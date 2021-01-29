@@ -1,0 +1,20 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
+cc_binary(
+    name = "native",
+    srcs = [
+        "com_example_ExampleFuzzerWithNative.cpp",
+        "com_example_ExampleFuzzerWithNative.h",
+    ],
+    copts = [
+        "-fsanitize=fuzzer-no-link,address",
+    ],
+    linkopts = [
+        "-fsanitize=fuzzer-no-link,address",
+    ],
+    linkshared = True,
+    visibility = ["//examples:__pkg__"],
+    deps = [
+        "//third_party/jni:jni_headers_only",
+    ],
+)

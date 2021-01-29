@@ -1,0 +1,5 @@
+exports_files([
+    "fuzz_target_test_wrapper.sh",
+    "jazzer",
+    "jazzer_wrapper.sh",
+])

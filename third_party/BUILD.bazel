@@ -1,0 +1,4 @@
+exports_files([
+    "gflags-use-double-dash-args.patch",
+    "libjpeg_turbo.BUILD",
+])

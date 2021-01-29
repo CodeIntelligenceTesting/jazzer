@@ -1,0 +1,174 @@
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# bazelbuild/platforms
+platforms_version = "0.0.2"
+
+platforms_sha = "48a2d8d343863989c232843e01afc8a986eb8738766bfd8611420a7db8f6f0c3"
+
+http_archive(
+    name = "platforms",
+    sha256 = platforms_sha,
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/%s/platforms-%s.tar.gz" % (platforms_version, platforms_version),
+        "https://github.com/bazelbuild/platforms/releases/download/%s/platforms-%s.tar.gz" % (platforms_version, platforms_version),
+    ],
+)
+
+# bazelbuild/bazel-skylib
+
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "ebdf850bfef28d923a2cc67ddca86355a449b5e4f38b0a70e584dc24e5984aa6",
+    strip_prefix = "bazel-skylib-f80bc733d4b9f83d427ce3442be2e07427b2cc8d",
+    urls = [
+        "https://github.com/bazelbuild/bazel-skylib/archive/f80bc733d4b9f83d427ce3442be2e07427b2cc8d.tar.gz",
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/archive/f80bc733d4b9f83d427ce3442be2e07427b2cc8d.tar.gz",
+    ],
+)
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+# bazelbuild/rules_jvm_external
+RULES_JVM_EXTERNAL_TAG = "4.0"
+
+RULES_JVM_EXTERNAL_SHA = "31701ad93dbfe544d597dbe62c9a1fdd76d81d8a9150c2bf1ecf928ecdf97169"
+
+http_archive(
+    name = "rules_jvm_external",
+    sha256 = RULES_JVM_EXTERNAL_SHA,
+    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
+)
+
+load("@rules_jvm_external//:defs.bzl", "maven_install")
+load("//:maven_artifacts.bzl", "MAVEN_ARTIFACTS")
+
+maven_install(
+    artifacts = MAVEN_ARTIFACTS,
+    maven_install_json = "//:maven_install.json",
+    repositories = [
+        "https://maven.google.com",
+        "https://repo1.maven.org/maven2",
+    ],
+)
+
+load("@maven//:defs.bzl", "pinned_maven_install")
+
+pinned_maven_install()
+
+# bazelbuild/rules_kotlin
+rules_kotlin_version = "v1.5.0-alpha-3"
+
+rules_kotlin_sha = "eeae65f973b70896e474c57aa7681e444d7a5446d9ec0a59bb88c59fc263ff62"
+
+http_archive(
+    name = "io_bazel_rules_kotlin",
+    sha256 = rules_kotlin_sha,
+    urls = ["https://github.com/bazelbuild/rules_kotlin/releases/download/%s/rules_kotlin_release.tgz" % rules_kotlin_version],
+)
+
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories")
+
+kotlin_repositories()
+
+register_toolchains("@//:kotlin_toolchain")
+
+# google/bazel_common
+bazel_common_commit = "11b744fb848a5c73b7173e8b771bf857b8558c89"
+
+http_archive(
+    name = "bazel_common",
+    sha256 = "cf607d9004a518d8a9bc959b558ffca730ab26e31ee1a7a36248fb054ca84cb7",
+    strip_prefix = "bazel-common-%s" % bazel_common_commit,
+    urls = ["https://github.com/google/bazel-common/archive/%s.zip" % bazel_common_commit],
+)
+
+# google/gflags
+com_github_gflags_gflags_version = "2.2.2"
+
+http_archive(
+    name = "com_github_gflags_gflags",
+    patches = [
+        "//third_party:gflags-use-double-dash-args.patch",
+    ],
+    sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
+    strip_prefix = "gflags-%s" % com_github_gflags_gflags_version,
+    url = "https://github.com/gflags/gflags/archive/v%s.tar.gz" % com_github_gflags_gflags_version,
+)
+
+# google/googletest
+googletest_version = "1.10.0"
+
+http_archive(
+    name = "googletest",
+    sha256 = "9dc9157a9a1551ec7a7e43daea9a694a0bb5fb8bec81235d8a1e6ef64c716dcb",
+    strip_prefix = "googletest-release-%s" % googletest_version,
+    url = "https://github.com/google/googletest/archive/release-%s.tar.gz" % googletest_version,
+)
+
+# google/glog
+com_google_glog_version = "0.4.0"
+
+http_archive(
+    name = "com_google_glog",
+    sha256 = "f28359aeba12f30d73d9e4711ef356dc842886968112162bc73002645139c39c",
+    strip_prefix = "glog-%s" % com_google_glog_version,
+    url = "https://github.com/google/glog/archive/v%s.tar.gz" % com_google_glog_version,
+)
+
+# abseil/abseil-cpp
+com_google_absl_commit = "3a2d6572d06709da32a17f053ca1e3c8e2af90df"
+
+http_archive(
+    name = "com_google_absl",
+    sha256 = "6ead5ca816dee2052e80ef746ab88e319f7cf40392e9dcc67d56d2d1e0043660",
+    strip_prefix = "abseil-cpp-%s" % com_google_absl_commit,
+    urls = ["https://github.com/abseil/abseil-cpp/archive/%s.zip" % com_google_absl_commit],
+)
+
+# bazelbuild/rules_pkg
+
+rules_pkg_version = "0.3.0"
+
+rules_pkg_sha = "6b5969a7acd7b60c02f816773b06fcf32fbe8ba0c7919ccdc2df4f8fb923804a"
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "rules_pkg",
+    sha256 = rules_pkg_sha,
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/%s/rules_pkg-%s.tar.gz" % (rules_pkg_version, rules_pkg_version),
+        "https://github.com/bazelbuild/rules_pkg/releases/download/%s/rules_pkg-%s.tar.gz" % (rules_pkg_version, rules_pkg_version),
+    ],
+)
+
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+
+rules_pkg_dependencies()
+
+# bazelbuild/rules_foreign_cc
+
+http_archive(
+    name = "rules_foreign_cc",
+    sha256 = "53b86f476999e4e3e6a6151ea363b18693d18118fab4de01b76b2db258790fe5",
+    strip_prefix = "rules_foreign_cc-466c32c70f6262f43eac06ad5e9dc2cbecbba228",
+    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/466c32c70f6262f43eac06ad5e9dc2cbecbba228.zip",
+)
+
+load("@rules_foreign_cc//:workspace_definitions.bzl", "rules_foreign_cc_dependencies")
+
+rules_foreign_cc_dependencies()
+
+# libjpeg_turbo
+
+http_archive(
+    name = "libjpeg_turbo",
+    build_file = "//third_party:libjpeg_turbo.BUILD",
+    sha256 = "6a965adb02ad898b2ae48214244618fe342baea79db97157fdc70d8844ac6f09",
+    strip_prefix = "libjpeg-turbo-2.0.90",
+    url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.90.tar.gz",
+)

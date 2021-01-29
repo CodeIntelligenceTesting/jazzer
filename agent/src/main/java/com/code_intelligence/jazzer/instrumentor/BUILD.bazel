@@ -1,0 +1,18 @@
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+
+kt_jvm_library(
+    name = "instrumentor",
+    srcs = glob([
+        "*.kt",
+    ]),
+    visibility = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+        "//agent/src/test/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
+    ],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime",
+        "@com_github_jetbrains_kotlin//:kotlin-reflect",
+        "@maven//:org_ow2_asm_asm",
+        "@maven//:org_ow2_asm_asm_commons",
+    ],
+)

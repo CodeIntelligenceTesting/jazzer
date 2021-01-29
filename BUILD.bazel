@@ -1,0 +1,56 @@
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "define_kt_toolchain")
+load("@io_bazel_rules_kotlin//kotlin/internal:opts.bzl", "kt_javac_options", "kt_kotlinc_options")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+kt_kotlinc_options(
+    name = "default_kotlinc_options",
+)
+
+kt_javac_options(
+    name = "default_javac_options",
+)
+
+define_kt_toolchain(
+    name = "kotlin_toolchain",
+    api_version = "1.4",
+    javac_options = ":default_javac_options",
+    jvm_target = "1.8",
+    kotlinc_options = ":default_kotlinc_options",
+    language_version = "1.4",
+)
+
+pkg_tar(
+    name = "jazzer_release",
+    srcs = [
+        "//agent:jazzer_agent_deploy.jar",
+        "//agent:jazzer_api_deploy.jar",
+        "//bazel:jazzer",
+        "//driver:jazzer_driver",
+    ],
+    extension = "tar.gz",
+    mode = "0777",
+    remap_paths = {"bazel/": ""},
+)
+
+sh_binary(
+    name = "jazzer",
+    srcs = ["//bazel:jazzer_wrapper.sh"],
+    args = [
+        "$(rootpath //driver:jazzer_driver)",
+    ],
+    data = [
+        "//driver:jazzer_driver",
+    ],
+)
+
+sh_binary(
+    name = "jazzer_asan",
+    srcs = ["//bazel:jazzer_wrapper.sh"],
+    args = [
+        "$(rootpath //driver:jazzer_driver_asan)",
+    ],
+    data = [
+        "//driver:jazzer_driver_asan",
+    ],
+)

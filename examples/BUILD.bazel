@@ -1,0 +1,149 @@
+load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
+
+java_fuzz_target_test(
+    name = "ExampleFuzzer",
+    srcs = [
+        "src/main/java/com/example/ExampleFuzzer.java",
+        "src/main/java/com/example/ExampleFuzzerHooks.java",
+    ],
+    # Comment out the next line to keep the fuzzer running indefinitely.
+    hook_classes = ["com.example.ExampleFuzzerHooks"],
+    target_class = "com.example.ExampleFuzzer",
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "ExampleFuzzerWithNative",
+    srcs = [
+        "src/main/java/com/example/ExampleFuzzerWithNative.java",
+    ],
+    native_libs = ["//examples/src/main/native"],
+    target_class = "com.example.ExampleFuzzerWithNative",
+    use_asan = True,
+    deps = [
+        "//agent:jazzer_api_deploy.jar",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "ExampleValueProfileFuzzer",
+    srcs = [
+        "src/main/java/com/example/ExampleValueProfileFuzzer.java",
+    ],
+    # Comment out the next line to keep the fuzzer running indefinitely.
+    fuzzer_args = ["-use_value_profile=1"],
+    target_class = "com.example.ExampleValueProfileFuzzer",
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "JpegImageParserFuzzer",
+    srcs = [
+        "src/main/java/com/example/JpegImageParserFuzzer.java",
+    ],
+    target_class = "com.example.JpegImageParserFuzzer",
+    deps = [
+        "@maven//:org_apache_commons_commons_imaging",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "GifImageParserFuzzer",
+    srcs = [
+        "src/main/java/com/example/GifImageParserFuzzer.java",
+    ],
+    target_class = "com.example.GifImageParserFuzzer",
+    deps = [
+        "@maven//:org_apache_commons_commons_imaging",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "TiffImageParserFuzzer",
+    srcs = [
+        "src/main/java/com/example/TiffImageParserFuzzer.java",
+    ],
+    tags = ["manual"],
+    target_class = "com.example.TiffImageParserFuzzer",
+    deps = [
+        "@maven//:org_apache_commons_commons_imaging",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "JsonSanitizerFuzzer",
+    srcs = [
+        "src/main/java/com/example/JsonSanitizerFuzzer.java",
+    ],
+    target_class = "com.example.JsonSanitizerFuzzer",
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+        "@maven//:com_google_code_gson_gson",
+        "@maven//:com_mikesamuel_json_sanitizer",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "JacksonCborFuzzer",
+    srcs = [
+        "src/main/java/com/example/JacksonCborFuzzer.java",
+    ],
+    target_class = "com.example.JacksonCborFuzzer",
+    deps = [
+        "@maven//:com_fasterxml_jackson_core_jackson_core",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_cbor",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "FastJsonFuzzer",
+    srcs = [
+        "src/main/java/com/example/FastJsonFuzzer.java",
+    ],
+    target_class = "com.example.FastJsonFuzzer",
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+        "@maven//:com_alibaba_fastjson",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "TurboJpegFuzzer",
+    srcs = [
+        "src/main/java/com/example/TurboJpegFuzzer.java",
+    ],
+    fuzzer_args = [
+        "-rss_limit_mb=8196",
+    ],
+    native_libs = [
+        "@libjpeg_turbo//:turbojpeg_native",
+    ],
+    tags = ["manual"],
+    target_class = "com.example.TurboJpegFuzzer",
+    use_asan = True,
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+        "@libjpeg_turbo//:turbojpeg_java",
+    ],
+)
+
+java_binary(
+    name = "examples",
+    create_executable = False,
+    resource_jars = [
+        ":ExampleFuzzer_target_deploy.jar",
+        ":ExampleValueProfileFuzzer_target_deploy.jar",
+        ":FastJsonFuzzer_target_deploy.jar",
+        ":GifImageParserFuzzer_target_deploy.jar",
+        ":JacksonCborFuzzer_target_deploy.jar",
+        ":JpegImageParserFuzzer_target_deploy.jar",
+        ":JsonSanitizerFuzzer_target_deploy.jar",
+        ":TiffImageParserFuzzer_target_deploy.jar",
+    ],
+    visibility = ["//visibility:public"],
+)

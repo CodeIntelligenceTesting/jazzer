@@ -1,0 +1,48 @@
+cc_library(
+    name = "jni",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":jni_headers",
+        ":libjvm",
+    ],
+)
+
+cc_library(
+    name = "jni_headers_only",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":jni_headers",
+    ],
+)
+
+genrule(
+    name = "jni_md_header",
+    srcs = select({
+        "@platforms//os:osx": ["@bazel_tools//tools/jdk:jni_md_header-darwin"],
+        "@platforms//os:windows": ["@bazel_tools//tools/jdk:jni_md_header-windows"],
+        "//conditions:default": ["@bazel_tools//tools/jdk:jni_md_header-linux"],
+    }),
+    outs = ["jni_md.h"],
+    cmd = "cp -f $< $@",
+)
+
+genrule(
+    name = "jni_header",
+    srcs = ["@bazel_tools//tools/jdk:jni_header"],
+    outs = ["jni.h"],
+    cmd = "cp -f $< $@",
+)
+
+cc_import(
+    name = "jni_headers",
+    hdrs = [
+        ":jni_header",
+        ":jni_md_header",
+    ],
+)
+
+cc_import(
+    name = "libjvm",
+    interface_library = "@local_jdk//:lib/server/libjvm.so",
+    system_provided = True,
+)

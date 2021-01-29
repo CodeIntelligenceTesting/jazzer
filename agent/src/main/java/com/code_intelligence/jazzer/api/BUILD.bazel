@@ -1,0 +1,13 @@
+load("@rules_java//java:defs.bzl", "java_library")
+load("@bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
+
+java_library(
+    name = "api",
+    srcs = glob(["*.java"]),
+    visibility = ["//visibility:public"],
+)
+
+javadoc_library(
+    name = "api_javadoc",
+    srcs = glob(["*.java"]),
+)

@@ -1,0 +1,13 @@
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+
+kt_jvm_library(
+    name = "runtime",
+    srcs = glob([
+        "*.java",
+        "*.kt",
+    ]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+    ],
+)

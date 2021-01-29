@@ -1,0 +1,146 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load(
+    "@bazel_tools//tools/jdk:default_java_toolchain.bzl",
+    "java_runtime_files",
+)
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+
+cc_library(
+    name = "sanitizer_hooks_with_pc",
+    srcs = ["sanitizer_hooks_with_pc.cpp"],
+    hdrs = ["sanitizer_hooks_with_pc.h"],
+)
+
+cc_test(
+    name = "sanitizer_hooks_with_pc_test",
+    size = "small",
+    srcs = ["sanitizer_hooks_with_pc_test.cpp"],
+    deps = [
+        ":sanitizer_hooks_with_pc",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "jvm_tooling_lib",
+    srcs = [
+        "coverage_tracker.cpp",
+        "fuzz_target_runner.cpp",
+        "fuzzed_data_provider.cpp",
+        "jvm_tooling.cpp",
+        "libfuzzer_callbacks.cpp",
+        "libfuzzer_driver.cpp",
+        "signal_handler.cpp",
+        "utils.cpp",
+    ],
+    hdrs = [
+        "coverage_tracker.h",
+        "fuzz_target_runner.h",
+        "fuzzed_data_provider.h",
+        "java_reproducer_templates.h",
+        "jvm_tooling.h",
+        "libfuzzer_callbacks.h",
+        "libfuzzer_driver.h",
+        "sanitizer_hooks_with_pc.h",
+        "signal_handler.h",
+        "utils.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":sanitizer_hooks_with_pc",
+        "//third_party/jni",
+        "@com_github_gflags_gflags//:gflags",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_glog//:glog",
+    ],
+)
+
+cc_binary(
+    name = "jazzer_driver",
+    srcs = ["libfuzzer_fuzz_target.cpp"],
+    data = [
+        "//agent:jazzer_agent_deploy.jar",
+    ],
+    linkopts = [
+        "-Wl,--wrap=__sanitizer_set_death_callback",
+        "-fsanitize=fuzzer",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":jvm_tooling_lib",
+    ],
+)
+
+cc_binary(
+    name = "jazzer_driver_asan",
+    srcs = ["libfuzzer_fuzz_target.cpp"],
+    data = [
+        "//agent:jazzer_agent_deploy.jar",
+    ],
+    linkopts = [
+        "-Wl,--wrap=__sanitizer_set_death_callback",
+        "-fsanitize=fuzzer,address",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":jvm_tooling_lib",
+    ],
+)
+
+cc_test(
+    name = "jvm_tooling_test",
+    size = "small",
+    srcs = [
+        "jvm_tooling_test.cpp",
+        "sanitizer_symbols_for_tests.cpp",
+    ],
+    args = [
+        "--cp=$(location //driver/testdata:fuzz_target_mocks_deploy.jar)",
+        "--agent_path=$(rootpath //agent:jazzer_agent_deploy.jar)",
+    ],
+    data = [
+        "//agent:jazzer_agent_deploy.jar",
+        "//driver/testdata:fuzz_target_mocks_deploy.jar",
+    ],
+    includes = ["."],
+    deps = [
+        ":jvm_tooling_lib",
+        ":test_main",
+        "@com_github_gflags_gflags//:gflags",
+        "@googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "fuzzed_data_provider_test",
+    size = "medium",
+    srcs = [
+        "fuzzed_data_provider_test.cpp",
+        "sanitizer_symbols_for_tests.cpp",
+    ],
+    args = [
+        "--cp=$(location //driver/testdata:fuzz_target_mocks_deploy.jar)",
+        "--agent_path=$(rootpath //agent:jazzer_agent_deploy.jar)",
+    ],
+    data = [
+        "//agent:jazzer_agent_deploy.jar",
+        "//driver/testdata:fuzz_target_mocks_deploy.jar",
+    ],
+    includes = ["."],
+    deps = [
+        ":jvm_tooling_lib",
+        ":test_main",
+        "@com_github_gflags_gflags//:gflags",
+        "@googletest//:gtest",
+    ],
+)
+
+cc_library(
+    name = "test_main",
+    srcs = ["test_main.cpp"],
+    deps = [
+        "@com_github_gflags_gflags//:gflags",
+        "@googletest//:gtest",
+    ],
+)

@@ -1,0 +1,9 @@
+build --incompatible_strict_action_env
+build -c opt
+
+# C/C++
+build --cxxopt='-std=c++17'
+build --action_env=CC=clang
+
+# Java
+build --java_language_version=8
