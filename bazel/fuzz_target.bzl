@@ -23,18 +23,22 @@ def java_fuzz_target_test(
         fuzzer_args = [],
         **kwargs):
     target_name = name + "_target"
+    deploy_manifest_lines = [
+        "Jazzer-Fuzz-Target-Class: %s" % target_class,
+    ]
+    if hook_classes:
+        deploy_manifest_lines += [
+            "Jazzer-Hook-Classes: %s" % ":".join(hook_classes),
+        ]
     native.java_binary(
         name = target_name,
         visibility = ["//visibility:private"],
         create_executable = False,
+        deploy_manifest_lines = deploy_manifest_lines,
         **kwargs
     )
 
     additional_args = []
-
-    hooks = ":".join(hook_classes)
-    if hooks != "":
-        additional_args.append("--custom_hooks=" + hooks)
 
     native_libs_paths = ":".join(["$$(dirname $(rootpaths %s) | paste -sd ':' -)" % native_lib for native_lib in native_libs])
     if native_libs_paths != "":
@@ -50,7 +54,6 @@ def java_fuzz_target_test(
         args = [
             "$(rootpath %s)" % driver,
             "--cp=$(rootpath :%s_deploy.jar)" % target_name,
-            "--target_class=" + target_class,
             "--agent_path=$(rootpath //agent:jazzer_agent_deploy.jar)",
             # Should be bigger than the JVM max heap size (4096m)
             "-rss_limit_mb=5000",

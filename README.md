@@ -64,7 +64,7 @@ A toy example can be run as follows:
 # Using Bazelisk:
 ./bazelisk-linux-amd64 run //examples:ExampleFuzzer
 # Using the binary release and examples_deploy.jar:
-./jazzer --cp=examples_deploy.jar --target_class=com.example.ExampleFuzzer --custom_hooks=com.example.ExampleFuzzerHooks
+./jazzer --cp=examples_deploy.jar
 ```
 
 This should produce output similar to the following:
@@ -166,8 +166,13 @@ invoking Jazzer with the following arguments:
 --cp=fuzz_target.jar:lib1.jar:lib2.jar --target_class=com.example.MyFirstFuzzTarget <optional_corpus_dir>
 ```
 
-Bazel produces the correct type of `.jar` from a `java_binary` target with `create_executable = False` by adding
-the suffix `_deploy.jar` to the target name.
+The fuzz target class can optionally be specified by adding it as the value of the `Jazzer-Fuzz-Target-Class` attribute
+in the JAR's manifest. If there is only a single such attribute among all manifests of JARs on the classpath, Jazzer will
+use its value as the fuzz target class.
+
+Bazel produces the correct type of `.jar` from a `java_binary` target with `create_executable = False` and
+`deploy_manifest_lines = ["Jazzer-Fuzz-Target-Class: com.example.MyFirstFuzzTarget"]` by adding the suffix `_deploy.jar`
+to the target name.
 
 ### Fuzzed Data Provider
 
@@ -304,6 +309,8 @@ for more details.
 
 To use the compiled method hooks they have to be available on the classpath provided by `--cp` and can then be loaded by providing the
 flag `--custom_hooks`, which takes a colon-separated list of names of classes to load hooks from.
+This list of custom hooks can alternatively be specified via the `Jazzer-Hook-Classes` attribute in the fuzz target
+JAR's manifest.
 
 ### Suppressing stack traces
 
