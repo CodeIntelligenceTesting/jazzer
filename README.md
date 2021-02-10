@@ -177,13 +177,13 @@ to extract multiple values or convert the input into a valid `java.lang.String`.
 the task of writing JVM fuzz targets.
 
 If the function `public static boolean fuzzerTestOneInput(FuzzedDataProvider data)` is defined in the fuzz target, it will
-be passed an object implementing `com.codeintelligence.jazzer.api.FuzzedDataProvider` that allows _consuming_ the raw fuzzer
+be passed an object implementing `com.code_intelligence.jazzer.api.FuzzedDataProvider` that allows _consuming_ the raw fuzzer
 input as values of common types. This can look as follows:
 
 ```java
 package com.example.MySecondFuzzTarget;
 
-import com.codeintelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 
 class MySecondFuzzTarget {
     public satic void callApi(int val, String text) {
