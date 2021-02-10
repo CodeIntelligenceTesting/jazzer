@@ -53,6 +53,8 @@ class FuzzTargetRunner : public ExceptionPrinter {
   jmethodID fuzzer_tear_down_;
   std::vector<jlong> ignore_tokens_;
 
+  std::string DetectFuzzTargetClass() const;
+
  public:
   // Initializes the java fuzz target by calling `void fuzzerInitialize(...)`.
   explicit FuzzTargetRunner(

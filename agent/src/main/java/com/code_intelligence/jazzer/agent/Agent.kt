@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.agent
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
 import com.code_intelligence.jazzer.runtime.CoverageMap
+import com.code_intelligence.jazzer.runtime.ManifestUtils
 import java.lang.instrument.Instrumentation
 
 val KNOWN_ARGUMENTS = listOf(
@@ -49,7 +50,10 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
                 else -> splitArg[0] to splitArg[1].split(":")
             }
         }.toMap()
-    val customHookNames = argumentMap["custom_hooks"] ?: emptyList()
+    val manifestCustomHookNames = ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES).flatMap {
+        it.split(':')
+    }
+    val customHookNames = manifestCustomHookNames + (argumentMap["custom_hooks"] ?: emptyList())
     val classNameGlobber = ClassNameGlobber(
         argumentMap["instrumentation_includes"] ?: emptyList(),
         (argumentMap["instrumentation_excludes"] ?: emptyList()) + customHookNames
@@ -87,9 +91,14 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
         .map { it.name }
         .filter { classNameGlobber.includes(it) || dependencyClassNameGlobber.includes(it) }
         .toSet()
-    val customHooks = customHookNames.flatMap { hookClassName ->
-        loadHooks(Class.forName(hookClassName)).also {
-            println("INFO: Loaded ${it.size} hooks from $hookClassName")
+    val customHooks = customHookNames.toSet().flatMap { hookClassName ->
+        try {
+            loadHooks(Class.forName(hookClassName)).also {
+                println("INFO: Loaded ${it.size} hooks from $hookClassName")
+            }
+        } catch (_: ClassNotFoundException) {
+            println("WARN: Failed to load hooks from $hookClassName")
+            emptySet()
         }
     }
     val relevantClassesLoadedAfterCustomHooks = instrumentation.allLoadedClasses
