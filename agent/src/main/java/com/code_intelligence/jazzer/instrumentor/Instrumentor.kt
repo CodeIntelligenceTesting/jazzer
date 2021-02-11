@@ -36,4 +36,8 @@ internal interface Instrumentor {
         return shouldInstrument(method.access) &&
             method.instructions.size() > 0
     }
+
+    companion object {
+        const val ASM_API_VERSION = Opcodes.ASM9
+    }
 }

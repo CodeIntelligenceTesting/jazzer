@@ -18,7 +18,6 @@ import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
 
 internal class HookInstrumentor(private val hooks: Iterable<Hook>, private val java6Mode: Boolean) : Instrumentor {
 
@@ -28,7 +27,7 @@ internal class HookInstrumentor(private val hooks: Iterable<Hook>, private val j
         val reader = ClassReader(bytecode)
         val writer = ClassWriter(reader, ClassWriter.COMPUTE_MAXS)
         random = DeterministicRandom("hook", reader.className)
-        val interceptor = object : ClassVisitor(Opcodes.ASM9, writer) {
+        val interceptor = object : ClassVisitor(Instrumentor.ASM_API_VERSION, writer) {
             override fun visitMethod(
                 access: Int,
                 name: String?,
