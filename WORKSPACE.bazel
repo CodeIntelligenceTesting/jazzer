@@ -47,6 +47,7 @@ load("//:maven_artifacts.bzl", "MAVEN_ARTIFACTS")
 
 maven_install(
     artifacts = MAVEN_ARTIFACTS,
+    fail_if_repin_required = True,
     maven_install_json = "//:maven_install.json",
     repositories = [
         "https://repo1.maven.org/maven2",
