@@ -1,0 +1,52 @@
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+
+java_binary(
+    name = "NoThrowDoclet",
+    srcs = ["NoThrowDoclet.java"],
+    create_executable = False,
+)
+
+genrule(
+    name = "java_no_throw_methods_list",
+    srcs = [
+        "@local_jdk//:lib/src.zip",
+    ],
+    outs = [
+        "java_no_throw_methods_list.dat.generated",
+    ],
+    cmd = """
+        TMP=$$(mktemp -d) && \
+        unzip $(execpath @local_jdk//:lib/src.zip) -d $$TMP && \
+        $(execpath @local_jdk//:bin/javadoc) \
+            -doclet com.code_intelligence.jazzer.generated.NoThrowDoclet \
+            -docletpath $(execpath :NoThrowDoclet_deploy.jar) \
+            --module java.base \
+            --source-path $$TMP/java.base \
+            --out $@ && \
+        sort -o $@ $@ && \
+        rm -rf $$TMP""",
+    tags = ["manual"],
+    tools = [
+        ":NoThrowDoclet_deploy.jar",
+        "@local_jdk//:bin/javadoc",
+    ],
+)
+
+# Workaround for https://github.com/bazelbuild/rules_kotlin/issues/281
+java_library(
+    name = "JavaNoThrowMethodsResource",
+    resources = [":java_no_throw_methods_list.dat"],
+)
+
+# To regenerate the list of methods, ensure that your local JDK is as recent as possible and contains `lib/src.zip`.
+# This will be the case if you are using the release binaries of the OpenJDK or if the `openjdk-<version>-source`
+# package is installed.
+# Then, exceute
+#   agent/src/main/java/com/code_intelligence/jazzer/generated/update_java_no_throw_methods_list.sh
+# from the Bazel root.
+kt_jvm_library(
+    name = "JavaNoThrowMethods",
+    srcs = [":JavaNoThrowMethods.kt"],
+    visibility = ["//agent/src/main/java/com/code_intelligence/jazzer/instrumentor:__pkg__"],
+    deps = ["JavaNoThrowMethodsResource"],
+)

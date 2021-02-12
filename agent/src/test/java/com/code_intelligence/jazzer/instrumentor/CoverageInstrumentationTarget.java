@@ -23,7 +23,7 @@ public class CoverageInstrumentationTarget implements DynamicTestContract {
 
   @Override
   public Map<String, Boolean> selfCheck() {
-    Map<String, Boolean> results = new HashMap<>();
+    HashMap<String, Boolean> results = new HashMap<>();
 
     results.put("for0", false);
     results.put("for1", false);
@@ -50,16 +50,18 @@ public class CoverageInstrumentationTarget implements DynamicTestContract {
     return results;
   }
 
-  private void foo(Map<String, Boolean> results) {
+  private void foo(HashMap<String, Boolean> results) {
     bar(results);
   }
 
+  // The use of Map instead of HashMap is deliberate here: Since Map#put can throw exceptions, the
+  // invocation should be instrumented for coverage.
   private void bar(Map<String, Boolean> results) {
     results.put("foobar", true);
   }
 
   @SuppressWarnings("unused")
-  private void baz(Map<String, Boolean> results) {
+  private void baz(HashMap<String, Boolean> results) {
     results.put("baz", false);
   }
 }
