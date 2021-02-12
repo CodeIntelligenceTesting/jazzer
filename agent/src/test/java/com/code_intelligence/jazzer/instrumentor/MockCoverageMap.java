@@ -33,8 +33,7 @@ public class MockCoverageMap {
         updated_pos = i;
       }
     }
-    int cur_location = updated_pos ^ prev_location;
-    locations.add(cur_location);
+    locations.add(updated_pos);
     System.arraycopy(mem.array(), 0, previous_mem.array(), 0, SIZE);
   }
 

@@ -18,7 +18,6 @@ package com.code_intelligence.jazzer.agent
 
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
-import com.code_intelligence.jazzer.runtime.CoverageMap
 import com.code_intelligence.jazzer.runtime.ManifestUtils
 import java.lang.instrument.Instrumentation
 
@@ -29,7 +28,6 @@ val KNOWN_ARGUMENTS = listOf(
     "custom_hook_excludes",
     "trace",
     "custom_hooks",
-    "cov_size",
 )
 
 fun premain(agentArgs: String?, instrumentation: Instrumentation) {
@@ -75,12 +73,6 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             }
         }
     }.toSet()
-
-    argumentMap["cov_size"]?.let {
-        require(it.size == 1) { "cov_size can only be specified once" }
-        CoverageMap.reinit(it.first().toInt())
-        println("INFO: Using custom coverage map size: ${CoverageMap.SIZE}")
-    }
 
     val runtimeInstrumentor = RuntimeInstrumentor(classNameGlobber, dependencyClassNameGlobber, instrumentationTypes)
     instrumentation.apply {

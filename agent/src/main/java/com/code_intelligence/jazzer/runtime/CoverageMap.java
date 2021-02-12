@@ -22,25 +22,7 @@ import java.nio.ByteBuffer;
  * native code.
  */
 final public class CoverageMap {
-  // This needs to be a power of two to ensure two indices XORed together
-  // don't overflow the buffer.
   public static int SIZE = 65536;
   public static ByteBuffer mem = ByteBuffer.allocateDirect(SIZE);
-  @SuppressWarnings("unused") public static int prev_location = 0; // is used in byte code directly
 
-  private static int nextPowerOfTwo(int minSize) {
-    int nextPowerOfTwo = 1;
-    // Cannot represent 2^31 in a signed int.
-    for (int log2 = 0; log2 < 30; log2++) {
-      nextPowerOfTwo <<= 1;
-      if (nextPowerOfTwo >= minSize)
-        break;
-    }
-    return nextPowerOfTwo;
-  }
-
-  public static void reinit(int minSize) {
-    SIZE = nextPowerOfTwo(minSize);
-    mem = ByteBuffer.allocateDirect(SIZE);
-  }
 }

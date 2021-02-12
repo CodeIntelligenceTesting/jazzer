@@ -20,6 +20,7 @@ JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_API_VERS
 MAVEN_ARTIFACTS = [
     "org.ow2.asm:asm:9.1",
     "org.ow2.asm:asm-commons:9.1",
+    "org.ow2.asm:asm-tree:9.1",
     maven.artifact("junit", "junit", "4.12", testonly = True),
     "org.apache.commons:commons-imaging:1.0-alpha2",
     "com.mikesamuel:json-sanitizer:1.2.1",
