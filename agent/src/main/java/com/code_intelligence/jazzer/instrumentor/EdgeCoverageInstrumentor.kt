@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
+import com.code_intelligence.jazzer.generated.JAVA_NO_THROW_METHODS
 import com.code_intelligence.jazzer.runtime.CoverageMap
 import org.jacoco.core.internal.flow.ClassProbesAdapter
 import org.jacoco.core.internal.flow.ClassProbesVisitor
@@ -149,9 +150,28 @@ private fun instrumentMethodEdge(
 ) {
     if (internalClassName.startsWith("com/code_intelligence/jazzer/") && !EdgeCoverageInstrumentor.isTesting)
         return
+    if (isNoThrowMethod(internalClassName, methodName, descriptor))
+        return
     instrumentControlFlowEdge(mv, nextEdgeId(), variable)
 }
 
+/**
+ * Checks whether a method is in a list of function known not to throw any exceptions (including subclasses of
+ * [java.lang.RuntimeException]).
+ *
+ * If a method is known not to throw any exceptions, calls to it do not need to be instrumented for coverage as it will
+ * always return to the same basic block.
+ *
+ * Note: According to the JVM specification, a [java.lang.VirtualMachineError] can always be thrown. As it is fatal for
+ * all practical purposes, we can ignore errors of this kind for coverage instrumentation.
+ */
+private fun isNoThrowMethod(internalClassName: String, methodName: String, descriptor: String): Boolean {
+    // We only collect no throw information for the Java standard library.
+    if (!internalClassName.startsWith("java/"))
+        return false
+    val key = "$internalClassName#$methodName#$descriptor"
+    return key in JAVA_NO_THROW_METHODS
+}
 
 // The remainder of this file interfaces with classes in org.jacoco.core.internal. Changes to this part should not be
 // necessary unless JaCoCo is updated or the way we instrument for coverage changes fundamentally.
