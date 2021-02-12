@@ -1,0 +1,123 @@
+// SPDX-License-Identifier: EPL-2.0 and Apache-2.0
+// These patches apply to JaCoCo (https://github.com/jacoco/jacoco) and are hereby made available under the terms of the
+// Eclipse Public License 2.0 available at:
+//   http://www.eclipse.org/legal/epl-2.0
+diff --git org.jacoco.core/src/org/jacoco/core/internal/flow/LabelInfo.java org.jacoco.core/src/org/jacoco/core/internal/flow/LabelInfo.java
+index 122d62b5..5ba3cf8d 100644
+--- org.jacoco.core/src/org/jacoco/core/internal/flow/LabelInfo.java
++++ org.jacoco.core/src/org/jacoco/core/internal/flow/LabelInfo.java
+@@ -141,8 +141,7 @@ public final class LabelInfo {
+ 	 */
+ 	public static boolean needsProbe(final Label label) {
+ 		final LabelInfo info = get(label);
+-		return info != null && info.successor
+-				&& (info.multiTarget || info.methodInvocationLine);
++		return info != null && info.successor && info.multiTarget;
+ 	}
+ 
+ 	/**
+diff --git org.jacoco.core/src/org/jacoco/core/internal/instr/ClassInstrumenter.java org.jacoco.core/src/org/jacoco/core/internal/instr/ClassInstrumenter.java
+index 476c9e34..bc192dc6 100644
+--- org.jacoco.core/src/org/jacoco/core/internal/instr/ClassInstrumenter.java
++++ org.jacoco.core/src/org/jacoco/core/internal/instr/ClassInstrumenter.java
+@@ -24,6 +24,7 @@ import org.objectweb.asm.MethodVisitor;
+ public class ClassInstrumenter extends ClassProbesVisitor {
+ 
+ 	private final IProbeArrayStrategy probeArrayStrategy;
++	private final IProbeInserterFactory probeInserterFactory;
+ 
+ 	private String className;
+ 
+@@ -40,6 +41,22 @@ public class ClassInstrumenter extends ClassProbesVisitor {
+ 			final ClassVisitor cv) {
+ 		super(cv);
+ 		this.probeArrayStrategy = probeArrayStrategy;
++		this.probeInserterFactory = new IProbeInserterFactory() {
++			@Override
++			public ProbeInserter makeProbeInserter(int access, String name,
++					String desc, MethodVisitor mv,
++					IProbeArrayStrategy arrayStrategy) {
++				return new ProbeInserter(access, name, desc, mv, arrayStrategy);
++			}
++		};
++	}
++
++	public ClassInstrumenter(final IProbeArrayStrategy probeArrayStrategy,
++			final IProbeInserterFactory probeInserterFactory,
++			final ClassVisitor cv) {
++		super(cv);
++		this.probeArrayStrategy = probeArrayStrategy;
++		this.probeInserterFactory = probeInserterFactory;
+ 	}
+ 
+ 	@Override
+@@ -71,8 +88,9 @@ public class ClassInstrumenter extends ClassProbesVisitor {
+ 			return null;
+ 		}
+ 		final MethodVisitor frameEliminator = new DuplicateFrameEliminator(mv);
+-		final ProbeInserter probeVariableInserter = new ProbeInserter(access,
+-				name, desc, frameEliminator, probeArrayStrategy);
++		final ProbeInserter probeVariableInserter =
++				probeInserterFactory.makeProbeInserter(access, name, desc,
++						frameEliminator, probeArrayStrategy);
+ 		return new MethodInstrumenter(probeVariableInserter,
+ 				probeVariableInserter);
+ 	}
+diff --git org.jacoco.core/src/org/jacoco/core/internal/instr/IProbeInserterFactory.java org.jacoco.core/src/org/jacoco/core/internal/instr/IProbeInserterFactory.java
+new file mode 100644
+index 00000000..19c2a7e2
+--- /dev/null
++++ org.jacoco.core/src/org/jacoco/core/internal/instr/IProbeInserterFactory.java
+@@ -0,0 +1,8 @@
++package org.jacoco.core.internal.instr;
++
++import org.objectweb.asm.MethodVisitor;
++
++public interface IProbeInserterFactory {
++    ProbeInserter makeProbeInserter(int access, String name, String desc,
++            MethodVisitor mv, IProbeArrayStrategy arrayStrategy);
++}
+diff --git org.jacoco.core/src/org/jacoco/core/internal/instr/InstrSupport.java org.jacoco.core/src/org/jacoco/core/internal/instr/InstrSupport.java
+index 71808ac8..3df93f63 100644
+--- org.jacoco.core/src/org/jacoco/core/internal/instr/InstrSupport.java
++++ org.jacoco.core/src/org/jacoco/core/internal/instr/InstrSupport.java
+@@ -78,7 +78,7 @@ public final class InstrSupport {
+ 	 * Data type of the field that stores coverage information for a class (
+ 	 * <code>boolean[]</code>).
+ 	 */
+-	public static final String DATAFIELD_DESC = "[Z";
++	public static final String DATAFIELD_DESC = "java/nio/ByteBuffer";
+ 
+ 	// === Init Method ===
+ 
+diff --git org.jacoco.core/src/org/jacoco/core/internal/instr/ProbeInserter.java org.jacoco.core/src/org/jacoco/core/internal/instr/ProbeInserter.java
+index 0f5b99ff..ba5daa6d 100644
+--- org.jacoco.core/src/org/jacoco/core/internal/instr/ProbeInserter.java
++++ org.jacoco.core/src/org/jacoco/core/internal/instr/ProbeInserter.java
+@@ -25,7 +25,7 @@ import org.objectweb.asm.TypePath;
+  * addition the probe array has to be retrieved at the beginning of the method
+  * and stored in a local variable.
+  */
+-class ProbeInserter extends MethodVisitor implements IProbeInserter {
++public class ProbeInserter extends MethodVisitor implements IProbeInserter {
+ 
+ 	private final IProbeArrayStrategy arrayStrategy;
+ 
+@@ -36,7 +36,7 @@ class ProbeInserter extends MethodVisitor implements IProbeInserter {
+ 	private final boolean clinit;
+ 
+ 	/** Position of the inserted variable. */
+-	private final int variable;
++	protected final int variable;
+ 
+ 	/** Maximum stack usage of the code to access the probe array. */
+ 	private int accessorStackSize;
+@@ -56,7 +56,7 @@ class ProbeInserter extends MethodVisitor implements IProbeInserter {
+ 	 *            callback to create the code that retrieves the reference to
+ 	 *            the probe array
+ 	 */
+-	ProbeInserter(final int access, final String name, final String desc,
++	public ProbeInserter(final int access, final String name, final String desc,
+ 			final MethodVisitor mv, final IProbeArrayStrategy arrayStrategy) {
+ 		super(InstrSupport.ASM_API_VERSION, mv);
+ 		this.clinit = InstrSupport.CLINIT_NAME.equals(name);

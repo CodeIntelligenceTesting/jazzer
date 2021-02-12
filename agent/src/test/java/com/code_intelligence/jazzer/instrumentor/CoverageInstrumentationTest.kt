@@ -19,7 +19,9 @@ import java.io.File
 import kotlin.test.assertEquals
 
 private fun applyInstrumentation(bytecode: ByteArray): ByteArray {
-    return AFLCoverageMapInstrumentor(MockCoverageMap::class.java).instrument(bytecode)
+    EdgeCoverageInstrumentor.resetNextGlobalEdgeIdForTestingOnly()
+    EdgeCoverageInstrumentor.setCoverageMapClassForTestingOnly(MockCoverageMap::class.java)
+    return EdgeCoverageInstrumentor.instrument(bytecode)
 }
 
 private fun getOriginalInstrumentationTargetInstance(): DynamicTestContract {
@@ -43,21 +45,21 @@ private fun assertControlFlow(expectedLocations: List<Int>) {
 
 class CoverageInstrumentationTest {
 
-    private val constructorStart = 54445
-    private val selfCheckStart = 8397
-    private val ifFirstBranch = 1555
-    private val ifEnd = 26354
-    private val outerForCondition = 37842
-    private val outerForBody = 53325
-    private val innerForCondition = 38432
-    private val innerForBody = 5673
-    private val innerForBodyIfFirstRun = 2378
-    private val innerForBodyIfSecondRun = 57606
-    private val innerForIncrementCounter = 7617
-    private val outerForIncrementCounter = 14668
-    private val outerForAfter = 9328
-    private val fooStart = 32182
-    private val barStart = 1381
+    private val constructorReturn = 0
+    private val ifFirstBranch = 1
+    @Suppress("unused")
+    private val ifSecondBranch = 2
+    private val ifEnd = 3
+    private val outerForCondition = 4
+    private val innerForBodyIfFirstRun = 6
+    private val innerForBodyIfSecondRun = 5
+    private val innerForIncrementCounter = 7
+    private val outerForIncrementCounter = 8
+    private val selfCheckReturn = 9
+    private val fooReturn = 10
+    private val barReturn = 11
+    @Suppress("unused")
+    private val bazReturn = 12
 
     @Test
     fun testOriginal() {
@@ -71,34 +73,27 @@ class CoverageInstrumentationTest {
 
         val innerForFirstRunControlFlow = mutableListOf<Int>().apply {
             repeat(5) {
-                addAll(listOf(innerForCondition, innerForBody, innerForBodyIfFirstRun, innerForIncrementCounter))
+                addAll(listOf(innerForBodyIfFirstRun, innerForIncrementCounter))
             }
-            add(innerForCondition)
         }.toList()
         val innerForSecondRunControlFlow = mutableListOf<Int>().apply {
             repeat(5) {
-                addAll(listOf(innerForCondition, innerForBody, innerForBodyIfSecondRun, innerForIncrementCounter))
+                addAll(listOf(innerForBodyIfSecondRun, innerForIncrementCounter))
             }
-            add(innerForCondition)
         }.toList()
-        val outerForControlFlow = listOf(outerForCondition, outerForBody) +
-            innerForFirstRunControlFlow +
-            listOf(outerForIncrementCounter, outerForCondition, outerForBody) +
-            innerForSecondRunControlFlow +
-            listOf(outerForIncrementCounter, outerForCondition)
+        val outerForControlFlow =
+            listOf(outerForCondition) +
+                innerForFirstRunControlFlow +
+                listOf(outerForIncrementCounter, outerForCondition) +
+                innerForSecondRunControlFlow +
+                listOf(outerForIncrementCounter)
 
         assertControlFlow(
-            listOf(constructorStart, selfCheckStart, ifFirstBranch, ifEnd) +
+            listOf(constructorReturn, ifFirstBranch, ifEnd) +
                 outerForControlFlow +
-                listOf(outerForAfter, fooStart, barStart)
+                listOf(barReturn, fooReturn, selfCheckReturn)
         )
     }
-
-    /**
-     * Computes the position of the counter in the coverage map to be incremented when control flows
-     * from the first member of [blocks] to the second.
-     */
-    fun edge(blocks: Pair<Int, Int>) = (blocks.first shr 1) xor blocks.second
 
     @OptIn(ExperimentalUnsignedTypes::class)
     @Test
@@ -107,9 +102,9 @@ class CoverageInstrumentationTest {
 
         val target = getInstrumentedInstrumentationTargetInstance()
         // The constructor of the target is run only once.
-        val takenOnceEdge = edge(constructorStart to selfCheckStart)
-        // Control flows from the start of selfCheck to the first if branch once per run.
-        val takenOnEveryRunEdge = edge(selfCheckStart to ifFirstBranch)
+        val takenOnceEdge = constructorReturn
+        // Control flows through the first if branch once per run.
+        val takenOnEveryRunEdge = ifFirstBranch
 
         for (i in 1..300) {
             assertSelfCheck(target)
@@ -128,7 +123,9 @@ class CoverageInstrumentationTest {
         // Make the patched class available in bazel-testlogs/.../test.outputs for manual inspection.
         val outDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR")
         File("$outDir/${CoverageInstrumentationSpecialCasesTarget::class.simpleName}.class").writeBytes(originalBytecode)
-        File("$outDir/${CoverageInstrumentationSpecialCasesTarget::class.simpleName}.patched.class").writeBytes(patchedBytecode)
+        File("$outDir/${CoverageInstrumentationSpecialCasesTarget::class.simpleName}.patched.class").writeBytes(
+            patchedBytecode
+        )
         val patchedClass = bytecodeToClass(CoverageInstrumentationSpecialCasesTarget::class.java.name, patchedBytecode)
         // Trigger a class load
         patchedClass.declaredMethods

@@ -183,3 +183,20 @@ http_archive(
     strip_prefix = "libjpeg-turbo-2.0.90",
     url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.90.tar.gz",
 )
+
+# JaCoCo
+
+jacoco_commit = "178d49870056b8a1f8ea6915e804d28b0dda5609"
+
+jacoco_sha = "da48fb5ae4ec3ffc659d4de18232aedea99476935f4ce4b0605f2d6aa1dc2553"
+
+http_archive(
+    name = "jacoco_internal",
+    build_file = "//third_party:jacoco_internal.BUILD",
+    patches = [
+        "//third_party:jacoco-make-probe-inserter-subclassable.patch",
+    ],
+    sha256 = jacoco_sha,
+    strip_prefix = "jacoco-%s" % jacoco_commit,
+    url = "https://github.com/jacoco/jacoco/archive/178d49870056b8a1f8ea6915e804d28b0dda5609.tar.gz",
+)

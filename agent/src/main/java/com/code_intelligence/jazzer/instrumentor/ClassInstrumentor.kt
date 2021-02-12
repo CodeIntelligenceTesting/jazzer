@@ -24,7 +24,7 @@ class ClassInstrumentor constructor(bytecode: ByteArray) {
         private set
 
     fun coverage() {
-        instrumentedBytecode = AFLCoverageMapInstrumentor().instrument(instrumentedBytecode)
+        instrumentedBytecode = EdgeCoverageInstrumentor.instrument(instrumentedBytecode)
     }
 
     fun traceDataFlow(instrumentations: Set<InstrumentationType>) {

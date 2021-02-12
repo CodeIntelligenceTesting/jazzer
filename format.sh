@@ -3,7 +3,7 @@ find -name '*.cpp' -o -name '*.h' -o -name '*.java' | xargs clang-format-11 -i
 
 # Kotlin
 # curl -sSLO https://github.com/pinterest/ktlint/releases/download/0.40.0/ktlint && chmod a+x ktlint
-ktlint -F
+ktlint -F "agent/**/*.kt" "driver/**/*.kt" "examples/**/*.kt"
 
 # BUILD files
 # go get github.com/bazelbuild/buildtools/buildifier
