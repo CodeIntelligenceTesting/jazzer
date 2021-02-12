@@ -39,9 +39,9 @@ private class HookMethodVisitor(
     hooks: Iterable<Hook>,
     private val java6Mode: Boolean,
     private val random: DeterministicRandom,
-) : MethodVisitor(Opcodes.ASM9, methodVisitor) {
+) : MethodVisitor(Instrumentor.ASM_API_VERSION, methodVisitor) {
 
-    val lvs = object : LocalVariablesSorter(Opcodes.ASM9, access, descriptor, this) {
+    val lvs = object : LocalVariablesSorter(Instrumentor.ASM_API_VERSION, access, descriptor, this) {
         override fun updateNewLocals(newLocals: Array<Any>) {
             // The local variables involved in calling hooks do not need to outlive the current
             // basic block and should thus not appear in stack map frames. By requesting the
