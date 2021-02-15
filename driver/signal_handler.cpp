@@ -24,7 +24,7 @@ constexpr auto kSignalHandlerClass =
     "com/code_intelligence/jazzer/runtime/SignalHandler";
 
 // Handles SIGINT raised while running Java code.
-void JNICALL handleInterrupt() {
+void JNICALL handleInterrupt(JNIEnv, jclass) {
   static std::atomic<bool> already_exiting{false};
   if (!already_exiting.exchange(true)) {
     // Let libFuzzer exit gracefully when the JVM received SIGINT.
