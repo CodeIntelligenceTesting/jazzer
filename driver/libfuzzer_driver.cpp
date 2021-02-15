@@ -88,7 +88,7 @@ void AbstractLibfuzzerDriver::initJvm(const std::string &executable_path) {
   jvm_ = std::make_unique<jazzer::JVM>(executable_path);
   if (FLAGS_hooks) {
     jazzer::registerFuzzerCallbacks(jvm_->GetEnv());
-    coverage_tracker_ = std::make_unique<jazzer::CoverageTracker>(*jvm_);
+    CoverageTracker::Setup(jvm_->GetEnv());
     // SignalHandler registers its own native methods
     signal_handler_ = std::make_unique<jazzer::SignalHandler>(*jvm_);
     signal_handler_->SetupSignalHandlers();
