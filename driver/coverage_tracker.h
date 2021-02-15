@@ -23,7 +23,7 @@ namespace jazzer {
 
 // The members of this struct are only accessed by libFuzzer.
 struct __attribute__((packed)) PCTableEntry {
-  uintptr_t PC, PCFlags;
+  [[maybe_unused]] uintptr_t PC, PCFlags;
 };
 
 // CoverageTracker registers an array of 8-bit coverage counters with
@@ -31,23 +31,21 @@ struct __attribute__((packed)) PCTableEntry {
 // side, where it is populated with the actual coverage information.
 class CoverageTracker : public ExceptionPrinter {
  private:
-  uint8_t *counters_;
-  std::size_t counters_size_;
+  static uint8_t *counters_;
 
-  uint32_t *fake_instructions_;
-  PCTableEntry *pc_entries_;
+  static uint32_t *fake_instructions_;
+  static PCTableEntry *pc_entries_;
+
+  static void JNICALL RegisterNewCoverageCounters(JNIEnv &env, jclass cls);
 
  public:
-  // Construct the coverage tracker. If the corresponding java class and method
-  // cannot be found it will throw std::runtime_error.
-  explicit CoverageTracker(JVM &jvm);
-
+  static void Setup(JNIEnv &env);
   // Clears the coverage counters array manually. It is cleared automatically
   // by libFuzzer prior to running the fuzz target, so this function is only
   // used in tests.
-  void Clear();
+  static void Clear();
 
   // Returns the address of the coverage counters array.
-  uint8_t *GetCoverageCounters();
+  static uint8_t *GetCoverageCounters();
 };
 }  // namespace jazzer

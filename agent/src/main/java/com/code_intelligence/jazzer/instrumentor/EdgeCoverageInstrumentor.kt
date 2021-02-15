@@ -62,7 +62,14 @@ object EdgeCoverageInstrumentor : Instrumentor {
 
 private var nextGlobalEdgeId = 0
 
-private fun nextEdgeId(): Int = nextGlobalEdgeId++
+private fun nextEdgeId(): Int {
+    if (nextGlobalEdgeId >= CoverageMap.mem.capacity()) {
+        if (!EdgeCoverageInstrumentor.isTesting) {
+            CoverageMap.enlargeCoverageMap()
+        }
+    }
+    return nextGlobalEdgeId++
+}
 
 /**
  * The maximal number of stack elements used by [loadCoverageMap].

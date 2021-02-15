@@ -45,6 +45,7 @@ class JvmToolingTest : public ::testing::Test {
     FLAGS_instrumentation_excludes = "**";
 
     jvm_ = std::make_unique<JVM>("test_executable");
+    CoverageTracker::Setup(jvm_->GetEnv());
   }
 
   static void TearDownTestCase() { jvm_.reset(nullptr); }
@@ -166,11 +167,9 @@ TEST_F(JvmToolingTest, FuzzTargetWithInit) {
 }
 
 TEST_F(JvmToolingTest, TestCoverageMap) {
-  CoverageTracker coverage_tracker(*jvm_);
-  coverage_tracker.Clear();
-
+  CoverageTracker::Clear();
   // check that after the initial clear the first coverage counter is 0
-  auto coverage_counters_array = coverage_tracker.GetCoverageCounters();
+  auto coverage_counters_array = CoverageTracker::GetCoverageCounters();
   ASSERT_EQ(0, coverage_counters_array[0]);
 
   FLAGS_target_class = "test/FuzzTargetWithCoverage";
@@ -180,7 +179,7 @@ TEST_F(JvmToolingTest, TestCoverageMap) {
   // increase
   fuzz_target_runner.Run(nullptr, 0);
   ASSERT_EQ(1, coverage_counters_array[0]);
-  coverage_tracker.Clear();
+  CoverageTracker::Clear();
   // back to initial state
   ASSERT_EQ(0, coverage_counters_array[0]);
 
