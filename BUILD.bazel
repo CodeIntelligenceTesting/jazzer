@@ -2,6 +2,7 @@ load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "define_kt_toolchain")
 load("@io_bazel_rules_kotlin//kotlin/internal:opts.bzl", "kt_javac_options", "kt_kotlinc_options")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
+load("@rules_jvm_external//:defs.bzl", "java_export")
 
 kt_kotlinc_options(
     name = "default_kotlinc_options",
@@ -52,5 +53,15 @@ sh_binary(
     ],
     data = [
         "//driver:jazzer_driver_asan",
+    ],
+)
+
+# To publish a new release to Maven, run:
+# bazel run --config=maven --define "maven_user=..." --define "maven_password=..." --define gpg_sign=true //:jazzer_api_export.publish
+java_export(
+    name = "jazzer_api_export",
+    maven_coordinates = "com.code-intelligence:jazzer-api:0.9.0",
+    runtime_deps = [
+        "//agent:jazzer_api",
     ],
 )

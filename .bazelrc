@@ -7,3 +7,8 @@ build --action_env=CC=clang
 
 # Java
 build --java_language_version=8
+
+# Maven publishing
+build:maven --stamp
+build:maven --define "maven_repo=https://oss.sonatype.org/service/local/staging/deploy/maven2"
+build:maven --java_runtime_version=localjdk_8

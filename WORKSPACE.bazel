@@ -58,6 +58,14 @@ load("@maven//:defs.bzl", "pinned_maven_install")
 
 pinned_maven_install()
 
+load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
+
+rules_jvm_external_deps()
+
+load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
+
+rules_jvm_external_setup()
+
 # bazelbuild/rules_kotlin
 rules_kotlin_version = "v1.5.0-alpha-3"
 
