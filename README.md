@@ -374,7 +374,8 @@ The following developers have contributed to Jazzer:
 [Henrik Schnor](https://github.com/henrikschnor),
 [Khaled Yakdan](https://github.com/kyakdan)
 
-The idea to apply AFL-style coverage instrumentation to JVM bytecode goes back to [kelinci](https://github.com/isstac/kelinci).
+The LLVM-style edge coverage instrumentation for JVM bytecode used by Jazzer relies on [JaCoCo](https://github.com/jacoco/jacoco).
+Previously, Jazzer used AFL-style coverage instrumentation as pioneered by [kelinci](https://github.com/isstac/kelinci).
 
 <p align="center">
 <a href="https://www.code-intelligence.com"><img src="https://www.code-intelligence.com/hubfs/Logos/CI%20Logos/CI_Header_GitHub_quer.jpeg" height=50px alt="Code Intelligence logo"></a>
