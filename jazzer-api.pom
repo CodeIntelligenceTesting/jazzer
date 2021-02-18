@@ -1,0 +1,38 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>{groupId}</groupId>
+  <artifactId>{artifactId}</artifactId>
+  <version>{version}</version>
+  <packaging>jar</packaging>
+  {dependencies}
+
+  <name>Jazzer API</name>
+  <description>Helper functions and annotations for Jazzer fuzz targets</description>
+  <url>https://github.com/CodeIntelligenceTesting/jazzer</url>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <organization>
+    <name>Code Intelligence GmbH</name>
+    <url>https://code-intelligence.com</url>
+  </organization>
+
+  <developers>
+    <developer>
+      <id>fmeum</id>
+      <name>Fabian Meumertzheim</name>
+      <email>meumertzheim@code-intelligence.com</email>
+      <organization>Code Intelligence GmbH</organization>
+    </developer>
+  </developers>
+
+  <scm>
+    <url>https://github.com/CodeIntelligenceTesting/jazzer</url>
+  </scm>
+</project>

@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+JAZZER_API_VERSION = "0.9.0"
+JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_API_VERSION
+
 MAVEN_ARTIFACTS = [
     "org.ow2.asm:asm:9.1",
     "org.ow2.asm:asm-commons:9.1",
