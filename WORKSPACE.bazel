@@ -42,8 +42,16 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_COMMIT,
 )
 
+load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
+
+rules_jvm_external_deps()
+
+load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
+
+rules_jvm_external_setup()
+
 load("@rules_jvm_external//:defs.bzl", "maven_install")
-load("//:maven_artifacts.bzl", "MAVEN_ARTIFACTS")
+load("//:maven.bzl", "MAVEN_ARTIFACTS")
 
 maven_install(
     artifacts = MAVEN_ARTIFACTS,
@@ -57,14 +65,6 @@ maven_install(
 load("@maven//:defs.bzl", "pinned_maven_install")
 
 pinned_maven_install()
-
-load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
-
-rules_jvm_external_deps()
-
-load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
-
-rules_jvm_external_setup()
 
 # bazelbuild/rules_kotlin
 rules_kotlin_version = "v1.5.0-alpha-3"

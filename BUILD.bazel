@@ -56,12 +56,13 @@ sh_binary(
     ],
 )
 
+exports_files([
+    "jazzer-api.pom",
+])
+
 # To publish a new release to Maven, run:
-# bazel run --config=maven --define "maven_user=..." --define "maven_password=..." --define gpg_sign=true //:jazzer_api_export.publish
-java_export(
-    name = "jazzer_api_export",
-    maven_coordinates = "com.code-intelligence:jazzer-api:0.9.0",
-    runtime_deps = [
-        "//agent:jazzer_api",
-    ],
+# bazel run --config=maven --define "maven_user=..." --define "maven_password=..." --define gpg_sign=true //:jazzer-api.publish
+alias(
+    name = "jazzer-api.publish",
+    actual = "//agent/src/main/java/com/code_intelligence/jazzer/api:api_export.publish",
 )
