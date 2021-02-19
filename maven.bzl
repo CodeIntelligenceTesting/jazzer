@@ -14,7 +14,7 @@
 
 load("@rules_jvm_external//:specs.bzl", "maven")
 
-JAZZER_API_VERSION = "0.9.0"
+JAZZER_API_VERSION = "0.9.1"
 JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_API_VERSION
 
 MAVEN_ARTIFACTS = [
