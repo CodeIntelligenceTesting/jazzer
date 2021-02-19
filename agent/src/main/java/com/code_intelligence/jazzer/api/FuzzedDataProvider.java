@@ -215,6 +215,15 @@ public interface FuzzedDataProvider {
   char consumeChar();
 
   /**
+   * Consumes a {@code char} between {@code min} and {@code max} from the fuzzer input.
+   *
+   * @param min the inclusive lower bound on the returned value
+   * @param max the inclusive upper bound on the returned value
+   * @return a {@code char} in the range {@code [min, max]}
+   */
+  char consumeChar(char min, char max);
+
+  /**
    * Consumes a {@code char} from the fuzzer input that is never a UTF-16 surrogate character.
    */
   char consumeCharNoSurrogates();

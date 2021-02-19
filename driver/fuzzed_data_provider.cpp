@@ -671,6 +671,7 @@ const JNINativeMethod kFuzzedDataMethods[]{
     {(char *)"consumeProbabilityDouble", (char *)"()D",
      (void *)&ConsumeProbability<jdouble>},
     {(char *)"consumeChar", (char *)"()C", (void *)&ConsumeChar},
+    {(char *)"consumeChar", (char *)"(CC)C", (void *)&ConsumeIntegral<jchar>},
     {(char *)"consumeCharNoSurrogates", (char *)"()C",
      (void *)&ConsumeCharNoSurrogates},
     {(char *)"consumeAsciiString", (char *)"(I)Ljava/lang/String;",

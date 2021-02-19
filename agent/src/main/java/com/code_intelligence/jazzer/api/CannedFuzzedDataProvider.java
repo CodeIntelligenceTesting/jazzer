@@ -152,6 +152,11 @@ final public class CannedFuzzedDataProvider implements FuzzedDataProvider {
   }
 
   @Override
+  public char consumeChar(char min, char max) {
+    return (char) nextReply.next();
+  }
+
+  @Override
   public char consumeCharNoSurrogates() {
     return (char) nextReply.next();
   }

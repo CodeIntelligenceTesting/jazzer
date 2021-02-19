@@ -63,6 +63,8 @@ class FuzzedDataProviderImpl implements FuzzedDataProvider {
 
   @Override public native char consumeChar();
 
+  @Override public native char consumeChar(char min, char max);
+
   @Override public native char consumeCharNoSurrogates();
 
   @Override public native String consumeAsciiString(int maxLength);
