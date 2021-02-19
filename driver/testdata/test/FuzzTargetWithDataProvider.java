@@ -15,7 +15,9 @@
 package test;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 class FuzzTargetWithDataProvider {
   public static <T extends Comparable<T>> void assertEqual(T a, T b) {
@@ -85,9 +87,9 @@ class FuzzTargetWithDataProvider {
 
     int[] array = {0, 1, 2, 3, 4};
     assertEqual(4, data.pickValue(array));
-    assertEqual(2, data.pickValue(array));
-    assertEqual(3, data.pickValue(array));
-    assertEqual(2, data.pickValue(array));
+    assertEqual(2, (int) data.pickValue(Arrays.stream(array).boxed().toArray()));
+    assertEqual(3, data.pickValue(Arrays.stream(array).boxed().collect(Collectors.toList())));
+    assertEqual(2, data.pickValue(Arrays.stream(array).boxed().collect(Collectors.toSet())));
 
     // Buffer is almost depleted at this point.
     assertEqual(7, data.remainingBytes());

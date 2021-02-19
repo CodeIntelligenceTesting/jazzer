@@ -14,6 +14,8 @@
 
 package com.code_intelligence.jazzer.api;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -273,6 +275,26 @@ public interface FuzzedDataProvider {
    * @return the number of unconsumed bytes in the fuzzer input
    */
   int remainingBytes();
+
+  /**
+   * Picks an element from {@code collection} based on the fuzzer input.
+   * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
+   *
+   * @param collection the {@link Collection} to pick an element from.
+   * @param <T> the type of a collection element
+   * @return an element from {@code collection} chosen based on the fuzzer input
+   */
+  default<T> T pickValue(Collection<T> collection) {
+    int size = collection.size();
+    if (size == 0) {
+      throw new IllegalArgumentException("collection is empty");
+    }
+    if (collection instanceof List<?>) {
+      return ((List<T>) collection).get(consumeInt(0, size - 1));
+    } else {
+      return (T) pickValue(collection.toArray());
+    }
+  }
 
   /**
    * Picks an element from {@code array} based on the fuzzer input.
