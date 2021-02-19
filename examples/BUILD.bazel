@@ -9,9 +9,6 @@ java_fuzz_target_test(
     # Comment out the next line to keep the fuzzer running indefinitely.
     hook_classes = ["com.example.ExampleFuzzerHooks"],
     target_class = "com.example.ExampleFuzzer",
-    deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/api",
-    ],
 )
 
 java_fuzz_target_test(
@@ -35,9 +32,6 @@ java_fuzz_target_test(
     # Comment out the next line to keep the fuzzer running indefinitely.
     fuzzer_args = ["-use_value_profile=1"],
     target_class = "com.example.ExampleValueProfileFuzzer",
-    deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/api",
-    ],
 )
 
 java_fuzz_target_test(
@@ -81,7 +75,6 @@ java_fuzz_target_test(
     ],
     target_class = "com.example.JsonSanitizerFuzzer",
     deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "@maven//:com_google_code_gson_gson",
         "@maven//:com_mikesamuel_json_sanitizer",
     ],
@@ -107,7 +100,6 @@ java_fuzz_target_test(
     ],
     target_class = "com.example.FastJsonFuzzer",
     deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "@maven//:com_alibaba_fastjson",
     ],
 )
@@ -127,7 +119,6 @@ java_fuzz_target_test(
     target_class = "com.example.TurboJpegFuzzer",
     use_asan = True,
     deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "@libjpeg_turbo//:turbojpeg_java",
     ],
 )
