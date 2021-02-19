@@ -15,6 +15,7 @@
 def java_fuzz_target_test(
         name,
         target_class,
+        deps = [],
         hook_classes = [],
         native_libs = [],
         use_asan = False,
@@ -35,6 +36,7 @@ def java_fuzz_target_test(
         visibility = ["//visibility:private"],
         create_executable = False,
         deploy_manifest_lines = deploy_manifest_lines,
+        deps = deps + ["//agent/src/main/java/com/code_intelligence/jazzer/api"],
         **kwargs
     )
 
