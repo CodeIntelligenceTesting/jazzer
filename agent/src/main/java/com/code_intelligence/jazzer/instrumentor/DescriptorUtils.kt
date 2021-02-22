@@ -14,34 +14,6 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
-import java.lang.reflect.Method
-
-internal val Class<*>.descriptor: String
-    get() = when {
-        isPrimitive -> {
-            when (this) {
-                Boolean::class.javaPrimitiveType -> "Z"
-                Byte::class.javaPrimitiveType -> "B"
-                Char::class.javaPrimitiveType -> "C"
-                Short::class.javaPrimitiveType -> "S"
-                Int::class.javaPrimitiveType -> "I"
-                Long::class.javaPrimitiveType -> "J"
-                Float::class.javaPrimitiveType -> "F"
-                Double::class.javaPrimitiveType -> "D"
-                java.lang.Void::class.javaPrimitiveType -> "V"
-                else -> throw IllegalStateException("Unknown primitive type: $name")
-            }
-        }
-        isArray -> "[${componentType.descriptor}"
-        java.lang.Object::class.java.isAssignableFrom(this) -> "L${name.replace('.', '/')};"
-        else -> throw IllegalArgumentException("Unknown class type: $name")
-    }
-
-internal val Method.descriptor: String
-    get() = parameterTypes.joinToString(separator = "", prefix = "(", postfix = ")${returnType.descriptor}") { parameterType ->
-        parameterType.descriptor
-    }
-
 internal fun isPrimitiveType(typeDescriptor: String): Boolean {
     return typeDescriptor in arrayOf("B", "C", "D", "F", "I", "J", "S", "V", "Z")
 }

@@ -12,6 +12,7 @@ kt_jvm_library(
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/generated:JavaNoThrowMethods",
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime",
+        "//agent/src/main/java/com/code_intelligence/jazzer/utils",
         "@com_github_jetbrains_kotlin//:kotlin-reflect",
         "@jacoco_internal",
         "@maven//:org_ow2_asm_asm",

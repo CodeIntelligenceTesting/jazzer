@@ -57,9 +57,14 @@ class DescriptorUtilsTest {
                 listOf("I", "I"),
                 "Ljava/lang/CharSequence;"
             ),
+            Triple(
+                String::class.java.getConstructor(),
+                emptyList(),
+                "()V"
+            )
         )
-        for ((method, parameterDescriptors, returnTypeDescriptor) in testCases) {
-            val descriptor = method.descriptor
+        for ((executable, parameterDescriptors, returnTypeDescriptor) in testCases) {
+            val descriptor = executable.descriptor
             assertEquals(extractParameterTypeDescriptors(descriptor), parameterDescriptors)
             assertEquals(extractReturnTypeDescriptor(descriptor), returnTypeDescriptor)
         }
