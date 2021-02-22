@@ -299,7 +299,7 @@ associated with the particular bytecode location and used to provide additional 
 See [ExampleValueProfileFuzzer.java](https://github.com/CodeIntelligenceTesting/jazzer/tree/main/examples/src/main/java/com/example/ExampleValueProfileFuzzer.java)
 for a fuzz target that would be very hard to fuzz without value profile.
 
-As passing the bytecode location back to libFuzzer requires inline assembly and may thus not always work reliably, it can be disabled
+As passing the bytecode location back to libFuzzer requires inline assembly and may thus not be fully portable, it can be disabled
 via the flag `--nofake_pcs`.
 
 ### Custom Hooks
