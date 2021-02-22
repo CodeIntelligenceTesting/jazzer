@@ -110,6 +110,10 @@ private fun instrumentControlFlowEdge(mv: MethodVisitor, edgeId: Int, variable: 
         visitInsn(Opcodes.DUP2)
         // Stack: mem | edgeId | mem | edgeId
         visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/nio/ByteBuffer", "get", "(I)B", false)
+        // Increment the counter, but ensure that it never stays at 0 after an overflow by incrementing it again in that
+        // case.
+        // This approach performs better than saturating the counter at 255 (see Section 3.3 of
+        // https://www.usenix.org/system/files/woot20-paper-fioraldi.pdf)
         // Stack: mem | edgeId | counter (sign-extended to int)
         push(0xff)
         // Stack: mem | edgeId | counter (sign-extended to int) | 0x000000ff
@@ -124,9 +128,9 @@ private fun instrumentControlFlowEdge(mv: MethodVisitor, edgeId: Int, variable: 
         push(8)
         // Stack: mem | edgeId | counter + 1 | counter + 1 | 8 (maxStack: +5)
         visitInsn(Opcodes.ISHR)
-        // Stack: mem | edgeId | counter + 1 | 1 if the increment overflowed, 0 otherwise
-        visitInsn(Opcodes.ISUB)
-        // Stack: mem | edgeId | counter if the increment overflowed, counter + 1 otherwise
+        // Stack: mem | edgeId | counter + 1 | 1 if the increment overflowed to 0, 0 otherwise
+        visitInsn(Opcodes.IADD)
+        // Stack: mem | edgeId | counter + 2 if the increment overflowed, counter + 1 otherwise
         visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/nio/ByteBuffer", "put", "(IB)Ljava/nio/ByteBuffer;", false)
         // Stack: mem
         visitInsn(Opcodes.POP)

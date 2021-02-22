@@ -109,11 +109,14 @@ class CoverageInstrumentationTest {
         // Control flows through the first if branch once per run.
         val takenOnEveryRunEdge = ifFirstBranch
 
-        for (i in 1..300) {
+        var lastCounter = 0.toUByte()
+        for (i in 1..600) {
             assertSelfCheck(target)
             assertEquals(1, MockCoverageMap.mem[takenOnceEdge])
-            // Verify that the counter does not overflow.
-            val expectedCounter = i.coerceAtMost(255).toUByte()
+            // Verify that the counter increments, but is never zero.
+            val expectedCounter = (lastCounter + 1U).toUByte().takeUnless { it == 0.toUByte() }
+                ?: (lastCounter + 2U).toUByte()
+            lastCounter = expectedCounter
             val actualCounter = MockCoverageMap.mem[takenOnEveryRunEdge].toUByte()
             assertEquals(expectedCounter, actualCounter, "After $i runs:")
         }
