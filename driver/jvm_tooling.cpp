@@ -68,7 +68,7 @@ namespace {
 constexpr auto kInstrumentorAgentBazelDir = "agent";
 constexpr auto kAgentFileName = "jazzer_agent_deploy.jar";
 constexpr const char kUtilsClassName[] =
-    "com/code_intelligence/jazzer/runtime/Utils";
+    "com/code_intelligence/jazzer/utils/Utils";
 }  // namespace
 
 namespace jazzer {
