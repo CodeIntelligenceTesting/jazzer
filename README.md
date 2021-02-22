@@ -209,7 +209,9 @@ class MySecondFuzzTarget {
 ```
 
 The `FuzzedDataProvider` interface definition is contained in `jazzer_api_deploy.jar` in the binary release and can be
-built by the Bazel target `//agent:jazzer_api_deploy.jar`. For additional information, see the
+built by the Bazel target `//agent:jazzer_api_deploy.jar`. It is also available from
+[Maven Central](https://search.maven.org/search?q=g:com.code-intelligence%20a:jazzer-api).
+For additional information, see the
 [javadocs](https://codeintelligencetesting.github.io/jazzer-api/com/code_intelligence/jazzer/api/FuzzedDataProvider.html).
 
 It is highly recommended to use `FuzzedDataProvider` for generating `java.lang.String` objects inside the fuzz target
@@ -310,6 +312,8 @@ for an example of such a hook.
 
 Method hooks can be declared using the `@MethodHook` annotation defined in the `com.code_intelligence.jazzer.api` package,
 which is contained in `jazzer_api_deploy.jar` (binary release) or built by the target `//agent:jazzer_api_deploy.jar` (Bazel).
+It is also available from
+[Maven Central](https://search.maven.org/search?q=g:com.code-intelligence%20a:jazzer-api).
 See the [javadocs of the `@MethodHook` API](https://codeintelligencetesting.github.io/jazzer-api/com/code_intelligence/jazzer/api/MethodHook.html)
 for more details.
 
