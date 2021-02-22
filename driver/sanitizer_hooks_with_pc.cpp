@@ -84,6 +84,7 @@ void __sanitizer_cov_trace_switch(uint64_t val, uint64_t *cases);
 void __sanitizer_cov_trace_div4(uint32_t val);
 void __sanitizer_cov_trace_div8(uint64_t val);
 void __sanitizer_cov_trace_gep(uintptr_t idx);
+void __sanitizer_cov_trace_pc_indir(uintptr_t callee);
 }
 
 // Masks any address down to its lower 12 bits.
@@ -132,4 +133,11 @@ void __sanitizer_cov_trace_gep_with_pc(void *caller_pc, uintptr_t idx) {
   void *trace_gep = reinterpret_cast<void *>(&__sanitizer_cov_trace_gep);
   auto fake_pc = caller_pc_to_fake_pc(caller_pc);
   trampoline(static_cast<uint64_t>(idx), 0, trace_gep, fake_pc);
+}
+
+void __sanitizer_cov_trace_pc_indir_with_pc(void *caller_pc, uintptr_t callee) {
+  void *trace_pc_indir =
+      reinterpret_cast<void *>(&__sanitizer_cov_trace_pc_indir);
+  auto fake_pc = caller_pc_to_fake_pc(caller_pc);
+  trampoline(static_cast<uint64_t>(callee), 0, trace_pc_indir, fake_pc);
 }

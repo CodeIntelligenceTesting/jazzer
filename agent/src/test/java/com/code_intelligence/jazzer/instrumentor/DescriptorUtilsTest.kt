@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
+import com.code_intelligence.jazzer.utils.descriptor
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -60,7 +61,7 @@ class DescriptorUtilsTest {
             Triple(
                 String::class.java.getConstructor(),
                 emptyList(),
-                "()V"
+                "V"
             )
         )
         for ((executable, parameterDescriptors, returnTypeDescriptor) in testCases) {

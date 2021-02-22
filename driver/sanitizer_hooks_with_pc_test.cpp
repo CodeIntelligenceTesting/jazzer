@@ -48,6 +48,8 @@ void __sanitizer_cov_trace_div4(uint32_t val) { RecordCoverage(); }
 void __sanitizer_cov_trace_div8(uint64_t val) { RecordCoverage(); }
 
 void __sanitizer_cov_trace_gep(uintptr_t idx) { RecordCoverage(); }
+
+void __sanitizer_cov_trace_pc_indir(uintptr_t callee) { RecordCoverage(); }
 }
 
 void ClearCoverage() { std::fill(gCoverageMap.begin(), gCoverageMap.end(), 0); }
@@ -119,6 +121,13 @@ TEST_F(TestFakePcTrampoline, TraceGepDirect) {
   EXPECT_TRUE(HasSingleCoveredPc()) << PrettyPrintCoverage();
 }
 
+TEST_F(TestFakePcTrampoline, TracePcIndirDirect) {
+  for (uint32_t i = 0; i < gCoverageMap.size(); ++i) {
+    __sanitizer_cov_trace_pc_indir(i);
+  }
+  EXPECT_TRUE(HasSingleCoveredPc()) << PrettyPrintCoverage();
+}
+
 TEST_F(TestFakePcTrampoline, TraceCmp4Trampoline) {
   for (uint32_t i = 0; i < gCoverageMap.size(); ++i) {
     __sanitizer_cov_trace_cmp4_with_pc(reinterpret_cast<void *>(i), i, i);
@@ -158,6 +167,13 @@ TEST_F(TestFakePcTrampoline, TraceDiv8Trampoline) {
 TEST_F(TestFakePcTrampoline, TraceGepTrampoline) {
   for (uint32_t i = 0; i < gCoverageMap.size(); ++i) {
     __sanitizer_cov_trace_gep_with_pc(reinterpret_cast<void *>(i), i);
+  }
+  EXPECT_TRUE(HasAllPcsCovered()) << PrettyPrintCoverage();
+}
+
+TEST_F(TestFakePcTrampoline, TracePcIndirTrampoline) {
+  for (uint32_t i = 0; i < gCoverageMap.size(); ++i) {
+    __sanitizer_cov_trace_pc_indir_with_pc(reinterpret_cast<void *>(i), i);
   }
   EXPECT_TRUE(HasAllPcsCovered()) << PrettyPrintCoverage();
 }

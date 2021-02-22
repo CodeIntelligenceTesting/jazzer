@@ -14,6 +14,9 @@
 
 package com.code_intelligence.jazzer.runtime;
 
+import com.code_intelligence.jazzer.utils.Utils;
+import java.lang.reflect.Executable;
+
 @SuppressWarnings("unused")
 final public class TraceDataFlowNativeCallbacks {
   /* trace-cmp */
@@ -52,6 +55,17 @@ final public class TraceDataFlowNativeCallbacks {
   /* trace-gep */
   // Calls: void __sanitizer_cov_trace_gep(uintptr_t Idx);
   public static native void traceGep(long val, int pc);
+
+  /* indirect-calls */
+  // Calls: void __sanitizer_cov_trace_pc_indir(uintptr_t Callee);
+  private static native void tracePcIndir(int callee, int caller);
+
+  public static void traceReflectiveCall(Executable callee, int pc) {
+    String className = callee.getDeclaringClass().getCanonicalName();
+    String executableName = callee.getName();
+    String descriptor = Utils.getDescriptor(callee);
+    tracePcIndir(Utils.simpleFastHash(className, executableName, descriptor), pc);
+  }
 
   public static int traceCmpLongWrapper(long arg1, long arg2, int pc) {
     traceCmpLong(arg1, arg2, pc);

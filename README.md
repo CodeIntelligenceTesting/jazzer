@@ -282,6 +282,7 @@ The particular instrumentation types to apply can be specified using the `--trac
 * `cmp`: compares (int, long, String) and switch cases
 * `div`: divisors in integer divisions
 * `gep`: constant array indexes
+* `indir`: call through `Method#invoke`
 * `all`: shorthand to apply all available instrumentations
 
 Multiple instrumentation types can be combined with a colon.

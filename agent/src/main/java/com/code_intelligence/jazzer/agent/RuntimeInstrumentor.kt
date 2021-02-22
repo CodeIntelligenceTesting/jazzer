@@ -20,6 +20,7 @@ import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
 import com.code_intelligence.jazzer.runtime.TraceCmpHooks
 import com.code_intelligence.jazzer.runtime.TraceDivHooks
+import com.code_intelligence.jazzer.runtime.TraceIndirHooks
 import java.lang.instrument.ClassFileTransformer
 import java.nio.file.FileSystems
 import java.nio.file.Path
@@ -72,6 +73,7 @@ internal class RuntimeInstrumentor(
             when (type) {
                 InstrumentationType.CMP -> TraceCmpHooks::class.java
                 InstrumentationType.DIV -> TraceDivHooks::class.java
+                InstrumentationType.INDIR -> TraceIndirHooks::class.java
                 else -> null
             }
         }
