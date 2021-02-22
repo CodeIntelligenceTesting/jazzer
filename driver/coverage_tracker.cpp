@@ -40,6 +40,16 @@ constexpr std::size_t kMaxCoverageCountersBufferSize = 1u << 20u;
 static_assert(kMaxCoverageCountersBufferSize <=
               std::numeric_limits<jint>::max());
 
+namespace {
+void AssertNoException(JNIEnv &env) {
+  if (env.ExceptionOccurred()) {
+    env.ExceptionDescribe();
+    throw std::runtime_error(
+        "Java exception occured in CoverageTracker JNI code");
+  }
+}
+}  // namespace
+
 namespace jazzer {
 
 uint8_t *CoverageTracker::counters_ = nullptr;
@@ -89,16 +99,22 @@ void CoverageTracker::Setup(JNIEnv &env) {
 void JNICALL CoverageTracker::RegisterNewCoverageCounters(JNIEnv &env,
                                                           jclass cls) {
   jclass coverage_map = env.FindClass(kCoverageMapClass);
+  AssertNoException(env);
   jfieldID counters_buffer_id = env.GetStaticFieldID(
       coverage_map, "mem", absl::StrFormat("L%s;", kByteBufferClass).c_str());
+  AssertNoException(env);
   jobject counters_buffer =
       env.GetStaticObjectField(coverage_map, counters_buffer_id);
+  AssertNoException(env);
 
   jclass byte_buffer = env.FindClass(kByteBufferClass);
+  AssertNoException(env);
   jmethodID byte_buffer_capacity_id =
       env.GetMethodID(byte_buffer, "capacity", "()I");
+  AssertNoException(env);
   jint old_counters_buffer_size =
       env.CallIntMethod(counters_buffer, byte_buffer_capacity_id);
+  AssertNoException(env);
 
   jint new_counters_buffer_size;
   if (old_counters_buffer_size == 0) {
@@ -113,8 +129,10 @@ void JNICALL CoverageTracker::RegisterNewCoverageCounters(JNIEnv &env,
 
   jobject new_counters_buffer = env.NewDirectByteBuffer(
       static_cast<void *>(counters_), new_counters_buffer_size);
+  AssertNoException(env);
   env.SetStaticObjectField(coverage_map, counters_buffer_id,
                            new_counters_buffer);
+  AssertNoException(env);
 
   // Register only the new second half of the counters buffer with libFuzzer.
   __sanitizer_cov_8bit_counters_init(counters_ + old_counters_buffer_size,
