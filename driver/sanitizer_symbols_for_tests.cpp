@@ -33,5 +33,6 @@ void __sanitizer_cov_trace_switch(uint64_t val, uint64_t *cases) {}
 void __sanitizer_cov_trace_div4(uint32_t val) {}
 void __sanitizer_cov_trace_div8(uint64_t val) {}
 void __sanitizer_cov_trace_gep(uintptr_t idx) {}
+void __sanitizer_cov_trace_pc_indir(uintptr_t callee) {}
 void __real___sanitizer_set_death_callback(void (*callback)()) {}
 }

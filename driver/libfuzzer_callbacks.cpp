@@ -166,6 +166,12 @@ void JNICALL libfuzzerGepCallbackWithPc(JNIEnv &env, jclass cls, jlong idx,
   __sanitizer_cov_trace_gep_with_pc(idToPc(id), static_cast<uintptr_t>(idx));
 }
 
+void JNICALL libfuzzerPcIndirCallback(JNIEnv &env, jclass cls, jint caller_id,
+                                      jint callee_id) {
+  __sanitizer_cov_trace_pc_indir_with_pc(idToPc(caller_id),
+                                         static_cast<uintptr_t>(callee_id));
+}
+
 void registerCallback(JNIEnv &env, const char *java_hooks_class_name,
                       const JNINativeMethod *methods, int num_methods) {
   auto java_hooks_class = env.FindClass(java_hooks_class_name);
@@ -246,6 +252,14 @@ bool registerFuzzerCallbacks(JNIEnv &env) {
 
     registerCallback(env, kLibfuzzerTraceDataFlowHooksClass, gep_methods,
                      sizeof(gep_methods) / sizeof(gep_methods[0]));
+  }
+
+  {
+    JNINativeMethod indir_methods[]{{(char *)"tracePcIndir", (char *)"(II)V",
+                                     (void *)(&libfuzzerPcIndirCallback)}};
+
+    registerCallback(env, kLibfuzzerTraceDataFlowHooksClass, indir_methods,
+                     sizeof(indir_methods) / sizeof(indir_methods[0]));
   }
 
   return env.ExceptionCheck();

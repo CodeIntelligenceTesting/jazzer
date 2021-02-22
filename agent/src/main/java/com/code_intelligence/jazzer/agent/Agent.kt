@@ -68,6 +68,7 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             "cov" -> setOf(InstrumentationType.COV)
             "div" -> setOf(InstrumentationType.DIV)
             "gep" -> setOf(InstrumentationType.GEP)
+            "indir" -> setOf(InstrumentationType.INDIR)
             "all" -> InstrumentationType.values().toSet()
             else -> {
                 println("WARN: Skipping unknown instrumentation type $it")

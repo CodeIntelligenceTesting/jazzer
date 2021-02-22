@@ -46,6 +46,16 @@ val Executable.descriptor: String
         parameterType.descriptor
     } + if (this is Method) returnType.descriptor else "V"
 
+fun simpleFastHash(vararg strings: String): Int {
+    var hash = 0
+    for (string in strings) {
+        for (c in string) {
+            hash = hash * 11 + c.toInt()
+        }
+    }
+    return hash
+}
+
 private fun hash(throwable: Throwable): ByteArray = MessageDigest.getInstance("SHA-256").run {
     // It suffices to hash the stack trace of the deepest cause as the higher-level causes only
     // contain part of the stack trace (plus possibly a different exception type).
