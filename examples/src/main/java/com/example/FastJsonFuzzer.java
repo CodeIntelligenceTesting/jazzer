@@ -21,12 +21,10 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 // Found the issues described in
 // https://github.com/alibaba/fastjson/issues/3631
 public class FastJsonFuzzer {
-  public static boolean fuzzerTestOneInput(FuzzedDataProvider data) {
+  public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     try {
       JSON.parse(data.consumeRemainingAsString());
-    } catch (JSONException e) {
-      return false;
+    } catch (JSONException ignored) {
     }
-    return false;
   }
 }

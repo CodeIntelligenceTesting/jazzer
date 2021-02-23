@@ -136,25 +136,24 @@ may be as simple as the following Java example:
 package com.example.MyFirstFuzzTarget;
 
 class MyFirstFuzzTarget {
-    public static boolean fuzzerTestOneInput(byte[] input) {
+    public static void fuzzerTestOneInput(byte[] input) {
         ...
-        // call the function under test with arguments derived from input
+        // Call the function under test with arguments derived from input and
+        // throw an exception if something unwanted happens.
         ...
-        return false;
     }
 }
 ```
 
 A Java fuzz target class needs to define exactly one of the following functions:
 
-* `public static boolean fuzzerTestOneInput(byte[] input)`: Ideal for fuzz targets that naturally work on raw byte input (e.g.
+* `public static void fuzzerTestOneInput(byte[] input)`: Ideal for fuzz targets that naturally work on raw byte input (e.g.
   image parsers).
-* `public static boolean fuzzerTestOneInput(com.code_intelligence.api.FuzzedDataProvider data)`: A variety of types of "fuzzed
+* `public static void fuzzerTestOneInput(com.code_intelligence.api.FuzzedDataProvider data)`: A variety of types of "fuzzed
   data" is made available via the `FuzzedDataProvider` interface (see below for more information on this interface).
 
 The fuzzer will repeatedly call this function with generated inputs. All unhandled exceptions are caught and
-reported as errors. Alternatively, returning `true` from `fuzzerTestOneInput` triggers an assertion error without
-the need to throw an exception.
+reported as errors.
 
 The optional functions `public static void fuzzerInitialize()` or `public static void fuzzerInitialize(String[] args)`
 can be defined if initial setup is required. These functions will be called once before
@@ -187,7 +186,7 @@ to extract multiple values or convert the input into a valid `java.lang.String`.
 [atheris'](https://github.com/google/atheris) `FuzzedDataProvider` and libFuzzer's `FuzzedDataProvider.h` to simplify
 the task of writing JVM fuzz targets.
 
-If the function `public static boolean fuzzerTestOneInput(FuzzedDataProvider data)` is defined in the fuzz target, it will
+If the function `public static void fuzzerTestOneInput(FuzzedDataProvider data)` is defined in the fuzz target, it will
 be passed an object implementing `com.code_intelligence.jazzer.api.FuzzedDataProvider` that allows _consuming_ the raw fuzzer
 input as values of common types. This can look as follows:
 
@@ -201,7 +200,7 @@ class MySecondFuzzTarget {
         ...
     }
 
-    public static boolean fuzzerTestOneInput(FuzzedDataProvider data) {
+    public static void fuzzerTestOneInput(FuzzedDataProvider data) {
         callApi1(data.consumeInt(), data.consumeRemainingAsString());
         return false;
     }

@@ -22,15 +22,13 @@ import java.io.IOException;
 // https://github.com/FasterXML/jackson-databind/pull/3032 if executed with
 // `--keep_going=3 -seed=2735196724`.
 public class JacksonCborFuzzer {
-  public static boolean fuzzerTestOneInput(byte[] input) {
+  public static void fuzzerTestOneInput(byte[] input) {
     CBORFactory factory = new CBORFactory();
     ObjectMapper mapper = new ObjectMapper(factory);
     mapper.enableDefaultTyping();
     try {
       mapper.readTree(input);
-    } catch (IOException e) {
-      return false;
+    } catch (IOException ignored) {
     }
-    return false;
   }
 }

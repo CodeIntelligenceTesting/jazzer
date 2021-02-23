@@ -102,12 +102,6 @@ TEST_F(JvmToolingTest, SimpleFuzzTarget) {
   ASSERT_EQ(RunResult::kOk, fuzz_target_runner.Run(
                                 (const uint8_t *)input.c_str(), input.size()));
 
-  // fuzzerTestOneInput returns true - treated as an assertion failure
-  input = "true";
-  ASSERT_EQ(
-      RunResult::kAssertion,
-      fuzz_target_runner.Run((const uint8_t *)input.c_str(), input.size()));
-
   // exception is thrown in fuzzerTestOneInput
   input = "crash";
   ASSERT_EQ(

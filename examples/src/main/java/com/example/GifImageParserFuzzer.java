@@ -23,12 +23,10 @@ import org.apache.commons.imaging.formats.gif.GifImageParser;
 // Found https://issues.apache.org/jira/browse/IMAGING-277 and
 // https://issues.apache.org/jira/browse/IMAGING-278.
 public class GifImageParserFuzzer {
-  public static boolean fuzzerTestOneInput(byte[] input) {
+  public static void fuzzerTestOneInput(byte[] input) {
     try {
       new GifImageParser().getBufferedImage(new ByteSourceArray(input), new HashMap<>());
-    } catch (IOException | ImageReadException e) {
-      return false;
+    } catch (IOException | ImageReadException ignored) {
     }
-    return false;
   }
 }
