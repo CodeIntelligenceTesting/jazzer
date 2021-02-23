@@ -20,7 +20,7 @@ import com.google.gson.JsonElement;
 import com.google.json.JsonSanitizer;
 
 public class JsonSanitizerFuzzer {
-  public static boolean fuzzerTestOneInput(FuzzedDataProvider data) {
+  public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     String input = data.consumeRemainingAsString();
     String validJson;
     try {
@@ -28,15 +28,14 @@ public class JsonSanitizerFuzzer {
     } catch (ArrayIndexOutOfBoundsException e) {
       // ArrayIndexOutOfBoundsException is expected if nesting depth is
       // exceeded.
-      return false;
+      return;
     }
     Gson gson = new Gson();
     gson.fromJson(validJson, JsonElement.class);
     if (validJson.contains("</script>") || validJson.contains("<script")
         || validJson.contains("<!--") || validJson.contains("]]>")) {
       System.out.println(validJson);
-      return true;
+      throw new IllegalStateException("Output contains forbidden substring");
     }
-    return false;
   }
 }

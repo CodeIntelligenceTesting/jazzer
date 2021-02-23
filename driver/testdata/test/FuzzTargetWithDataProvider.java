@@ -26,7 +26,7 @@ class FuzzTargetWithDataProvider {
     }
   }
 
-  public strictfp static boolean fuzzerTestOneInput(FuzzedDataProvider data) {
+  public strictfp static void fuzzerTestOneInput(FuzzedDataProvider data) {
     assertEqual(true, data.consumeBoolean());
 
     assertEqual((byte) 0x7F, data.consumeByte());
@@ -110,6 +110,5 @@ class FuzzTargetWithDataProvider {
     assertEqual("", data.consumeRemainingAsString());
     assertEqual("", data.consumeAsciiString(100));
     assertEqual("", data.consumeString(100));
-    return false;
   }
 }

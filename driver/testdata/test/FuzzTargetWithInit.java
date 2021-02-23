@@ -19,13 +19,12 @@ class FuzzTargetWithInit {
   public static void fuzzerInitialize(String[] args) {
     crashOnString = args;
   }
-  public static boolean fuzzerTestOneInput(byte[] input) {
+  public static void fuzzerTestOneInput(byte[] input) {
     String inputString = new String(input);
     for (String crashString : crashOnString) {
       if (inputString.equals(crashString)) {
         throw new RuntimeException("triggered the exception");
       }
     }
-    return false;
   }
 }

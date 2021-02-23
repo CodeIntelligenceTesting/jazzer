@@ -29,7 +29,7 @@ public class TurboJpegFuzzer {
     new TJDecompressor();
   }
 
-  public static boolean fuzzerTestOneInput(FuzzedDataProvider data) {
+  public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     try {
       int flagsDecompress = data.consumeInt();
       int flagsTransform = data.consumeInt();
@@ -52,10 +52,8 @@ public class TurboJpegFuzzer {
         tjd = new TJDecompressor(data.consumeRemainingAsBytes());
       }
       tjd.decompress(buffer, 0, 0, desiredWidth, 0, desiredHeight, pixelFormat, flagsDecompress);
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       // We are not looking for Java exceptions, but segfaults and ASan reports.
-      return false;
     }
-    return false;
   }
 }

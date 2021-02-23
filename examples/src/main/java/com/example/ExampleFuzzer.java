@@ -22,7 +22,7 @@ public class ExampleFuzzer {
     // Optional initialization to be run before the first call to fuzzerTestOneInput.
   }
 
-  public static boolean fuzzerTestOneInput(FuzzedDataProvider data) {
+  public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     String input = data.consumeRemainingAsString();
     // Without the hook in ExampleFuzzerHooks.java, the value of random would change on every
     // invocation, making it almost impossible to guess for the fuzzer.
@@ -31,7 +31,6 @@ public class ExampleFuzzer {
         && input.charAt(25) == 'C') {
       mustNeverBeCalled();
     }
-    return false;
   }
 
   private static void mustNeverBeCalled() {

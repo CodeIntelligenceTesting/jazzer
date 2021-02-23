@@ -26,7 +26,6 @@ namespace jazzer {
 
 enum class RunResult {
   kOk,
-  kAssertion,
   kException,
   kDumpAndContinue,
 };
@@ -37,9 +36,9 @@ enum class RunResult {
 //    OR
 //    - `public static void fuzzerInitialize(String[] args)`
 // 2. On every call of Run():
-//    - `public static boolean fuzzerTestOneInput(FuzzedDataProvider data)`
+//    - `public static void fuzzerTestOneInput(FuzzedDataProvider data)`
 //    OR
-//    - `public static boolean fuzzerTestOneInput(byte[] input)`
+//    - `public static void fuzzerTestOneInput(byte[] input)`
 // 3. On destruction:
 //    - `public static void fuzzerTearDown()`
 class FuzzTargetRunner : public ExceptionPrinter {

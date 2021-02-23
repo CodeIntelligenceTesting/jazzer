@@ -15,12 +15,11 @@
 package test;
 
 class SimpleFuzzTarget {
-  public static boolean fuzzerTestOneInput(byte[] input) {
+  public static void fuzzerTestOneInput(byte[] input) {
     String inputString = new String(input);
     System.err.println("got input " + inputString);
     if (inputString.startsWith("crash")) {
       throw new RuntimeException("exception triggered in fuzz target");
-    } else
-      return inputString.startsWith("true");
+    }
   }
 }

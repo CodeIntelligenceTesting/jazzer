@@ -93,13 +93,13 @@ FuzzTargetRunner::FuzzTargetRunner(
   }
   jclass_ = jvm.FindClass(FLAGS_target_class);
   // one of the following functions is required:
-  //    public static boolean fuzzerTestOneInput(byte[] input)
-  //    public static boolean fuzzerTestOneInput(FuzzedDataProvider data)
+  //    public static void fuzzerTestOneInput(byte[] input)
+  //    public static void fuzzerTestOneInput(FuzzedDataProvider data)
   fuzzer_test_one_input_bytes_ =
-      jvm.GetStaticMethodID(jclass_, "fuzzerTestOneInput", "([B)Z", false);
+      jvm.GetStaticMethodID(jclass_, "fuzzerTestOneInput", "([B)V", false);
   fuzzer_test_one_input_data_ = jvm.GetStaticMethodID(
       jclass_, "fuzzerTestOneInput",
-      "(Lcom/code_intelligence/jazzer/api/FuzzedDataProvider;)Z", false);
+      "(Lcom/code_intelligence/jazzer/api/FuzzedDataProvider;)V", false);
   bool using_bytes = fuzzer_test_one_input_bytes_ != nullptr;
   bool using_data = fuzzer_test_one_input_data_ != nullptr;
   // Fail if none ore both of the two possible fuzzerTestOneInput versions is
@@ -107,9 +107,12 @@ FuzzTargetRunner::FuzzTargetRunner(
   if (using_bytes == using_data) {
     LOG(ERROR) << FLAGS_target_class
                << " must define exactly one of the following two functions:";
-    LOG(ERROR) << "public static boolean fuzzerTestOneInput(byte[] ...)";
+    LOG(ERROR) << "public static void fuzzerTestOneInput(byte[] ...)";
     LOG(ERROR)
-        << "public static boolean fuzzerTestOneInput(FuzzedDataProvider ...)";
+        << "public static void fuzzerTestOneInput(FuzzedDataProvider ...)";
+    LOG(ERROR) << "Note: Fuzz targets returning boolean are no longer "
+                  "supported; exceptions should be thrown instead of "
+                  "returning true.";
     exit(1);
   }
 
@@ -177,12 +180,10 @@ FuzzTargetRunner::~FuzzTargetRunner() {
 
 RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
   auto &env = jvm_.GetEnv();
-  bool trigger_exit;
   if (fuzzer_test_one_input_data_ != nullptr) {
     FeedFuzzedDataProvider(data, size);
-    trigger_exit =
-        env.CallStaticBooleanMethod(jclass_, fuzzer_test_one_input_data_,
-                                    GetFuzzedDataProviderJavaObject(jvm_));
+    env.CallStaticVoidMethod(jclass_, fuzzer_test_one_input_data_,
+                             GetFuzzedDataProviderJavaObject(jvm_));
   } else {
     jbyteArray byte_array = env.NewByteArray(size);
     if (byte_array == nullptr) {
@@ -191,15 +192,11 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
     }
     env.SetByteArrayRegion(byte_array, 0, size,
                            reinterpret_cast<const jbyte *>(data));
-    trigger_exit = env.CallStaticBooleanMethod(
-        jclass_, fuzzer_test_one_input_bytes_, byte_array);
+    env.CallStaticVoidMethod(jclass_, fuzzer_test_one_input_bytes_, byte_array);
     env.DeleteLocalRef(byte_array);
   }
 
-  if (trigger_exit) {
-    std::cerr << "== Java Assertion Error" << std::endl;
-    return RunResult::kAssertion;
-  } else if (env.ExceptionOccurred()) {
+  if (env.ExceptionOccurred()) {
     jlong dedup_token = computeDedupToken();
     // Check whether this stack trace has been encountered before if
     // `--keep_going` has been supplied.
@@ -231,9 +228,8 @@ void FuzzTargetRunner::DumpReproducer(const uint8_t *data, std::size_t size) {
     // Java-only CannedFuzzedDataProvider in the reproducer.
     FeedFuzzedDataProvider(data, size);
     jobject recorder = GetRecordingFuzzedDataProviderJavaObject(jvm_);
-    bool result = env.CallStaticBooleanMethod(
-        jclass_, fuzzer_test_one_input_data_, recorder);
-    if (!result && !env.ExceptionOccurred()) {
+    env.CallStaticVoidMethod(jclass_, fuzzer_test_one_input_data_, recorder);
+    if (!env.ExceptionOccurred()) {
       LOG(ERROR) << "Failed to reproduce crash when rerunning with recorder";
       return;
     }
