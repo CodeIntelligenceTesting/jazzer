@@ -14,10 +14,15 @@
 
 #include "libfuzzer_driver.h"
 
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <random>
 #include <string>
 #include <vector>
 
 #include "absl/strings/match.h"
+#include "absl/strings/str_format.h"
 #include "coverage_tracker.h"
 #include "driver/libfuzzer_callbacks.h"
 #include "fuzz_target_runner.h"
@@ -40,6 +45,9 @@ DECLARE_bool(log_prefix);
 // Defined in libfuzzer_callbacks.cpp
 DECLARE_bool(fake_pcs);
 
+// Defined in jvm_tooling.cpp
+DECLARE_string(id_sync_file);
+
 extern "C" void __real___sanitizer_set_death_callback(void (*callback)());
 
 // We use the linker opt -Wl,--wrap=__sanitizer_set_death_callback to wrap the
@@ -48,6 +56,27 @@ extern "C" void __wrap___sanitizer_set_death_callback(void (*callback)()) {
   jazzer::AbstractLibfuzzerDriver::libfuzzer_print_crashing_input_ = callback;
   __real___sanitizer_set_death_callback(callback);
 }
+
+namespace {
+char *additional_arg;
+std::vector<char *> modified_argv;
+
+std::string GetNewTempFilePath() {
+  auto temp_dir = std::filesystem::temp_directory_path();
+
+  std::string temp_filename_suffix(32, '\0');
+  std::random_device rng;
+  std::uniform_int_distribution<char> dist('a', 'z');
+  std::generate_n(temp_filename_suffix.begin(), temp_filename_suffix.length(),
+                  [&rng, &dist] { return dist(rng); });
+
+  auto temp_path = temp_dir / ("jazzer-" + temp_filename_suffix);
+  if (std::filesystem::exists(temp_path))
+    throw std::runtime_error("Random temp file path exists: " +
+                             temp_path.string());
+  return temp_path;
+}
+}  // namespace
 
 namespace jazzer {
 // A libFuzzer-registered callback that outputs the crashing input, but does
@@ -80,6 +109,47 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
   // Let gflags consume its flags, but keep them in the argument list in case
   // libFuzzer forwards the command line (e.g. with -jobs or -minimize_crash).
   gflags::ParseCommandLineFlags(&our_argc, &our_argv, false);
+
+  if (std::any_of(argv_start, argv_end, [](const std::string_view &arg) {
+        return absl::StartsWith(arg, "-fork=") ||
+               absl::StartsWith(arg, "-jobs=") ||
+               absl::StartsWith(arg, "-merge=");
+      })) {
+    if (FLAGS_id_sync_file.empty()) {
+      // Create an empty temporary file used for coverage ID synchronization and
+      // pass its path to the agent in every child process. This requires adding
+      // the argument to argv for it to be picked up by libFuzzer, which then
+      // forwards it to child processes.
+      FLAGS_id_sync_file = GetNewTempFilePath();
+      std::string new_arg =
+          absl::StrFormat("--id_sync_file=%s", FLAGS_id_sync_file);
+      // This argument can be accessed by libFuzzer at any (later) time and thus
+      // cannot be safely freed by us.
+      additional_arg = strdup(new_arg.c_str());
+      modified_argv = std::vector<char *>(argv_start, argv_end);
+      modified_argv.push_back(additional_arg);
+      // Terminate modified_argv.
+      modified_argv.push_back(nullptr);
+      // Modify argv and argc for libFuzzer. modified_argv must not be changed
+      // after this point.
+      *argc += 1;
+      *argv = modified_argv.data();
+      argv_start = *argv;
+      argv_end = *argv + *argc;
+    }
+    // Creates the file, truncating it if it exists.
+    std::ofstream touch_file(FLAGS_id_sync_file, std::ios_base::trunc);
+
+    auto cleanup_fn = [] {
+      try {
+        std::filesystem::remove(std::filesystem::path(FLAGS_id_sync_file));
+      } catch (...) {
+        // We should not throw exceptions during shutdown.
+      }
+    };
+    std::atexit(cleanup_fn);
+    std::at_quick_exit(cleanup_fn);
+  }
 
   initJvm(*argv_start);
 }

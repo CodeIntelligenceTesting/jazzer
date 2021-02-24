@@ -65,10 +65,14 @@ internal class ClassNameGlobber(includes: List<String>, excludes: List<String>) 
 internal class RuntimeInstrumentor(
     private val classesToInstrument: ClassNameGlobber,
     private val dependencyClassesToInstrument: ClassNameGlobber,
-    private val instrumentationTypes: Set<InstrumentationType>
+    private val instrumentationTypes: Set<InstrumentationType>,
+    idSyncFile: Path?,
 ) : ClassFileTransformer {
 
-    private val coverageIdSynchronizer = TrivialCoverageIdStrategy()
+    private val coverageIdSynchronizer = if (idSyncFile != null)
+        SynchronizedCoverageIdStrategy(idSyncFile)
+    else
+        TrivialCoverageIdStrategy()
 
     private val includedHooks = instrumentationTypes
         .mapNotNull { type ->
