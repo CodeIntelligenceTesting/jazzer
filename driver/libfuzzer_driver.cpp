@@ -55,14 +55,14 @@ namespace jazzer {
 void (*AbstractLibfuzzerDriver::libfuzzer_print_crashing_input_)() = nullptr;
 
 AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
-    const int argc, char **argv, const std::string &usage_string) {
+    int *argc, char ***argv, const std::string &usage_string) {
   gflags::SetUsageMessage(usage_string);
   // Disable glog log prefixes to mimic libFuzzer output.
   FLAGS_log_prefix = false;
-  google::InitGoogleLogging(argv[0]);
+  google::InitGoogleLogging((*argv)[0]);
 
-  auto argv_start = argv;
-  auto argv_end = argv + argc;
+  auto argv_start = *argv;
+  auto argv_end = *argv + *argc;
 
   if (std::find(argv_start, argv_end, "-use_value_profile=1"s) != argv_end) {
     FLAGS_fake_pcs = true;
@@ -71,7 +71,7 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
   // All libFuzzer flags start with a single dash, our arguments all start with
   // a double dash. We can thus filter out the arguments meant for gflags by
   // taking only those with a leading double dash.
-  std::vector<char *> our_args = {argv[0]};
+  std::vector<char *> our_args = {*argv_start};
   std::copy_if(
       argv_start, argv_end, std::back_inserter(our_args),
       [](const auto arg) { return absl::StartsWith(std::string(arg), "--"); });
@@ -81,7 +81,7 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
   // libFuzzer forwards the command line (e.g. with -jobs or -minimize_crash).
   gflags::ParseCommandLineFlags(&our_argc, &our_argv, false);
 
-  initJvm(argv[0]);
+  initJvm(*argv_start);
 }
 
 void AbstractLibfuzzerDriver::initJvm(const std::string &executable_path) {
@@ -95,7 +95,7 @@ void AbstractLibfuzzerDriver::initJvm(const std::string &executable_path) {
   }
 }
 
-LibfuzzerDriver::LibfuzzerDriver(const int argc, char **argv)
+LibfuzzerDriver::LibfuzzerDriver(int *argc, char ***argv)
     : AbstractLibfuzzerDriver(argc, argv, getUsageString()) {
   // the FuzzTargetRunner can only be initialized after the fuzzer callbacks
   // have been registered otherwise link errors would occur

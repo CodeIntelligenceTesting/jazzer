@@ -31,7 +31,7 @@ namespace jazzer {
 
 class AbstractLibfuzzerDriver {
  public:
-  AbstractLibfuzzerDriver(int argc, char **argv,
+  AbstractLibfuzzerDriver(int *argc, char ***argv,
                           const std::string &usage_string);
 
   virtual ~AbstractLibfuzzerDriver() = default;
@@ -61,7 +61,7 @@ class AbstractLibfuzzerDriver {
 
 class LibfuzzerDriver : public AbstractLibfuzzerDriver {
  public:
-  LibfuzzerDriver(int argc, char **argv);
+  LibfuzzerDriver(int *argc, char ***argv);
 
   virtual RunResult TestOneInput(const uint8_t *data, std::size_t size);
 
