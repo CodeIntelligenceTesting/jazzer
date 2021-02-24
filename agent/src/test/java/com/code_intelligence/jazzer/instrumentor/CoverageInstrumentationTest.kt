@@ -19,9 +19,7 @@ import java.io.File
 import kotlin.test.assertEquals
 
 private fun applyInstrumentation(bytecode: ByteArray): ByteArray {
-    EdgeCoverageInstrumentor.resetNextGlobalEdgeIdForTestingOnly()
-    EdgeCoverageInstrumentor.setCoverageMapClassForTestingOnly(MockCoverageMap::class.java)
-    return EdgeCoverageInstrumentor.instrument(bytecode)
+    return EdgeCoverageInstrumentor(0, MockCoverageMap::class.java).instrument(bytecode)
 }
 
 private fun getOriginalInstrumentationTargetInstance(): DynamicTestContract {

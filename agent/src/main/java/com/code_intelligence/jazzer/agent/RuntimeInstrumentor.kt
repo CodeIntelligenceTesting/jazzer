@@ -25,6 +25,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.security.ProtectionDomain
 import kotlin.math.roundToInt
+import kotlin.system.exitProcess
 import kotlin.time.measureTimedValue
 
 private val BASE_INCLUDED_CLASS_NAME_GLOBS = listOf(
@@ -67,6 +68,8 @@ internal class RuntimeInstrumentor(
     private val instrumentationTypes: Set<InstrumentationType>
 ) : ClassFileTransformer {
 
+    private val coverageIdSynchronizer = TrivialCoverageIdStrategy()
+
     private val includedHooks = instrumentationTypes
         .mapNotNull { type ->
             when (type) {
@@ -98,7 +101,11 @@ internal class RuntimeInstrumentor(
         val prettyClassName = internalClassName.replace('/', '.')
         val (instrumentedBytecode, duration) = measureTimedValue {
             try {
-                instrument(classfileBuffer, fullInstrumentation)
+                instrument(internalClassName, classfileBuffer, fullInstrumentation)
+            } catch (e: CoverageIdException) {
+                println("ERROR: Coverage IDs are out of sync")
+                e.printStackTrace()
+                exitProcess(1)
             } catch (e: Exception) {
                 println("WARN: Failed to instrument $prettyClassName, skipping")
                 e.printStackTrace()
@@ -115,7 +122,7 @@ internal class RuntimeInstrumentor(
         return instrumentedBytecode
     }
 
-    private fun instrument(bytecode: ByteArray, fullInstrumentation: Boolean): ByteArray {
+    private fun instrument(internalClassName: String, bytecode: ByteArray, fullInstrumentation: Boolean): ByteArray {
         return ClassInstrumentor(bytecode).run {
             if (fullInstrumentation) {
                 // Hook instrumentation must be performed after data flow tracing as the injected
@@ -124,7 +131,13 @@ internal class RuntimeInstrumentor(
                 // trigger the GEP callbacks for ByteBuffer.
                 traceDataFlow(instrumentationTypes)
                 hooks(includedHooks + customHooks)
-                coverage()
+                val firstId = coverageIdSynchronizer.obtainFirstId(internalClassName)
+                var actualNumEdgeIds = 0
+                try {
+                    actualNumEdgeIds = coverage(firstId)
+                } finally {
+                    coverageIdSynchronizer.commitIdCount(actualNumEdgeIds)
+                }
             } else {
                 hooks(customHooks)
             }
