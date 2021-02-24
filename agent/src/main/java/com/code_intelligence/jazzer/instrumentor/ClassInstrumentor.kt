@@ -23,8 +23,10 @@ class ClassInstrumentor constructor(bytecode: ByteArray) {
     var instrumentedBytecode = bytecode
         private set
 
-    fun coverage() {
-        instrumentedBytecode = EdgeCoverageInstrumentor.instrument(instrumentedBytecode)
+    fun coverage(initialEdgeId: Int): Int {
+        val edgeCoverageInstrumentor = EdgeCoverageInstrumentor(initialEdgeId)
+        instrumentedBytecode = edgeCoverageInstrumentor.instrument(instrumentedBytecode)
+        return edgeCoverageInstrumentor.numEdges
     }
 
     fun traceDataFlow(instrumentations: Set<InstrumentationType>) {
