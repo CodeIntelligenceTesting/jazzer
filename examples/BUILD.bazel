@@ -39,6 +39,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/JpegImageParserFuzzer.java",
     ],
+    fuzzer_args = ["-fork=5"],
     target_class = "com.example.JpegImageParserFuzzer",
     deps = [
         "@maven//:org_apache_commons_commons_imaging",

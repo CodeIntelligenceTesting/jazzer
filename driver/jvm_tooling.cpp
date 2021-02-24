@@ -61,6 +61,11 @@ DEFINE_string(
     "list of instrumentation to perform separated by colon \":\". "
     "Available options are cov, cmp, div, gep, all. These options "
     "correspond to the \"-fsanitize-coverage=trace-*\" flags in clang.");
+DEFINE_string(
+    id_sync_file, "",
+    "path to a file that should be used to synchronize coverage IDs "
+    "between parallel fuzzing processes. Defaults to a temporary file "
+    "created for this purpose if running in parallel.");
 
 DECLARE_bool(hooks);
 
@@ -124,6 +129,7 @@ std::string agentArgsFromFlags() {
            {"custom_hook_includes", FLAGS_custom_hook_includes},
            {"custom_hook_excludes", FLAGS_custom_hook_excludes},
            {"trace", FLAGS_trace},
+           {"id_sync_file", FLAGS_id_sync_file},
        }) {
     if (!flag_pair.second.empty()) {
       args.push_back(flag_pair.first + "=" + flag_pair.second);

@@ -20,6 +20,7 @@ import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
 import com.code_intelligence.jazzer.runtime.ManifestUtils
 import java.lang.instrument.Instrumentation
+import java.nio.file.Path
 
 val KNOWN_ARGUMENTS = listOf(
     "instrumentation_includes",
@@ -28,6 +29,7 @@ val KNOWN_ARGUMENTS = listOf(
     "custom_hook_excludes",
     "trace",
     "custom_hooks",
+    "id_sync_file",
 )
 
 fun premain(agentArgs: String?, instrumentation: Instrumentation) {
@@ -73,8 +75,13 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             }
         }
     }.toSet()
+    val idSyncFile = argumentMap["id_sync_file"]?.let {
+        Path.of(it.single()).also { path ->
+            println("INFO: Synchronizing coverage IDs in ${path.toAbsolutePath()}")
+        }
+    }
 
-    val runtimeInstrumentor = RuntimeInstrumentor(classNameGlobber, dependencyClassNameGlobber, instrumentationTypes)
+    val runtimeInstrumentor = RuntimeInstrumentor(classNameGlobber, dependencyClassNameGlobber, instrumentationTypes, idSyncFile)
     instrumentation.apply {
         addTransformer(runtimeInstrumentor)
     }
