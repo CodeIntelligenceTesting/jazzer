@@ -43,13 +43,13 @@ extern "C" void driver_cleanup() {
 
 // Entry point called by libfuzzer before any LLVMFuzzerTestOneInput(...)
 // invocations.
-extern "C" int LLVMFuzzerInitialize(const int *argc, char ***argv) {
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
   if (is_asan_active) {
     std::cerr << "WARN: Jazzer is not compatible with LeakSanitizer yet. Leaks "
                  "are not reported."
               << std::endl;
   }
-  gLibfuzzerDriver = std::make_unique<Driver>(*argc, *argv);
+  gLibfuzzerDriver = std::make_unique<Driver>(argc, argv);
   // Run even if we use std::quick_exit to prevent libFuzzer stack trace
   // printing.
   std::atexit(&driver_cleanup);
