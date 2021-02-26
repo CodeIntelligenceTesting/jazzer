@@ -121,6 +121,7 @@ Jazzer has so far uncovered the following vulnerabilities and bugs:
 * [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) `CBORParser` throws an undeclared exception due to missing bounds checks when parsing Unicode ([fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/236))
 * [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) `CBORParser` throws an undeclared exception on dangling arrays ([fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/240))
 * [Apache/commons-imaging](https://commons.apache.org/proper/commons-imaging/) throws undeclared exceptions in parsers for multiple image formats (reported as [`IMAGING-275`](https://issues.apache.org/jira/browse/IMAGING-275) through [`IMAGING-279`](https://issues.apache.org/jira/browse/IMAGING-279))
+* [netplex/json-smart-v1](https://github.com/netplex/json-smart-v1) and [netplex/json-smart-v2](https://github.com/netplex/json-smart-v2) throw an undeclared exception ([CVE-2021-27568](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-27568), reported by @GanbaruTobi)
 
 If you find bugs with Jazzer, we would be happy to hear from you!
 Feel free to [open an issue](https://github.com/CodeIntelligenceTesting/jazzer/issues/new) or submit a pull request.
