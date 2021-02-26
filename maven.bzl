@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_jvm_external//:specs.bzl", "maven")
-
 JAZZER_API_VERSION = "0.9.1"
 JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_API_VERSION
 
@@ -21,7 +19,7 @@ MAVEN_ARTIFACTS = [
     "org.ow2.asm:asm:9.1",
     "org.ow2.asm:asm-commons:9.1",
     "org.ow2.asm:asm-tree:9.1",
-    maven.artifact("junit", "junit", "4.12", testonly = True),
+    "junit:junit:4.12",
     "org.apache.commons:commons-imaging:1.0-alpha2",
     "com.mikesamuel:json-sanitizer:1.2.1",
     "com.google.code.gson:gson:2.8.6",
