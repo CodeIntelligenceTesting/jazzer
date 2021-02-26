@@ -166,7 +166,7 @@ FuzzTargetRunner::FuzzTargetRunner(
       LOG(ERROR) << "Invalid dedup token (expected up to 16 hex digits): '"
                  << str_token << "'";
       // Don't let libFuzzer print a crash stack trace.
-      std::quick_exit(1);
+      _Exit(1);
     }
   }
 }
