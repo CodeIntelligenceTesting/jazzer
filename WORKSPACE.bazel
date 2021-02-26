@@ -197,3 +197,13 @@ http_archive(
     strip_prefix = "jacoco-%s" % jacoco_commit,
     url = "https://github.com/jacoco/jacoco/archive/178d49870056b8a1f8ea6915e804d28b0dda5609.tar.gz",
 )
+
+# libFuzzer
+
+http_archive(
+    name = "libFuzzer",
+    build_file = "//third_party:libFuzzer.BUILD",
+    sha256 = "8ad4ddbafac4f2c8f2ea523c2c4196f940e8e16f9e635210537582a48622a5d5",
+    strip_prefix = "llvm-project-llvmorg-11.0.0",
+    url = "https://github.com/llvm/llvm-project/archive/llvmorg-11.0.0.tar.gz",
+)
