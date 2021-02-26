@@ -50,10 +50,7 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
               << std::endl;
   }
   gLibfuzzerDriver = std::make_unique<Driver>(argc, argv);
-  // Run even if we use std::quick_exit to prevent libFuzzer stack trace
-  // printing.
   std::atexit(&driver_cleanup);
-  std::at_quick_exit(&driver_cleanup);
   return 0;
 }
 
@@ -74,7 +71,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, const size_t size) {
         return 0;
       }
       // Exit directly without invoking libFuzzer's atexit hook.
-      std::quick_exit(Driver::kErrorExitCode);
+      driver_cleanup();
+      _Exit(Driver::kErrorExitCode);
     } else {
       // libFuzzer failed to register its death callback, exit normally.
       std::exit(1);
