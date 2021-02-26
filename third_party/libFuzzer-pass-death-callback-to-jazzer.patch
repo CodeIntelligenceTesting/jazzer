@@ -1,0 +1,28 @@
+diff --git compiler-rt/lib/fuzzer/FuzzerExtFunctions.def compiler-rt/lib/fuzzer/FuzzerExtFunctions.def
+index 51edf8444..e31f00402 100644
+--- compiler-rt/lib/fuzzer/FuzzerExtFunctions.def
++++ compiler-rt/lib/fuzzer/FuzzerExtFunctions.def
+@@ -42,7 +42,7 @@ EXT_FUNC(__sanitizer_symbolize_pc, void,
+ EXT_FUNC(__sanitizer_get_module_and_offset_for_pc, int,
+          (void *pc, char *module_path,
+          size_t module_path_len,void **pc_offset), false);
+-EXT_FUNC(__sanitizer_set_death_callback, void, (void (*)(void)), true);
++EXT_FUNC(__jazzer_set_death_callback, void, (void (*)(void)), true);
+ EXT_FUNC(__sanitizer_set_report_fd, void, (void*), false);
+ EXT_FUNC(__msan_scoped_disable_interceptor_checks, void, (), false);
+ EXT_FUNC(__msan_scoped_enable_interceptor_checks, void, (), false);
+diff --git compiler-rt/lib/fuzzer/FuzzerLoop.cpp compiler-rt/lib/fuzzer/FuzzerLoop.cpp
+index 6e3bf44f8..9d17b911c 100644
+--- compiler-rt/lib/fuzzer/FuzzerLoop.cpp
++++ compiler-rt/lib/fuzzer/FuzzerLoop.cpp
+@@ -138,8 +138,8 @@ void Fuzzer::HandleMalloc(size_t Size) {
+ Fuzzer::Fuzzer(UserCallback CB, InputCorpus &Corpus, MutationDispatcher &MD,
+                FuzzingOptions Options)
+     : CB(CB), Corpus(Corpus), MD(MD), Options(Options) {
+-  if (EF->__sanitizer_set_death_callback)
+-    EF->__sanitizer_set_death_callback(StaticDeathCallback);
++  if (EF->__jazzer_set_death_callback)
++    EF->__jazzer_set_death_callback(StaticDeathCallback);
+   assert(!F);
+   F = this;
+   TPC.ResetMaps();
