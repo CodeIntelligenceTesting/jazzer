@@ -148,7 +148,6 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
       }
     };
     std::atexit(cleanup_fn);
-    std::at_quick_exit(cleanup_fn);
   }
 
   initJvm(*argv_start);
