@@ -11,8 +11,18 @@ on:
 jobs:
      
   build_and_test:
-    runs-on: ubuntu-latest
-    
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            arch: "linux"
+            cache: "/home/runner/.cache"
+          - os: macos-latest
+            arch: "darwin"
+            cache: "/private/var/tmp"
+
     steps:
       - uses: actions/checkout@v2
       
@@ -28,8 +38,20 @@ jobs:
 #          path: "/home/runner/.cache/bazel"
 #          key: bazel
 
+      - name: Download Bazelisk for macOS
+        if: matrix.arch == darwin
+        run: curl -LO https://github.com/bazelbuild/bazelisk/releases/download/v1.7.5/bazelisk-darwin-amd64 && chmod +x bazelisk-darwin-amd64
+
       - name: Build
-        run: ./bazelisk-linux-amd64 build -c opt //...
+        run: ./bazelisk-${{ matrix.arch }}-amd64 build -c opt //...
 
       - name: Test
-        run: ./bazelisk-linux-amd64 test -c opt //...
+        run: ./bazelisk-${{ matrix.arch }}-amd64 test -c opt --test_tag_filters="-broken-on-${{ matrix.arch }}" //...
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: testlogs-${{ matrix.arch }}
+          # https://github.com/actions/upload-artifact/issues/92#issuecomment-711107236
+          path: bazel-testlogs*/**/test.log
