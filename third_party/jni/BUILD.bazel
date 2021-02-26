@@ -45,6 +45,9 @@ cc_import(
 
 cc_import(
     name = "libjvm",
-    interface_library = "@local_jdk//:lib/server/libjvm.so",
+    interface_library = select({
+        "@platforms//os:osx": "@local_jdk//:lib/server/libjvm.dylib",
+        "//conditions:default": "@local_jdk//:lib/server/libjvm.so",
+    }),
     system_provided = True,
 )
