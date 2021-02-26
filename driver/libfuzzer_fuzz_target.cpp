@@ -59,24 +59,19 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, const size_t size) {
   auto result = gLibfuzzerDriver->TestOneInput(data, size);
   if (result != jazzer::RunResult::kOk) {
     // Fuzzer triggered an exception or assertion in Java code. Skip the
-    // uninformative libFuzzer stack trace if possible.
-    if (Driver::libfuzzer_print_crashing_input_ != nullptr) {
-      std::cerr << "== libFuzzer crashing input ==\n";
-      Driver::libfuzzer_print_crashing_input_();
-      // DumpReproducer needs to be called after libFuzzer printed its final
-      // stats as otherwise it would report incorrect coverage.
-      gLibfuzzerDriver->DumpReproducer(data, size);
-      if (result == jazzer::RunResult::kDumpAndContinue) {
-        // Continue fuzzing after printing the crashing input.
-        return 0;
-      }
-      // Exit directly without invoking libFuzzer's atexit hook.
-      driver_cleanup();
-      _Exit(Driver::kErrorExitCode);
-    } else {
-      // libFuzzer failed to register its death callback, exit normally.
-      std::exit(1);
+    // uninformative libFuzzer stack trace.
+    std::cerr << "== libFuzzer crashing input ==\n";
+    Driver::libfuzzer_print_crashing_input_();
+    // DumpReproducer needs to be called after libFuzzer printed its final
+    // stats as otherwise it would report incorrect coverage.
+    gLibfuzzerDriver->DumpReproducer(data, size);
+    if (result == jazzer::RunResult::kDumpAndContinue) {
+      // Continue fuzzing after printing the crashing input.
+      return 0;
     }
+    // Exit directly without invoking libFuzzer's atexit hook.
+    driver_cleanup();
+    _Exit(Driver::kErrorExitCode);
   }
   return 0;
 }
