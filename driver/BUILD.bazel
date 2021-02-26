@@ -61,11 +61,11 @@ cc_binary(
     ],
     linkopts = [
         "-Wl,--wrap=__sanitizer_set_death_callback",
-        "-fsanitize=fuzzer",
     ],
     visibility = ["//visibility:public"],
     deps = [
         ":jvm_tooling_lib",
+        "@libFuzzer",
     ],
 )
 
@@ -77,11 +77,12 @@ cc_binary(
     ],
     linkopts = [
         "-Wl,--wrap=__sanitizer_set_death_callback",
-        "-fsanitize=fuzzer,address",
+        "-fsanitize=address",
     ],
     visibility = ["//visibility:public"],
     deps = [
         ":jvm_tooling_lib",
+        "@libFuzzer",
     ],
 )
 
