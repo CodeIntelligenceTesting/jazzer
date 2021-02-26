@@ -42,6 +42,9 @@ cc_library(
         "signal_handler.h",
         "utils.h",
     ],
+    linkopts = [
+        "-ldl",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":sanitizer_hooks_with_pc",
@@ -59,9 +62,6 @@ cc_binary(
     data = [
         "//agent:jazzer_agent_deploy.jar",
     ],
-    linkopts = [
-        "-Wl,--wrap=__sanitizer_set_death_callback",
-    ],
     visibility = ["//visibility:public"],
     deps = [
         ":jvm_tooling_lib",
@@ -76,7 +76,6 @@ cc_binary(
         "//agent:jazzer_agent_deploy.jar",
     ],
     linkopts = [
-        "-Wl,--wrap=__sanitizer_set_death_callback",
         "-fsanitize=address",
     ],
     visibility = ["//visibility:public"],
