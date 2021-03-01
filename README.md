@@ -115,15 +115,17 @@ See `examples/BUILD.bazel` for the list of all possible example targets.
 
 Jazzer has so far uncovered the following vulnerabilities and bugs:
 
-* [OWASP/json-sanitizer](https://github.com/OWASP/json-sanitizer) could be made to emit `</script>` and `]]>` in its output, which causes XSS ([CVE-2021-23899](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-23899), [fixed](https://groups.google.com/g/json-sanitizer-support/c/dAW1AeNMoA0))
-* [OWASP/json-sanitizer](https://github.com/OWASP/json-sanitizer) could be made to return invalid JSON or throw an undeclared exception ([CVE-2021-23900](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-23900), [fixed](https://groups.google.com/g/json-sanitizer-support/c/dAW1AeNMoA0))
-* [alibaba/fastjon](https://github.com/alibaba/fastjson) throws undeclared exceptions ([reported](https://github.com/alibaba/fastjson/issues/3631))
-* [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) `CBORParser` throws an undeclared exception due to missing bounds checks when parsing Unicode ([fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/236))
-* [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) `CBORParser` throws an undeclared exception on dangling arrays ([fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/240))
-* [Apache/commons-imaging](https://commons.apache.org/proper/commons-imaging/) throws undeclared exceptions in parsers for multiple image formats (reported as [`IMAGING-275`](https://issues.apache.org/jira/browse/IMAGING-275) through [`IMAGING-279`](https://issues.apache.org/jira/browse/IMAGING-279))
-* [netplex/json-smart-v1](https://github.com/netplex/json-smart-v1) and [netplex/json-smart-v2](https://github.com/netplex/json-smart-v2) throw an undeclared exception ([CVE-2021-27568](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-27568), reported by @GanbaruTobi)
+| Project | Bug      | Status | CVE | found by |
+| ------- | -------- | ------ | --- | -------- |
+| [OWASP/json-sanitizer](https://github.com/OWASP/json-sanitizer) | Output can contain`</script>` and `]]>`, which allows XSS | [fixed](https://groups.google.com/g/json-sanitizer-support/c/dAW1AeNMoA0) | [CVE-2021-23899](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-23899) | [Code Intelligence](https://code-intelligence.com) |
+| [OWASP/json-sanitizer](https://github.com/OWASP/json-sanitizer) | Output can be invalid JSON and undeclared exceptions can be thrown | [fixed](https://groups.google.com/g/json-sanitizer-support/c/dAW1AeNMoA0) | [CVE-2021-23900](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-23900) | [Code Intelligence](https://code-intelligence.com) |
+| [netplex/json-smart-v1](https://github.com/netplex/json-smart-v1) <br/> [netplex/json-smart-v2](https://github.com/netplex/json-smart-v2) | `JSONParser#parse` throws an undeclared exception | [reported](https://github.com/netplex/json-smart-v2/issues/60) | [CVE-2021-27568](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-27568) | [@GanbaruTobi](https://github.com/GanbaruTobi) |
+| [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception due to missing bounds checks when parsing Unicode | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/236) | | [Code Intelligence](https://code-intelligence.com) |
+| [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception on dangling arrays | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/240) | | [Code Intelligence](https://code-intelligence.com) |
+| [alibaba/fastjon](https://github.com/alibaba/fastjson) | `JSON#parse` throws undeclared exceptions | [reported](https://github.com/alibaba/fastjson/issues/3631) | | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-imaging](https://commons.apache.org/proper/commons-imaging/) | Parsers for multiple image formats throw undeclared exceptions | [reported](https://issues.apache.org/jira/browse/IMAGING-279?jql=project%20%3D%20%22Commons%20Imaging%22%20AND%20reporter%20%3D%20Meumertzheim%20) | | [Code Intelligence](https://code-intelligence.com) |
 
-If you find bugs with Jazzer, we would be happy to hear from you!
+If you find bugs with Jazzer, we would like to hear from you!
 Feel free to [open an issue](https://github.com/CodeIntelligenceTesting/jazzer/issues/new) or submit a pull request.
 
 ## Usage
