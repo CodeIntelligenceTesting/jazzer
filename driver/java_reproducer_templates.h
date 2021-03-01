@@ -26,6 +26,7 @@ public class Crash_$0 {
     static final String base64Bytes = "$1";
 
     public static void main(String[] args) {
+        ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
         try {
             Method fuzzerInitialize = $2.class.getDeclaredMethod("fuzzerInitialize");
             if (fuzzerInitialize.getParameterTypes().length == 0) {
