@@ -15,27 +15,16 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.json.JsonSanitizer;
 
-public class JsonSanitizerFuzzer {
+public class JsonSanitizerCrashFuzzer {
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     String input = data.consumeRemainingAsString();
-    String validJson;
     try {
-      validJson = JsonSanitizer.sanitize(input, 60);
-    } catch (ArrayIndexOutOfBoundsException e) {
+      JsonSanitizer.sanitize(input, 10);
+    } catch (ArrayIndexOutOfBoundsException ignored) {
       // ArrayIndexOutOfBoundsException is expected if nesting depth is
       // exceeded.
-      return;
-    }
-    Gson gson = new Gson();
-    gson.fromJson(validJson, JsonElement.class);
-    if (validJson.contains("</script>") || validJson.contains("<script")
-        || validJson.contains("<!--") || validJson.contains("]]>")) {
-      System.out.println(validJson);
-      throw new IllegalStateException("Output contains forbidden substring");
     }
   }
 }

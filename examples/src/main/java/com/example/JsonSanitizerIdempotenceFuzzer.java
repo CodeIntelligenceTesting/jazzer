@@ -15,26 +15,20 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
-import java.security.SecureRandom;
+import com.google.json.JsonSanitizer;
 
-public class ExampleFuzzer {
-  public static void fuzzerInitialize() {
-    // Optional initialization to be run before the first call to fuzzerTestOneInput.
-  }
-
+public class JsonSanitizerIdempotenceFuzzer {
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     String input = data.consumeRemainingAsString();
-    // Without the hook in ExampleFuzzerHooks.java, the value of random would change on every
-    // invocation, making it almost impossible to guess for the fuzzer.
-    long random = new SecureRandom().nextLong();
-    if (input.startsWith("magicstring" + random) && input.length() > 30
-        && input.charAt(25) == 'C') {
-      mustNeverBeCalled();
+    String validJson;
+    try {
+      validJson = JsonSanitizer.sanitize(input, 10);
+    } catch (Exception e) {
+      return;
     }
-  }
 
-  private static void mustNeverBeCalled() {
-    throw new FuzzerSecurityIssueMedium("mustNeverBeCalled has been called");
+    // Ensure that sanitizing twice does not give different output (idempotence). Since failure to
+    // be idempotent is not a security issue in itself, fail with a regular AssertionError.
+    assert JsonSanitizer.sanitize(validJson).equals(validJson) : "Not idempotent";
   }
 }
