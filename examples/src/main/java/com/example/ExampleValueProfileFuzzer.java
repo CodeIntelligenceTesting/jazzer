@@ -15,6 +15,7 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
 import java.util.Base64;
 
 public class ExampleValueProfileFuzzer {
@@ -47,6 +48,6 @@ public class ExampleValueProfileFuzzer {
   }
 
   private static void mustNeverBeCalled() {
-    throw new IllegalStateException("mustNeverBeCalled has been called");
+    throw new FuzzerSecurityIssueLow("mustNeverBeCalled has been called");
   }
 }

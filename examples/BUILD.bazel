@@ -70,11 +70,44 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
-    name = "JsonSanitizerFuzzer",
+    name = "JsonSanitizerCrashFuzzer",
     srcs = [
-        "src/main/java/com/example/JsonSanitizerFuzzer.java",
+        "src/main/java/com/example/JsonSanitizerCrashFuzzer.java",
     ],
-    target_class = "com.example.JsonSanitizerFuzzer",
+    target_class = "com.example.JsonSanitizerCrashFuzzer",
+    deps = [
+        "@maven//:com_mikesamuel_json_sanitizer",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "JsonSanitizerDenylistFuzzer",
+    srcs = [
+        "src/main/java/com/example/JsonSanitizerDenylistFuzzer.java",
+    ],
+    target_class = "com.example.JsonSanitizerDenylistFuzzer",
+    deps = [
+        "@maven//:com_mikesamuel_json_sanitizer",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "JsonSanitizerIdempotenceFuzzer",
+    srcs = [
+        "src/main/java/com/example/JsonSanitizerIdempotenceFuzzer.java",
+    ],
+    target_class = "com.example.JsonSanitizerIdempotenceFuzzer",
+    deps = [
+        "@maven//:com_mikesamuel_json_sanitizer",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "JsonSanitizerValidJsonFuzzer",
+    srcs = [
+        "src/main/java/com/example/JsonSanitizerValidJsonFuzzer.java",
+    ],
+    target_class = "com.example.JsonSanitizerValidJsonFuzzer",
     deps = [
         "@maven//:com_google_code_gson_gson",
         "@maven//:com_mikesamuel_json_sanitizer",
@@ -131,11 +164,9 @@ java_binary(
         ":ExampleFuzzer_target_deploy.jar",
         ":ExampleValueProfileFuzzer_target_deploy.jar",
         ":FastJsonFuzzer_target_deploy.jar",
-        ":GifImageParserFuzzer_target_deploy.jar",
         ":JacksonCborFuzzer_target_deploy.jar",
         ":JpegImageParserFuzzer_target_deploy.jar",
-        ":JsonSanitizerFuzzer_target_deploy.jar",
-        ":TiffImageParserFuzzer_target_deploy.jar",
+        ":JsonSanitizerDenylistFuzzer_target_deploy.jar",
     ],
     visibility = ["//visibility:public"],
 )
