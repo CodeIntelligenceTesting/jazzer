@@ -5,7 +5,8 @@ load("@rules_pkg//:pkg.bzl", "pkg_tar")
 load("@rules_jvm_external//:defs.bzl", "java_export")
 
 kt_kotlinc_options(
-    name = "default_kotlinc_options",
+    name = "kotlinc_options",
+    x_use_ir = True,
 )
 
 kt_javac_options(
@@ -17,7 +18,7 @@ define_kt_toolchain(
     api_version = "1.4",
     javac_options = ":default_javac_options",
     jvm_target = "1.8",
-    kotlinc_options = ":default_kotlinc_options",
+    kotlinc_options = ":kotlinc_options",
     language_version = "1.4",
 )
 
