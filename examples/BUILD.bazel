@@ -19,6 +19,8 @@ java_fuzz_target_test(
         "src/main/java/com/example/ExampleFuzzerWithNative.java",
     ],
     native_libs = ["//examples/src/main/native"],
+    # Bazel creates shared libraries with an incorrect extension on macOS.
+    tags = ["broken-on-darwin"],
     target_class = "com.example.ExampleFuzzerWithNative",
     use_asan = True,
     deps = [
@@ -51,6 +53,8 @@ java_fuzz_target_test(
         "src/main/java/com/example/JpegImageParserFuzzer.java",
     ],
     fuzzer_args = ["-fork=5"],
+    # The exit codes of the forked libFuzzer processes are not picked up correctly.
+    tags = ["broken-on-darwin"],
     target_class = "com.example.JpegImageParserFuzzer",
     deps = [
         "@maven//:org_apache_commons_commons_imaging",
