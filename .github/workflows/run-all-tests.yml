@@ -39,7 +39,7 @@ jobs:
 #          key: bazel
 
       - name: Download Bazelisk for macOS
-        if: matrix.arch == darwin
+        if: matrix.arch == 'darwin'
         run: curl -LO https://github.com/bazelbuild/bazelisk/releases/download/v1.7.5/bazelisk-darwin-amd64 && chmod +x bazelisk-darwin-amd64
 
       - name: Build
