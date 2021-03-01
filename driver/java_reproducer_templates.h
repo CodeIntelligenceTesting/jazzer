@@ -48,6 +48,6 @@ constexpr const char *kTestOneInputWithBytes =
     "byte[] input = java.util.Base64.getDecoder().decode(base64Bytes);";
 
 constexpr const char *kTestOneInputWithData =
-    "com.code_intelligence.jazzer.runtime.CannedFuzzedDataProvider input = new "
-    "com.code_intelligence.jazzer.runtime.CannedFuzzedDataProvider(base64Bytes)"
+    "com.code_intelligence.jazzer.api.CannedFuzzedDataProvider input = new "
+    "com.code_intelligence.jazzer.api.CannedFuzzedDataProvider(base64Bytes)"
     ";";
