@@ -155,6 +155,7 @@ JVM::JVM(const std::string &executable_path) {
       JavaVMOption{.optionString = const_cast<char *>(class_path.c_str())});
   // set the maximum heap size
   options.push_back(JavaVMOption{.optionString = (char *)"-Xmx4096m"});
+  options.push_back(JavaVMOption{.optionString = (char *)"-enableassertions"});
 
   // add additional jvm options set through command line flags
   std::vector<std::string> jvm_args;
