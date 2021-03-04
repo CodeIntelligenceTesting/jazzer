@@ -76,7 +76,10 @@ std::string PrettyPrintCoverage() {
 
 class TestFakePcTrampoline : public ::testing::Test {
  protected:
-  TestFakePcTrampoline() { ClearCoverage(); }
+  TestFakePcTrampoline() {
+    ClearCoverage();
+    CalibrateTrampoline();
+  }
 };
 
 TEST_F(TestFakePcTrampoline, TraceCmp4Direct) {
@@ -131,6 +134,7 @@ TEST_F(TestFakePcTrampoline, TracePcIndirDirect) {
 TEST_F(TestFakePcTrampoline, TraceCmp4Trampoline) {
   for (uint32_t i = 0; i < gCoverageMap.size(); ++i) {
     __sanitizer_cov_trace_cmp4_with_pc(reinterpret_cast<void *>(i), i, i);
+    EXPECT_EQ(1, gCoverageMap[i]);
   }
   EXPECT_TRUE(HasAllPcsCovered()) << PrettyPrintCoverage();
 }
@@ -138,6 +142,7 @@ TEST_F(TestFakePcTrampoline, TraceCmp4Trampoline) {
 TEST_F(TestFakePcTrampoline, TraceCmp8Trampoline) {
   for (uint32_t i = 0; i < gCoverageMap.size(); ++i) {
     __sanitizer_cov_trace_cmp8_with_pc(reinterpret_cast<void *>(i), i, i);
+    EXPECT_EQ(1, gCoverageMap[i]);
   }
   EXPECT_TRUE(HasAllPcsCovered()) << PrettyPrintCoverage();
 }
@@ -146,6 +151,7 @@ TEST_F(TestFakePcTrampoline, TraceSwitchTrampoline) {
   for (uint32_t i = 0; i < gCoverageMap.size(); ++i) {
     __sanitizer_cov_trace_switch_with_pc(reinterpret_cast<void *>(i), i,
                                          nullptr);
+    EXPECT_EQ(1, gCoverageMap[i]);
   }
   EXPECT_TRUE(HasAllPcsCovered()) << PrettyPrintCoverage();
 }
@@ -153,6 +159,7 @@ TEST_F(TestFakePcTrampoline, TraceSwitchTrampoline) {
 TEST_F(TestFakePcTrampoline, TraceDiv4Trampoline) {
   for (uint32_t i = 0; i < gCoverageMap.size(); ++i) {
     __sanitizer_cov_trace_div4_with_pc(reinterpret_cast<void *>(i), i);
+    EXPECT_EQ(1, gCoverageMap[i]);
   }
   EXPECT_TRUE(HasAllPcsCovered()) << PrettyPrintCoverage();
 }
@@ -160,6 +167,7 @@ TEST_F(TestFakePcTrampoline, TraceDiv4Trampoline) {
 TEST_F(TestFakePcTrampoline, TraceDiv8Trampoline) {
   for (uint32_t i = 0; i < gCoverageMap.size(); ++i) {
     __sanitizer_cov_trace_div8_with_pc(reinterpret_cast<void *>(i), i);
+    EXPECT_EQ(1, gCoverageMap[i]);
   }
   EXPECT_TRUE(HasAllPcsCovered()) << PrettyPrintCoverage();
 }
@@ -167,6 +175,7 @@ TEST_F(TestFakePcTrampoline, TraceDiv8Trampoline) {
 TEST_F(TestFakePcTrampoline, TraceGepTrampoline) {
   for (uint32_t i = 0; i < gCoverageMap.size(); ++i) {
     __sanitizer_cov_trace_gep_with_pc(reinterpret_cast<void *>(i), i);
+    EXPECT_EQ(1, gCoverageMap[i]);
   }
   EXPECT_TRUE(HasAllPcsCovered()) << PrettyPrintCoverage();
 }

@@ -75,6 +75,34 @@ end_of_function:
   return;
 }
 
+namespace {
+uintptr_t trampoline_offset = 0;
+}
+
+void set_trampoline_offset() {
+  // Stores the additive inverse of the current return address modulo 0x1000 in
+  // trampoline_offset.
+  trampoline_offset =
+      0x1000u -
+      (reinterpret_cast<uintptr_t>(__builtin_return_address(0)) & 0xFFFu);
+}
+
+// Computes the additive shift that needs to be applied to the caller PC by
+// caller_pc_to_fake_pc to make caller PC and resulting fake return address
+// agree modulo 0x1000. This offset is constant for each binary, but may vary
+// based on code generation specifics. By calibrating the trampoline, the fuzzer
+// behavior is fully determined by the seed.
+void CalibrateTrampoline() {
+  trampoline(0, 0, reinterpret_cast<void *>(&set_trampoline_offset), 0);
+}
+
+// Masks any address down to its lower 12 bits, adjusting for the trampoline
+// shift.
+__attribute__((always_inline)) inline uint16_t caller_pc_to_fake_pc(
+    const void *caller_pc) {
+  return (reinterpret_cast<uintptr_t>(caller_pc) + trampoline_offset) & 0xFFFu;
+}
+
 // The original hooks exposed by libFuzzer. All of these get the caller's
 // address via __builtin_return_address(0).
 extern "C" {
@@ -86,13 +114,6 @@ void __sanitizer_cov_trace_div8(uint64_t val);
 void __sanitizer_cov_trace_gep(uintptr_t idx);
 void __sanitizer_cov_trace_pc_indir(uintptr_t callee);
 }
-
-// Masks any address down to its lower 12 bits.
-__attribute__((always_inline)) inline uint16_t caller_pc_to_fake_pc(
-    const void *caller_pc) {
-  return reinterpret_cast<uintptr_t>(caller_pc) & 0xFFFu;
-}
-
 void __sanitizer_cov_trace_cmp4_with_pc(void *caller_pc, uint32_t arg1,
                                         uint32_t arg2) {
   void *trace_cmp4 = reinterpret_cast<void *>(&__sanitizer_cov_trace_cmp4);

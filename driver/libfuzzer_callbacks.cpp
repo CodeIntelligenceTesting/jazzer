@@ -194,6 +194,7 @@ namespace jazzer {
 bool registerFuzzerCallbacks(JNIEnv &env) {
   if (FLAGS_fake_pcs) {
     LOG(INFO) << "using callback variants with fake pcs";
+    CalibrateTrampoline();
   }
   {
     JNINativeMethod string_methods[]{
