@@ -44,3 +44,5 @@ void __sanitizer_cov_trace_gep_with_pc(void *caller_pc, uintptr_t idx);
 
 void __sanitizer_cov_trace_pc_indir_with_pc(void *caller_pc, uintptr_t callee);
 }
+
+void CalibrateTrampoline();
