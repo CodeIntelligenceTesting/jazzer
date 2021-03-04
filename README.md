@@ -138,7 +138,7 @@ may be as simple as the following Java example:
 ```java
 package com.example.MyFirstFuzzTarget;
 
-class MyFirstFuzzTarget {
+public class MyFirstFuzzTarget {
     public static void fuzzerTestOneInput(byte[] input) {
         ...
         // Call the function under test with arguments derived from input and
@@ -198,14 +198,13 @@ package com.example.MySecondFuzzTarget;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 
-class MySecondFuzzTarget {
+publi class MySecondFuzzTarget {
     public static void callApi(int val, String text) {
         ...
     }
 
     public static void fuzzerTestOneInput(FuzzedDataProvider data) {
         callApi1(data.consumeInt(), data.consumeRemainingAsString());
-        return false;
     }
 }
 ```
