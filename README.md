@@ -205,7 +205,6 @@ public class MySecondFuzzTarget {
 
     public static void fuzzerTestOneInput(FuzzedDataProvider data) {
         callApi1(data.consumeInt(), data.consumeRemainingAsString());
-        return false;
     }
 }
 ```
