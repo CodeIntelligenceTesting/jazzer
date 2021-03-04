@@ -198,7 +198,7 @@ package com.example.MySecondFuzzTarget;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 
-publi class MySecondFuzzTarget {
+public class MySecondFuzzTarget {
     public static void callApi(int val, String text) {
         ...
     }
