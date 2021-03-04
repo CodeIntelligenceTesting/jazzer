@@ -16,7 +16,7 @@
 # Crashes will be available as test outputs. These are cleared on the next run,
 # so this is only useful for examples.
 DEFAULT_CRASH_PREFIX="$TEST_UNDECLARED_OUTPUTS_DIR"
-eval "$1" -artifact_prefix="$DEFAULT_CRASH_PREFIX/" --reproducer_path="$DEFAULT_CRASH_PREFIX" "${@:2}" -seed=2735196724
+eval "$1" -artifact_prefix="$DEFAULT_CRASH_PREFIX/" --reproducer_path="$DEFAULT_CRASH_PREFIX" -seed=2735196724 "${@:2}"
 # Assert that we either found a crash in java (exit code 77) or an ASan crash
 # (exit code 76).
 declare -i exit_code=$?
