@@ -80,10 +80,10 @@ public class MockTraceDataFlowCallbacks {
 
   public static void traceSwitch(long switchValue, long[] libfuzzerCaseValues, int pc) {
     if (libfuzzerCaseValues.length < 3
-        // bit size of case values is always 32 (int)
-        || libfuzzerCaseValues[0] != 32
         // number of case values must match length
-        || libfuzzerCaseValues[1] != libfuzzerCaseValues.length - 2) {
+        || libfuzzerCaseValues[0] != libfuzzerCaseValues.length - 2
+        // bit size of case values is always 32 (int)
+        || libfuzzerCaseValues[1] != 32) {
       hookCalls.add("INVALID_SWITCH");
       return;
     }
