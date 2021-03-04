@@ -174,20 +174,19 @@ internal class TraceDataFlowInstrumentor(private val types: Set<InstrumentationT
         // duplicate {lookup,table}switch key for use as first function argument
         add(InsnNode(Opcodes.DUP))
         add(InsnNode(Opcodes.I2L))
-        // Setup array with switch cases.
-        // The format libfuzzer expects is created here directly
-        // i.e. first two values are bit size (always 32) and number of cases
+        // Set up array with switch case values. The format libfuzzer expects is created here directly, i.e., the first
+        // two entries are the number of cases and the bit size of values (always 32).
         add(IntInsnNode(Opcodes.SIPUSH, caseValues.size + 2))
         add(IntInsnNode(Opcodes.NEWARRAY, Opcodes.T_LONG))
-        // Store bit size of keys
-        add(InsnNode(Opcodes.DUP))
-        add(IntInsnNode(Opcodes.SIPUSH, 0))
-        add(LdcInsnNode(32.toLong()))
-        add(InsnNode(Opcodes.LASTORE))
         // Store number of cases
         add(InsnNode(Opcodes.DUP))
-        add(IntInsnNode(Opcodes.SIPUSH, 1))
+        add(IntInsnNode(Opcodes.SIPUSH, 0))
         add(LdcInsnNode(caseValues.size.toLong()))
+        add(InsnNode(Opcodes.LASTORE))
+        // Store bit size of keys
+        add(InsnNode(Opcodes.DUP))
+        add(IntInsnNode(Opcodes.SIPUSH, 1))
+        add(LdcInsnNode(32.toLong()))
         add(InsnNode(Opcodes.LASTORE))
         // Store {lookup,table}switch case values
         for ((i, caseValue) in caseValues.withIndex()) {
