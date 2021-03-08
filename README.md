@@ -120,13 +120,13 @@ Jazzer has so far uncovered the following vulnerabilities and bugs:
 | [OWASP/json-sanitizer](https://github.com/OWASP/json-sanitizer) | Output can contain`</script>` and `]]>`, which allows XSS | [fixed](https://groups.google.com/g/json-sanitizer-support/c/dAW1AeNMoA0) | [CVE-2021-23899](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-23899) | [Code Intelligence](https://code-intelligence.com) |
 | [OWASP/json-sanitizer](https://github.com/OWASP/json-sanitizer) | Output can be invalid JSON and undeclared exceptions can be thrown | [fixed](https://groups.google.com/g/json-sanitizer-support/c/dAW1AeNMoA0) | [CVE-2021-23900](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-23900) | [Code Intelligence](https://code-intelligence.com) |
 | [netplex/json-smart-v1](https://github.com/netplex/json-smart-v1) <br/> [netplex/json-smart-v2](https://github.com/netplex/json-smart-v2) | `JSONParser#parse` throws an undeclared exception | [reported](https://github.com/netplex/json-smart-v2/issues/60) | [CVE-2021-27568](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-27568) | [@GanbaruTobi](https://github.com/GanbaruTobi) |
-| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | Infinite loop and `OutOfMemoryError` in `TarFile` | [fixed](https://issues.apache.org/jira/browse/COMPRESS-569) || [Code Intelligence](https://code-intelligence.com) |
-| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `IllegalArgumentException` in `ZipFile`| [reported](https://issues.apache.org/jira/browse/COMPRESS-567) || [Code Intelligence](https://code-intelligence.com) |
-| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `NullPointerException` in `ZipFile`| [fixed](https://issues.apache.org/jira/browse/COMPRESS-568) || [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | Infinite loop and `OutOfMemoryError` in `TarFile` | [fixed](https://issues.apache.org/jira/browse/COMPRESS-569) | | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-imaging](https://commons.apache.org/proper/commons-imaging/) | Parsers for multiple image formats throw undeclared exceptions | [reported](https://issues.apache.org/jira/browse/IMAGING-279?jql=project%20%3D%20%22Commons%20Imaging%22%20AND%20reporter%20%3D%20Meumertzheim%20) | | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `NullPointerException` in `ZipFile`| [fixed](https://issues.apache.org/jira/browse/COMPRESS-568) | | [Code Intelligence](https://code-intelligence.com) |
 | [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception due to missing bounds checks when parsing Unicode | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/236) | | [Code Intelligence](https://code-intelligence.com) |
 | [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception on dangling arrays | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/240) | | [Code Intelligence](https://code-intelligence.com) |
 | [alibaba/fastjon](https://github.com/alibaba/fastjson) | `JSON#parse` throws undeclared exceptions | [reported](https://github.com/alibaba/fastjson/issues/3631) | | [Code Intelligence](https://code-intelligence.com) |
-| [Apache/commons-imaging](https://commons.apache.org/proper/commons-imaging/) | Parsers for multiple image formats throw undeclared exceptions | [reported](https://issues.apache.org/jira/browse/IMAGING-279?jql=project%20%3D%20%22Commons%20Imaging%22%20AND%20reporter%20%3D%20Meumertzheim%20) | | [Code Intelligence](https://code-intelligence.com) |
+| [cbeust/klaxon](https://github.com/cbeust/klaxon) | Default parser throws runtime exceptions | [fix submitted](https://github.com/cbeust/klaxon/pull/330) | | [Code Intelligence](https://code-intelligence.com) |
 
 If you find bugs with Jazzer, we would like to hear from you!
 Feel free to [open an issue](https://github.com/CodeIntelligenceTesting/jazzer/issues/new) or submit a pull request.
@@ -166,6 +166,11 @@ can be defined if initial setup is required. These functions will be called once
 the first call to `fuzzerTestOneInput`.
 
 The optional function `public static void fuzzerTearDown()` will be run just before the JVM is shut down.
+
+#### Kotlin
+
+An example of a Kotlin fuzz target can be found in
+[KlaxonFuzzer.kt](https://github.com/CodeIntelligenceTesting/jazzer/tree/main/examples/src/main/java/com/example/KlaxonFuzzer.kt).
 
 ### Running the fuzzer
 
