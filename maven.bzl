@@ -27,4 +27,5 @@ MAVEN_ARTIFACTS = [
     "com.fasterxml.jackson.core:jackson-databind:2.12.1",
     "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.12.1",
     "com.alibaba:fastjson:1.2.75",
+    "com.beust:klaxon:5.5",
 ]

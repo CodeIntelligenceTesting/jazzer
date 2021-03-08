@@ -22,6 +22,7 @@ def java_fuzz_target_test(
         visibility = None,
         tags = [],
         fuzzer_args = [],
+        srcs = [],
         **kwargs):
     target_name = name + "_target"
     deploy_manifest_lines = [
@@ -31,12 +32,17 @@ def java_fuzz_target_test(
         deploy_manifest_lines += [
             "Jazzer-Hook-Classes: %s" % ":".join(hook_classes),
         ]
+
+    # Deps can only be specified on java_binary targets with sources, which
+    # excludes e.g. Kotlin libraries wrapped into java_binary via runtime_deps.
+    target_deps = deps + ["//agent/src/main/java/com/code_intelligence/jazzer/api"] if srcs else []
     native.java_binary(
         name = target_name,
+        srcs = srcs,
         visibility = ["//visibility:private"],
         create_executable = False,
         deploy_manifest_lines = deploy_manifest_lines,
-        deps = deps + ["//agent/src/main/java/com/code_intelligence/jazzer/api"],
+        deps = target_deps,
         **kwargs
     )
 
