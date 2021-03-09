@@ -126,7 +126,7 @@ Jazzer has so far uncovered the following vulnerabilities and bugs:
 | [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception due to missing bounds checks when parsing Unicode | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/236) | | [Code Intelligence](https://code-intelligence.com) |
 | [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception on dangling arrays | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/240) | | [Code Intelligence](https://code-intelligence.com) |
 | [alibaba/fastjon](https://github.com/alibaba/fastjson) | `JSON#parse` throws undeclared exceptions | [reported](https://github.com/alibaba/fastjson/issues/3631) | | [Code Intelligence](https://code-intelligence.com) |
-| [cbeust/klaxon](https://github.com/cbeust/klaxon) | Default parser throws runtime exceptions | [fix submitted](https://github.com/cbeust/klaxon/pull/330) | | [Code Intelligence](https://code-intelligence.com) |
+| [cbeust/klaxon](https://github.com/cbeust/klaxon) | Default parser throws runtime exceptions | [fixed](https://github.com/cbeust/klaxon/pull/330) | | [Code Intelligence](https://code-intelligence.com) |
 
 If you find bugs with Jazzer, we would like to hear from you!
 Feel free to [open an issue](https://github.com/CodeIntelligenceTesting/jazzer/issues/new) or submit a pull request.
