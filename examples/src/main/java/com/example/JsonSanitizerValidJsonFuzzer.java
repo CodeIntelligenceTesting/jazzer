@@ -36,7 +36,7 @@ public class JsonSanitizerValidJsonFuzzer {
       Gson gson = new Gson();
       gson.fromJson(validJson, JsonElement.class);
     } catch (Exception e) {
-      throw new FuzzerSecurityIssueLow("Not idempotent", e);
+      throw new FuzzerSecurityIssueLow("Output is invalid JSON", e);
     }
   }
 }
