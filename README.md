@@ -11,10 +11,12 @@ It is based on [libFuzzer](https://llvm.org/docs/LibFuzzer.html) and brings many
 The JVM bytecode is executed inside the fuzzer process, which ensures fast execution speeds and allows seamless fuzzing of
 native libraries.
 
+Jazzer supports x64 Linux and macOS 10.15 (11 is untested).
+
 ## Installation
 
 The preferred way to install Jazzer is to compile it from source using [Bazel](https://bazel.build), but binary distributions
-are also available. At the moment Jazzer is only available for x64 Linux.
+for x64 Linux are also available.
 
 ### Using Bazel
 
@@ -23,17 +25,17 @@ Jazzer has the following dependencies when being built from source:
 * JDK 8 or later (e.g. [OpenJDK](https://openjdk.java.net/))
 * [Clang](https://clang.llvm.org/) 9.0 or later (using a recent version is strongly recommended)
 
-Jazzer uses [Bazelisk](https://github.com/bazelbuild/bazelisk) to automatically download and install Bazel. Building
-Jazzer from source and running it thus only requires the following assuming the dependencies are installed:
+Jazzer uses [Bazelisk](https://github.com/bazelbuild/bazelisk) to automatically download and install Bazel on Linux.
+Building Jazzer from source and running it thus only requires the following assuming the dependencies are installed:
 
 ```bash
 git clone https://github.com/CodeIntelligenceTesting/jazzer
 cd jazzer
-# If Bazel is installed, use (note the double dash):
-bazel run //:jazzer -- <arguments>
-# If Bazel is not installed, use (note the double dash):
+# Note the double dash used to pass <arguments> to Jazzer rather than Bazel.
 ./bazelisk-linux-amd64 run //:jazzer -- <arguments>
 ```
+
+On macOS, Bazel needs to be installed manually as described in the [official instructions](https://docs.bazel.build/versions/4.0.0/install-os-x.html).
 
 ### Using the provided binaries
 
