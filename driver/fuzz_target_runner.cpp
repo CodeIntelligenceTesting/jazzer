@@ -29,6 +29,7 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "java_reproducer_templates.h"
+#include "severity_annotator.h"
 #include "third_party/jni/jni.h"
 #include "utils.h"
 
@@ -207,7 +208,8 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
     } else {
       ignore_tokens_.push_back(dedup_token);
       std::cout << std::endl;
-      std::cerr << "== Java Exception: " << getAndClearException();
+      std::cerr << "== Java Exception: "
+                << AddSeverityMarker(getAndClearException());
       std::cout << "DEDUP_TOKEN: " << std::hex << std::setfill('0')
                 << std::setw(16) << dedup_token << std::endl;
       if (ignore_tokens_.size() < static_cast<std::size_t>(FLAGS_keep_going)) {
