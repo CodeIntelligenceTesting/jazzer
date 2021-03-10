@@ -13,7 +13,7 @@ native libraries.
 
 ## News: Jazzer available in OSS-Fuzz
 
-[Code Intelligence](https://code-intelligence.com) and Google have teamed up to bring support for Java, Kotlin, and other JVM-based languages to [OSS-Fuzz](https://github.com/google/oss-fuzz), Google's project for large-scale fuzzing of open-souce software.
+[Code Intelligence](https://code-intelligence.com) and Google have teamed up to bring support for Java, Kotlin, and other JVM-based languages to [OSS-Fuzz](https://github.com/google/oss-fuzz), Google's project for large-scale fuzzing of open-souce software. Read [the blogpost](https://security.googleblog.com/2021/03/fuzzing-java-in-oss-fuzz.html) over at the Google Security Blog.
 
 If you want to learn more about Jazzer, OSS-Fuzz, and the role fuzzing plays in web app security, join the talks by [Abhishek Arya](https://twitter.com/infernosec), [Sergej Dechand](https://twitter.com/serj_de), and [Khaled Yakdan](https://twitter.com/KhaledYakdan) at [FuzzCon Europe WebSec Edition](https://www.fuzzcon.eu/#hs_cos_wrapper_module_1511712391204163).
 
