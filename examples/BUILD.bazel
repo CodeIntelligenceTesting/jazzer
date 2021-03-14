@@ -36,6 +36,16 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "RethrowFuzzerSecurityIssueTest",
+    srcs = [
+        "src/main/java/com/example/RethrowFuzzerSecurityIssueTest.java",
+        "src/main/java/com/example/RethrowFuzzerSecurityIssueTestHooks.java",
+    ],
+    hook_classes = ["com.example.RethrowFuzzerSecurityIssueTestHooks"],
+    target_class = "com.example.RethrowFuzzerSecurityIssueTest",
+)
+
+java_fuzz_target_test(
     name = "JpegImageParserFuzzer",
     srcs = [
         "src/main/java/com/example/JpegImageParserFuzzer.java",

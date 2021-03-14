@@ -22,7 +22,7 @@ package com.code_intelligence.jazzer.api;
  * or any other. However, automated fuzzing platforms can use the extra information to handle the
  * detected issues appropriately.
  */
-public class FuzzerSecurityIssueLow extends RuntimeException {
+public class FuzzerSecurityIssueLow extends Error {
   public FuzzerSecurityIssueLow() {}
 
   public FuzzerSecurityIssueLow(String message) {

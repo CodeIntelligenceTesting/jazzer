@@ -14,6 +14,10 @@
 
 package com.code_intelligence.jazzer.runtime;
 
+import com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical;
+import com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh;
+import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
+import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
 import com.code_intelligence.jazzer.utils.Utils;
 import java.lang.reflect.Executable;
 
@@ -72,5 +76,11 @@ final public class TraceDataFlowNativeCallbacks {
     // Long.compare serves as a substitute for the lcmp opcode, which can't be used directly
     // as the stack layout required for the call can't be achieved without local variables.
     return Long.compare(arg1, arg2);
+  }
+
+  public static void rethrowFuzzerSecurityIssue(Throwable t) {
+    if (t instanceof FuzzerSecurityIssueCritical || t instanceof FuzzerSecurityIssueHigh
+        || t instanceof FuzzerSecurityIssueMedium || t instanceof FuzzerSecurityIssueLow)
+      throw(Error) t;
   }
 }

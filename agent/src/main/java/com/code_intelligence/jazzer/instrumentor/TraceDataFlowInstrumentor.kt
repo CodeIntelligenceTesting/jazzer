@@ -19,15 +19,22 @@ import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
+import org.objectweb.asm.tree.AnnotationNode
 import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.tree.FrameNode
 import org.objectweb.asm.tree.InsnList
 import org.objectweb.asm.tree.InsnNode
 import org.objectweb.asm.tree.IntInsnNode
+import org.objectweb.asm.tree.LabelNode
 import org.objectweb.asm.tree.LdcInsnNode
+import org.objectweb.asm.tree.LineNumberNode
+import org.objectweb.asm.tree.LocalVariableNode
 import org.objectweb.asm.tree.LookupSwitchInsnNode
 import org.objectweb.asm.tree.MethodInsnNode
 import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.tree.TableSwitchInsnNode
+import org.objectweb.asm.tree.TryCatchBlockNode
+import org.objectweb.asm.tree.TypeInsnNode
 
 internal class TraceDataFlowInstrumentor(private val types: Set<InstrumentationType>, callbackClass: Class<*> = TraceDataFlowNativeCallbacks::class.java) : Instrumentor {
 
@@ -42,6 +49,7 @@ internal class TraceDataFlowInstrumentor(private val types: Set<InstrumentationT
         for (method in node.methods) {
             if (shouldInstrument(method)) {
                 addDataFlowInstrumentation(method)
+                addRethrowInstrumentation(method)
             }
         }
 
@@ -128,6 +136,82 @@ internal class TraceDataFlowInstrumentor(private val types: Set<InstrumentationT
                     if (!isConstantIntegerPushInsn(inst.previous)) continue@loop
                     method.instructions.insertBefore(inst, gepLoadInstrumentation())
                 }
+            }
+        }
+    }
+
+    /**
+     * Skip over nodes that must remain in place at the target of a jump instruction.
+     */
+    private fun skipFixedPositionNodes(node: AbstractInsnNode): AbstractInsnNode? {
+        var nextFreeNode: AbstractInsnNode? = node
+        while (true) {
+            when (nextFreeNode) {
+                is LabelNode,
+                is LineNumberNode,
+                is FrameNode,
+                is AnnotationNode,
+                is TryCatchBlockNode,
+                is LocalVariableNode -> nextFreeNode = nextFreeNode.next
+                is TypeInsnNode -> {
+                    // NEW instructions are always accompanied by label nodes that tie them to
+                    // `Uninitialized` entries in the stack map table. If a NEW instruction is
+                    // a target of a jump, then this label node is reused as the target of the
+                    // jump and we must not insert other instrumentations in its place.
+                    if (nextFreeNode.opcode == Opcodes.NEW) {
+                        nextFreeNode = nextFreeNode.next
+                    } else {
+                        break
+                    }
+                }
+                else -> break
+            }
+        }
+        return nextFreeNode
+    }
+
+    /**
+     * Prevent FuzzerSecurityIssue* from being caught by inserting a rethrow at the beginning of
+     * every generic catch clause that could catch it.
+     *
+     * This instrumentation transforms a try-catch block such as
+     *
+     * try {
+     *   ...
+     * } catch (Throwable t) {
+     *   ...
+     * }
+     *
+     * into bytecode equivalent to
+     *
+     * try {
+     *   ...
+     * } catch (Throwable t) {
+     *   if (t instanceof FuzzerSecurityIssueCritical)
+     *     throw (Error) t;
+     *   // likewise for the other FuzzerSecurityIssue* exceptions.
+     *   ...
+     * }
+     */
+    private fun addRethrowInstrumentation(method: MethodNode) {
+        for (tryCatchBlock in method.tryCatchBlocks) {
+            if (tryCatchBlock.type in listOf("java/lang/Throwable", "java/lang/Error")) {
+                val firstInsertionPoint = skipFixedPositionNodes(tryCatchBlock.handler)
+                method.instructions.insertBefore(
+                    firstInsertionPoint,
+                    InsnList().apply {
+                        add(InsnNode(Opcodes.DUP))
+                        add(
+                            MethodInsnNode(
+                                Opcodes.INVOKESTATIC,
+                                callbackInternalClassName,
+                                "rethrowFuzzerSecurityIssue",
+                                "(Ljava/lang/Throwable;)V",
+                                false
+                            )
+                        )
+                    }
+                )
             }
         }
     }
