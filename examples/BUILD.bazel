@@ -46,6 +46,15 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "ExampleOutOfMemoryFuzzer",
+    srcs = [
+        "src/main/java/com/example/ExampleOutOfMemoryFuzzer.java",
+    ],
+    fuzzer_args = ["--jvm_args=-Xmx512m"],
+    target_class = "com.example.ExampleOutOfMemoryFuzzer",
+)
+
+java_fuzz_target_test(
     name = "JpegImageParserFuzzer",
     srcs = [
         "src/main/java/com/example/JpegImageParserFuzzer.java",
