@@ -670,6 +670,7 @@ java/lang/IncompatibleClassChangeError#<init>#()V
 java/lang/IncompatibleClassChangeError#<init>#(Ljava/lang/String;)V
 java/lang/IndexOutOfBoundsException#<init>#()V
 java/lang/IndexOutOfBoundsException#<init>#(I)V
+java/lang/IndexOutOfBoundsException#<init>#(J)V
 java/lang/IndexOutOfBoundsException#<init>#(Ljava/lang/String;)V
 java/lang/InheritableThreadLocal#<init>#()V
 java/lang/InstantiationError#<init>#()V
@@ -1521,6 +1522,8 @@ java/lang/invoke/ConstantGroup#subGroup#(II)Ljava/lang/invoke/ConstantGroup;
 java/lang/invoke/IndirectVarHandle#coordinateTypes#()Ljava/util/List;
 java/lang/invoke/IndirectVarHandle#toMethodHandle#(Ljava/lang/invoke/VarHandle/AccessMode;)Ljava/lang/invoke/MethodHandle;
 java/lang/invoke/IndirectVarHandle#varType#()Ljava/lang/Class;
+java/lang/invoke/IndirectVarHandle#withInvokeBehavior#()Ljava/lang/invoke/VarHandle;
+java/lang/invoke/IndirectVarHandle#withInvokeExactBehavior#()Ljava/lang/invoke/VarHandle;
 java/lang/invoke/InfoFromMemberName#getDeclaringClass#()Ljava/lang/Class;
 java/lang/invoke/InfoFromMemberName#getMethodType#()Ljava/lang/invoke/MethodType;
 java/lang/invoke/InfoFromMemberName#getModifiers#()I
@@ -1605,6 +1608,20 @@ java/lang/invoke/MemberName#makeAccessException#()Ljava/lang/ReflectiveOperation
 java/lang/invoke/MemberName#makeAccessException#(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/IllegalAccessException;
 java/lang/invoke/MemberName#refersTo#(Ljava/lang/Class;Ljava/lang/String;)Z
 java/lang/invoke/MemberName#toString#()Ljava/lang/String;
+java/lang/invoke/MemoryAccessVarHandleByteHelper#withInvokeBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleByteHelper;
+java/lang/invoke/MemoryAccessVarHandleByteHelper#withInvokeExactBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleByteHelper;
+java/lang/invoke/MemoryAccessVarHandleCharHelper#withInvokeBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleCharHelper;
+java/lang/invoke/MemoryAccessVarHandleCharHelper#withInvokeExactBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleCharHelper;
+java/lang/invoke/MemoryAccessVarHandleDoubleHelper#withInvokeBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleDoubleHelper;
+java/lang/invoke/MemoryAccessVarHandleDoubleHelper#withInvokeExactBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleDoubleHelper;
+java/lang/invoke/MemoryAccessVarHandleFloatHelper#withInvokeBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleFloatHelper;
+java/lang/invoke/MemoryAccessVarHandleFloatHelper#withInvokeExactBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleFloatHelper;
+java/lang/invoke/MemoryAccessVarHandleIntHelper#withInvokeBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleIntHelper;
+java/lang/invoke/MemoryAccessVarHandleIntHelper#withInvokeExactBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleIntHelper;
+java/lang/invoke/MemoryAccessVarHandleLongHelper#withInvokeBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleLongHelper;
+java/lang/invoke/MemoryAccessVarHandleLongHelper#withInvokeExactBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleLongHelper;
+java/lang/invoke/MemoryAccessVarHandleShortHelper#withInvokeBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleShortHelper;
+java/lang/invoke/MemoryAccessVarHandleShortHelper#withInvokeExactBehavior#()Ljava/lang/invoke/MemoryAccessVarHandleShortHelper;
 java/lang/invoke/MethodHandle#asFixedArity#()Ljava/lang/invoke/MethodHandle;
 java/lang/invoke/MethodHandle#describeConstable#()Ljava/util/Optional;
 java/lang/invoke/MethodHandle#isVarargsCollector#()Z
@@ -1651,6 +1668,7 @@ java/lang/invoke/MethodTypeForm#setCachedMethodHandle#(ILjava/lang/invoke/Method
 java/lang/invoke/MethodTypeForm#toString#()Ljava/lang/String;
 java/lang/invoke/MutableCallSite#dynamicInvoker#()Ljava/lang/invoke/MethodHandle;
 java/lang/invoke/MutableCallSite#getTarget#()Ljava/lang/invoke/MethodHandle;
+java/lang/invoke/NativeMethodHandle#make#(Ljdk/internal/invoke/NativeEntryPoint;Ljava/lang/invoke/MethodHandle;)Ljava/lang/invoke/MethodHandle;
 java/lang/invoke/ProxyClassesDumper#dumpClass#(Ljava/lang/String;[B)V
 java/lang/invoke/ProxyClassesDumper#encodeForFilename#(Ljava/lang/String;)Ljava/lang/String;
 java/lang/invoke/ProxyClassesDumper#getInstance#(Ljava/lang/String;)Ljava/lang/invoke/ProxyClassesDumper;
@@ -1677,6 +1695,7 @@ java/lang/invoke/VarHandle#acquireFence#()V
 java/lang/invoke/VarHandle#coordinateTypes#()Ljava/util/List;
 java/lang/invoke/VarHandle#describeConstable#()Ljava/util/Optional;
 java/lang/invoke/VarHandle#fullFence#()V
+java/lang/invoke/VarHandle#hasInvokeExactBehavior#()Z
 java/lang/invoke/VarHandle#isAccessModeSupported#(Ljava/lang/invoke/VarHandle/AccessMode;)Z
 java/lang/invoke/VarHandle#loadLoadFence#()V
 java/lang/invoke/VarHandle#releaseFence#()V
@@ -1684,6 +1703,8 @@ java/lang/invoke/VarHandle#storeStoreFence#()V
 java/lang/invoke/VarHandle#toMethodHandle#(Ljava/lang/invoke/VarHandle/AccessMode;)Ljava/lang/invoke/MethodHandle;
 java/lang/invoke/VarHandle#toString#()Ljava/lang/String;
 java/lang/invoke/VarHandle#varType#()Ljava/lang/Class;
+java/lang/invoke/VarHandle#withInvokeBehavior#()Ljava/lang/invoke/VarHandle;
+java/lang/invoke/VarHandle#withInvokeExactBehavior#()Ljava/lang/invoke/VarHandle;
 java/lang/invoke/VarHandles#collectCoordinates#(Ljava/lang/invoke/VarHandle;ILjava/lang/invoke/MethodHandle;)Ljava/lang/invoke/VarHandle;
 java/lang/invoke/VarHandles#dropCoordinates#(Ljava/lang/invoke/VarHandle;I[Ljava/lang/Class;)Ljava/lang/invoke/VarHandle;
 java/lang/invoke/VarHandles#filterCoordinates#(Ljava/lang/invoke/VarHandle;I[Ljava/lang/invoke/MethodHandle;)Ljava/lang/invoke/VarHandle;
@@ -1742,7 +1763,9 @@ java/lang/module/ResolvedModule#reference#()Ljava/lang/module/ModuleReference;
 java/lang/module/ResolvedModule#toString#()Ljava/lang/String;
 java/lang/ref/Cleaner#register#(Ljava/lang/Object;Ljava/lang/Runnable;)Ljava/lang/ref/Cleaner/Cleanable;
 java/lang/ref/FinalReference#<init>#(Ljava/lang/Object;Ljava/lang/ref/ReferenceQueue;)V
+java/lang/ref/FinalReference#clear#()V
 java/lang/ref/FinalReference#enqueue#()Z
+java/lang/ref/FinalReference#get#()Ljava/lang/Object;
 java/lang/ref/PhantomReference#<init>#(Ljava/lang/Object;Ljava/lang/ref/ReferenceQueue;)V
 java/lang/ref/PhantomReference#get#()Ljava/lang/Object;
 java/lang/ref/Reference#clear#()V
@@ -1750,6 +1773,7 @@ java/lang/ref/Reference#enqueue#()Z
 java/lang/ref/Reference#get#()Ljava/lang/Object;
 java/lang/ref/Reference#isEnqueued#()Z
 java/lang/ref/Reference#reachabilityFence#(Ljava/lang/Object;)V
+java/lang/ref/Reference#refersTo#(Ljava/lang/Object;)Z
 java/lang/ref/ReferenceQueue#<init>#()V
 java/lang/ref/ReferenceQueue#poll#()Ljava/lang/ref/Reference;
 java/lang/ref/SoftReference#<init>#(Ljava/lang/Object;)V
@@ -2407,6 +2431,10 @@ java/net/URLPermission#hashCode#()I
 java/net/URLPermission#implies#(Ljava/security/Permission;)Z
 java/net/URLStreamHandler#<init>#()V
 java/net/URLStreamHandlerFactory#createURLStreamHandler#(Ljava/lang/String;)Ljava/net/URLStreamHandler;
+java/net/UnixDomainSocketAddress#equals#(Ljava/lang/Object;)Z
+java/net/UnixDomainSocketAddress#getPath#()Ljava/nio/file/Path;
+java/net/UnixDomainSocketAddress#hashCode#()I
+java/net/UnixDomainSocketAddress#toString#()Ljava/lang/String;
 java/net/UnknownContentHandler#getContent#(Ljava/net/URLConnection;)Ljava/lang/Object;
 java/net/UnknownHostException#<init>#()V
 java/net/UnknownHostException#<init>#(Ljava/lang/String;)V
@@ -2789,6 +2817,7 @@ java/nio/DirectByteBuffer#isDirect#()Z
 java/nio/DirectByteBuffer#isReadOnly#()Z
 java/nio/DirectByteBuffer#put#(B)Ljava/nio/ByteBuffer;
 java/nio/DirectByteBuffer#put#(IB)Ljava/nio/ByteBuffer;
+java/nio/DirectByteBuffer#put#(ILjava/nio/ByteBuffer;II)Ljava/nio/ByteBuffer;
 java/nio/DirectByteBuffer#put#(I[BII)Ljava/nio/ByteBuffer;
 java/nio/DirectByteBuffer#put#(Ljava/nio/ByteBuffer;)Ljava/nio/ByteBuffer;
 java/nio/DirectByteBuffer#put#([BII)Ljava/nio/ByteBuffer;
@@ -2819,6 +2848,7 @@ java/nio/DirectByteBufferR#isDirect#()Z
 java/nio/DirectByteBufferR#isReadOnly#()Z
 java/nio/DirectByteBufferR#put#(B)Ljava/nio/ByteBuffer;
 java/nio/DirectByteBufferR#put#(IB)Ljava/nio/ByteBuffer;
+java/nio/DirectByteBufferR#put#(ILjava/nio/ByteBuffer;II)Ljava/nio/ByteBuffer;
 java/nio/DirectByteBufferR#put#(I[BII)Ljava/nio/ByteBuffer;
 java/nio/DirectByteBufferR#put#(Ljava/nio/ByteBuffer;)Ljava/nio/ByteBuffer;
 java/nio/DirectByteBufferR#put#([BII)Ljava/nio/ByteBuffer;
@@ -2844,6 +2874,7 @@ java/nio/DirectCharBufferRS#isReadOnly#()Z
 java/nio/DirectCharBufferRS#order#()Ljava/nio/ByteOrder;
 java/nio/DirectCharBufferRS#put#(C)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferRS#put#(IC)Ljava/nio/CharBuffer;
+java/nio/DirectCharBufferRS#put#(ILjava/nio/CharBuffer;II)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferRS#put#(I[CII)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferRS#put#(Ljava/nio/CharBuffer;)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferRS#put#([CII)Ljava/nio/CharBuffer;
@@ -2859,6 +2890,7 @@ java/nio/DirectCharBufferRU#isReadOnly#()Z
 java/nio/DirectCharBufferRU#order#()Ljava/nio/ByteOrder;
 java/nio/DirectCharBufferRU#put#(C)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferRU#put#(IC)Ljava/nio/CharBuffer;
+java/nio/DirectCharBufferRU#put#(ILjava/nio/CharBuffer;II)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferRU#put#(I[CII)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferRU#put#(Ljava/nio/CharBuffer;)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferRU#put#([CII)Ljava/nio/CharBuffer;
@@ -2881,6 +2913,7 @@ java/nio/DirectCharBufferS#isReadOnly#()Z
 java/nio/DirectCharBufferS#order#()Ljava/nio/ByteOrder;
 java/nio/DirectCharBufferS#put#(C)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferS#put#(IC)Ljava/nio/CharBuffer;
+java/nio/DirectCharBufferS#put#(ILjava/nio/CharBuffer;II)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferS#put#(I[CII)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferS#put#(Ljava/nio/CharBuffer;)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferS#put#([CII)Ljava/nio/CharBuffer;
@@ -2903,6 +2936,7 @@ java/nio/DirectCharBufferU#isReadOnly#()Z
 java/nio/DirectCharBufferU#order#()Ljava/nio/ByteOrder;
 java/nio/DirectCharBufferU#put#(C)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferU#put#(IC)Ljava/nio/CharBuffer;
+java/nio/DirectCharBufferU#put#(ILjava/nio/CharBuffer;II)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferU#put#(I[CII)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferU#put#(Ljava/nio/CharBuffer;)Ljava/nio/CharBuffer;
 java/nio/DirectCharBufferU#put#([CII)Ljava/nio/CharBuffer;
@@ -2918,6 +2952,7 @@ java/nio/DirectDoubleBufferRS#isReadOnly#()Z
 java/nio/DirectDoubleBufferRS#order#()Ljava/nio/ByteOrder;
 java/nio/DirectDoubleBufferRS#put#(D)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferRS#put#(ID)Ljava/nio/DoubleBuffer;
+java/nio/DirectDoubleBufferRS#put#(ILjava/nio/DoubleBuffer;II)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferRS#put#(I[DII)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferRS#put#(Ljava/nio/DoubleBuffer;)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferRS#put#([DII)Ljava/nio/DoubleBuffer;
@@ -2931,6 +2966,7 @@ java/nio/DirectDoubleBufferRU#isReadOnly#()Z
 java/nio/DirectDoubleBufferRU#order#()Ljava/nio/ByteOrder;
 java/nio/DirectDoubleBufferRU#put#(D)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferRU#put#(ID)Ljava/nio/DoubleBuffer;
+java/nio/DirectDoubleBufferRU#put#(ILjava/nio/DoubleBuffer;II)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferRU#put#(I[DII)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferRU#put#(Ljava/nio/DoubleBuffer;)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferRU#put#([DII)Ljava/nio/DoubleBuffer;
@@ -2951,6 +2987,7 @@ java/nio/DirectDoubleBufferS#isReadOnly#()Z
 java/nio/DirectDoubleBufferS#order#()Ljava/nio/ByteOrder;
 java/nio/DirectDoubleBufferS#put#(D)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferS#put#(ID)Ljava/nio/DoubleBuffer;
+java/nio/DirectDoubleBufferS#put#(ILjava/nio/DoubleBuffer;II)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferS#put#(I[DII)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferS#put#(Ljava/nio/DoubleBuffer;)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferS#put#([DII)Ljava/nio/DoubleBuffer;
@@ -2971,6 +3008,7 @@ java/nio/DirectDoubleBufferU#isReadOnly#()Z
 java/nio/DirectDoubleBufferU#order#()Ljava/nio/ByteOrder;
 java/nio/DirectDoubleBufferU#put#(D)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferU#put#(ID)Ljava/nio/DoubleBuffer;
+java/nio/DirectDoubleBufferU#put#(ILjava/nio/DoubleBuffer;II)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferU#put#(I[DII)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferU#put#(Ljava/nio/DoubleBuffer;)Ljava/nio/DoubleBuffer;
 java/nio/DirectDoubleBufferU#put#([DII)Ljava/nio/DoubleBuffer;
@@ -2984,6 +3022,7 @@ java/nio/DirectFloatBufferRS#isReadOnly#()Z
 java/nio/DirectFloatBufferRS#order#()Ljava/nio/ByteOrder;
 java/nio/DirectFloatBufferRS#put#(F)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferRS#put#(IF)Ljava/nio/FloatBuffer;
+java/nio/DirectFloatBufferRS#put#(ILjava/nio/FloatBuffer;II)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferRS#put#(I[FII)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferRS#put#(Ljava/nio/FloatBuffer;)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferRS#put#([FII)Ljava/nio/FloatBuffer;
@@ -2997,6 +3036,7 @@ java/nio/DirectFloatBufferRU#isReadOnly#()Z
 java/nio/DirectFloatBufferRU#order#()Ljava/nio/ByteOrder;
 java/nio/DirectFloatBufferRU#put#(F)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferRU#put#(IF)Ljava/nio/FloatBuffer;
+java/nio/DirectFloatBufferRU#put#(ILjava/nio/FloatBuffer;II)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferRU#put#(I[FII)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferRU#put#(Ljava/nio/FloatBuffer;)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferRU#put#([FII)Ljava/nio/FloatBuffer;
@@ -3017,6 +3057,7 @@ java/nio/DirectFloatBufferS#isReadOnly#()Z
 java/nio/DirectFloatBufferS#order#()Ljava/nio/ByteOrder;
 java/nio/DirectFloatBufferS#put#(F)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferS#put#(IF)Ljava/nio/FloatBuffer;
+java/nio/DirectFloatBufferS#put#(ILjava/nio/FloatBuffer;II)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferS#put#(I[FII)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferS#put#(Ljava/nio/FloatBuffer;)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferS#put#([FII)Ljava/nio/FloatBuffer;
@@ -3037,6 +3078,7 @@ java/nio/DirectFloatBufferU#isReadOnly#()Z
 java/nio/DirectFloatBufferU#order#()Ljava/nio/ByteOrder;
 java/nio/DirectFloatBufferU#put#(F)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferU#put#(IF)Ljava/nio/FloatBuffer;
+java/nio/DirectFloatBufferU#put#(ILjava/nio/FloatBuffer;II)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferU#put#(I[FII)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferU#put#(Ljava/nio/FloatBuffer;)Ljava/nio/FloatBuffer;
 java/nio/DirectFloatBufferU#put#([FII)Ljava/nio/FloatBuffer;
@@ -3050,6 +3092,7 @@ java/nio/DirectIntBufferRS#isReadOnly#()Z
 java/nio/DirectIntBufferRS#order#()Ljava/nio/ByteOrder;
 java/nio/DirectIntBufferRS#put#(I)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferRS#put#(II)Ljava/nio/IntBuffer;
+java/nio/DirectIntBufferRS#put#(ILjava/nio/IntBuffer;II)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferRS#put#(I[III)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferRS#put#(Ljava/nio/IntBuffer;)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferRS#put#([III)Ljava/nio/IntBuffer;
@@ -3063,6 +3106,7 @@ java/nio/DirectIntBufferRU#isReadOnly#()Z
 java/nio/DirectIntBufferRU#order#()Ljava/nio/ByteOrder;
 java/nio/DirectIntBufferRU#put#(I)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferRU#put#(II)Ljava/nio/IntBuffer;
+java/nio/DirectIntBufferRU#put#(ILjava/nio/IntBuffer;II)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferRU#put#(I[III)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferRU#put#(Ljava/nio/IntBuffer;)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferRU#put#([III)Ljava/nio/IntBuffer;
@@ -3083,6 +3127,7 @@ java/nio/DirectIntBufferS#isReadOnly#()Z
 java/nio/DirectIntBufferS#order#()Ljava/nio/ByteOrder;
 java/nio/DirectIntBufferS#put#(I)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferS#put#(II)Ljava/nio/IntBuffer;
+java/nio/DirectIntBufferS#put#(ILjava/nio/IntBuffer;II)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferS#put#(I[III)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferS#put#(Ljava/nio/IntBuffer;)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferS#put#([III)Ljava/nio/IntBuffer;
@@ -3103,6 +3148,7 @@ java/nio/DirectIntBufferU#isReadOnly#()Z
 java/nio/DirectIntBufferU#order#()Ljava/nio/ByteOrder;
 java/nio/DirectIntBufferU#put#(I)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferU#put#(II)Ljava/nio/IntBuffer;
+java/nio/DirectIntBufferU#put#(ILjava/nio/IntBuffer;II)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferU#put#(I[III)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferU#put#(Ljava/nio/IntBuffer;)Ljava/nio/IntBuffer;
 java/nio/DirectIntBufferU#put#([III)Ljava/nio/IntBuffer;
@@ -3115,6 +3161,7 @@ java/nio/DirectLongBufferRS#isDirect#()Z
 java/nio/DirectLongBufferRS#isReadOnly#()Z
 java/nio/DirectLongBufferRS#order#()Ljava/nio/ByteOrder;
 java/nio/DirectLongBufferRS#put#(IJ)Ljava/nio/LongBuffer;
+java/nio/DirectLongBufferRS#put#(ILjava/nio/LongBuffer;II)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferRS#put#(I[JII)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferRS#put#(J)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferRS#put#(Ljava/nio/LongBuffer;)Ljava/nio/LongBuffer;
@@ -3128,6 +3175,7 @@ java/nio/DirectLongBufferRU#isDirect#()Z
 java/nio/DirectLongBufferRU#isReadOnly#()Z
 java/nio/DirectLongBufferRU#order#()Ljava/nio/ByteOrder;
 java/nio/DirectLongBufferRU#put#(IJ)Ljava/nio/LongBuffer;
+java/nio/DirectLongBufferRU#put#(ILjava/nio/LongBuffer;II)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferRU#put#(I[JII)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferRU#put#(J)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferRU#put#(Ljava/nio/LongBuffer;)Ljava/nio/LongBuffer;
@@ -3148,6 +3196,7 @@ java/nio/DirectLongBufferS#isDirect#()Z
 java/nio/DirectLongBufferS#isReadOnly#()Z
 java/nio/DirectLongBufferS#order#()Ljava/nio/ByteOrder;
 java/nio/DirectLongBufferS#put#(IJ)Ljava/nio/LongBuffer;
+java/nio/DirectLongBufferS#put#(ILjava/nio/LongBuffer;II)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferS#put#(I[JII)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferS#put#(J)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferS#put#(Ljava/nio/LongBuffer;)Ljava/nio/LongBuffer;
@@ -3168,6 +3217,7 @@ java/nio/DirectLongBufferU#isDirect#()Z
 java/nio/DirectLongBufferU#isReadOnly#()Z
 java/nio/DirectLongBufferU#order#()Ljava/nio/ByteOrder;
 java/nio/DirectLongBufferU#put#(IJ)Ljava/nio/LongBuffer;
+java/nio/DirectLongBufferU#put#(ILjava/nio/LongBuffer;II)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferU#put#(I[JII)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferU#put#(J)Ljava/nio/LongBuffer;
 java/nio/DirectLongBufferU#put#(Ljava/nio/LongBuffer;)Ljava/nio/LongBuffer;
@@ -3180,6 +3230,7 @@ java/nio/DirectShortBufferRS#duplicate#()Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferRS#isDirect#()Z
 java/nio/DirectShortBufferRS#isReadOnly#()Z
 java/nio/DirectShortBufferRS#order#()Ljava/nio/ByteOrder;
+java/nio/DirectShortBufferRS#put#(ILjava/nio/ShortBuffer;II)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferRS#put#(IS)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferRS#put#(I[SII)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferRS#put#(Ljava/nio/ShortBuffer;)Ljava/nio/ShortBuffer;
@@ -3193,6 +3244,7 @@ java/nio/DirectShortBufferRU#duplicate#()Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferRU#isDirect#()Z
 java/nio/DirectShortBufferRU#isReadOnly#()Z
 java/nio/DirectShortBufferRU#order#()Ljava/nio/ByteOrder;
+java/nio/DirectShortBufferRU#put#(ILjava/nio/ShortBuffer;II)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferRU#put#(IS)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferRU#put#(I[SII)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferRU#put#(Ljava/nio/ShortBuffer;)Ljava/nio/ShortBuffer;
@@ -3213,6 +3265,7 @@ java/nio/DirectShortBufferS#get#([SII)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferS#isDirect#()Z
 java/nio/DirectShortBufferS#isReadOnly#()Z
 java/nio/DirectShortBufferS#order#()Ljava/nio/ByteOrder;
+java/nio/DirectShortBufferS#put#(ILjava/nio/ShortBuffer;II)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferS#put#(IS)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferS#put#(I[SII)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferS#put#(Ljava/nio/ShortBuffer;)Ljava/nio/ShortBuffer;
@@ -3233,6 +3286,7 @@ java/nio/DirectShortBufferU#get#([SII)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferU#isDirect#()Z
 java/nio/DirectShortBufferU#isReadOnly#()Z
 java/nio/DirectShortBufferU#order#()Ljava/nio/ByteOrder;
+java/nio/DirectShortBufferU#put#(ILjava/nio/ShortBuffer;II)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferU#put#(IS)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferU#put#(I[SII)Ljava/nio/ShortBuffer;
 java/nio/DirectShortBufferU#put#(Ljava/nio/ShortBuffer;)Ljava/nio/ShortBuffer;
@@ -3307,6 +3361,7 @@ java/nio/HeapByteBuffer#isDirect#()Z
 java/nio/HeapByteBuffer#isReadOnly#()Z
 java/nio/HeapByteBuffer#put#(B)Ljava/nio/ByteBuffer;
 java/nio/HeapByteBuffer#put#(IB)Ljava/nio/ByteBuffer;
+java/nio/HeapByteBuffer#put#(ILjava/nio/ByteBuffer;II)Ljava/nio/ByteBuffer;
 java/nio/HeapByteBuffer#put#(I[BII)Ljava/nio/ByteBuffer;
 java/nio/HeapByteBuffer#put#(Ljava/nio/ByteBuffer;)Ljava/nio/ByteBuffer;
 java/nio/HeapByteBuffer#put#([BII)Ljava/nio/ByteBuffer;
@@ -3336,6 +3391,7 @@ java/nio/HeapByteBufferR#duplicate#()Ljava/nio/ByteBuffer;
 java/nio/HeapByteBufferR#isReadOnly#()Z
 java/nio/HeapByteBufferR#put#(B)Ljava/nio/ByteBuffer;
 java/nio/HeapByteBufferR#put#(IB)Ljava/nio/ByteBuffer;
+java/nio/HeapByteBufferR#put#(ILjava/nio/ByteBuffer;II)Ljava/nio/ByteBuffer;
 java/nio/HeapByteBufferR#put#(I[BII)Ljava/nio/ByteBuffer;
 java/nio/HeapByteBufferR#put#(Ljava/nio/ByteBuffer;)Ljava/nio/ByteBuffer;
 java/nio/HeapByteBufferR#put#([BII)Ljava/nio/ByteBuffer;
@@ -3365,6 +3421,7 @@ java/nio/HeapCharBuffer#isReadOnly#()Z
 java/nio/HeapCharBuffer#order#()Ljava/nio/ByteOrder;
 java/nio/HeapCharBuffer#put#(C)Ljava/nio/CharBuffer;
 java/nio/HeapCharBuffer#put#(IC)Ljava/nio/CharBuffer;
+java/nio/HeapCharBuffer#put#(ILjava/nio/CharBuffer;II)Ljava/nio/CharBuffer;
 java/nio/HeapCharBuffer#put#(I[CII)Ljava/nio/CharBuffer;
 java/nio/HeapCharBuffer#put#(Ljava/lang/String;II)Ljava/nio/CharBuffer;
 java/nio/HeapCharBuffer#put#(Ljava/nio/CharBuffer;)Ljava/nio/CharBuffer;
@@ -3379,6 +3436,7 @@ java/nio/HeapCharBufferR#isReadOnly#()Z
 java/nio/HeapCharBufferR#order#()Ljava/nio/ByteOrder;
 java/nio/HeapCharBufferR#put#(C)Ljava/nio/CharBuffer;
 java/nio/HeapCharBufferR#put#(IC)Ljava/nio/CharBuffer;
+java/nio/HeapCharBufferR#put#(ILjava/nio/CharBuffer;II)Ljava/nio/CharBuffer;
 java/nio/HeapCharBufferR#put#(I[CII)Ljava/nio/CharBuffer;
 java/nio/HeapCharBufferR#put#(Ljava/lang/String;II)Ljava/nio/CharBuffer;
 java/nio/HeapCharBufferR#put#(Ljava/nio/CharBuffer;)Ljava/nio/CharBuffer;
@@ -3398,6 +3456,7 @@ java/nio/HeapDoubleBuffer#isReadOnly#()Z
 java/nio/HeapDoubleBuffer#order#()Ljava/nio/ByteOrder;
 java/nio/HeapDoubleBuffer#put#(D)Ljava/nio/DoubleBuffer;
 java/nio/HeapDoubleBuffer#put#(ID)Ljava/nio/DoubleBuffer;
+java/nio/HeapDoubleBuffer#put#(ILjava/nio/DoubleBuffer;II)Ljava/nio/DoubleBuffer;
 java/nio/HeapDoubleBuffer#put#(I[DII)Ljava/nio/DoubleBuffer;
 java/nio/HeapDoubleBuffer#put#(Ljava/nio/DoubleBuffer;)Ljava/nio/DoubleBuffer;
 java/nio/HeapDoubleBuffer#put#([DII)Ljava/nio/DoubleBuffer;
@@ -3410,6 +3469,7 @@ java/nio/HeapDoubleBufferR#isReadOnly#()Z
 java/nio/HeapDoubleBufferR#order#()Ljava/nio/ByteOrder;
 java/nio/HeapDoubleBufferR#put#(D)Ljava/nio/DoubleBuffer;
 java/nio/HeapDoubleBufferR#put#(ID)Ljava/nio/DoubleBuffer;
+java/nio/HeapDoubleBufferR#put#(ILjava/nio/DoubleBuffer;II)Ljava/nio/DoubleBuffer;
 java/nio/HeapDoubleBufferR#put#(I[DII)Ljava/nio/DoubleBuffer;
 java/nio/HeapDoubleBufferR#put#(Ljava/nio/DoubleBuffer;)Ljava/nio/DoubleBuffer;
 java/nio/HeapDoubleBufferR#put#([DII)Ljava/nio/DoubleBuffer;
@@ -3427,6 +3487,7 @@ java/nio/HeapFloatBuffer#isReadOnly#()Z
 java/nio/HeapFloatBuffer#order#()Ljava/nio/ByteOrder;
 java/nio/HeapFloatBuffer#put#(F)Ljava/nio/FloatBuffer;
 java/nio/HeapFloatBuffer#put#(IF)Ljava/nio/FloatBuffer;
+java/nio/HeapFloatBuffer#put#(ILjava/nio/FloatBuffer;II)Ljava/nio/FloatBuffer;
 java/nio/HeapFloatBuffer#put#(I[FII)Ljava/nio/FloatBuffer;
 java/nio/HeapFloatBuffer#put#(Ljava/nio/FloatBuffer;)Ljava/nio/FloatBuffer;
 java/nio/HeapFloatBuffer#put#([FII)Ljava/nio/FloatBuffer;
@@ -3439,6 +3500,7 @@ java/nio/HeapFloatBufferR#isReadOnly#()Z
 java/nio/HeapFloatBufferR#order#()Ljava/nio/ByteOrder;
 java/nio/HeapFloatBufferR#put#(F)Ljava/nio/FloatBuffer;
 java/nio/HeapFloatBufferR#put#(IF)Ljava/nio/FloatBuffer;
+java/nio/HeapFloatBufferR#put#(ILjava/nio/FloatBuffer;II)Ljava/nio/FloatBuffer;
 java/nio/HeapFloatBufferR#put#(I[FII)Ljava/nio/FloatBuffer;
 java/nio/HeapFloatBufferR#put#(Ljava/nio/FloatBuffer;)Ljava/nio/FloatBuffer;
 java/nio/HeapFloatBufferR#put#([FII)Ljava/nio/FloatBuffer;
@@ -3456,6 +3518,7 @@ java/nio/HeapIntBuffer#isReadOnly#()Z
 java/nio/HeapIntBuffer#order#()Ljava/nio/ByteOrder;
 java/nio/HeapIntBuffer#put#(I)Ljava/nio/IntBuffer;
 java/nio/HeapIntBuffer#put#(II)Ljava/nio/IntBuffer;
+java/nio/HeapIntBuffer#put#(ILjava/nio/IntBuffer;II)Ljava/nio/IntBuffer;
 java/nio/HeapIntBuffer#put#(I[III)Ljava/nio/IntBuffer;
 java/nio/HeapIntBuffer#put#(Ljava/nio/IntBuffer;)Ljava/nio/IntBuffer;
 java/nio/HeapIntBuffer#put#([III)Ljava/nio/IntBuffer;
@@ -3468,6 +3531,7 @@ java/nio/HeapIntBufferR#isReadOnly#()Z
 java/nio/HeapIntBufferR#order#()Ljava/nio/ByteOrder;
 java/nio/HeapIntBufferR#put#(I)Ljava/nio/IntBuffer;
 java/nio/HeapIntBufferR#put#(II)Ljava/nio/IntBuffer;
+java/nio/HeapIntBufferR#put#(ILjava/nio/IntBuffer;II)Ljava/nio/IntBuffer;
 java/nio/HeapIntBufferR#put#(I[III)Ljava/nio/IntBuffer;
 java/nio/HeapIntBufferR#put#(Ljava/nio/IntBuffer;)Ljava/nio/IntBuffer;
 java/nio/HeapIntBufferR#put#([III)Ljava/nio/IntBuffer;
@@ -3484,6 +3548,7 @@ java/nio/HeapLongBuffer#isDirect#()Z
 java/nio/HeapLongBuffer#isReadOnly#()Z
 java/nio/HeapLongBuffer#order#()Ljava/nio/ByteOrder;
 java/nio/HeapLongBuffer#put#(IJ)Ljava/nio/LongBuffer;
+java/nio/HeapLongBuffer#put#(ILjava/nio/LongBuffer;II)Ljava/nio/LongBuffer;
 java/nio/HeapLongBuffer#put#(I[JII)Ljava/nio/LongBuffer;
 java/nio/HeapLongBuffer#put#(J)Ljava/nio/LongBuffer;
 java/nio/HeapLongBuffer#put#(Ljava/nio/LongBuffer;)Ljava/nio/LongBuffer;
@@ -3496,6 +3561,7 @@ java/nio/HeapLongBufferR#duplicate#()Ljava/nio/LongBuffer;
 java/nio/HeapLongBufferR#isReadOnly#()Z
 java/nio/HeapLongBufferR#order#()Ljava/nio/ByteOrder;
 java/nio/HeapLongBufferR#put#(IJ)Ljava/nio/LongBuffer;
+java/nio/HeapLongBufferR#put#(ILjava/nio/LongBuffer;II)Ljava/nio/LongBuffer;
 java/nio/HeapLongBufferR#put#(I[JII)Ljava/nio/LongBuffer;
 java/nio/HeapLongBufferR#put#(J)Ljava/nio/LongBuffer;
 java/nio/HeapLongBufferR#put#(Ljava/nio/LongBuffer;)Ljava/nio/LongBuffer;
@@ -3512,6 +3578,7 @@ java/nio/HeapShortBuffer#get#([SII)Ljava/nio/ShortBuffer;
 java/nio/HeapShortBuffer#isDirect#()Z
 java/nio/HeapShortBuffer#isReadOnly#()Z
 java/nio/HeapShortBuffer#order#()Ljava/nio/ByteOrder;
+java/nio/HeapShortBuffer#put#(ILjava/nio/ShortBuffer;II)Ljava/nio/ShortBuffer;
 java/nio/HeapShortBuffer#put#(IS)Ljava/nio/ShortBuffer;
 java/nio/HeapShortBuffer#put#(I[SII)Ljava/nio/ShortBuffer;
 java/nio/HeapShortBuffer#put#(Ljava/nio/ShortBuffer;)Ljava/nio/ShortBuffer;
@@ -3524,6 +3591,7 @@ java/nio/HeapShortBufferR#compact#()Ljava/nio/ShortBuffer;
 java/nio/HeapShortBufferR#duplicate#()Ljava/nio/ShortBuffer;
 java/nio/HeapShortBufferR#isReadOnly#()Z
 java/nio/HeapShortBufferR#order#()Ljava/nio/ByteOrder;
+java/nio/HeapShortBufferR#put#(ILjava/nio/ShortBuffer;II)Ljava/nio/ShortBuffer;
 java/nio/HeapShortBufferR#put#(IS)Ljava/nio/ShortBuffer;
 java/nio/HeapShortBufferR#put#(I[SII)Ljava/nio/ShortBuffer;
 java/nio/HeapShortBufferR#put#(Ljava/nio/ShortBuffer;)Ljava/nio/ShortBuffer;
@@ -4590,6 +4658,7 @@ java/security/spec/InvalidKeySpecException#<init>#(Ljava/lang/Throwable;)V
 java/security/spec/InvalidParameterSpecException#<init>#()V
 java/security/spec/InvalidParameterSpecException#<init>#(Ljava/lang/String;)V
 java/security/spec/MGF1ParameterSpec#getDigestAlgorithm#()Ljava/lang/String;
+java/security/spec/MGF1ParameterSpec#toString#()Ljava/lang/String;
 java/security/spec/NamedParameterSpec#getName#()Ljava/lang/String;
 java/security/spec/PKCS8EncodedKeySpec#getEncoded#()[B
 java/security/spec/PKCS8EncodedKeySpec#getFormat#()Ljava/lang/String;
@@ -5649,6 +5718,7 @@ java/time/format/DateTimeFormatterBuilder#<init>#()V
 java/time/format/DateTimeFormatterBuilder#append#(Ljava/time/format/DateTimeFormatter;)Ljava/time/format/DateTimeFormatterBuilder;
 java/time/format/DateTimeFormatterBuilder#appendChronologyId#()Ljava/time/format/DateTimeFormatterBuilder;
 java/time/format/DateTimeFormatterBuilder#appendChronologyText#(Ljava/time/format/TextStyle;)Ljava/time/format/DateTimeFormatterBuilder;
+java/time/format/DateTimeFormatterBuilder#appendDayPeriodText#(Ljava/time/format/TextStyle;)Ljava/time/format/DateTimeFormatterBuilder;
 java/time/format/DateTimeFormatterBuilder#appendGenericZoneText#(Ljava/time/format/TextStyle;)Ljava/time/format/DateTimeFormatterBuilder;
 java/time/format/DateTimeFormatterBuilder#appendGenericZoneText#(Ljava/time/format/TextStyle;Ljava/util/Set;)Ljava/time/format/DateTimeFormatterBuilder;
 java/time/format/DateTimeFormatterBuilder#appendInstant#()Ljava/time/format/DateTimeFormatterBuilder;
@@ -6321,6 +6391,7 @@ java/util/IdentityHashMap#remove#(Ljava/lang/Object;)Ljava/lang/Object;
 java/util/IdentityHashMap#replaceAll#(Ljava/util/function/BiFunction;)V
 java/util/IdentityHashMap#size#()I
 java/util/IdentityHashMap#values#()Ljava/util/Collection;
+java/util/IllegalFormatArgumentIndexException#getMessage#()Ljava/lang/String;
 java/util/IllegalFormatCodePointException#<init>#(I)V
 java/util/IllegalFormatCodePointException#getCodePoint#()I
 java/util/IllegalFormatCodePointException#getMessage#()Ljava/lang/String;
@@ -8080,6 +8151,7 @@ java/util/stream/DoublePipeline#forEachOrdered#(Ljava/util/function/DoubleConsum
 java/util/stream/DoublePipeline#iterator#()Ljava/util/PrimitiveIterator/OfDouble;
 java/util/stream/DoublePipeline#limit#(J)Ljava/util/stream/DoubleStream;
 java/util/stream/DoublePipeline#map#(Ljava/util/function/DoubleUnaryOperator;)Ljava/util/stream/DoubleStream;
+java/util/stream/DoublePipeline#mapMulti#(Ljava/util/stream/DoubleStream/DoubleMapMultiConsumer;)Ljava/util/stream/DoubleStream;
 java/util/stream/DoublePipeline#mapToInt#(Ljava/util/function/DoubleToIntFunction;)Ljava/util/stream/IntStream;
 java/util/stream/DoublePipeline#mapToLong#(Ljava/util/function/DoubleToLongFunction;)Ljava/util/stream/LongStream;
 java/util/stream/DoublePipeline#mapToObj#(Ljava/util/function/DoubleFunction;)Ljava/util/stream/Stream;
@@ -8119,6 +8191,7 @@ java/util/stream/DoubleStream#iterate#(DLjava/util/function/DoublePredicate;Ljav
 java/util/stream/DoubleStream#iterate#(DLjava/util/function/DoubleUnaryOperator;)Ljava/util/stream/DoubleStream;
 java/util/stream/DoubleStream#iterator#()Ljava/util/PrimitiveIterator/OfDouble;
 java/util/stream/DoubleStream#map#(Ljava/util/function/DoubleUnaryOperator;)Ljava/util/stream/DoubleStream;
+java/util/stream/DoubleStream#mapMulti#(Ljava/util/stream/DoubleStream/DoubleMapMultiConsumer;)Ljava/util/stream/DoubleStream;
 java/util/stream/DoubleStream#mapToInt#(Ljava/util/function/DoubleToIntFunction;)Ljava/util/stream/IntStream;
 java/util/stream/DoubleStream#mapToLong#(Ljava/util/function/DoubleToLongFunction;)Ljava/util/stream/LongStream;
 java/util/stream/DoubleStream#mapToObj#(Ljava/util/function/DoubleFunction;)Ljava/util/stream/Stream;
@@ -8165,6 +8238,7 @@ java/util/stream/IntPipeline#forEachOrdered#(Ljava/util/function/IntConsumer;)V
 java/util/stream/IntPipeline#iterator#()Ljava/util/PrimitiveIterator/OfInt;
 java/util/stream/IntPipeline#limit#(J)Ljava/util/stream/IntStream;
 java/util/stream/IntPipeline#map#(Ljava/util/function/IntUnaryOperator;)Ljava/util/stream/IntStream;
+java/util/stream/IntPipeline#mapMulti#(Ljava/util/stream/IntStream/IntMapMultiConsumer;)Ljava/util/stream/IntStream;
 java/util/stream/IntPipeline#mapToDouble#(Ljava/util/function/IntToDoubleFunction;)Ljava/util/stream/DoubleStream;
 java/util/stream/IntPipeline#mapToLong#(Ljava/util/function/IntToLongFunction;)Ljava/util/stream/LongStream;
 java/util/stream/IntPipeline#mapToObj#(Ljava/util/function/IntFunction;)Ljava/util/stream/Stream;
@@ -8206,6 +8280,7 @@ java/util/stream/IntStream#iterate#(ILjava/util/function/IntPredicate;Ljava/util
 java/util/stream/IntStream#iterate#(ILjava/util/function/IntUnaryOperator;)Ljava/util/stream/IntStream;
 java/util/stream/IntStream#iterator#()Ljava/util/PrimitiveIterator/OfInt;
 java/util/stream/IntStream#map#(Ljava/util/function/IntUnaryOperator;)Ljava/util/stream/IntStream;
+java/util/stream/IntStream#mapMulti#(Ljava/util/stream/IntStream/IntMapMultiConsumer;)Ljava/util/stream/IntStream;
 java/util/stream/IntStream#mapToDouble#(Ljava/util/function/IntToDoubleFunction;)Ljava/util/stream/DoubleStream;
 java/util/stream/IntStream#mapToLong#(Ljava/util/function/IntToLongFunction;)Ljava/util/stream/LongStream;
 java/util/stream/IntStream#mapToObj#(Ljava/util/function/IntFunction;)Ljava/util/stream/Stream;
@@ -8245,6 +8320,7 @@ java/util/stream/LongPipeline#forEachOrdered#(Ljava/util/function/LongConsumer;)
 java/util/stream/LongPipeline#iterator#()Ljava/util/PrimitiveIterator/OfLong;
 java/util/stream/LongPipeline#limit#(J)Ljava/util/stream/LongStream;
 java/util/stream/LongPipeline#map#(Ljava/util/function/LongUnaryOperator;)Ljava/util/stream/LongStream;
+java/util/stream/LongPipeline#mapMulti#(Ljava/util/stream/LongStream/LongMapMultiConsumer;)Ljava/util/stream/LongStream;
 java/util/stream/LongPipeline#mapToDouble#(Ljava/util/function/LongToDoubleFunction;)Ljava/util/stream/DoubleStream;
 java/util/stream/LongPipeline#mapToInt#(Ljava/util/function/LongToIntFunction;)Ljava/util/stream/IntStream;
 java/util/stream/LongPipeline#mapToObj#(Ljava/util/function/LongFunction;)Ljava/util/stream/Stream;
@@ -8285,6 +8361,7 @@ java/util/stream/LongStream#iterate#(JLjava/util/function/LongPredicate;Ljava/ut
 java/util/stream/LongStream#iterate#(JLjava/util/function/LongUnaryOperator;)Ljava/util/stream/LongStream;
 java/util/stream/LongStream#iterator#()Ljava/util/PrimitiveIterator/OfLong;
 java/util/stream/LongStream#map#(Ljava/util/function/LongUnaryOperator;)Ljava/util/stream/LongStream;
+java/util/stream/LongStream#mapMulti#(Ljava/util/stream/LongStream/LongMapMultiConsumer;)Ljava/util/stream/LongStream;
 java/util/stream/LongStream#mapToDouble#(Ljava/util/function/LongToDoubleFunction;)Ljava/util/stream/DoubleStream;
 java/util/stream/LongStream#mapToInt#(Ljava/util/function/LongToIntFunction;)Ljava/util/stream/IntStream;
 java/util/stream/LongStream#mapToObj#(Ljava/util/function/LongFunction;)Ljava/util/stream/Stream;
@@ -8361,6 +8438,10 @@ java/util/stream/ReferencePipeline#forEachOrdered#(Ljava/util/function/Consumer;
 java/util/stream/ReferencePipeline#iterator#()Ljava/util/Iterator;
 java/util/stream/ReferencePipeline#limit#(J)Ljava/util/stream/Stream;
 java/util/stream/ReferencePipeline#map#(Ljava/util/function/Function;)Ljava/util/stream/Stream;
+java/util/stream/ReferencePipeline#mapMulti#(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;
+java/util/stream/ReferencePipeline#mapMultiToDouble#(Ljava/util/function/BiConsumer;)Ljava/util/stream/DoubleStream;
+java/util/stream/ReferencePipeline#mapMultiToInt#(Ljava/util/function/BiConsumer;)Ljava/util/stream/IntStream;
+java/util/stream/ReferencePipeline#mapMultiToLong#(Ljava/util/function/BiConsumer;)Ljava/util/stream/LongStream;
 java/util/stream/ReferencePipeline#mapToDouble#(Ljava/util/function/ToDoubleFunction;)Ljava/util/stream/DoubleStream;
 java/util/stream/ReferencePipeline#mapToInt#(Ljava/util/function/ToIntFunction;)Ljava/util/stream/IntStream;
 java/util/stream/ReferencePipeline#mapToLong#(Ljava/util/function/ToLongFunction;)Ljava/util/stream/LongStream;
@@ -8377,6 +8458,7 @@ java/util/stream/ReferencePipeline#sorted#(Ljava/util/Comparator;)Ljava/util/str
 java/util/stream/ReferencePipeline#takeWhile#(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;
 java/util/stream/ReferencePipeline#toArray#()[Ljava/lang/Object;
 java/util/stream/ReferencePipeline#toArray#(Ljava/util/function/IntFunction;)[Ljava/lang/Object;
+java/util/stream/ReferencePipeline#toList#()Ljava/util/List;
 java/util/stream/ReferencePipeline#unordered#()Ljava/util/stream/Stream;
 java/util/stream/Sink#begin#(J)V
 java/util/stream/Sink#cancellationRequested#()Z
@@ -8415,6 +8497,10 @@ java/util/stream/Stream#generate#(Ljava/util/function/Supplier;)Ljava/util/strea
 java/util/stream/Stream#iterate#(Ljava/lang/Object;Ljava/util/function/Predicate;Ljava/util/function/UnaryOperator;)Ljava/util/stream/Stream;
 java/util/stream/Stream#iterate#(Ljava/lang/Object;Ljava/util/function/UnaryOperator;)Ljava/util/stream/Stream;
 java/util/stream/Stream#map#(Ljava/util/function/Function;)Ljava/util/stream/Stream;
+java/util/stream/Stream#mapMulti#(Ljava/util/function/BiConsumer;)Ljava/util/stream/Stream;
+java/util/stream/Stream#mapMultiToDouble#(Ljava/util/function/BiConsumer;)Ljava/util/stream/DoubleStream;
+java/util/stream/Stream#mapMultiToInt#(Ljava/util/function/BiConsumer;)Ljava/util/stream/IntStream;
+java/util/stream/Stream#mapMultiToLong#(Ljava/util/function/BiConsumer;)Ljava/util/stream/LongStream;
 java/util/stream/Stream#mapToDouble#(Ljava/util/function/ToDoubleFunction;)Ljava/util/stream/DoubleStream;
 java/util/stream/Stream#mapToInt#(Ljava/util/function/ToIntFunction;)Ljava/util/stream/IntStream;
 java/util/stream/Stream#mapToLong#(Ljava/util/function/ToLongFunction;)Ljava/util/stream/LongStream;
@@ -8429,6 +8515,7 @@ java/util/stream/Stream#sorted#()Ljava/util/stream/Stream;
 java/util/stream/Stream#sorted#(Ljava/util/Comparator;)Ljava/util/stream/Stream;
 java/util/stream/Stream#takeWhile#(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;
 java/util/stream/Stream#toArray#()[Ljava/lang/Object;
+java/util/stream/Stream#toList#()Ljava/util/List;
 java/util/stream/StreamOpFlag#valueOf#(Ljava/lang/String;)Ljava/util/stream/StreamOpFlag;
 java/util/stream/StreamOpFlag#values#()[Ljava/util/stream/StreamOpFlag;
 java/util/stream/StreamShape#valueOf#(Ljava/lang/String;)Ljava/util/stream/StreamShape;
