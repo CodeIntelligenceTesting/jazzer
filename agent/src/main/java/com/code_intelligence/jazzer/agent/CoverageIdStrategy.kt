@@ -156,6 +156,7 @@ internal class SynchronizedCoverageIdStrategy(private val idSyncFile: Path) : Co
                 }
                 else -> {
                     localIdFileLock.release()
+                    System.err.println(idInfo.joinToString("\n") { "${it.first}:${it.second}:${it.third}" })
                     throw IllegalStateException("Multiple entries for $className in ID file")
                 }
             }
