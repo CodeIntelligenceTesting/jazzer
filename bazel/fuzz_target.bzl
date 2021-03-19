@@ -32,6 +32,7 @@ def java_fuzz_target_test(
     ]
     if hook_classes:
         deploy_manifest_lines.append("Jazzer-Hook-Classes: %s" % ":".join(hook_classes))
+
     # Deps can only be specified on java_binary targets with sources, which
     # excludes e.g. Kotlin libraries wrapped into java_binary via runtime_deps.
     target_deps = deps + ["//agent/src/main/java/com/code_intelligence/jazzer/api"] if srcs else []

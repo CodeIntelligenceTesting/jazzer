@@ -73,4 +73,6 @@ final public class TraceDataFlowNativeCallbacks {
     // as the stack layout required for the call can't be achieved without local variables.
     return Long.compare(arg1, arg2);
   }
+
+  public static native void handleLibraryLoad();
 }
