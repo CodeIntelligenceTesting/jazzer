@@ -23,6 +23,7 @@ enum class InstrumentationType {
     DIV,
     GEP,
     INDIR,
+    NATIVE,
 }
 
 internal interface Instrumentor {
