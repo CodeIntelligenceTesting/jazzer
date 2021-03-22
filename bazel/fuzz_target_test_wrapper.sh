@@ -24,6 +24,5 @@ if [ $exit_code -eq 77 ] || [ $exit_code -eq 76 ]
 then
   exit 0
 else
-  echo "Unexpected exit code: $exit_code"
   exit 1
 fi

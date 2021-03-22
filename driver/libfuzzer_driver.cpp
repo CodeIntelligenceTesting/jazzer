@@ -14,8 +14,6 @@
 
 #include "libfuzzer_driver.h"
 
-#include <dlfcn.h>
-
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
@@ -50,16 +48,13 @@ DECLARE_bool(fake_pcs);
 // Defined in jvm_tooling.cpp
 DECLARE_string(id_sync_file);
 
-// We apply a patch to libFuzzer to make it call this function instead of
-// __sanitizer_set_death_callback to pass us the death callback.
-extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
-    void (*callback)()) {
+extern "C" void __real___sanitizer_set_death_callback(void (*callback)());
+
+// We use the linker opt -Wl,--wrap=__sanitizer_set_death_callback to wrap the
+// symbol defined by sanitizers_common to receive libFuzzer's death callback.
+extern "C" void __wrap___sanitizer_set_death_callback(void (*callback)()) {
   jazzer::AbstractLibfuzzerDriver::libfuzzer_print_crashing_input_ = callback;
-  void *sanitizer_set_death_callback =
-      dlsym(RTLD_NEXT, "__sanitizer_set_death_callback");
-  if (sanitizer_set_death_callback != nullptr)
-    reinterpret_cast<void (*)(void (*)())>(sanitizer_set_death_callback)(
-        callback);
+  __real___sanitizer_set_death_callback(callback);
 }
 
 namespace {
@@ -153,6 +148,7 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
       }
     };
     std::atexit(cleanup_fn);
+    std::at_quick_exit(cleanup_fn);
   }
 
   initJvm(*argv_start);
