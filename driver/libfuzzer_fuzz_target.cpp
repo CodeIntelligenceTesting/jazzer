@@ -50,10 +50,7 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
               << std::endl;
   }
   gLibfuzzerDriver = std::make_unique<Driver>(argc, argv);
-  // Run even if we use std::quick_exit to prevent libFuzzer stack trace
-  // printing.
   std::atexit(&driver_cleanup);
-  std::at_quick_exit(&driver_cleanup);
   return 0;
 }
 
@@ -62,23 +59,19 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, const size_t size) {
   auto result = gLibfuzzerDriver->TestOneInput(data, size);
   if (result != jazzer::RunResult::kOk) {
     // Fuzzer triggered an exception or assertion in Java code. Skip the
-    // uninformative libFuzzer stack trace if possible.
-    if (Driver::libfuzzer_print_crashing_input_ != nullptr) {
-      std::cerr << "== libFuzzer crashing input ==\n";
-      Driver::libfuzzer_print_crashing_input_();
-      // DumpReproducer needs to be called after libFuzzer printed its final
-      // stats as otherwise it would report incorrect coverage.
-      gLibfuzzerDriver->DumpReproducer(data, size);
-      if (result == jazzer::RunResult::kDumpAndContinue) {
-        // Continue fuzzing after printing the crashing input.
-        return 0;
-      }
-      // Exit directly without invoking libFuzzer's atexit hook.
-      std::quick_exit(Driver::kErrorExitCode);
-    } else {
-      // libFuzzer failed to register its death callback, exit normally.
-      std::exit(1);
+    // uninformative libFuzzer stack trace.
+    std::cerr << "== libFuzzer crashing input ==\n";
+    Driver::libfuzzer_print_crashing_input_();
+    // DumpReproducer needs to be called after libFuzzer printed its final
+    // stats as otherwise it would report incorrect coverage.
+    gLibfuzzerDriver->DumpReproducer(data, size);
+    if (result == jazzer::RunResult::kDumpAndContinue) {
+      // Continue fuzzing after printing the crashing input.
+      return 0;
     }
+    // Exit directly without invoking libFuzzer's atexit hook.
+    driver_cleanup();
+    _Exit(Driver::kErrorExitCode);
   }
   return 0;
 }

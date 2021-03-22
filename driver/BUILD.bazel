@@ -1,9 +1,4 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
-load(
-    "@bazel_tools//tools/jdk:default_java_toolchain.bzl",
-    "java_runtime_files",
-)
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 
 cc_library(
     name = "sanitizer_hooks_with_pc",
@@ -47,6 +42,9 @@ cc_library(
         "signal_handler.h",
         "utils.h",
     ],
+    linkopts = [
+        "-ldl",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":sanitizer_hooks_with_pc",
@@ -64,13 +62,10 @@ cc_binary(
     data = [
         "//agent:jazzer_agent_deploy.jar",
     ],
-    linkopts = [
-        "-Wl,--wrap=__sanitizer_set_death_callback",
-        "-fsanitize=fuzzer",
-    ],
     visibility = ["//visibility:public"],
     deps = [
         ":jvm_tooling_lib",
+        "@libFuzzer",
     ],
 )
 
@@ -81,12 +76,12 @@ cc_binary(
         "//agent:jazzer_agent_deploy.jar",
     ],
     linkopts = [
-        "-Wl,--wrap=__sanitizer_set_death_callback",
-        "-fsanitize=fuzzer,address",
+        "-fsanitize=address",
     ],
     visibility = ["//visibility:public"],
     deps = [
         ":jvm_tooling_lib",
+        "@libFuzzer",
     ],
 )
 
