@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_java//java:defs.bzl", "java_binary")
-
 def java_fuzz_target_test(
         name,
         target_class,
@@ -31,12 +29,14 @@ def java_fuzz_target_test(
         "Jazzer-Fuzz-Target-Class: %s" % target_class,
     ]
     if hook_classes:
-        deploy_manifest_lines.append("Jazzer-Hook-Classes: %s" % ":".join(hook_classes))
+        deploy_manifest_lines += [
+            "Jazzer-Hook-Classes: %s" % ":".join(hook_classes),
+        ]
 
     # Deps can only be specified on java_binary targets with sources, which
     # excludes e.g. Kotlin libraries wrapped into java_binary via runtime_deps.
     target_deps = deps + ["//agent/src/main/java/com/code_intelligence/jazzer/api"] if srcs else []
-    java_binary(
+    native.java_binary(
         name = target_name,
         srcs = srcs,
         visibility = ["//visibility:private"],

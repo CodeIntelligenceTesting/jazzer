@@ -18,7 +18,6 @@ import com.code_intelligence.jazzer.instrumentor.ClassInstrumentor
 import com.code_intelligence.jazzer.instrumentor.Hook
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
-import com.code_intelligence.jazzer.runtime.NativeLibHooks
 import com.code_intelligence.jazzer.runtime.TraceCmpHooks
 import com.code_intelligence.jazzer.runtime.TraceDivHooks
 import com.code_intelligence.jazzer.runtime.TraceIndirHooks
@@ -82,7 +81,6 @@ internal class RuntimeInstrumentor(
                 InstrumentationType.CMP -> TraceCmpHooks::class.java
                 InstrumentationType.DIV -> TraceDivHooks::class.java
                 InstrumentationType.INDIR -> TraceIndirHooks::class.java
-                InstrumentationType.NATIVE -> NativeLibHooks::class.java
                 else -> null
             }
         }

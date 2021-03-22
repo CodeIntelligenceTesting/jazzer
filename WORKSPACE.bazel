@@ -14,14 +14,8 @@ http_archive(
     ],
 )
 
-# bazelbuild/rules_python
-http_archive(
-    name = "rules_python",
-    sha256 = "b6d46438523a3ec0f3cead544190ee13223a52f6a6765a29eae7b7cc24cc83a0",
-    url = "https://github.com/bazelbuild/rules_python/releases/download/0.1.0/rules_python-0.1.0.tar.gz",
-)
-
 # bazelbuild/bazel-skylib
+
 http_archive(
     name = "bazel_skylib",
     sha256 = "ebdf850bfef28d923a2cc67ddca86355a449b5e4f38b0a70e584dc24e5984aa6",
@@ -84,6 +78,7 @@ http_archive(
     urls = ["https://github.com/bazelbuild/rules_kotlin/releases/download/%s/rules_kotlin_release.tgz" % rules_kotlin_version],
 )
 
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories")
 
 kotlin_repositories()
@@ -149,6 +144,8 @@ rules_pkg_version = "0.3.0"
 
 rules_pkg_sha = "6b5969a7acd7b60c02f816773b06fcf32fbe8ba0c7919ccdc2df4f8fb923804a"
 
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
 http_archive(
     name = "rules_pkg",
     sha256 = rules_pkg_sha,
@@ -163,6 +160,7 @@ load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 rules_pkg_dependencies()
 
 # bazelbuild/rules_foreign_cc
+
 rules_foreign_cc_commit = "da99da47a0befc3dfbf65739190cd374f836f21d"
 
 http_archive(
@@ -177,6 +175,7 @@ load("@rules_foreign_cc//:workspace_definitions.bzl", "rules_foreign_cc_dependen
 rules_foreign_cc_dependencies()
 
 # libjpeg_turbo
+
 http_archive(
     name = "libjpeg_turbo",
     build_file = "//third_party:libjpeg_turbo.BUILD",
@@ -186,6 +185,7 @@ http_archive(
 )
 
 # JaCoCo
+
 jacoco_commit = "178d49870056b8a1f8ea6915e804d28b0dda5609"
 
 jacoco_sha = "da48fb5ae4ec3ffc659d4de18232aedea99476935f4ce4b0605f2d6aa1dc2553"
@@ -199,17 +199,4 @@ http_archive(
     sha256 = jacoco_sha,
     strip_prefix = "jacoco-%s" % jacoco_commit,
     url = "https://github.com/jacoco/jacoco/archive/178d49870056b8a1f8ea6915e804d28b0dda5609.tar.gz",
-)
-
-# libFuzzer
-http_archive(
-    name = "libFuzzer",
-    build_file = "//third_party:libFuzzer.BUILD",
-    patches = [
-        "//third_party:libFuzzer-make-interceptors-configurable.patch",
-        "//third_party:libFuzzer-pass-death-callback-to-jazzer.patch",
-    ],
-    sha256 = "a78949f86fc9852f51b11ceb3e6c2c61bb6e4ebb073198cebddc82451f708adf",
-    strip_prefix = "llvm-project-llvmorg-12.0.0-rc3",
-    url = "https://github.com/llvm/llvm-project/archive/llvmorg-12.0.0-rc3.tar.gz",
 )

@@ -2,8 +2,5 @@ exports_files([
     "gflags-use-double-dash-args.patch",
     "jacoco-make-probe-inserter-subclassable.patch",
     "jacoco_internal.BUILD",
-    "libFuzzer-make-interceptors-configurable.patch",
-    "libFuzzer-pass-death-callback-to-jazzer.patch",
-    "libFuzzer.BUILD",
     "libjpeg_turbo.BUILD",
 ])
