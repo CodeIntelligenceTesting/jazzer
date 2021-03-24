@@ -284,13 +284,11 @@ ExceptionPrinter::ExceptionPrinter(JVM &jvm)
 //    PrintWriter printWriter = new PrintWriter(stringWriter);
 //    e.printStackTrace(printWriter);
 //    return stringWriter.toString();
-std::string ExceptionPrinter::getAndClearException() {
+std::string ExceptionPrinter::getProcessedStackTrace(jthrowable exception) {
   auto &env = jvm_.GetEnv();
-  auto exception = env.ExceptionOccurred();
   if (exception == nullptr) {
     return "";
   }
-  env.ExceptionClear();
 
   auto string_writer =
       env.NewObject(string_writer_class_, string_writer_constructor_);
@@ -317,18 +315,21 @@ std::string ExceptionPrinter::getAndClearException() {
     return "";
   }
 
-  auto char_pointer = env.GetStringUTFChars(exception_string_object, 0);
+  auto char_pointer = env.GetStringUTFChars(exception_string_object, nullptr);
   std::string exception_string(char_pointer);
   env.ReleaseStringUTFChars(exception_string_object, char_pointer);
   return exception_string;
 }
 
-jlong ExceptionPrinter::computeDedupToken() {
+jlong ExceptionPrinter::computeDedupToken(jthrowable exception) {
   auto &env = jvm_.GetEnv();
-  jthrowable exception = env.ExceptionOccurred();
   if (exception == nullptr || compute_dedup_token_method_ == nullptr) return 0;
-  return jvm_.GetEnv().CallStaticLongMethod(utils_, compute_dedup_token_method_,
-                                            exception);
+  const auto dedup_token = env.CallStaticLongMethod(utils_, compute_dedup_token_method_, exception);
+  if (env.ExceptionOccurred()) {
+    env.ExceptionDescribe();
+    return 0;
+  }
+  return dedup_token;
 }
 
 }  // namespace jazzer

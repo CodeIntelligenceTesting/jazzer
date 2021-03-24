@@ -71,11 +71,11 @@ class ExceptionPrinter {
  protected:
   explicit ExceptionPrinter(JVM &jvm);
 
-  // returns the current JVM exception stack trace as string and clears the
-  // exception
-  std::string getAndClearException();
+  // returns the current JVM exception stack trace as a string with additional
+  // information such as severity ratings
+  std::string getProcessedStackTrace(jthrowable exception);
   // returns a hash of the exception stack trace for deduplication purposes
-  jlong computeDedupToken();
+  jlong computeDedupToken(jthrowable exception);
 };
 
 } /* namespace jazzer */
