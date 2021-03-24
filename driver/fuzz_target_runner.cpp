@@ -147,9 +147,9 @@ FuzzTargetRunner::FuzzTargetRunner(
     LOG(INFO) << "did not call any fuzz target initialize functions";
   }
 
-  if (env.ExceptionOccurred()) {
+  if (jthrowable exception = env.ExceptionOccurred()) {
     LOG(ERROR) << "== Java Exception in fuzzerInitialize: ";
-    LOG(ERROR) << getAndClearException();
+    LOG(ERROR) << getProcessedStackTrace(exception);
     std::exit(1);
   }
 
@@ -175,7 +175,8 @@ FuzzTargetRunner::~FuzzTargetRunner() {
   if (fuzzer_tear_down_ != nullptr) {
     std::cerr << "calling fuzzer teardown function" << std::endl;
     jvm_.GetEnv().CallStaticVoidMethod(jclass_, fuzzer_tear_down_);
-    std::cerr << getAndClearException() << std::endl;
+    if (jthrowable exception = jvm_.GetEnv().ExceptionOccurred())
+      std::cerr << getProcessedStackTrace(exception) << std::endl;
   }
 }
 
@@ -188,7 +189,7 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
   } else {
     jbyteArray byte_array = env.NewByteArray(size);
     if (byte_array == nullptr) {
-      LOG(ERROR) << getAndClearException();
+      env.ExceptionDescribe();
       throw std::runtime_error(std::string("Cannot create byte array"));
     }
     env.SetByteArrayRegion(byte_array, 0, size,
@@ -197,11 +198,12 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
     env.DeleteLocalRef(byte_array);
   }
 
-  if (env.ExceptionOccurred()) {
-    jlong dedup_token = computeDedupToken();
+  if (jthrowable exception = env.ExceptionOccurred()) {
+    env.ExceptionClear();
+    jlong dedup_token = computeDedupToken(exception);
     // Check whether this stack trace has been encountered before if
     // `--keep_going` has been supplied.
-    if (FLAGS_keep_going > 1 &&
+    if (dedup_token != 0 && FLAGS_keep_going > 1 &&
         std::find(ignore_tokens_.cbegin(), ignore_tokens_.cend(),
                   dedup_token) != ignore_tokens_.end()) {
       return RunResult::kOk;
@@ -209,7 +211,7 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
       ignore_tokens_.push_back(dedup_token);
       std::cout << std::endl;
       std::cerr << "== Java Exception: "
-                << AddSeverityMarker(getAndClearException());
+                << AddSeverityMarker(getProcessedStackTrace(exception));
       std::cout << "DEDUP_TOKEN: " << std::hex << std::setfill('0')
                 << std::setw(16) << dedup_token << std::endl;
       if (ignore_tokens_.size() < static_cast<std::size_t>(FLAGS_keep_going)) {

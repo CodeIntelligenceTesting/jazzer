@@ -117,8 +117,9 @@ class ExceptionPrinterTest : public ExceptionPrinter {
     jclass illegal_argument_exception =
         jvm_.FindClass("java.lang.IllegalArgumentException");
     jvm_.GetEnv().ThrowNew(illegal_argument_exception, "Test");
-    auto exception = getAndClearException();
-    return exception;
+    jthrowable exception = jvm_.GetEnv().ExceptionOccurred();
+    jvm_.GetEnv().ExceptionClear();
+    return getProcessedStackTrace(exception);
   }
 
  private:
