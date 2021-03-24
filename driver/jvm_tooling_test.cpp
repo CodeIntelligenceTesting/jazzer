@@ -80,6 +80,7 @@ TEST_F(JvmToolingTest, JniProperties) {
     jstring str = env.NewStringUTF(el.first.c_str());
     auto ret = (jstring)env.CallStaticObjectMethod(property_printer_class,
                                                    method_id, str);
+    ASSERT_FALSE(env.ExceptionCheck());
     if (el.second.empty()) {
       ASSERT_EQ(nullptr, ret);
     } else {

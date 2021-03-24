@@ -50,5 +50,9 @@ void SignalHandler::SetupSignalHandlers() {
         "could not register native callbacks 'handleInterrupt'");
   }
   jvm_.GetEnv().CallStaticVoidMethod(jclass_, setup_signal_handlers_method_);
+  if (jvm_.GetEnv().ExceptionCheck()) {
+    jvm_.GetEnv().ExceptionDescribe();
+    throw std::runtime_error("failed to set up signal handlers");
+  }
 }
 }  // namespace jazzer
