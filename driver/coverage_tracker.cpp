@@ -42,7 +42,7 @@ static_assert(kMaxCoverageCountersBufferSize <=
 
 namespace {
 void AssertNoException(JNIEnv &env) {
-  if (env.ExceptionOccurred()) {
+  if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     throw std::runtime_error(
         "Java exception occured in CoverageTracker JNI code");

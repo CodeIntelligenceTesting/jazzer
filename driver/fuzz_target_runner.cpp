@@ -233,7 +233,7 @@ void FuzzTargetRunner::DumpReproducer(const uint8_t *data, std::size_t size) {
     FeedFuzzedDataProvider(data, size);
     jobject recorder = GetRecordingFuzzedDataProviderJavaObject(jvm_);
     env.CallStaticVoidMethod(jclass_, fuzzer_test_one_input_data_, recorder);
-    if (!env.ExceptionOccurred()) {
+    if (!env.ExceptionCheck()) {
       LOG(ERROR) << "Failed to reproduce crash when rerunning with recorder";
       return;
     }
