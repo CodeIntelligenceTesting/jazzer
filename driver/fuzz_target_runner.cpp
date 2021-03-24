@@ -268,6 +268,10 @@ std::string FuzzTargetRunner::DetectFuzzTargetClass() const {
   auto &env = jvm_.GetEnv();
   auto jni_fuzz_target_class = (jstring)(
       env.CallStaticObjectMethod(manifest_utils, detect_fuzz_target_class));
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
+    exit(1);
+  }
   if (jni_fuzz_target_class == nullptr) return "";
 
   const char *fuzz_target_class_cstr =

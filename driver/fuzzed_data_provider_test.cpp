@@ -267,6 +267,7 @@ TEST_F(FuzzedDataProviderTest, InvalidModifiedUtf8AfterFixup) {
         auto jni_roundtripped_bytes = (jbyteArray)env.CallStaticObjectMethod(
             modified_utf8_validator, string_to_modified_utf_bytes,
             jni_fixed_string);
+        ASSERT_FALSE(env.ExceptionCheck());
         env.DeleteLocalRef(jni_fixed_string);
         jint roundtripped_bytes_length =
             env.GetArrayLength(jni_roundtripped_bytes);

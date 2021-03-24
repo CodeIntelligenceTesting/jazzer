@@ -739,6 +739,10 @@ jobject GetRecordingFuzzedDataProviderJavaObject(const JVM &jvm) {
       java_class, "makeFuzzedDataProviderProxy",
       "()Lcom/code_intelligence/jazzer/api/FuzzedDataProvider;", true);
   jobject local_ref = env.CallStaticObjectMethod(java_class, java_make_proxy);
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
+    exit(1);
+  }
   return env.NewGlobalRef(local_ref);
 }
 
@@ -753,6 +757,10 @@ std::string SerializeRecordingFuzzedDataProvider(const JVM &jvm,
                             true);
   auto serialized_recorder =
       (jstring)env.CallStaticObjectMethod(java_class, java_serialize, recorder);
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
+    exit(1);
+  }
   env.DeleteGlobalRef(recorder);
   const char *serialized_recorder_cstr =
       env.GetStringUTFChars(serialized_recorder, nullptr);
