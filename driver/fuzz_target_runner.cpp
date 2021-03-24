@@ -29,7 +29,6 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "java_reproducer_templates.h"
-#include "severity_annotator.h"
 #include "third_party/jni/jni.h"
 #include "utils.h"
 
@@ -149,7 +148,7 @@ FuzzTargetRunner::FuzzTargetRunner(
 
   if (jthrowable exception = env.ExceptionOccurred()) {
     LOG(ERROR) << "== Java Exception in fuzzerInitialize: ";
-    LOG(ERROR) << getProcessedStackTrace(exception);
+    LOG(ERROR) << getStackTrace(exception);
     std::exit(1);
   }
 
@@ -176,7 +175,7 @@ FuzzTargetRunner::~FuzzTargetRunner() {
     std::cerr << "calling fuzzer teardown function" << std::endl;
     jvm_.GetEnv().CallStaticVoidMethod(jclass_, fuzzer_tear_down_);
     if (jthrowable exception = jvm_.GetEnv().ExceptionOccurred())
-      std::cerr << getProcessedStackTrace(exception) << std::endl;
+      std::cerr << getStackTrace(exception) << std::endl;
   }
 }
 
@@ -198,9 +197,11 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
     env.DeleteLocalRef(byte_array);
   }
 
-  if (jthrowable exception = env.ExceptionOccurred()) {
+  if (env.ExceptionCheck()) {
+    auto original_exception = env.ExceptionOccurred();
     env.ExceptionClear();
-    jlong dedup_token = computeDedupToken(exception);
+    auto processed_exception = preprocessException(original_exception);
+    jlong dedup_token = computeDedupToken(processed_exception);
     // Check whether this stack trace has been encountered before if
     // `--keep_going` has been supplied.
     if (dedup_token != 0 && FLAGS_keep_going > 1 &&
@@ -210,8 +211,7 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
     } else {
       ignore_tokens_.push_back(dedup_token);
       std::cout << std::endl;
-      std::cerr << "== Java Exception: "
-                << AddSeverityMarker(getProcessedStackTrace(exception));
+      std::cerr << "== Java Exception: " << getStackTrace(processed_exception);
       std::cout << "DEDUP_TOKEN: " << std::hex << std::setfill('0')
                 << std::setw(16) << dedup_token << std::endl;
       if (ignore_tokens_.size() < static_cast<std::size_t>(FLAGS_keep_going)) {

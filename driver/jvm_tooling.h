@@ -51,8 +51,10 @@ class JVM {
                             const std::string &type) const;
 };
 
-// Adds a convenience method to convert the last jvm exception to std::string
-// using StringWriter and PrintWriter.
+// Adds convenience methods to convert a jvm exception to std::string
+// using StringWriter and PrintWriter. The stack trace can be subjected to
+// further processing, such as deduplication token computation and severity
+// annotation.
 class ExceptionPrinter {
  private:
   const JVM &jvm_;
@@ -65,15 +67,17 @@ class ExceptionPrinter {
   jmethodID print_writer_constructor_;
   jmethodID print_stack_trace_method_;
 
-  jclass utils_;
+  jclass exception_utils_;
   jmethodID compute_dedup_token_method_;
+  jmethodID preprocess_throwable_method_;
 
  protected:
   explicit ExceptionPrinter(JVM &jvm);
 
-  // returns the current JVM exception stack trace as a string with additional
-  // information such as severity ratings
-  std::string getProcessedStackTrace(jthrowable exception);
+  // returns the current JVM exception stack trace as a string
+  std::string getStackTrace(jthrowable exception);
+  // augments the throwable with additional information such as severity markers
+  jthrowable preprocessException(jthrowable exception);
   // returns a hash of the exception stack trace for deduplication purposes
   jlong computeDedupToken(jthrowable exception);
 };

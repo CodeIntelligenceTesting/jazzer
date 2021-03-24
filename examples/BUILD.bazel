@@ -48,6 +48,14 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "ExampleStackOverflowFuzzer",
+    srcs = [
+        "src/main/java/com/example/ExampleStackOverflowFuzzer.java",
+    ],
+    target_class = "com.example.ExampleStackOverflowFuzzer",
+)
+
+java_fuzz_target_test(
     name = "JpegImageParserFuzzer",
     srcs = [
         "src/main/java/com/example/JpegImageParserFuzzer.java",
