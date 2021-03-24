@@ -72,8 +72,8 @@ DECLARE_bool(hooks);
 namespace {
 constexpr auto kInstrumentorAgentBazelDir = "agent";
 constexpr auto kAgentFileName = "jazzer_agent_deploy.jar";
-constexpr const char kUtilsClassName[] =
-    "com/code_intelligence/jazzer/utils/Utils";
+constexpr const char kExceptionUtilsClassName[] =
+    "com/code_intelligence/jazzer/runtime/ExceptionUtils";
 }  // namespace
 
 namespace jazzer {
@@ -273,9 +273,12 @@ ExceptionPrinter::ExceptionPrinter(JVM &jvm)
   print_stack_trace_method_ = jvm.GetMethodID(
       throwable_class, "printStackTrace", "(Ljava/io/PrintWriter;)V");
   if (FLAGS_hooks) {
-    utils_ = jvm.FindClass(kUtilsClassName);
+    exception_utils_ = jvm.FindClass(kExceptionUtilsClassName);
     compute_dedup_token_method_ = jvm.GetStaticMethodID(
-        utils_, "computeDedupToken", "(Ljava/lang/Throwable;)J");
+        exception_utils_, "computeDedupToken", "(Ljava/lang/Throwable;)J");
+    preprocess_throwable_method_ =
+        jvm.GetStaticMethodID(exception_utils_, "preprocessThrowable",
+                              "(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
   }
 }
 
@@ -284,7 +287,7 @@ ExceptionPrinter::ExceptionPrinter(JVM &jvm)
 //    PrintWriter printWriter = new PrintWriter(stringWriter);
 //    e.printStackTrace(printWriter);
 //    return stringWriter.toString();
-std::string ExceptionPrinter::getProcessedStackTrace(jthrowable exception) {
+std::string ExceptionPrinter::getStackTrace(jthrowable exception) {
   auto &env = jvm_.GetEnv();
   if (exception == nullptr) {
     return "";
@@ -321,10 +324,23 @@ std::string ExceptionPrinter::getProcessedStackTrace(jthrowable exception) {
   return exception_string;
 }
 
+jthrowable ExceptionPrinter::preprocessException(jthrowable exception) {
+  auto &env = jvm_.GetEnv();
+  if (!FLAGS_hooks || !preprocess_throwable_method_) return exception;
+  auto processed_exception = (jthrowable)(env.CallStaticObjectMethod(
+      exception_utils_, preprocess_throwable_method_, exception));
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
+    return exception;
+  }
+  return processed_exception;
+}
+
 jlong ExceptionPrinter::computeDedupToken(jthrowable exception) {
   auto &env = jvm_.GetEnv();
   if (exception == nullptr || compute_dedup_token_method_ == nullptr) return 0;
-  const auto dedup_token = env.CallStaticLongMethod(utils_, compute_dedup_token_method_, exception);
+  const auto dedup_token = env.CallStaticLongMethod(
+      exception_utils_, compute_dedup_token_method_, exception);
   if (env.ExceptionOccurred()) {
     env.ExceptionDescribe();
     return 0;

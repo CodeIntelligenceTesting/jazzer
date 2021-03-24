@@ -119,7 +119,7 @@ class ExceptionPrinterTest : public ExceptionPrinter {
     jvm_.GetEnv().ThrowNew(illegal_argument_exception, "Test");
     jthrowable exception = jvm_.GetEnv().ExceptionOccurred();
     jvm_.GetEnv().ExceptionClear();
-    return getProcessedStackTrace(exception);
+    return getStackTrace(exception);
   }
 
  private:
