@@ -197,7 +197,7 @@ jclass JVM::FindClass(std::string class_name) const {
   std::replace(class_name.begin(), class_name.end(), '.', '/');
   const auto ret = env.FindClass(class_name.c_str());
   if (ret == nullptr) {
-    if (env.ExceptionOccurred()) {
+    if (env.ExceptionCheck()) {
       env.ExceptionDescribe();
       throw std::runtime_error(
           absl::StrFormat("Could not find class %s", class_name));
@@ -217,7 +217,7 @@ jmethodID JVM::GetStaticMethodID(jclass jclass, const std::string &jmethod,
       env.GetStaticMethodID(jclass, jmethod.c_str(), signature.c_str());
   if (ret == nullptr) {
     if (is_required) {
-      if (env.ExceptionOccurred()) {
+      if (env.ExceptionCheck()) {
         env.ExceptionDescribe();
       }
       throw std::runtime_error(
@@ -236,7 +236,7 @@ jmethodID JVM::GetMethodID(jclass jclass, const std::string &jmethod,
   auto &env = GetEnv();
   const auto ret = env.GetMethodID(jclass, jmethod.c_str(), signature.c_str());
   if (ret == nullptr) {
-    if (env.ExceptionOccurred()) {
+    if (env.ExceptionCheck()) {
       env.ExceptionDescribe();
     }
     throw std::runtime_error(absl::StrFormat("Method '%s' not found", jmethod));
@@ -250,7 +250,7 @@ jfieldID JVM::GetStaticFieldID(jclass class_id, const std::string &field_name,
   const auto ret =
       env.GetStaticFieldID(class_id, field_name.c_str(), type.c_str());
   if (ret == nullptr) {
-    if (env.ExceptionOccurred()) {
+    if (env.ExceptionCheck()) {
       env.ExceptionDescribe();
     }
     throw std::runtime_error(
@@ -341,7 +341,7 @@ jlong ExceptionPrinter::computeDedupToken(jthrowable exception) {
   if (exception == nullptr || compute_dedup_token_method_ == nullptr) return 0;
   const auto dedup_token = env.CallStaticLongMethod(
       exception_utils_, compute_dedup_token_method_, exception);
-  if (env.ExceptionOccurred()) {
+  if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     return 0;
   }
