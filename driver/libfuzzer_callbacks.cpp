@@ -212,6 +212,10 @@ extern "C" [[maybe_unused]] bool __sanitizer_weak_is_relevant_pc(
 void ignoreLibraryForInterception(const std::string &lib_name) {
   const auto num_address_ranges = ignore_for_interception_ranges.size();
   std::ifstream loaded_libs("/proc/self/maps");
+  if (!loaded_libs) {
+    // This early exit is taken e.g. on macOS, where /proc does not exist.
+    return;
+  }
   std::string line;
   while (std::getline(loaded_libs, line)) {
     if (!absl::StrContains(line, lib_name)) continue;
