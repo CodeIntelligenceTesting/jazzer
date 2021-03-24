@@ -52,6 +52,8 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExampleStackOverflowFuzzer.java",
     ],
+    # Crashes with a segfault before any stack trace printing is reached.
+    tags = ["broken-on-darwin"],
     target_class = "com.example.ExampleStackOverflowFuzzer",
 )
 
