@@ -17,4 +17,13 @@ package com.code_intelligence.jazzer.runtime;
 final public class JazzerInternal {
   // Accessed from native code.
   private static Throwable lastFinding;
+
+  // Accessed from api.Jazzer via reflection.
+  public static void reportFindingFromHook(Throwable finding) {
+    lastFinding = finding;
+    // Throw an Error that is hard to catch (short of outright ignoring it) in order to quickly
+    // terminate the execution of the fuzz target. The finding will be reported as soon as the fuzz
+    // target returns even if this Error is swallowed.
+    throw new HardToCatchThrowable();
+  }
 }
