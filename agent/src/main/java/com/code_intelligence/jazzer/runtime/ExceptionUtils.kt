@@ -73,11 +73,11 @@ fun preprocessThrowable(throwable: Throwable): Throwable = when (throwable) {
         // stopping at the first repetition of a frame. The original error is returned as the cause
         // unchanged.
         val observedFrames = mutableSetOf<StackTraceElement>()
-        val bottomToTopFramesWithoutRepetition = throwable.stackTrace.takeLastWhile { frame ->
+        val bottomFramesWithoutRepetition = throwable.stackTrace.takeLastWhile { frame ->
             (frame !in observedFrames).also { observedFrames.add(frame) }
         }
         FuzzerSecurityIssueLow("Stack overflow (truncated to likely cause)", throwable).apply {
-            stackTrace = bottomToTopFramesWithoutRepetition.reversed().toTypedArray()
+            stackTrace = bottomFramesWithoutRepetition.toTypedArray()
         }
     }
     // Includes OutOfMemoryError
