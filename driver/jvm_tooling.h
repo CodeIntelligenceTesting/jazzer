@@ -75,11 +75,11 @@ class ExceptionPrinter {
   explicit ExceptionPrinter(JVM &jvm);
 
   // returns the current JVM exception stack trace as a string
-  std::string getStackTrace(jthrowable exception);
+  std::string getStackTrace(jthrowable exception) const;
   // augments the throwable with additional information such as severity markers
-  jthrowable preprocessException(jthrowable exception);
+  jthrowable preprocessException(jthrowable exception) const;
   // returns a hash of the exception stack trace for deduplication purposes
-  jlong computeDedupToken(jthrowable exception);
+  jlong computeDedupToken(jthrowable exception) const;
 };
 
 } /* namespace jazzer */
