@@ -29,6 +29,16 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "ExamplePathTraversalFuzzer",
+    srcs = [
+        "src/main/java/com/example/ExamplePathTraversalFuzzer.java",
+        "src/main/java/com/example/ExamplePathTraversalFuzzerHooks.java",
+    ],
+    hook_classes = ["com.example.ExamplePathTraversalFuzzerHooks"],
+    target_class = "com.example.ExamplePathTraversalFuzzer",
+)
+
+java_fuzz_target_test(
     name = "ExampleValueProfileFuzzer",
     srcs = [
         "src/main/java/com/example/ExampleValueProfileFuzzer.java",

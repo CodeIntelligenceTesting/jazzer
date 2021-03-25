@@ -331,7 +331,8 @@ In order to obtain information about data passed into functions such as `String.
 hooks invocations to these methods. This functionality is also available to fuzz targets, where it can be used to implement
 custom sanitizers or stub out methods that block the fuzzer from progressing (e.g. checksum verifications or random number generation).
 See [ExampleFuzzerHooks.java](https://github.com/CodeIntelligenceTesting/jazzer/tree/main/examples/src/main/java/com/example/ExampleFuzzerHooks.java)
-for an example of such a hook.
+for an example of such a hook. An example for a sanitizer can be found in
+[ExamplePathTraversalFuzzerHooks.java](https://github.com/CodeIntelligenceTesting/jazzer/tree/main/examples/src/main/java/com/example/ExamplePathTraversalFuzzerHooks.java).
 
 Method hooks can be declared using the `@MethodHook` annotation defined in the `com.code_intelligence.jazzer.api` package,
 which is contained in `jazzer_api_deploy.jar` (binary release) or built by the target `//agent:jazzer_api_deploy.jar` (Bazel).
