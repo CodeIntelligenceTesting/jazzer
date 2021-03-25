@@ -50,9 +50,12 @@ class FuzzTargetRunner : public ExceptionPrinter {
   jmethodID fuzzer_test_one_input_bytes_;
   jmethodID fuzzer_test_one_input_data_;
   jmethodID fuzzer_tear_down_;
+  jclass jazzer_;
+  jfieldID last_finding_;
   std::vector<jlong> ignore_tokens_;
 
-  std::string DetectFuzzTargetClass() const;
+  [[nodiscard]] std::string DetectFuzzTargetClass() const;
+  [[nodiscard]] jthrowable GetFinding() const;
 
  public:
   // Initializes the java fuzz target by calling `void fuzzerInitialize(...)`.

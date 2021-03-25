@@ -287,7 +287,7 @@ ExceptionPrinter::ExceptionPrinter(JVM &jvm)
 //    PrintWriter printWriter = new PrintWriter(stringWriter);
 //    e.printStackTrace(printWriter);
 //    return stringWriter.toString();
-std::string ExceptionPrinter::getStackTrace(jthrowable exception) {
+std::string ExceptionPrinter::getStackTrace(jthrowable exception) const {
   auto &env = jvm_.GetEnv();
   if (exception == nullptr) {
     return "";
@@ -324,7 +324,8 @@ std::string ExceptionPrinter::getStackTrace(jthrowable exception) {
   return exception_string;
 }
 
-jthrowable ExceptionPrinter::preprocessException(jthrowable exception) {
+jthrowable ExceptionPrinter::preprocessException(jthrowable exception) const {
+  if (exception == nullptr) return nullptr;
   auto &env = jvm_.GetEnv();
   if (!FLAGS_hooks || !preprocess_throwable_method_) return exception;
   auto processed_exception = (jthrowable)(env.CallStaticObjectMethod(
@@ -336,7 +337,7 @@ jthrowable ExceptionPrinter::preprocessException(jthrowable exception) {
   return processed_exception;
 }
 
-jlong ExceptionPrinter::computeDedupToken(jthrowable exception) {
+jlong ExceptionPrinter::computeDedupToken(jthrowable exception) const {
   auto &env = jvm_.GetEnv();
   if (exception == nullptr || compute_dedup_token_method_ == nullptr) return 0;
   const auto dedup_token = env.CallStaticLongMethod(

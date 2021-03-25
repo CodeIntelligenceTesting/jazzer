@@ -54,6 +54,8 @@ DEFINE_string(reproducer_path, ".",
 
 constexpr auto kManifestUtilsClass =
     "com/code_intelligence/jazzer/runtime/ManifestUtils";
+constexpr auto kJazzerClass =
+    "com/code_intelligence/jazzer/runtime/JazzerInternal";
 
 namespace jazzer {
 // split a string on unescaped spaces
@@ -91,6 +93,10 @@ FuzzTargetRunner::FuzzTargetRunner(
               << std::endl;
     exit(1);
   }
+  jazzer_ = jvm.FindClass(kJazzerClass);
+  last_finding_ =
+      env.GetStaticFieldID(jazzer_, "lastFinding", "Ljava/lang/Throwable;");
+
   jclass_ = jvm.FindClass(FLAGS_target_class);
   // one of the following functions is required:
   //    public static void fuzzerTestOneInput(byte[] input)
@@ -197,11 +203,9 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
     env.DeleteLocalRef(byte_array);
   }
 
-  if (env.ExceptionCheck()) {
-    auto original_exception = env.ExceptionOccurred();
-    env.ExceptionClear();
-    auto processed_exception = preprocessException(original_exception);
-    jlong dedup_token = computeDedupToken(processed_exception);
+  const auto finding = GetFinding();
+  if (finding != nullptr) {
+    jlong dedup_token = computeDedupToken(finding);
     // Check whether this stack trace has been encountered before if
     // `--keep_going` has been supplied.
     if (dedup_token != 0 && FLAGS_keep_going > 1 &&
@@ -211,7 +215,7 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
     } else {
       ignore_tokens_.push_back(dedup_token);
       std::cout << std::endl;
-      std::cerr << "== Java Exception: " << getStackTrace(processed_exception);
+      std::cerr << "== Java Exception: " << getStackTrace(finding);
       std::cout << "DEDUP_TOKEN: " << std::hex << std::setfill('0')
                 << std::setw(16) << dedup_token << std::endl;
       if (ignore_tokens_.size() < static_cast<std::size_t>(FLAGS_keep_going)) {
@@ -224,6 +228,24 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
   return RunResult::kOk;
 }
 
+// Returns a fuzzer finding as a Throwable (or nullptr if there is none),
+// clearing any JVM exceptions in the process.
+jthrowable FuzzTargetRunner::GetFinding() const {
+  auto &env = jvm_.GetEnv();
+  jthrowable unprocessed_finding = nullptr;
+  if (env.ExceptionCheck()) {
+    unprocessed_finding = env.ExceptionOccurred();
+    env.ExceptionClear();
+  }
+  // Explicitly reported findings take precedence over uncaught exceptions.
+  if (auto reported_finding =
+          (jthrowable)env.GetStaticObjectField(jazzer_, last_finding_);
+      reported_finding != nullptr) {
+    unprocessed_finding = reported_finding;
+  }
+  return preprocessException(unprocessed_finding);
+}
+
 void FuzzTargetRunner::DumpReproducer(const uint8_t *data, std::size_t size) {
   auto &env = jvm_.GetEnv();
   std::string base64_data;
@@ -233,11 +255,11 @@ void FuzzTargetRunner::DumpReproducer(const uint8_t *data, std::size_t size) {
     FeedFuzzedDataProvider(data, size);
     jobject recorder = GetRecordingFuzzedDataProviderJavaObject(jvm_);
     env.CallStaticVoidMethod(jclass_, fuzzer_test_one_input_data_, recorder);
-    if (!env.ExceptionCheck()) {
+    const auto finding = GetFinding();
+    if (finding == nullptr) {
       LOG(ERROR) << "Failed to reproduce crash when rerunning with recorder";
       return;
     }
-    env.ExceptionClear();
     base64_data = SerializeRecordingFuzzedDataProvider(jvm_, recorder);
   } else {
     absl::string_view data_str(reinterpret_cast<const char *>(data), size);
