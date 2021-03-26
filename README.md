@@ -17,7 +17,7 @@ Jazzer supports x64 Linux and (experimentally) macOS 10.15.
 
 [Code Intelligence](https://code-intelligence.com) and Google have teamed up to bring support for Java, Kotlin, and other JVM-based languages to [OSS-Fuzz](https://github.com/google/oss-fuzz), Google's project for large-scale fuzzing of open-souce software. Read [the blogpost](https://security.googleblog.com/2021/03/fuzzing-java-in-oss-fuzz.html) over at the Google Security Blog.
 
-If you want to learn more about Jazzer, OSS-Fuzz, and the role fuzzing plays in web app security, join the talks by [Abhishek Arya](https://twitter.com/infernosec), [Fabian Meumertzheim](https://twitter.com/fhenneke), and [Khaled Yakdan](https://twitter.com/KhaledYakdan) at [FuzzCon Europe WebSec Edition](https://www.fuzzcon.eu/#hs_cos_wrapper_module_1511712391204163).
+If you want to learn more about Jazzer and OSS-Fuzz, [watch the FuzzCon 2020 talk](https://www.youtube.com/watch?v=SmH3Ys_k8vA&list=PLI0R_0_8-TV55gJU-UXrOzZoPbVOj1CW6&index=3) by [Abhishek Arya](https://twitter.com/infernosec) and [Fabian Meumertzheim](https://twitter.com/fhenneke).
 
 ## Installation
 
