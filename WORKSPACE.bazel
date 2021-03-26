@@ -213,3 +213,20 @@ http_archive(
     strip_prefix = "llvm-project-llvmorg-12.0.0-rc3",
     url = "https://github.com/llvm/llvm-project/archive/llvmorg-12.0.0-rc3.tar.gz",
 )
+
+# bazel_jar_jar
+
+bazel_jar_jar_commit = "171f268569384c57c19474b04aebe574d85fde0d"
+
+bazel_jar_jar_sha = "97c5f862482a05f385bd8f9d28a9bbf684b0cf3fae93112ee96f3fb04d34b193"
+
+http_archive(
+    name = "com_github_johnynek_bazel_jar_jar",
+    sha256 = bazel_jar_jar_sha,
+    strip_prefix = "bazel_jar_jar-%s" % bazel_jar_jar_commit,
+    url = "https://github.com/johnynek/bazel_jar_jar/archive/%s.tar.gz" % bazel_jar_jar_commit,
+)
+
+load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar_repositories")
+
+jar_jar_repositories()

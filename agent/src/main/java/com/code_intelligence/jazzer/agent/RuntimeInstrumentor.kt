@@ -41,7 +41,6 @@ private val BASE_EXCLUDED_CLASS_NAME_GLOBS = listOf(
     "java.**",
     "jdk.**",
     "kotlin.**",
-    "org.objectweb.asm.**", // dependency used for bytecode manipulation
     "sun.**",
 )
 
