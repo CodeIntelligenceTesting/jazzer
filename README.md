@@ -4,6 +4,7 @@
 # Jazzer
 [![Maven Central](https://img.shields.io/maven-central/v/com.code-intelligence/jazzer-api)](https://search.maven.org/search?q=g:com.code-intelligence%20a:jazzer-api)
 ![GitHub Actions](https://github.com/CodeIntelligenceTesting/jazzer/workflows/Build%20all%20targets%20and%20run%20all%20tests/badge.svg)
+[![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/java-example.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:java-example)
 
 Jazzer is a coverage-guided, in-process fuzzer for the JVM platform developed by [Code Intelligence](https://code-intelligence.com).
 It is based on [libFuzzer](https://llvm.org/docs/LibFuzzer.html) and brings many of its instrumentation-powered mutation features to the JVM.
