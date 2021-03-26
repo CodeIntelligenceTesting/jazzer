@@ -15,11 +15,11 @@
 package com.code_intelligence.jazzer.instrumentor
 
 import com.code_intelligence.jazzer.api.HookType
-import org.objectweb.asm.Handle
-import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
-import org.objectweb.asm.Type
-import org.objectweb.asm.commons.LocalVariablesSorter
+import com.code_intelligence.jazzer.third_party.objectweb.asm.Handle
+import com.code_intelligence.jazzer.third_party.objectweb.asm.MethodVisitor
+import com.code_intelligence.jazzer.third_party.objectweb.asm.Opcodes
+import com.code_intelligence.jazzer.third_party.objectweb.asm.Type
+import com.code_intelligence.jazzer.third_party.objectweb.asm.commons.LocalVariablesSorter
 
 internal fun makeHookMethodVisitor(
     access: Int,

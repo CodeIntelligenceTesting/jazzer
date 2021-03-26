@@ -15,19 +15,19 @@
 package com.code_intelligence.jazzer.instrumentor
 
 import com.code_intelligence.jazzer.runtime.TraceDataFlowNativeCallbacks
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.Opcodes
-import org.objectweb.asm.tree.AbstractInsnNode
-import org.objectweb.asm.tree.ClassNode
-import org.objectweb.asm.tree.InsnList
-import org.objectweb.asm.tree.InsnNode
-import org.objectweb.asm.tree.IntInsnNode
-import org.objectweb.asm.tree.LdcInsnNode
-import org.objectweb.asm.tree.LookupSwitchInsnNode
-import org.objectweb.asm.tree.MethodInsnNode
-import org.objectweb.asm.tree.MethodNode
-import org.objectweb.asm.tree.TableSwitchInsnNode
+import com.code_intelligence.jazzer.third_party.objectweb.asm.ClassReader
+import com.code_intelligence.jazzer.third_party.objectweb.asm.ClassWriter
+import com.code_intelligence.jazzer.third_party.objectweb.asm.Opcodes
+import com.code_intelligence.jazzer.third_party.objectweb.asm.tree.AbstractInsnNode
+import com.code_intelligence.jazzer.third_party.objectweb.asm.tree.ClassNode
+import com.code_intelligence.jazzer.third_party.objectweb.asm.tree.InsnList
+import com.code_intelligence.jazzer.third_party.objectweb.asm.tree.InsnNode
+import com.code_intelligence.jazzer.third_party.objectweb.asm.tree.IntInsnNode
+import com.code_intelligence.jazzer.third_party.objectweb.asm.tree.LdcInsnNode
+import com.code_intelligence.jazzer.third_party.objectweb.asm.tree.LookupSwitchInsnNode
+import com.code_intelligence.jazzer.third_party.objectweb.asm.tree.MethodInsnNode
+import com.code_intelligence.jazzer.third_party.objectweb.asm.tree.MethodNode
+import com.code_intelligence.jazzer.third_party.objectweb.asm.tree.TableSwitchInsnNode
 
 internal class TraceDataFlowInstrumentor(private val types: Set<InstrumentationType>, callbackClass: Class<*> = TraceDataFlowNativeCallbacks::class.java) : Instrumentor {
 
