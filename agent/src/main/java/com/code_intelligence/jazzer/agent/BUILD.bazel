@@ -3,7 +3,7 @@ load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
 kt_jvm_library(
     name = "agent_lib",
     srcs = glob(["*.kt"]),
-    visibility = ["//agent:__pkg__"],
+    visibility = ["//visibility:public"],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime",
