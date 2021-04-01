@@ -226,10 +226,10 @@ void ignoreLibraryForInterception(const std::string &lib_name) {
                 << line << std::endl;
       exit(1);
     }
-    // Skip non-executable address ranges.
-    if (!absl::StrContains(parts[1], 'x')) continue;
+    // Skip non-executable address rang"s.
+    if (!absl::StrContains(parts[1], "x")) continue;
     std::string_view range_str = parts[0];
-    std::vector<std::string> range = absl::StrSplit(range_str, '-');
+    std::vector<std::string> range = absl::StrSplit(range_str, "-");
     if (range.size() != 2) {
       std::cout
           << "ERROR: Unexpected address range format in /proc/self/maps line: "
