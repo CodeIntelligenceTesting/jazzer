@@ -190,7 +190,8 @@ extern "C" [[maybe_unused]] bool __sanitizer_weak_is_relevant_pc(
   // don't originate from those address ranges that are known to belong to the
   // JDK.
   return std::none_of(ignore_for_interception_ranges.cbegin(),
-                      ignore_for_interception_ranges.cend(), [caller_pc](const auto &range) {
+                      ignore_for_interception_ranges.cend(),
+                      [caller_pc](const auto &range) {
                         uintptr_t start;
                         uintptr_t end;
                         std::tie(start, end) = range;
