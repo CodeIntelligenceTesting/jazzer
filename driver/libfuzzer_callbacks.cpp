@@ -16,6 +16,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -177,6 +178,7 @@ void JNICALL libfuzzerPcIndirCallback(JNIEnv &env, jclass cls, jint caller_id,
 }
 
 bool is_using_native_libraries = false;
+std::once_flag ignore_list_flag;
 std::vector<std::pair<uintptr_t, uintptr_t>> ignore_for_interception_ranges;
 
 extern "C" [[maybe_unused]] bool __sanitizer_weak_is_relevant_pc(
@@ -268,12 +270,16 @@ const std::vector<std::string> kLibrariesToIgnoreForInterception = {
 };
 
 void JNICALL handleLibraryLoad(JNIEnv &env, jclass cls) {
-  if (is_using_native_libraries) return;
-  LOG(INFO) << "detected a native library load, enabling interception for libc "
-               "functions";
-  is_using_native_libraries = true;
-  for (const auto &lib_name : kLibrariesToIgnoreForInterception)
-    ignoreLibraryForInterception(lib_name);
+  std::call_once(ignore_list_flag, [] {
+    LOG(INFO)
+        << "detected a native library load, enabling interception for libc "
+           "functions";
+    for (const auto &lib_name : kLibrariesToIgnoreForInterception)
+      ignoreLibraryForInterception(lib_name);
+    // Enable the ignore list after it has been populated since vector is not
+    // thread-safe with respect to concurrent writes and reads.
+    is_using_native_libraries = true;
+  });
 }
 
 void registerCallback(JNIEnv &env, const char *java_hooks_class_name,
