@@ -62,6 +62,14 @@ extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
         callback);
 }
 
+// Suppress libFuzzer warnings about missing sanitizer methods in non-ASan
+// builds.
+extern "C" __attribute__((weak)) int __sanitizer_acquire_crash_state() {
+  return true;
+}
+
+extern "C" __attribute__((weak)) void __sanitizer_print_stack_trace() {}
+
 namespace {
 char *additional_arg;
 std::vector<char *> modified_argv;
