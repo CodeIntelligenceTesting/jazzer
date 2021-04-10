@@ -88,7 +88,7 @@ internal class TraceDataFlowInstrumentor(private val types: Set<InstrumentationT
                     // sorted by unsigned value.
                     val caseValues = when (inst) {
                         is LookupSwitchInsnNode -> {
-                            if (0 <= inst.keys.first() && inst.keys.last() < 256)
+                            if (inst.keys.isEmpty() || (0 <= inst.keys.first() && inst.keys.last() < 256))
                                 continue@loop
                             inst.keys
                         }

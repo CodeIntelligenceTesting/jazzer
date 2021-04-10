@@ -72,6 +72,12 @@ public class TraceDataFlowInstrumentationTarget implements DynamicTestContract {
         results.put("lookupSwitchUninstrumented", true);
     }
 
+    results.put("emptySwitchUninstrumented", false);
+    switch (switchValue) {
+      default:
+        results.put("emptySwitchUninstrumented", true);
+    }
+
     switch (switchValue) {
       case 1000:
       case 1001:
