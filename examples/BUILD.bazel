@@ -27,9 +27,9 @@ java_fuzz_target_test(
         "src/main/java/com/example/ExampleFuzzerWithNative.java",
     ],
     native_libs = ["//examples/src/main/native"],
-    target_class = "com.example.ExampleFuzzerWithNative",
     # Bazel creates shared libraries with an incorrect extension on macOS.
     target_compatible_with = NOT_OSX,
+    target_class = "com.example.ExampleFuzzerWithNative",
     use_asan = True,
     deps = [
         "//agent:jazzer_api_deploy.jar",
@@ -70,9 +70,9 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExampleStackOverflowFuzzer.java",
     ],
-    target_class = "com.example.ExampleStackOverflowFuzzer",
     # Crashes with a segfault before any stack trace printing is reached.
     target_compatible_with = NOT_OSX,
+    target_class = "com.example.ExampleStackOverflowFuzzer",
 )
 
 java_fuzz_target_test(
@@ -81,9 +81,9 @@ java_fuzz_target_test(
         "src/main/java/com/example/JpegImageParserFuzzer.java",
     ],
     fuzzer_args = ["-fork=5"],
-    target_class = "com.example.JpegImageParserFuzzer",
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
     target_compatible_with = NOT_OSX,
+    target_class = "com.example.JpegImageParserFuzzer",
     deps = [
         "@maven//:org_apache_commons_commons_imaging",
     ],
