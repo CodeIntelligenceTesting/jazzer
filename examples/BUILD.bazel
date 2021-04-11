@@ -2,14 +2,6 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
-# List of all platforms except OSX. Set this value to attribute
-# "target_compatible_with" of targets that should not be executed on OSX.
-NOT_OSX = [
-    "@bazel_tools//platforms:freebsd",
-    "@bazel_tools//platforms:linux",
-    "@bazel_tools//platforms:windows",
-]
-
 java_fuzz_target_test(
     name = "ExampleFuzzer",
     srcs = [
@@ -27,9 +19,9 @@ java_fuzz_target_test(
         "src/main/java/com/example/ExampleFuzzerWithNative.java",
     ],
     native_libs = ["//examples/src/main/native"],
-    target_class = "com.example.ExampleFuzzerWithNative",
     # Bazel creates shared libraries with an incorrect extension on macOS.
-    target_compatible_with = NOT_OSX,
+    tags = ["broken-on-darwin"],
+    target_class = "com.example.ExampleFuzzerWithNative",
     use_asan = True,
     deps = [
         "//agent:jazzer_api_deploy.jar",
@@ -70,9 +62,9 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExampleStackOverflowFuzzer.java",
     ],
-    target_class = "com.example.ExampleStackOverflowFuzzer",
     # Crashes with a segfault before any stack trace printing is reached.
-    target_compatible_with = NOT_OSX,
+    tags = ["broken-on-darwin"],
+    target_class = "com.example.ExampleStackOverflowFuzzer",
 )
 
 java_fuzz_target_test(
@@ -81,9 +73,9 @@ java_fuzz_target_test(
         "src/main/java/com/example/JpegImageParserFuzzer.java",
     ],
     fuzzer_args = ["-fork=5"],
-    target_class = "com.example.JpegImageParserFuzzer",
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
-    target_compatible_with = NOT_OSX,
+    tags = ["broken-on-darwin"],
+    target_class = "com.example.JpegImageParserFuzzer",
     deps = [
         "@maven//:org_apache_commons_commons_imaging",
     ],
