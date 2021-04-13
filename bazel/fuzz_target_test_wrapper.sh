@@ -22,7 +22,11 @@ eval "$1" -artifact_prefix="$DEFAULT_CRASH_PREFIX/" --reproducer_path="$DEFAULT_
 declare -i exit_code=$?
 if [ $exit_code -eq 77 ] || [ $exit_code -eq 76 ]
 then
-  exit 0
+  if [ "$(ls "$DEFAULT_CRASH_PREFIX/")" ]; then
+    exit 0
+  else
+    exit 1
+  fi
 else
   echo "Unexpected exit code: $exit_code"
   exit 1
