@@ -25,6 +25,7 @@ import com.code_intelligence.jazzer.runtime.TraceIndirHooks
 import java.lang.instrument.ClassFileTransformer
 import java.nio.file.FileSystems
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.security.ProtectionDomain
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess
@@ -57,7 +58,7 @@ internal class ClassNameGlobber(includes: List<String>, excludes: List<String>) 
         .map(::packageGlobToMatcher)
 
     fun includes(className: String): Boolean {
-        val internalClassNameAsPath = Path.of(className.replace('.', '/'))
+        val internalClassNameAsPath = Paths.get(className.replace('.', '/'))
         return includeMatchers.any { it.matches(internalClassNameAsPath) } &&
             excludeMatchers.none { it.matches(internalClassNameAsPath) }
     }

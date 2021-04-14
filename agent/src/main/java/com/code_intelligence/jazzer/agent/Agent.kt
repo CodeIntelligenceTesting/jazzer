@@ -20,7 +20,7 @@ import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
 import com.code_intelligence.jazzer.runtime.ManifestUtils
 import java.lang.instrument.Instrumentation
-import java.nio.file.Path
+import java.nio.file.Paths
 
 val KNOWN_ARGUMENTS = listOf(
     "instrumentation_includes",
@@ -78,7 +78,7 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
         }
     }.toSet()
     val idSyncFile = argumentMap["id_sync_file"]?.let {
-        Path.of(it.single()).also { path ->
+        Paths.get(it.single()).also { path ->
             println("INFO: Synchronizing coverage IDs in ${path.toAbsolutePath()}")
         }
     }
