@@ -35,14 +35,16 @@
 DEFINE_string(
     target_class, "",
     "The Java class that contains the static fuzzerTestOneInput function");
-
 DEFINE_string(target_args, "",
               "Arguments passed to fuzzerInitialize as a String array. "
               "Separated by space.");
+
 DEFINE_int32(keep_going, 1,
              "Continue fuzzing until N distinct exception stack traces have"
              "been encountered");
-
+DEFINE_bool(dedup, true,
+            "Emit a dedup token for every finding. Defaults to true and is "
+            "required for --keep_going and --ignore.");
 DEFINE_string(
     ignore, "",
     "Comma-separated list of crash dedup tokens to ignore. This is useful to "
@@ -90,6 +92,11 @@ FuzzTargetRunner::FuzzTargetRunner(
   // the value of the --target_class argument.
   if (FLAGS_target_class.empty()) {
     std::cerr << "Missing argument --target_class=<fuzz_target_class>"
+              << std::endl;
+    exit(1);
+  }
+  if ((!FLAGS_ignore.empty() || FLAGS_keep_going > 1) && !FLAGS_dedup) {
+    std::cerr << "--nodedup is not supported with --ignore or --keep_going"
               << std::endl;
     exit(1);
   }
@@ -216,8 +223,10 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
       ignore_tokens_.push_back(dedup_token);
       std::cout << std::endl;
       std::cerr << "== Java Exception: " << getStackTrace(finding);
-      std::cout << "DEDUP_TOKEN: " << std::hex << std::setfill('0')
-                << std::setw(16) << dedup_token << std::endl;
+      if (FLAGS_dedup) {
+        std::cout << "DEDUP_TOKEN: " << std::hex << std::setfill('0')
+                  << std::setw(16) << dedup_token << std::endl;
+      }
       if (ignore_tokens_.size() < static_cast<std::size_t>(FLAGS_keep_going)) {
         return RunResult::kDumpAndContinue;
       } else {
