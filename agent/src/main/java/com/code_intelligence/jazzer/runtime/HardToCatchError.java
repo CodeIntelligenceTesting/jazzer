@@ -20,8 +20,8 @@ import java.io.PrintWriter;
 /**
  * An Error that rethrows itself when any of its getters is invoked.
  */
-public class HardToCatchThrowable extends Error {
-  public HardToCatchThrowable() {
+public class HardToCatchError extends Error {
+  public HardToCatchError() {
     super();
   }
 
