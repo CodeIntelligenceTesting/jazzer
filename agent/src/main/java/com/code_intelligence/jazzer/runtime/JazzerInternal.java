@@ -24,6 +24,6 @@ final public class JazzerInternal {
     // Throw an Error that is hard to catch (short of outright ignoring it) in order to quickly
     // terminate the execution of the fuzz target. The finding will be reported as soon as the fuzz
     // target returns even if this Error is swallowed.
-    throw new HardToCatchThrowable();
+    throw new HardToCatchError();
   }
 }
