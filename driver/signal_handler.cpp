@@ -29,6 +29,9 @@ void JNICALL handleInterrupt(JNIEnv, jclass) {
   if (!already_exiting.exchange(true)) {
     // Let libFuzzer exit gracefully when the JVM received SIGINT.
     raise(SIGUSR1);
+  } else {
+    // Exit libFuzzer forcefully on repeated SIGINTs.
+    raise(SIGTERM);
   }
 }
 
