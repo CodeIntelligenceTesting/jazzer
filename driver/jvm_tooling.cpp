@@ -339,7 +339,9 @@ jthrowable ExceptionPrinter::preprocessException(jthrowable exception) const {
 
 jlong ExceptionPrinter::computeDedupToken(jthrowable exception) const {
   auto &env = jvm_.GetEnv();
-  if (exception == nullptr || compute_dedup_token_method_ == nullptr) return 0;
+  if (!FLAGS_hooks || exception == nullptr ||
+      compute_dedup_token_method_ == nullptr)
+    return 0;
   const auto dedup_token = env.CallStaticLongMethod(
       exception_utils_, compute_dedup_token_method_, exception);
   if (env.ExceptionCheck()) {
