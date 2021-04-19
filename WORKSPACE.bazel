@@ -202,21 +202,16 @@ http_archive(
 )
 
 # libFuzzer
-llvm_commit = "423024904825d147c69e8999537b6b813bc24999"
+llvm_commit = "69c3fe6175b0bc8f8a5a6be3a9e66a5502d98915"
 
-llvm_sha = "54a0baae898c4c23bcbeb22c7b9df25dc5ad1c7d879014200146ee455360202a"
+llvm_sha = "4aba69716993cc5d5361ddec99bdf53a7a20de91511d2b04e430650d5a2a8b4b"
 
 http_archive(
     name = "libFuzzer",
     build_file = "//third_party:libFuzzer.BUILD",
-    patches = [
-        "//third_party:libFuzzer-make-interceptors-configurable.patch",
-        "//third_party:libFuzzer-pass-death-callback-to-jazzer.patch",
-    ],
     sha256 = llvm_sha,
-    strip_prefix = "llvm-llvm-project-%s" % llvm_commit[:7],
-    type = "tar.gz",
-    url = "https://api.github.com/repos/llvm/llvm-project/tarball/%s" % llvm_commit,
+    strip_prefix = "llvm-project-jazzer-%s" % llvm_commit,
+    url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/%s.tar.gz" % llvm_commit,
 )
 
 # bazel_jar_jar
