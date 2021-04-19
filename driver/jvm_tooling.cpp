@@ -156,6 +156,10 @@ JVM::JVM(const std::string &executable_path) {
   // set the maximum heap size
   options.push_back(JavaVMOption{.optionString = (char *)"-Xmx4096m"});
   options.push_back(JavaVMOption{.optionString = (char *)"-enableassertions"});
+  // Preserve and emit stack trace information even on hot paths.
+  // This may hurt performance, but also helps find flaky bugs.
+  options.push_back(
+      JavaVMOption{.optionString = (char *)"-XX:-OmitStackTraceInFastThrow"});
 
   // add additional jvm options set through command line flags
   std::vector<std::string> jvm_args;
