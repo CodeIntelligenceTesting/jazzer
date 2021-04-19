@@ -25,6 +25,9 @@ void __sanitizer_weak_hook_memcmp(void *caller_pc, const void *s1,
                                   const void *s2, std::size_t n, int result) {}
 void __sanitizer_weak_hook_strcmp(void *caller_pc, const char *s1,
                                   const char *s2, int result) {}
+void __sanitizer_weak_hook_compare_bytes(void *caller_pc, const void *s1,
+                                         const void *s2, std::size_t n1,
+                                         std::size_t n2, int result) {}
 void __sanitizer_weak_hook_strstr(void *caller_pc, const char *s1,
                                   const char *s2, int result) {}
 void __sanitizer_cov_trace_cmp4(uint32_t arg1, uint32_t arg2) {}
