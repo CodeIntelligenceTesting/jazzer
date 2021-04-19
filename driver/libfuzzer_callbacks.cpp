@@ -67,29 +67,35 @@ inline __attribute__((always_inline)) void *idToPc(jint id) {
 void JNICALL libfuzzerStringCompareCallback(JNIEnv &env, jclass cls, jstring s1,
                                             jstring s2, jint result, jint id) {
   const char *s1_native = env.GetStringUTFChars(s1, nullptr);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   std::size_t n1 = env.GetStringUTFLength(s1);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   const char *s2_native = env.GetStringUTFChars(s2, nullptr);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   std::size_t n2 = env.GetStringUTFLength(s2);
-  env.ExceptionDescribe();
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   __sanitizer_weak_hook_compare_bytes(idToPc(id), s1_native, s2_native, n1, n2,
                                       result);
   env.ReleaseStringUTFChars(s1, s1_native);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   env.ReleaseStringUTFChars(s2, s2_native);
-  env.ExceptionDescribe();
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
 }
 
 void JNICALL libfuzzerStringContainCallback(JNIEnv &env, jclass cls, jstring s1,
                                             jstring s2, jint id) {
   const char *s1_native = env.GetStringUTFChars(s1, nullptr);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   const char *s2_native = env.GetStringUTFChars(s2, nullptr);
-  env.ExceptionDescribe();
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   // libFuzzer currently ignores the result, which allows us to simply pass a
   // valid but arbitrary pointer here instead of performing an actual strstr
   // operation.
   __sanitizer_weak_hook_strstr(idToPc(id), s1_native, s2_native, s1_native);
   env.ReleaseStringUTFChars(s1, s1_native);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   env.ReleaseStringUTFChars(s2, s2_native);
-  env.ExceptionDescribe();
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
 }
 
 void JNICALL libfuzzerByteCompareCallback(JNIEnv &env, jclass cls,
@@ -97,13 +103,15 @@ void JNICALL libfuzzerByteCompareCallback(JNIEnv &env, jclass cls,
                                           jbyteArray b2, jint b2_length,
                                           jint result, jint id) {
   jbyte *b1_native = env.GetByteArrayElements(b1, nullptr);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   jbyte *b2_native = env.GetByteArrayElements(b2, nullptr);
-  env.ExceptionDescribe();
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   __sanitizer_weak_hook_compare_bytes(idToPc(id), b1_native, b2_native,
                                       b1_length, b2_length, result);
   env.ReleaseByteArrayElements(b1, b1_native, JNI_ABORT);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   env.ReleaseByteArrayElements(b2, b2_native, JNI_ABORT);
-  env.ExceptionDescribe();
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
 }
 
 void JNICALL libfuzzerLongCompareCallback(JNIEnv &env, jclass cls, jlong value1,
@@ -133,9 +141,11 @@ void JNICALL libfuzzerSwitchCaseCallback(JNIEnv &env, jclass cls,
                                          jlongArray libfuzzer_case_values,
                                          jint id) {
   jlong *case_values = env.GetLongArrayElements(libfuzzer_case_values, nullptr);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   __sanitizer_cov_trace_switch(switch_value,
                                reinterpret_cast<uint64_t *>(case_values));
   env.ReleaseLongArrayElements(libfuzzer_case_values, case_values, JNI_ABORT);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
 }
 
 void JNICALL libfuzzerSwitchCaseCallbackWithPc(JNIEnv &env, jclass cls,
@@ -143,9 +153,11 @@ void JNICALL libfuzzerSwitchCaseCallbackWithPc(JNIEnv &env, jclass cls,
                                                jlongArray libfuzzer_case_values,
                                                jint id) {
   jlong *case_values = env.GetLongArrayElements(libfuzzer_case_values, nullptr);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   __sanitizer_cov_trace_switch_with_pc(
       idToPc(id), switch_value, reinterpret_cast<uint64_t *>(case_values));
   env.ReleaseLongArrayElements(libfuzzer_case_values, case_values, JNI_ABORT);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
 }
 
 void JNICALL libfuzzerLongDivCallback(JNIEnv &env, jclass cls, jlong value,
