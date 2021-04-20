@@ -18,6 +18,10 @@ import com.code_intelligence.jazzer.generated.JAVA_NO_THROW_METHODS
 import com.code_intelligence.jazzer.runtime.CoverageMap
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.ClassProbesAdapter
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.ClassProbesVisitor
+import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.IMethodProbesAdapterFactory
+import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.IProbeIdGenerator
+import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.MethodProbesAdapter
+import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.MethodProbesVisitor
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.instr.ClassInstrumenter
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.instr.IProbeArrayStrategy
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.instr.IProbeInserterFactory
@@ -134,29 +138,19 @@ class EdgeCoverageInstrumentor(
     }
 
     /**
-     * The maximal number of stack elements used by [instrumentMethodEdge].
+     * Returns true if bytecode instrumentation should be injected right before a method invocation, e.g., because that
+     * method may throw.
      */
-    private val instrumentMethodEdgeStackSize = instrumentControlFlowEdgeStackSize
-
-    /**
-     * Inject bytecode instrumentation right before a method invocation (if needed). The coverage map can be loaded from
-     * local variable [variable].
-     *
-     * Note: Since not every method invocation might need instrumentation, an edge ID should only be generated if needed
-     * by calling [nextEdgeId].
-     */
-    private fun instrumentMethodEdge(
-        mv: MethodVisitor,
-        variable: Int,
+    private fun shouldInstrumentMethodEdge(
         internalClassName: String,
         methodName: String,
         descriptor: String
-    ) {
+    ): Boolean {
         if (internalClassName.startsWith("com/code_intelligence/jazzer/") && !isTesting)
-            return
+            return false
         if (isNoThrowMethod(internalClassName, methodName, descriptor))
-            return
-        instrumentControlFlowEdge(mv, nextEdgeId(), variable)
+            return false
+        return true
     }
 
     /**
@@ -180,6 +174,10 @@ class EdgeCoverageInstrumentor(
 // The remainder of this file interfaces with classes in org.jacoco.core.internal. Changes to this part should not be
 // necessary unless JaCoCo is updated or the way we instrument for coverage changes fundamentally.
 
+    /**
+     * A [ProbeInserter] that injects the bytecode instrumentation returned by [instrumentControlFlowEdge] and modifies
+     * the stack size and number of local variables accordingly.
+     */
     private inner class EdgeCoverageProbeInserter(
         access: Int,
         name: String,
@@ -192,21 +190,8 @@ class EdgeCoverageInstrumentor(
         }
 
         override fun visitMaxs(maxStack: Int, maxLocals: Int) {
-            val maxStackIncrease = max(instrumentControlFlowEdgeStackSize, instrumentMethodEdgeStackSize)
-            val newMaxStack = max(maxStack + maxStackIncrease, loadCoverageMapStackSize)
-            val newMaxLocals = maxLocals + 1
-            mv.visitMaxs(newMaxStack, newMaxLocals)
-        }
-
-        override fun visitMethodInsn(
-            opcode: Int,
-            owner: String,
-            name: String,
-            descriptor: String,
-            isInterface: Boolean
-        ) {
-            instrumentMethodEdge(mv, variable, owner, name, descriptor)
-            mv.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
+            val newMaxStack = max(maxStack + instrumentControlFlowEdgeStackSize, loadCoverageMapStackSize)
+            mv.visitMaxs(newMaxStack, maxLocals + 1)
         }
     }
 
@@ -215,8 +200,35 @@ class EdgeCoverageInstrumentor(
             EdgeCoverageProbeInserter(access, name, desc, mv, arrayStrategy)
         }
 
+    /**
+     * A [MethodProbesAdapter] that adds a call to [MethodProbesVisitor.visitProbe] on every method edge for which
+     * [shouldInstrumentMethodEdge] returns true.
+     */
+    private inner class EdgeCoverageMethodProbesAdapter(
+        probesVisitor: MethodProbesVisitor,
+        idGenerator: IProbeIdGenerator
+    ) : MethodProbesAdapter(probesVisitor, idGenerator) {
+        @Override
+        override fun visitMethodInsn(
+            opcode: Int,
+            owner: String,
+            name: String,
+            descriptor: String,
+            isInterface: Boolean
+        ) {
+            if (shouldInstrumentMethodEdge(owner, name, descriptor)) {
+                probesVisitor.visitProbe(nextEdgeId())
+            }
+            super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
+        }
+    }
+
+    private val edgeCoverageMethodProbesAdapterFactory = IMethodProbesAdapterFactory { probesVisitor, idGenerator ->
+        EdgeCoverageMethodProbesAdapter(probesVisitor, idGenerator)
+    }
+
     private inner class EdgeCoverageClassProbesAdapter(cv: ClassProbesVisitor, trackFrames: Boolean) :
-        ClassProbesAdapter(cv, trackFrames) {
+        ClassProbesAdapter(cv, trackFrames, edgeCoverageMethodProbesAdapterFactory) {
         override fun nextId(): Int = nextEdgeId()
     }
 
