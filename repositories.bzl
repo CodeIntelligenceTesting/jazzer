@@ -119,6 +119,7 @@ def jazzer_dependencies():
         name = "jazzer_jacoco",
         build_file = "@jazzer//third_party:jacoco_internal.BUILD",
         patches = [
+            "@jazzer//third_party:jacoco-make-probe-adapter-subclassable.patch",
             "@jazzer//third_party:jacoco-make-probe-inserter-subclassable.patch",
         ],
         sha256 = "da48fb5ae4ec3ffc659d4de18232aedea99476935f4ce4b0605f2d6aa1dc2553",
