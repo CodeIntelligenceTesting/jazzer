@@ -25,10 +25,13 @@ extern "C" void __sanitizer_cov_8bit_counters_init(uint8_t *start,
                                                    uint8_t *end);
 extern "C" void __sanitizer_cov_pcs_init(const uintptr_t *pcs_beg,
                                          const uintptr_t *pcs_end);
+extern "C" size_t __sanitizer_cov_get_observed_pcs(uintptr_t **pc_entries);
 
 constexpr auto kCoverageMapClass =
     "com/code_intelligence/jazzer/runtime/CoverageMap";
 constexpr auto kByteBufferClass = "java/nio/ByteBuffer";
+constexpr auto kCoverageRecorderClass =
+    "com/code_intelligence/jazzer/instrumentor/CoverageRecorder";
 
 // The initial size of the Java coverage map (512 counters).
 constexpr std::size_t kInitialCoverageCountersBufferSize = 1u << 9u;
@@ -45,7 +48,7 @@ void AssertNoException(JNIEnv &env) {
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     throw std::runtime_error(
-        "Java exception occured in CoverageTracker JNI code");
+        "Java exception occurred in CoverageTracker JNI code");
   }
 }
 }  // namespace
@@ -147,4 +150,53 @@ void CoverageTracker::Clear() {
 }
 
 uint8_t *CoverageTracker::GetCoverageCounters() { return counters_; }
+
+void CoverageTracker::RecordInitialCoverage(JNIEnv &env) {
+  jclass coverage_recorder = env.FindClass(kCoverageRecorderClass);
+  AssertNoException(env);
+  jmethodID coverage_recorder_update_covered_ids_with_coverage_map =
+      env.GetStaticMethodID(coverage_recorder,
+                            "updateCoveredIdsWithCoverageMap", "()V");
+  AssertNoException(env);
+  env.CallStaticVoidMethod(
+      coverage_recorder,
+      coverage_recorder_update_covered_ids_with_coverage_map);
+  AssertNoException(env);
+}
+
+std::string CoverageTracker::ComputeCoverage(JNIEnv &env) {
+  uintptr_t *covered_pcs;
+  size_t num_covered_pcs = __sanitizer_cov_get_observed_pcs(&covered_pcs);
+  std::vector<jint> covered_edge_ids{};
+  covered_edge_ids.reserve(num_covered_pcs);
+  const uintptr_t first_pc = pc_entries_[0].PC;
+  std::for_each(covered_pcs, covered_pcs + num_covered_pcs,
+                [&covered_edge_ids, first_pc](const uintptr_t pc) {
+                  jint edge_id =
+                      (pc - first_pc) / sizeof(fake_instructions_[0]);
+                  covered_edge_ids.push_back(edge_id);
+                });
+  delete[] covered_pcs;
+
+  jclass coverage_recorder = env.FindClass(kCoverageRecorderClass);
+  AssertNoException(env);
+  jmethodID coverage_recorder_compute_file_coverage = env.GetStaticMethodID(
+      coverage_recorder, "computeFileCoverage", "([I)Ljava/lang/String;");
+  AssertNoException(env);
+  jintArray covered_edge_ids_jni = env.NewIntArray(num_covered_pcs);
+  AssertNoException(env);
+  env.SetIntArrayRegion(covered_edge_ids_jni, 0, num_covered_pcs,
+                        covered_edge_ids.data());
+  AssertNoException(env);
+  auto file_coverage_jni = (jstring)(env.CallStaticObjectMethod(
+      coverage_recorder, coverage_recorder_compute_file_coverage,
+      covered_edge_ids_jni));
+  AssertNoException(env);
+  auto file_coverage_cstr = env.GetStringUTFChars(file_coverage_jni, nullptr);
+  AssertNoException(env);
+  std::string file_coverage(file_coverage_cstr);
+  env.ReleaseStringUTFChars(file_coverage_jni, file_coverage_cstr);
+  AssertNoException(env);
+  return file_coverage;
+}
 }  // namespace jazzer

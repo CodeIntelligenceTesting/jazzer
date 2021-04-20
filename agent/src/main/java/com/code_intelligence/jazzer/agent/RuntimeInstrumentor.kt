@@ -15,6 +15,7 @@
 package com.code_intelligence.jazzer.agent
 
 import com.code_intelligence.jazzer.instrumentor.ClassInstrumentor
+import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hook
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
@@ -159,6 +160,7 @@ internal class RuntimeInstrumentor(
                 } finally {
                     coverageIdSynchronizer.commitIdCount(actualNumEdgeIds)
                 }
+                CoverageRecorder.recordInstrumentedClass(internalClassName, bytecode, firstId, firstId + actualNumEdgeIds)
             } else {
                 hooks(customHooks)
             }

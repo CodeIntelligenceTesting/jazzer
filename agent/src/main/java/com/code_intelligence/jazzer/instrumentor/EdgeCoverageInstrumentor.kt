@@ -16,8 +16,12 @@ package com.code_intelligence.jazzer.instrumentor
 
 import com.code_intelligence.jazzer.generated.JAVA_NO_THROW_METHODS
 import com.code_intelligence.jazzer.runtime.CoverageMap
+import com.code_intelligence.jazzer.third_party.jacoco.core.analysis.Analyzer
+import com.code_intelligence.jazzer.third_party.jacoco.core.analysis.ICoverageVisitor
+import com.code_intelligence.jazzer.third_party.jacoco.core.data.ExecutionDataStore
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.ClassProbesAdapter
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.ClassProbesVisitor
+import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.IClassProbesAdapterFactory
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.IMethodProbesAdapterFactory
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.IProbeIdGenerator
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.flow.MethodProbesAdapter
@@ -51,6 +55,12 @@ class EdgeCoverageInstrumentor(
         )
         reader.accept(visitor, ClassReader.EXPAND_FRAMES)
         return writer.toByteArray()
+    }
+
+    fun analyze(executionData: ExecutionDataStore, coverageVisitor: ICoverageVisitor, bytecode: ByteArray, internalClassName: String) {
+        Analyzer(executionData, coverageVisitor, edgeCoverageClassProbesAdapterFactory).run {
+            analyzeClass(bytecode, internalClassName)
+        }
     }
 
     val numEdges
@@ -230,6 +240,10 @@ class EdgeCoverageInstrumentor(
     private inner class EdgeCoverageClassProbesAdapter(cv: ClassProbesVisitor, trackFrames: Boolean) :
         ClassProbesAdapter(cv, trackFrames, edgeCoverageMethodProbesAdapterFactory) {
         override fun nextId(): Int = nextEdgeId()
+    }
+
+    private val edgeCoverageClassProbesAdapterFactory = IClassProbesAdapterFactory { probesVisitor, trackFrames ->
+        EdgeCoverageClassProbesAdapter(probesVisitor, trackFrames)
     }
 
     private val edgeCoverageProbeArrayStrategy = object : IProbeArrayStrategy {

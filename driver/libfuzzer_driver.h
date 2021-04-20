@@ -63,9 +63,9 @@ class LibfuzzerDriver : public AbstractLibfuzzerDriver {
  public:
   LibfuzzerDriver(int *argc, char ***argv);
 
-  virtual RunResult TestOneInput(const uint8_t *data, std::size_t size);
+  RunResult TestOneInput(const uint8_t *data, std::size_t size) override;
 
-  virtual ~LibfuzzerDriver() = default;
+  ~LibfuzzerDriver() override = default;
 
   void DumpReproducer(const uint8_t *data, std::size_t size);
 

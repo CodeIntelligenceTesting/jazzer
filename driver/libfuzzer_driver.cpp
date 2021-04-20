@@ -50,6 +50,9 @@ DECLARE_bool(fake_pcs);
 // Defined in jvm_tooling.cpp
 DECLARE_string(id_sync_file);
 
+// Defined in fuzz_target_runner.cpp
+DECLARE_string(coverage_report);
+
 // We apply a patch to libFuzzer to make it call this function instead of
 // __sanitizer_set_death_callback to pass us the death callback.
 extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
@@ -128,6 +131,11 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
                absl::StartsWith(arg, "-jobs=") ||
                absl::StartsWith(arg, "-merge=");
       })) {
+    if (!FLAGS_coverage_report.empty()) {
+      LOG(WARNING) << "WARN: --coverage_report does not support parallel "
+                      "fuzzing and has been disabled";
+      FLAGS_coverage_report = "";
+    }
     if (FLAGS_id_sync_file.empty()) {
       // Create an empty temporary file used for coverage ID synchronization and
       // pass its path to the agent in every child process. This requires adding
