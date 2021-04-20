@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "jvm_tooling.h"
 #include "third_party/jni/jni.h"
 
@@ -47,5 +49,8 @@ class CoverageTracker : public ExceptionPrinter {
 
   // Returns the address of the coverage counters array.
   static uint8_t *GetCoverageCounters();
+
+  static void RecordInitialCoverage(JNIEnv &env);
+  static std::string ComputeCoverage(JNIEnv &env);
 };
 }  // namespace jazzer

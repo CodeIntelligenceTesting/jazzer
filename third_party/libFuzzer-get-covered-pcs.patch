@@ -1,0 +1,21 @@
+diff --git compiler-rt/lib/fuzzer/FuzzerTracePC.cpp compiler-rt/lib/fuzzer/FuzzerTracePC.cpp
+index 208f56af0b84..fdd714d2cb31 100644
+--- compiler-rt/lib/fuzzer/FuzzerTracePC.cpp
++++ compiler-rt/lib/fuzzer/FuzzerTracePC.cpp
+@@ -27,6 +27,16 @@
+ // Used by -fsanitize-coverage=stack-depth to track stack depth
+ ATTRIBUTES_INTERFACE_TLS_INITIAL_EXEC uintptr_t __sancov_lowest_stack;
+
++extern "C" size_t __sanitizer_cov_get_observed_pcs(uintptr_t **covered_pcs_out) {
++  size_t size = fuzzer::TPC.GetTotalPCCoverage();
++  auto covered_pcs = new uintptr_t[size];
++  *covered_pcs_out = covered_pcs;
++  fuzzer::TPC.ForEachObservedPC([&](const fuzzer::TracePC::PCTableEntry* entry) {
++    *covered_pcs++ = entry->PC;
++  });
++  return size;
++}
++
+ namespace fuzzer {
+
+ TracePC TPC;

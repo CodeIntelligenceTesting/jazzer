@@ -25,6 +25,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/substitute.h"
+#include "coverage_tracker.h"
 #include "fuzzed_data_provider.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
@@ -53,6 +54,11 @@ DEFINE_string(
 DEFINE_string(reproducer_path, ".",
               "Path at which fuzzing reproducers are stored. Defaults to the "
               "current directory.");
+DEFINE_string(coverage_report, "",
+              "Path at which a coverage report is stored when the fuzzer "
+              "exits. If left empty, no report is generated (default)");
+
+DECLARE_bool(hooks);
 
 constexpr auto kManifestUtilsClass =
     "com/code_intelligence/jazzer/runtime/ManifestUtils";
@@ -165,6 +171,9 @@ FuzzTargetRunner::FuzzTargetRunner(
     std::exit(1);
   }
 
+  if (FLAGS_hooks && !FLAGS_coverage_report.empty()) {
+    CoverageTracker::RecordInitialCoverage(env);
+  }
   SetUpFuzzedDataProvider(jvm_);
 
   // Parse a comma-separated list of hex dedup tokens.
@@ -184,6 +193,16 @@ FuzzTargetRunner::FuzzTargetRunner(
 }
 
 FuzzTargetRunner::~FuzzTargetRunner() {
+  if (FLAGS_hooks && !FLAGS_coverage_report.empty()) {
+    std::string report = CoverageTracker::ComputeCoverage(jvm_.GetEnv());
+    std::ofstream report_file(FLAGS_coverage_report);
+    if (report_file) {
+      report_file << report << std::flush;
+    } else {
+      LOG(ERROR) << "Failed to write coverage report to "
+                 << FLAGS_coverage_report;
+    }
+  }
   if (fuzzer_tear_down_ != nullptr) {
     std::cerr << "calling fuzzer teardown function" << std::endl;
     jvm_.GetEnv().CallStaticVoidMethod(jclass_, fuzzer_tear_down_);

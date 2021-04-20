@@ -131,6 +131,9 @@ def jazzer_dependencies():
         http_archive,
         name = "jazzer_libfuzzer",
         build_file = "@jazzer//third_party:libFuzzer.BUILD",
+        patches = [
+            "//third_party:libFuzzer-get-covered-pcs.patch",
+        ],
         sha256 = "4aba69716993cc5d5361ddec99bdf53a7a20de91511d2b04e430650d5a2a8b4b",
         strip_prefix = "llvm-project-jazzer-69c3fe6175b0bc8f8a5a6be3a9e66a5502d98915",
         url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/69c3fe6175b0bc8f8a5a6be3a9e66a5502d98915.tar.gz",
