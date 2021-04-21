@@ -15,13 +15,13 @@
 package com.code_intelligence.jazzer.generated
 
 private object JavaNoThrowMethods {
-    val dataFilePath: String = JavaNoThrowMethods.javaClass.packageName.replace('.', '/')
+    val dataFilePath: String = JavaNoThrowMethods.javaClass.`package`.name.replace('.', '/')
     const val dataFileName = "java_no_throw_methods_list.dat"
 
     fun readJavaNoThrowMethods(): Set<String> {
         val resource = JavaNoThrowMethods.javaClass.classLoader.getResource("$dataFilePath/$dataFileName")!!
         return resource.openStream().bufferedReader().useLines { line -> line.toSet() }.also {
-            System.out.println("INFO: Loaded ${it.size} no-throw method signatures")
+            println("INFO: Loaded ${it.size} no-throw method signatures")
         }
     }
 }
