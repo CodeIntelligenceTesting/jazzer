@@ -21,6 +21,10 @@ extern "C" {
 void __sanitizer_cov_8bit_counters_init(uint8_t *start, uint8_t *end) {}
 void __sanitizer_cov_pcs_init(const uintptr_t *pcs_beg,
                               const uintptr_t *pcs_end) {}
+size_t __sanitizer_cov_get_observed_pcs(uintptr_t **pc_entries) {
+  *pc_entries = new uintptr_t[0];
+  return 0;
+}
 void __sanitizer_weak_hook_memcmp(void *caller_pc, const void *s1,
                                   const void *s2, std::size_t n, int result) {}
 void __sanitizer_weak_hook_strcmp(void *caller_pc, const char *s1,
