@@ -216,10 +216,10 @@ class EdgeCoverageInstrumentor(
             descriptor: String,
             isInterface: Boolean
         ) {
+            super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
             if (shouldInstrumentMethodEdge(owner, name, descriptor)) {
                 probesVisitor.visitProbe(nextEdgeId())
             }
-            super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
         }
     }
 
