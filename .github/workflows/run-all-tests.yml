@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        jdk: [8, 16]
+        jdk: [8, 15]
         include:
           - os: ubuntu-latest
             arch: "linux"
@@ -25,7 +25,7 @@ jobs:
             cache: "/private/var/tmp"
           - jdk: 8
             jdk8_flag: "--//third_party/jni:jdk_8"
-          - jdk: 16
+          - jdk: 15
             jdk8_flag: "--no//third_party/jni:jdk_8"
 
     steps:
