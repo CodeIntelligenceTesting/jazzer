@@ -16,6 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
+        jdk: [8, 16]
         include:
           - os: ubuntu-latest
             arch: "linux"
@@ -30,7 +31,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
-          java-version: 16
+          java-version: ${{ matrix.jdk }}
 
       - name: Mount Bazel disk cache
         uses: actions/cache@v2
