@@ -15,7 +15,12 @@
 package com.code_intelligence.jazzer.instrumentor
 
 fun classToBytecode(targetClass: Class<*>): ByteArray {
-    return ClassLoader.getSystemClassLoader().getResourceAsStream("${targetClass.name.replace('.', '/')}.class")!!.readAllBytes()
+    return ClassLoader
+        .getSystemClassLoader()
+        .getResourceAsStream("${targetClass.name.replace('.', '/')}.class")!!
+        .use {
+            it.readBytes()
+        }
 }
 
 fun bytecodeToClass(name: String, bytecode: ByteArray): Class<*> {
@@ -26,7 +31,8 @@ fun bytecodeToClass(name: String, bytecode: ByteArray): Class<*> {
  * A ClassLoader that dynamically loads a single specified class from byte code and delegates all other class loads to
  * its own ClassLoader.
  */
-class BytecodeClassLoader(val className: String, private val classBytecode: ByteArray) : ClassLoader(BytecodeClassLoader::class.java.classLoader) {
+class BytecodeClassLoader(val className: String, private val classBytecode: ByteArray) :
+    ClassLoader(BytecodeClassLoader::class.java.classLoader) {
     override fun loadClass(name: String): Class<*> {
         if (name != className)
             return super.loadClass(name)
