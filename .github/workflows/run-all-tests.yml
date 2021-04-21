@@ -9,44 +9,44 @@ on:
   workflow_dispatch:
 
 jobs:
-     
+
   build_and_test:
     runs-on: ${{ matrix.os }}
+    env:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
         include:
           - os: ubuntu-latest
             arch: "linux"
-            cache: "/home/runner/.cache"
+            cache: "/home/runner/.cache/bazel-disk"
           - os: macos-latest
             arch: "darwin"
             cache: "/private/var/tmp"
 
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
           java-version: 16
 
-#      Disabled due to issues with missing dependency declarations on system headers.
-#      - name: Mount bazel cache
-#        uses: actions/cache@v2
-#        with:
-#          path: "/home/runner/.cache/bazel"
-#          key: bazel
+      - name: Mount Bazel disk cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ matrix.cache }}
+          key: bazel-disk-cache
 
       - name: Download Bazelisk for macOS
         if: matrix.arch == 'darwin'
         run: curl -LO https://github.com/bazelbuild/bazelisk/releases/download/v1.7.5/bazelisk-darwin-amd64 && chmod +x bazelisk-darwin-amd64
 
       - name: Build
-        run: ./bazelisk-${{ matrix.arch }}-amd64 build -c opt //...
+        run: ./bazelisk-${{ matrix.arch }}-amd64 build --disk_cache=${{ matrix.cache }} -c opt //...
 
       - name: Test
-        run: ./bazelisk-${{ matrix.arch }}-amd64 test -c opt --test_tag_filters="-broken-on-${{ matrix.arch }}" //...
+        run: ./bazelisk-${{ matrix.arch }}-amd64 test --disk_cache=${{ matrix.cache }} -c opt --test_tag_filters="-broken-on-${{ matrix.arch }}" //...
 
       - name: Upload test logs
         if: always()
