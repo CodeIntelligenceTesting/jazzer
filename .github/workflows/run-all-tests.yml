@@ -12,8 +12,6 @@ jobs:
 
   build_and_test:
     runs-on: ${{ matrix.os }}
-    env:
-      ALL_TARGETS: //... -//third_party/...
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -49,10 +47,10 @@ jobs:
         run: curl -LO https://github.com/bazelbuild/bazelisk/releases/download/v1.7.5/bazelisk-darwin-amd64 && chmod +x bazelisk-darwin-amd64
 
       - name: Build
-        run: ./bazelisk-${{ matrix.arch }}-amd64 build --disk_cache=${{ matrix.cache }} -c opt ${{ matrix.jdk8_flag }} -- ${{ env.ALL_TARGETS }}
+        run: ./bazelisk-${{ matrix.arch }}-amd64 build --disk_cache=${{ matrix.cache }} -c opt ${{ matrix.jdk8_flag }} //...
 
       - name: Test
-        run: ./bazelisk-${{ matrix.arch }}-amd64 test --disk_cache=${{ matrix.cache }} -c opt ${{ matrix.jdk8_flag }} --test_tag_filters="-broken-on-${{ matrix.arch }}" -- ${{ env.ALL_TARGETS }}
+        run: ./bazelisk-${{ matrix.arch }}-amd64 test --disk_cache=${{ matrix.cache }} -c opt ${{ matrix.jdk8_flag }} --test_tag_filters="-broken-on-${{ matrix.arch }}" //...
 
       - name: Upload test logs
         if: always()
