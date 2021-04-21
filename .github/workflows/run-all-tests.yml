@@ -40,7 +40,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ matrix.cache }}
-          key: bazel-disk-cache
+          key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
 
       - name: Download Bazelisk for macOS
         if: matrix.arch == 'darwin'
