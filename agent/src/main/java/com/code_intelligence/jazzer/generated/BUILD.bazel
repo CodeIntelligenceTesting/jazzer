@@ -5,6 +5,7 @@ java_binary(
     name = "NoThrowDoclet",
     srcs = ["NoThrowDoclet.java"],
     create_executable = False,
+    tags = ["manual"],
 )
 
 genrule(

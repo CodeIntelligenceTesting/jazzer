@@ -65,6 +65,8 @@ cc_import(
         "//conditions:default": "@local_jdk//:lib/server/libjvm.dylib",
     }),
     system_provided = True,
+    # Workaround for https://github.com/bazelbuild/bazel/issues/12745
+    tags = ["manual"],
 )
 
 cc_import(
@@ -74,4 +76,6 @@ cc_import(
         "//conditions:default": "@local_jdk//:lib/server/libjvm.so",
     }),
     system_provided = True,
+    # Workaround for https://github.com/bazelbuild/bazel/issues/12745
+    tags = ["manual"],
 )
