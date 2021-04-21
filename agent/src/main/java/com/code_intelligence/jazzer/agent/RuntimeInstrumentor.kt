@@ -101,6 +101,19 @@ internal class RuntimeInstrumentor(
         protectionDomain: ProtectionDomain?,
         classfileBuffer: ByteArray,
     ): ByteArray? {
+        return try {
+            transformInternal(internalClassName, classfileBuffer)
+        } catch (t: Throwable) {
+            // Throwables raised from transform are silently dropped, making it extremely hard to detect instrumentation
+            // failures. The docs advise to use a top-level try-catch.
+            // https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/ClassFileTransformer.html
+            t.printStackTrace()
+            throw t
+        }
+    }
+
+    @OptIn(kotlin.time.ExperimentalTime::class)
+    fun transformInternal(internalClassName: String, classfileBuffer: ByteArray): ByteArray? {
         val fullInstrumentation = when {
             classesToInstrument.includes(internalClassName) -> true
             dependencyClassesToInstrument.includes(internalClassName) -> false
