@@ -53,12 +53,12 @@ class CoverageInstrumentationTest {
     private val innerForBodyIfSecondRun = 5
     private val innerForIncrementCounter = 7
     private val outerForIncrementCounter = 8
-    private val fooInvocation = 9
-    private val selfCheckReturn = 10
-    private val barInvocation = 11
-    private val fooReturn = 12
-    private val barMapPutInvocation = 13
-    private val barReturn = 14
+    private val afterFooInvocation = 9
+    private val beforeReturn = 10
+    private val fooAfterBarInvocation = 11
+    private val fooBeforeReturn = 12
+    private val barAfterMapPutInvocation = 13
+    private val barBeforeReturn = 14
     @Suppress("unused")
     private val bazReturn = 15
 
@@ -92,7 +92,11 @@ class CoverageInstrumentationTest {
         assertControlFlow(
             listOf(constructorReturn, ifFirstBranch, ifEnd) +
                 outerForControlFlow +
-                listOf(fooInvocation, barInvocation, barMapPutInvocation, barReturn, fooReturn, selfCheckReturn)
+                listOf(
+                    barAfterMapPutInvocation, barBeforeReturn,
+                    fooAfterBarInvocation, fooBeforeReturn,
+                    afterFooInvocation, beforeReturn
+                )
         )
     }
 
