@@ -3,10 +3,9 @@ load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 
 cc_library(
     name = "jni",
+    hdrs = [":jni_headers"],
     visibility = ["//visibility:public"],
-    deps = [
-        ":jni_headers",
-    ] + select({
+    deps = select({
         "@platforms//os:osx": [":libjvm_osx"],
         "//conditions:default": [":libjvm_linux"],
     }),
@@ -14,10 +13,10 @@ cc_library(
 
 cc_library(
     name = "jni_headers_only",
-    visibility = ["//visibility:public"],
-    deps = [
+    hdrs = [
         ":jni_headers",
     ],
+    visibility = ["//visibility:public"],
 )
 
 genrule(
@@ -38,9 +37,9 @@ genrule(
     cmd = "cp -f $< $@",
 )
 
-cc_import(
+filegroup(
     name = "jni_headers",
-    hdrs = [
+    srcs = [
         ":jni_header",
         ":jni_md_header",
     ],

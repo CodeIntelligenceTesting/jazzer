@@ -4,6 +4,8 @@ build -c opt
 # C/C++
 build --cxxopt='-std=c++17'
 build --action_env=CC=clang
+# Requires a relatively modern clang.
+build:ci --features=layering_check
 
 # Java
 build --java_language_version=8
