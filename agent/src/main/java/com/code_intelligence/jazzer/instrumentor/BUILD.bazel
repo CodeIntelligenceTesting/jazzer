@@ -29,8 +29,8 @@ java_binary(
     name = "unshaded_deps",
     create_executable = False,
     runtime_deps = [
-        "@jacoco_internal",
-        "@maven//:org_ow2_asm_asm",
-        "@maven//:org_ow2_asm_asm_commons",
+        "@jazzer_jacoco//:jacoco_internal",
+        "@jazzer_ow2_asm//:asm",
+        "@jazzer_ow2_asm//:asm_commons",
     ],
 )

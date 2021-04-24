@@ -7,9 +7,9 @@ java_library(
         "-Xep:EqualsHashCode:WARN",
     ],
     deps = [
-        "@maven//:org_ow2_asm_asm",
-        "@maven//:org_ow2_asm_asm_commons",
-        "@maven//:org_ow2_asm_asm_tree",
+        "@jazzer_ow2_asm//:asm",
+        "@jazzer_ow2_asm//:asm_commons",
+        "@jazzer_ow2_asm//:asm_tree",
     ],
     visibility = ["//visibility:public"],
 )
