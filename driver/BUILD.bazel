@@ -47,10 +47,10 @@ cc_library(
     deps = [
         ":sanitizer_hooks_with_pc",
         "//third_party/jni",
-        "@com_github_gflags_gflags//:gflags",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_glog//:glog",
+        "@jazzer_com_github_gflags_gflags//:gflags",
     ],
 )
 
@@ -63,7 +63,7 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":jvm_tooling_lib",
-        "@libFuzzer",
+        "@jazzer_libfuzzer//:libFuzzer",
     ],
 )
 
@@ -79,7 +79,7 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":jvm_tooling_lib",
-        "@libFuzzer",
+        "@jazzer_libfuzzer//:libFuzzer",
     ],
 )
 
@@ -102,8 +102,8 @@ cc_test(
     deps = [
         ":jvm_tooling_lib",
         ":test_main",
-        "@com_github_gflags_gflags//:gflags",
         "@googletest//:gtest",
+        "@jazzer_com_github_gflags_gflags//:gflags",
     ],
 )
 
@@ -126,8 +126,8 @@ cc_test(
     deps = [
         ":jvm_tooling_lib",
         ":test_main",
-        "@com_github_gflags_gflags//:gflags",
         "@googletest//:gtest",
+        "@jazzer_com_github_gflags_gflags//:gflags",
     ],
 )
 
@@ -135,7 +135,7 @@ cc_library(
     name = "test_main",
     srcs = ["test_main.cpp"],
     deps = [
-        "@com_github_gflags_gflags//:gflags",
         "@googletest//:gtest",
+        "@jazzer_com_github_gflags_gflags//:gflags",
     ],
 )

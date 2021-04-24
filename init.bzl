@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-JAZZER_API_VERSION = "0.9.1"
-JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_API_VERSION
+"""Dependency initialization utilities."""
 
-MAVEN_ARTIFACTS = [
-    "junit:junit:4.12",
-    "org.apache.commons:commons-imaging:1.0-alpha2",
-    "com.mikesamuel:json-sanitizer:1.2.1",
-    "com.google.code.gson:gson:2.8.6",
-    "com.fasterxml.jackson.core:jackson-core:2.12.1",
-    "com.fasterxml.jackson.core:jackson-databind:2.12.1",
-    "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.12.1",
-    "com.alibaba:fastjson:1.2.75",
-    "com.beust:klaxon:5.5",
-]
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar_repositories")
+load("@io_bazel_rules_kotlin//kotlin:dependencies.bzl", "kt_download_local_dev_dependencies")
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories")
+
+def jazzer_init():
+    bazel_skylib_workspace()
+    kt_download_local_dev_dependencies()
+    kotlin_repositories()
+    native.register_toolchains("@jazzer//:kotlin_toolchain")
+    jar_jar_repositories()
