@@ -23,9 +23,6 @@ java_fuzz_target_test(
     tags = ["broken-on-darwin"],
     target_class = "com.example.ExampleFuzzerWithNative",
     use_asan = True,
-    deps = [
-        "//agent:jazzer_api_deploy.jar",
-    ],
 )
 
 java_fuzz_target_test(
