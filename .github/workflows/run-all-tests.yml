@@ -37,6 +37,7 @@ jobs:
           java-version: ${{ matrix.jdk }}
 
       - name: Mount Bazel disk cache
+        if: matrix.arch != 'darwin'
         uses: actions/cache@v2
         with:
           path: ${{ matrix.cache }}
