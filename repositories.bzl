@@ -134,7 +134,7 @@ def jazzer_dependencies():
         patches = [
             "@jazzer//third_party:libFuzzer-get-covered-pcs.patch",
         ],
-        sha256 = "",
-        strip_prefix = "llvm-project-jazzer-323a61f95560431042f906f424a23b5ebd5e566c",
-        url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/323a61f95560431042f906f424a23b5ebd5e566c.tar.gz",
+        sha256 = "4aba69716993cc5d5361ddec99bdf53a7a20de91511d2b04e430650d5a2a8b4b",
+        strip_prefix = "llvm-project-jazzer-69c3fe6175b0bc8f8a5a6be3a9e66a5502d98915",
+        url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/69c3fe6175b0bc8f8a5a6be3a9e66a5502d98915.tar.gz",
     )
