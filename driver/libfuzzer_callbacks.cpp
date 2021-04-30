@@ -42,6 +42,9 @@ const char kLibfuzzerTraceDataFlowHooksClass[] =
 extern "C" {
 void __sanitizer_weak_hook_memcmp(void *caller_pc, const void *s1,
                                   const void *s2, std::size_t n, int result);
+void __sanitizer_weak_hook_compare_bytes(void *caller_pc, const void *s1,
+                                         const void *s2, std::size_t n1,
+                                         std::size_t n2, int result);
 void __sanitizer_weak_hook_strcmp(void *caller_pc, const char *s1,
                                   const char *s2, int result);
 void __sanitizer_weak_hook_strstr(void *caller_pc, const char *s1,
@@ -65,9 +68,14 @@ void JNICALL libfuzzerStringCompareCallback(JNIEnv &env, jclass cls, jstring s1,
                                             jstring s2, jint result, jint id) {
   const char *s1_native = env.GetStringUTFChars(s1, nullptr);
   if (env.ExceptionCheck()) env.ExceptionDescribe();
+  std::size_t n1 = env.GetStringUTFLength(s1);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
   const char *s2_native = env.GetStringUTFChars(s2, nullptr);
   if (env.ExceptionCheck()) env.ExceptionDescribe();
-  __sanitizer_weak_hook_strcmp(idToPc(id), s1_native, s2_native, result);
+  std::size_t n2 = env.GetStringUTFLength(s2);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
+  __sanitizer_weak_hook_compare_bytes(idToPc(id), s1_native, s2_native, n1, n2,
+                                      result);
   env.ReleaseStringUTFChars(s1, s1_native);
   if (env.ExceptionCheck()) env.ExceptionDescribe();
   env.ReleaseStringUTFChars(s2, s2_native);
@@ -98,8 +106,8 @@ void JNICALL libfuzzerByteCompareCallback(JNIEnv &env, jclass cls,
   if (env.ExceptionCheck()) env.ExceptionDescribe();
   jbyte *b2_native = env.GetByteArrayElements(b2, nullptr);
   if (env.ExceptionCheck()) env.ExceptionDescribe();
-  __sanitizer_weak_hook_memcmp(idToPc(id), b1_native, b2_native,
-                               std::min(b1_length, b2_length), result);
+  __sanitizer_weak_hook_compare_bytes(idToPc(id), b1_native, b2_native,
+                                      b1_length, b2_length, result);
   env.ReleaseByteArrayElements(b1, b1_native, JNI_ABORT);
   if (env.ExceptionCheck()) env.ExceptionDescribe();
   env.ReleaseByteArrayElements(b2, b2_native, JNI_ABORT);
