@@ -1,0 +1,13 @@
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+
+kt_jvm_library(
+    name = "sanitizers",
+    srcs = glob([
+        "*.kt",
+    ]),
+    visibility = ["//sanitizers:__pkg__"],
+    deps = [
+        "//agent:jazzer_api_compile_only",
+        "//sanitizers/src/main/java/jaz",
+    ],
+)
