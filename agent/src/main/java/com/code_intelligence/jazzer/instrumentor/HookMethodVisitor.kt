@@ -52,7 +52,7 @@ private class HookMethodVisitor(
     }
 
     private val hooks = hooks.associateBy { hook ->
-        var hookKey = "${hook.targetInternalClassName}#${hook.targetMethodName}"
+        var hookKey = "${hook.hookType}#${hook.targetInternalClassName}#${hook.targetMethodName}"
         if (hook.targetMethodDescriptor != null)
             hookKey += "#${hook.targetMethodDescriptor}"
         hookKey
@@ -65,10 +65,61 @@ private class HookMethodVisitor(
         methodDescriptor: String,
         isInterface: Boolean,
     ) {
-        val hook = findMatchingHook(opcode, owner, methodName, methodDescriptor)
-        if (hook == null) {
-            // Either there is no matching hook or the current opcode is not a call instruction. Emit it unchanged.
+        if (!isMethodInvocationOp(opcode)) {
             mv.visitMethodInsn(opcode, owner, methodName, methodDescriptor, isInterface)
+            return
+        }
+        handleMethodInsn(HookType.BEFORE, opcode, owner, methodName, methodDescriptor, isInterface)
+    }
+
+    /**
+     * Emits the bytecode for a method call instruction for the next applicable hook type in order (BEFORE, REPLACE,
+     * AFTER). Since the instrumented code is indistinguishable from an uninstrumented call instruction, it can be
+     * safely nested. Combining REPLACE hooks with other hooks is however not supported as these hooks already subsume
+     * the functionality of BEFORE and AFTER hooks.
+     */
+    private fun visitNextHookTypeOrCall(
+        hookType: HookType,
+        appliedHook: Boolean,
+        opcode: Int,
+        owner: String,
+        methodName: String,
+        methodDescriptor: String,
+        isInterface: Boolean,
+    ) = when (hookType) {
+        HookType.BEFORE -> {
+            val nextHookType = if (appliedHook) {
+                // After a BEFORE hook has been applied, we can safely apply an AFTER hook by replacing the actual
+                // call instruction with the full bytecode injected for the AFTER hook.
+                HookType.AFTER
+            } else {
+                // If no BEFORE hook is registered, look for a REPLACE hook next.
+                HookType.REPLACE
+            }
+            handleMethodInsn(nextHookType, opcode, owner, methodName, methodDescriptor, isInterface)
+        }
+        HookType.REPLACE -> {
+            // REPLACE hooks can't (and don't need to) be mixed with other hooks. We only cycle through them if we
+            // couldn't find a matching REPLACE hook, in which case we try an AFTER hook next.
+            require(!appliedHook)
+            handleMethodInsn(HookType.AFTER, opcode, owner, methodName, methodDescriptor, isInterface)
+        }
+        // An AFTER hook is always the last in the chain. Whether a hook has been applied or not, always emit the
+        // actual call instruction.
+        HookType.AFTER -> mv.visitMethodInsn(opcode, owner, methodName, methodDescriptor, isInterface)
+    }
+
+    fun handleMethodInsn(
+        hookType: HookType,
+        opcode: Int,
+        owner: String,
+        methodName: String,
+        methodDescriptor: String,
+        isInterface: Boolean,
+    ) {
+        val hook = findMatchingHook(hookType, owner, methodName, methodDescriptor)
+        if (hook == null) {
+            visitNextHookTypeOrCall(hookType, false, opcode, owner, methodName, methodDescriptor, isInterface)
             return
         }
 
@@ -193,8 +244,8 @@ private class HookMethodVisitor(
                 loadMethodArguments(paramDescriptors, localObjArr) // push all method arguments
                 // Stack layout: ... | MethodHandle (objectref) | owner (objectref) | object array (arrayref) | hookId (int)
                 //                   | [owner (objectref)] | arg1 (primitive/objectref) | arg2 (primitive/objectref) | ...
-                // Call the original method
-                mv.visitMethodInsn(opcode, owner, methodName, methodDescriptor, isInterface)
+                // Call the original method or the next hook in order
+                visitNextHookTypeOrCall(hookType, true, opcode, owner, methodName, methodDescriptor, isInterface)
                 val returnTypeDescriptor = extractReturnTypeDescriptor(methodDescriptor)
                 if (returnTypeDescriptor == "V") {
                     // If the method didn't return anything, we push a nullref as placeholder
@@ -235,9 +286,8 @@ private class HookMethodVisitor(
         Opcodes.INVOKESPECIAL
     )
 
-    private fun findMatchingHook(opcode: Int, owner: String, name: String, descriptor: String): Hook? {
-        if (!isMethodInvocationOp(opcode)) return null
-        val withoutDescriptorKey = "$owner#$name"
+    private fun findMatchingHook(hookType: HookType, owner: String, name: String, descriptor: String): Hook? {
+        val withoutDescriptorKey = "$hookType#$owner#$name"
         val withDescriptorKey = "$withoutDescriptorKey#$descriptor"
         return hooks[withDescriptorKey] ?: hooks[withoutDescriptorKey]
     }

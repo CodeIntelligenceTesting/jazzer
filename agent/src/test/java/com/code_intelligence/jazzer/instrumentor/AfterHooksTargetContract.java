@@ -24,4 +24,6 @@ public interface AfterHooksTargetContract extends DynamicTestContract {
   void verifyFirstSecret(String secret);
 
   void verifySecondSecret(String secret);
+
+  void verifyThirdSecret(String secret);
 }
