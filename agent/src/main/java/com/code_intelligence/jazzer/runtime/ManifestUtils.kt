@@ -18,8 +18,8 @@ import java.util.jar.Manifest
 
 object ManifestUtils {
 
-    val FUZZ_TARGET_CLASS = "Jazzer-Fuzz-Target-Class"
-    val HOOK_CLASSES = "Jazzer-Hook-Classes"
+    const val FUZZ_TARGET_CLASS = "Jazzer-Fuzz-Target-Class"
+    const val HOOK_CLASSES = "Jazzer-Hook-Classes"
 
     fun combineManifestValues(attribute: String): List<String> {
         val manifests = ManifestUtils::class.java.classLoader.getResources("META-INF/MANIFEST.MF")
