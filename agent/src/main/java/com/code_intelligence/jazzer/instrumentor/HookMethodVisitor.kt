@@ -27,7 +27,7 @@ internal fun makeHookMethodVisitor(
     methodVisitor: MethodVisitor?,
     hooks: Iterable<Hook>,
     java6Mode: Boolean,
-    random: DeterministicRandom
+    random: DeterministicRandom,
 ): MethodVisitor {
     return HookMethodVisitor(access, descriptor, methodVisitor, hooks, java6Mode, random).lvs
 }
@@ -111,7 +111,15 @@ private class HookMethodVisitor(
                 // MethodHandle constants (type 15) are not supported in Java 6 class files (major version 50).
                 mv.visitInsn(Opcodes.ACONST_NULL) // push nullref
             } else {
-                mv.visitLdcInsn(Handle(handleOpcode, owner, methodName, methodDescriptor, isInterface)) // push MethodHandle
+                mv.visitLdcInsn(
+                    Handle(
+                        handleOpcode,
+                        owner,
+                        methodName,
+                        methodDescriptor,
+                        isInterface
+                    )
+                ) // push MethodHandle
             }
             // Stack layout: ... | MethodHandle (objectref)
             // Push the owner object again
@@ -128,7 +136,13 @@ private class HookMethodVisitor(
         when (hook.hookType) {
             HookType.BEFORE -> {
                 // Call the hook method
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, hook.hookInternalClassName, hook.hookMethodName, hook.hookMethodDescriptor, false)
+                mv.visitMethodInsn(
+                    Opcodes.INVOKESTATIC,
+                    hook.hookInternalClassName,
+                    hook.hookMethodName,
+                    hook.hookMethodDescriptor,
+                    false
+                )
                 // Stack layout: ...
                 // Push the values for the original method call onto the stack again
                 if (opcode != Opcodes.INVOKESTATIC) {
@@ -136,12 +150,18 @@ private class HookMethodVisitor(
                 }
                 loadMethodArguments(paramDescriptors, localObjArr) // push all method arguments
                 // Stack layout: ... | [owner (objectref)] | arg1 (primitive/objectref) | arg2 (primitive/objectref) | ...
-                // Call the original method
-                mv.visitMethodInsn(opcode, owner, methodName, methodDescriptor, isInterface)
+                // Call the original method or the next hook in order.
+                visitNextHookTypeOrCall(hookType, true, opcode, owner, methodName, methodDescriptor, isInterface)
             }
             HookType.REPLACE -> {
                 // Call the hook method
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, hook.hookInternalClassName, hook.hookMethodName, hook.hookMethodDescriptor, false)
+                mv.visitMethodInsn(
+                    Opcodes.INVOKESTATIC,
+                    hook.hookInternalClassName,
+                    hook.hookMethodName,
+                    hook.hookMethodDescriptor,
+                    false
+                )
                 // Stack layout: ... | [return value (primitive/objectref)]
                 // Check if we need to process the return value
                 val returnTypeDescriptor = extractReturnTypeDescriptor(methodDescriptor)
@@ -185,7 +205,13 @@ private class HookMethodVisitor(
                 mv.visitVarInsn(Opcodes.ASTORE, localReturnObj) // consume objectref
                 mv.visitVarInsn(Opcodes.ALOAD, localReturnObj) // push objectref
                 // Call the hook method
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, hook.hookInternalClassName, hook.hookMethodName, hook.hookMethodDescriptor, false)
+                mv.visitMethodInsn(
+                    Opcodes.INVOKESTATIC,
+                    hook.hookInternalClassName,
+                    hook.hookMethodName,
+                    hook.hookMethodDescriptor,
+                    false
+                )
                 // Stack layout: ...
                 if (returnTypeDescriptor != "V") {
                     // Push the return value again
@@ -295,6 +321,12 @@ private class HookMethodVisitor(
             "Z" -> Pair("booleanValue", "java/lang/Boolean")
             else -> return
         }
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, wrappedTypeDescriptor, methodName, "()$primitiveTypeDescriptor", false)
+        mv.visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            wrappedTypeDescriptor,
+            methodName,
+            "()$primitiveTypeDescriptor",
+            false
+        )
     }
 }
