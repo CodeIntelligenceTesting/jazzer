@@ -45,8 +45,8 @@ public class AfterHooks {
       targetClassName = "com.code_intelligence.jazzer.instrumentor.AfterHooksTarget",
       targetMethod = "getFirstSecret", targetMethodDescriptor = "()Ljava/lang/String;")
   public static void
-  patchGetFirstSecret(MethodHandle method, Object thisObject, Object[] arguments, int hookId,
-      String returnValue) throws Throwable {
+  patchGetFirstSecret(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, String returnValue) {
     // Use the returned secret to pass the test.
     ((AfterHooksTargetContract) thisObject).verifyFirstSecret(returnValue);
   }
@@ -55,8 +55,8 @@ public class AfterHooks {
       targetClassName = "com.code_intelligence.jazzer.instrumentor.AfterHooksTarget",
       targetMethod = "getSecondSecret")
   public static void
-  patchGetSecondSecret(MethodHandle method, Object thisObject, Object[] arguments, int hookId,
-      Object returnValue) throws Throwable {
+  patchGetSecondSecret(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Object returnValue) {
     // Use the returned secret to pass the test.
     ((AfterHooksTargetContract) thisObject).verifySecondSecret((String) returnValue);
   }
