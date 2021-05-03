@@ -45,6 +45,9 @@ public class AfterHooksTarget implements AfterHooksTargetContract {
     verifySecondSecret("not_secret_at_all");
     getSecondSecret();
 
+    verifyThirdSecret("not_the_secret");
+    new StringBuilder("not_hunter3");
+
     return results;
   }
 
@@ -74,5 +77,9 @@ public class AfterHooksTarget implements AfterHooksTargetContract {
   @SuppressWarnings("SameParameterValue")
   public void verifySecondSecret(String secret) {
     results.put("verifySecondSecret", secret.equals("hunter2!"));
+  }
+
+  public void verifyThirdSecret(String secret) {
+    results.put("verifyThirdSecret", secret.equals("hunter3"));
   }
 }
