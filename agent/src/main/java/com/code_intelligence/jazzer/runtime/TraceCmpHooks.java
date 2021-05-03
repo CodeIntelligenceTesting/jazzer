@@ -199,8 +199,7 @@ final public class TraceCmpHooks {
     byte[] first = (byte[]) arguments[0];
     byte[] second = (byte[]) arguments[1];
     if (!returnValue) {
-      TraceDataFlowNativeCallbacks.traceMemcmp(
-          first, first.length, second, second.length, 1, hookId);
+      TraceDataFlowNativeCallbacks.traceMemcmp(first, second, 1, hookId);
     }
   }
 
@@ -214,8 +213,7 @@ final public class TraceCmpHooks {
     byte[] second =
         Arrays.copyOfRange((byte[]) arguments[3], (int) arguments[4], (int) arguments[5]);
     if (!returnValue) {
-      TraceDataFlowNativeCallbacks.traceMemcmp(
-          first, first.length, second, second.length, 1, hookId);
+      TraceDataFlowNativeCallbacks.traceMemcmp(first, second, 1, hookId);
     }
   }
 
@@ -229,8 +227,7 @@ final public class TraceCmpHooks {
     byte[] first = (byte[]) arguments[0];
     byte[] second = (byte[]) arguments[1];
     if (returnValue != 0) {
-      TraceDataFlowNativeCallbacks.traceMemcmp(
-          first, first.length, second, second.length, returnValue, hookId);
+      TraceDataFlowNativeCallbacks.traceMemcmp(first, second, returnValue, hookId);
     }
   }
 
@@ -246,8 +243,7 @@ final public class TraceCmpHooks {
     byte[] second =
         Arrays.copyOfRange((byte[]) arguments[3], (int) arguments[4], (int) arguments[5]);
     if (returnValue != 0) {
-      TraceDataFlowNativeCallbacks.traceMemcmp(
-          first, first.length, second, second.length, returnValue, hookId);
+      TraceDataFlowNativeCallbacks.traceMemcmp(first, second, returnValue, hookId);
     }
   }
 }
