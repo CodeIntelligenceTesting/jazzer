@@ -96,8 +96,12 @@ private class HookMethodVisitor(
             // Special case for constructors:
             // We cannot create a MethodHandle for a constructor, so we push null instead.
             mv.visitInsn(Opcodes.ACONST_NULL) // push nullref
-            // We also cannot use the uninitialized object as parameter, so we do the same here.
-            mv.visitInsn(Opcodes.ACONST_NULL) // push nullref
+            // Only pass the this object if it has been initialized by the time the hook is invoked.
+            if (hook.hookType == HookType.AFTER) {
+                mv.visitVarInsn(Opcodes.ALOAD, localOwnerObj)
+            } else {
+                mv.visitInsn(Opcodes.ACONST_NULL) // push nullref
+            }
         } else {
             // Push a MethodHandle representing the hooked method.
             val handleOpcode = when (opcode) {
