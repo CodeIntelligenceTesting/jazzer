@@ -1,0 +1,10 @@
+load("@rules_java//java:defs.bzl", "java_library")
+
+java_library(
+    name = "sanitizers",
+    visibility = ["//agent:__pkg__"],
+    runtime_deps = [
+        "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers",
+        "//sanitizers/src/main/java/jaz",
+    ],
+)

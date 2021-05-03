@@ -42,6 +42,8 @@ private val BASE_EXCLUDED_CLASS_NAME_GLOBS = listOf(
     "com.code_intelligence.jazzer.**",
     "com.sun.**", // package for Proxy objects
     "java.**",
+    "jaz.Ter", // safe companion of the honeypot class used by sanitizers
+    "jaz.Zer", // honeypot class used by sanitizers
     "jdk.**",
     "kotlin.**",
     "sun.**",
