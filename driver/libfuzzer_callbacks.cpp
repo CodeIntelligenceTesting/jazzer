@@ -99,12 +99,15 @@ void JNICALL libfuzzerStringContainCallback(JNIEnv &env, jclass cls, jstring s1,
 }
 
 void JNICALL libfuzzerByteCompareCallback(JNIEnv &env, jclass cls,
-                                          jbyteArray b1, jint b1_length,
-                                          jbyteArray b2, jint b2_length,
+                                          jbyteArray b1, jbyteArray b2,
                                           jint result, jint id) {
   jbyte *b1_native = env.GetByteArrayElements(b1, nullptr);
   if (env.ExceptionCheck()) env.ExceptionDescribe();
   jbyte *b2_native = env.GetByteArrayElements(b2, nullptr);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
+  jint b1_length = env.GetArrayLength(b1);
+  if (env.ExceptionCheck()) env.ExceptionDescribe();
+  jint b2_length = env.GetArrayLength(b2);
   if (env.ExceptionCheck()) env.ExceptionDescribe();
   __sanitizer_weak_hook_compare_bytes(idToPc(id), b1_native, b2_native,
                                       b1_length, b2_length, result);
@@ -326,7 +329,7 @@ bool registerFuzzerCallbacks(JNIEnv &env) {
   }
   {
     JNINativeMethod string_methods[]{
-        {(char *)"traceMemcmp", (char *)"([BI[BIII)V",
+        {(char *)"traceMemcmp", (char *)"([B[BII)V",
          (void *)&libfuzzerByteCompareCallback},
         {(char *)"traceStrcmp",
          (char *)"(Ljava/lang/String;Ljava/lang/String;II)V",

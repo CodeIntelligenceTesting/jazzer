@@ -34,8 +34,7 @@ final public class TraceDataFlowNativeCallbacks {
 
   // Calls: void __sanitizer_weak_hook_memcmp(void *caller_pc, const void *b1, const void *b2,
   // size_t n, int result);
-  public static native void traceMemcmp(
-      byte[] b1, int b1Length, byte[] b2, int b2Length, int result, int pc);
+  public static native void traceMemcmp(byte[] b1, byte[] b2, int result, int pc);
 
   // Calls: void __sanitizer_weak_hook_strcmp(void *called_pc, const char *s1, const char *s2, int
   // result);

@@ -27,6 +27,7 @@ final public class Jazzer {
 
   private static MethodHandle traceStrcmp = null;
   private static MethodHandle traceStrstr = null;
+  private static MethodHandle traceMemcmp = null;
 
   static {
     try {
@@ -43,6 +44,10 @@ final public class Jazzer {
           MethodType.methodType(void.class, String.class, String.class, int.class);
       traceStrstr = MethodHandles.publicLookup().findStatic(
           traceDataFlowNativeCallbacks, "traceStrstr", traceStrstrType);
+      MethodType traceMemcmpType =
+          MethodType.methodType(void.class, byte[].class, byte[].class, int.class, int.class);
+      traceMemcmp = MethodHandles.publicLookup().findStatic(
+          traceDataFlowNativeCallbacks, "traceMemcmp", traceMemcmpType);
     } catch (ClassNotFoundException ignore) {
       // Not running in the context of the agent. This is fine as long as no methods are called on
       // this class.
@@ -70,6 +75,26 @@ final public class Jazzer {
   public static void guideTowardsEquality(String current, String target, int id) {
     try {
       traceStrcmp.invokeExact(current, target, 1, id);
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Instructs the fuzzer to guide its mutations towards making {@code current} equal to {@code
+   * target}.
+   *
+   * If the relation between the raw fuzzer input and the value of {@code current} is relatively
+   * complex, running the fuzzer with the argument {@code -use_value_profile=1} may be necessary to
+   * achieve equality.
+   *
+   * @param current a non-constant byte array observed during fuzz target execution
+   * @param target a byte array that {@code current} should become equal to, but currently isn't
+   * @param id a (probabilistically) unique identifier for this particular compare hint
+   */
+  public static void guideTowardsEquality(byte[] current, byte[] target, int id) {
+    try {
+      traceMemcmp.invokeExact(current, target, 1, id);
     } catch (Throwable e) {
       e.printStackTrace();
     }
