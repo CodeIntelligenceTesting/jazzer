@@ -181,7 +181,7 @@ internal class SynchronizedCoverageIdStrategy(private val idSyncFile: Path) : Co
                 // We are the first to instrument this class and should record the number of IDs in the sync file.
                 check(cachedFirstId != null)
                 localIdFileLock.channel().append("$cachedClassName:$cachedFirstId:$idCount\n")
-                localIdFileLock.channel().force(true);
+                localIdFileLock.channel().force(true)
             }
             idFileLock = null
             cachedFirstId = null
