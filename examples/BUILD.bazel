@@ -185,8 +185,6 @@ java_fuzz_target_test(
     name = "KlaxonFuzzer",
     fuzzer_args = [
         "--keep_going=7",
-        # Prevent the JVM from optimizing away stack traces (interfers with deduplication).
-        "--jvm_args=-XX:-OmitStackTraceInFastThrow",
     ],
     target_class = "com.example.KlaxonFuzzer",
     runtime_deps = [":KlaxonFuzzTarget"],
