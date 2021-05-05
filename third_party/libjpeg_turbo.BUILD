@@ -1,4 +1,4 @@
-load("@rules_foreign_cc//tools/build_defs:cmake.bzl", "cmake_external")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:select_file.bzl", "select_file")
 
@@ -12,7 +12,15 @@ filegroup(
     srcs = glob(["java/org/libjpegturbo/turbojpeg/*.java"]),
 )
 
-cmake_external(
+cc_import(
+    name = "libawt",
+    hdrs = [
+        "@local_jdk//:include/jawt.h",
+    ],
+    shared_library = "@local_jdk//:lib/libawt.so",
+)
+
+cmake(
     name = "libjpeg_turbo",
     cache_entries = {
         "CMAKE_BUILD_TYPE": "Release",
@@ -22,9 +30,14 @@ cmake_external(
         "WITH_JAVA": "1",
     },
     lib_source = ":all_files",
-    shared_libraries = [
+    out_shared_libs = [
         "libjpeg.so",
         "libturbojpeg.so",
+    ],
+    deps = [
+        ":libawt",
+        "@bazel_tools//tools/jdk:jni",
+        "@jazzer//third_party/jni:jni_libs",
     ],
 )
 
