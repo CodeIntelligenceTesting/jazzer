@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "third_party/jni/jni.h"
+#include <jni.h>
 
 namespace jazzer {
 

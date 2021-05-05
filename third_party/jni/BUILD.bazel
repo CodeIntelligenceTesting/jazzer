@@ -2,47 +2,12 @@ load("@rules_cc//cc:defs.bzl", "cc_import", "cc_library")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 
 cc_library(
-    name = "jni",
-    hdrs = [":jni_headers"],
+    name = "jni_libs",
     visibility = ["//visibility:public"],
     deps = select({
         "@platforms//os:osx": [":libjvm_osx"],
         "//conditions:default": [":libjvm_linux"],
     }),
-)
-
-cc_library(
-    name = "jni_headers_only",
-    hdrs = [
-        ":jni_headers",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-genrule(
-    name = "jni_md_header",
-    srcs = select({
-        "@platforms//os:osx": ["@bazel_tools//tools/jdk:jni_md_header-darwin"],
-        "@platforms//os:windows": ["@bazel_tools//tools/jdk:jni_md_header-windows"],
-        "//conditions:default": ["@bazel_tools//tools/jdk:jni_md_header-linux"],
-    }),
-    outs = ["jni_md.h"],
-    cmd = "cp -f $< $@",
-)
-
-genrule(
-    name = "jni_header",
-    srcs = ["@bazel_tools//tools/jdk:jni_header"],
-    outs = ["jni.h"],
-    cmd = "cp -f $< $@",
-)
-
-filegroup(
-    name = "jni_headers",
-    srcs = [
-        ":jni_header",
-        ":jni_md_header",
-    ],
 )
 
 bool_flag(

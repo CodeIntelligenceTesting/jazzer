@@ -14,12 +14,13 @@
 
 #include "coverage_tracker.h"
 
+#include <jni.h>
+
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
 
 #include "absl/strings/str_format.h"
-#include "third_party/jni/jni.h"
 
 extern "C" void __sanitizer_cov_8bit_counters_init(uint8_t *start,
                                                    uint8_t *end);

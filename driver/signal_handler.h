@@ -16,8 +16,9 @@
 
 #pragma once
 
+#include <jni.h>
+
 #include "jvm_tooling.h"
-#include "third_party/jni/jni.h"
 
 namespace jazzer {
 // SignalHandler registers handlers for signals (e.g. SIGINT) in Java and

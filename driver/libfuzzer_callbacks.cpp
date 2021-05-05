@@ -14,6 +14,8 @@
 
 #include "libfuzzer_callbacks.h"
 
+#include <jni.h>
+
 #include <fstream>
 #include <iostream>
 #include <mutex>
@@ -25,7 +27,6 @@
 #include "absl/strings/str_split.h"
 #include "glog/logging.h"
 #include "sanitizer_hooks_with_pc.h"
-#include "third_party/jni/jni.h"
 
 DEFINE_bool(
     fake_pcs, false,
