@@ -14,11 +14,11 @@
 
 #include "signal_handler.h"
 
+#include <jni.h>
+
 #include <atomic>
 #include <csignal>
 #include <stdexcept>
-
-#include "third_party/jni/jni.h"
 
 constexpr auto kSignalHandlerClass =
     "com/code_intelligence/jazzer/runtime/SignalHandler";

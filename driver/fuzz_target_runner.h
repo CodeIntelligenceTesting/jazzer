@@ -16,11 +16,12 @@
 
 #pragma once
 
+#include <jni.h>
+
 #include <string>
 #include <vector>
 
 #include "jvm_tooling.h"
-#include "third_party/jni/jni.h"
 
 namespace jazzer {
 

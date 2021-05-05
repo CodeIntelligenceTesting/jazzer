@@ -15,6 +15,6 @@ cc_binary(
     linkshared = True,
     visibility = ["//examples:__pkg__"],
     deps = [
-        "//third_party/jni:jni_headers_only",
+        "@bazel_tools//tools/jdk:jni",
     ],
 )

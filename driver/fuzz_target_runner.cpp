@@ -14,6 +14,8 @@
 
 #include "fuzz_target_runner.h"
 
+#include <jni.h>
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -30,7 +32,6 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "java_reproducer_templates.h"
-#include "third_party/jni/jni.h"
 #include "utils.h"
 
 DEFINE_string(

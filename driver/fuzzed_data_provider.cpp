@@ -45,6 +45,8 @@
 
 #include "fuzzed_data_provider.h"
 
+#include <jni.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <string>
@@ -53,7 +55,6 @@
 
 #include "absl/strings/str_format.h"
 #include "jvm_tooling.h"
-#include "third_party/jni/jni.h"
 
 namespace {
 
