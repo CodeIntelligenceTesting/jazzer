@@ -153,8 +153,9 @@ JVM::JVM(const std::string &executable_path) {
   std::vector<JavaVMOption> options;
   options.push_back(
       JavaVMOption{.optionString = const_cast<char *>(class_path.c_str())});
-  // set the maximum heap size
-  options.push_back(JavaVMOption{.optionString = (char *)"-Xmx4096m"});
+  // Set the maximum heap size to a value that is slightly smaller than
+  // libFuzzer's default rss_limit_mb. This prevents erroneous oom reports.
+  options.push_back(JavaVMOption{.optionString = (char *)"-Xmx2040m"});
   options.push_back(JavaVMOption{.optionString = (char *)"-enableassertions"});
   // Preserve and emit stack trace information even on hot paths.
   // This may hurt performance, but also helps find flaky bugs.
