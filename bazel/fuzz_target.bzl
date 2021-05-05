@@ -63,8 +63,6 @@ def java_fuzz_target_test(
             "$(rootpath %s)" % driver,
             "--cp=$(rootpath :%s_deploy.jar)" % target_name,
             "--agent_path=$(rootpath //agent:jazzer_agent_deploy.jar)",
-            # Should be bigger than the JVM max heap size (4096m)
-            "-rss_limit_mb=5000",
         ] + additional_args + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,
