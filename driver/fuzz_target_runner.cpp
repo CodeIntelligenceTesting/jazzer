@@ -41,9 +41,9 @@ DEFINE_string(target_args, "",
               "Arguments passed to fuzzerInitialize as a String array. "
               "Separated by space.");
 
-DEFINE_int32(keep_going, 1,
-             "Continue fuzzing until N distinct exception stack traces have"
-             "been encountered");
+DEFINE_uint32(keep_going, 1,
+              "Continue fuzzing until N distinct exception stack traces have"
+              "been encountered");
 DEFINE_bool(dedup, true,
             "Emit a dedup token for every finding. Defaults to true and is "
             "required for --keep_going and --ignore.");
