@@ -23,7 +23,9 @@ If you want to learn more about Jazzer and OSS-Fuzz, [watch the FuzzCon 2020 tal
 ## Installation
 
 The preferred way to install Jazzer is to compile it from source using [Bazel](https://bazel.build), but binary distributions
-for x64 Linux are also available.
+for x64 Linux are also available. Note that these binaries might be outdated as Jazzer follows the "Live at Head" philosophy.
+
+Support for Jazzer has recently been added to [rules_fuzzing](https://github.com/bazelbuild/rules_fuzzing), the official Bazel rules for fuzzing. See their README for instructions on how to use Jazzer in a Java Bazel project.
 
 ### Using Bazel
 
