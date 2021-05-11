@@ -96,7 +96,7 @@ internal class RuntimeInstrumentor(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     override fun transform(
-        loader: ClassLoader,
+        loader: ClassLoader?,
         internalClassName: String,
         classBeingRedefined: Class<*>?,
         protectionDomain: ProtectionDomain?,
