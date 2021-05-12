@@ -19,8 +19,10 @@ package com.code_intelligence.jazzer.agent
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
 import com.code_intelligence.jazzer.runtime.ManifestUtils
+import java.io.File
 import java.lang.instrument.Instrumentation
 import java.nio.file.Paths
+import java.util.jar.JarFile
 
 val KNOWN_ARGUMENTS = listOf(
     "instrumentation_includes",
@@ -32,7 +34,20 @@ val KNOWN_ARGUMENTS = listOf(
     "id_sync_file",
 )
 
+private object AgentJarFinder {
+    private val agentJarPath = AgentJarFinder::class.java.protectionDomain?.codeSource?.location?.toURI()
+    val agentJarFile = agentJarPath?.let { JarFile(File(it)) }
+}
+
 fun premain(agentArgs: String?, instrumentation: Instrumentation) {
+    // Add the agent jar (i.e., the jar out of which we are currently executing) to the search path of the bootstrap
+    // class loader to ensure that instrumented classes can find the CoverageMap class regardless of which ClassLoader
+    // they are using.
+    if (AgentJarFinder.agentJarFile != null) {
+        instrumentation.appendToBootstrapClassLoaderSearch(AgentJarFinder.agentJarFile)
+    } else {
+        println("WARN: Failed to add agent JAR to bootstrap class loader search path")
+    }
     val argumentMap = (agentArgs ?: "")
         .split(',')
         .mapNotNull {

@@ -19,7 +19,10 @@ private object JavaNoThrowMethods {
     const val dataFileName = "java_no_throw_methods_list.dat"
 
     fun readJavaNoThrowMethods(): Set<String> {
-        val resource = JavaNoThrowMethods.javaClass.classLoader.getResource("$dataFilePath/$dataFileName")!!
+        // If we successfully appended the agent JAR to the bootstrap class loader path in Agent, the classLoader
+        // property of JavaNoThrowMethods returns null and we have to use the system class loader instead.
+        val ownClassLoader = JavaNoThrowMethods::class.java.classLoader ?: ClassLoader.getSystemClassLoader()
+        val resource = ownClassLoader.getResource("$dataFilePath/$dataFileName")!!
         return resource.openStream().bufferedReader().useLines { line -> line.toSet() }.also {
             println("INFO: Loaded ${it.size} no-throw method signatures")
         }
