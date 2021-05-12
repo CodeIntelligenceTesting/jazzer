@@ -82,8 +82,13 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             println("INFO: Synchronizing coverage IDs in ${path.toAbsolutePath()}")
         }
     }
-
-    val runtimeInstrumentor = RuntimeInstrumentor(classNameGlobber, dependencyClassNameGlobber, instrumentationTypes, idSyncFile)
+    val runtimeInstrumentor = RuntimeInstrumentor(
+        instrumentation,
+        classNameGlobber,
+        dependencyClassNameGlobber,
+        instrumentationTypes,
+        idSyncFile
+    )
     instrumentation.apply {
         addTransformer(runtimeInstrumentor)
     }
