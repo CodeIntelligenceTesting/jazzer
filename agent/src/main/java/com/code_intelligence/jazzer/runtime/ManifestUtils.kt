@@ -22,7 +22,7 @@ object ManifestUtils {
     const val HOOK_CLASSES = "Jazzer-Hook-Classes"
 
     fun combineManifestValues(attribute: String): List<String> {
-        val manifests = ManifestUtils::class.java.classLoader.getResources("META-INF/MANIFEST.MF")
+        val manifests = ClassLoader.getSystemResources("META-INF/MANIFEST.MF")
         return manifests.asSequence().mapNotNull { url ->
             url.openStream().use { inputStream ->
                 val manifest = Manifest(inputStream)
