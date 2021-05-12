@@ -24,6 +24,7 @@ import com.code_intelligence.jazzer.runtime.TraceCmpHooks
 import com.code_intelligence.jazzer.runtime.TraceDivHooks
 import com.code_intelligence.jazzer.runtime.TraceIndirHooks
 import java.lang.instrument.ClassFileTransformer
+import java.lang.instrument.Instrumentation
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -66,6 +67,7 @@ internal class ClassNameGlobber(includes: List<String>, excludes: List<String>) 
 }
 
 internal class RuntimeInstrumentor(
+    private val instrumentation: Instrumentation,
     private val classesToInstrument: ClassNameGlobber,
     private val dependencyClassesToInstrument: ClassNameGlobber,
     private val instrumentationTypes: Set<InstrumentationType>,
@@ -111,6 +113,36 @@ internal class RuntimeInstrumentor(
             t.printStackTrace()
             throw t
         }
+    }
+
+    override fun transform(
+        module: Module?,
+        loader: ClassLoader?,
+        internalClassName: String,
+        classBeingRedefined: Class<*>?,
+        protectionDomain: ProtectionDomain?,
+        classfileBuffer: ByteArray
+    ): ByteArray? {
+        if (module != null && !module.canRead(RuntimeInstrumentor::class.java.module)) {
+            // Make all other modules read our (unnamed) module, which allows them to access the classes needed by the
+            // instrumentations, e.g. CoverageMap. If a module can't be modified, it should not be instrumented as the
+            // injected bytecode might throw NoClassDefFoundError.
+            // https://mail.openjdk.java.net/pipermail/jigsaw-dev/2021-May/014663.html
+            if (!instrumentation.isModifiableModule(module)) {
+                val prettyClassName = internalClassName.replace('/', '.')
+                println("WARN: Failed to instrument $prettyClassName in unmodifiable module ${module.name}, skipping")
+                return null
+            }
+            instrumentation.redefineModule(
+                module,
+                /* extraReads */ setOf(RuntimeInstrumentor::class.java.module),
+                emptyMap(),
+                emptyMap(),
+                emptySet(),
+                emptyMap()
+            )
+        }
+        return transform(loader, internalClassName, classBeingRedefined, protectionDomain, classfileBuffer)
     }
 
     @OptIn(kotlin.time.ExperimentalTime::class)
