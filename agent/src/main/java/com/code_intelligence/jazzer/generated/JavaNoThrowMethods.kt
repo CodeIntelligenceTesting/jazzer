@@ -33,6 +33,4 @@ private object JavaNoThrowMethods {
  * Note: Since methods only declare their thrown exceptions that are not subclasses of [java.lang.RuntimeException],
  * this list cannot be generated purely based on information available via reflection.
  */
-val JAVA_NO_THROW_METHODS by lazy {
-    JavaNoThrowMethods.readJavaNoThrowMethods()
-}
+val JAVA_NO_THROW_METHODS = JavaNoThrowMethods.readJavaNoThrowMethods()
