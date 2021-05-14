@@ -7,3 +7,11 @@ java_fuzz_target_test(
     ],
     target_class = "com.example.ObjectInputStreamDeserialization",
 )
+
+java_fuzz_target_test(
+    name = "ReflectiveCall",
+    srcs = [
+        "ReflectiveCall.java",
+    ],
+    target_class = "com.example.ReflectiveCall",
+)
