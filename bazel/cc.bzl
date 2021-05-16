@@ -34,13 +34,7 @@ def _cc_17_binary_impl(ctx):
         target_file = ctx.executable.binary,
         is_executable = True,
     )
-    binary_runfiles = ctx.attr.binary[0][DefaultInfo].default_runfiles
-    return [
-        DefaultInfo(
-            executable = output_file,
-            runfiles = binary_runfiles,
-        ),
-    ]
+    return [DefaultInfo(executable = output_file)]
 
 _cc_17_binary = rule(
     implementation = _cc_17_binary_impl,
