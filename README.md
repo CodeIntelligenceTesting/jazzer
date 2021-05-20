@@ -35,7 +35,7 @@ Jazzer has the following dependencies when being built from source:
 * [Clang](https://clang.llvm.org/) 9.0 or later (using a recent version is strongly recommended)
 
 Jazzer uses [Bazelisk](https://github.com/bazelbuild/bazelisk) to automatically download and install Bazel on Linux.
-Building Jazzer from source and running it thus only requires the following assuming the dependencies are installed:
+Building Jazzer from source and running it thus only requires the following assuming the dependencies are installed: 
 
 ```bash
 git clone https://github.com/CodeIntelligenceTesting/jazzer
