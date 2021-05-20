@@ -1,7 +1,7 @@
 <img src="https://www.code-intelligence.com/hubfs/Logos/CI%20Logos/Jazzer_einfach.png" height=150px alt="Jazzer logo">
 
 
-# Jazzer
+# Jazzer 
 [![Maven Central](https://img.shields.io/maven-central/v/com.code-intelligence/jazzer-api)](https://search.maven.org/search?q=g:com.code-intelligence%20a:jazzer-api)
 ![GitHub Actions](https://github.com/CodeIntelligenceTesting/jazzer/workflows/Build%20all%20targets%20and%20run%20all%20tests/badge.svg)
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/java-example.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:java-example)
