@@ -142,7 +142,7 @@ Jazzer has so far uncovered the following vulnerabilities and bugs:
 | [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception due to missing bounds checks when parsing Unicode | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/236) | | [Code Intelligence](https://code-intelligence.com) |
 | [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception on dangling arrays | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/240) | | [Code Intelligence](https://code-intelligence.com) |
 
-As Jazzer is used to fuzz JVM projects in OSS-Fuzz, an additional list of bugs can be found [on the OSS-Fuzz issue tracker](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=proj%3A%22json-sanitizer%22%20OR%20proj%3A%22fastjson2%22%20OR%20proj%3A%22jackson-core%22%20OR%20proj%3A%22jackson-dataformats-binary%22&can=1).
+As Jazzer is used to fuzz JVM projects in OSS-Fuzz, an additional list of bugs can be found [on the OSS-Fuzz issue tracker](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=proj%3A%22json-sanitizer%22%20OR%20proj%3A%22fastjson2%22%20OR%20proj%3A%22jackson-core%22%20OR%20proj%3A%22jackson-dataformats-binary%22%20OR%20proj%3A%22jackson-dataformats-xml%22%20OR%20proj%3A%22apache-commons%22%20OR%20proj%3A%22jsoup%22&can=1).
 
 If you find bugs with Jazzer, we would like to hear from you!
 Feel free to [open an issue](https://github.com/CodeIntelligenceTesting/jazzer/issues/new) or submit a pull request.
