@@ -38,7 +38,6 @@ private val BASE_INCLUDED_CLASS_NAME_GLOBS = listOf(
 
 private val BASE_EXCLUDED_CLASS_NAME_GLOBS = listOf(
     "\\[**", // array types
-    "com.code_intelligence.jazzer.**",
     "com.sun.**", // package for Proxy objects
     "java.**",
     "jaz.Ter", // safe companion of the honeypot class used by sanitizers
@@ -155,6 +154,10 @@ internal class RuntimeInstrumentor(
         classfileBuffer: ByteArray,
     ): ByteArray? {
         return try {
+            // Bail out early if we would instrument ourselves. This prevents ClassCircularityErrors as we might need to
+            // load additional Jazzer classes until we reach the full exclusion logic.
+            if (internalClassName.startsWith("com/code_intelligence/jazzer/"))
+                return null
             transformInternal(internalClassName, classfileBuffer)
         } catch (t: Throwable) {
             // Throwables raised from transform are silently dropped, making it extremely hard to detect instrumentation
