@@ -62,8 +62,8 @@ class SimpleGlobMatcher(val glob: String) {
     private val prefix: String
 
     init {
-        // Map class names to internal class names and remain compatible with globs such as "\\[" that use escaping.
-        val pattern = glob.replace('.', '/').replace("\\", "")
+        // Remain compatible with globs such as "\\[" that use escaping.
+        val pattern = glob.replace("\\", "")
         when {
             !pattern.contains('*') -> {
                 type = Type.FULL_MATCH
@@ -85,13 +85,19 @@ class SimpleGlobMatcher(val glob: String) {
         }
     }
 
-    fun matches(internalClassName: String) = when (type) {
-        Type.FULL_MATCH -> internalClassName == prefix
-        Type.PATH_WILDCARD_SUFFIX -> internalClassName.startsWith(prefix)
-        Type.SEGMENT_WILDCARD_SUFFIX -> {
-            // className starts with prefix and contains no further '/'.
-            internalClassName.startsWith(prefix) &&
-                internalClassName.indexOf('/', startIndex = prefix.length) == -1
+    /**
+     * Checks whether [maybeInternalClassName], which may be internal (foo/bar) or not (foo.bar), matches [glob].
+     */
+    fun matches(maybeInternalClassName: String): Boolean {
+        val className = maybeInternalClassName.replace('/', '.')
+        return when (type) {
+            Type.FULL_MATCH -> className == prefix
+            Type.PATH_WILDCARD_SUFFIX -> className.startsWith(prefix)
+            Type.SEGMENT_WILDCARD_SUFFIX -> {
+                // className starts with prefix and contains no further '.'.
+                className.startsWith(prefix) &&
+                    className.indexOf('.', startIndex = prefix.length) == -1
+            }
         }
     }
 }
