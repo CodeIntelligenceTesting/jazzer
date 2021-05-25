@@ -29,12 +29,21 @@ _add_cxxopt_std_17 = transition(
 
 def _cc_17_binary_impl(ctx):
     output_file = ctx.actions.declare_file(ctx.label.name)
+
+    # Do not include the original target in the runfiles of the target built with the transition.
+    all_runfiles = ctx.attr.binary[0][DefaultInfo].default_runfiles.files.to_list()
+    filtered_runfiles = ctx.runfiles([runfile for runfile in all_runfiles if runfile != ctx.executable.binary])
     ctx.actions.symlink(
         output = output_file,
         target_file = ctx.executable.binary,
         is_executable = True,
     )
-    return [DefaultInfo(executable = output_file)]
+    return [
+        DefaultInfo(
+            executable = output_file,
+            runfiles = filtered_runfiles,
+        ),
+    ]
 
 _cc_17_binary = rule(
     implementation = _cc_17_binary_impl,
