@@ -14,5 +14,5 @@
 # limitations under the License.
 
 DEFAULT_CRASH_PREFIX="/tmp/jazzer"
-mkdir $DEFAULT_CRASH_PREFIX
+mkdir -p $DEFAULT_CRASH_PREFIX
 eval "$1" -artifact_prefix="$DEFAULT_CRASH_PREFIX/" --reproducer_path="$DEFAULT_CRASH_PREFIX" "${@:2}"
