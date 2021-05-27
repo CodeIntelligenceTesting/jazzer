@@ -1,5 +1,5 @@
 exports_files([
     "gflags-use-double-dash-args.patch",
     "jacoco-make-probe-inserter-subclassable.patch",
-    "libFuzzer-get-covered-pcs.patch",
+    "libFuzzer-quote-command-args.patch",
 ])
