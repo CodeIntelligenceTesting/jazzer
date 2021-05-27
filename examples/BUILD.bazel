@@ -69,7 +69,13 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/JpegImageParserFuzzer.java",
     ],
-    fuzzer_args = ["-fork=5"],
+    fuzzer_args = [
+        "-fork=5",
+        # Only used to verify that arguments are correctly passed down to child
+        # processes. Quoting with both " and ' is necessary in this test since
+        # one level of quoting is lost when passing through jazzer_wrapper.sh
+        "--jvm_args=\"'-Dfoo=foo;-Dbar=bar'\"",
+    ],
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
     tags = ["broken-on-darwin"],
     target_class = "com.example.JpegImageParserFuzzer",
