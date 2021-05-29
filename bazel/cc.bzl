@@ -27,29 +27,17 @@ _add_cxxopt_std_17 = transition(
     ],
 )
 
-def _cc_17_binary_impl(ctx):
-    output_file = ctx.actions.declare_file(ctx.label.name)
-
-    # Do not include the original target in the runfiles of the target built with the transition.
-    all_runfiles = ctx.attr.binary[0][DefaultInfo].default_runfiles.files.to_list()
-    filtered_runfiles = ctx.runfiles([runfile for runfile in all_runfiles if runfile != ctx.executable.binary])
-    ctx.actions.symlink(
-        output = output_file,
-        target_file = ctx.executable.binary,
-        is_executable = True,
-    )
+def _cc_17_library_impl(ctx):
+    library = ctx.attr.library[0]
     return [
-        DefaultInfo(
-            executable = output_file,
-            runfiles = filtered_runfiles,
-        ),
+        library[DefaultInfo],
+        library[CcInfo],
     ]
 
-_cc_17_binary = rule(
-    implementation = _cc_17_binary_impl,
+_cc_17_library = rule(
+    implementation = _cc_17_library_impl,
     attrs = {
-        "binary": attr.label(
-            executable = True,
+        "library": attr.label(
             cfg = _add_cxxopt_std_17,
             mandatory = True,
             providers = [CcInfo],
@@ -58,23 +46,23 @@ _cc_17_binary = rule(
             default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
         ),
     },
-    executable = True,
+    provides = [CcInfo],
 )
 
-# A cc_binary that is built with -std=c++17, including all its transitive dependencies.
-# This is redundant while developing Jazzer itself as the .bazelrc sets this flag for all build commands, but is needed
-# when Jazzer is included as an external workspace.
-def cc_17_binary(name, srcs, deps, visibility, **kwargs):
-    native.cc_binary(
-        name = name + "_original",
-        srcs = srcs,
-        deps = deps,
+# A cc_library that is built with -std=c++17, including all its transitive
+# dependencies. This is redundant while developing Jazzer itself as the .bazelrc
+# sets this flag for all build commands, but is needed when Jazzer is included
+# as an external workspace.
+def cc_17_library(name, visibility = None, **kwargs):
+    library_name = name + "_original_"
+    native.cc_library(
+        name = library_name,
         visibility = ["//visibility:private"],
         **kwargs
     )
 
-    _cc_17_binary(
+    _cc_17_library(
         name = name,
-        binary = ":%s_original" % name,
+        library = library_name,
         visibility = visibility,
     )
