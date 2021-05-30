@@ -117,6 +117,7 @@ internal class SynchronizedCoverageIdStrategy(private val idSyncFile: Path) : Co
             // Wait until we have obtained the lock on the sync file. We hold the lock from this point until we have
             // finished reading and writing (if necessary) to the file.
             val localIdFileLock = localIdFile.lock()
+            check(localIdFileLock.isValid && !localIdFileLock.isShared)
             // Parse the sync file, which consists of lines of the form
             // <class name>:<first ID>:<num IDs>
             val idInfo = localIdFileLock.channel().readFully()
@@ -150,12 +151,12 @@ internal class SynchronizedCoverageIdStrategy(private val idSyncFile: Path) : Co
                     // This class has already been instrumented elsewhere, so we just return the first ID and ID count
                     // reported from there and release the lock right away. The caller is still expected to call
                     // commitIdCount.
-                    localIdFileLock.release()
+                    localIdFile.close()
                     cachedIdCount = idInfoForClass.single().third
                     idInfoForClass.single().second
                 }
                 else -> {
-                    localIdFileLock.release()
+                    localIdFile.close()
                     System.err.println(idInfo.joinToString("\n") { "${it.first}:${it.second}:${it.third}" })
                     throw IllegalStateException("Multiple entries for $className in ID file")
                 }
@@ -190,7 +191,7 @@ internal class SynchronizedCoverageIdStrategy(private val idSyncFile: Path) : Co
         } catch (e: Exception) {
             throw CoverageIdException(e)
         } finally {
-            localIdFileLock?.release()
+            localIdFileLock?.channel()?.close()
         }
     }
 }
