@@ -70,7 +70,7 @@ DEFINE_string(
 DECLARE_bool(hooks);
 
 namespace {
-constexpr auto kInstrumentorAgentBazelDir = "agent";
+constexpr auto kInstrumentorAgentBazelDir = "../jazzer/agent";
 constexpr auto kAgentFileName = "jazzer_agent_deploy.jar";
 constexpr const char kExceptionUtilsClassName[] =
     "com/code_intelligence/jazzer/runtime/ExceptionUtils";
@@ -89,29 +89,28 @@ std::string dirFromFullPath(const std::string &path) {
 // getInstrumentorAgentPath searches for the fuzzing instrumentation agent and
 // returns the location if it is found. Otherwise it calls exit(0).
 std::string getInstrumentorAgentPath(const std::string &executable_path) {
-  // user provided agent location takes precedence
+  // User provided agent location takes precedence.
   if (!FLAGS_agent_path.empty()) {
     if (std::ifstream(FLAGS_agent_path).good()) return FLAGS_agent_path;
     LOG(ERROR) << "Could not find " << kAgentFileName << "in \""
                << FLAGS_agent_path << "\"";
     exit(0);
   }
-
-  {
-    // first check if we are running inside the bazel tree
+  // First check if we are running inside the Bazel tree and use the agent
+  // runfile. This requires a Bazel env variable to be defined as loading an
+  // agent from a sibling directory may not be safe in e.g. download folders.
+  if (std::getenv("BUILD_WORKING_DIRECTORY") != nullptr) {
     auto bazel_path = absl::StrFormat("%s%c%s", kInstrumentorAgentBazelDir,
                                       kPathSeparator, kAgentFileName);
     if (std::ifstream(bazel_path).good()) return bazel_path;
   }
 
-  {
-    // if the agent is not in the bazel path we look next to the
-    // libfuzzer_runner binary
-    const auto dir = dirFromFullPath(executable_path);
-    auto agent_path =
-        absl::StrFormat("%s%c%s", dir, kPathSeparator, kAgentFileName);
-    if (std::ifstream(agent_path).good()) return agent_path;
-  }
+  // If the agent is not in the bazel path we look next to the jazzer_driver
+  // binary.
+  const auto dir = dirFromFullPath(executable_path);
+  auto agent_path =
+      absl::StrFormat("%s%c%s", dir, kPathSeparator, kAgentFileName);
+  if (std::ifstream(agent_path).good()) return agent_path;
   LOG(ERROR) << "Could not find " << kAgentFileName
              << ". Please provide "
                 "the pathname via the --agent_path flag.";
