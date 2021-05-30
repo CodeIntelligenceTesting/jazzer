@@ -18,11 +18,11 @@
 
 // simple function containing a crash that requires coverage and string compare
 // instrumentation for the fuzzer to find
-void parseInternal(const std::string &input) {
+__attribute__((optnone)) void parseInternal(const std::string &input) {
   if (input[0] == 'a' && input[1] == 'b' && input[5] == 'c') {
     if (input.find("secret_in_native_library") != std::string::npos) {
       // BOOM
-      *(char *)1 = 2;
+      [[maybe_unused]] char foo = input[input.size() + 2];
     }
   }
 }
