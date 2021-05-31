@@ -34,6 +34,8 @@ Jazzer has the following dependencies when being built from source:
 * JDK 8 or later (e.g. [OpenJDK](https://openjdk.java.net/))
 * [Clang](https://clang.llvm.org/) 9.0 or later (using a recent version is strongly recommended)
 
+#### Linux
+
 Jazzer uses [Bazelisk](https://github.com/bazelbuild/bazelisk) to automatically download and install Bazel on Linux.
 Building Jazzer from source and running it thus only requires the following assuming the dependencies are installed:
 
@@ -44,21 +46,57 @@ cd jazzer
 ./bazelisk-linux-amd64 run //:jazzer -- <arguments>
 ```
 
-On macOS, Bazel needs to be installed manually as described in the [official instructions](https://docs.bazel.build/versions/4.0.0/install-os-x.html).
+If you prefer to build binaries that can be run without Bazel, use the following command to build your own archive with release binaries:
+
+```bash
+$ ./bazelisk-linux-amd64 build //:jazzer_release
+...
+INFO: Found 1 target...
+Target //:jazzer_release up-to-date:
+  bazel-bin/jazzer_release.tar.gz
+...
+```
+
+This will print the path of a `jazzer_release.tar.gz` archive that contains the same binaries that would be part of a release.
+
+#### macOS
+
+Since Jazzer does not ship the macOS version of [Bazelisk](https://github.com/bazelbuild/bazelisk), a tool that automatically downloads and installs the correct version of Bazel, download [the most recent release](https://github.com/bazelbuild/bazelisk/releases) of `bazelisk-darwin`.
+Afterwards, clone Jazzer and run it via:
+
+```bash
+git clone https://github.com/CodeIntelligenceTesting/jazzer
+cd jazzer
+# Note the double dash used to pass <arguments> to Jazzer rather than Bazel.
+/path/to/bazelisk-darwin run //:jazzer -- <arguments>
+```
+
+If you prefer to build binaries that can be run without Bazel, use the following command to build your own archive with release binaries:
+
+```bash
+$ /path/to/bazelisk-darwin build //:jazzer_release
+...
+INFO: Found 1 target...
+Target //:jazzer_release up-to-date:
+  bazel-bin/jazzer_release.tar.gz
+...
+```
+
+This will print the path of a `jazzer_release.tar.gz` archive that contains the same binaries that would be part of a release.
 
 ### Using the provided binaries
 
 Binary releases are available under [Releases](https://github.com/CodeIntelligenceTesting/jazzer/releases) and are built
 using an [LLVM 11 Bazel toolchain](https://github.com/CodeIntelligenceTesting/llvm-toolchain).
 
-The binary distributions of Jazzer consists of the following components:
+The binary distributions of Jazzer consist of the following components:
 
 - `jazzer_driver` - native binary that interfaces between libFuzzer and the JVM fuzz target
 - `jazzer_agent_deploy.jar` - Java agent that performs bytecode instrumentation and tracks coverage
 - `jazzer_api_deploy.jar` - contains convenience methods for creating fuzz targets and defining custom hooks
 - `jazzer` - convenience shell script that runs the Jazzer driver with the local JRE shared libraries added to `LD_LIBRARY_PATH`
 
-The additional release artifact `examples.jar` contains most of the examples and can be used to run them without having to build them (see Examples below).
+The additional release artifact `examples_deploy.jar` contains most of the examples and can be used to run them without having to build them (see Examples below).
 
 After unpacking the archive, run Jazzer via
 
