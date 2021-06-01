@@ -75,6 +75,7 @@ java_fuzz_target_test(
         # processes. Quoting with both " and ' is necessary in this test since
         # one level of quoting is lost when passing through jazzer_wrapper.sh
         "--jvm_args=\"'-Dfoo=foo;-Dbar=bar'\"",
+        "--additional_jvm_args=\"'-Dbaz=baz'\"",
     ],
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
     tags = ["broken-on-darwin"],
