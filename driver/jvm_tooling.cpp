@@ -33,6 +33,10 @@ DEFINE_string(cp, ".",
               "runtime and further dependencies separated by a colon \":\"");
 DEFINE_string(jvm_args, "",
               "arguments passed to the jvm separated by semicolon \";\"");
+DEFINE_string(additional_jvm_args, "",
+              "additional arguments passed to the jvm separated by semicolon "
+              "\";\". Use this option to set further JVM args that should not "
+              "interfere with those provided via --jvm_args.");
 DEFINE_string(agent_path, "", "location of the fuzzing instrumentation agent");
 
 // Arguments that are passed to the instrumentation agent.
@@ -167,6 +171,14 @@ JVM::JVM(const std::string &executable_path) {
     jvm_args = absl::StrSplit(FLAGS_jvm_args, ';');
   }
   for (const auto &arg : jvm_args) {
+    options.push_back(
+        JavaVMOption{.optionString = const_cast<char *>(arg.c_str())});
+  }
+  std::vector<std::string> additional_jvm_args;
+  if (!FLAGS_additional_jvm_args.empty()) {
+    additional_jvm_args = absl::StrSplit(FLAGS_additional_jvm_args, ';');
+  }
+  for (const auto &arg : additional_jvm_args) {
     options.push_back(
         JavaVMOption{.optionString = const_cast<char *>(arg.c_str())});
   }

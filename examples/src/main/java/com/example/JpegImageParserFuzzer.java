@@ -24,7 +24,8 @@ import org.apache.commons.imaging.formats.jpeg.JpegImageParser;
 public class JpegImageParserFuzzer {
   public static void fuzzerInitialize() {
     // Only used to verify that arguments are correctly passed down to child processes.
-    if (System.getProperty("foo") == null || System.getProperty("bar") == null) {
+    if (System.getProperty("foo") == null || System.getProperty("bar") == null
+        || System.getProperty("baz") == null) {
       // Exit the process with an exit code different from that for a finding.
       System.err.println("ERROR: Did not pass all jvm_args to child process.");
       System.exit(3);
