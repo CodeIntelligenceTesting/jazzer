@@ -16,6 +16,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -25,6 +26,7 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "libfuzzer_callbacks.h"
+#include "tools/cpp/runfiles/runfiles.h"
 #include "utils.h"
 
 DEFINE_string(cp, ".",
@@ -74,7 +76,7 @@ DEFINE_string(
 DECLARE_bool(hooks);
 
 namespace {
-constexpr auto kInstrumentorAgentBazelDir = "../jazzer/agent";
+constexpr auto kAgentBazelRunfilesPath = "jazzer/agent/jazzer_agent_deploy.jar";
 constexpr auto kAgentFileName = "jazzer_agent_deploy.jar";
 constexpr const char kExceptionUtilsClassName[] =
     "com/code_intelligence/jazzer/runtime/ExceptionUtils";
@@ -101,12 +103,17 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
     exit(0);
   }
   // First check if we are running inside the Bazel tree and use the agent
-  // runfile. This requires a Bazel env variable to be defined as loading an
-  // agent from a sibling directory may not be safe in e.g. download folders.
-  if (std::getenv("BUILD_WORKING_DIRECTORY") != nullptr) {
-    auto bazel_path = absl::StrFormat("%s%c%s", kInstrumentorAgentBazelDir,
-                                      kPathSeparator, kAgentFileName);
-    if (std::ifstream(bazel_path).good()) return bazel_path;
+  // runfile.
+  {
+    using bazel::tools::cpp::runfiles::Runfiles;
+    std::string error;
+    std::unique_ptr<Runfiles> runfiles(
+        Runfiles::Create(executable_path, &error));
+    if (runfiles != nullptr) {
+      auto bazel_path = runfiles->Rlocation(kAgentBazelRunfilesPath);
+      if (!bazel_path.empty() && std::ifstream(bazel_path).good())
+        return bazel_path;
+    }
   }
 
   // If the agent is not in the bazel path we look next to the jazzer_driver

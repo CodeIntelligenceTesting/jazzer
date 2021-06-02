@@ -48,6 +48,7 @@ cc_library(
     deps = [
         ":sanitizer_hooks_with_pc",
         "//third_party/jni:jni_libs",
+        "@bazel_tools//tools/cpp/runfiles",
         "@bazel_tools//tools/jdk:jni",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
