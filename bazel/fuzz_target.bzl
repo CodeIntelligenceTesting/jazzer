@@ -62,7 +62,6 @@ def java_fuzz_target_test(
         args = [
             "$(rootpath %s)" % driver,
             "--cp=$(rootpath :%s_deploy.jar)" % target_name,
-            "--agent_path=$(rootpath //agent:jazzer_agent_deploy.jar)",
         ] + additional_args + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,
