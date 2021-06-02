@@ -43,10 +43,9 @@ http_archive(
 
 http_archive(
     name = "rules_foreign_cc",
-    sha256 = "2016c60cb413005602a4d4770508af14ce745a6e77263ebd720ca1ca5ed8b9a5",
-    strip_prefix = "rules_foreign_cc-c82e72fa2bde475abe1c87a16e0930ebe4228ab4",
-    # v0.2.0 + fix for https://github.com/bazelbuild/rules_foreign_cc/issues/630
-    url = "https://github.com/CodeIntelligenceTesting/rules_foreign_cc/archive/c82e72fa2bde475abe1c87a16e0930ebe4228ab4.tar.gz",
+    sha256 = "8ab257584256e2c7eefa0c4e0794ae3be3e8f634f9ec0356da0a653dfed5da9a",
+    strip_prefix = "rules_foreign_cc-76198edc790de8e8514bddaa3895d1145fccd6aa",
+    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/76198edc790de8e8514bddaa3895d1145fccd6aa.tar.gz",
 )
 
 load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
