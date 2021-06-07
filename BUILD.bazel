@@ -2,6 +2,8 @@ load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "define_kt_toolchain")
 load("@io_bazel_rules_kotlin//kotlin/internal:opts.bzl", "kt_javac_options", "kt_kotlinc_options")
 
+exports_files(["LICENSE"])
+
 kt_kotlinc_options(
     name = "kotlinc_options",
     x_use_ir = True,
