@@ -14,15 +14,27 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
-    name = "ExampleFuzzerWithNative",
+    name = "ExampleFuzzerWithASan",
     srcs = [
         "src/main/java/com/example/ExampleFuzzerWithNative.java",
     ],
-    native_libs = ["//examples/src/main/native"],
+    native_libs = ["//examples/src/main/native:native_asan"],
+    sanitizer = "address",
     # Bazel creates shared libraries with an incorrect extension on macOS.
     tags = ["broken-on-darwin"],
     target_class = "com.example.ExampleFuzzerWithNative",
-    use_asan = True,
+)
+
+java_fuzz_target_test(
+    name = "ExampleFuzzerWithUBSan",
+    srcs = [
+        "src/main/java/com/example/ExampleFuzzerWithNative.java",
+    ],
+    native_libs = ["//examples/src/main/native:native_ubsan"],
+    sanitizer = "undefined",
+    # Bazel creates shared libraries with an incorrect extension on macOS.
+    tags = ["broken-on-darwin"],
+    target_class = "com.example.ExampleFuzzerWithNative",
 )
 
 java_fuzz_target_test(
@@ -208,9 +220,9 @@ java_fuzz_target_test(
     native_libs = [
         "@libjpeg_turbo//:turbojpeg_native",
     ],
+    sanitizer = "address",
     tags = ["manual"],
     target_class = "com.example.TurboJpegFuzzer",
-    use_asan = True,
     deps = [
         "@libjpeg_turbo//:turbojpeg_java",
     ],

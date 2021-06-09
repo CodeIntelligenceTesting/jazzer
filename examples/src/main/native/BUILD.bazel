@@ -1,7 +1,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary")
 
 cc_binary(
-    name = "native",
+    name = "native_asan",
     srcs = [
         "com_example_ExampleFuzzerWithNative.cpp",
         "com_example_ExampleFuzzerWithNative.h",
@@ -11,6 +11,28 @@ cc_binary(
     ],
     linkopts = [
         "-fsanitize=fuzzer-no-link,address",
+    ],
+    linkshared = True,
+    visibility = ["//examples:__pkg__"],
+    deps = [
+        "@bazel_tools//tools/jdk:jni",
+    ],
+)
+
+cc_binary(
+    name = "native_ubsan",
+    srcs = [
+        "com_example_ExampleFuzzerWithNative.cpp",
+        "com_example_ExampleFuzzerWithNative.h",
+    ],
+    copts = [
+        "-fsanitize=fuzzer-no-link,undefined",
+        "-fno-sanitize-recover=all",
+        # Workaround for https://github.com/bazelbuild/bazel/issues/11122.
+        "-fno-sanitize=vptr,function",
+    ],
+    linkopts = [
+        "-fsanitize=fuzzer-no-link,undefined",
     ],
     linkshared = True,
     visibility = ["//examples:__pkg__"],

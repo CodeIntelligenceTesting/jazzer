@@ -401,15 +401,18 @@ via `--ignore=<token_1>,<token2>`.
 Jazzer supports fuzzing of native libraries loaded by the JVM, for example via `System.load()`. For the fuzzer to get
 coverage feedback, these libraries have to be compiled with `-fsanitize=fuzzer-no-link`.
 
-Additional sanitizers such as AddressSanitizer are often desirable to uncover bugs inside the native libraries. This
-requires compiling the library with `-fsanitize=fuzzer-no-link,address` and using the asan-ified driver available
-as the Bazel target `//:jazzer_asan`.
+Additional sanitizers such as AddressSanitizer or UndefinedBehaviorSanitizer are often desirable to uncover bugs inside
+the native libraries. The required compilation flags for native libraries are as follows:
+ - *AddressSanitizer*: `-fsanitize=fuzzer-no-link,address`
+ - *UndefinedBehaviorSanitizer*: `-fsanitize=fuzzer-no-link,undefined` (add `-fno-sanitize-recover=all` to crash on UBSan reports)
 
-**Note:** Sanitizers other than AddressSanitizer are not yet supported. Furthermore, due to the nature of the JVM's GC,
-LeakSanitizer reports currently too many false positives to be useful and are thus disabled.
+Then, use the appropriate driver `//:jazzer_asan` or `//:jazzer_ubsan`.
 
-The fuzz target `ExampleFuzzerWithNative` in the `examples/` directory contains a minimal working example for fuzzing
-with native libraries. Also see `TurboJpegFuzzer` for a real-world example.
+**Note:** Sanitizers other than AddressSanitizer and UndefinedBehaviorSanitizer are not yet supported.
+Furthermore, due to the nature of the JVM's GC, LeakSanitizer reports too many false positives to be useful and is thus disabled.
+
+The fuzz targets `ExampleFuzzerWithNativeASan` and `ExampleFuzzerWithNativeUBSan` in the `examples/` directory contain
+minimal working examples for fuzzing with native libraries. Also see `TurboJpegFuzzer` for a real-world example.
 
 ### Fuzzing with Custom Mutators
 

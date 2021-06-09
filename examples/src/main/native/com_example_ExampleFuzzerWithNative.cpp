@@ -14,14 +14,20 @@
 
 #include "com_example_ExampleFuzzerWithNative.h"
 
+#include <limits>
 #include <string>
 
 // simple function containing a crash that requires coverage and string compare
 // instrumentation for the fuzzer to find
 __attribute__((optnone)) void parseInternal(const std::string &input) {
+  constexpr int bar = std::numeric_limits<int>::max() - 5;
+  // Crashes with UBSan.
+  if (bar + input[0] == 300) {
+    return;
+  }
   if (input[0] == 'a' && input[1] == 'b' && input[5] == 'c') {
     if (input.find("secret_in_native_library") != std::string::npos) {
-      // BOOM
+      // Crashes with ASan.
       [[maybe_unused]] char foo = input[input.size() + 2];
     }
   }
