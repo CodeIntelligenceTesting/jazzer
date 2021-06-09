@@ -28,6 +28,11 @@ const char *__asan_default_options() {
   // We use a distinguished exit code to recognize ASan crashes in tests.
   return "detect_leaks=0,exitcode=76";
 }
+
+const char *__ubsan_default_options() {
+  // We use a distinguished exit code to recognize UBSan crashes in tests.
+  return "exitcode=76";
+}
 }
 
 namespace {

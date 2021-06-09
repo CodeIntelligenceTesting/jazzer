@@ -85,6 +85,20 @@ cc_binary(
     ],
     linkopts = [
         "-fsanitize=address",
+        "-rdynamic",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [":driver_lib"],
+)
+
+cc_binary(
+    name = "jazzer_driver_ubsan",
+    data = [
+        "//agent:jazzer_agent_deploy.jar",
+    ],
+    linkopts = [
+        "-fsanitize=undefined",
+        "-rdynamic",
     ],
     visibility = ["//visibility:public"],
     deps = [":driver_lib"],

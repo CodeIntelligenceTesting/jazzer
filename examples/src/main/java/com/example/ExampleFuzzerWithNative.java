@@ -18,7 +18,11 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 
 public class ExampleFuzzerWithNative {
   static {
-    System.loadLibrary("native");
+    try {
+      System.loadLibrary("native_asan");
+    } catch (UnsatisfiedLinkError e) {
+      System.loadLibrary("native_ubsan");
+    }
   }
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {

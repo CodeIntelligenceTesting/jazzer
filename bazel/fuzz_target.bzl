@@ -20,7 +20,7 @@ def java_fuzz_target_test(
         deps = [],
         hook_classes = [],
         native_libs = [],
-        use_asan = False,
+        sanitizer = None,
         visibility = None,
         tags = [],
         fuzzer_args = [],
@@ -52,7 +52,14 @@ def java_fuzz_target_test(
     if native_libs_paths != "":
         additional_args.append("--jvm_args=-Djava.library.path=" + native_libs_paths)
 
-    driver = "//driver:jazzer_driver_asan" if use_asan else "//driver:jazzer_driver"
+    if sanitizer == None:
+        driver = "//driver:jazzer_driver"
+    elif sanitizer == "address":
+        driver = "//driver:jazzer_driver_asan"
+    elif sanitizer == "undefined":
+        driver = "//driver:jazzer_driver_ubsan"
+    else:
+        fail("Invalid sanitizer: " + sanitizer)
 
     native.sh_test(
         name = name,

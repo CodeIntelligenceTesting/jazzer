@@ -57,6 +57,17 @@ sh_binary(
     ],
 )
 
+sh_binary(
+    name = "jazzer_ubsan",
+    srcs = ["//bazel:jazzer_wrapper.sh"],
+    args = [
+        "$(rootpath //driver:jazzer_driver_ubsan)",
+    ],
+    data = [
+        "//driver:jazzer_driver_ubsan",
+    ],
+)
+
 exports_files([
     "jazzer-api.pom",
 ])
