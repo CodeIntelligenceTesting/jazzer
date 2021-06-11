@@ -122,6 +122,7 @@ internal class RuntimeInstrumentor(
     private val dependencyClassesToInstrument: ClassNameGlobber,
     private val instrumentationTypes: Set<InstrumentationType>,
     idSyncFile: Path?,
+    private val dumpClassesDir: Path?,
 ) : ClassFileTransformer {
 
     private val coverageIdSynchronizer = if (idSyncFile != null)
@@ -166,6 +167,15 @@ internal class RuntimeInstrumentor(
             // https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/ClassFileTransformer.html
             t.printStackTrace()
             throw t
+        }.also { instrumentedByteCode ->
+            // Only dump classes that were instrumented.
+            if (instrumentedByteCode != null && dumpClassesDir != null) {
+                val relativePath = "$internalClassName.class"
+                val absolutePath = dumpClassesDir.resolve(relativePath)
+                val dumpFile = absolutePath.toFile()
+                dumpFile.parentFile.mkdirs()
+                dumpFile.writeBytes(instrumentedByteCode)
+            }
         }
     }
 

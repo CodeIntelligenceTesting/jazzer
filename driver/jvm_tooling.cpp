@@ -72,6 +72,9 @@ DEFINE_string(
     "path to a file that should be used to synchronize coverage IDs "
     "between parallel fuzzing processes. Defaults to a temporary file "
     "created for this purpose if running in parallel.");
+DEFINE_string(
+    dump_classes_dir, "",
+    "path to a directory in which Jazzer should dump the instrumented classes");
 
 DECLARE_bool(hooks);
 
@@ -140,6 +143,7 @@ std::string agentArgsFromFlags() {
            {"custom_hook_excludes", FLAGS_custom_hook_excludes},
            {"trace", FLAGS_trace},
            {"id_sync_file", FLAGS_id_sync_file},
+           {"dump_classes_dir", FLAGS_dump_classes_dir},
        }) {
     if (!flag_pair.second.empty()) {
       args.push_back(flag_pair.first + "=" + flag_pair.second);
