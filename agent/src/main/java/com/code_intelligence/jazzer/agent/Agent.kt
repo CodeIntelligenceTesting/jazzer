@@ -23,6 +23,9 @@ import java.io.File
 import java.lang.instrument.Instrumentation
 import java.nio.file.Paths
 import java.util.jar.JarFile
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
 
 val KNOWN_ARGUMENTS = listOf(
     "instrumentation_includes",
@@ -32,6 +35,7 @@ val KNOWN_ARGUMENTS = listOf(
     "trace",
     "custom_hooks",
     "id_sync_file",
+    "dump_classes_dir",
 )
 
 private object AgentJarFinder {
@@ -39,6 +43,7 @@ private object AgentJarFinder {
     val agentJarFile = agentJarPath?.let { JarFile(File(it)) }
 }
 
+@OptIn(ExperimentalPathApi::class)
 fun premain(agentArgs: String?, instrumentation: Instrumentation) {
     // Add the agent jar (i.e., the jar out of which we are currently executing) to the search path of the bootstrap
     // class loader to ensure that instrumented classes can find the CoverageMap class regardless of which ClassLoader
@@ -97,12 +102,22 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             println("INFO: Synchronizing coverage IDs in ${path.toAbsolutePath()}")
         }
     }
+    val dumpClassesDir = argumentMap["dump_classes_dir"]?.let {
+        Paths.get(it.single()).toAbsolutePath().also { path ->
+            if (path.exists() && path.isDirectory()) {
+                println("INFO: Dumping instrumented classes into $path")
+            } else {
+                println("ERROR: Cannot dump instrumented classes into $path; does not exist or not a directory")
+            }
+        }
+    }
     val runtimeInstrumentor = RuntimeInstrumentor(
         instrumentation,
         classNameGlobber,
         dependencyClassNameGlobber,
         instrumentationTypes,
-        idSyncFile
+        idSyncFile,
+        dumpClassesDir,
     )
     instrumentation.apply {
         addTransformer(runtimeInstrumentor)
