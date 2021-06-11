@@ -57,9 +57,9 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "rules_jvm_external",
-        sha256 = "f2b36a098736f8b742f22cb25dfcab5481ef5e3d8cfeb4f52b71f5537fbb8266",
-        strip_prefix = "rules_jvm_external-367eb9ae5be8acd5a069b84c4672a2ed1d0bda82",
-        url = "https://github.com/bazelbuild/rules_jvm_external/archive/367eb9ae5be8acd5a069b84c4672a2ed1d0bda82.zip",
+        sha256 = "f36441aa876c4f6427bfb2d1f2d723b48e9d930b62662bf723ddfb8fc80f0140",
+        strip_prefix = "rules_jvm_external-4.1",
+        url = "https://github.com/bazelbuild/rules_jvm_external/archive/4.1.zip",
     )
 
     maybe(
