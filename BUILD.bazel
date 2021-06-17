@@ -44,6 +44,9 @@ sh_binary(
     data = [
         "//driver:jazzer_driver",
     ],
+    deps = [
+        "@bazel_tools//tools/bash/runfiles",
+    ],
 )
 
 sh_binary(
