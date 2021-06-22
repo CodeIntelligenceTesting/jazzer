@@ -30,27 +30,20 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
-        name = "rules_python",
-        sha256 = "b6d46438523a3ec0f3cead544190ee13223a52f6a6765a29eae7b7cc24cc83a0",
-        url = "https://github.com/bazelbuild/rules_python/releases/download/0.1.0/rules_python-0.1.0.tar.gz",
-    )
-
-    maybe(
-        http_archive,
         name = "bazel_common",
-        sha256 = "cf607d9004a518d8a9bc959b558ffca730ab26e31ee1a7a36248fb054ca84cb7",
-        strip_prefix = "bazel-common-11b744fb848a5c73b7173e8b771bf857b8558c89",
-        url = "https://github.com/google/bazel-common/archive/11b744fb848a5c73b7173e8b771bf857b8558c89.zip",
+        sha256 = "8b6aebdc095c8448b2f6a72bb8eae4a563891467e2d20c943f21940b1c444e38",
+        strip_prefix = "bazel-common-3d0e5005cfcbee836e31695d4ab91b5328ccc506",
+        url = "https://github.com/google/bazel-common/archive/3d0e5005cfcbee836e31695d4ab91b5328ccc506.zip",
     )
 
     maybe(
         http_archive,
         name = "bazel_skylib",
-        sha256 = "ebdf850bfef28d923a2cc67ddca86355a449b5e4f38b0a70e584dc24e5984aa6",
-        strip_prefix = "bazel-skylib-f80bc733d4b9f83d427ce3442be2e07427b2cc8d",
+        sha256 = "37fbe6e229f28dfda55d9c9a305235b882a1cf6cff746ce448b8b870ecfdf620",
+        strip_prefix = "bazel-skylib-fd75066f159234265efb8f838b056be5a2e00a59",
         urls = [
-            "https://github.com/bazelbuild/bazel-skylib/archive/f80bc733d4b9f83d427ce3442be2e07427b2cc8d.tar.gz",
-            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/archive/f80bc733d4b9f83d427ce3442be2e07427b2cc8d.tar.gz",
+            "https://github.com/bazelbuild/bazel-skylib/archive/fd75066f159234265efb8f838b056be5a2e00a59.tar.gz",
+            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/archive/fd75066f159234265efb8f838b056be5a2e00a59.tar.gz",
         ],
     )
 
@@ -73,17 +66,17 @@ def jazzer_dependencies():
         http_archive,
         name = "com_google_glog",
         repo_mapping = {"@com_github_gflags_gflags": "@jazzer_com_github_gflags_gflags"},
-        sha256 = "9f520a71cc23900757b8da4f620b15cd9e92f89a1ed79fe395dff7cecdaa5b7a",
-        strip_prefix = "glog-8d40d7564d4a06d77d707d7c4a50c8b5dc45dd80",
-        url = "https://github.com/google/glog/archive/8d40d7564d4a06d77d707d7c4a50c8b5dc45dd80.tar.gz",
+        sha256 = "5a39d51a6058348e6b683f5343a24d94e01c518c7a045101045e301a27efab13",
+        strip_prefix = "glog-a4a725d547a6c1329607db50af044c4fa329e07a",
+        url = "https://github.com/google/glog/archive/a4a725d547a6c1329607db50af044c4fa329e07a.tar.gz",
     )
 
     maybe(
         http_archive,
         name = "com_google_absl",
-        sha256 = "6ead5ca816dee2052e80ef746ab88e319f7cf40392e9dcc67d56d2d1e0043660",
-        strip_prefix = "abseil-cpp-3a2d6572d06709da32a17f053ca1e3c8e2af90df",
-        url = "https://github.com/abseil/abseil-cpp/archive/3a2d6572d06709da32a17f053ca1e3c8e2af90df.zip",
+        sha256 = "a2837e9042e4adac18e9bbc25f18c2c5ada0c672bc1bbeb9c8769e98b05c6c4e",
+        strip_prefix = "abseil-cpp-60be12ed9822078970f05f3c560324184302df6b",
+        url = "https://github.com/abseil/abseil-cpp/archive/60be12ed9822078970f05f3c560324184302df6b.zip",
     )
 
     maybe(
