@@ -35,7 +35,7 @@ def java_fuzz_target_test(
 
     # Deps can only be specified on java_binary targets with sources, which
     # excludes e.g. Kotlin libraries wrapped into java_binary via runtime_deps.
-    target_deps = deps + ["//agent/src/main/java/com/code_intelligence/jazzer/api"] if srcs else []
+    target_deps = deps + ["//agent:jazzer_api_compile_only"] if srcs else []
     java_binary(
         name = target_name,
         srcs = srcs,
