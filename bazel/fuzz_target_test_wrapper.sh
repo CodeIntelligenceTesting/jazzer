@@ -16,6 +16,15 @@
 # Crashes will be available as test outputs. These are cleared on the next run,
 # so this is only useful for examples.
 DEFAULT_CRASH_PREFIX="$TEST_UNDECLARED_OUTPUTS_DIR"
+
+# Determine the path to load libjvm.so from, either relative to the location of
+# the java binary or to $JAVA_HOME, if set.
+JAVA_BIN=$(readlink -f "$(which java)")
+JAVA_HOME=${JAVA_HOME:-${JAVA_BIN%/bin/java}}
+# The location of libjvm.so relative to the JDK differs between JDK <= 8 and 9+.
+JVM_LD_LIBRARY_PATH="$JAVA_HOME/lib/server:$JAVA_HOME/lib/amd64/server"
+
+LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$JVM_LD_LIBRARY_PATH \
 eval "$1" -artifact_prefix="$DEFAULT_CRASH_PREFIX/" --reproducer_path="$DEFAULT_CRASH_PREFIX" -seed=2735196724 "${@:2}"
 # Assert that we either found a crash in java (exit code 77) or an ASan crash
 # (exit code 76).
