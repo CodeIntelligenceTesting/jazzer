@@ -74,6 +74,9 @@ cc_binary(
     data = [
         "//agent:jazzer_agent_deploy.jar",
     ],
+    linkopts = [
+        "-rdynamic",
+    ],
     visibility = ["//visibility:public"],
     deps = [":driver_lib"],
 )
