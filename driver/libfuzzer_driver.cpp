@@ -34,13 +34,6 @@
 
 using namespace std::string_literals;
 
-DEFINE_bool(hooks, true,
-            "Use JVM hooks to provide coverage information to the fuzzer. The "
-            "fuzzer uses the coverage information to perform smarter input "
-            "selection and mutation. If set to false no "
-            "coverage information will be processed. This can be useful for "
-            "running a regression test on non-instrumented bytecode.");
-
 // Defined by glog
 DECLARE_bool(log_prefix);
 
@@ -176,13 +169,6 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
 
 void AbstractLibfuzzerDriver::initJvm(const std::string &executable_path) {
   jvm_ = std::make_unique<jazzer::JVM>(executable_path);
-  if (FLAGS_hooks) {
-    jazzer::registerFuzzerCallbacks(jvm_->GetEnv());
-    CoverageTracker::Setup(jvm_->GetEnv());
-    // SignalHandler registers its own native methods
-    signal_handler_ = std::make_unique<jazzer::SignalHandler>(*jvm_);
-    signal_handler_->SetupSignalHandlers();
-  }
 }
 
 LibfuzzerDriver::LibfuzzerDriver(int *argc, char ***argv)

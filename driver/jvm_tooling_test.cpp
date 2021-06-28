@@ -45,7 +45,6 @@ class JvmToolingTest : public ::testing::Test {
     FLAGS_instrumentation_excludes = "**";
 
     jvm_ = std::make_unique<JVM>("test_executable");
-    CoverageTracker::Setup(jvm_->GetEnv());
   }
 
   static void TearDownTestCase() { jvm_.reset(nullptr); }

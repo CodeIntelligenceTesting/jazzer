@@ -36,25 +36,30 @@ void JNICALL handleInterrupt(JNIEnv, jclass) {
 }
 
 namespace jazzer {
-SignalHandler::SignalHandler(JVM &jvm)
-    : jvm_(jvm),
-      jclass_(jvm.FindClass(kSignalHandlerClass)),
-      setup_signal_handlers_method_(
-          jvm.GetStaticMethodID(jclass_, "setupSignalHandlers", "()V")) {}
-
-void SignalHandler::SetupSignalHandlers() {
-  JNINativeMethod signal_handler[]{
+void SignalHandler::Setup(JNIEnv &env) {
+  jclass signal_handler_class = env.FindClass(kSignalHandlerClass);
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
+    throw std::runtime_error("could not find signal handler class");
+  }
+  JNINativeMethod signal_handler_methods[]{
       {(char *)"handleInterrupt", (char *)"()V", (void *)&handleInterrupt},
   };
-  jvm_.GetEnv().RegisterNatives(jclass_, signal_handler, 1);
-  if (jvm_.GetEnv().ExceptionCheck()) {
-    jvm_.GetEnv().ExceptionDescribe();
+  env.RegisterNatives(signal_handler_class, signal_handler_methods, 1);
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
     throw std::runtime_error(
         "could not register native callbacks 'handleInterrupt'");
   }
-  jvm_.GetEnv().CallStaticVoidMethod(jclass_, setup_signal_handlers_method_);
-  if (jvm_.GetEnv().ExceptionCheck()) {
-    jvm_.GetEnv().ExceptionDescribe();
+  jmethodID setup_signal_handlers_method_ =
+      env.GetStaticMethodID(signal_handler_class, "setupSignalHandlers", "()V");
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
+    throw std::runtime_error("could not find setupSignalHandlers method");
+  }
+  env.CallStaticVoidMethod(signal_handler_class, setup_signal_handlers_method_);
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
     throw std::runtime_error("failed to set up signal handlers");
   }
 }
