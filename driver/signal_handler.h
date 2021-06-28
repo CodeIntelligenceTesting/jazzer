@@ -18,23 +18,12 @@
 
 #include <jni.h>
 
-#include "jvm_tooling.h"
-
 namespace jazzer {
 // SignalHandler registers handlers for signals (e.g. SIGINT) in Java and
 // notifies the driver via native callbacks when the handlers fire.
 class SignalHandler {
- private:
-  const JVM &jvm_;
-  jclass jclass_;
-  jmethodID setup_signal_handlers_method_;
-
  public:
-  // Throws std::runtime_error if the corresponding Java class and method cannot
-  // be found.
-  explicit SignalHandler(JVM &);
-
   // Set up handlers for signal in Java.
-  void SetupSignalHandlers();
+  static void Setup(JNIEnv &env);
 };
 }  // namespace jazzer

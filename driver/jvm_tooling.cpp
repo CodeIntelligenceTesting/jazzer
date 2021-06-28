@@ -23,9 +23,11 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
+#include "coverage_tracker.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "libfuzzer_callbacks.h"
+#include "signal_handler.h"
 #include "tools/cpp/runfiles/runfiles.h"
 #include "utils.h"
 
@@ -76,7 +78,33 @@ DEFINE_string(
     dump_classes_dir, "",
     "path to a directory in which Jazzer should dump the instrumented classes");
 
-DECLARE_bool(hooks);
+DEFINE_bool(hooks, true,
+            "Use JVM hooks to provide coverage information to the fuzzer. The "
+            "fuzzer uses the coverage information to perform smarter input "
+            "selection and mutation. If set to false no "
+            "coverage information will be processed. This can be useful for "
+            "running a regression test on non-instrumented bytecode.");
+
+// Called by the agent when
+// com.code_intelligence.jazzer.instrumentor.ClassInstrumentor is initialized.
+// This only happens when FLAGS_hooks is true.
+extern "C" JNIEXPORT jint JNICALL JNI_OnLoad_jazzer_initialize(JavaVM *vm,
+                                                               void *) {
+  if (!FLAGS_hooks) {
+    LOG(ERROR) << "JNI_OnLoad_jazzer_initialize called with --nohooks";
+    exit(1);
+  }
+  JNIEnv *env = nullptr;
+  jint result = vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_8);
+  if (result != JNI_OK) {
+    LOG(FATAL) << "Failed to get JNI environment";
+    exit(1);
+  }
+  jazzer::registerFuzzerCallbacks(*env);
+  jazzer::CoverageTracker::Setup(*env);
+  jazzer::SignalHandler::Setup(*env);
+  return JNI_VERSION_1_8;
+}
 
 namespace {
 constexpr auto kAgentBazelRunfilesPath = "jazzer/agent/jazzer_agent_deploy.jar";
@@ -203,7 +231,7 @@ JVM::JVM(const std::string &executable_path) {
         .optionString = const_cast<char *>(agent_jvm_arg.c_str())});
   }
 
-  JavaVMInitArgs jvm_init_args = {.version = JNI_VERSION_1_6,
+  JavaVMInitArgs jvm_init_args = {.version = JNI_VERSION_1_8,
                                   .nOptions = (int)options.size(),
                                   .options = options.data(),
                                   .ignoreUnrecognized = JNI_FALSE};

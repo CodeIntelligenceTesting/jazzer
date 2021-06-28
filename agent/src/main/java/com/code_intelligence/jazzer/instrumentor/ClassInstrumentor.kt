@@ -39,4 +39,11 @@ class ClassInstrumentor constructor(bytecode: ByteArray) {
             java6Mode = extractClassFileMajorVersion(instrumentedBytecode) < 51
         ).instrument(instrumentedBytecode)
     }
+
+    companion object {
+        init {
+            // Calls JNI_OnLoad_jazzer_initialize in the driver, which registers the native methods.
+            System.loadLibrary("jazzer_initialize")
+        }
+    }
 }

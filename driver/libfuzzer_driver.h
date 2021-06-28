@@ -20,7 +20,6 @@
 #include <string>
 
 #include "absl/strings/match.h"
-#include "coverage_tracker.h"
 #include "fuzz_target_runner.h"
 #include "fuzzed_data_provider.h"
 #include "jvm_tooling.h"
@@ -50,9 +49,6 @@ class AbstractLibfuzzerDriver {
   std::unique_ptr<jazzer::JVM> jvm_;
 
  private:
-  // handles clearing and reading of the coverage map
-  std::unique_ptr<jazzer::CoverageTracker> coverage_tracker_;
-
   // forwards signals caught while the JVM is running
   std::unique_ptr<jazzer::SignalHandler> signal_handler_;
 

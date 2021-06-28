@@ -44,6 +44,9 @@ cc_library(
     linkopts = [
         "-ldl",
     ],
+    # Needs to be linked statically for JNI_OnLoad_jazzer_initialize to be found
+    # by the JVM.
+    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
         ":sanitizer_hooks_with_pc",
@@ -123,6 +126,11 @@ cc_test(
         "//driver/testdata:fuzz_target_mocks_deploy.jar",
     ],
     includes = ["."],
+    linkopts = [
+        # Needs to export symbols dynamically for JNI_OnLoad_jazzer_initialize
+        # to be found by the JVM.
+        "-rdynamic",
+    ],
     deps = [
         ":jvm_tooling_lib",
         ":test_main",
