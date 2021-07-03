@@ -91,9 +91,9 @@ def jazzer_dependencies():
         http_archive,
         build_file = "@jazzer//third_party:asm.BUILD",
         name = "jazzer_ow2_asm",
-        sha256 = "5fb512c8c2813df19467180ab6b4ed734fdf84e618f26560659593bc1a746497",
-        strip_prefix = "asm-ASM_9_1",
-        url = "https://gitlab.ow2.org/asm/asm/-/archive/ASM_9_1/asm-ASM_9_1.tar.gz",
+        sha256 = "7b596cc584b241619911e99c5c96366fccd533b1a50b8720c151c2f74b5915e3",
+        strip_prefix = "asm-ASM_9_2",
+        url = "https://gitlab.ow2.org/asm/asm/-/archive/ASM_9_2/asm-ASM_9_2.tar.gz",
     )
 
     maybe(
