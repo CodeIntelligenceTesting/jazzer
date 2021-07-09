@@ -14,7 +14,10 @@
 
 def _add_cxxopt_std_17_impl(settings, attr):
     return {
-        "//command_line_option:cxxopt": settings["//command_line_option:cxxopt"] + ["-std=c++17"],
+        "//command_line_option:cxxopt": settings["//command_line_option:cxxopt"] + [
+            "-std=c++17",
+            "-stdlib=libc++",
+        ],
     }
 
 _add_cxxopt_std_17 = transition(

@@ -11,6 +11,9 @@ cc_test(
     name = "sanitizer_hooks_with_pc_test",
     size = "small",
     srcs = ["sanitizer_hooks_with_pc_test.cpp"],
+    linkopts = [
+        "-stdlib=libc++",
+    ],
     deps = [
         ":sanitizer_hooks_with_pc",
         "@googletest//:gtest",
@@ -78,6 +81,7 @@ cc_binary(
         "//agent:jazzer_agent_deploy.jar",
     ],
     linkopts = [
+        "-stdlib=libc++",
         "-rdynamic",
     ],
     visibility = ["//visibility:public"],
@@ -90,6 +94,7 @@ cc_binary(
         "//agent:jazzer_agent_deploy.jar",
     ],
     linkopts = [
+        "-stdlib=libc++",
         "-fsanitize=address",
         "-rdynamic",
     ],
@@ -103,6 +108,7 @@ cc_binary(
         "//agent:jazzer_agent_deploy.jar",
     ],
     linkopts = [
+        "-stdlib=libc++",
         "-fsanitize=undefined",
         "-rdynamic",
     ],
@@ -130,6 +136,7 @@ cc_test(
         # Needs to export symbols dynamically for JNI_OnLoad_jazzer_initialize
         # to be found by the JVM.
         "-rdynamic",
+        "-stdlib=libc++",
     ],
     deps = [
         ":jvm_tooling_lib",
@@ -155,6 +162,9 @@ cc_test(
         "//driver/testdata:fuzz_target_mocks_deploy.jar",
     ],
     includes = ["."],
+    linkopts = [
+        "-stdlib=libc++",
+    ],
     deps = [
         ":jvm_tooling_lib",
         ":test_main",

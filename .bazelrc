@@ -3,6 +3,7 @@ build -c opt
 
 # C/C++
 build --cxxopt='-std=c++17'
+build --cxxopt='-stdlib=libc++'
 build --action_env=CC=clang
 # Requires a relatively modern clang.
 build:ci --features=layering_check
