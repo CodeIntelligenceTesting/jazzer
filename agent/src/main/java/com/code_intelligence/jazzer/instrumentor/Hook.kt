@@ -25,7 +25,9 @@ import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 
 class Hook private constructor(hookMethod: Method, annotation: MethodHook) {
-    private val targetClassName = annotation.targetClassName
+    // Allowing arbitrary exterior whitespace in the target class name allows for an easy workaround
+    // for mangled hooks due to shading applied to hooks.
+    private val targetClassName = annotation.targetClassName.trim()
     val targetMethodName = annotation.targetMethod
     val targetMethodDescriptor = annotation.targetMethodDescriptor.takeIf { it.isNotEmpty() }
     val hookType = annotation.type
