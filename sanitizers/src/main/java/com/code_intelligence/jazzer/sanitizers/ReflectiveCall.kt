@@ -22,6 +22,7 @@ import java.lang.invoke.MethodHandle
 /**
  * Detects unsafe reflective calls that lead to attacker-controlled method calls.
  */
+@Suppress("unused_parameter")
 object ReflectiveCall {
 
     /**
