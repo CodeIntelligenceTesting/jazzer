@@ -46,6 +46,9 @@ private val BASE_EXCLUDED_CLASS_NAME_GLOBS = listOf(
     "jdk.**",
     "kotlin.**",
     "sun.**",
+    "javax.management.DynamicMBean", // used by ManagementFactory.getRuntimeMXBean()
+    "javax.management.NotificationEmitter", // used by ManagementFactory.getRuntimeMXBean()
+    "javax.management.NotificationBroadcaster", // used by ManagementFactory.getRuntimeMXBean()
 )
 
 class SimpleGlobMatcher(val glob: String) {
