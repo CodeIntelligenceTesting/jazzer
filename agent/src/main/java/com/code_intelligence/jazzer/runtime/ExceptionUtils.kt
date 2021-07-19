@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.runtime
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow
+import java.lang.management.ManagementFactory
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 
@@ -76,11 +77,15 @@ fun preprocessThrowable(throwable: Throwable): Throwable = when (throwable) {
         val bottomFramesWithoutRepetition = throwable.stackTrace.takeLastWhile { frame ->
             (frame !in observedFrames).also { observedFrames.add(frame) }
         }
-        FuzzerSecurityIssueLow("Stack overflow (truncated to likely cause)", throwable).apply {
+        FuzzerSecurityIssueLow("Stack overflow (use '${getReproducingXssArg()}' to reproduce)", throwable).apply {
             stackTrace = bottomFramesWithoutRepetition.toTypedArray()
         }
     }
-    // Includes OutOfMemoryError
+    is OutOfMemoryError -> stripOwnStackTrace(
+        FuzzerSecurityIssueLow(
+            "Out of memory (use '${getReproducingXmxArg()}' to reproduce)", throwable
+        )
+    )
     is VirtualMachineError -> stripOwnStackTrace(FuzzerSecurityIssueLow(throwable))
     else -> throwable
 }
@@ -91,4 +96,50 @@ fun preprocessThrowable(throwable: Throwable): Throwable = when (throwable) {
  */
 private fun stripOwnStackTrace(throwable: Throwable) = throwable.apply {
     stackTrace = emptyArray()
+}
+
+/**
+ * Returns a valid `-Xmx` JVM argument that sets the stack size to a value with which [StackOverflowError] findings can
+ * be reproduced, assuming the environment is sufficiently similar (e.g. OS and JVM version).
+ */
+private fun getReproducingXmxArg(): String? {
+    val maxHeapSizeInMegaBytes = (getNumericFinalFlagValue("MaxHeapSize") ?: return null) shr 20
+    val conservativeMaxHeapSizeInMegaBytes = (maxHeapSizeInMegaBytes * 0.9).toInt()
+    return "-Xmx${conservativeMaxHeapSizeInMegaBytes}m"
+}
+
+/**
+ * Returns a valid `-Xss` JVM argument that sets the stack size to a value with which [StackOverflowError] findings can
+ * be reproduced, assuming the environment is sufficiently similar (e.g. OS and JVM version).
+ */
+private fun getReproducingXssArg(): String? {
+    val threadStackSizeInKiloBytes = getNumericFinalFlagValue("ThreadStackSize") ?: return null
+    val conservativeThreadStackSizeInKiloBytes = (threadStackSizeInKiloBytes * 0.9).toInt()
+    return "-Xss${conservativeThreadStackSizeInKiloBytes}k"
+}
+
+private fun getNumericFinalFlagValue(arg: String): Long? {
+    val argPattern = "$arg\\D*(\\d*)".toRegex()
+    return argPattern.find(javaFullFinalFlags ?: return null)?.groupValues?.get(1)?.toLongOrNull()
+}
+
+private val javaFullFinalFlags by lazy {
+    readJavaFullFinalFlags()
+}
+
+private fun readJavaFullFinalFlags(): String? {
+    val javaHome = System.getProperty("java.home") ?: return null
+    val javaBinary = "$javaHome/bin/java"
+    val currentJvmArgs = ManagementFactory.getRuntimeMXBean().inputArguments
+    val javaPrintFlagsProcess = ProcessBuilder(
+        listOf(javaBinary) + currentJvmArgs + listOf(
+            "-XX:+PrintFlagsFinal",
+            "-version"
+        )
+    ).start()
+    return javaPrintFlagsProcess.inputStream.bufferedReader().useLines { lineSequence ->
+        lineSequence
+            .filter { it.contains("ThreadStackSize") || it.contains("MaxHeapSize") }
+            .joinToString("\n")
+    }
 }
