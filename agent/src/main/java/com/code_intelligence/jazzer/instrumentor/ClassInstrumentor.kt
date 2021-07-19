@@ -42,8 +42,12 @@ class ClassInstrumentor constructor(bytecode: ByteArray) {
 
     companion object {
         init {
-            // Calls JNI_OnLoad_jazzer_initialize in the driver, which registers the native methods.
-            System.loadLibrary("jazzer_initialize")
+            try {
+                // Calls JNI_OnLoad_jazzer_initialize in the driver, which registers the native methods.
+                System.loadLibrary("jazzer_initialize")
+            } catch (_: UnsatisfiedLinkError) {
+                // Make it possible to use (parts of) the agent without the driver.
+            }
         }
     }
 }
