@@ -238,11 +238,13 @@ RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
     if (dedup_token != 0 && FLAGS_keep_going > 1 &&
         std::find(ignore_tokens_.cbegin(), ignore_tokens_.cend(),
                   dedup_token) != ignore_tokens_.end()) {
+      env.DeleteLocalRef(finding);
       return RunResult::kOk;
     } else {
       ignore_tokens_.push_back(dedup_token);
       std::cout << std::endl;
       std::cerr << "== Java Exception: " << getStackTrace(finding);
+      env.DeleteLocalRef(finding);
       if (FLAGS_dedup) {
         std::cout << "DEDUP_TOKEN: " << std::hex << std::setfill('0')
                   << std::setw(16) << dedup_token << std::endl;
@@ -270,9 +272,12 @@ jthrowable FuzzTargetRunner::GetFinding() const {
   if (auto reported_finding =
           (jthrowable)env.GetStaticObjectField(jazzer_, last_finding_);
       reported_finding != nullptr) {
+    env.DeleteLocalRef(unprocessed_finding);
     unprocessed_finding = reported_finding;
   }
-  return preprocessException(unprocessed_finding);
+  jthrowable processed_finding = preprocessException(unprocessed_finding);
+  env.DeleteLocalRef(unprocessed_finding);
+  return processed_finding;
 }
 
 void FuzzTargetRunner::DumpReproducer(const uint8_t *data, std::size_t size) {
@@ -329,6 +334,7 @@ std::string FuzzTargetRunner::DetectFuzzTargetClass() const {
       env.GetStringUTFChars(jni_fuzz_target_class, nullptr);
   std::string fuzz_target_class = std::string(fuzz_target_class_cstr);
   env.ReleaseStringUTFChars(jni_fuzz_target_class, fuzz_target_class_cstr);
+  env.DeleteLocalRef(jni_fuzz_target_class);
 
   return fuzz_target_class;
 }

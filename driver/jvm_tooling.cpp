@@ -362,12 +362,14 @@ std::string ExceptionPrinter::getStackTrace(jthrowable exception) const {
   }
 
   env.CallVoidMethod(exception, print_stack_trace_method_, print_writer);
+  env.DeleteLocalRef(print_writer);
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     return "";
   }
   auto exception_string_object = reinterpret_cast<jstring>(
       env.CallObjectMethod(string_writer, string_writer_to_string_method_));
+  env.DeleteLocalRef(string_writer);
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     return "";
@@ -376,6 +378,7 @@ std::string ExceptionPrinter::getStackTrace(jthrowable exception) const {
   auto char_pointer = env.GetStringUTFChars(exception_string_object, nullptr);
   std::string exception_string(char_pointer);
   env.ReleaseStringUTFChars(exception_string_object, char_pointer);
+  env.DeleteLocalRef(exception_string_object);
   return exception_string;
 }
 
