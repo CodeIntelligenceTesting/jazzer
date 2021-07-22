@@ -14,8 +14,11 @@
 
 package jaz;
 
+import com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh;
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
 import com.code_intelligence.jazzer.api.Jazzer;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 
 /**
  * A honeypot class that reports an appropriate finding on any interaction with one of its methods
@@ -93,5 +96,12 @@ public class Zer implements java.io.Serializable {
     // stack trace prerecorded in the static initializer.
     Jazzer.reportFindingFromHook(staticInitializerCause);
     super.finalize();
+  }
+
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    Jazzer.reportFindingFromHook(new FuzzerSecurityIssueHigh("Remote Code Execution\n"
+        + "  Deserialization of arbitrary classes with custom readObject may allow remote\n"
+        + "  code execution depending on the classpath."));
+    in.defaultReadObject();
   }
 }
