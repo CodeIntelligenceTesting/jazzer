@@ -744,7 +744,10 @@ jobject GetRecordingFuzzedDataProviderJavaObject(const JVM &jvm) {
     env.ExceptionDescribe();
     exit(1);
   }
-  return env.NewGlobalRef(local_ref);
+  // This global reference is deleted in SerializeRecordingFuzzedDataProvider.
+  jobject global_ref = env.NewGlobalRef(local_ref);
+  env.DeleteLocalRef(local_ref);
+  return global_ref;
 }
 
 std::string SerializeRecordingFuzzedDataProvider(const JVM &jvm,
@@ -758,15 +761,17 @@ std::string SerializeRecordingFuzzedDataProvider(const JVM &jvm,
                             true);
   auto serialized_recorder =
       (jstring)env.CallStaticObjectMethod(java_class, java_serialize, recorder);
+  env.DeleteLocalRef(java_class);
+  env.DeleteGlobalRef(recorder);
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     exit(1);
   }
-  env.DeleteGlobalRef(recorder);
   const char *serialized_recorder_cstr =
       env.GetStringUTFChars(serialized_recorder, nullptr);
   std::string out(serialized_recorder_cstr);
   env.ReleaseStringUTFChars(serialized_recorder, serialized_recorder_cstr);
+  env.DeleteLocalRef(serialized_recorder);
   return out;
 }
 }  // namespace jazzer
