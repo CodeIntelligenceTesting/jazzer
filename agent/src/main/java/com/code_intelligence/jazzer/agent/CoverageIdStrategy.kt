@@ -19,6 +19,7 @@ import java.nio.channels.FileChannel
 import java.nio.channels.FileLock
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import java.util.UUID
 
 /**
  * Indicates a fatal failure to generate synchronized coverage IDs.
@@ -90,6 +91,7 @@ private fun FileChannel.append(string: String) {
  * them across multiple agents.
  */
 internal class SynchronizedCoverageIdStrategy(private val idSyncFile: Path) : CoverageIdStrategy {
+    val uuid: UUID = UUID.randomUUID()
     var idFileLock: FileLock? = null
 
     var cachedFirstId: Int? = null
@@ -125,7 +127,9 @@ internal class SynchronizedCoverageIdStrategy(private val idSyncFile: Path) : Co
                 .filterNot { it.isBlank() }
                 .map { line ->
                     val parts = line.split(':')
-                    check(parts.size == 3) { "Expected ID file line to be of the form  '<class name>:<first ID>:<num IDs>', got '$line'" }
+                    check(parts.size == 4) {
+                        "Expected ID file line to be of the form  '<class name>:<first ID>:<num IDs>:<uuid>', got '$line'"
+                    }
                     val lineClassName = parts[0]
                     val lineFirstId = parts[1].toInt()
                     check(lineFirstId >= 0) { "Negative first ID in line: $line" }
@@ -181,7 +185,7 @@ internal class SynchronizedCoverageIdStrategy(private val idSyncFile: Path) : Co
             } else {
                 // We are the first to instrument this class and should record the number of IDs in the sync file.
                 check(cachedFirstId != null)
-                localIdFileLock.channel().append("$cachedClassName:$cachedFirstId:$idCount\n")
+                localIdFileLock.channel().append("$cachedClassName:$cachedFirstId:$idCount:$uuid\n")
                 localIdFileLock.channel().force(true)
             }
             idFileLock = null
