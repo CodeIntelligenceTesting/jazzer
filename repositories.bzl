@@ -58,8 +58,8 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "io_bazel_rules_kotlin",
-        sha256 = "eeae65f973b70896e474c57aa7681e444d7a5446d9ec0a59bb88c59fc263ff62",
-        url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.5.0-alpha-3/rules_kotlin_release.tgz",
+        sha256 = "58edd86f0f3c5b959c54e656b8e7eb0b0becabd412465c37a2078693c2571f7f",
+        url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.5.0-beta-3/rules_kotlin_release.tgz",
     )
 
     maybe(
