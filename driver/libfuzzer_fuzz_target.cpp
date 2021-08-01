@@ -26,12 +26,16 @@ const char *__asan_default_options() {
   // LeakSanitizer is not yet supported as it reports too many false positives
   // due to how the JVM GC works.
   // We use a distinguished exit code to recognize ASan crashes in tests.
-  return "detect_leaks=0,exitcode=76";
+  // Also specify abort_on_error=0 explicitly since ASan aborts rather than
+  // exits on macOS by default, which would cause our exit code to be ignored.
+  return "abort_on_error=0,detect_leaks=0,exitcode=76";
 }
 
 const char *__ubsan_default_options() {
   // We use a distinguished exit code to recognize UBSan crashes in tests.
-  return "exitcode=76";
+  // Also specify abort_on_error=0 explicitly since UBSan aborts rather than
+  // exits on macOS by default, which would cause our exit code to be ignored.
+  return "abort_on_error=0,exitcode=76";
 }
 }
 
