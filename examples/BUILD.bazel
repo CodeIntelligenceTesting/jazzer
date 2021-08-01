@@ -18,10 +18,11 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExampleFuzzerWithNative.java",
     ],
-    native_libs = ["//examples/src/main/native:native_asan"],
+    native_libs = [
+        "//examples/src/main/native:libnative_asan.dylib",
+        "//examples/src/main/native:libnative_asan.so",
+    ],
     sanitizer = "address",
-    # Bazel creates shared libraries with an incorrect extension on macOS.
-    tags = ["broken-on-darwin"],
     target_class = "com.example.ExampleFuzzerWithNative",
 )
 
@@ -30,10 +31,11 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExampleFuzzerWithNative.java",
     ],
-    native_libs = ["//examples/src/main/native:native_ubsan"],
+    native_libs = [
+        "//examples/src/main/native:libnative_ubsan.dylib",
+        "//examples/src/main/native:libnative_ubsan.so",
+    ],
     sanitizer = "undefined",
-    # Bazel creates shared libraries with an incorrect extension on macOS.
-    tags = ["broken-on-darwin"],
     target_class = "com.example.ExampleFuzzerWithNative",
 )
 
