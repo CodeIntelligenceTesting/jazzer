@@ -166,6 +166,10 @@ Jazzer has so far uncovered the following vulnerabilities and bugs:
 
 | Project | Bug      | Status | CVE | found by |
 | ------- | -------- | ------ | --- | -------- |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | Infinite loop when loading a crafted 7z | fixed | [CVE-2021-35515](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-35515) | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `OutOfMemoryError` when loading a crafted 7z | fixed | [CVE-2021-35516](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-35516) | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | Infinite loop when loading a crafted TAR | fixed | [CVE-2021-35517](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-35517) | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `OutOfMemoryError` when loading a crafted ZIP | fixed | [CVE-2021-36090](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-36090) | [Code Intelligence](https://code-intelligence.com) |
 | [Apache/PDFBox](https://pdfbox.apache.org/) | Infinite loop when loading a crafted PDF | fixed | [CVE-2021-27807](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-27807) | [Code Intelligence](https://code-intelligence.com) |
 | [Apache/PDFBox](https://pdfbox.apache.org/) | OutOfMemoryError when loading a crafted PDF | fixed | [CVE-2021-27906](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-27906) | [Code Intelligence](https://code-intelligence.com) |
 | [netplex/json-smart-v1](https://github.com/netplex/json-smart-v1) <br/> [netplex/json-smart-v2](https://github.com/netplex/json-smart-v2) | `JSONParser#parse` throws an undeclared exception | [fixed](https://github.com/netplex/json-smart-v2/issues/60) | [CVE-2021-27568](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-27568) | [@GanbaruTobi](https://github.com/GanbaruTobi) |
