@@ -24,11 +24,26 @@ cc_test(
 )
 
 cc_library(
+    name = "fuzzed_data_provider",
+    srcs = [
+        "fuzzed_data_provider.cpp",
+    ],
+    hdrs = [
+        "fuzzed_data_provider.h",
+    ],
+    deps = [
+        "@bazel_tools//tools/jdk:jni",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_library(
     name = "jvm_tooling_lib",
     srcs = [
         "coverage_tracker.cpp",
         "fuzz_target_runner.cpp",
-        "fuzzed_data_provider.cpp",
+        "java_reproducer.cpp",
+        "java_reproducer.h",
         "java_reproducer_templates.h",
         "jvm_tooling.cpp",
         "libfuzzer_callbacks.cpp",
@@ -58,6 +73,7 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":fuzzed_data_provider",
         ":sanitizer_hooks_with_pc",
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/strings",

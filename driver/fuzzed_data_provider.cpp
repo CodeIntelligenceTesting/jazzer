@@ -45,8 +45,6 @@
 
 #include "fuzzed_data_provider.h"
 
-#include <jni.h>
-
 #include <algorithm>
 #include <cstdint>
 #include <string>
@@ -54,14 +52,8 @@
 #include <vector>
 
 #include "absl/strings/str_format.h"
-#include "jvm_tooling.h"
 
 namespace {
-
-const char kFuzzedDataProviderImplClass[] =
-    "com/code_intelligence/jazzer/runtime/FuzzedDataProviderImpl";
-const char kRecordingFuzzedDataProviderClass[] =
-    "com/code_intelligence/jazzer/runtime/RecordingFuzzedDataProvider";
 
 const uint8_t *gDataPtr = nullptr;
 std::size_t gRemainingBytes = 0;
@@ -703,10 +695,13 @@ const jint kNumFuzzedDataMethods =
 
 namespace jazzer {
 
-void SetUpFuzzedDataProvider(const JVM &jvm) {
-  auto &env = jvm.GetEnv();
+void SetUpFuzzedDataProvider(JNIEnv &env) {
   jclass fuzzed_data_provider_class =
-      jvm.FindClass(kFuzzedDataProviderImplClass);
+      env.FindClass(kFuzzedDataProviderImplClass);
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
+    throw std::runtime_error("failed to find FuzzedDataProviderImpl class");
+  }
   env.RegisterNatives(fuzzed_data_provider_class, kFuzzedDataMethods,
                       kNumFuzzedDataMethods);
   if (env.ExceptionCheck()) {
@@ -719,59 +714,5 @@ void SetUpFuzzedDataProvider(const JVM &jvm) {
 void FeedFuzzedDataProvider(const uint8_t *data, std::size_t size) {
   gDataPtr = data;
   gRemainingBytes = size;
-}
-
-jobject GetFuzzedDataProviderJavaObject(const JVM &jvm) {
-  static jobject java_object = nullptr;
-  if (java_object == nullptr) {
-    jclass java_class = jvm.FindClass(kFuzzedDataProviderImplClass);
-    jmethodID java_constructor = jvm.GetMethodID(java_class, "<init>", "()V");
-    jobject local_ref = jvm.GetEnv().NewObject(java_class, java_constructor);
-    // We leak a global reference here as it will be used until JVM exit.
-    java_object = jvm.GetEnv().NewGlobalRef(local_ref);
-  }
-  return java_object;
-}
-
-jobject GetRecordingFuzzedDataProviderJavaObject(const JVM &jvm) {
-  auto &env = jvm.GetEnv();
-  jclass java_class = jvm.FindClass(kRecordingFuzzedDataProviderClass);
-  jmethodID java_make_proxy = jvm.GetStaticMethodID(
-      java_class, "makeFuzzedDataProviderProxy",
-      "()Lcom/code_intelligence/jazzer/api/FuzzedDataProvider;", true);
-  jobject local_ref = env.CallStaticObjectMethod(java_class, java_make_proxy);
-  if (env.ExceptionCheck()) {
-    env.ExceptionDescribe();
-    exit(1);
-  }
-  // This global reference is deleted in SerializeRecordingFuzzedDataProvider.
-  jobject global_ref = env.NewGlobalRef(local_ref);
-  env.DeleteLocalRef(local_ref);
-  return global_ref;
-}
-
-std::string SerializeRecordingFuzzedDataProvider(const JVM &jvm,
-                                                 jobject recorder) {
-  auto &env = jvm.GetEnv();
-  jclass java_class = jvm.FindClass(kRecordingFuzzedDataProviderClass);
-  jmethodID java_serialize =
-      jvm.GetStaticMethodID(java_class, "serializeFuzzedDataProviderProxy",
-                            "(Lcom/code_intelligence/jazzer/api/"
-                            "FuzzedDataProvider;)Ljava/lang/String;",
-                            true);
-  auto serialized_recorder =
-      (jstring)env.CallStaticObjectMethod(java_class, java_serialize, recorder);
-  env.DeleteLocalRef(java_class);
-  env.DeleteGlobalRef(recorder);
-  if (env.ExceptionCheck()) {
-    env.ExceptionDescribe();
-    exit(1);
-  }
-  const char *serialized_recorder_cstr =
-      env.GetStringUTFChars(serialized_recorder, nullptr);
-  std::string out(serialized_recorder_cstr);
-  env.ReleaseStringUTFChars(serialized_recorder, serialized_recorder_cstr);
-  env.DeleteLocalRef(serialized_recorder);
-  return out;
 }
 }  // namespace jazzer
