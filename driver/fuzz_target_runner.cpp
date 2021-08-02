@@ -31,6 +31,7 @@
 #include "fuzzed_data_provider.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
+#include "java_reproducer.h"
 #include "java_reproducer_templates.h"
 #include "utils.h"
 
@@ -175,7 +176,7 @@ FuzzTargetRunner::FuzzTargetRunner(
   if (FLAGS_hooks && !FLAGS_coverage_report.empty()) {
     CoverageTracker::RecordInitialCoverage(env);
   }
-  SetUpFuzzedDataProvider(jvm_);
+  SetUpFuzzedDataProvider(jvm_.GetEnv());
 
   // Parse a comma-separated list of hex dedup tokens.
   std::vector<std::string> str_ignore_tokens =

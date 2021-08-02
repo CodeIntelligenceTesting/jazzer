@@ -30,25 +30,15 @@
 #include <utility>
 #include <vector>
 
-#include "jvm_tooling.h"
-
 namespace jazzer {
 
+constexpr char kFuzzedDataProviderImplClass[] =
+    "com/code_intelligence/jazzer/runtime/FuzzedDataProviderImpl";
+
 // Registers the native methods in FuzzedDataProvider.
-void SetUpFuzzedDataProvider(const JVM &jvm);
+void SetUpFuzzedDataProvider(JNIEnv &env);
 
 // Feed the FuzzedDataProvider with a new data buffer. The buffer is accessed
 // by native code and not copied into the JVM, so this is cheap to call.
 void FeedFuzzedDataProvider(const uint8_t *data, std::size_t size);
-
-// Gets the single global reference to a Java FuzzedDataProvider object. The
-// object itself doesn't hold any state and only exists to make the UX better by
-// providing it as an argument to the fuzz target instead of relying on static
-// calls.
-jobject GetFuzzedDataProviderJavaObject(const JVM &jvm);
-
-jobject GetRecordingFuzzedDataProviderJavaObject(const JVM &jvm);
-
-std::string SerializeRecordingFuzzedDataProvider(const JVM &jvm,
-                                                 jobject recorder);
 }  // namespace jazzer
