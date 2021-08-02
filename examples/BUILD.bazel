@@ -150,6 +150,36 @@ java_fuzz_target_test(
     ],
 )
 
+java_binary(
+    name = "JsonSanitizerDenylistCrash",
+    args = [
+        "com.example.JsonSanitizerDenylistFuzzer",
+        "$(location :json_sanitizer_denylist_crash)",
+    ],
+    data = [
+        ":json_sanitizer_denylist_crash",
+    ],
+    main_class = "com.code_intelligence.jazzer.replay.Replayer",
+    runtime_deps = [
+        ":JsonSanitizerDenylistFuzzer_target_deploy.jar",
+        "//agent/src/main/java/com/code_intelligence/jazzer/replay:Replayer_deploy.jar",
+    ],
+)
+
+sh_test(
+    name = "JsonSanitizerDenylistCrashTest",
+    srcs = ["check_for_finding.sh"],
+    args = [
+        "$(location :JsonSanitizerDenylistCrash)",
+        "com.example.JsonSanitizerDenylistFuzzer",
+        "$(location :json_sanitizer_denylist_crash)",
+    ],
+    data = [
+        ":JsonSanitizerDenylistCrash",
+        ":json_sanitizer_denylist_crash",
+    ],
+)
+
 java_fuzz_target_test(
     name = "JsonSanitizerIdempotenceFuzzer",
     srcs = [

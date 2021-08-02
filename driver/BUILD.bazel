@@ -1,10 +1,5 @@
 load("//bazel:cc.bzl", "cc_17_library")
 
-# None of the targets in this package should be built into shared objects. By
-# disabling the supports_pic feature, we reduce build time otherwise spent on
-# .pic.o files.
-package(features = ["-supports_pic"])
-
 cc_library(
     name = "sanitizer_hooks_with_pc",
     srcs = ["sanitizer_hooks_with_pc.cpp"],
@@ -31,9 +26,12 @@ cc_library(
     hdrs = [
         "fuzzed_data_provider.h",
     ],
+    visibility = [
+        "//agent/src/main/native/com/code_intelligence/jazzer/replay:__pkg__",
+    ],
     deps = [
-        "@bazel_tools//tools/jdk:jni",
         "@com_google_absl//absl/strings:str_format",
+        "@fmeum_rules_jni//jni",
     ],
 )
 

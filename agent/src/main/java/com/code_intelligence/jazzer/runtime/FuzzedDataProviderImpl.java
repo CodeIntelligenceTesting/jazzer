@@ -16,8 +16,8 @@ package com.code_intelligence.jazzer.runtime;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 
-class FuzzedDataProviderImpl implements FuzzedDataProvider {
-  FuzzedDataProviderImpl() {}
+public class FuzzedDataProviderImpl implements FuzzedDataProvider {
+  public FuzzedDataProviderImpl() {}
 
   @Override public native boolean consumeBoolean();
 
