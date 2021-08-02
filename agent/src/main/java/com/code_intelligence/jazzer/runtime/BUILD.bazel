@@ -1,13 +1,30 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
+java_library(
+    name = "fuzzed_data_provider",
+    srcs = [
+        "FuzzedDataProviderImpl.java",
+    ],
+    visibility = ["//agent/src/main/java/com/code_intelligence/jazzer/replay:__pkg__"],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+    ],
+)
+
 kt_jvm_library(
     name = "runtime",
-    srcs = glob([
-        "*.java",
-        "*.kt",
-    ]),
+    srcs = glob(
+        [
+            "*.java",
+            "*.kt",
+        ],
+        exclude = [
+            "FuzzedDataProviderImpl.java",
+        ],
+    ),
     visibility = ["//visibility:public"],
     deps = [
+        ":fuzzed_data_provider",
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "//agent/src/main/java/com/code_intelligence/jazzer/utils",
     ],
