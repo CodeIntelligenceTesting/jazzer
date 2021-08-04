@@ -84,6 +84,9 @@ Target //:jazzer_release up-to-date:
 
 This will print the path of a `jazzer_release.tar.gz` archive that contains the same binaries that would be part of a release.
 
+The build may fail with the clang shipped with Xcode. If you encounter issues during the build, add `--config=toolchain`
+right after `run` or `build` in the `bazelisk` commands above to use a checked-in toolchain that is known to work.
+
 ### Using the provided binaries
 
 Binary releases are available under [Releases](https://github.com/CodeIntelligenceTesting/jazzer/releases) and are built

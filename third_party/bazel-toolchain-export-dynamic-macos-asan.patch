@@ -1,0 +1,21 @@
+diff --git toolchain/BUILD.tpl toolchain/BUILD.tpl
+index bc9280f..f4bfa3d 100644
+--- toolchain/BUILD.tpl
++++ toolchain/BUILD.tpl
+@@ -126,6 +126,7 @@ filegroup(
+         [
+             "lib/lib*.a",
+             "lib/clang/%{llvm_version}/lib/**/*.a",
++            "lib/clang/%{llvm_version}/lib/**/*.dylib",
+         ],
+         exclude = [
+             "lib/libLLVM*.a",
+@@ -216,3 +217,8 @@ filegroup(
+         ":linker_components",
+     ],
+ )
++
++cc_import(
++    name = "macos_asan_dynamic",
++    shared_library = "lib/clang/%{llvm_version}/lib/darwin/libclang_rt.asan_osx_dynamic.dylib",
++)

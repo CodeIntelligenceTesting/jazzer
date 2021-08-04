@@ -1,4 +1,13 @@
-exports_files([
-    "gflags-use-double-dash-args.patch",
-    "jacoco-make-probe-inserter-subclassable.patch",
-])
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+
+bool_flag(
+    name = "toolchain",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "uses_toolchain",
+    flag_values = {
+        ":toolchain": "true",
+    },
+)

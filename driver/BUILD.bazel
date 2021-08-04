@@ -84,6 +84,16 @@ cc_binary(
     deps = [":driver_lib"],
 )
 
+alias(
+    name = "using_toolchain_on_osx",
+    actual = select({
+        "//third_party:uses_toolchain": "@platforms//os:osx",
+        # In order to achieve AND semantics, reference a setting that is known
+        # not to apply.
+        "//conditions:default": "//third_party:uses_toolchain",
+    }),
+)
+
 cc_binary(
     name = "jazzer_driver_asan",
     data = [
@@ -91,10 +101,16 @@ cc_binary(
     ],
     linkopts = [
         "-fsanitize=address",
+        "-static-libsan",
         "-rdynamic",
     ],
     visibility = ["//visibility:public"],
-    deps = [":driver_lib"],
+    deps = [":driver_lib"] + select({
+        # There is no static ASan runtime on macOS, so link to the dynamic
+        # runtime library if on macOS and using the toolchain.
+        ":using_toolchain_on_osx": ["@llvm_toolchain//:macos_asan_dynamic"],
+        "//conditions:default": [],
+    }),
 )
 
 cc_binary(
@@ -104,6 +120,8 @@ cc_binary(
     ],
     linkopts = [
         "-fsanitize=undefined",
+        # Link UBSan statically, even on macOS.
+        "-static-libsan",
         "-rdynamic",
     ],
     visibility = ["//visibility:public"],
