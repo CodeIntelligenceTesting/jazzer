@@ -28,13 +28,17 @@ public class Crash_$0 {
     public static void main(String[] args) {
         ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
         try {
-            Method fuzzerInitialize = $2.class.getDeclaredMethod("fuzzerInitialize");
-            if (fuzzerInitialize.getParameterTypes().length == 0) {
-                fuzzerInitialize.invoke(null);
-            } else {
-                fuzzerInitialize.invoke(null, (Object) args);
-            }
+            Method fuzzerInitialize = $2.class.getMethod("fuzzerInitialize");
+            fuzzerInitialize.invoke(null);
         } catch (NoSuchMethodException ignored) {
+            try {
+                Method fuzzerInitialize = $2.class.getMethod("fuzzerInitialize", String[].class);
+                fuzzerInitialize.invoke(null, (Object) args);
+            } catch (NoSuchMethodException ignored) {
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
         } catch (IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
             System.exit(1);
