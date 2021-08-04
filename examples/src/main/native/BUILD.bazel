@@ -9,9 +9,6 @@ cc_shared_library(
     copts = [
         "-fsanitize=fuzzer-no-link,address",
     ],
-    linkopts = [
-        "-fsanitize=fuzzer-no-link,address",
-    ],
     visibility = ["//examples:__pkg__"],
     deps = [
         "@bazel_tools//tools/jdk:jni",
@@ -29,9 +26,6 @@ cc_shared_library(
         "-fno-sanitize-recover=all",
         # Workaround for https://github.com/bazelbuild/bazel/issues/11122.
         "-fno-sanitize=vptr,function",
-    ],
-    linkopts = [
-        "-fsanitize=fuzzer-no-link,undefined",
     ],
     visibility = ["//examples:__pkg__"],
     deps = [
