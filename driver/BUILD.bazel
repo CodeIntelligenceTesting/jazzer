@@ -50,13 +50,13 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":sanitizer_hooks_with_pc",
-        "//third_party/jni:jni_libs",
         "@bazel_tools//tools/cpp/runfiles",
         "@bazel_tools//tools/jdk:jni",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_glog//:glog",
         "@jazzer_com_github_gflags_gflags//:gflags",
+        "@jazzer_libjvm//:libjvm",
     ],
 )
 
