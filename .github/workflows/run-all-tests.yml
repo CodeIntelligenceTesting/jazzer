@@ -23,10 +23,6 @@ jobs:
           - os: macos-latest
             arch: "darwin"
             cache: "/private/var/tmp"
-          - jdk: 8
-            jdk8_flag: "--//third_party/jni:jdk_8"
-          - jdk: 15
-            jdk8_flag: "--no//third_party/jni:jdk_8"
 
     steps:
       - uses: actions/checkout@v2
@@ -48,10 +44,10 @@ jobs:
         run: curl -LO https://github.com/bazelbuild/bazelisk/releases/download/v1.7.5/bazelisk-darwin-amd64 && chmod +x bazelisk-darwin-amd64
 
       - name: Build
-        run: ./bazelisk-${{ matrix.arch }}-amd64 build --config=ci --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }} --disk_cache=${{ matrix.cache }} --java_runtime_version=localjdk_${{ matrix.jdk }} ${{ matrix.jdk8_flag }} //...
+        run: ./bazelisk-${{ matrix.arch }}-amd64 build --config=ci --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }} --disk_cache=${{ matrix.cache }} --java_runtime_version=localjdk_${{ matrix.jdk }} //...
 
       - name: Test
-        run: ./bazelisk-${{ matrix.arch }}-amd64 test --config=ci --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }} --disk_cache=${{ matrix.cache }} --java_runtime_version=localjdk_${{ matrix.jdk }} ${{ matrix.jdk8_flag }} --test_tag_filters="-broken-on-${{ matrix.arch }}" //...
+        run: ./bazelisk-${{ matrix.arch }}-amd64 test --config=ci --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }} --disk_cache=${{ matrix.cache }} --java_runtime_version=localjdk_${{ matrix.jdk }} --test_tag_filters="-broken-on-${{ matrix.arch }}" //...
 
       - name: Upload test logs
         if: always()

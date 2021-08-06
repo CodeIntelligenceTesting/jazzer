@@ -16,6 +16,7 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
+load("//bazel:local_jdk_libjvm.bzl", "local_jdk_libjvm")
 
 def jazzer_dependencies():
     maybe(
@@ -127,4 +128,9 @@ def jazzer_dependencies():
         sha256 = "1c6fd44cf6ea5f70f79fba94a86ff3cd010b9e25f2166b7d55143acd21ce6f08",
         strip_prefix = "llvm-project-jazzer-b9c07e9c1e75857901808c13101c909104c413a8",
         url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/b9c07e9c1e75857901808c13101c909104c413a8.tar.gz",
+    )
+
+    maybe(
+        local_jdk_libjvm,
+        name = "jazzer_libjvm",
     )
