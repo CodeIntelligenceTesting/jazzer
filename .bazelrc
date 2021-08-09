@@ -4,6 +4,7 @@ build -c opt
 # C/C++
 build --cxxopt='-std=c++17'
 build --action_env=CC=clang
+build --incompatible_enable_cc_toolchain_resolution
 # Requires a relatively modern clang.
 build:ci --features=layering_check
 
@@ -12,18 +13,21 @@ build --java_language_version=8
 build --tool_java_language_version=9
 
 # Toolchain
-build:toolchain --incompatible_enable_cc_toolchain_resolution
 build:toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-linux,@llvm_toolchain//:cc-toolchain-darwin
 build:toolchain --//third_party:toolchain
 
-# RBE
-build:ci --config=toolchain
+# CI tests (not using the toolchain to test OSS-Fuzz compatibility)
 build:ci --bes_results_url=https://app.buildbuddy.io/invocation/
 build:ci --bes_backend=grpcs://cloud.buildbuddy.io
 build:ci --remote_cache=grpcs://cloud.buildbuddy.io
 build:ci --remote_timeout=3600
 
-# Maven publishing
+# Release
+build:release --config=toolchain
+build:release --config=ci
+
+# Maven publishing (local only, requires GPG signature)
+build:maven --config=toolchain
 build:maven --stamp
 build:maven --define "maven_repo=https://oss.sonatype.org/service/local/staging/deploy/maven2"
 build:maven --java_runtime_version=localjdk_8
