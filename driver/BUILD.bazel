@@ -128,6 +128,7 @@ cc_binary(
         "-fsanitize=undefined",
         # Link UBSan statically, even on macOS.
         "-static-libsan",
+        "-fsanitize-link-c++-runtime",
         "-rdynamic",
     ] + select({
         "@platforms//os:linux": ["-fuse-ld=lld"],
