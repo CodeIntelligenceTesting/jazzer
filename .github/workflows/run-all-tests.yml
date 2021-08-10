@@ -22,7 +22,7 @@ jobs:
             cache: "/home/runner/.cache/bazel-disk"
           - os: macos-latest
             arch: "darwin"
-            cache: "/private/var/tmp"
+            cache: "/private/var/tmp/bazel-disk"
 
     steps:
       - uses: actions/checkout@v2
@@ -33,7 +33,6 @@ jobs:
           java-version: ${{ matrix.jdk }}
 
       - name: Mount Bazel disk cache
-        if: matrix.arch != 'darwin'
         uses: actions/cache@v2
         with:
           path: ${{ matrix.cache }}
