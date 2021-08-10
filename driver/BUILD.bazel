@@ -79,7 +79,10 @@ cc_binary(
     ],
     linkopts = [
         "-rdynamic",
-    ],
+    ] + select({
+        "@platforms//os:linux": ["-fuse-ld=lld"],
+        "//conditions:default": [],
+    }),
     visibility = ["//visibility:public"],
     deps = [":driver_lib"],
 )
@@ -103,7 +106,10 @@ cc_binary(
         "-fsanitize=address",
         "-static-libsan",
         "-rdynamic",
-    ],
+    ] + select({
+        "@platforms//os:linux": ["-fuse-ld=lld"],
+        "//conditions:default": [],
+    }),
     visibility = ["//visibility:public"],
     deps = [":driver_lib"] + select({
         # There is no static ASan runtime on macOS, so link to the dynamic
@@ -123,7 +129,10 @@ cc_binary(
         # Link UBSan statically, even on macOS.
         "-static-libsan",
         "-rdynamic",
-    ],
+    ] + select({
+        "@platforms//os:linux": ["-fuse-ld=lld"],
+        "//conditions:default": [],
+    }),
     visibility = ["//visibility:public"],
     deps = [":driver_lib"],
 )
