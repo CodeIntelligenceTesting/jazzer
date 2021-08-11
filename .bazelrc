@@ -16,12 +16,6 @@ build --tool_java_language_version=9
 build:toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-linux,@llvm_toolchain//:cc-toolchain-darwin
 build:toolchain --//third_party:toolchain
 
-# CI tests (not using the toolchain to test OSS-Fuzz compatibility)
-build:ci --bes_results_url=https://app.buildbuddy.io/invocation/
-build:ci --bes_backend=grpcs://cloud.buildbuddy.io
-build:ci --remote_cache=grpcs://cloud.buildbuddy.io
-build:ci --remote_timeout=3600
-
 # Release
 build:release --config=toolchain
 build:release --config=ci
