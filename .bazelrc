@@ -3,7 +3,7 @@ build -c opt
 
 # C/C++
 build --cxxopt='-std=c++17'
-build --action_env=CC=clang
+build --repo_env=CC=clang
 build --incompatible_enable_cc_toolchain_resolution
 # Requires a relatively modern clang.
 build:ci --features=layering_check
