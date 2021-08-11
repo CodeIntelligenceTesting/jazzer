@@ -56,7 +56,8 @@ _cc_17_library = rule(
 # sets this flag for all build commands, but is needed when Jazzer is included
 # as an external workspace.
 def cc_17_library(name, visibility = None, **kwargs):
-    library_name = name + "_original_"
+    library_name = name + "_original_do_not_use_"
+    kwargs.setdefault("tags", []).append("manual")
     native.cc_library(
         name = library_name,
         visibility = ["//visibility:private"],

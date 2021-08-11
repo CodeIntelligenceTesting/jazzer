@@ -47,6 +47,10 @@ cc_library(
     # Needs to be linked statically for JNI_OnLoad_jazzer_initialize to be found
     # by the JVM.
     linkstatic = True,
+    tags = [
+        # Should be built through the cc_17_library driver_lib.
+        "manual",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":sanitizer_hooks_with_pc",
