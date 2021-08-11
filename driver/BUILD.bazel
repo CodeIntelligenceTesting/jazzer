@@ -5,6 +5,7 @@ cc_library(
     name = "sanitizer_hooks_with_pc",
     srcs = ["sanitizer_hooks_with_pc.cpp"],
     hdrs = ["sanitizer_hooks_with_pc.h"],
+    linkstatic = True,
 )
 
 cc_test(
@@ -69,6 +70,7 @@ cc_17_library(
     srcs = [
         "libfuzzer_fuzz_target.cpp",
     ],
+    linkstatic = True,
     deps = [
         ":jvm_tooling_lib",
         "@jazzer_libfuzzer//:libFuzzer",
@@ -188,6 +190,7 @@ cc_test(
 cc_library(
     name = "test_main",
     srcs = ["test_main.cpp"],
+    linkstatic = True,
     deps = [
         "@googletest//:gtest",
         "@jazzer_com_github_gflags_gflags//:gflags",

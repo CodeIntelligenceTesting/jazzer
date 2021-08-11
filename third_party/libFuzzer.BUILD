@@ -17,5 +17,6 @@ cc_library(
         "-std=c++11",
     ],
     alwayslink = True,
+    linkstatic = True,
     visibility = ["//visibility:public"],
 )
