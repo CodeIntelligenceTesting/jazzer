@@ -2,6 +2,9 @@ build --incompatible_strict_action_env
 build -c opt
 
 # C/C++
+# Only relevant for tests and their dependencies. Everything that external
+# repositories can reference must build without this, e.g., by using a
+# transition.
 build --cxxopt='-std=c++17'
 build --repo_env=CC=clang
 build --incompatible_enable_cc_toolchain_resolution
