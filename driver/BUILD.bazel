@@ -91,7 +91,7 @@ cc_binary(
     linkopts = [
         "-rdynamic",
     ] + select({
-        "@platforms//os:linux": ["-fuse-ld=lld"],
+        "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],
@@ -118,7 +118,7 @@ cc_binary(
         "-static-libsan",
         "-rdynamic",
     ] + select({
-        "@platforms//os:linux": ["-fuse-ld=lld"],
+        "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],
@@ -142,7 +142,7 @@ cc_binary(
         "-fsanitize-link-c++-runtime",
         "-rdynamic",
     ] + select({
-        "@platforms//os:linux": ["-fuse-ld=lld"],
+        "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],

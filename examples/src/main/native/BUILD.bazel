@@ -10,7 +10,7 @@ cc_shared_library(
         "-fsanitize=fuzzer-no-link,address",
     ],
     linkopts = select({
-        "@platforms//os:linux": ["-fuse-ld=lld"],
+        "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
     visibility = ["//examples:__pkg__"],
@@ -30,7 +30,7 @@ cc_shared_library(
         "-fno-sanitize-recover=all",
     ],
     linkopts = select({
-        "@platforms//os:linux": ["-fuse-ld=lld"],
+        "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
     visibility = ["//examples:__pkg__"],
