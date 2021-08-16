@@ -81,3 +81,16 @@ alias(
     name = "jazzer-api.publish",
     actual = "//agent/src/main/java/com/code_intelligence/jazzer/api:api_export.publish",
 )
+
+config_setting(
+    name = "clang",
+    flag_values = {"@bazel_tools//tools/cpp:compiler": "clang"},
+)
+
+alias(
+    name = "clang_on_linux",
+    actual = select({
+        ":clang": "@platforms//os:linux",
+        "//conditions:default": ":clang",
+    }),
+)
