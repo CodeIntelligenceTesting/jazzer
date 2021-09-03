@@ -100,7 +100,7 @@ object CoverageRecorder {
 
     private fun Double.format(digits: Int) = "%.${digits}f".format(this)
 
-    private fun dumpJacocoCoverage(coveredIds: Set<Int>): ByteArray? {
+    public fun dumpJacocoCoverage(coveredIds: Set<Int>): ByteArray? {
         // Update the list of covered IDs with the coverage information for the current run.
         updateCoveredIdsWithCoverageMap()
 
