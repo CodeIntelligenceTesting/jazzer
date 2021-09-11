@@ -233,7 +233,8 @@ java_fuzz_target_test(
 java_binary(
     name = "examples",
     create_executable = False,
-    resource_jars = [
+    visibility = ["//visibility:public"],
+    runtime_deps = [
         ":ExampleFuzzer_target_deploy.jar",
         ":ExampleValueProfileFuzzer_target_deploy.jar",
         ":FastJsonFuzzer_target_deploy.jar",
@@ -241,5 +242,4 @@ java_binary(
         ":JpegImageParserFuzzer_target_deploy.jar",
         ":JsonSanitizerDenylistFuzzer_target_deploy.jar",
     ],
-    visibility = ["//visibility:public"],
 )
