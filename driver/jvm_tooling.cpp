@@ -115,6 +115,37 @@ constexpr const char kExceptionUtilsClassName[] =
 
 namespace jazzer {
 
+void DumpJvmStackTraces() {
+  JavaVM *vm;
+  jsize num_vms;
+  JNI_GetCreatedJavaVMs(&vm, 1, &num_vms);
+  if (num_vms != 1) {
+    return;
+  }
+  JNIEnv *env = nullptr;
+  if (vm->AttachCurrentThread(reinterpret_cast<void **>(&env), nullptr) !=
+      JNI_OK) {
+    return;
+  }
+  jclass exceptionUtils = env->FindClass(kExceptionUtilsClassName);
+  if (env->ExceptionCheck()) {
+    env->ExceptionDescribe();
+    return;
+  }
+  jmethodID dumpStack =
+      env->GetStaticMethodID(exceptionUtils, "dumpAllStackTraces", "()V");
+  if (env->ExceptionCheck()) {
+    env->ExceptionDescribe();
+    return;
+  }
+  env->CallStaticVoidMethod(exceptionUtils, dumpStack);
+  if (env->ExceptionCheck()) {
+    env->ExceptionDescribe();
+    return;
+  }
+  // Do not detach as we may be the main thread (but the JVM exits anyway).
+}
+
 std::string dirFromFullPath(const std::string &path) {
   const auto pos = path.rfind(kPathSeparator);
   if (pos != std::string::npos) {
