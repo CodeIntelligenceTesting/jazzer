@@ -25,12 +25,10 @@
 
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
-#include "coverage_tracker.h"
-#include "driver/libfuzzer_callbacks.h"
 #include "fuzz_target_runner.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "signal_handler.h"
+#include "jvm_tooling.h"
 
 using namespace std::string_literals;
 
@@ -64,7 +62,9 @@ extern "C" __attribute__((weak)) int __sanitizer_acquire_crash_state() {
   return true;
 }
 
-extern "C" __attribute__((weak)) void __sanitizer_print_stack_trace() {}
+extern "C" __attribute__((weak)) void __sanitizer_print_stack_trace() {
+  jazzer::DumpJvmStackTraces();
+}
 
 namespace {
 char *additional_arg;

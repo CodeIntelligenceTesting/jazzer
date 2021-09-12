@@ -143,3 +143,24 @@ private fun readJavaFullFinalFlags(): String? {
             .joinToString("\n")
     }
 }
+
+fun dumpAllStackTraces() {
+    System.err.println("\nStack traces of all JVM threads:\n")
+    for ((thread, stack) in Thread.getAllStackTraces()) {
+        System.err.println(thread)
+        // Remove traces of this method and the methods it calls.
+        stack.asList()
+            .asReversed()
+            .takeWhile {
+                !(
+                    it.className == "com.code_intelligence.jazzer.runtime.ExceptionUtils" &&
+                        it.methodName == "dumpAllStackTraces"
+                    )
+            }
+            .asReversed()
+            .forEach { frame ->
+                System.err.println("\tat $frame")
+            }
+        System.err.println()
+    }
+}

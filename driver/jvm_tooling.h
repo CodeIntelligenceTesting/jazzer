@@ -22,6 +22,8 @@
 
 namespace jazzer {
 
+void DumpJvmStackTraces();
+
 // JVM is a thin wrapper around JNI_CreateJavaVM and DestroyJavaVM. The JVM
 // instance is created inside the constructor with some default JNI options
 // + options which can be added to via command line flags.
