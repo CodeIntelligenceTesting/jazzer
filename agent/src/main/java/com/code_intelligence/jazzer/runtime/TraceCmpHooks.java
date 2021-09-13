@@ -108,13 +108,11 @@ final public class TraceCmpHooks {
   regionsMatches5(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean returnValue) {
     if (!returnValue) {
-      int offset = (int) arguments[1];
+      int toffset = (int) arguments[1];
       String other = (String) arguments[2];
       int ooffset = (int) arguments[3];
       int len = (int) arguments[4];
-      String thisPart = ((String) thisObject).substring(offset, offset + len);
-      String otherPart = other.substring(ooffset, ooffset + len);
-      TraceDataFlowNativeCallbacks.traceStrcmp(thisPart, otherPart, 1, hookId);
+      regionMatchesInternal((String) thisObject, toffset, other, ooffset, len, hookId);
     }
   }
 
@@ -124,14 +122,23 @@ final public class TraceCmpHooks {
   regionMatches4(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean returnValue) {
     if (!returnValue) {
-      int offset = (int) arguments[0];
+      int toffset = (int) arguments[0];
       String other = (String) arguments[1];
       int ooffset = (int) arguments[2];
       int len = (int) arguments[3];
-      String thisPart = ((String) thisObject).substring(offset, offset + len);
-      String otherPart = other.substring(ooffset, ooffset + len);
-      TraceDataFlowNativeCallbacks.traceStrcmp(thisPart, otherPart, 1, hookId);
+      regionMatchesInternal((String) thisObject, toffset, other, ooffset, len, hookId);
     }
+  }
+
+  private static void regionMatchesInternal(
+      String thisString, int toffset, String other, int ooffset, int len, int hookId) {
+    if (toffset < 0 || ooffset < 0)
+      return;
+    int cappedThisStringEnd = Math.min(toffset + len, thisString.length());
+    int cappedOtherStringEnd = Math.min(ooffset + len, other.length());
+    String thisPart = thisString.substring(toffset, cappedThisStringEnd);
+    String otherPart = other.substring(ooffset, cappedOtherStringEnd);
+    TraceDataFlowNativeCallbacks.traceStrcmp(thisPart, otherPart, 1, hookId);
   }
 
   @MethodHook(
