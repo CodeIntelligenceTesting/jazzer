@@ -1,18 +1,25 @@
 load("@rules_java//java:defs.bzl", "java_binary")
+load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
 java_binary(
-    name = "jazzer_agent",
+    name = "jazzer_agent_unshaded",
     create_executable = False,
     deploy_manifest_lines = [
         "Premain-Class: com.code_intelligence.jazzer.agent.Agent",
         "Jazzer-Hook-Classes: {}".format(":".join(SANITIZER_CLASSES)),
     ],
-    visibility = ["//visibility:public"],
     runtime_deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/agent:agent_lib",
         "//sanitizers",
     ],
+)
+
+jar_jar(
+    name = "jazzer_agent_deploy",
+    input_jar = "jazzer_agent_unshaded_deploy.jar",
+    rules = "agent_shade_rules",
+    visibility = ["//visibility:public"],
 )
 
 java_binary(
