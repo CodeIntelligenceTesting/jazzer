@@ -90,6 +90,15 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
+        build_file = "@jazzer//third_party:classgraph.BUILD",
+        name = "com_github_classgraph_classgraph",
+        sha256 = "2b7c3930f007e4acca8a50a26957b09a55b2fabd23ed00715516a114ae3f1c1e",
+        strip_prefix = "classgraph-classgraph-4.8.116",
+        url = "https://github.com/classgraph/classgraph/archive/refs/tags/classgraph-4.8.116.tar.gz",
+    )
+
+    maybe(
+        http_archive,
         build_file = "@jazzer//third_party:asm.BUILD",
         name = "jazzer_ow2_asm",
         sha256 = "7b596cc584b241619911e99c5c96366fccd533b1a50b8720c151c2f74b5915e3",

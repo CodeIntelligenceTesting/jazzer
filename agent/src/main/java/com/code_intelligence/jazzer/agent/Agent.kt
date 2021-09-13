@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.agent
 
 import com.code_intelligence.jazzer.instrumentor.ClassNameGlobber
+import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
 import com.code_intelligence.jazzer.runtime.ManifestUtils
@@ -79,6 +80,7 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
         argumentMap["instrumentation_includes"] ?: emptyList(),
         (argumentMap["instrumentation_excludes"] ?: emptyList()) + customHookNames
     )
+    CoverageRecorder.classNameGlobber = classNameGlobber
     val dependencyClassNameGlobber = ClassNameGlobber(
         argumentMap["custom_hook_includes"] ?: emptyList(),
         (argumentMap["custom_hook_excludes"] ?: emptyList()) + customHookNames
