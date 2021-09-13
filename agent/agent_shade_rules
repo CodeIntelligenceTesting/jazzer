@@ -1,0 +1,1 @@
+rule kotlin.** com.code_intelligence.jazzer.third_party.kotlin.@1
