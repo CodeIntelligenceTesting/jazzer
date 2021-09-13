@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.agent
 
+import com.code_intelligence.jazzer.instrumentor.ClassNameGlobber
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
 import com.code_intelligence.jazzer.runtime.ManifestUtils
