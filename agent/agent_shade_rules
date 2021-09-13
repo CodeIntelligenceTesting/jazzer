@@ -1,1 +1,3 @@
 rule kotlin.** com.code_intelligence.jazzer.third_party.kotlin.@1
+rule io.** com.code_intelligence.jazzer.third_party.io.@1
+rule nonapi.** com.code_intelligence.jazzer.third_party.nonapi.@1

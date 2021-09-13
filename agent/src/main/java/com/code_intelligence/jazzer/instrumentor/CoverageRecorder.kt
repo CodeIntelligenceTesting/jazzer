@@ -23,6 +23,7 @@ import com.code_intelligence.jazzer.third_party.jacoco.core.data.ExecutionDataWr
 import com.code_intelligence.jazzer.third_party.jacoco.core.data.SessionInfo
 import com.code_intelligence.jazzer.third_party.jacoco.core.data.SessionInfoStore
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.data.CRC64
+import io.github.classgraph.ClassGraph
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.time.Instant
@@ -32,10 +33,11 @@ private data class InstrumentedClassInfo(
     val classId: Long,
     val initialEdgeId: Int,
     val nextEdgeId: Int,
-    val bytecode: ByteArray
+    val bytecode: ByteArray,
 )
 
 object CoverageRecorder {
+    var classNameGlobber = ClassNameGlobber(emptyList(), emptyList())
     private val instrumentedClassInfo = mutableMapOf<String, InstrumentedClassInfo>()
     private var startTimestamp: Instant? = null
     private val additionalCoverage = mutableSetOf<Int>()
@@ -150,6 +152,7 @@ object CoverageRecorder {
     fun analyzeCoverage(coveredIds: Set<Int>): CoverageBuilder? {
         return try {
             val coverage = CoverageBuilder()
+            analyzeAllUncoveredClasses(coverage)
             val rawExecutionData = dumpJacocoCoverage(coveredIds) ?: return null
             val executionDataStore = ExecutionDataStore()
             val sessionInfoStore = SessionInfoStore()
@@ -173,5 +176,45 @@ object CoverageRecorder {
             e.printStackTrace()
             null
         }
+    }
+
+    /**
+     * Traverses the entire classpath and analyzes all uncovered classes that match the include/exclude pattern.
+     * The returned [CoverageBuilder] will report coverage information for *all* classes on the classpath, not just
+     * those that were loaded while the fuzzer ran.
+     */
+    private fun analyzeAllUncoveredClasses(coverage: CoverageBuilder): CoverageBuilder {
+        val coveredClassNames = instrumentedClassInfo
+            .keys
+            .asSequence()
+            .map { it.replace('/', '.') }
+            .toSet()
+        val emptyExecutionDataStore = ExecutionDataStore()
+        ClassGraph()
+            .enableClassInfo()
+            .ignoreClassVisibility()
+            .rejectPackages(
+                // Always exclude Jazzer-internal packages (including ClassGraph itself) from coverage reports. Classes
+                // from the Java standard library are never traversed.
+                "com.code_intelligence.jazzer.*",
+                "jaz",
+            )
+            .scan().use { result ->
+                result.allClasses
+                    .asSequence()
+                    .filter { classInfo -> classNameGlobber.includes(classInfo.name) }
+                    .filterNot { classInfo -> classInfo.name in coveredClassNames }
+                    .forEach { classInfo ->
+                        classInfo.resource.use { resource ->
+                            EdgeCoverageInstrumentor(0).analyze(
+                                emptyExecutionDataStore,
+                                coverage,
+                                resource.load(),
+                                classInfo.name.replace('.', '/')
+                            )
+                        }
+                    }
+            }
+        return coverage
     }
 }
