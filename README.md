@@ -22,10 +22,20 @@ If you want to learn more about Jazzer and OSS-Fuzz, [watch the FuzzCon 2020 tal
 
 ## Installation
 
-The preferred way to install Jazzer is to compile it from source using [Bazel](https://bazel.build), but binary distributions
-for x64 Linux are also available. Note that these binaries might be outdated as Jazzer follows the "Live at Head" philosophy.
+The preferred way to install Jazzer is to compile it from source using [Bazel](https://bazel.build), but binary distributions for x64 Linux as well as a Docker image are also available.
+Note that these binaries might be outdated as Jazzer follows the "Live at Head" philosophy - you should be able to just checkout the latest commit from `main` and build it.
 
 Support for Jazzer has recently been added to [rules_fuzzing](https://github.com/bazelbuild/rules_fuzzing), the official Bazel rules for fuzzing. See their README for instructions on how to use Jazzer in a Java Bazel project.
+
+### Using Docker
+
+The "distroless" Docker image [cifuzz/jazzer](https://hub.docker.com/r/cifuzz/jazzer) includes Jazzer together with OpenJDK 11. Just mount a directory containing your compiled fuzz target into the container under `/fuzzing` by running:
+
+```sh
+docker run -v path/containing/the/application:/fuzzing cifuzz/jazzer <arguments>
+```
+
+If Jazzer produces a finding, the input that triggered it will be available in the same directory.
 
 ### Using Bazel
 
