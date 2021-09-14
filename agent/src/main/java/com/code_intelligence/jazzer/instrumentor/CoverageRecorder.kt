@@ -100,7 +100,7 @@ object CoverageRecorder {
 
     private fun Double.format(digits: Int) = "%.${digits}f".format(this)
 
-    public fun dumpJacocoCoverage(coveredIds: Set<Int>): ByteArray? {
+    fun dumpJacocoCoverage(coveredIds: Set<Int>): ByteArray? {
         // Update the list of covered IDs with the coverage information for the current run.
         updateCoveredIdsWithCoverageMap()
 
@@ -147,7 +147,7 @@ object CoverageRecorder {
         return outStream.toByteArray()
     }
 
-    private fun analyzeCoverage(coveredIds: Set<Int>): CoverageBuilder? {
+    fun analyzeCoverage(coveredIds: Set<Int>): CoverageBuilder? {
         return try {
             val coverage = CoverageBuilder()
             val rawExecutionData = dumpJacocoCoverage(coveredIds) ?: return null
