@@ -173,37 +173,6 @@ More information on what hooks and Java reproducers are can be found below.
 
 See `examples/BUILD.bazel` for the list of all possible example targets.
 
-## Findings
-
-Jazzer has so far uncovered the following vulnerabilities and bugs:
-
-| Project | Bug      | Status | CVE | found by |
-| ------- | -------- | ------ | --- | -------- |
-| [jhy/jsoup](https://github.com/jhy/jsoup) | More than 19 Bugs found in HTML and XML parser | [fixed](https://github.com/jhy/jsoup/security/advisories/GHSA-m72m-mhq2-9p6c) | [CVE-2021-37714](https://nvd.nist.gov/vuln/detail/CVE-2021-37714) | [Code Intelligence](https://code-intelligence.com) |
-| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | Infinite loop when loading a crafted 7z | fixed | [CVE-2021-35515](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-35515) | [Code Intelligence](https://code-intelligence.com) |
-| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `OutOfMemoryError` when loading a crafted 7z | fixed | [CVE-2021-35516](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-35516) | [Code Intelligence](https://code-intelligence.com) |
-| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | Infinite loop when loading a crafted TAR | fixed | [CVE-2021-35517](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-35517) | [Code Intelligence](https://code-intelligence.com) |
-| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `OutOfMemoryError` when loading a crafted ZIP | fixed | [CVE-2021-36090](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-36090) | [Code Intelligence](https://code-intelligence.com) |
-| [Apache/PDFBox](https://pdfbox.apache.org/) | Infinite loop when loading a crafted PDF | fixed | [CVE-2021-27807](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-27807) | [Code Intelligence](https://code-intelligence.com) |
-| [Apache/PDFBox](https://pdfbox.apache.org/) | OutOfMemoryError when loading a crafted PDF | fixed | [CVE-2021-27906](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-27906) | [Code Intelligence](https://code-intelligence.com) |
-| [netplex/json-smart-v1](https://github.com/netplex/json-smart-v1) <br/> [netplex/json-smart-v2](https://github.com/netplex/json-smart-v2) | `JSONParser#parse` throws an undeclared exception | [fixed](https://github.com/netplex/json-smart-v2/issues/60) | [CVE-2021-27568](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-27568) | [@GanbaruTobi](https://github.com/GanbaruTobi) |
-| [OWASP/json-sanitizer](https://github.com/OWASP/json-sanitizer) | Output can contain`</script>` and `]]>`, which allows XSS | [fixed](https://groups.google.com/g/json-sanitizer-support/c/dAW1AeNMoA0) | [CVE-2021-23899](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-23899) | [Code Intelligence](https://code-intelligence.com) |
-| [OWASP/json-sanitizer](https://github.com/OWASP/json-sanitizer) | Output can be invalid JSON and undeclared exceptions can be thrown | [fixed](https://groups.google.com/g/json-sanitizer-support/c/dAW1AeNMoA0) | [CVE-2021-23900](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-23900) | [Code Intelligence](https://code-intelligence.com) |
-| [alibaba/fastjon](https://github.com/alibaba/fastjson) | `JSON#parse` throws undeclared exceptions | [fixed](https://github.com/alibaba/fastjson/issues/3631) | | [Code Intelligence](https://code-intelligence.com) |
-| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | Infinite loop and `OutOfMemoryError` in `TarFile` | [fixed](https://issues.apache.org/jira/browse/COMPRESS-569) | | [Code Intelligence](https://code-intelligence.com) |
-| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `NullPointerException` in `ZipFile`| [fixed](https://issues.apache.org/jira/browse/COMPRESS-568) | | [Code Intelligence](https://code-intelligence.com) |
-| [Apache/commons-imaging](https://commons.apache.org/proper/commons-imaging/) | Parsers for multiple image formats throw undeclared exceptions | [reported](https://issues.apache.org/jira/browse/IMAGING-279?jql=project%20%3D%20%22Commons%20Imaging%22%20AND%20reporter%20%3D%20Meumertzheim%20) | | [Code Intelligence](https://code-intelligence.com) |
-| [Apache/PDFBox](https://pdfbox.apache.org/) | Various undeclared exceptions | [fixed](https://issues.apache.org/jira/browse/PDFBOX-5108?jql=project%20%3D%20PDFBOX%20AND%20reporter%20in%20(Meumertzheim)) | | [Code Intelligence](https://code-intelligence.com) |
-| [cbeust/klaxon](https://github.com/cbeust/klaxon) | Default parser throws runtime exceptions | [fixed](https://github.com/cbeust/klaxon/pull/330) | | [Code Intelligence](https://code-intelligence.com) |
-| [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception due to missing bounds checks when parsing Unicode | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/236) | | [Code Intelligence](https://code-intelligence.com) |
-| [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception on dangling arrays | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/240) | | [Code Intelligence](https://code-intelligence.com) |
-| [ngageoint/tiff-java](https://github.com/ngageoint/tiff-java) | `readTiff ` Index Out Of Bounds | [fixed](https://github.com/ngageoint/tiff-java/issues/38) | | [@raminfp](https://github.com/raminfp) |
-
-As Jazzer is used to fuzz JVM projects in OSS-Fuzz, an additional list of bugs can be found [on the OSS-Fuzz issue tracker](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=proj%3A%22json-sanitizer%22%20OR%20proj%3A%22fastjson2%22%20OR%20proj%3A%22jackson-core%22%20OR%20proj%3A%22jackson-dataformats-binary%22%20OR%20proj%3A%22jackson-dataformats-xml%22%20OR%20proj%3A%22apache-commons%22%20OR%20proj%3A%22jsoup%22&can=1).
-
-If you find bugs with Jazzer, we would like to hear from you!
-Feel free to [open an issue](https://github.com/CodeIntelligenceTesting/jazzer/issues/new) or submit a pull request.
-
 ## Usage
 
 ### Creating a fuzz target
@@ -332,6 +301,37 @@ libFuzzer offers the `-fork=N` and `-jobs=N` flags for parallel fuzzing, both of
 Jazzer currently maintains coverage information in a global variable that is shared among threads. This means that while
 fuzzing multi-threaded fuzz targets is theoretically possible, the reported coverage information may be misleading.
 
+## Findings
+
+Jazzer has so far uncovered the following vulnerabilities and bugs:
+
+| Project | Bug      | Status | CVE | found by |
+| ------- | -------- | ------ | --- | -------- |
+| [jhy/jsoup](https://github.com/jhy/jsoup) | More than 19 Bugs found in HTML and XML parser | [fixed](https://github.com/jhy/jsoup/security/advisories/GHSA-m72m-mhq2-9p6c) | [CVE-2021-37714](https://nvd.nist.gov/vuln/detail/CVE-2021-37714) | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | Infinite loop when loading a crafted 7z | fixed | [CVE-2021-35515](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-35515) | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `OutOfMemoryError` when loading a crafted 7z | fixed | [CVE-2021-35516](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-35516) | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | Infinite loop when loading a crafted TAR | fixed | [CVE-2021-35517](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-35517) | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `OutOfMemoryError` when loading a crafted ZIP | fixed | [CVE-2021-36090](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-36090) | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/PDFBox](https://pdfbox.apache.org/) | Infinite loop when loading a crafted PDF | fixed | [CVE-2021-27807](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-27807) | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/PDFBox](https://pdfbox.apache.org/) | OutOfMemoryError when loading a crafted PDF | fixed | [CVE-2021-27906](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-27906) | [Code Intelligence](https://code-intelligence.com) |
+| [netplex/json-smart-v1](https://github.com/netplex/json-smart-v1) <br/> [netplex/json-smart-v2](https://github.com/netplex/json-smart-v2) | `JSONParser#parse` throws an undeclared exception | [fixed](https://github.com/netplex/json-smart-v2/issues/60) | [CVE-2021-27568](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-27568) | [@GanbaruTobi](https://github.com/GanbaruTobi) |
+| [OWASP/json-sanitizer](https://github.com/OWASP/json-sanitizer) | Output can contain`</script>` and `]]>`, which allows XSS | [fixed](https://groups.google.com/g/json-sanitizer-support/c/dAW1AeNMoA0) | [CVE-2021-23899](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-23899) | [Code Intelligence](https://code-intelligence.com) |
+| [OWASP/json-sanitizer](https://github.com/OWASP/json-sanitizer) | Output can be invalid JSON and undeclared exceptions can be thrown | [fixed](https://groups.google.com/g/json-sanitizer-support/c/dAW1AeNMoA0) | [CVE-2021-23900](https://cve.mitre.org/cgi-bin/cvename.cgi?name=2021-23900) | [Code Intelligence](https://code-intelligence.com) |
+| [alibaba/fastjon](https://github.com/alibaba/fastjson) | `JSON#parse` throws undeclared exceptions | [fixed](https://github.com/alibaba/fastjson/issues/3631) | | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | Infinite loop and `OutOfMemoryError` in `TarFile` | [fixed](https://issues.apache.org/jira/browse/COMPRESS-569) | | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `NullPointerException` in `ZipFile`| [fixed](https://issues.apache.org/jira/browse/COMPRESS-568) | | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/commons-imaging](https://commons.apache.org/proper/commons-imaging/) | Parsers for multiple image formats throw undeclared exceptions | [reported](https://issues.apache.org/jira/browse/IMAGING-279?jql=project%20%3D%20%22Commons%20Imaging%22%20AND%20reporter%20%3D%20Meumertzheim%20) | | [Code Intelligence](https://code-intelligence.com) |
+| [Apache/PDFBox](https://pdfbox.apache.org/) | Various undeclared exceptions | [fixed](https://issues.apache.org/jira/browse/PDFBOX-5108?jql=project%20%3D%20PDFBOX%20AND%20reporter%20in%20(Meumertzheim)) | | [Code Intelligence](https://code-intelligence.com) |
+| [cbeust/klaxon](https://github.com/cbeust/klaxon) | Default parser throws runtime exceptions | [fixed](https://github.com/cbeust/klaxon/pull/330) | | [Code Intelligence](https://code-intelligence.com) |
+| [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception due to missing bounds checks when parsing Unicode | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/236) | | [Code Intelligence](https://code-intelligence.com) |
+| [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception on dangling arrays | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/240) | | [Code Intelligence](https://code-intelligence.com) |
+| [ngageoint/tiff-java](https://github.com/ngageoint/tiff-java) | `readTiff ` Index Out Of Bounds | [fixed](https://github.com/ngageoint/tiff-java/issues/38) | | [@raminfp](https://github.com/raminfp) |
+
+As Jazzer is used to fuzz JVM projects in OSS-Fuzz, an additional list of bugs can be found [on the OSS-Fuzz issue tracker](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=proj%3A%22json-sanitizer%22%20OR%20proj%3A%22fastjson2%22%20OR%20proj%3A%22jackson-core%22%20OR%20proj%3A%22jackson-dataformats-binary%22%20OR%20proj%3A%22jackson-dataformats-xml%22%20OR%20proj%3A%22apache-commons%22%20OR%20proj%3A%22jsoup%22&can=1).
+
+If you find bugs with Jazzer, we would like to hear from you!
+Feel free to [open an issue](https://github.com/CodeIntelligenceTesting/jazzer/issues/new) or submit a pull request.
+
 ## Advanced Options
 
 Various command line options are available to control the instrumentation and fuzzer execution. Since Jazzer is a
@@ -413,7 +413,7 @@ With the flag `--keep_going=N` Jazzer continues fuzzing until `N` unique stack t
 Particular stack traces can also be ignored based on their `DEDUP_TOKEN` by passing a comma-separated list of tokens
 via `--ignore=<token_1>,<token2>`.
 
-## Advanced fuzzed targets
+## Advanced fuzz targets
 
 ### Fuzzing with Native Libraries
 
