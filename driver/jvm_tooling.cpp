@@ -235,7 +235,7 @@ JVM::JVM(const std::string &executable_path) {
   options.push_back(
       JavaVMOption{.optionString = (char *)"-XX:-OmitStackTraceInFastThrow"});
   // Optimize GC for high throughput rather than low latency.
-  options.push_back(JavaVMOption{.optionString = (char *)"XX:+UseParallelGC"});
+  options.push_back(JavaVMOption{.optionString = (char *)"-XX:+UseParallelGC"});
 
   // add additional jvm options set through command line flags
   std::vector<std::string> jvm_args;
