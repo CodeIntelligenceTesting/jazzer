@@ -16,7 +16,6 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("//bazel:local_jdk_libjvm.bzl", "local_jdk_libjvm")
 
 def jazzer_dependencies():
     maybe(
@@ -99,6 +98,13 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
+        name = "fmeum_rules_jni",
+        sha256 = "9d17a403ccb8b005fdb490a0e94942f163d55fdbb4a3e51fb135bd44e174d170",
+        url = "https://github.com/fmeum/rules_jni/releases/download/v0.1.1/rules_jni-v0.1.1.tar.gz",
+    )
+
+    maybe(
+        http_archive,
         build_file = "@jazzer//third_party:asm.BUILD",
         name = "jazzer_ow2_asm",
         sha256 = "7b596cc584b241619911e99c5c96366fccd533b1a50b8720c151c2f74b5915e3",
@@ -137,9 +143,4 @@ def jazzer_dependencies():
         sha256 = "1c6fd44cf6ea5f70f79fba94a86ff3cd010b9e25f2166b7d55143acd21ce6f08",
         strip_prefix = "llvm-project-jazzer-b9c07e9c1e75857901808c13101c909104c413a8/compiler-rt/lib/fuzzer",
         url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/b9c07e9c1e75857901808c13101c909104c413a8.tar.gz",
-    )
-
-    maybe(
-        local_jdk_libjvm,
-        name = "jazzer_libjvm",
     )

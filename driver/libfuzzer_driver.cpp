@@ -14,6 +14,8 @@
 
 #include "libfuzzer_driver.h"
 
+#include <rules_jni.h>
+
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
@@ -86,6 +88,7 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
   // Disable glog log prefixes to mimic libFuzzer output.
   FLAGS_log_prefix = false;
   google::InitGoogleLogging((*argv)[0]);
+  rules_jni_init((*argv)[0]);
 
   auto argv_start = *argv;
   auto argv_end = *argv + *argc;

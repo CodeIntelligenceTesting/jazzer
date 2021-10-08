@@ -60,12 +60,11 @@ cc_library(
     deps = [
         ":sanitizer_hooks_with_pc",
         "@bazel_tools//tools/cpp/runfiles",
-        "@bazel_tools//tools/jdk:jni",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_glog//:glog",
+        "@fmeum_rules_jni//jni:libjvm",
         "@jazzer_com_github_gflags_gflags//:gflags",
-        "@jazzer_libjvm//:libjvm",
     ],
 )
 

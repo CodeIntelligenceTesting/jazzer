@@ -1,40 +1,34 @@
-load("//bazel:cc.bzl", "cc_shared_library")
+load("@fmeum_rules_jni//jni:defs.bzl", "java_native_library")
 
-cc_shared_library(
+java_native_library(
     name = "native_asan",
     srcs = [
         "com_example_ExampleFuzzerWithNative.cpp",
-        "com_example_ExampleFuzzerWithNative.h",
     ],
     copts = [
         "-fsanitize=fuzzer-no-link,address",
     ],
+    java_lib = "//examples:example_fuzzer_with_native_lib",
     linkopts = select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
     visibility = ["//examples:__pkg__"],
-    deps = [
-        "@bazel_tools//tools/jdk:jni",
-    ],
 )
 
-cc_shared_library(
+java_native_library(
     name = "native_ubsan",
     srcs = [
         "com_example_ExampleFuzzerWithNative.cpp",
-        "com_example_ExampleFuzzerWithNative.h",
     ],
     copts = [
         "-fsanitize=fuzzer-no-link,undefined",
         "-fno-sanitize-recover=all",
     ],
+    java_lib = "//examples:example_fuzzer_with_native_lib",
     linkopts = select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
     visibility = ["//examples:__pkg__"],
-    deps = [
-        "@bazel_tools//tools/jdk:jni",
-    ],
 )

@@ -15,14 +15,12 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.github.fmeum.rules_jni.RulesJni;
 
 public class ExampleFuzzerWithNative {
   static {
-    try {
-      System.loadLibrary("native_asan");
-    } catch (UnsatisfiedLinkError e) {
-      System.loadLibrary("native_ubsan");
-    }
+    String native_lib = System.getProperty("jazzer.native_lib");
+    RulesJni.loadLibrary(native_lib, ExampleFuzzerWithNative.class);
   }
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {
