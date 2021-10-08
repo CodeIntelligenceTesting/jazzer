@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("@rules_cc//cc:defs.bzl", "cc_binary")
-
 def _add_cxxopt_std_17_impl(settings, attr):
     return {
         "//command_line_option:cxxopt": settings["//command_line_option:cxxopt"] + ["-std=c++17"],
