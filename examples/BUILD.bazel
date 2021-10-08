@@ -1,4 +1,3 @@
-load("@rules_java//java:defs.bzl", "java_binary")
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
