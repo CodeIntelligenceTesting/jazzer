@@ -36,6 +36,28 @@ http_archive(
     urls = ["https://github.com/grailbio/bazel-toolchain/archive/76ce37e977a304acf8948eadabb82c516320e286.tar.gz"],
 )
 
+http_archive(
+    name = "googletest",
+    sha256 = "9dc9157a9a1551ec7a7e43daea9a694a0bb5fb8bec81235d8a1e6ef64c716dcb",
+    strip_prefix = "googletest-release-1.10.0",
+    url = "https://github.com/google/googletest/archive/release-1.10.0.tar.gz",
+)
+
+http_archive(
+    name = "rules_foreign_cc",
+    sha256 = "8ab257584256e2c7eefa0c4e0794ae3be3e8f634f9ec0356da0a653dfed5da9a",
+    strip_prefix = "rules_foreign_cc-76198edc790de8e8514bddaa3895d1145fccd6aa",
+    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/76198edc790de8e8514bddaa3895d1145fccd6aa.tar.gz",
+)
+
+http_archive(
+    name = "libjpeg_turbo",
+    build_file = "//third_party:libjpeg_turbo.BUILD",
+    sha256 = "6a965adb02ad898b2ae48214244618fe342baea79db97157fdc70d8844ac6f09",
+    strip_prefix = "libjpeg-turbo-2.0.90",
+    url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.90.tar.gz",
+)
+
 load("@com_grail_bazel_toolchain//toolchain:deps.bzl", "bazel_toolchain_dependencies")
 
 bazel_toolchain_dependencies()
@@ -58,6 +80,10 @@ load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
 
 rules_jvm_external_setup()
 
+load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
+
+rules_foreign_cc_dependencies()
+
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 load("//:maven.bzl", "MAVEN_ARTIFACTS")
 
@@ -74,29 +100,3 @@ maven_install(
 load("@maven//:defs.bzl", "pinned_maven_install")
 
 pinned_maven_install()
-
-http_archive(
-    name = "googletest",
-    sha256 = "9dc9157a9a1551ec7a7e43daea9a694a0bb5fb8bec81235d8a1e6ef64c716dcb",
-    strip_prefix = "googletest-release-1.10.0",
-    url = "https://github.com/google/googletest/archive/release-1.10.0.tar.gz",
-)
-
-http_archive(
-    name = "rules_foreign_cc",
-    sha256 = "8ab257584256e2c7eefa0c4e0794ae3be3e8f634f9ec0356da0a653dfed5da9a",
-    strip_prefix = "rules_foreign_cc-76198edc790de8e8514bddaa3895d1145fccd6aa",
-    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/76198edc790de8e8514bddaa3895d1145fccd6aa.tar.gz",
-)
-
-load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
-
-rules_foreign_cc_dependencies()
-
-http_archive(
-    name = "libjpeg_turbo",
-    build_file = "//third_party:libjpeg_turbo.BUILD",
-    sha256 = "6a965adb02ad898b2ae48214244618fe342baea79db97157fdc70d8844ac6f09",
-    strip_prefix = "libjpeg-turbo-2.0.90",
-    url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.90.tar.gz",
-)
