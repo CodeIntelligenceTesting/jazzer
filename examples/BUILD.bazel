@@ -1,4 +1,5 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("@fmeum_rules_jni//jni:defs.bzl", "java_library_with_native")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
 java_fuzz_target_test(
@@ -12,30 +13,39 @@ java_fuzz_target_test(
     target_class = "com.example.ExampleFuzzer",
 )
 
-java_fuzz_target_test(
-    name = "ExampleFuzzerWithASan",
+java_library_with_native(
+    name = "example_fuzzer_with_native_lib",
     srcs = [
         "src/main/java/com/example/ExampleFuzzerWithNative.java",
     ],
     native_libs = [
-        "//examples/src/main/native:libnative_asan.dylib",
-        "//examples/src/main/native:libnative_asan.so",
+        "//examples/src/main/native/com/example:native_asan",
+        "//examples/src/main/native/com/example:native_ubsan",
     ],
+    visibility = ["//examples/src/main/native/com/example:__pkg__"],
+    deps = [
+        "//agent:jazzer_api_compile_only",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "ExampleFuzzerWithASan",
+    fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_asan"],
     sanitizer = "address",
     target_class = "com.example.ExampleFuzzerWithNative",
+    runtime_deps = [
+        ":example_fuzzer_with_native_lib",
+    ],
 )
 
 java_fuzz_target_test(
     name = "ExampleFuzzerWithUBSan",
-    srcs = [
-        "src/main/java/com/example/ExampleFuzzerWithNative.java",
-    ],
-    native_libs = [
-        "//examples/src/main/native:libnative_ubsan.dylib",
-        "//examples/src/main/native:libnative_ubsan.so",
-    ],
+    fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_ubsan"],
     sanitizer = "undefined",
     target_class = "com.example.ExampleFuzzerWithNative",
+    runtime_deps = [
+        ":example_fuzzer_with_native_lib",
+    ],
 )
 
 java_fuzz_target_test(
@@ -84,11 +94,8 @@ java_fuzz_target_test(
     ],
     fuzzer_args = [
         "-fork=5",
-        # Only used to verify that arguments are correctly passed down to child
-        # processes. Quoting with both " and ' is necessary in this test since
-        # one level of quoting is lost when passing through jazzer_wrapper.sh
-        "--jvm_args=\"'-Dfoo=foo;-Dbar=bar'\"",
-        "--additional_jvm_args=\"'-Dbaz=baz'\"",
+        "--jvm_args=-Dfoo=foo;-Dbar=bar",
+        "--additional_jvm_args=-Dbaz=baz",
     ],
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
     tags = ["broken-on-darwin"],

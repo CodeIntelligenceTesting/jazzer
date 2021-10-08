@@ -72,26 +72,3 @@ def cc_17_library(name, visibility = None, **kwargs):
         library = library_name,
         visibility = visibility,
     )
-
-# Workaround for https://github.com/bazelbuild/bazel/issues/11082
-# By explicitly setting the name of a cc_binary and selecting based on the
-# platform, the resulting shared object will have the correct extension on both
-# Linux and macOS.
-def cc_shared_library(name, visibility = None, **kwargs):
-    # Linux
-    linux_name = "lib%s.so" % name
-    native.cc_binary(
-        name = linux_name,
-        linkshared = True,
-        visibility = visibility,
-        **kwargs
-    )
-
-    # macOS
-    osx_name = "lib%s.dylib" % name
-    native.cc_binary(
-        name = osx_name,
-        linkshared = True,
-        visibility = visibility,
-        **kwargs
-    )

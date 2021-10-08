@@ -36,8 +36,7 @@ cmake(
     ],
     deps = [
         ":libawt",
-        "@bazel_tools//tools/jdk:jni",
-        "@jazzer//third_party/jni:jni_libs",
+        "@fmeum_rules_jni//jni",
     ],
 )
 

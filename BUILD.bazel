@@ -26,48 +26,31 @@ pkg_tar(
     srcs = [
         "//agent:jazzer_agent_deploy.jar",
         "//agent:jazzer_api_deploy.jar",
-        "//bazel:jazzer",
         "//driver:jazzer_driver",
     ],
     extension = "tar.gz",
     mode = "0777",
-    remap_paths = {"bazel/": ""},
+    remap_paths = {
+        "agent/jazzer_agent_deploy.jar": "jazzer_agent_deploy.jar",
+        "agent/jazzer_api_deploy.jar": "jazzer_api_deploy.jar",
+        "driver/jazzer_driver": "jazzer",
+    },
+    strip_prefix = "./",
 )
 
-sh_binary(
+alias(
     name = "jazzer",
-    srcs = ["//bazel:jazzer_wrapper.sh"],
-    args = [
-        "$(rootpath //driver:jazzer_driver)",
-    ],
-    data = [
-        "//driver:jazzer_driver",
-    ],
-    deps = [
-        "@bazel_tools//tools/bash/runfiles",
-    ],
+    actual = "//driver:jazzer_driver",
 )
 
-sh_binary(
+alias(
     name = "jazzer_asan",
-    srcs = ["//bazel:jazzer_wrapper.sh"],
-    args = [
-        "$(rootpath //driver:jazzer_driver_asan)",
-    ],
-    data = [
-        "//driver:jazzer_driver_asan",
-    ],
+    actual = "//driver:jazzer_driver_asan",
 )
 
-sh_binary(
+alias(
     name = "jazzer_ubsan",
-    srcs = ["//bazel:jazzer_wrapper.sh"],
-    args = [
-        "$(rootpath //driver:jazzer_driver_ubsan)",
-    ],
-    data = [
-        "//driver:jazzer_driver_ubsan",
-    ],
+    actual = "//driver:jazzer_driver_ubsan",
 )
 
 exports_files([

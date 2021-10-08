@@ -46,33 +46,34 @@ def java_fuzz_target_test(
 
     additional_args = []
 
-    native_libs_paths = ":".join(["$$(dirname $(rootpaths %s) | paste -sd ':' -)" % native_lib for native_lib in native_libs])
-    if native_libs_paths != "":
-        additional_args.append("--jvm_args=-Djava.library.path=" + native_libs_paths)
-
     if sanitizer == None:
         driver = "//driver:jazzer_driver"
+        driver_rlocation = "jazzer/driver/jazzer_driver"
     elif sanitizer == "address":
         driver = "//driver:jazzer_driver_asan"
+        driver_rlocation = "jazzer/driver/jazzer_driver_asan"
     elif sanitizer == "undefined":
         driver = "//driver:jazzer_driver_ubsan"
+        driver_rlocation = "jazzer/driver/jazzer_driver_ubsan"
     else:
         fail("Invalid sanitizer: " + sanitizer)
 
-    native.sh_test(
+    native.java_test(
         name = name,
-        srcs = ["//bazel:fuzz_target_test_wrapper.sh"],
-        size = "large",
+        runtime_deps = ["//bazel:fuzz_target_test_wrapper"],
+        size = "enormous",
         timeout = "moderate",
         args = [
-            "$(rootpath %s)" % driver,
-            "--cp=$(rootpath :%s_deploy.jar)" % target_name,
+            driver_rlocation,
+            "jazzer/$(rootpath :%s_deploy.jar)" % target_name,
         ] + additional_args + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,
             "//agent:jazzer_agent_deploy.jar",
             driver,
         ] + native_libs,
+        main_class = "FuzzTargetTestWrapper",
+        use_testrunner = False,
         tags = tags,
         visibility = visibility,
     )
