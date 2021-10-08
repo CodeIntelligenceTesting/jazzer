@@ -1,4 +1,3 @@
-load("@rules_java//java:defs.bzl", "java_binary")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
