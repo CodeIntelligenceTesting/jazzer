@@ -1,4 +1,3 @@
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("//bazel:cc.bzl", "cc_17_library")
 
 # None of the targets in this package should be built into shared objects. By
