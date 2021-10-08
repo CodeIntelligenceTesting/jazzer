@@ -73,6 +73,14 @@ def java_fuzz_target_test(
             "//agent:jazzer_agent_deploy.jar",
             driver,
         ] + native_libs,
+        env_inherit = [
+            # Helps rules_jni's libjvm_stub find the correct JDK.
+            "JAVA_HOME",
+            # If set, rules_jni's libjvm_stub outputs more detailed logs.
+            "LIBJVM_STUB_TRACE",
+            # Helps rules_jni's libjvm_stub find the correct JDK.
+            "PATH",
+        ],
         tags = tags,
         visibility = visibility,
     )

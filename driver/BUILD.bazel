@@ -60,12 +60,11 @@ cc_library(
     deps = [
         ":sanitizer_hooks_with_pc",
         "@bazel_tools//tools/cpp/runfiles",
-        "@bazel_tools//tools/jdk:jni",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_glog//:glog",
+        "@fmeum_rules_jni//jni:libjvm",
         "@jazzer_com_github_gflags_gflags//:gflags",
-        "@jazzer_libjvm//:libjvm",
     ],
 )
 
@@ -163,6 +162,14 @@ cc_test(
         "//agent:jazzer_agent_deploy.jar",
         "//driver/testdata:fuzz_target_mocks_deploy.jar",
     ],
+    env_inherit = [
+        # Helps rules_jni's libjvm_stub find the correct JDK.
+        "JAVA_HOME",
+        # If set, rules_jni's libjvm_stub outputs more detailed logs.
+        "LIBJVM_STUB_TRACE",
+        # Helps rules_jni's libjvm_stub find the correct JDK.
+        "PATH",
+    ],
     includes = ["."],
     linkopts = [
         # Needs to export symbols dynamically for JNI_OnLoad_jazzer_initialize
@@ -191,6 +198,14 @@ cc_test(
     data = [
         "//agent:jazzer_agent_deploy.jar",
         "//driver/testdata:fuzz_target_mocks_deploy.jar",
+    ],
+    env_inherit = [
+        # Helps rules_jni's libjvm_stub find the correct JDK.
+        "JAVA_HOME",
+        # If set, rules_jni's libjvm_stub outputs more detailed logs.
+        "LIBJVM_STUB_TRACE",
+        # Helps rules_jni's libjvm_stub find the correct JDK.
+        "PATH",
     ],
     includes = ["."],
     deps = [
