@@ -65,7 +65,7 @@ object Deserialization {
         ObjectOutputStream(baos).writeObject(jaz.Ter())
         val serializedJazTerInstance = baos.toByteArray()
         val posToPatch = serializedJazTerInstance.indexOf("jaz.Ter".toByteArray())
-        serializedJazTerInstance[posToPatch + "jaz.".length] = 'Z'.toByte()
+        serializedJazTerInstance[posToPatch + "jaz.".length] = 'Z'.code.toByte()
         serializedJazTerInstance
     }
 
