@@ -48,7 +48,7 @@ fun simpleFastHash(vararg strings: String): Int {
     var hash = 0
     for (string in strings) {
         for (c in string) {
-            hash = hash * 11 + c.toInt()
+            hash = hash * 11 + c.code
         }
     }
     return hash

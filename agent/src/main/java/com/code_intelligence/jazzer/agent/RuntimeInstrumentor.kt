@@ -146,7 +146,7 @@ internal class RuntimeInstrumentor(
                 return null
             }
         }
-        val durationInMs = duration.inMilliseconds.roundToInt()
+        val durationInMs = duration.inWholeMilliseconds
         val sizeIncrease = ((100.0 * (instrumentedBytecode.size - classfileBuffer.size)) / classfileBuffer.size).roundToInt()
         if (fullInstrumentation) {
             println("INFO: Instrumented $prettyClassName (took $durationInMs ms, size +$sizeIncrease%)")
