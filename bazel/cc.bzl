@@ -13,8 +13,9 @@
 # limitations under the License.
 
 def _add_cxxopt_std_17_impl(settings, attr):
+    STD_CXX_17_CXXOPTS = ["/std:c++17" if attr.is_windows else "-std=c++17"]
     return {
-        "//command_line_option:cxxopt": settings["//command_line_option:cxxopt"] + ["-std=c++17"],
+        "//command_line_option:cxxopt": settings["//command_line_option:cxxopt"] + STD_CXX_17_CXXOPTS,
     }
 
 _add_cxxopt_std_17 = transition(
@@ -37,6 +38,7 @@ def _cc_17_library_impl(ctx):
 _cc_17_library = rule(
     implementation = _cc_17_library_impl,
     attrs = {
+        "is_windows": attr.bool(),
         "library": attr.label(
             cfg = _add_cxxopt_std_17,
             mandatory = True,
@@ -64,6 +66,10 @@ def cc_17_library(name, visibility = None, **kwargs):
 
     _cc_17_library(
         name = name,
+        is_windows = select({
+            "@platforms//os:windows": True,
+            "//conditions:default": False,
+        }),
         library = library_name,
         visibility = visibility,
     )

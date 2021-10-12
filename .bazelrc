@@ -1,11 +1,14 @@
 build --incompatible_strict_action_env
+build --enable_platform_specific_config
 build -c opt
 
 # C/C++
 # Only relevant for tests and their dependencies. Everything that external
 # repositories can reference must build without this, e.g., by using a
 # transition.
-build --cxxopt='-std=c++17'
+build:linux --cxxopt='-std=c++17'
+build:macos --cxxopt='-std=c++17'
+build:windows --cxxopt='/std:c++17'
 build --repo_env=CC=clang
 build --incompatible_enable_cc_toolchain_resolution
 # Requires a relatively modern clang.
@@ -16,7 +19,6 @@ build --java_language_version=8
 build --tool_java_language_version=9
 
 # Windows
-build --enable_platform_specific_config
 # Only compiles with clang on Windows.
 build:windows --extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl
 build:windows --extra_execution_platforms=//:x64_windows-clang-cl
