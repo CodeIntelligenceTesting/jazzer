@@ -22,6 +22,7 @@ java_library_with_native(
         "//examples/src/main/native/com/example:native_asan",
         "//examples/src/main/native/com/example:native_ubsan",
     ],
+    tags = ["manual"],
     visibility = ["//examples/src/main/native/com/example:__pkg__"],
     deps = [
         "//agent:jazzer_api_compile_only",
@@ -33,6 +34,10 @@ java_fuzz_target_test(
     fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_asan"],
     sanitizer = "address",
     target_class = "com.example.ExampleFuzzerWithNative",
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
     runtime_deps = [
         ":example_fuzzer_with_native_lib",
     ],
@@ -43,6 +48,10 @@ java_fuzz_target_test(
     fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_ubsan"],
     sanitizer = "undefined",
     target_class = "com.example.ExampleFuzzerWithNative",
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
     runtime_deps = [
         ":example_fuzzer_with_native_lib",
     ],

@@ -13,6 +13,7 @@ java_native_library(
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
+    tags = ["manual"],
     visibility = ["//examples:__pkg__"],
 )
 
@@ -30,5 +31,6 @@ java_native_library(
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
+    tags = ["manual"],
     visibility = ["//examples:__pkg__"],
 )
