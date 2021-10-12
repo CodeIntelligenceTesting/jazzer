@@ -1,4 +1,5 @@
 build --incompatible_strict_action_env
+build --enable_platform_specific_config
 build -c opt
 
 # C/C++
@@ -14,6 +15,11 @@ build:ci --features=layering_check
 # Java
 build --java_language_version=8
 build --tool_java_language_version=9
+
+# Windows
+# Only compiles with clang on Windows.
+build:windows --extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl
+build:windows --extra_execution_platforms=//:x64_windows-clang-cl
 
 # Toolchain
 build:toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-linux,@llvm_toolchain//:cc-toolchain-darwin
