@@ -59,9 +59,10 @@ cc_library(
         "jvm_tooling.h",
         "libfuzzer_driver.h",
     ],
-    linkopts = [
-        "-ldl",
-    ],
+    linkopts = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": ["-ldl"],
+    }),
     # Needs to be linked statically for JNI_OnLoad_jazzer_initialize to be found
     # by the JVM.
     linkstatic = True,
@@ -112,9 +113,12 @@ cc_binary(
     data = [
         "//agent:jazzer_agent_deploy.jar",
     ],
-    linkopts = [
-        "-rdynamic",
-    ] + select({
+    linkopts = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": [
+            "-rdynamic",
+        ],
+    }) + select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
@@ -141,8 +145,12 @@ cc_binary(
     linkopts = [
         "-fsanitize=address",
         "-static-libsan",
-        "-rdynamic",
     ] + select({
+        "@platforms//os:windows": [],
+        "//conditions:default": [
+            "-rdynamic",
+        ],
+    }) + select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
@@ -166,8 +174,12 @@ cc_binary(
         # Link UBSan statically, even on macOS.
         "-static-libsan",
         "-fsanitize-link-c++-runtime",
-        "-rdynamic",
     ] + select({
+        "@platforms//os:windows": [],
+        "//conditions:default": [
+            "-rdynamic",
+        ],
+    }) + select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
@@ -191,11 +203,14 @@ cc_test(
         "//driver/testdata:fuzz_target_mocks_deploy.jar",
     ],
     includes = ["."],
-    linkopts = [
-        # Needs to export symbols dynamically for JNI_OnLoad_jazzer_initialize
-        # to be found by the JVM.
-        "-rdynamic",
-    ],
+    linkopts = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": [
+            # Needs to export symbols dynamically for JNI_OnLoad_jazzer_initialize
+            # to be found by the JVM.
+            "-rdynamic",
+        ],
+    }),
     deps = [
         ":jvm_tooling_lib",
         ":test_main",

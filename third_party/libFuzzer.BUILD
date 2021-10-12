@@ -8,12 +8,19 @@ cc_library(
         "*.h",
         "*.def",
     ]),
-    copts = [
-        "-g",
-        "-O2",
-        "-fno-omit-frame-pointer",
-        "-std=c++11",
-    ],
+    copts = select({
+        "@platforms//os:windows": [
+            "/Ox", # Optimize for speed.
+            "/Oy-", # Do not omit frame pointer.
+            "/std:c++17",
+        ],
+        "//conditions:default": [
+            "-g",
+            "-O2",
+            "-fno-omit-frame-pointer",
+            "-std=c++11",
+        ],
+    }),
     alwayslink = True,
     linkstatic = True,
     visibility = ["//visibility:public"],
