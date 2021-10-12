@@ -15,6 +15,15 @@ build:ci --features=layering_check
 build --java_language_version=8
 build --tool_java_language_version=9
 
+# Windows
+build --enable_platform_specific_config
+# Only compiles with clang on Windows.
+build:windows --extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl
+build:windows --extra_execution_platforms=//:x64_windows-clang-cl
+
+# macOS
+test:macos --test_tag_filters="-broken-on-macos"
+
 # Toolchain
 build:toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-linux,@llvm_toolchain//:cc-toolchain-darwin
 build:toolchain --//third_party:toolchain

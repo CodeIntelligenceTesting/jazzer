@@ -92,7 +92,7 @@ java_fuzz_target_test(
         "src/main/java/com/example/ExampleStackOverflowFuzzer.java",
     ],
     # Crashes with a segfault before any stack trace printing is reached.
-    tags = ["broken-on-darwin"],
+    tags = ["broken-on-macos"],
     target_class = "com.example.ExampleStackOverflowFuzzer",
 )
 
@@ -107,7 +107,7 @@ java_fuzz_target_test(
         "--additional_jvm_args=-Dbaz=baz",
     ],
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
-    tags = ["broken-on-darwin"],
+    tags = ["broken-on-macos"],
     target_class = "com.example.JpegImageParserFuzzer",
     deps = [
         "@maven//:org_apache_commons_commons_imaging",
