@@ -83,6 +83,12 @@ cc_17_library(
 
 cc_binary(
     name = "jazzer_driver",
+    srcs = [
+        # Defines symbols otherwise defined by sanitizers to prevent linker
+        # errors and print JVM stack traces.
+        # Windows-compatible replacement for __attribute__((weak)).
+        "sanitizer_symbols.cpp",
+    ],
     data = [
         "//agent:jazzer_agent_deploy.jar",
     ],
