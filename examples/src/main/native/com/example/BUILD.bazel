@@ -7,6 +7,7 @@ java_native_library(
     ],
     copts = [
         "-fsanitize=fuzzer-no-link,address",
+        "-fno-sanitize-blacklist",
     ],
     java_lib = "//examples:example_fuzzer_with_native_lib",
     linkopts = select({
