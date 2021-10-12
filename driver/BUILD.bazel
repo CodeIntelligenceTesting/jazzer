@@ -99,6 +99,7 @@ cc_binary(
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
+    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [":driver_lib"],
 )
@@ -126,6 +127,7 @@ cc_binary(
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
+    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [":driver_lib"] + select({
         # There is no static ASan runtime on macOS, so link to the dynamic
@@ -150,6 +152,7 @@ cc_binary(
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
+    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [":driver_lib"],
 )
