@@ -25,6 +25,7 @@
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
+#include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "sanitizer_hooks_with_pc.h"
 
