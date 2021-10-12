@@ -48,60 +48,64 @@ std::pair<std::string, std::size_t> FixUpRemainingModifiedUtf8(
                            ascii_only, stop_on_backslash);
 }
 
+// Work around the fact that size_t is unsigned long on Linux and unsigned long
+// long on Windows.
+std::size_t operator"" _z(unsigned long long x) { return x; }
+
 using namespace std::literals::string_literals;
 TEST(FixUpModifiedUtf8Test, FullUtf8_ContinueOnBackslash) {
-  EXPECT_EQ(std::make_pair("jazzer"s, 6ul),
+  EXPECT_EQ(std::make_pair("jazzer"s, 6_z),
             FixUpRemainingModifiedUtf8("jazzer"s, false, false));
-  EXPECT_EQ(std::make_pair("ja\xC0\x80zzer"s, 7ul),
+  EXPECT_EQ(std::make_pair("ja\xC0\x80zzer"s, 7_z),
             FixUpRemainingModifiedUtf8("ja\0zzer"s, false, false));
-  EXPECT_EQ(std::make_pair("ja\xC0\x80\xC0\x80zzer"s, 8ul),
+  EXPECT_EQ(std::make_pair("ja\xC0\x80\xC0\x80zzer"s, 8_z),
             FixUpRemainingModifiedUtf8("ja\0\0zzer"s, false, false));
-  EXPECT_EQ(std::make_pair("ja\\zzer"s, 7ul),
+  EXPECT_EQ(std::make_pair("ja\\zzer"s, 7_z),
             FixUpRemainingModifiedUtf8("ja\\zzer"s, false, false));
-  EXPECT_EQ(std::make_pair("ja\\\\zzer"s, 8ul),
+  EXPECT_EQ(std::make_pair("ja\\\\zzer"s, 8_z),
             FixUpRemainingModifiedUtf8("ja\\\\zzer"s, false, false));
-  EXPECT_EQ(std::make_pair("€ß"s, 5ul),
+  EXPECT_EQ(std::make_pair("€ß"s, 5_z),
             FixUpRemainingModifiedUtf8(u8"€ß"s, false, false));
 }
 
 TEST(FixUpModifiedUtf8Test, AsciiOnly_ContinueOnBackslash) {
-  EXPECT_EQ(std::make_pair("jazzer"s, 6ul),
+  EXPECT_EQ(std::make_pair("jazzer"s, 6_z),
             FixUpRemainingModifiedUtf8("jazzer"s, true, false));
-  EXPECT_EQ(std::make_pair("ja\xC0\x80zzer"s, 7ul),
+  EXPECT_EQ(std::make_pair("ja\xC0\x80zzer"s, 7_z),
             FixUpRemainingModifiedUtf8("ja\0zzer"s, true, false));
-  EXPECT_EQ(std::make_pair("ja\xC0\x80\xC0\x80zzer"s, 8ul),
+  EXPECT_EQ(std::make_pair("ja\xC0\x80\xC0\x80zzer"s, 8_z),
             FixUpRemainingModifiedUtf8("ja\0\0zzer"s, true, false));
-  EXPECT_EQ(std::make_pair("ja\\zzer"s, 7ul),
+  EXPECT_EQ(std::make_pair("ja\\zzer"s, 7_z),
             FixUpRemainingModifiedUtf8("ja\\zzer"s, true, false));
-  EXPECT_EQ(std::make_pair("ja\\\\zzer"s, 8ul),
+  EXPECT_EQ(std::make_pair("ja\\\\zzer"s, 8_z),
             FixUpRemainingModifiedUtf8("ja\\\\zzer"s, true, false));
-  EXPECT_EQ(std::make_pair("\x62\x02\x2C\x43\x1F"s, 5ul),
+  EXPECT_EQ(std::make_pair("\x62\x02\x2C\x43\x1F"s, 5_z),
             FixUpRemainingModifiedUtf8(u8"€ß"s, true, false));
 }
 
 TEST(FixUpModifiedUtf8Test, FullUtf8_StopOnBackslash) {
-  EXPECT_EQ(std::make_pair("jazzer"s, 6ul),
+  EXPECT_EQ(std::make_pair("jazzer"s, 6_z),
             FixUpRemainingModifiedUtf8("jazzer"s, false, true));
-  EXPECT_EQ(std::make_pair("ja\xC0\x80zzer"s, 7ul),
+  EXPECT_EQ(std::make_pair("ja\xC0\x80zzer"s, 7_z),
             FixUpRemainingModifiedUtf8("ja\0zzer"s, false, true));
-  EXPECT_EQ(std::make_pair("ja\xC0\x80\xC0\x80zzer"s, 8ul),
+  EXPECT_EQ(std::make_pair("ja\xC0\x80\xC0\x80zzer"s, 8_z),
             FixUpRemainingModifiedUtf8("ja\0\0zzer"s, false, true));
-  EXPECT_EQ(std::make_pair("ja"s, 4ul),
+  EXPECT_EQ(std::make_pair("ja"s, 4_z),
             FixUpRemainingModifiedUtf8("ja\\zzer"s, false, true));
-  EXPECT_EQ(std::make_pair("ja\\zzer"s, 8ul),
+  EXPECT_EQ(std::make_pair("ja\\zzer"s, 8_z),
             FixUpRemainingModifiedUtf8("ja\\\\zzer"s, false, true));
 }
 
 TEST(FixUpModifiedUtf8Test, AsciiOnly_StopOnBackslash) {
-  EXPECT_EQ(std::make_pair("jazzer"s, 6ul),
+  EXPECT_EQ(std::make_pair("jazzer"s, 6_z),
             FixUpRemainingModifiedUtf8("jazzer"s, true, true));
-  EXPECT_EQ(std::make_pair("ja\xC0\x80zzer"s, 7ul),
+  EXPECT_EQ(std::make_pair("ja\xC0\x80zzer"s, 7_z),
             FixUpRemainingModifiedUtf8("ja\0zzer"s, true, true));
-  EXPECT_EQ(std::make_pair("ja\xC0\x80\xC0\x80zzer"s, 8ul),
+  EXPECT_EQ(std::make_pair("ja\xC0\x80\xC0\x80zzer"s, 8_z),
             FixUpRemainingModifiedUtf8("ja\0\0zzer"s, true, true));
-  EXPECT_EQ(std::make_pair("ja"s, 4ul),
+  EXPECT_EQ(std::make_pair("ja"s, 4_z),
             FixUpRemainingModifiedUtf8("ja\\zzer"s, true, true));
-  EXPECT_EQ(std::make_pair("ja\\zzer"s, 8ul),
+  EXPECT_EQ(std::make_pair("ja\\zzer"s, 8_z),
             FixUpRemainingModifiedUtf8("ja\\\\zzer"s, true, true));
 }
 
