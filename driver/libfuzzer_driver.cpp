@@ -14,8 +14,6 @@
 
 #include "libfuzzer_driver.h"
 
-#include <dlfcn.h>
-
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
@@ -44,26 +42,16 @@ DECLARE_string(id_sync_file);
 // Defined in fuzz_target_runner.cpp
 DECLARE_string(coverage_report);
 
+// This symbol is defined by sanitizers if linked into Jazzer or in
+// sanitizer_symbols.cpp if no sanitizer is used.
+extern "C" void __sanitizer_set_death_callback(void (*)());
+
 // We apply a patch to libFuzzer to make it call this function instead of
 // __sanitizer_set_death_callback to pass us the death callback.
 extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
     void (*callback)()) {
   jazzer::AbstractLibfuzzerDriver::libfuzzer_print_crashing_input_ = callback;
-  void *sanitizer_set_death_callback =
-      dlsym(RTLD_DEFAULT, "__sanitizer_set_death_callback");
-  if (sanitizer_set_death_callback != nullptr)
-    reinterpret_cast<void (*)(void (*)())>(sanitizer_set_death_callback)(
-        callback);
-}
-
-// Suppress libFuzzer warnings about missing sanitizer methods in non-ASan
-// builds.
-extern "C" __attribute__((weak)) int __sanitizer_acquire_crash_state() {
-  return true;
-}
-
-extern "C" __attribute__((weak)) void __sanitizer_print_stack_trace() {
-  jazzer::DumpJvmStackTraces();
+  __sanitizer_set_death_callback(callback);
 }
 
 namespace {
