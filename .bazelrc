@@ -22,6 +22,7 @@ build --tool_java_language_version=9
 # Only compiles with clang on Windows.
 build:windows --extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl
 build:windows --extra_execution_platforms=//:x64_windows-clang-cl
+build:windows --features=static_link_msvcrt
 
 # macOS
 test:macos --test_tag_filters="-broken-on-macos"
