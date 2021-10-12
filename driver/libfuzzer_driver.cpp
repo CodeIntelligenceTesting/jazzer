@@ -66,9 +66,9 @@ std::string GetNewTempFilePath() {
 
   std::string temp_filename_suffix(32, '\0');
   std::random_device rng;
-  std::uniform_int_distribution<char> dist('a', 'z');
+  std::uniform_int_distribution<short> dist(0, 'z' - 'a');
   std::generate_n(temp_filename_suffix.begin(), temp_filename_suffix.length(),
-                  [&rng, &dist] { return dist(rng); });
+                  [&rng, &dist] { return static_cast<char>('a' + dist(rng)); });
 
   auto temp_path = temp_dir / ("jazzer-" + temp_filename_suffix);
   if (std::filesystem::exists(temp_path))
