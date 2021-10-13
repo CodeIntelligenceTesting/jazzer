@@ -42,9 +42,9 @@ DEFINE_string(target_args, "",
               "Arguments passed to fuzzerInitialize as a String array. "
               "Separated by space.");
 
-DEFINE_uint32(keep_going, 1,
+DEFINE_uint32(keep_going, 0,
               "Continue fuzzing until N distinct exception stack traces have"
-              "been encountered");
+              "been encountered. Defaults to exit after the first finding.");
 DEFINE_bool(dedup, true,
             "Emit a dedup token for every finding. Defaults to true and is "
             "required for --keep_going and --ignore.");
@@ -60,12 +60,18 @@ DEFINE_string(coverage_report, "",
               "Path at which a coverage report is stored when the fuzzer "
               "exits. If left empty, no report is generated (default)");
 
+DEFINE_string(autofuzz, "",
+              "Fully qualified reference to a method on the classpath that "
+              "should be fuzzed automatically (example: System.out::println)");
+
 DECLARE_bool(hooks);
 
 constexpr auto kManifestUtilsClass =
     "com/code_intelligence/jazzer/runtime/ManifestUtils";
 constexpr auto kJazzerClass =
     "com/code_intelligence/jazzer/runtime/JazzerInternal";
+constexpr auto kAutofuzzFuzzTargetClass =
+    "com/code_intelligence/jazzer/autofuzz/FuzzTarget";
 
 namespace jazzer {
 // split a string on unescaped spaces
@@ -93,15 +99,38 @@ FuzzTargetRunner::FuzzTargetRunner(
     JVM &jvm, const std::vector<std::string> &additional_target_args)
     : ExceptionPrinter(jvm), jvm_(jvm), ignore_tokens_() {
   auto &env = jvm.GetEnv();
-  if (FLAGS_target_class.empty()) {
+  if (!FLAGS_target_class.empty() && !FLAGS_autofuzz.empty()) {
+    std::cerr << "--target_class and --autofuzz cannot be specified together"
+              << std::endl;
+    exit(1);
+  }
+  if (!FLAGS_target_args.empty() && !FLAGS_autofuzz.empty()) {
+    std::cerr << "--target_args and --autofuzz cannot be specified together"
+              << std::endl;
+    exit(1);
+  }
+  if (FLAGS_target_class.empty() && FLAGS_autofuzz.empty()) {
     FLAGS_target_class = DetectFuzzTargetClass();
   }
   // If automatically detecting the fuzz target class failed, we expect it as
   // the value of the --target_class argument.
-  if (FLAGS_target_class.empty()) {
+  if (FLAGS_target_class.empty() && FLAGS_autofuzz.empty()) {
     std::cerr << "Missing argument --target_class=<fuzz_target_class>"
               << std::endl;
     exit(1);
+  }
+  if (!FLAGS_autofuzz.empty()) {
+    FLAGS_target_class = kAutofuzzFuzzTargetClass;
+    if (FLAGS_keep_going == 0) {
+      FLAGS_keep_going = std::numeric_limits<gflags::uint32>::max();
+    }
+    // Pass the method reference string as an argument to the generic autofuzz
+    // fuzz target.
+    FLAGS_target_args = FLAGS_autofuzz;
+  }
+  // Set --keep_going to its real default.
+  if (FLAGS_keep_going == 0) {
+    FLAGS_keep_going = 1;
   }
   if ((!FLAGS_ignore.empty() || FLAGS_keep_going > 1) && !FLAGS_dedup) {
     std::cerr << "--nodedup is not supported with --ignore or --keep_going"

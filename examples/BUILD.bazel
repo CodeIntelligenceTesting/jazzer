@@ -3,6 +3,18 @@ load("@fmeum_rules_jni//jni:defs.bzl", "java_library_with_native")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
 java_fuzz_target_test(
+    name = "Autofuzz",
+    fuzzer_args = [
+        "--autofuzz=com.google.json.JsonSanitizer::sanitize",
+        # Exit after the first finding for testing purposes.
+        "--keep_going=1",
+    ],
+    runtime_deps = [
+        "@maven//:com_mikesamuel_json_sanitizer",
+    ],
+)
+
+java_fuzz_target_test(
     name = "ExampleFuzzer",
     srcs = [
         "src/main/java/com/example/ExampleFuzzer.java",
