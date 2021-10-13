@@ -14,7 +14,7 @@
 
 def java_fuzz_target_test(
         name,
-        target_class,
+        target_class = None,
         deps = [],
         hook_classes = [],
         native_libs = [],
@@ -25,9 +25,9 @@ def java_fuzz_target_test(
         srcs = [],
         **kwargs):
     target_name = name + "_target"
-    deploy_manifest_lines = [
-        "Jazzer-Fuzz-Target-Class: %s" % target_class,
-    ]
+    deploy_manifest_lines = []
+    if target_class:
+        deploy_manifest_lines.append("Jazzer-Fuzz-Target-Class: %s" % target_class)
     if hook_classes:
         deploy_manifest_lines.append("Jazzer-Hook-Classes: %s" % ":".join(hook_classes))
 
