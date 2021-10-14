@@ -28,8 +28,24 @@ public class FuzzTargetTestWrapper {
     Runfiles runfiles;
     try {
       runfiles = Runfiles.create();
-      driverActualPath = runfiles.rlocation(args[0]);
+      String driverRlocation;
+      if (System.getProperty("os.name").startsWith("Windows")) {
+        driverRlocation = args[0] + ".exe";
+      } else {
+        driverRlocation = args[0];
+      }
+      driverActualPath = runfiles.rlocation(driverRlocation);
+      if (driverActualPath == null) {
+        System.err.println("driverActualPath is null, driverRlocation=" + driverRlocation);
+        System.exit(1);
+        return;
+      }
       jarActualPath = runfiles.rlocation(args[1]);
+      if (jarActualPath == null) {
+        System.err.println("jarActualPath is null, jarRlocation=" + jarActualPath);
+        System.exit(1);
+        return;
+      }
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
