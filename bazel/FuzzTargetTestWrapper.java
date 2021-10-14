@@ -27,7 +27,9 @@ public class FuzzTargetTestWrapper {
     Runfiles runfiles;
     try {
       runfiles = Runfiles.create();
+      System.err.println("args[0]: " + args[0]);
       driverActualPath = runfiles.rlocation(args[0]);
+      System.err.println("driverActualPath: " + driverActualPath);
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(1);
