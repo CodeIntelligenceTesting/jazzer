@@ -14,12 +14,11 @@
 
 package com.code_intelligence.jazzer.api;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Replays recorded FuzzedDataProvider invocations that were executed while fuzzing.
@@ -39,6 +38,20 @@ final public class CannedFuzzedDataProvider implements FuzzedDataProvider {
       throw new RuntimeException(e);
     }
     nextReply = recordedReplies.iterator();
+  }
+
+  public static CannedFuzzedDataProvider create(List<Object> objects) {
+    try {
+      try (ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
+        try (ObjectOutputStream out = new ObjectOutputStream(bout)) {
+          out.writeObject(new ArrayList<>(objects));
+          String base64 = Base64.getEncoder().encodeToString(bout.toByteArray());
+          return new CannedFuzzedDataProvider(base64);
+        }
+      }
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   @Override
