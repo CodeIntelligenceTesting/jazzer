@@ -155,7 +155,7 @@ FuzzTargetRunner::FuzzTargetRunner(
     jclass string_class = jvm.FindClass("java/lang/String");
     jobjectArray arg_array = jvm.GetEnv().NewObjectArray(
         fuzz_target_args_tokens.size(), string_class, nullptr);
-    for (std::size_t i = 0; i < fuzz_target_args_tokens.size(); i++) {
+    for (jint i = 0; i < fuzz_target_args_tokens.size(); i++) {
       jstring str = env.NewStringUTF(fuzz_target_args_tokens[i].c_str());
       env.SetObjectArrayElement(arg_array, i, str);
     }
