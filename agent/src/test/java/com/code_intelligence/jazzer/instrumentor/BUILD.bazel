@@ -1,4 +1,5 @@
-load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library", "kt_jvm_test")
+load("//bazel:kotlin.bzl", "wrapped_kt_jvm_test")
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 kt_jvm_library(
     name = "patch_test_utils",
@@ -8,7 +9,7 @@ kt_jvm_library(
     ],
 )
 
-kt_jvm_test(
+wrapped_kt_jvm_test(
     name = "trace_data_flow_instrumentation_test",
     size = "small",
     srcs = [
@@ -27,7 +28,7 @@ kt_jvm_test(
     ],
 )
 
-kt_jvm_test(
+wrapped_kt_jvm_test(
     name = "coverage_instrumentation_test",
     size = "small",
     srcs = [
@@ -47,7 +48,7 @@ kt_jvm_test(
     ],
 )
 
-kt_jvm_test(
+wrapped_kt_jvm_test(
     name = "descriptor_utils_test",
     size = "small",
     srcs = [
@@ -63,7 +64,7 @@ kt_jvm_test(
     ],
 )
 
-kt_jvm_test(
+wrapped_kt_jvm_test(
     name = "hook_validation_test",
     size = "small",
     srcs = [
@@ -82,7 +83,7 @@ kt_jvm_test(
     ],
 )
 
-kt_jvm_test(
+wrapped_kt_jvm_test(
     name = "after_hooks_patch_test",
     size = "small",
     srcs = [
@@ -103,7 +104,7 @@ kt_jvm_test(
     ],
 )
 
-kt_jvm_test(
+wrapped_kt_jvm_test(
     name = "before_hooks_patch_test",
     size = "small",
     srcs = [
@@ -124,7 +125,7 @@ kt_jvm_test(
     ],
 )
 
-kt_jvm_test(
+wrapped_kt_jvm_test(
     name = "replace_hooks_patch_test",
     size = "small",
     srcs = [
