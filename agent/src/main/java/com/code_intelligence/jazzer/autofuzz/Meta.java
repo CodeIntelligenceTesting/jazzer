@@ -15,6 +15,9 @@
 package com.code_intelligence.jazzer.autofuzz;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.ScanResult;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -23,10 +26,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.List;
+import java.util.WeakHashMap;
 import net.jodah.typetools.TypeResolver;
 import net.jodah.typetools.TypeResolver.Unknown;
 
 public class Meta {
+  static WeakHashMap<Class<?>, List<Class<?>>> cache = new WeakHashMap<>();
+
   public static Object consume(FuzzedDataProvider data, Class<?> type) {
     if (type == byte.class || type == Byte.class) {
       return data.consumeByte();
@@ -68,8 +75,19 @@ public class Meta {
       return new ByteArrayInputStream(data.consumeBytes(data.remainingBytes() / 2));
     } else if (type.isEnum()) {
       return data.pickValue(type.getEnumConstants());
-    } else if (Modifier.isAbstract(type.getModifiers())) {
-    } else if (type.isInterface()) {
+    } else if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
+      List<Class<?>> implementingClasses = cache.get(type);
+      if (implementingClasses == null) {
+        try (ScanResult result =
+                 new ClassGraph().enableClassInfo().enableInterClassDependencies().scan()) {
+          ClassInfoList children =
+              type.isInterface() ? result.getClassesImplementing(type) : result.getSubclasses(type);
+          implementingClasses =
+              children.getStandardClasses().filter(cls -> !cls.isAbstract()).loadClasses();
+          cache.put(type, implementingClasses);
+        }
+      }
+      return consume(data, data.pickValue(implementingClasses));
     } else if (type.getConstructors().length > 0) {
       return autofuzz(data, data.pickValue(type.getConstructors()));
     }

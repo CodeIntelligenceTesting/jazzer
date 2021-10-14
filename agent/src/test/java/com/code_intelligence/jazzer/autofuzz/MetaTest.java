@@ -20,10 +20,8 @@ import static org.junit.Assert.assertTrue;
 import com.code_intelligence.jazzer.api.CannedFuzzedDataProvider;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.google.json.JsonSanitizer;
-
 import java.util.Arrays;
 import java.util.Collections;
-
 import org.junit.Test;
 
 public class MetaTest {
