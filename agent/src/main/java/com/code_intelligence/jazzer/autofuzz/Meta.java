@@ -96,12 +96,23 @@ public class Meta {
 
   private static Object consumeChecked(FuzzedDataProvider data, Class<?>[] types, int i) {
     if (types[i] == Unknown.class) {
-      throw new IllegalArgumentException("Failed to determine type of argument " + (i + 1));
+      throw new AutofuzzError("Failed to determine type of argument " + (i + 1));
     }
-    Object result = consume(data, types[i]);
+    Object result;
+    try {
+      result = consume(data, types[i]);
+    } catch (AutofuzzConstructionException e) {
+      // Do not nest AutofuzzConstructionExceptions.
+      throw e;
+    } catch (AutofuzzInvocationException e) {
+      // If an invocation fails while creating the arguments for another invocation, the exception
+      // should not be reported, so we rewrap it.
+      throw new AutofuzzConstructionException(e.getCause());
+    } catch (Throwable t) {
+      throw new AutofuzzConstructionException(t);
+    }
     if (result != null && !types[i].isAssignableFrom(result.getClass())) {
-      throw new IllegalStateException(
-          "consume returned " + result.getClass() + ", but need " + types[i]);
+      throw new AutofuzzError("consume returned " + result.getClass() + ", but need " + types[i]);
     }
     return result;
   }
@@ -118,10 +129,11 @@ public class Meta {
     Object[] arguments = consumeArguments(data, method);
     try {
       return method.invoke(thisObject, arguments);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
+    } catch (IllegalAccessException | IllegalArgumentException | NullPointerException e) {
+      // We should ensure that the arguments fed into the method are always valid.
+      throw new AutofuzzError(e);
     } catch (InvocationTargetException e) {
-      throw new RuntimeException(e.getCause());
+      throw new AutofuzzInvocationException(e.getCause());
     }
   }
 
@@ -129,30 +141,37 @@ public class Meta {
     Object[] arguments = consumeArguments(data, constructor);
     try {
       return constructor.newInstance(arguments);
-    } catch (InstantiationException | IllegalAccessException e) {
-      throw new RuntimeException(e);
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+      // This should never be reached as the logic in consume should prevent us from e.g. calling
+      // constructors of abstract classes or private constructors.
+      throw new AutofuzzError(e);
     } catch (InvocationTargetException e) {
-      throw new RuntimeException(e.getCause());
+      throw new AutofuzzInvocationException(e.getCause());
     }
   }
 
   private static Object[] consumeArguments(FuzzedDataProvider data, Executable executable) {
-    return Arrays.stream(executable.getParameterTypes())
-        .map((type) -> consume(data, type))
-        .toArray();
+    Object[] result;
+    try {
+      result = Arrays.stream(executable.getParameterTypes())
+                   .map((type) -> consume(data, type))
+                   .toArray();
+      return result;
+    } catch (AutofuzzConstructionException e) {
+      // Do not nest AutofuzzConstructionExceptions.
+      throw e;
+    } catch (AutofuzzInvocationException e) {
+      // If an invocation fails while creating the arguments for another invocation, the exception
+      // should not be reported, so we rewrap it.
+      throw new AutofuzzConstructionException(e.getCause());
+    } catch (Throwable t) {
+      throw new AutofuzzConstructionException(t);
+    }
   }
 
   public static <T1> void autofuzz(FuzzedDataProvider data, Consumer1<T1> func) {
-    Class<?> type = TypeResolver.resolveRawArgument(Consumer1.class, func.getClass());
-    if (type == Unknown.class) {
-      throw new IllegalArgumentException("Failed to determine type of argument 1");
-    }
-    Object result = consume(data, type);
-    if (result != null && !type.isAssignableFrom(result.getClass())) {
-      throw new IllegalStateException(
-          "consume returned " + result.getClass() + ", but need " + type);
-    }
-    func.accept((T1) result);
+    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer1.class, func.getClass());
+    func.accept((T1) consumeChecked(data, types, 0));
   }
 
   public static <T1, R> R autofuzz(FuzzedDataProvider data, Function1<T1, R> func) {
