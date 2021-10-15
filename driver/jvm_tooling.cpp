@@ -160,9 +160,9 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
   // User provided agent location takes precedence.
   if (!FLAGS_agent_path.empty()) {
     if (std::ifstream(FLAGS_agent_path).good()) return FLAGS_agent_path;
-    LOG(ERROR) << "Could not find " << kAgentFileName << "in \""
+    LOG(ERROR) << "Could not find " << kAgentFileName << " at \""
                << FLAGS_agent_path << "\"";
-    exit(0);
+    exit(1);
   }
   // First check if we are running inside the Bazel tree and use the agent
   // runfile.
