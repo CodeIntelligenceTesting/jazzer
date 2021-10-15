@@ -27,6 +27,12 @@ DECLARE_string(target_args);
 DECLARE_string(agent_path);
 DECLARE_string(instrumentation_excludes);
 
+#ifdef _WIN32
+#define ARG_SEPARATOR ";"
+#else
+#define ARG_SEPARATOR ":"
+#endif
+
 namespace jazzer {
 
 std::vector<std::string> splitOnSpace(const std::string &s);
@@ -42,7 +48,8 @@ class JvmToolingTest : public ::testing::Test {
   // process, so we set up a single JVM instance for this test binary which gets
   // destroyed after all tests in this test suite have finished.
   static void SetUpTestCase() {
-    FLAGS_jvm_args = "-Denv1=val1;-Denv2=val2";
+    FLAGS_jvm_args =
+        "-Denv1=va\\" ARG_SEPARATOR "l1\\\\" ARG_SEPARATOR "-Denv2=val2";
     FLAGS_instrumentation_excludes = "**";
     using ::bazel::tools::cpp::runfiles::Runfiles;
     Runfiles *runfiles = Runfiles::CreateForTest();
@@ -79,7 +86,9 @@ TEST_F(JvmToolingTest, JniProperties) {
 
   auto &env = jvm_->GetEnv();
   for (const auto &el : std::vector<std::pair<std::string, std::string>>{
-           {"not set property", ""}, {"env1", "val1"}, {"env2", "val2"}}) {
+           {"not set property", ""},
+           {"env1", "va" ARG_SEPARATOR "l1\\"},
+           {"env2", "val2"}}) {
     jstring str = env.NewStringUTF(el.first.c_str());
     auto ret = (jstring)env.CallStaticObjectMethod(property_printer_class,
                                                    method_id, str);
