@@ -20,10 +20,13 @@ import com.sun.source.util.DocTrees;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -141,8 +144,8 @@ public class NoThrowDoclet implements Doclet {
     return element.getQualifiedName().toString().replace('.', '/');
   }
 
-  private void handleExecutableElement(DocTrees trees, ExecutableElement executable)
-      throws IOException {
+  private void handleExecutableElement(
+      DocTrees trees, ExecutableElement executable, String className) throws IOException {
     if (!executable.getModifiers().contains(Modifier.PUBLIC))
       return;
 
@@ -156,8 +159,6 @@ public class NoThrowDoclet implements Doclet {
     }
 
     String methodName = executable.getSimpleName().toString();
-    String className =
-        ((TypeElement) executable.getEnclosingElement()).getQualifiedName().toString();
     String internalClassName = className.replace('.', '/');
 
     String paramTypeDescriptors = executable.getParameters()
@@ -171,19 +172,36 @@ public class NoThrowDoclet implements Doclet {
     out.write(String.format("%s#%s#%s%n", internalClassName, methodName, methodDescriptor));
   }
 
-  public void handleTypeElement(DocTrees trees, TypeElement typeElement) throws IOException {
-    List<ExecutableElement> executables =
-        ElementFilter.constructorsIn(typeElement.getEnclosedElements());
-    executables.addAll(ElementFilter.methodsIn(typeElement.getEnclosedElements()));
+  public void handleTypeElement(DocTrees trees, Map<TypeMirror, TypeElement> allTypes,
+      TypeElement typeElement) throws IOException {
+    List<ExecutableElement> declaredExecutables =
+        Stream.concat(ElementFilter.constructorsIn(typeElement.getEnclosedElements()).stream(),
+            ElementFilter.methodsIn(typeElement.getEnclosedElements()).stream()).collect(Collectors.toList());
+    Stream<ExecutableElement> inheritedExecutablesStream =
+        typeElement.getInterfaces().stream().flatMap(
+            iface -> {
+              TypeElement type = allTypes.get(iface);
+              if (type == null) {
+                return Stream.of();
+              } else {
+                return ElementFilter.methodsIn(type.getEnclosedElements()).stream().filter(
+                    executableElement -> declaredExecutables.stream().noneMatch(executableElement::equals)
+                );
+              }
+            });
+    Set<ExecutableElement> executables =
+        Stream.concat(declaredExecutables.stream(), inheritedExecutablesStream)
+            .collect(Collectors.toSet());
+    String className = typeElement.getQualifiedName().toString();
     for (ExecutableElement executableElement : executables) {
-      handleExecutableElement(trees, executableElement);
+      handleExecutableElement(trees, executableElement, className);
     }
   }
 
   @Override
   public boolean run(DocletEnvironment docletEnvironment) {
     try {
-      DocTrees trees = docletEnvironment.getDocTrees();
+      Map<TypeMirror, TypeElement> allTypes = new HashMap<>();
       for (ModuleElement moduleElement :
           ElementFilter.modulesIn(docletEnvironment.getSpecifiedElements())) {
         for (PackageElement packageElement :
@@ -194,11 +212,15 @@ public class NoThrowDoclet implements Doclet {
               ElementKind kind = typeElement.getKind();
               if (kind == ElementKind.CLASS || kind == ElementKind.ENUM
                   || kind == ElementKind.INTERFACE) {
-                handleTypeElement(trees, typeElement);
+                allTypes.put(typeElement.asType(), typeElement);
               }
             }
           }
         }
+      }
+      DocTrees trees = docletEnvironment.getDocTrees();
+      for (TypeElement type : allTypes.values()) {
+        handleTypeElement(trees, allTypes, type);
       }
     } catch (IOException e) {
       e.printStackTrace();
