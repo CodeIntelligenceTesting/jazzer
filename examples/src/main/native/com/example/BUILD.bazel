@@ -12,6 +12,11 @@ java_native_library(
     java_lib = "//examples:example_fuzzer_with_native_lib",
     linkopts = select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
+        "@platforms//os:windows": [
+            # Windows requires all symbols that should be imported from the main
+            # executable to be defined by an import lib.
+            "/wholearchive:clang_rt.asan_dll_thunk-x86_64.lib",
+        ],
         "//conditions:default": [],
     }),
     visibility = ["//examples:__pkg__"],
@@ -29,6 +34,11 @@ java_native_library(
     java_lib = "//examples:example_fuzzer_with_native_lib",
     linkopts = select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
+        "@platforms//os:windows": [
+            # Using the asan thunk is correct here as it contains symbols for
+            # UBSan and SanCov as well.
+            "/wholearchive:clang_rt.asan_dll_thunk-x86_64.lib",
+        ],
         "//conditions:default": [],
     }),
     visibility = ["//examples:__pkg__"],

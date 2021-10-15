@@ -1,6 +1,6 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("@fmeum_rules_jni//jni:defs.bzl", "java_library_with_native")
-load("//bazel:compat.bzl", "SKIP_ON_MACOS")
+load("//bazel:compat.bzl", "SKIP_ON_MACOS", "SKIP_ON_WINDOWS")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
 java_fuzz_target_test(
@@ -44,6 +44,8 @@ java_fuzz_target_test(
     fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_ubsan"],
     sanitizer = "undefined",
     target_class = "com.example.ExampleFuzzerWithNative",
+    # Crashes at runtime without an error message.
+    target_compatible_with = SKIP_ON_WINDOWS,
     runtime_deps = [
         ":example_fuzzer_with_native_lib",
     ],
