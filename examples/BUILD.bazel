@@ -1,5 +1,6 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("@fmeum_rules_jni//jni:defs.bzl", "java_library_with_native")
+load("//bazel:compat.bzl", "SKIP_ON_MACOS")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
 java_fuzz_target_test(
@@ -82,9 +83,9 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExampleStackOverflowFuzzer.java",
     ],
-    # Crashes with a segfault before any stack trace printing is reached.
-    tags = ["broken-on-darwin"],
     target_class = "com.example.ExampleStackOverflowFuzzer",
+    # Crashes with a segfault before any stack trace printing is reached.
+    target_compatible_with = SKIP_ON_MACOS,
 )
 
 java_fuzz_target_test(
@@ -97,9 +98,9 @@ java_fuzz_target_test(
         "--jvm_args=-Dfoo=foo;-Dbar=bar",
         "--additional_jvm_args=-Dbaz=baz",
     ],
-    # The exit codes of the forked libFuzzer processes are not picked up correctly.
-    tags = ["broken-on-darwin"],
     target_class = "com.example.JpegImageParserFuzzer",
+    # The exit codes of the forked libFuzzer processes are not picked up correctly.
+    target_compatible_with = SKIP_ON_MACOS,
     deps = [
         "@maven//:org_apache_commons_commons_imaging",
     ],
