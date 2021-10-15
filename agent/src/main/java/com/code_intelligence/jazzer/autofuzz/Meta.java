@@ -25,14 +25,67 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 import net.jodah.typetools.TypeResolver;
 import net.jodah.typetools.TypeResolver.Unknown;
 
 public class Meta {
   static WeakHashMap<Class<?>, List<Class<?>>> cache = new WeakHashMap<>();
+
+  public static Object autofuzz(FuzzedDataProvider data, Method method) {
+    if (Modifier.isStatic(method.getModifiers())) {
+      return autofuzz(data, method, null);
+    } else {
+      return autofuzz(data, method, consume(data, method.getDeclaringClass()));
+    }
+  }
+
+  public static Object autofuzz(FuzzedDataProvider data, Method method, Object thisObject) {
+    Object[] arguments = consumeArguments(data, method);
+    try {
+      return method.invoke(thisObject, arguments);
+    } catch (IllegalAccessException | IllegalArgumentException | NullPointerException e) {
+      // We should ensure that the arguments fed into the method are always valid.
+      throw new AutofuzzError(e);
+    } catch (InvocationTargetException e) {
+      throw new AutofuzzInvocationException(e.getCause());
+    }
+  }
+
+  public static <R> R autofuzz(FuzzedDataProvider data, Constructor<R> constructor) {
+    Object[] arguments = consumeArguments(data, constructor);
+    try {
+      return constructor.newInstance(arguments);
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+      // This should never be reached as the logic in consume should prevent us from e.g. calling
+      // constructors of abstract classes or private constructors.
+      throw new AutofuzzError(e);
+    } catch (InvocationTargetException e) {
+      throw new AutofuzzInvocationException(e.getCause());
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1> void autofuzz(FuzzedDataProvider data, Consumer1<T1> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer1.class, func.getClass());
+    func.accept((T1) consumeChecked(data, types, 0));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, R> R autofuzz(FuzzedDataProvider data, Function1<T1, R> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Function1.class, func.getClass());
+    return func.apply((T1) consumeChecked(data, types, 0));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, R> R autofuzz(FuzzedDataProvider data, Function2<T1, T2, R> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Function2.class, func.getClass());
+    return func.apply((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1));
+  }
 
   public static Object consume(FuzzedDataProvider data, Class<?> type) {
     if (type == byte.class || type == Byte.class) {
@@ -90,8 +143,65 @@ public class Meta {
       return consume(data, data.pickValue(implementingClasses));
     } else if (type.getConstructors().length > 0) {
       return autofuzz(data, data.pickValue(type.getConstructors()));
+    } else if (getNestedBuilderClasses(type).size() > 0) {
+      List<Class<?>> nestedBuilderClasses = getNestedBuilderClasses(type);
+      Class<?> pickedBuilder = data.pickValue(nestedBuilderClasses);
+
+      List<Method> cascadingBuilderMethods = Arrays.stream(pickedBuilder.getMethods())
+                                                 .filter(m -> m.getReturnType() == pickedBuilder)
+                                                 .collect(Collectors.toList());
+
+      List<Method> originalObjectCreationMethods = Arrays.stream(pickedBuilder.getMethods())
+                                                       .filter(m -> m.getReturnType() == type)
+                                                       .collect(Collectors.toList());
+
+      int pickedMethodsNumber = data.consumeInt(0, cascadingBuilderMethods.size());
+      List<Method> pickedMethods = new ArrayList<>();
+      for (int i = 0; i < pickedMethodsNumber; i++) {
+        Method method = data.pickValue(cascadingBuilderMethods);
+        pickedMethods.add(method);
+        cascadingBuilderMethods.remove(method);
+      }
+
+      Method builderMethod = data.pickValue(originalObjectCreationMethods);
+
+      Object obj = autofuzz(data, data.pickValue(pickedBuilder.getConstructors()));
+      for (Method method : pickedMethods) {
+        obj = autofuzz(data, method, obj);
+      }
+
+      try {
+        return builderMethod.invoke(obj);
+      } catch (Exception e) {
+        throw new AutofuzzConstructionException(e);
+      }
     }
     return null;
+  }
+
+  private static List<Class<?>> getNestedBuilderClasses(Class<?> type) {
+    return Arrays.stream(type.getClasses())
+        .filter(cls -> cls.getName().endsWith("Builder"))
+        .collect(Collectors.toList());
+  }
+
+  private static Object[] consumeArguments(FuzzedDataProvider data, Executable executable) {
+    Object[] result;
+    try {
+      result = Arrays.stream(executable.getParameterTypes())
+                   .map((type) -> consume(data, type))
+                   .toArray();
+      return result;
+    } catch (AutofuzzConstructionException e) {
+      // Do not nest AutofuzzConstructionExceptions.
+      throw e;
+    } catch (AutofuzzInvocationException e) {
+      // If an invocation fails while creating the arguments for another invocation, the exception
+      // should not be reported, so we rewrap it.
+      throw new AutofuzzConstructionException(e.getCause());
+    } catch (Throwable t) {
+      throw new AutofuzzConstructionException(t);
+    }
   }
 
   private static Object consumeChecked(FuzzedDataProvider data, Class<?>[] types, int i) {
@@ -115,72 +225,5 @@ public class Meta {
       throw new AutofuzzError("consume returned " + result.getClass() + ", but need " + types[i]);
     }
     return result;
-  }
-
-  public static Object autofuzz(FuzzedDataProvider data, Method method) {
-    if (Modifier.isStatic(method.getModifiers())) {
-      return autofuzz(data, method, null);
-    } else {
-      return autofuzz(data, method, consume(data, method.getDeclaringClass()));
-    }
-  }
-
-  public static Object autofuzz(FuzzedDataProvider data, Method method, Object thisObject) {
-    Object[] arguments = consumeArguments(data, method);
-    try {
-      return method.invoke(thisObject, arguments);
-    } catch (IllegalAccessException | IllegalArgumentException | NullPointerException e) {
-      // We should ensure that the arguments fed into the method are always valid.
-      throw new AutofuzzError(e);
-    } catch (InvocationTargetException e) {
-      throw new AutofuzzInvocationException(e.getCause());
-    }
-  }
-
-  public static <R> R autofuzz(FuzzedDataProvider data, Constructor<R> constructor) {
-    Object[] arguments = consumeArguments(data, constructor);
-    try {
-      return constructor.newInstance(arguments);
-    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException e) {
-      // This should never be reached as the logic in consume should prevent us from e.g. calling
-      // constructors of abstract classes or private constructors.
-      throw new AutofuzzError(e);
-    } catch (InvocationTargetException e) {
-      throw new AutofuzzInvocationException(e.getCause());
-    }
-  }
-
-  private static Object[] consumeArguments(FuzzedDataProvider data, Executable executable) {
-    Object[] result;
-    try {
-      result = Arrays.stream(executable.getParameterTypes())
-                   .map((type) -> consume(data, type))
-                   .toArray();
-      return result;
-    } catch (AutofuzzConstructionException e) {
-      // Do not nest AutofuzzConstructionExceptions.
-      throw e;
-    } catch (AutofuzzInvocationException e) {
-      // If an invocation fails while creating the arguments for another invocation, the exception
-      // should not be reported, so we rewrap it.
-      throw new AutofuzzConstructionException(e.getCause());
-    } catch (Throwable t) {
-      throw new AutofuzzConstructionException(t);
-    }
-  }
-
-  public static <T1> void autofuzz(FuzzedDataProvider data, Consumer1<T1> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer1.class, func.getClass());
-    func.accept((T1) consumeChecked(data, types, 0));
-  }
-
-  public static <T1, R> R autofuzz(FuzzedDataProvider data, Function1<T1, R> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Function1.class, func.getClass());
-    return func.apply((T1) consumeChecked(data, types, 0));
-  }
-
-  public static <T1, T2, R> R autofuzz(FuzzedDataProvider data, Function2<T1, T2, R> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Function2.class, func.getClass());
-    return func.apply((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1));
   }
 }
