@@ -97,9 +97,11 @@ java_fuzz_target_test(
     ],
     fuzzer_args = [
         "-fork=5",
-        "--jvm_args=-Dfoo=foo;-Dbar=bar",
         "--additional_jvm_args=-Dbaz=baz",
-    ],
+    ] + select({
+        "@platforms//os:windows": ["--jvm_args=-Dfoo=foo;-Dbar=bar"],
+        "//conditions:default": ["--jvm_args=-Dfoo=foo:-Dbar=bar"],
+    }),
     target_class = "com.example.JpegImageParserFuzzer",
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
     target_compatible_with = SKIP_ON_MACOS,

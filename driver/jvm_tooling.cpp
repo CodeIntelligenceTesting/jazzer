@@ -22,6 +22,7 @@
 
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
+#include "absl/strings/str_replace.h"
 #include "absl/strings/str_split.h"
 #include "coverage_tracker.h"
 #include "gflags/gflags.h"
@@ -32,14 +33,16 @@
 #include "utils.h"
 
 DEFINE_string(cp, ".",
-              "the jvm class path which should include the fuzz target class, "
-              "instrumentor "
-              "runtime and further dependencies separated by a colon \":\"");
+              "the classpath to use for fuzzing. Behaves analogously to java's "
+              "-cp (separator is ':' on Linux/macOS and ';' on Windows, escape "
+              "it with '\\').");
 DEFINE_string(jvm_args, "",
-              "arguments passed to the jvm separated by semicolon \";\"");
+              "arguments passed to the JVM (separator is ':' on Linux/macOS "
+              "and ';' on Windows, escape it with '\\')");
 DEFINE_string(additional_jvm_args, "",
-              "additional arguments passed to the jvm separated by semicolon "
-              "\";\". Use this option to set further JVM args that should not "
+              "additional arguments passed to the JVM (separator is ':' on "
+              "Linux/macOS and ';' on Windows). Use this option to set further "
+              "JVM args that should not "
               "interfere with those provided via --jvm_args.");
 DEFINE_string(agent_path, "", "location of the fuzzing instrumentation agent");
 
@@ -84,6 +87,12 @@ DEFINE_bool(hooks, true,
             "selection and mutation. If set to false no "
             "coverage information will be processed. This can be useful for "
             "running a regression test on non-instrumented bytecode.");
+
+#ifdef _WIN32
+#define ARG_SEPARATOR ";"
+#else
+#define ARG_SEPARATOR ":"
+#endif
 
 // Called by the agent when
 // com.code_intelligence.jazzer.instrumentor.ClassInstrumentor is initialized.
@@ -211,16 +220,44 @@ std::string agentArgsFromFlags() {
   return absl::StrJoin(args, ",");
 }
 
+// Splits a string at the ARG_SEPARATOR unless it is escaped with a backslash.
+// Backslash itself can be escaped with another backslash.
+std::vector<std::string> splitEscaped(const std::string &str) {
+  // Protect \\ and \<separator> against splitting.
+  const std::string BACKSLASH_BACKSLASH_REPLACEMENT =
+      "%%JAZZER_BACKSLASH_BACKSLASH_REPLACEMENT%%";
+  const std::string BACKSLASH_SEPARATOR_REPLACEMENT =
+      "%%JAZZER_BACKSLASH_SEPARATOR_REPLACEMENT%%";
+  std::string protected_str =
+      absl::StrReplaceAll(str, {{"\\\\", BACKSLASH_BACKSLASH_REPLACEMENT}});
+  protected_str = absl::StrReplaceAll(
+      protected_str, {{"\\" ARG_SEPARATOR, BACKSLASH_SEPARATOR_REPLACEMENT}});
+
+  std::vector<std::string> parts = absl::StrSplit(protected_str, ARG_SEPARATOR);
+  std::transform(parts.begin(), parts.end(), parts.begin(),
+                 [&BACKSLASH_SEPARATOR_REPLACEMENT,
+                  &BACKSLASH_BACKSLASH_REPLACEMENT](const std::string &part) {
+                   return absl::StrReplaceAll(
+                       part,
+                       {
+                           {BACKSLASH_SEPARATOR_REPLACEMENT, ARG_SEPARATOR},
+                           {BACKSLASH_BACKSLASH_REPLACEMENT, "\\"},
+                       });
+                 });
+
+  return parts;
+}
+
 JVM::JVM(const std::string &executable_path) {
   // combine class path from command line flags and JAVA_FUZZER_CLASSPATH env
   // variable
   std::string class_path = absl::StrFormat("-Djava.class.path=%s", FLAGS_cp);
   const auto class_path_from_env = std::getenv("JAVA_FUZZER_CLASSPATH");
   if (class_path_from_env) {
-    class_path += absl::StrFormat(":%s", class_path_from_env);
+    class_path += absl::StrFormat(ARG_SEPARATOR "%s", class_path_from_env);
   }
-  class_path +=
-      absl::StrFormat(":%s", getInstrumentorAgentPath(executable_path));
+  class_path += absl::StrFormat(ARG_SEPARATOR "%s",
+                                getInstrumentorAgentPath(executable_path));
   LOG(INFO) << "got class path " << class_path;
 
   std::vector<JavaVMOption> options;
@@ -240,7 +277,7 @@ JVM::JVM(const std::string &executable_path) {
   // add additional jvm options set through command line flags
   std::vector<std::string> jvm_args;
   if (!FLAGS_jvm_args.empty()) {
-    jvm_args = absl::StrSplit(FLAGS_jvm_args, ';');
+    jvm_args = splitEscaped(FLAGS_jvm_args);
   }
   for (const auto &arg : jvm_args) {
     options.push_back(
@@ -248,7 +285,7 @@ JVM::JVM(const std::string &executable_path) {
   }
   std::vector<std::string> additional_jvm_args;
   if (!FLAGS_additional_jvm_args.empty()) {
-    additional_jvm_args = absl::StrSplit(FLAGS_additional_jvm_args, ';');
+    additional_jvm_args = splitEscaped(FLAGS_additional_jvm_args);
   }
   for (const auto &arg : additional_jvm_args) {
     options.push_back(
