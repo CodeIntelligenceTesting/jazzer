@@ -16,3 +16,8 @@ SKIP_ON_MACOS = select({
     "@platforms//os:macos": ["@platforms//:incompatible"],
     "//conditions:default": [],
 })
+
+SKIP_ON_WINDOWS = select({
+    "@platforms//os:windows": ["@platforms//:incompatible"],
+    "//conditions:default": [],
+})
