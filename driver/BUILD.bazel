@@ -166,7 +166,6 @@ cc_test(
     ],
     args = [
         "--cp=$(location //driver/testdata:fuzz_target_mocks_deploy.jar)",
-        "--agent_path=$(rootpath //agent:jazzer_agent_deploy.jar)",
     ],
     data = [
         "//agent:jazzer_agent_deploy.jar",
@@ -195,7 +194,6 @@ cc_test(
     ],
     args = [
         "--cp=$(location //driver/testdata:fuzz_target_mocks_deploy.jar)",
-        "--agent_path=$(rootpath //agent:jazzer_agent_deploy.jar)",
     ],
     data = [
         "//agent:jazzer_agent_deploy.jar",
