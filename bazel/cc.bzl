@@ -30,7 +30,12 @@ _add_cxxopt_std_17 = transition(
 def _cc_17_library_impl(ctx):
     library = ctx.attr.library[0]
     return [
-        library[DefaultInfo],
+        # Workaround for https://github.com/bazelbuild/bazel/issues/9442.
+        DefaultInfo(
+            data_runfiles = library[DefaultInfo].data_runfiles,
+            default_runfiles = library[DefaultInfo].default_runfiles,
+            files = library[DefaultInfo].files,
+        ),
         library[CcInfo],
     ]
 
