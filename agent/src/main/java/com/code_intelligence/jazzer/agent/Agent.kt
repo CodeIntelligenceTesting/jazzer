@@ -45,6 +45,8 @@ private object AgentJarFinder {
     val agentJarFile = agentJarPath?.let { JarFile(File(it)) }
 }
 
+private val argumentDelimiter = if (System.getProperty("os.name").startsWith("Windows")) ";" else ":"
+
 @OptIn(ExperimentalPathApi::class)
 fun premain(agentArgs: String?, instrumentation: Instrumentation) {
     // Add the agent jar (i.e., the jar out of which we are currently executing) to the search path of the bootstrap
@@ -69,7 +71,7 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
                     println("WARN: Ignoring unknown argument ${splitArg[0]}")
                     null
                 }
-                else -> splitArg[0] to splitArg[1].split(":")
+                else -> splitArg[0] to splitArg[1].split(argumentDelimiter)
             }
         }.toMap()
     val manifestCustomHookNames = ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES).flatMap {
