@@ -18,6 +18,7 @@
 #include "fuzz_target_runner.h"
 #include "gflags/gflags.h"
 #include "gtest/gtest.h"
+#include "tools/cpp/runfiles/runfiles.h"
 
 DECLARE_string(cp);
 DECLARE_string(jvm_args);
@@ -43,6 +44,9 @@ class JvmToolingTest : public ::testing::Test {
   static void SetUpTestCase() {
     FLAGS_jvm_args = "-Denv1=val1;-Denv2=val2";
     FLAGS_instrumentation_excludes = "**";
+    using ::bazel::tools::cpp::runfiles::Runfiles;
+    Runfiles *runfiles = Runfiles::CreateForTest();
+    FLAGS_cp = runfiles->Rlocation(FLAGS_cp);
 
     jvm_ = std::make_unique<JVM>("test_executable");
   }

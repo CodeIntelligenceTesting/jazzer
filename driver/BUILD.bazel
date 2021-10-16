@@ -206,7 +206,7 @@ cc_test(
         "sanitizer_symbols_for_tests.cpp",
     ],
     args = [
-        "--cp=$(location //driver/testdata:fuzz_target_mocks_deploy.jar)",
+        "--cp=jazzer/$(rootpath //driver/testdata:fuzz_target_mocks_deploy.jar)",
     ],
     data = [
         "//agent:jazzer_agent_deploy.jar",
@@ -224,6 +224,7 @@ cc_test(
     deps = [
         ":jvm_tooling_lib",
         ":test_main",
+        "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
         "@jazzer_com_github_gflags_gflags//:gflags",
     ],
@@ -237,7 +238,7 @@ cc_test(
         "sanitizer_symbols_for_tests.cpp",
     ],
     args = [
-        "--cp=$(location //driver/testdata:fuzz_target_mocks_deploy.jar)",
+        "--cp=jazzer/$(rootpath //driver/testdata:fuzz_target_mocks_deploy.jar)",
     ],
     data = [
         "//agent:jazzer_agent_deploy.jar",
@@ -247,6 +248,7 @@ cc_test(
     deps = [
         ":jvm_tooling_lib",
         ":test_main",
+        "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
         "@jazzer_com_github_gflags_gflags//:gflags",
     ],
