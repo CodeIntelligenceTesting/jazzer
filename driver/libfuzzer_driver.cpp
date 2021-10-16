@@ -73,7 +73,7 @@ std::string GetNewTempFilePath() {
   if (std::filesystem::exists(temp_path))
     throw std::runtime_error("Random temp file path exists: " +
                              temp_path.string());
-  return temp_path.generic_string();
+  return temp_path.string();
 }
 }  // namespace
 
