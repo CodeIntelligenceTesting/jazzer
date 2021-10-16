@@ -36,6 +36,20 @@
 
 #define REPEAT_4096(a) REPEAT_16(REPEAT_16(REPEAT_16(a)))
 
+// The first four registers to pass arguments in according to the
+// platform-specific x64 calling convention.
+#ifdef _WIN64
+#define REG_1 "rcx"
+#define REG_2 "rdx"
+#define REG_3 "r8"
+#define REG_4 "r9"
+#else
+#define REG_1 "rdi"
+#define REG_2 "rsi"
+#define REG_3 "rdx"
+#define REG_4 "rcx"
+#endif
+
 // Call the function at address `func` with arguments `arg1` and `arg2` while
 // ensuring that the return address is `fake_pc` up to a globally constant
 // offset.
@@ -44,10 +58,10 @@ __attribute__((noinline)) void trampoline(uint64_t arg1, uint64_t arg2,
   // arg1 and arg2 have to be forwarded according to the x64 calling convention.
   // We also fix func and fake_pc to their registers so that we can safely use
   // rax below.
-  [[maybe_unused]] register uint64_t arg1_loc asm("rdi") = arg1;
-  [[maybe_unused]] register uint64_t arg2_loc asm("rsi") = arg2;
-  [[maybe_unused]] register void *func_loc asm("rdx") = func;
-  [[maybe_unused]] register uint64_t fake_pc_loc asm("rcx") = fake_pc;
+  [[maybe_unused]] register uint64_t arg1_loc asm(REG_1) = arg1;
+  [[maybe_unused]] register uint64_t arg2_loc asm(REG_2) = arg2;
+  [[maybe_unused]] register void *func_loc asm(REG_3) = func;
+  [[maybe_unused]] register uint64_t fake_pc_loc asm(REG_4) = fake_pc;
   asm volatile goto(
       // Load RIP-relative address of the end of this function.
       "lea %l[end_of_function](%%rip), %%rax \n\t"
