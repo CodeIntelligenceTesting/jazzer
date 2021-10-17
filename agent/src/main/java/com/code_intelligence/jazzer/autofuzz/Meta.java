@@ -156,12 +156,7 @@ public class Meta {
                                                        .collect(Collectors.toList());
 
       int pickedMethodsNumber = data.consumeInt(0, cascadingBuilderMethods.size());
-      List<Method> pickedMethods = new ArrayList<>();
-      for (int i = 0; i < pickedMethodsNumber; i++) {
-        Method method = data.pickValue(cascadingBuilderMethods);
-        pickedMethods.add(method);
-        cascadingBuilderMethods.remove(method);
-      }
+      List<Method> pickedMethods = data.pickValues(cascadingBuilderMethods, pickedMethodsNumber);
 
       Method builderMethod = data.pickValue(originalObjectCreationMethods);
 

@@ -14,6 +14,8 @@
 
 package com.code_intelligence.jazzer.api;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -284,6 +286,7 @@ public interface FuzzedDataProvider {
    * @param <T> the type of a collection element
    * @return an element from {@code collection} chosen based on the fuzzer input
    */
+  @SuppressWarnings("unchecked")
   default<T> T pickValue(Collection<T> collection) {
     int size = collection.size();
     if (size == 0) {
@@ -394,5 +397,48 @@ public interface FuzzedDataProvider {
    */
   default char pickValue(char[] array) {
     return array[consumeInt(0, array.length - 1)];
+  }
+
+  /**
+   * Picks {@code numOfElements} elements from {@code collection} based on the fuzzer input.
+   * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
+   *
+   * @param collection the {@link Collection} to pick an element from.
+   * @param numOfElements the number of elements to pick.
+   * @param <T> the type of the collection element
+   * @return an array of size {@code numOfElements} from {@code collection} chosen based on the
+   *     fuzzer input
+   */
+  default<T> List<T> pickValues(Collection<T> collection, int numOfElements) {
+    int size = collection.size();
+    if (size == 0) {
+      throw new IllegalArgumentException("collection is empty");
+    }
+    if (numOfElements > collection.size()) {
+      throw new IllegalArgumentException("numOfElements exceeds collection.size()");
+    }
+
+    List<T> remainingElements = new ArrayList<>(collection);
+    List<T> pickedElements = new ArrayList<>();
+    for (int i = 0; i < numOfElements; i++) {
+      T element = pickValue(remainingElements);
+      pickedElements.add(element);
+      remainingElements.remove(element);
+    }
+    return pickedElements;
+  }
+
+  /**
+   * Picks {@code numOfElements} elements from {@code array} based on the fuzzer input.
+   * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
+   *
+   * @param array the array to pick an element from.
+   * @param numOfElements the number of elements to pick.
+   * @param <T> the type of the array element
+   * @return an array of size {@code numOfElements} from {@code array} chosen based on the fuzzer
+   *     input
+   */
+  default<T> List<T> pickValues(T[] array, int numOfElements) {
+    return pickValues(Arrays.asList(array), numOfElements);
   }
 }
