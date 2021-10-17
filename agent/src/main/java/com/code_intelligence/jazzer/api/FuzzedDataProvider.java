@@ -283,7 +283,7 @@ public interface FuzzedDataProvider {
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param collection the {@link Collection} to pick an element from.
-   * @param <T> the type of a collection element
+   * @param <T> the type of the collection element
    * @return an element from {@code collection} chosen based on the fuzzer input
    */
   @SuppressWarnings("unchecked")
@@ -304,7 +304,7 @@ public interface FuzzedDataProvider {
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param array the array to pick an element from.
-   * @param <T> the type of an array element
+   * @param <T> the type of the array element
    * @return an element from {@code array} chosen based on the fuzzer input
    */
   default<T> T pickValue(T[] array) {

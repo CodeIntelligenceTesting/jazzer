@@ -18,6 +18,7 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
+import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -25,10 +26,7 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.stream.Collectors;
 import net.jodah.typetools.TypeResolver;
 import net.jodah.typetools.TypeResolver.Unknown;
@@ -142,7 +140,19 @@ public class Meta {
       }
       return consume(data, data.pickValue(implementingClasses));
     } else if (type.getConstructors().length > 0) {
-      return autofuzz(data, data.pickValue(type.getConstructors()));
+      Constructor<?> constructor = data.pickValue(type.getConstructors());
+      Object obj = autofuzz(data, constructor);
+      if (constructor.getParameterCount() == 0) {
+        List<Method> potentialSetters = getPotentialSetters(type);
+        if (!potentialSetters.isEmpty()) {
+          List<Method> pickedSetters =
+              data.pickValues(potentialSetters, data.consumeInt(0, potentialSetters.size()));
+          for (Method setter : pickedSetters) {
+            autofuzz(data, setter, obj);
+          }
+        }
+      }
+      return obj;
     } else if (getNestedBuilderClasses(type).size() > 0) {
       List<Class<?>> nestedBuilderClasses = getNestedBuilderClasses(type);
       Class<?> pickedBuilder = data.pickValue(nestedBuilderClasses);
@@ -160,16 +170,23 @@ public class Meta {
 
       Method builderMethod = data.pickValue(originalObjectCreationMethods);
 
-      Object obj = autofuzz(data, data.pickValue(pickedBuilder.getConstructors()));
+      Object builderObj = autofuzz(data, data.pickValue(pickedBuilder.getConstructors()));
       for (Method method : pickedMethods) {
-        obj = autofuzz(data, method, obj);
+        builderObj = autofuzz(data, method, builderObj);
       }
 
       try {
-        return builderMethod.invoke(obj);
+        return builderMethod.invoke(builderObj);
       } catch (Exception e) {
         throw new AutofuzzConstructionException(e);
       }
+    } else {
+      Constructor<?>[] c = type.getDeclaredConstructors();
+      System.err.printf("ctor: %s\n", c[0].toGenericString());
+      System.err.printf("    public %b\n", Modifier.isPublic(c[0].getModifiers()));
+      System.err.printf("    private %b\n", Modifier.isPrivate(c[0].getModifiers()));
+      System.err.printf("    protected %b\n", Modifier.isProtected(c[0].getModifiers()));
+      //      System.err.printf("    protected %b\n", Modifier.i(c[0].getModifiers()));
     }
     return null;
   }
@@ -178,6 +195,19 @@ public class Meta {
     return Arrays.stream(type.getClasses())
         .filter(cls -> cls.getName().endsWith("Builder"))
         .collect(Collectors.toList());
+  }
+
+  private static List<Method> getPotentialSetters(Class<?> type) {
+    List<Method> potentialSetters = new ArrayList<>();
+    List<Method> methods = Arrays.asList(type.getMethods());
+    methods.sort(Comparator.comparing(Method::getName));
+    for (Method method : methods) {
+      if (void.class.equals(method.getReturnType()) && method.getParameterCount() == 1
+          && method.getName().startsWith("set")) {
+        potentialSetters.add(method);
+      }
+    }
+    return potentialSetters;
   }
 
   private static Object[] consumeArguments(FuzzedDataProvider data, Executable executable) {
