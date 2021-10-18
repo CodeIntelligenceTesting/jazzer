@@ -18,7 +18,6 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
-import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -32,7 +31,10 @@ import net.jodah.typetools.TypeResolver;
 import net.jodah.typetools.TypeResolver.Unknown;
 
 public class Meta {
-  static WeakHashMap<Class<?>, List<Class<?>>> cache = new WeakHashMap<>();
+  static WeakHashMap<Class<?>, List<Class<?>>> implementingClassesCache = new WeakHashMap<>();
+  static WeakHashMap<Class<?>, List<Class<?>>> nestedBuilderClassesCache = new WeakHashMap<>();
+  static WeakHashMap<Class<?>, List<Method>> originalObjectCreationMethodsCache =
+      new WeakHashMap<>();
 
   public static Object autofuzz(FuzzedDataProvider data, Method method) {
     if (Modifier.isStatic(method.getModifiers())) {
@@ -135,7 +137,7 @@ public class Meta {
     } else if (type.isEnum()) {
       return data.pickValue(type.getEnumConstants());
     } else if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
-      List<Class<?>> implementingClasses = cache.get(type);
+      List<Class<?>> implementingClasses = implementingClassesCache.get(type);
       if (implementingClasses == null) {
         try (ScanResult result =
                  new ClassGraph().enableClassInfo().enableInterClassDependencies().scan()) {
@@ -143,7 +145,7 @@ public class Meta {
               type.isInterface() ? result.getClassesImplementing(type) : result.getSubclasses(type);
           implementingClasses =
               children.getStandardClasses().filter(cls -> !cls.isAbstract()).loadClasses();
-          cache.put(type, implementingClasses);
+          implementingClassesCache.put(type, implementingClasses);
         }
       }
       if (implementingClasses.isEmpty()) {
@@ -165,17 +167,20 @@ public class Meta {
         }
       }
       return obj;
-    } else if (getNestedBuilderClasses(type).size() > 0) {
-      List<Class<?>> nestedBuilderClasses = getNestedBuilderClasses(type);
+    }
+    // We are out of more or less canonical ways to construct an instance of this class and have to resort to more
+    // heuristic approaches.
+
+    // First, try to find nested classes with names ending in Builder and call a subset of their chaining methods.
+    List<Class<?>> nestedBuilderClasses = getNestedBuilderClasses(type);
+    if (!nestedBuilderClasses.isEmpty()) {
       Class<?> pickedBuilder = data.pickValue(nestedBuilderClasses);
 
       List<Method> cascadingBuilderMethods = Arrays.stream(pickedBuilder.getMethods())
                                                  .filter(m -> m.getReturnType() == pickedBuilder)
                                                  .collect(Collectors.toList());
 
-      List<Method> originalObjectCreationMethods = Arrays.stream(pickedBuilder.getMethods())
-                                                       .filter(m -> m.getReturnType() == type)
-                                                       .collect(Collectors.toList());
+      List<Method> originalObjectCreationMethods = getOriginalObjectCreationMethods(pickedBuilder);
 
       int pickedMethodsNumber = data.consumeInt(0, cascadingBuilderMethods.size());
       List<Method> pickedMethods = data.pickValues(cascadingBuilderMethods, pickedMethodsNumber);
@@ -204,9 +209,27 @@ public class Meta {
   }
 
   private static List<Class<?>> getNestedBuilderClasses(Class<?> type) {
-    return Arrays.stream(type.getClasses())
-        .filter(cls -> cls.getName().endsWith("Builder"))
-        .collect(Collectors.toList());
+    List<Class<?>> nestedBuilderClasses = nestedBuilderClassesCache.get(type);
+    if (nestedBuilderClasses == null) {
+      nestedBuilderClasses = Arrays.stream(type.getClasses())
+              .filter(cls -> cls.getName().endsWith("Builder"))
+              .filter(cls -> !getOriginalObjectCreationMethods(cls).isEmpty())
+              .collect(Collectors.toList());
+      nestedBuilderClassesCache.put(type, nestedBuilderClasses);
+    }
+    return nestedBuilderClasses;
+  }
+
+  private static List<Method> getOriginalObjectCreationMethods(Class<?> builder) {
+    List<Method> originalObjectCreationMethods = originalObjectCreationMethodsCache.get(builder);
+    if (originalObjectCreationMethods == null) {
+      originalObjectCreationMethods = Arrays.stream(builder.getMethods())
+              .filter(m -> m.getReturnType() == builder.getEnclosingClass())
+              .collect(Collectors.toList());
+      originalObjectCreationMethodsCache.put(builder, originalObjectCreationMethods);
+    }
+    return originalObjectCreationMethods;
+
   }
 
   private static List<Method> getPotentialSetters(Class<?> type) {
