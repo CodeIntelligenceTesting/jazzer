@@ -41,7 +41,11 @@ public class Meta {
     if (Modifier.isStatic(method.getModifiers())) {
       return autofuzz(data, method, null);
     } else {
-      return autofuzz(data, method, consume(data, method.getDeclaringClass()));
+      Object thisObject = consume(data, method.getDeclaringClass());
+      if (thisObject == null) {
+        throw new AutofuzzConstructionException();
+      }
+      return autofuzz(data, method, thisObject);
     }
   }
 
