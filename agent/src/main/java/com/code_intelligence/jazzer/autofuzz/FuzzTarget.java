@@ -145,11 +145,32 @@ public class FuzzTarget {
           return;
         }
       }
+      cleanStackTraces(cause);
       throw cause;
     } catch (Throwable t) {
       System.err.println("Unexpected exception encountered during autofuzz");
       t.printStackTrace();
       System.exit(1);
+    }
+  }
+
+  // Removes all stack trace elements that live in the Java standard library, internal JDK classes
+  // or the autofuzz package from the bottom of all stack frames.
+  private static void cleanStackTraces(Throwable t) {
+    Throwable cause = t;
+    while (cause != null) {
+      StackTraceElement[] elements = cause.getStackTrace();
+      int firstInterestingPos;
+      for (firstInterestingPos = elements.length - 1; firstInterestingPos > 0;
+           firstInterestingPos--) {
+        String className = elements[firstInterestingPos].getClassName();
+        if (!className.startsWith("com.code_intelligence.jazzer.autofuzz")
+            && !className.startsWith("java.") && !className.startsWith("jdk.")) {
+          break;
+        }
+      }
+      cause.setStackTrace(Arrays.copyOfRange(elements, 0, firstInterestingPos + 1));
+      cause = cause.getCause();
     }
   }
 }
