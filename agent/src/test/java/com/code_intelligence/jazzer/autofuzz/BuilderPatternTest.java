@@ -80,17 +80,21 @@ class Employee {
 
 public class BuilderPatternTest {
   FuzzedDataProvider data =
-      CannedFuzzedDataProvider.create(Arrays.asList(0, // Select the first Builder
+      CannedFuzzedDataProvider.create(Arrays.asList((byte) 1, // do not return null
+          0, // Select the first Builder
           2, // Select two Builder methods returning a builder object (fluent design)
           0, // Select the first build method
           0, // pick the first remaining builder method (withAge)
           0, // pick the first remaining builder method (withJobTitle)
           0, // pick the first build method
+          (byte) 1, // do not return null
           6, // remaining bytes
           "foo", // firstName
+          (byte) 1, // do not return null
           6, // remaining bytes
           "bar", // lastName
           20, // age
+          (byte) 1, // do not return null
           6, // remaining bytes
           "baz" // jobTitle
           ));

@@ -23,11 +23,13 @@ import java.util.Arrays;
 import org.junit.Test;
 
 public class SettersTest {
-  FuzzedDataProvider data =
-      CannedFuzzedDataProvider.create(Arrays.asList(0, // pick first constructor
+  FuzzedDataProvider data = CannedFuzzedDataProvider.create(
+      Arrays.asList((byte) 1, // do not return null for EmployeeWithSetters
+          0, // pick first constructor
           2, // pick two setters
           1, // pick second setter
           0, // pick first setter
+          (byte) 1, // do not return null for String
           6, // remaining bytes
           "foo", // setFirstName
           26 // setAge

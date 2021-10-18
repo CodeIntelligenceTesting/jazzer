@@ -89,14 +89,20 @@ class ClassB2 implements InterfaceA {
 }
 
 public class InterfaceCreationTest {
-  FuzzedDataProvider data = CannedFuzzedDataProvider.create(Arrays.asList(0, // pick ClassB1
-      0, // pick first constructor
-      5, // arg for ClassB1 constructor
-      1, // pick ClassB2
-      0, // pick first constructor
-      8, // remaining bytes
-      "test" // arg for ClassB2 constructor
-      ));
+  FuzzedDataProvider data =
+      CannedFuzzedDataProvider.create(Arrays.asList((byte) 1, // do not return null
+          0, // pick ClassB1
+          (byte) 1, // do not return null
+          0, // pick first constructor
+          5, // arg for ClassB1 constructor
+          (byte) 1, // do not return null
+          1, // pick ClassB2
+          (byte) 1, // do not return null
+          0, // pick first constructor
+          (byte) 1, // do not return null
+          8, // remaining bytes
+          "test" // arg for ClassB2 constructor
+          ));
 
   @Test
   public void testConsumeInterface() {
