@@ -11,4 +11,4 @@ buildifier -r .
 
 # Licence headers
 # go get -u github.com/google/addlicense
-addlicense -c "Code Intelligence GmbH" agent/ bazel/ driver/ examples/ sanitizers/ *.bzl
+addlicense -c "Code Intelligence GmbH" agent/ bazel/ docker/ driver/ examples/ sanitizers/ *.bzl
