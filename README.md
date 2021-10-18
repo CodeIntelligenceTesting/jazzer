@@ -12,7 +12,7 @@ It is based on [libFuzzer](https://llvm.org/docs/LibFuzzer.html) and brings many
 The JVM bytecode is executed inside the fuzzer process, which ensures fast execution speeds and allows seamless fuzzing of
 native libraries.
 
-Jazzer supports x64 Linux and (experimentally) macOS 10.15.
+Jazzer supports Linux and (experimentally) macOS 10.15 and Windows, all on the x64 architecture.
 
 ## News: Jazzer available in OSS-Fuzz
 
