@@ -102,7 +102,15 @@ public class Meta {
       return data.consumeBoolean();
     } else if (type == char.class || type == Character.class) {
       return data.consumeChar();
-    } else if (type.isAssignableFrom(String.class)) {
+    }
+    // Return null for non-primitive and non-boxed types in ~5% of the cases.
+    // TODO: We might want to return null for boxed types sometimes, but this is complicated by the
+    //       fact that TypeUtils can't distinguish between a primitive type and its wrapper and may
+    //       thus easily cause false-positive NullPointerExceptions.
+    if (!type.isPrimitive() && data.consumeByte((byte) 0, (byte) 19) == 0) {
+      return null;
+    }
+    if (type.isAssignableFrom(String.class)) {
       return data.consumeString(data.remainingBytes() / 2);
     } else if (type.isArray()) {
       if (type == byte[].class) {

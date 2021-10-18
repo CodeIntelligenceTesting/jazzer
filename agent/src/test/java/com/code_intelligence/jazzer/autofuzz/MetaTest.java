@@ -38,14 +38,19 @@ public class MetaTest {
   @Test
   public void testAutofuzz() {
     FuzzedDataProvider data = CannedFuzzedDataProvider.create(Arrays.asList(5,
+        (byte) 1, // do not return null
         6, // remainingBytes
         "foo",
+        (byte) 1, // do not return null
         6, // remainingBytes
         "bar",
+        (byte) 1, // do not return null
         8, // remainingBytes
         "buzz",
+        (byte) 1, // do not return null
         6, // remainingBytes
         "jazzer",
+        (byte) 1, // do not return null
         6, // remainingBytes
         "jazzer"));
     assertTrue(Meta.autofuzz(data, MetaTest::isFive));
