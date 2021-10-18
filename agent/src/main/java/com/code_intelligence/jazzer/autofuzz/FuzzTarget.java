@@ -83,7 +83,7 @@ public class FuzzTarget {
                         .toArray(Method[] ::new);
     if (targetMethods.length == 0) {
       if (descriptor == null) {
-        System.err.printf("%nFailed to find accessible methods named %s in class %s for autofuzz.%n"
+        System.err.printf("Failed to find accessible methods named %s in class %s for autofuzz.%n"
                 + "Accessible methods:%n%s",
             methodName, className,
             Arrays.stream(targetClass.getMethods())
@@ -93,7 +93,7 @@ public class FuzzTarget {
                 .distinct()
                 .collect(Collectors.joining(System.lineSeparator())));
       } else {
-        System.err.printf("%nFailed to find accessible methods named %s in class %s for autofuzz.%n"
+        System.err.printf("Failed to find accessible methods named %s in class %s for autofuzz.%n"
                 + "Accessible methods with that name:%n%s",
             methodName, className,
             Arrays.stream(targetClass.getMethods())
@@ -121,7 +121,10 @@ public class FuzzTarget {
     try {
       Meta.autofuzz(data, targetMethod);
       executionsSinceLastInvocation = 0;
-    } catch (AutofuzzConstructionException ignored) {
+    } catch (AutofuzzConstructionException e) {
+      if (Meta.isDebug()) {
+        e.printStackTrace();
+      }
       // Ignore exceptions thrown while constructing the parameters for the target method. We can
       // only guess how to generate valid parameters and any exceptions thrown while doing so
       // are most likely on us. However, if this happens too often, Autofuzz got stuck and we should

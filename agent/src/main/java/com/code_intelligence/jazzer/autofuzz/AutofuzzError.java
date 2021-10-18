@@ -22,6 +22,10 @@ public class AutofuzzError extends Error {
     super(message);
   }
 
+  public AutofuzzError(String message, Throwable cause) {
+    super(message, cause);
+  }
+
   public AutofuzzError(Throwable cause) {
     super(cause);
   }
