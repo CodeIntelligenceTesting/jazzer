@@ -20,8 +20,10 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FuzzTarget {
   private static final long MAX_EXECUTIONS_WITHOUT_INVOCATION = 100;
@@ -32,7 +34,7 @@ public class FuzzTarget {
   private static long executionsSinceLastInvocation = 0;
 
   public static void fuzzerInitialize(String[] args) {
-    if (args.length != 1 || !args[0].contains("::")) {
+    if (args.length == 0 || !args[0].contains("::")) {
       System.err.println(
           "Expected the argument to --autofuzz to be a method reference (e.g. System.out::println)");
       System.exit(1);
@@ -106,9 +108,26 @@ public class FuzzTarget {
       }
       System.exit(1);
     }
+    List<Class<?>> alwaysIgnore =
+        Arrays.stream(args)
+            .skip(1)
+            .map(name -> {
+              try {
+                return Thread.currentThread().getContextClassLoader().loadClass(name);
+              } catch (ClassNotFoundException e) {
+                System.err.printf("Failed to find class '%s' specified in --autofuzz_ignore", name);
+                System.exit(1);
+              }
+              throw new Error("Not reached");
+            })
+            .collect(Collectors.toList());
     throwsDeclarations =
         Arrays.stream(targetMethods)
-            .collect(Collectors.toMap(method -> method, Method::getExceptionTypes));
+            .collect(Collectors.toMap(method
+                -> method,
+                method
+                -> Stream.concat(Arrays.stream(method.getExceptionTypes()), alwaysIgnore.stream())
+                       .toArray(Class[] ::new)));
   }
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Throwable {

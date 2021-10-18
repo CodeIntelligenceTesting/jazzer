@@ -25,6 +25,7 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/str_replace.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/substitute.h"
 #include "coverage_tracker.h"
@@ -63,6 +64,9 @@ DEFINE_string(coverage_report, "",
 DEFINE_string(autofuzz, "",
               "Fully qualified reference to a method on the classpath that "
               "should be fuzzed automatically (example: System.out::println)");
+DEFINE_string(autofuzz_ignore, "",
+              "Fully qualified class names of exceptions to ignore during "
+              "autofuzz. Separated by comma.");
 
 DECLARE_bool(hooks);
 
@@ -109,6 +113,10 @@ FuzzTargetRunner::FuzzTargetRunner(
               << std::endl;
     exit(1);
   }
+  if (FLAGS_autofuzz.empty() && !FLAGS_autofuzz_ignore.empty()) {
+    std::cerr << "--autofuzz_ignore requires --autofuzz" << std::endl;
+    exit(1);
+  }
   if (FLAGS_target_class.empty() && FLAGS_autofuzz.empty()) {
     FLAGS_target_class = DetectFuzzTargetClass();
   }
@@ -124,9 +132,15 @@ FuzzTargetRunner::FuzzTargetRunner(
     if (FLAGS_keep_going == 0) {
       FLAGS_keep_going = std::numeric_limits<gflags::uint32>::max();
     }
-    // Pass the method reference string as an argument to the generic autofuzz
-    // fuzz target.
+    // Pass the method reference string as the first argument to the generic
+    // autofuzz fuzz target. Subseqeuent arguments are interpreted as exception
+    // class names that should be ignored.
     FLAGS_target_args = FLAGS_autofuzz;
+    if (!FLAGS_autofuzz_ignore.empty()) {
+      FLAGS_target_args = absl::StrCat(
+          FLAGS_target_args, " ",
+          absl::StrReplaceAll(FLAGS_autofuzz_ignore, {{",", " "}}));
+    }
   }
   // Set --keep_going to its real default.
   if (FLAGS_keep_going == 0) {
