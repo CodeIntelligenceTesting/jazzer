@@ -183,6 +183,7 @@ sh_test(
         ":JsonSanitizerDenylistCrash",
         ":json_sanitizer_denylist_crash",
     ],
+    target_compatible_with = SKIP_ON_WINDOWS,
 )
 
 java_fuzz_target_test(
