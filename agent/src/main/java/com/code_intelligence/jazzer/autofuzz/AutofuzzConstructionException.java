@@ -19,6 +19,9 @@ package com.code_intelligence.jazzer.autofuzz;
  * not the actual invocation of an autofuzzed method.
  */
 public class AutofuzzConstructionException extends RuntimeException {
+  public AutofuzzConstructionException() {
+    super();
+  }
   public AutofuzzConstructionException(String message) {
     super(message);
   }
