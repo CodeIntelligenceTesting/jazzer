@@ -15,7 +15,10 @@
 package com.code_intelligence.jazzer.autofuzz;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.utils.Utils;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,13 +34,33 @@ public class FuzzTarget {
   public static void fuzzerInitialize(String[] args) {
     if (args.length != 1 || !args[0].contains("::")) {
       System.err.println(
-          "Expected the argument to --autofuzz to be a method reference (e.g. System.out::println");
+          "Expected the argument to --autofuzz to be a method reference (e.g. System.out::println)");
       System.exit(1);
     }
     methodReference = args[0];
     String[] parts = methodReference.split("::", 2);
     String className = parts[0];
-    String methodName = parts[1];
+    String methodNameAndOptionalDescriptor = parts[1];
+    String methodName;
+    String descriptor;
+    int descriptorStart = methodNameAndOptionalDescriptor.indexOf('(');
+    if (descriptorStart != -1) {
+      methodName = methodNameAndOptionalDescriptor.substring(0, descriptorStart);
+      // URL decode the descriptor to allow copy-pasting from javadoc links such as:
+      // https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html#valueOf(char%5B%5D)
+      try {
+        descriptor =
+            URLDecoder.decode(methodNameAndOptionalDescriptor.substring(descriptorStart), "UTF-8");
+      } catch (UnsupportedEncodingException e) {
+        // UTF-8 is always supported.
+        e.printStackTrace();
+        System.exit(1);
+        return;
+      }
+    } else {
+      methodName = methodNameAndOptionalDescriptor;
+      descriptor = null;
+    }
 
     Class<?> targetClass;
     try {
@@ -53,11 +76,35 @@ public class FuzzTarget {
     }
 
     targetMethods = Arrays.stream(targetClass.getMethods())
-                        .filter(method -> method.getName().equals(methodName))
+                        .filter(method
+                            -> method.getName().equals(methodName)
+                                && (descriptor == null
+                                    || Utils.getReadableDescriptor(method).equals(descriptor)))
                         .toArray(Method[] ::new);
     if (targetMethods.length == 0) {
-      System.err.printf("Failed to find accessible methods named %s in class %s for autofuzz",
-          methodName, className);
+      if (descriptor == null) {
+        System.err.printf("%nFailed to find accessible methods named %s in class %s for autofuzz.%n"
+                + "Accessible methods:%n%s",
+            methodName, className,
+            Arrays.stream(targetClass.getMethods())
+                .map(method
+                    -> String.format(
+                        "%s::%s", method.getDeclaringClass().getName(), method.getName()))
+                .distinct()
+                .collect(Collectors.joining(System.lineSeparator())));
+      } else {
+        System.err.printf("%nFailed to find accessible methods named %s in class %s for autofuzz.%n"
+                + "Accessible methods with that name:%n%s",
+            methodName, className,
+            Arrays.stream(targetClass.getMethods())
+                .filter(method -> method.getName().equals(methodName))
+                .map(method
+                    -> String.format("%s::%s%s", method.getDeclaringClass().getName(),
+                        method.getName(), Utils.getReadableDescriptor(method)))
+                .distinct()
+                .collect(Collectors.joining(System.lineSeparator())));
+      }
+      System.exit(1);
     }
     throwsDeclarations =
         Arrays.stream(targetMethods)
@@ -65,7 +112,12 @@ public class FuzzTarget {
   }
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Throwable {
-    Method targetMethod = data.pickValue(targetMethods);
+    Method targetMethod;
+    if (targetMethods.length == 1) {
+      targetMethod = targetMethods[0];
+    } else {
+      targetMethod = data.pickValue(targetMethods);
+    }
     try {
       Meta.autofuzz(data, targetMethod);
       executionsSinceLastInvocation = 0;
