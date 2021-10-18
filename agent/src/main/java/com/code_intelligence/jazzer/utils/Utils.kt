@@ -39,10 +39,37 @@ val Class<*>.descriptor: String
         else -> throw IllegalArgumentException("Unknown class type: $name")
     }
 
+val Class<*>.readableDescriptor: String
+    get() = when {
+        isPrimitive -> {
+            when (this) {
+                Boolean::class.javaPrimitiveType -> "boolean"
+                Byte::class.javaPrimitiveType -> "byte"
+                Char::class.javaPrimitiveType -> "char"
+                Short::class.javaPrimitiveType -> "short"
+                Int::class.javaPrimitiveType -> "int"
+                Long::class.javaPrimitiveType -> "long"
+                Float::class.javaPrimitiveType -> "float"
+                Double::class.javaPrimitiveType -> "double"
+                java.lang.Void::class.javaPrimitiveType -> "void"
+                else -> throw IllegalStateException("Unknown primitive type: $name")
+            }
+        }
+        isArray -> "${componentType.readableDescriptor}[]"
+        java.lang.Object::class.java.isAssignableFrom(this) -> name
+        else -> throw IllegalArgumentException("Unknown class type: $name")
+    }
+
 val Executable.descriptor: String
     get() = parameterTypes.joinToString(separator = "", prefix = "(", postfix = ")") { parameterType ->
         parameterType.descriptor
     } + if (this is Method) returnType.descriptor else "V"
+
+// This does not include the return type as the parameter descriptors already uniquely identify the executable.
+val Executable.readableDescriptor: String
+    get() = parameterTypes.joinToString(separator = ",", prefix = "(", postfix = ")") { parameterType ->
+        parameterType.readableDescriptor
+    }
 
 fun simpleFastHash(vararg strings: String): Int {
     var hash = 0
