@@ -16,6 +16,7 @@ package com.code_intelligence.jazzer.autofuzz;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.utils.Utils;
+import java.io.Closeable;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -149,11 +150,12 @@ public class FuzzTarget {
     } else {
       targetExecutable = data.pickValue(FuzzTarget.targetExecutables);
     }
+    Object returnValue = null;
     try {
       if (targetExecutable instanceof Method) {
-        Meta.autofuzz(data, (Method) targetExecutable);
+        returnValue = Meta.autofuzz(data, (Method) targetExecutable);
       } else {
-        Meta.autofuzz(data, (Constructor<?>) targetExecutable);
+        returnValue = Meta.autofuzz(data, (Constructor<?>) targetExecutable);
       }
       executionsSinceLastInvocation = 0;
     } catch (AutofuzzConstructionException e) {
@@ -186,6 +188,10 @@ public class FuzzTarget {
       System.err.println("Unexpected exception encountered during autofuzz");
       t.printStackTrace();
       System.exit(1);
+    } finally {
+      if (returnValue instanceof Closeable) {
+        ((Closeable) returnValue).close();
+      }
     }
   }
 
