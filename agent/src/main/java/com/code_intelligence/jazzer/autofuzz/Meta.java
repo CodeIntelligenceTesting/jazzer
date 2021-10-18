@@ -144,8 +144,13 @@ public class Meta {
     } else if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
       List<Class<?>> implementingClasses = implementingClassesCache.get(type);
       if (implementingClasses == null) {
-        try (ScanResult result =
-                 new ClassGraph().enableClassInfo().enableInterClassDependencies().scan()) {
+        ClassGraph classGraph =
+            new ClassGraph().enableClassInfo().enableInterClassDependencies().rejectPackages(
+                "jaz.*");
+        if (!isTest()) {
+          classGraph.rejectPackages("com.code_intelligence.jazzer.*");
+        }
+        try (ScanResult result = classGraph.scan()) {
           ClassInfoList children =
               type.isInterface() ? result.getClassesImplementing(type) : result.getSubclasses(type);
           implementingClasses =
@@ -223,6 +228,11 @@ public class Meta {
           Arrays.stream(type.getClasses()).map(Class::getName).collect(Collectors.joining(", ")));
       throw new AutofuzzConstructionException(summary);
     }
+  }
+
+  static boolean isTest() {
+    String value = System.getenv("JAZZER_AUTOFUZZ_TESTING");
+    return value != null && !value.isEmpty();
   }
 
   static boolean isDebug() {
