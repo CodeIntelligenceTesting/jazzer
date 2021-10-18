@@ -15,6 +15,5 @@ RUN git clone --depth=1 https://github.com/CodeIntelligenceTesting/jazzer.git &&
 FROM gcr.io/distroless/java
 
 COPY --from=builder /root/jazzer/bazel-bin/agent/jazzer_agent_deploy.jar /root/jazzer/bazel-bin/driver/jazzer_driver /app/
-ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}/usr/lib/jvm/java-11-openjdk-amd64/lib/server
 WORKDIR /fuzzing
 ENTRYPOINT [ "/app/jazzer_driver", "-artifact_prefix=/fuzzing/", "--reproducer_path=/fuzzing" ]
