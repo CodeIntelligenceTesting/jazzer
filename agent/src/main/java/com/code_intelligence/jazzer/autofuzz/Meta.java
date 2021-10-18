@@ -146,6 +146,10 @@ public class Meta {
           cache.put(type, implementingClasses);
         }
       }
+      if (implementingClasses.isEmpty()) {
+        throw new AutofuzzConstructionException(String.format(
+            "Could not find classes implementing %s on the classpath", type.getName()));
+      }
       return consume(data, data.pickValue(implementingClasses));
     } else if (type.getConstructors().length > 0) {
       Constructor<?> constructor = data.pickValue(type.getConstructors());
