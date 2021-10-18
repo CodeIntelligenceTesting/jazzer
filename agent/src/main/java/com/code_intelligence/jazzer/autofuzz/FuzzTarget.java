@@ -17,6 +17,8 @@ package com.code_intelligence.jazzer.autofuzz;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.utils.Utils;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.Arrays;
@@ -29,8 +31,8 @@ public class FuzzTarget {
   private static final long MAX_EXECUTIONS_WITHOUT_INVOCATION = 100;
 
   private static String methodReference;
-  private static Method[] targetMethods;
-  private static Map<Method, Class<?>[]> throwsDeclarations;
+  private static Executable[] targetExecutables;
+  private static Map<Executable, Class<?>[]> throwsDeclarations;
   private static long executionsSinceLastInvocation = 0;
 
   public static void fuzzerInitialize(String[] args) {
@@ -77,13 +79,23 @@ public class FuzzTarget {
       return;
     }
 
-    targetMethods = Arrays.stream(targetClass.getMethods())
-                        .filter(method
-                            -> method.getName().equals(methodName)
-                                && (descriptor == null
-                                    || Utils.getReadableDescriptor(method).equals(descriptor)))
-                        .toArray(Method[] ::new);
-    if (targetMethods.length == 0) {
+    if (methodName.equals("new")) {
+      targetExecutables =
+          Arrays.stream(targetClass.getConstructors())
+              .filter(constructor
+                  -> descriptor == null
+                      || Utils.getReadableDescriptor(constructor).equals(descriptor))
+              .toArray(Executable[] ::new);
+    } else {
+      targetExecutables =
+          Arrays.stream(targetClass.getMethods())
+              .filter(method
+                  -> method.getName().equals(methodName)
+                      && (descriptor == null
+                          || Utils.getReadableDescriptor(method).equals(descriptor)))
+              .toArray(Executable[] ::new);
+    }
+    if (targetExecutables.length == 0) {
       if (descriptor == null) {
         System.err.printf("Failed to find accessible methods named %s in class %s for autofuzz.%n"
                 + "Accessible methods:%n%s",
@@ -122,7 +134,7 @@ public class FuzzTarget {
             })
             .collect(Collectors.toList());
     throwsDeclarations =
-        Arrays.stream(targetMethods)
+        Arrays.stream(targetExecutables)
             .collect(Collectors.toMap(method
                 -> method,
                 method
@@ -131,14 +143,18 @@ public class FuzzTarget {
   }
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Throwable {
-    Method targetMethod;
-    if (targetMethods.length == 1) {
-      targetMethod = targetMethods[0];
+    Executable targetExecutable;
+    if (FuzzTarget.targetExecutables.length == 1) {
+      targetExecutable = FuzzTarget.targetExecutables[0];
     } else {
-      targetMethod = data.pickValue(targetMethods);
+      targetExecutable = data.pickValue(FuzzTarget.targetExecutables);
     }
     try {
-      Meta.autofuzz(data, targetMethod);
+      if (targetExecutable instanceof Method) {
+        Meta.autofuzz(data, (Method) targetExecutable);
+      } else {
+        Meta.autofuzz(data, (Constructor<?>) targetExecutable);
+      }
       executionsSinceLastInvocation = 0;
     } catch (AutofuzzConstructionException e) {
       if (Meta.isDebug()) {
@@ -159,7 +175,7 @@ public class FuzzTarget {
       Throwable cause = e.getCause();
       Class<?> causeClass = cause.getClass();
       // Do not report exceptions declared to be thrown by the method under test.
-      for (Class<?> declaredThrow : throwsDeclarations.get(targetMethod)) {
+      for (Class<?> declaredThrow : throwsDeclarations.get(targetExecutable)) {
         if (declaredThrow.isAssignableFrom(causeClass)) {
           return;
         }
