@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-10.15]
+        os: [ubuntu-latest, macos-10.15, windows-2016]
         include:
           - os: ubuntu-latest
             arch: "linux"
@@ -17,6 +17,9 @@ jobs:
           - os: macos-10.15
             arch: "darwin"
             cache: "/private/var/tmp/bazel-disk"
+          - os: windows-2016
+            arch: "windows"
+            cache: "%HOME%/bazel-disk"
 
     steps:
       - uses: actions/checkout@v2
@@ -61,11 +64,18 @@ jobs:
           name: replayer_linux.jar
           path: replayer_linux
 
+      - name: Download Windows jar
+        uses: actions/download-artifact@v2
+        with:
+          name: replayer_windows.jar
+          path: replayer_windows
+
       - name: Merge jars
         run: |
           mkdir merged
           unzip -o replayer_darwin/replayer.jar -d merged
           unzip -o replayer_linux/replayer.jar -d merged
+          unzip -o replayer_windows/replayer.jar -d merged
           jar cvmf merged/META-INF/MANIFEST.MF replayer.jar -C merged .
 
       - name: Upload merged jar
