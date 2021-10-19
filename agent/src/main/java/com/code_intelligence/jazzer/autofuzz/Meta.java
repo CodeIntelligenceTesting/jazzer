@@ -37,6 +37,7 @@ public class Meta {
   static WeakHashMap<Class<?>, List<Class<?>>> nestedBuilderClassesCache = new WeakHashMap<>();
   static WeakHashMap<Class<?>, List<Method>> originalObjectCreationMethodsCache =
       new WeakHashMap<>();
+  static WeakHashMap<Class<?>, List<Method>> cascadingBuilderMethodsCache = new WeakHashMap<>();
 
   public static Object autofuzz(FuzzedDataProvider data, Method method) {
     if (Modifier.isStatic(method.getModifiers())) {
@@ -145,9 +146,9 @@ public class Meta {
     } else if (type == Class.class) {
       return YourAverageJavaClass.class;
     } else if (type == Method.class) {
-      return data.pickValue(YourAverageJavaClass.class.getMethods());
+      return data.pickValue(sortExecutables(YourAverageJavaClass.class.getMethods()));
     } else if (type == Constructor.class) {
-      return data.pickValue(YourAverageJavaClass.class.getConstructors());
+      return data.pickValue(sortExecutables(YourAverageJavaClass.class.getConstructors()));
     } else if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
       List<Class<?>> implementingClasses = implementingClassesCache.get(type);
       if (implementingClasses == null) {
@@ -175,7 +176,7 @@ public class Meta {
       }
       return consume(data, data.pickValue(implementingClasses));
     } else if (type.getConstructors().length > 0) {
-      Constructor<?> constructor = data.pickValue(type.getConstructors());
+      Constructor<?> constructor = data.pickValue(sortExecutables(type.getConstructors()));
       Object obj = autofuzz(data, constructor);
       if (constructor.getParameterCount() == 0) {
         List<Method> potentialSetters = getPotentialSetters(type);
@@ -197,19 +198,15 @@ public class Meta {
     List<Class<?>> nestedBuilderClasses = getNestedBuilderClasses(type);
     if (!nestedBuilderClasses.isEmpty()) {
       Class<?> pickedBuilder = data.pickValue(nestedBuilderClasses);
-
-      List<Method> cascadingBuilderMethods = Arrays.stream(pickedBuilder.getMethods())
-                                                 .filter(m -> m.getReturnType() == pickedBuilder)
-                                                 .collect(Collectors.toList());
-
+      List<Method> cascadingBuilderMethods = getCascadingBuilderMethods(pickedBuilder);
       List<Method> originalObjectCreationMethods = getOriginalObjectCreationMethods(pickedBuilder);
 
       int pickedMethodsNumber = data.consumeInt(0, cascadingBuilderMethods.size());
       List<Method> pickedMethods = data.pickValues(cascadingBuilderMethods, pickedMethodsNumber);
-
       Method builderMethod = data.pickValue(originalObjectCreationMethods);
 
-      Object builderObj = autofuzz(data, data.pickValue(pickedBuilder.getConstructors()));
+      Object builderObj =
+          autofuzz(data, data.pickValue(sortExecutables(pickedBuilder.getConstructors())));
       for (Method method : pickedMethods) {
         builderObj = autofuzz(data, method, builderObj);
       }
@@ -257,6 +254,20 @@ public class Meta {
             .collect(Collectors.joining(", ")));
   }
 
+  private static <T extends Executable> List<T> sortExecutables(T[] executables) {
+    List<T> list = Arrays.asList(executables);
+    sortExecutables(list);
+    return list;
+  }
+
+  private static void sortExecutables(List<? extends Executable> executables) {
+    executables.sort(Comparator.comparing(Executable::getName).thenComparing(Utils::getDescriptor));
+  }
+
+  private static void sortClasses(List<? extends Class<?>> classes) {
+    classes.sort(Comparator.comparing(Class::getName));
+  }
+
   private static List<Class<?>> getNestedBuilderClasses(Class<?> type) {
     List<Class<?>> nestedBuilderClasses = nestedBuilderClassesCache.get(type);
     if (nestedBuilderClasses == null) {
@@ -264,6 +275,7 @@ public class Meta {
                                  .filter(cls -> cls.getName().endsWith("Builder"))
                                  .filter(cls -> !getOriginalObjectCreationMethods(cls).isEmpty())
                                  .collect(Collectors.toList());
+      sortClasses(nestedBuilderClasses);
       nestedBuilderClassesCache.put(type, nestedBuilderClasses);
     }
     return nestedBuilderClasses;
@@ -276,21 +288,34 @@ public class Meta {
           Arrays.stream(builder.getMethods())
               .filter(m -> m.getReturnType() == builder.getEnclosingClass())
               .collect(Collectors.toList());
+      sortExecutables(originalObjectCreationMethods);
       originalObjectCreationMethodsCache.put(builder, originalObjectCreationMethods);
     }
     return originalObjectCreationMethods;
   }
 
+  private static List<Method> getCascadingBuilderMethods(Class<?> builder) {
+    List<Method> cascadingBuilderMethods = cascadingBuilderMethodsCache.get(builder);
+    if (cascadingBuilderMethods == null) {
+      cascadingBuilderMethods = Arrays.stream(builder.getMethods())
+                                    .filter(m -> m.getReturnType() == builder)
+                                    .collect(Collectors.toList());
+      sortExecutables(cascadingBuilderMethods);
+      cascadingBuilderMethodsCache.put(builder, cascadingBuilderMethods);
+    }
+    return cascadingBuilderMethods;
+  }
+
   private static List<Method> getPotentialSetters(Class<?> type) {
     List<Method> potentialSetters = new ArrayList<>();
-    List<Method> methods = Arrays.asList(type.getMethods());
-    methods.sort(Comparator.comparing(Method::getName));
+    Method[] methods = type.getMethods();
     for (Method method : methods) {
       if (void.class.equals(method.getReturnType()) && method.getParameterCount() == 1
           && method.getName().startsWith("set")) {
         potentialSetters.add(method);
       }
     }
+    sortExecutables(potentialSetters);
     return potentialSetters;
   }
 
