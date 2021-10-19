@@ -52,6 +52,7 @@ class CoverageTracker : public ExceptionPrinter {
   static uint8_t *GetCoverageCounters();
 
   static void RecordInitialCoverage(JNIEnv &env);
+  static void ReplayInitialCoverage(JNIEnv &env);
   static std::string ComputeCoverage(JNIEnv &env);
 };
 }  // namespace jazzer
