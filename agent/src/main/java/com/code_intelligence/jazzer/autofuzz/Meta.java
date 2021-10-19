@@ -17,7 +17,6 @@ package com.code_intelligence.jazzer.autofuzz;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.utils.Utils;
 import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -169,10 +168,7 @@ public class Meta {
           classGraph.rejectPackages("com.code_intelligence.jazzer.*");
         }
         try (ScanResult result = classGraph.scan()) {
-          ClassInfoList children =
-              type.isInterface() ? result.getClassesImplementing(type) : result.getSubclasses(type);
-          implementingClasses =
-              children.getStandardClasses().filter(cls -> !cls.isAbstract()).loadClasses();
+          implementingClasses = getAllNonAbstractImplementingClasses(result, type);
           implementingClassesCache.put(type, implementingClasses);
         }
       }
@@ -287,6 +283,22 @@ public class Meta {
 
   private static void sortClasses(List<? extends Class<?>> classes) {
     classes.sort(Comparator.comparing(Class::getName));
+  }
+
+  public static List<Class<?>> getAllNonAbstractImplementingClasses(
+      ScanResult scanResult, Class<?> type) {
+    if (type.isInterface()) {
+      scanResult.getClassesImplementing(type)
+          .getStandardClasses()
+          .filter(cls -> !cls.isAbstract())
+          .loadClasses();
+    }
+    return scanResult.getAllClasses()
+        .loadClasses()
+        .stream()
+        .filter(cls -> type.isAssignableFrom(cls) && !Modifier.isAbstract(cls.getModifiers()))
+        .distinct()
+        .collect(Collectors.toList());
   }
 
   private static List<Class<?>> getNestedBuilderClasses(Class<?> type) {
