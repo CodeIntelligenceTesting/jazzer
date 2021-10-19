@@ -25,11 +25,6 @@ import java.lang.invoke.MethodHandle
 @Suppress("unused_parameter")
 object ReflectiveCall {
 
-    /**
-     * jaz.Zer is a honeypot class: All of its methods report a finding when called.
-     */
-    private const val HONEYPOT_CLASS_NAME = "jaz.Zer"
-
     @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Class", targetMethod = "forName")
     @JvmStatic
     fun classForNameHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {

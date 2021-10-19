@@ -28,11 +28,6 @@ import java.lang.invoke.MethodHandle
 object ExpressionLanguageInjection {
 
     /**
-     * jaz.Zer is a honeypot class: All of its methods report a finding when called.
-     */
-    private const val HONEYPOT_CLASS_NAME = "jaz.Zer"
-
-    /**
      * Try to call the default constructor of the honeypot class.
      */
     private const val EXPRESSION_LANGUAGE_ATTACK =

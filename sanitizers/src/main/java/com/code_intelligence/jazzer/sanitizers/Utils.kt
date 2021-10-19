@@ -17,6 +17,11 @@ package com.code_intelligence.jazzer.sanitizers
 import com.code_intelligence.jazzer.api.Jazzer
 import java.io.InputStream
 
+/**
+ * jaz.Zer is a honeypot class: All of its methods report a finding when called.
+ */
+const val HONEYPOT_CLASS_NAME = "jaz.Zer"
+
 internal fun Short.toBytes(): ByteArray {
     return byteArrayOf(
         ((toInt() shr 8) and 0xFF).toByte(),

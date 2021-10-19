@@ -32,11 +32,6 @@ import java.util.WeakHashMap
 @Suppress("unused_parameter")
 object Deserialization {
 
-    /**
-     * jaz.Zer is a honeypot class: All of its methods report a finding when called.
-     */
-    private const val HONEYPOT_CLASS_NAME = "jaz.Zer"
-
     private val OBJECT_INPUT_STREAM_HEADER =
         ObjectStreamConstants.STREAM_MAGIC.toBytes() + ObjectStreamConstants.STREAM_VERSION.toBytes()
 
