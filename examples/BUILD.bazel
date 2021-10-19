@@ -168,11 +168,7 @@ java_fuzz_target_test(
 )
 
 java_binary(
-    name = "JsonSanitizerDenylistCrash",
-    args = [
-        "com.example.JsonSanitizerDenylistFuzzer",
-        "$(location :json_sanitizer_denylist_crash)",
-    ],
+    name = "JsonSanitizerReplayerCrash",
     data = [
         ":json_sanitizer_denylist_crash",
     ],
@@ -184,18 +180,20 @@ java_binary(
 )
 
 sh_test(
-    name = "JsonSanitizerDenylistCrashTest",
+    name = "JsonSanitizerReplayerCrashTest",
     srcs = ["check_for_finding.sh"],
     args = [
-        "$(location :JsonSanitizerDenylistCrash)",
+        "jazzer/$(rootpath :JsonSanitizerReplayerCrash)",
         "com.example.JsonSanitizerDenylistFuzzer",
-        "$(location :json_sanitizer_denylist_crash)",
+        "jazzer/$(rootpath :json_sanitizer_denylist_crash)",
     ],
     data = [
-        ":JsonSanitizerDenylistCrash",
+        ":JsonSanitizerReplayerCrash",
         ":json_sanitizer_denylist_crash",
     ],
-    target_compatible_with = SKIP_ON_WINDOWS,
+    deps = [
+        "@bazel_tools//tools/bash/runfiles",
+    ],
 )
 
 java_fuzz_target_test(
