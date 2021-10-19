@@ -14,5 +14,6 @@
 
 set -e
 
-docker build --pull -t cifuzz/jazzer "$@" docker/jazzer
-docker build -t cifuzz/jazzer-autofuzz "$@" docker/jazzer-autofuzz
+this_dir=$(dirname "$(realpath "$0")")
+docker build --pull -t cifuzz/jazzer "$@" "$this_dir"/jazzer
+docker build -t cifuzz/jazzer-autofuzz "$@" "$this_dir"/jazzer-autofuzz
