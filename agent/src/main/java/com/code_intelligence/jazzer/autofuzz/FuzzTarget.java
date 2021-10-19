@@ -69,7 +69,8 @@ public class FuzzTarget {
 
     Class<?> targetClass;
     try {
-      targetClass = Thread.currentThread().getContextClassLoader().loadClass(className);
+      // Explicitly invoking static initializers to trigger some coverage in the code.
+      targetClass = Class.forName(className, true, ClassLoader.getSystemClassLoader());
     } catch (ClassNotFoundException e) {
       System.err.printf(
           "Failed to find class %s for autofuzz, please ensure it is contained in the classpath "
@@ -126,7 +127,7 @@ public class FuzzTarget {
             .skip(1)
             .map(name -> {
               try {
-                return Thread.currentThread().getContextClassLoader().loadClass(name);
+                return ClassLoader.getSystemClassLoader().loadClass(name);
               } catch (ClassNotFoundException e) {
                 System.err.printf("Failed to find class '%s' specified in --autofuzz_ignore", name);
                 System.exit(1);
