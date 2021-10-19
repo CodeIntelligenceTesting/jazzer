@@ -172,6 +172,11 @@ public class FuzzTarget {
         System.err.printf("Failed to generate valid arguments to '%s' in %d attempts; giving up%n",
             methodReference, executionsSinceLastInvocation);
         System.exit(1);
+      } else if (executionsSinceLastInvocation >= MAX_EXECUTIONS_WITHOUT_INVOCATION / 2) {
+        // The application under test might perform classpath modifications or create classes
+        // dynamically that implement interfaces or extend abstract classes. Rescanning the
+        // classpath might help with constructing objects.
+        Meta.rescanClasspath();
       }
     } catch (AutofuzzInvocationException e) {
       executionsSinceLastInvocation = 0;
