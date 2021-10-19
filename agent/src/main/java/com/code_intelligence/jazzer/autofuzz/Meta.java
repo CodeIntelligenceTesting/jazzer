@@ -234,6 +234,10 @@ public class Meta {
     }
   }
 
+  static void rescanClasspath() {
+    implementingClassesCache.clear();
+  }
+
   static boolean isTest() {
     String value = System.getenv("JAZZER_AUTOFUZZ_TESTING");
     return value != null && !value.isEmpty();
