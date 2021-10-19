@@ -25,4 +25,9 @@ MAVEN_ARTIFACTS = [
     "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.12.1",
     "com.alibaba:fastjson:1.2.75",
     "com.beust:klaxon:5.5",
+    "javax.validation:validation-api:2.0.1.Final",
+    "javax.xml.bind:jaxb-api:2.3.1",
+    "javax.el:javax.el-api:3.0.1-b06",
+    "org.hibernate:hibernate-validator:5.2.4.Final",
+    "org.glassfish:javax.el:3.0.1-b06",
 ]
