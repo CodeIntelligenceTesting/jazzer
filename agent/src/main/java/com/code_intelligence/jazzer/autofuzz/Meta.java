@@ -20,6 +20,7 @@ import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -117,7 +118,7 @@ public class Meta {
     if (!type.isPrimitive() && data.consumeByte((byte) 0, (byte) 19) == 0) {
       return null;
     }
-    if (type.isAssignableFrom(String.class)) {
+    if (type == String.class || type == CharSequence.class) {
       return data.consumeString(data.remainingBytes() / 2);
     } else if (type.isArray()) {
       if (type == byte[].class) {
@@ -137,7 +138,7 @@ public class Meta {
         }
         return array;
       }
-    } else if (type.isAssignableFrom(ByteArrayInputStream.class)) {
+    } else if (type == ByteArrayInputStream.class || type == InputStream.class) {
       return new ByteArrayInputStream(data.consumeBytes(data.remainingBytes() / 2));
     } else if (type.isEnum()) {
       return data.pickValue(type.getEnumConstants());
