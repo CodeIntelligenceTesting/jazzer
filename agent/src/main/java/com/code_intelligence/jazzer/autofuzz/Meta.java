@@ -141,6 +141,12 @@ public class Meta {
       return new ByteArrayInputStream(data.consumeBytes(data.remainingBytes() / 2));
     } else if (type.isEnum()) {
       return data.pickValue(type.getEnumConstants());
+    } else if (type == Class.class) {
+      return YourAverageJavaClass.class;
+    } else if (type == Method.class) {
+      return data.pickValue(YourAverageJavaClass.class.getMethods());
+    } else if (type == Constructor.class) {
+      return data.pickValue(YourAverageJavaClass.class.getConstructors());
     } else if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
       List<Class<?>> implementingClasses = implementingClassesCache.get(type);
       if (implementingClasses == null) {
