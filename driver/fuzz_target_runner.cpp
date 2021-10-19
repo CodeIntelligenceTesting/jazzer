@@ -216,7 +216,7 @@ FuzzTargetRunner::FuzzTargetRunner(
     std::exit(1);
   }
 
-  if (FLAGS_hooks && !FLAGS_coverage_report.empty()) {
+  if (FLAGS_hooks) {
     CoverageTracker::RecordInitialCoverage(env);
   }
   SetUpFuzzedDataProvider(jvm_.GetEnv());
@@ -258,6 +258,16 @@ FuzzTargetRunner::~FuzzTargetRunner() {
 
 RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
   auto &env = jvm_.GetEnv();
+  static std::size_t run_count = 0;
+  if (run_count < 2) {
+    run_count++;
+    // For the first two runs only, replay the coverage recorded from static
+    // initializers. libFuzzer cleared the coverage map after they ran and could
+    // fail to see any coverage, triggering an early exit, if we don't replay it
+    // here.
+    // https://github.com/llvm/llvm-project/blob/957a5e987444d3193575d6ad8afe6c75da00d794/compiler-rt/lib/fuzzer/FuzzerLoop.cpp#L804-L809
+    CoverageTracker::ReplayInitialCoverage(env);
+  }
   if (fuzzer_test_one_input_data_ != nullptr) {
     FeedFuzzedDataProvider(data, size);
     env.CallStaticVoidMethod(jclass_, fuzzer_test_one_input_data_,

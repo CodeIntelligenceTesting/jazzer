@@ -165,6 +165,18 @@ void CoverageTracker::RecordInitialCoverage(JNIEnv &env) {
   AssertNoException(env);
 }
 
+void CoverageTracker::ReplayInitialCoverage(JNIEnv &env) {
+  jclass coverage_recorder = env.FindClass(kCoverageRecorderClass);
+  AssertNoException(env);
+  jmethodID coverage_recorder_update_covered_ids_with_coverage_map =
+      env.GetStaticMethodID(coverage_recorder, "replayCoveredIds", "()V");
+  AssertNoException(env);
+  env.CallStaticVoidMethod(
+      coverage_recorder,
+      coverage_recorder_update_covered_ids_with_coverage_map);
+  AssertNoException(env);
+}
+
 std::string CoverageTracker::ComputeCoverage(JNIEnv &env) {
   uintptr_t *covered_pcs;
   size_t num_covered_pcs = __sanitizer_cov_get_observed_pcs(&covered_pcs);

@@ -62,6 +62,14 @@ object CoverageRecorder {
     }
 
     @JvmStatic
+    fun replayCoveredIds() {
+        val mem = CoverageMap.mem
+        for (coverageId in additionalCoverage) {
+            mem.put(coverageId, 1)
+        }
+    }
+
+    @JvmStatic
     fun computeFileCoverage(coveredIds: IntArray): String {
         val coverage = analyzeCoverage(coveredIds.toSet()) ?: return "No classes were instrumented"
         return coverage.sourceFiles.joinToString(
