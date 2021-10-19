@@ -22,7 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-// Returned by Meta when asked to construct a Class object.
+// Returned by Meta when asked to construct a Class object. Its purpose is to be a relatively
+// "interesting" Java data class that can serve as the target of methods that perform some kind of
+// reflection or deserialization.
 public class YourAverageJavaClass implements Cloneable, Closeable, Serializable {
   public byte aByte;
   public boolean aBoolean;
