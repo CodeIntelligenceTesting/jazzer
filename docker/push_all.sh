@@ -17,5 +17,5 @@ set -e
 this_dir=$(dirname "$(realpath "$0")")
 "$this_dir"/build_all.sh --no-cache
 
-docker push -t cifuzz/jazzer
-docker push -t cifuzz/jazzer-autofuzz
+docker push cifuzz/jazzer
+docker push cifuzz/jazzer-autofuzz
