@@ -45,7 +45,8 @@ DEFINE_string(target_args, "",
 
 DEFINE_uint32(keep_going, 0,
               "Continue fuzzing until N distinct exception stack traces have"
-              "been encountered. Defaults to exit after the first finding.");
+              "been encountered. Defaults to exit after the first finding "
+              "unless --autofuzz is specified.");
 DEFINE_bool(dedup, true,
             "Emit a dedup token for every finding. Defaults to true and is "
             "required for --keep_going and --ignore.");
@@ -63,7 +64,9 @@ DEFINE_string(coverage_report, "",
 
 DEFINE_string(autofuzz, "",
               "Fully qualified reference to a method on the classpath that "
-              "should be fuzzed automatically (example: System.out::println)");
+              "should be fuzzed automatically (example: System.out::println). "
+              "Fuzzing will continue even after a finding; specify "
+              "--keep_going=N to stop after N findings.");
 DEFINE_string(autofuzz_ignore, "",
               "Fully qualified class names of exceptions to ignore during "
               "autofuzz. Separated by comma.");
