@@ -84,7 +84,8 @@ public class FuzzTarget {
       return;
     }
 
-    if (methodName.equals("new")) {
+    boolean isConstructor = methodName.equals("new");
+    if (isConstructor) {
       targetExecutables =
           Arrays.stream(targetClass.getConstructors())
               .filter(constructor
@@ -101,27 +102,46 @@ public class FuzzTarget {
               .toArray(Executable[] ::new);
     }
     if (targetExecutables.length == 0) {
-      if (descriptor == null) {
-        System.err.printf("Failed to find accessible methods named %s in class %s for autofuzz.%n"
-                + "Accessible methods:%n%s",
-            methodName, className,
-            Arrays.stream(targetClass.getMethods())
-                .map(method
-                    -> String.format(
-                        "%s::%s", method.getDeclaringClass().getName(), method.getName()))
-                .distinct()
-                .collect(Collectors.joining(System.lineSeparator())));
+      if (isConstructor) {
+        if (descriptor == null) {
+          System.err.printf(
+              "Failed to find accessible constructors in class %s for autofuzz.%n", className);
+        } else {
+          System.err.printf(
+              "Failed to find accessible constructors with signature %s in class %s for autofuzz.%n"
+                  + "Accessible constructors:%n%s",
+              descriptor, className,
+              Arrays.stream(targetClass.getConstructors())
+                  .map(method
+                      -> String.format("%s::new%s", method.getDeclaringClass().getName(),
+                          Utils.getReadableDescriptor(method)))
+                  .distinct()
+                  .collect(Collectors.joining(System.lineSeparator())));
+        }
       } else {
-        System.err.printf("Failed to find accessible methods named %s in class %s for autofuzz.%n"
-                + "Accessible methods with that name:%n%s",
-            methodName, className,
-            Arrays.stream(targetClass.getMethods())
-                .filter(method -> method.getName().equals(methodName))
-                .map(method
-                    -> String.format("%s::%s%s", method.getDeclaringClass().getName(),
-                        method.getName(), Utils.getReadableDescriptor(method)))
-                .distinct()
-                .collect(Collectors.joining(System.lineSeparator())));
+        if (descriptor == null) {
+          System.err.printf("Failed to find accessible methods named %s in class %s for autofuzz.%n"
+                  + "Accessible methods:%n%s",
+              methodName, className,
+              Arrays.stream(targetClass.getMethods())
+                  .map(method
+                      -> String.format(
+                          "%s::%s", method.getDeclaringClass().getName(), method.getName()))
+                  .distinct()
+                  .collect(Collectors.joining(System.lineSeparator())));
+        } else {
+          System.err.printf(
+              "Failed to find accessible methods named %s with signature %s in class %s for autofuzz.%n"
+                  + "Accessible methods with that name:%n%s",
+              methodName, descriptor, className,
+              Arrays.stream(targetClass.getMethods())
+                  .filter(method -> method.getName().equals(methodName))
+                  .map(method
+                      -> String.format("%s::%s%s", method.getDeclaringClass().getName(),
+                          method.getName(), Utils.getReadableDescriptor(method)))
+                  .distinct()
+                  .collect(Collectors.joining(System.lineSeparator())));
+        }
       }
       System.exit(1);
     }
@@ -183,7 +203,7 @@ public class FuzzTarget {
         System.err.printf("Failed to generate valid arguments to '%s' in %d attempts; giving up%n",
             methodReference, executionsSinceLastInvocation);
         System.exit(1);
-      } else if (executionsSinceLastInvocation >= MAX_EXECUTIONS_WITHOUT_INVOCATION / 2) {
+      } else if (executionsSinceLastInvocation == MAX_EXECUTIONS_WITHOUT_INVOCATION / 2) {
         // The application under test might perform classpath modifications or create classes
         // dynamically that implement interfaces or extend abstract classes. Rescanning the
         // classpath might help with constructing objects.
