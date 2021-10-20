@@ -120,22 +120,32 @@ public class Meta {
       return null;
     }
     if (type == String.class || type == CharSequence.class) {
-      return data.consumeString(data.remainingBytes() / 2);
+      return data.consumeString(consumeArrayLength(data, 1));
     } else if (type.isArray()) {
       if (type == byte[].class) {
-        return data.consumeBytes(data.remainingBytes() / 2);
+        return data.consumeBytes(consumeArrayLength(data, Byte.BYTES));
       } else if (type == int[].class) {
-        return data.consumeInts(data.remainingBytes() / 2);
+        return data.consumeInts(consumeArrayLength(data, Integer.BYTES));
       } else if (type == short[].class) {
-        return data.consumeShorts(data.remainingBytes() / 2);
+        return data.consumeShorts(consumeArrayLength(data, Short.BYTES));
       } else if (type == long[].class) {
-        return data.consumeLongs(data.remainingBytes() / 2);
+        return data.consumeLongs(consumeArrayLength(data, Long.BYTES));
       } else if (type == boolean[].class) {
-        return data.consumeBooleans(data.remainingBytes() / 2);
+        return data.consumeBooleans(consumeArrayLength(data, 1));
       } else {
-        Object array = Array.newInstance(type.getComponentType(), data.remainingBytes() / 2);
+        int remainingBytesBeforeFirstElementCreation = data.remainingBytes();
+        Object firstElement = consume(data, type.getComponentType());
+        int remainingBytesAfterFirstElementCreation = data.remainingBytes();
+        int sizeOfElementEstimate =
+            remainingBytesBeforeFirstElementCreation - remainingBytesAfterFirstElementCreation;
+        Object array = Array.newInstance(
+            type.getComponentType(), consumeArrayLength(data, sizeOfElementEstimate));
         for (int i = 0; i < Array.getLength(array); i++) {
-          Array.set(array, i, consume(data, type.getComponentType()));
+          if (i == 0) {
+            Array.set(array, i, firstElement);
+          } else {
+            Array.set(array, i, consume(data, type.getComponentType()));
+          }
         }
         return array;
       }
@@ -246,6 +256,13 @@ public class Meta {
   static boolean isDebug() {
     String value = System.getenv("JAZZER_AUTOFUZZ_DEBUG");
     return value != null && !value.isEmpty();
+  }
+
+  private static int consumeArrayLength(FuzzedDataProvider data, int sizeOfElement) {
+    // Spend at most half of the fuzzer input bytes so that the remaining arguments that require
+    // construction still have non-trivial data to work with.
+    int bytesToSpend = data.remainingBytes() / 2;
+    return bytesToSpend / Math.max(sizeOfElement, 1);
   }
 
   private static String getDebugSummary(
