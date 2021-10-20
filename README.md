@@ -269,6 +269,46 @@ It is highly recommended to use `FuzzedDataProvider` for generating `java.lang.S
 instead of converting the raw byte array to directly via a `String` constructor as the `FuzzedDataProvider` implementation is
 engineered to minimize copying and generate both valid and invalid ASCII-only and Unicode strings.
 
+### Autofuzz mode
+
+The autofuzz mode enables fuzzing arbitrary methods without having to manually create fuzz targets. 
+This can be done with the `--autofuzz` flag which can be used to specify a method reference (e.g., `System.out::println`). 
+Here you can provide a specific method signature (e.g., `org.apache.commons.imaging.Imaging::getBufferedImage(java.io.InputStream,java.util.Map)`) 
+or simply only the function name. If no signature is provided, jazzer will fuzz all public methods with the that name 
+and picks one in each iteration. Jazzer then creates the objects needed to invoke the selected method. 
+Enabling to provide the method signature in this format makes it easy to copy-paste methods signatures from javadoc.
+
+Under the hoods, jazzer tries various ways of creating objects from the fuzzer input. For example, if a parameter is an 
+interface or an abstract class, we look for all non-abstract implementing classes in the class path. 
+Jazzer can also create objects from classes that follow the [builder design pattern](https://www.baeldung.com/creational-design-patterns#builder) 
+or have a default constructor and use setters to set the fields.
+
+Creating objects from fuzzer input can lead to many reported exceptions. 
+Jazzer addresses this issue by ignoring exceptions that the target method declares to throw. 
+In addition to that, you can provide a list of exceptions to be ignored during fuzzing. 
+You can specify concrete exceptions (e.g., `java.lang.NullPointerException`). 
+In this case, we ignore the specified exceptions and all corresponding subclasses. 
+Another option is to specify a glob pattern to ignore all exceptions in a specific package (`java.lang.*`).
+
+#### Docker
+To facilitate using the autofuzz mode, we provide a docker image that you can use to fuzz libraries by providing their Maven coordinates. 
+The dependencies will then be downloaded and auto-fuzzed.
+
+```sh
+docker run cifuzz/jazzer-autofuzz <Maven coordinates> --autofuzz=<Method reference> <argunemts>
+```
+
+Here is an example to show how you can fuzz the JSON sanitizer with the autofuzz mode.
+```sh
+docker run -it cifuzz/jazzer-autofuzz \
+   com.mikesamuel:json-sanitizer:1.2.0 \
+   com.google.json.JsonSanitizer::sanitize \
+   --autofuzz_ignore=java.lang.ArrayIndexOutOfBoundsException \
+   --keep_going=1
+```
+
+#### 
+
 ### Reproducing a bug
 
 When Jazzer manages to find an input that causes an uncaught exception or a failed assertion, it prints a Java
