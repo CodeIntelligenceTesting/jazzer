@@ -15,7 +15,6 @@
 package com.code_intelligence.jazzer.agent
 
 import com.code_intelligence.jazzer.instrumentor.ClassInstrumentor
-import com.code_intelligence.jazzer.instrumentor.ClassNameGlobber
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hook
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
@@ -24,6 +23,7 @@ import com.code_intelligence.jazzer.runtime.NativeLibHooks
 import com.code_intelligence.jazzer.runtime.TraceCmpHooks
 import com.code_intelligence.jazzer.runtime.TraceDivHooks
 import com.code_intelligence.jazzer.runtime.TraceIndirHooks
+import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
 import java.nio.file.Path

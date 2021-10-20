@@ -16,11 +16,11 @@
 
 package com.code_intelligence.jazzer.agent
 
-import com.code_intelligence.jazzer.instrumentor.ClassNameGlobber
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
 import com.code_intelligence.jazzer.runtime.ManifestUtils
+import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import java.io.File
 import java.lang.instrument.Instrumentation
 import java.nio.file.Paths

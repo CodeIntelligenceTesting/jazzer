@@ -23,6 +23,7 @@ import com.code_intelligence.jazzer.third_party.jacoco.core.data.ExecutionDataWr
 import com.code_intelligence.jazzer.third_party.jacoco.core.data.SessionInfo
 import com.code_intelligence.jazzer.third_party.jacoco.core.data.SessionInfoStore
 import com.code_intelligence.jazzer.third_party.jacoco.core.internal.data.CRC64
+import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import io.github.classgraph.ClassGraph
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream

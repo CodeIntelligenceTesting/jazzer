@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.code_intelligence.jazzer.instrumentor
+package com.code_intelligence.jazzer.utils
 
 import java.lang.IllegalArgumentException
 
@@ -47,7 +47,7 @@ class ClassNameGlobber(includes: List<String>, excludes: List<String>) {
     }
 }
 
-private class SimpleGlobMatcher(val glob: String) {
+class SimpleGlobMatcher(val glob: String) {
     private enum class Type {
         // foo.bar (matches foo.bar only)
         FULL_MATCH,
