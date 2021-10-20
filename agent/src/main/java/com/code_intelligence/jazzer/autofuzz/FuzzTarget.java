@@ -15,6 +15,7 @@
 package com.code_intelligence.jazzer.autofuzz;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.utils.SimpleGlobMatcher;
 import com.code_intelligence.jazzer.utils.Utils;
 import java.io.Closeable;
 import java.io.UnsupportedEncodingException;
@@ -25,6 +26,7 @@ import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,6 +36,7 @@ public class FuzzTarget {
   private static String methodReference;
   private static Executable[] targetExecutables;
   private static Map<Executable, Class<?>[]> throwsDeclarations;
+  private static Set<SimpleGlobMatcher> ignoredExceptionMatchers;
   private static long executionsSinceLastInvocation = 0;
 
   public static void fuzzerInitialize(String[] args) {
@@ -142,9 +145,17 @@ public class FuzzTarget {
       }
       System.exit(1);
     }
+
+    ignoredExceptionMatchers = Arrays.stream(args)
+                                   .skip(1)
+                                   .filter(s -> s.contains("*"))
+                                   .map(SimpleGlobMatcher::new)
+                                   .collect(Collectors.toSet());
+
     List<Class<?>> alwaysIgnore =
         Arrays.stream(args)
             .skip(1)
+            .filter(s -> !s.contains("*"))
             .map(name -> {
               try {
                 return ClassLoader.getSystemClassLoader().loadClass(name);
@@ -207,6 +218,10 @@ public class FuzzTarget {
         if (declaredThrow.isAssignableFrom(causeClass)) {
           return;
         }
+      }
+
+      if (ignoredExceptionMatchers.stream().anyMatch(m -> m.matches(causeClass.getName()))) {
+        return;
       }
       cleanStackTraces(cause);
       throw cause;
