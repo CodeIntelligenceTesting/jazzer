@@ -60,6 +60,8 @@ final public class Jazzer {
     }
   }
 
+  private Jazzer() {}
+
   /**
    * Instructs the fuzzer to guide its mutations towards making {@code current} equal to {@code
    * target}.

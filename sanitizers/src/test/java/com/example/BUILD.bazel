@@ -27,7 +27,6 @@ java_fuzz_target_test(
         "@maven//:javax_el_javax_el_api",
         "@maven//:javax_validation_validation_api",
         "@maven//:javax_xml_bind_jaxb_api",
-        "@maven//:org_glassfish_javax_el",
         "@maven//:org_hibernate_hibernate_validator",
     ],
 )
