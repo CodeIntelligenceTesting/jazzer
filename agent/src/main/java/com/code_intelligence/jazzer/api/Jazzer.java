@@ -30,6 +30,7 @@ final public class Jazzer {
   private static MethodHandle traceMemcmp = null;
 
   private static MethodHandle consume = null;
+  private static MethodHandle autofuzzFunction1 = null;
 
   static {
     try {
@@ -55,6 +56,9 @@ final public class Jazzer {
       MethodType consumeType =
           MethodType.methodType(Object.class, FuzzedDataProvider.class, Class.class);
       consume = MethodHandles.publicLookup().findStatic(metaClass, "consume", consumeType);
+
+      autofuzzFunction1 = MethodHandles.publicLookup().findStatic(metaClass, "autofuzz",
+          MethodType.methodType(Object.class, FuzzedDataProvider.class, Function1.class));
     } catch (ClassNotFoundException ignore) {
       // Not running in the context of the agent. This is fine as long as no methods are called on
       // this class.
@@ -68,6 +72,36 @@ final public class Jazzer {
   }
 
   private Jazzer() {}
+
+  /**
+   * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
+   * using only public methods available on the classpath.
+   *
+   * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
+   * meaningful ways for a number of reasons.
+   *
+   * @param data the {@link FuzzedDataProvider} instance provided to {@code fuzzerTestOneInput}.
+   * @param func a method reference for the function to autofuzz. If there are multiple overloads,
+   *     resolve ambiguities by explicitly casting to {@link Function1} with (partially) specified
+   *     type variables, e.g. {@code (Function1<String, ?>) String::new}.
+   * @return the return value of {@code func}, or {@code null} if {@code autofuzz} failed to invoke
+   *     the function.
+   * @throws Throwable any {@link Throwable} thrown by {@code func}, or an {@link
+   *     AutofuzzConstructionException} if autofuzz failed to construct the arguments for the call.
+   *     The {@link Throwable} is thrown unchecked.
+   */
+  @SuppressWarnings("unchecked")
+  public static <T1, R> R autofuzz(FuzzedDataProvider data, Function1<T1, R> func) {
+    try {
+      return (R) autofuzzFunction1.invoke(data, func);
+    } catch (AutofuzzInvocationException e) {
+      rethrowUnchecked(e.getCause());
+    } catch (Throwable t) {
+      rethrowUnchecked(t);
+    }
+    // Not reached.
+    return null;
+  }
 
   /**
    * Attempts to construct an instance of {@code type} from the fuzzer input using only public

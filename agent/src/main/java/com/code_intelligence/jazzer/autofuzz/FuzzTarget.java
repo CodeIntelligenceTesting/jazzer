@@ -15,6 +15,7 @@
 package com.code_intelligence.jazzer.autofuzz;
 
 import com.code_intelligence.jazzer.api.AutofuzzConstructionException;
+import com.code_intelligence.jazzer.api.AutofuzzInvocationException;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.utils.SimpleGlobMatcher;
 import com.code_intelligence.jazzer.utils.Utils;

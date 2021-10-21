@@ -14,8 +14,10 @@
 
 package com.code_intelligence.jazzer.api;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,6 +28,14 @@ public class AutofuzzTest {
 
   public interface ImplementedInterface {}
   public static class ImplementingClass implements ImplementedInterface {}
+
+  private static boolean implIsNotNull(ImplementedInterface impl) {
+    return impl != null;
+  }
+
+  private static boolean implIsNotNull(UnimplementedInterface impl) {
+    return impl != null;
+  }
 
   @Test
   public void testConsume() {
@@ -41,5 +51,27 @@ public class AutofuzzTest {
     FuzzedDataProvider data = CannedFuzzedDataProvider.create(Collections.singletonList(
         (byte) 1 /* do not return null without searching for implementing classes */));
     assertNull(Jazzer.consume(data, UnimplementedInterface.class));
+  }
+
+  @Test
+  public void testAutofuzz() {
+    FuzzedDataProvider data = CannedFuzzedDataProvider.create(
+        Arrays.asList((byte) 1 /* do not return null */, 0 /* first class on the classpath */,
+            (byte) 1 /* do not return null */, 0 /* first constructor */));
+    assertEquals(Boolean.TRUE,
+        Jazzer.autofuzz(data, (Function1<ImplementedInterface, ?>) AutofuzzTest::implIsNotNull));
+  }
+
+  @Test
+  public void testAutofuzzFailsWithException() {
+    FuzzedDataProvider data = CannedFuzzedDataProvider.create(
+        Collections.singletonList((byte) 1 /* do not return null */));
+    try {
+      Jazzer.autofuzz(data, (Function1<UnimplementedInterface, ?>) AutofuzzTest::implIsNotNull);
+    } catch (AutofuzzConstructionException e) {
+      // Pass.
+      return;
+    }
+    fail("should have thrown an AutofuzzConstructionException");
   }
 }
