@@ -15,6 +15,7 @@
 package com.code_intelligence.jazzer.autofuzz;
 
 import com.code_intelligence.jazzer.api.AutofuzzConstructionException;
+import com.code_intelligence.jazzer.api.AutofuzzInvocationException;
 import com.code_intelligence.jazzer.api.Consumer1;
 import com.code_intelligence.jazzer.api.Consumer2;
 import com.code_intelligence.jazzer.api.Consumer3;

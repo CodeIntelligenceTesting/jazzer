@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.code_intelligence.jazzer.autofuzz;
+package com.code_intelligence.jazzer.api;
 
+// An exception wrapping a {@link Throwable} thrown during the actual invocation of, but not the
+// construction of parameters for an autofuzzed method.
 /**
- * An exception wrapping a {@link Throwable} thrown during the actual invocation of, but not the
- * construction of parameters for an autofuzzed method.
+ * Only used internally.
  */
 public class AutofuzzInvocationException extends RuntimeException {
   public AutofuzzInvocationException(Throwable cause) {
