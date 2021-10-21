@@ -35,6 +35,11 @@ final public class Jazzer {
   private static MethodHandle autofuzzFunction3 = null;
   private static MethodHandle autofuzzFunction4 = null;
   private static MethodHandle autofuzzFunction5 = null;
+  private static MethodHandle autofuzzConsumer1 = null;
+  private static MethodHandle autofuzzConsumer2 = null;
+  private static MethodHandle autofuzzConsumer3 = null;
+  private static MethodHandle autofuzzConsumer4 = null;
+  private static MethodHandle autofuzzConsumer5 = null;
 
   static {
     try {
@@ -71,6 +76,16 @@ final public class Jazzer {
           MethodType.methodType(Object.class, FuzzedDataProvider.class, Function4.class));
       autofuzzFunction5 = MethodHandles.publicLookup().findStatic(metaClass, "autofuzz",
           MethodType.methodType(Object.class, FuzzedDataProvider.class, Function5.class));
+      autofuzzConsumer1 = MethodHandles.publicLookup().findStatic(metaClass, "autofuzz",
+          MethodType.methodType(void.class, FuzzedDataProvider.class, Consumer1.class));
+      autofuzzConsumer2 = MethodHandles.publicLookup().findStatic(metaClass, "autofuzz",
+          MethodType.methodType(void.class, FuzzedDataProvider.class, Consumer2.class));
+      autofuzzConsumer3 = MethodHandles.publicLookup().findStatic(metaClass, "autofuzz",
+          MethodType.methodType(void.class, FuzzedDataProvider.class, Consumer3.class));
+      autofuzzConsumer4 = MethodHandles.publicLookup().findStatic(metaClass, "autofuzz",
+          MethodType.methodType(void.class, FuzzedDataProvider.class, Consumer4.class));
+      autofuzzConsumer5 = MethodHandles.publicLookup().findStatic(metaClass, "autofuzz",
+          MethodType.methodType(void.class, FuzzedDataProvider.class, Consumer5.class));
     } catch (ClassNotFoundException ignore) {
       // Not running in the context of the agent. This is fine as long as no methods are called on
       // this class.
@@ -235,6 +250,133 @@ final public class Jazzer {
     }
     // Not reached.
     return null;
+  }
+
+  /**
+   * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
+   * using only public methods available on the classpath.
+   *
+   * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
+   * meaningful ways for a number of reasons.
+   *
+   * @param data the {@link FuzzedDataProvider} instance provided to {@code fuzzerTestOneInput}.
+   * @param func a method reference for the function to autofuzz. If there are multiple overloads,
+   *     resolve ambiguities by explicitly casting to {@link Consumer1} with explicitly specified
+   * type variable.
+   * @throws Throwable any {@link Throwable} thrown by {@code func}, or an {@link
+   *     AutofuzzConstructionException} if autofuzz failed to construct the arguments for the call.
+   *     The {@link Throwable} is thrown unchecked.
+   */
+  public static <T1> void autofuzz(FuzzedDataProvider data, Consumer1<T1> func) {
+    try {
+      autofuzzConsumer1.invoke(data, func);
+    } catch (AutofuzzInvocationException e) {
+      rethrowUnchecked(e.getCause());
+    } catch (Throwable t) {
+      rethrowUnchecked(t);
+    }
+  }
+
+  /**
+   * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
+   * using only public methods available on the classpath.
+   *
+   * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
+   * meaningful ways for a number of reasons.
+   *
+   * @param data the {@link FuzzedDataProvider} instance provided to {@code fuzzerTestOneInput}.
+   * @param func a method reference for the function to autofuzz. If there are multiple overloads,
+   *     resolve ambiguities by explicitly casting to {@link Consumer2} with (partially) specified
+   * type variables.
+   * @throws Throwable any {@link Throwable} thrown by {@code func}, or an {@link
+   *     AutofuzzConstructionException} if autofuzz failed to construct the arguments for the call.
+   *     The {@link Throwable} is thrown unchecked.
+   */
+  public static <T1, T2> void autofuzz(FuzzedDataProvider data, Consumer2<T1, T2> func) {
+    try {
+      autofuzzConsumer2.invoke(data, func);
+    } catch (AutofuzzInvocationException e) {
+      rethrowUnchecked(e.getCause());
+    } catch (Throwable t) {
+      rethrowUnchecked(t);
+    }
+  }
+
+  /**
+   * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
+   * using only public methods available on the classpath.
+   *
+   * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
+   * meaningful ways for a number of reasons.
+   *
+   * @param data the {@link FuzzedDataProvider} instance provided to {@code fuzzerTestOneInput}.
+   * @param func a method reference for the function to autofuzz. If there are multiple overloads,
+   *     resolve ambiguities by explicitly casting to {@link Consumer3} with (partially) specified
+   * type variables.
+   * @throws Throwable any {@link Throwable} thrown by {@code func}, or an {@link
+   *     AutofuzzConstructionException} if autofuzz failed to construct the arguments for the call.
+   *     The {@link Throwable} is thrown unchecked.
+   */
+  public static <T1, T2, T3> void autofuzz(FuzzedDataProvider data, Consumer3<T1, T2, T3> func) {
+    try {
+      autofuzzConsumer3.invoke(data, func);
+    } catch (AutofuzzInvocationException e) {
+      rethrowUnchecked(e.getCause());
+    } catch (Throwable t) {
+      rethrowUnchecked(t);
+    }
+  }
+
+  /**
+   * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
+   * using only public methods available on the classpath.
+   *
+   * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
+   * meaningful ways for a number of reasons.
+   *
+   * @param data the {@link FuzzedDataProvider} instance provided to {@code fuzzerTestOneInput}.
+   * @param func a method reference for the function to autofuzz. If there are multiple overloads,
+   *     resolve ambiguities by explicitly casting to {@link Consumer4} with (partially) specified
+   * type variables.
+   * @throws Throwable any {@link Throwable} thrown by {@code func}, or an {@link
+   *     AutofuzzConstructionException} if autofuzz failed to construct the arguments for the call.
+   *     The {@link Throwable} is thrown unchecked.
+   */
+  public static <T1, T2, T3, T4> void autofuzz(
+      FuzzedDataProvider data, Consumer4<T1, T2, T3, T4> func) {
+    try {
+      autofuzzConsumer4.invoke(data, func);
+    } catch (AutofuzzInvocationException e) {
+      rethrowUnchecked(e.getCause());
+    } catch (Throwable t) {
+      rethrowUnchecked(t);
+    }
+  }
+
+  /**
+   * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
+   * using only public methods available on the classpath.
+   *
+   * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
+   * meaningful ways for a number of reasons.
+   *
+   * @param data the {@link FuzzedDataProvider} instance provided to {@code fuzzerTestOneInput}.
+   * @param func a method reference for the function to autofuzz. If there are multiple overloads,
+   *     resolve ambiguities by explicitly casting to {@link Consumer5} with (partially) specified
+   * type variables.
+   * @throws Throwable any {@link Throwable} thrown by {@code func}, or an {@link
+   *     AutofuzzConstructionException} if autofuzz failed to construct the arguments for the call.
+   *     The {@link Throwable} is thrown unchecked.
+   */
+  public static <T1, T2, T3, T4, T5> void autofuzz(
+      FuzzedDataProvider data, Consumer5<T1, T2, T3, T4, T5> func) {
+    try {
+      autofuzzConsumer5.invoke(data, func);
+    } catch (AutofuzzInvocationException e) {
+      rethrowUnchecked(e.getCause());
+    } catch (Throwable t) {
+      rethrowUnchecked(t);
+    }
   }
 
   /**

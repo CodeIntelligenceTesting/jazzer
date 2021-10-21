@@ -37,6 +37,13 @@ public class AutofuzzTest {
     return impl != null;
   }
 
+  private static void checkAllTheArguments(
+      String arg1, int arg2, byte arg3, ImplementedInterface arg4) {
+    if (!arg1.equals("foobar") || arg2 != 42 || arg3 != 5 || arg4 == null) {
+      throw new IllegalArgumentException();
+    }
+  }
+
   @Test
   public void testConsume() {
     FuzzedDataProvider data = CannedFuzzedDataProvider.create(
@@ -73,5 +80,28 @@ public class AutofuzzTest {
       return;
     }
     fail("should have thrown an AutofuzzConstructionException");
+  }
+
+  @Test
+  public void testAutofuzzConsumer() {
+    FuzzedDataProvider data = CannedFuzzedDataProvider.create(
+        Arrays.asList((byte) 1 /* do not return null */, 6 /* string length */, "foobar", 42,
+            (byte) 5, (byte) 1 /* do not return null */, 0 /* first class on the classpath */,
+            (byte) 1 /* do not return null */, 0 /* first constructor */));
+    Jazzer.autofuzz(data, AutofuzzTest::checkAllTheArguments);
+  }
+
+  @Test
+  public void testAutofuzzConsumerThrowsException() {
+    FuzzedDataProvider data =
+        CannedFuzzedDataProvider.create(Arrays.asList((byte) 1 /* do not return null */,
+            6 /* string length */, "foobar", 42, (byte) 5, (byte) 0 /* *do* return null */));
+    try {
+      Jazzer.autofuzz(data, AutofuzzTest::checkAllTheArguments);
+    } catch (IllegalArgumentException e) {
+      // Pass.
+      return;
+    }
+    fail("should have thrown an IllegalArgumentException");
   }
 }
