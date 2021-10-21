@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.autofuzz;
 
+import com.code_intelligence.jazzer.api.AutofuzzConstructionException;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.utils.Utils;
 import io.github.classgraph.ClassGraph;
