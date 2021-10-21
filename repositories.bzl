@@ -31,11 +31,10 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "bazel_skylib",
-        sha256 = "37fbe6e229f28dfda55d9c9a305235b882a1cf6cff746ce448b8b870ecfdf620",
-        strip_prefix = "bazel-skylib-fd75066f159234265efb8f838b056be5a2e00a59",
+        sha256 = "c6966ec828da198c5d9adbaa94c05e3a1c7f21bd012a0b29ba8ddbccb2c93b0d",
         urls = [
-            "https://github.com/bazelbuild/bazel-skylib/archive/fd75066f159234265efb8f838b056be5a2e00a59.tar.gz",
-            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/archive/fd75066f159234265efb8f838b056be5a2e00a59.tar.gz",
+            "https://github.com/bazelbuild/bazel-skylib/releases/download/1.1.1/bazel-skylib-1.1.1.tar.gz",
+            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.1.1/bazel-skylib-1.1.1.tar.gz",
         ],
     )
 
