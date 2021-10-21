@@ -29,6 +29,10 @@ build:windows --features=static_link_msvcrt
 test:windows --noincompatible_strict_action_env
 run:windows --noincompatible_strict_action_env
 
+# Toolchain
+build:toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-linux,@llvm_toolchain//:cc-toolchain-darwin
+build:toolchain --//third_party:toolchain
+
 # CI tests (not using the toolchain to test OSS-Fuzz compatibility)
 build:ci --bes_results_url=https://app.buildbuddy.io/invocation/
 build:ci --bes_backend=grpcs://cloud.buildbuddy.io
