@@ -29,6 +29,8 @@ final public class Jazzer {
   private static MethodHandle traceStrstr = null;
   private static MethodHandle traceMemcmp = null;
 
+  private static MethodHandle consume = null;
+
   static {
     try {
       jazzerInternal = Class.forName("com.code_intelligence.jazzer.runtime.JazzerInternal");
@@ -48,6 +50,11 @@ final public class Jazzer {
           MethodType.methodType(void.class, byte[].class, byte[].class, int.class, int.class);
       traceMemcmp = MethodHandles.publicLookup().findStatic(
           traceDataFlowNativeCallbacks, "traceMemcmp", traceMemcmpType);
+
+      Class<?> metaClass = Class.forName("com.code_intelligence.jazzer.autofuzz.Meta");
+      MethodType consumeType =
+          MethodType.methodType(Object.class, FuzzedDataProvider.class, Class.class);
+      consume = MethodHandles.publicLookup().findStatic(metaClass, "consume", consumeType);
     } catch (ClassNotFoundException ignore) {
       // Not running in the context of the agent. This is fine as long as no methods are called on
       // this class.
@@ -61,6 +68,31 @@ final public class Jazzer {
   }
 
   private Jazzer() {}
+
+  /**
+   * Attempts to construct an instance of {@code type} from the fuzzer input using only public
+   * methods available on the classpath.
+   *
+   * <b>Note:</b> This function is inherently heuristic and may fail to return meaningful values for
+   * a variety of reasons.
+   *
+   * @param data the {@link FuzzedDataProvider} instance provided to {@code fuzzerTestOneInput}.
+   * @param type the {@link Class} to construct an instance of.
+   * @return an instance of {@code type} constructed from the fuzzer input, or {@code null} if
+   *     autofuzz failed to create an instance.
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> T consume(FuzzedDataProvider data, Class<T> type) {
+    try {
+      return (T) consume.invokeExact(data, type);
+    } catch (AutofuzzConstructionException ignored) {
+      return null;
+    } catch (Throwable t) {
+      rethrowUnchecked(t);
+      // Not reached.
+      return null;
+    }
+  }
 
   /**
    * Instructs the fuzzer to guide its mutations towards making {@code current} equal to {@code
@@ -147,5 +179,11 @@ final public class Jazzer {
         e.printStackTrace();
       }
     }
+  }
+
+  // Rethrows a (possibly checked) exception while avoiding a throws declaration.
+  @SuppressWarnings("unchecked")
+  private static <T extends Throwable> void rethrowUnchecked(Throwable t) throws T {
+    throw(T) t;
   }
 }
