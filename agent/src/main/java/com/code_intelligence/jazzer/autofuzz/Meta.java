@@ -15,6 +15,16 @@
 package com.code_intelligence.jazzer.autofuzz;
 
 import com.code_intelligence.jazzer.api.AutofuzzConstructionException;
+import com.code_intelligence.jazzer.api.Consumer1;
+import com.code_intelligence.jazzer.api.Consumer2;
+import com.code_intelligence.jazzer.api.Consumer3;
+import com.code_intelligence.jazzer.api.Consumer4;
+import com.code_intelligence.jazzer.api.Consumer5;
+import com.code_intelligence.jazzer.api.Function1;
+import com.code_intelligence.jazzer.api.Function2;
+import com.code_intelligence.jazzer.api.Function3;
+import com.code_intelligence.jazzer.api.Function4;
+import com.code_intelligence.jazzer.api.Function5;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.utils.Utils;
 import io.github.classgraph.ClassGraph;
