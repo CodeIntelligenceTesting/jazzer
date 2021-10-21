@@ -30,14 +30,6 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
-        name = "bazel_common",
-        sha256 = "8b6aebdc095c8448b2f6a72bb8eae4a563891467e2d20c943f21940b1c444e38",
-        strip_prefix = "bazel-common-3d0e5005cfcbee836e31695d4ab91b5328ccc506",
-        url = "https://github.com/google/bazel-common/archive/3d0e5005cfcbee836e31695d4ab91b5328ccc506.zip",
-    )
-
-    maybe(
-        http_archive,
         name = "bazel_skylib",
         sha256 = "37fbe6e229f28dfda55d9c9a305235b882a1cf6cff746ce448b8b870ecfdf620",
         strip_prefix = "bazel-skylib-fd75066f159234265efb8f838b056be5a2e00a59",
