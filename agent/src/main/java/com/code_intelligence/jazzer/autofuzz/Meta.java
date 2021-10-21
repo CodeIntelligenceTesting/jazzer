@@ -84,6 +84,36 @@ public class Meta {
   }
 
   @SuppressWarnings("unchecked")
+  public static <T1, T2> void autofuzz(FuzzedDataProvider data, Consumer2<T1, T2> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer2.class, func.getClass());
+    func.accept((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3> void autofuzz(FuzzedDataProvider data, Consumer3<T1, T2, T3> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer3.class, func.getClass());
+    func.accept((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
+        (T3) consumeChecked(data, types, 2));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3, T4> void autofuzz(
+      FuzzedDataProvider data, Consumer4<T1, T2, T3, T4> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer4.class, func.getClass());
+    func.accept((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
+        (T3) consumeChecked(data, types, 2), (T4) consumeChecked(data, types, 3));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3, T4, T5> void autofuzz(
+      FuzzedDataProvider data, Consumer5<T1, T2, T3, T4, T5> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer5.class, func.getClass());
+    func.accept((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
+        (T3) consumeChecked(data, types, 2), (T4) consumeChecked(data, types, 3),
+        (T5) consumeChecked(data, types, 4));
+  }
+
+  @SuppressWarnings("unchecked")
   public static <T1, R> R autofuzz(FuzzedDataProvider data, Function1<T1, R> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Function1.class, func.getClass());
     return func.apply((T1) consumeChecked(data, types, 0));
@@ -93,6 +123,30 @@ public class Meta {
   public static <T1, T2, R> R autofuzz(FuzzedDataProvider data, Function2<T1, T2, R> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Function2.class, func.getClass());
     return func.apply((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3, R> R autofuzz(FuzzedDataProvider data, Function3<T1, T2, T3, R> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Function3.class, func.getClass());
+    return func.apply((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
+        (T3) consumeChecked(data, types, 2));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3, T4, R> R autofuzz(
+      FuzzedDataProvider data, Function4<T1, T2, T3, T4, R> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Function4.class, func.getClass());
+    return func.apply((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
+        (T3) consumeChecked(data, types, 2), (T4) consumeChecked(data, types, 3));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3, T4, T5, R> R autofuzz(
+      FuzzedDataProvider data, Function5<T1, T2, T3, T4, T5, R> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Function5.class, func.getClass());
+    return func.apply((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
+        (T3) consumeChecked(data, types, 2), (T4) consumeChecked(data, types, 3),
+        (T5) consumeChecked(data, types, 4));
   }
 
   public static Object consume(FuzzedDataProvider data, Class<?> type) {
