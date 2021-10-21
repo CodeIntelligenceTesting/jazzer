@@ -83,9 +83,9 @@ def jazzer_dependencies():
         http_archive,
         build_file = "@jazzer//third_party:classgraph.BUILD",
         name = "com_github_classgraph_classgraph",
-        sha256 = "c1804c9c657b0c6781af694443e140efc8178b8f2469d59f18bf1e6cfaafc284",
-        strip_prefix = "classgraph-classgraph-4.8.126",
-        url = "https://github.com/classgraph/classgraph/archive/refs/tags/classgraph-4.8.126.tar.gz",
+        sha256 = "535159d80c163d5b4d025c402b4562c92ed2d6d963db8c6c5255c0eb2c4e9f39",
+        strip_prefix = "classgraph-classgraph-4.8.128",
+        url = "https://github.com/classgraph/classgraph/archive/refs/tags/classgraph-4.8.128.tar.gz",
     )
 
     maybe(
