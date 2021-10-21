@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.code_intelligence.jazzer.autofuzz;
+package com.code_intelligence.jazzer.api;
+
+import java.util.function.Function;
 
 @FunctionalInterface
-public interface Consumer5<T1, T2, T3, T4, T5> {
-  void accept(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5);
+public interface Function1<T1, R> extends Function<T1, R> {
+  R apply(T1 arg1);
 }

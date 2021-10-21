@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.code_intelligence.jazzer.autofuzz;
+package com.code_intelligence.jazzer.api;
 
-import java.util.function.Consumer;
+import java.util.function.BiFunction;
 
 @FunctionalInterface
-public interface Consumer1<T1> extends Consumer<T1> {
-  @Override void accept(T1 t1);
+public interface Function2<T1, T2, R> extends BiFunction<T1, T2, R> {
+  @Override R apply(T1 arg1, T2 arg2);
 }

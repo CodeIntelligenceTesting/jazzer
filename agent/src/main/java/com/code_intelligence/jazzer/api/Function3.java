@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.code_intelligence.jazzer.autofuzz;
-
-import java.util.function.Function;
+package com.code_intelligence.jazzer.api;
 
 @FunctionalInterface
-public interface Function1<T1, R> extends Function<T1, R> {
-  R apply(T1 arg1);
+public interface Function3<T1, T2, T3, R> {
+  R apply(T1 arg1, T2 arg2, T3 arg3);
 }
