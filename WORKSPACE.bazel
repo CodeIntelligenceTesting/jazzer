@@ -51,6 +51,13 @@ http_archive(
 )
 
 http_archive(
+    name = "rules_jvm_external",
+    sha256 = "f36441aa876c4f6427bfb2d1f2d723b48e9d930b62662bf723ddfb8fc80f0140",
+    strip_prefix = "rules_jvm_external-4.1",
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/4.1.zip",
+)
+
+http_archive(
     name = "libjpeg_turbo",
     build_file = "//third_party:libjpeg_turbo.BUILD",
     sha256 = "6a965adb02ad898b2ae48214244618fe342baea79db97157fdc70d8844ac6f09",
