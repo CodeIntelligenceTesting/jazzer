@@ -41,14 +41,6 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
-        name = "rules_jvm_external",
-        sha256 = "f36441aa876c4f6427bfb2d1f2d723b48e9d930b62662bf723ddfb8fc80f0140",
-        strip_prefix = "rules_jvm_external-4.1",
-        url = "https://github.com/bazelbuild/rules_jvm_external/archive/4.1.zip",
-    )
-
-    maybe(
-        http_archive,
         name = "io_bazel_rules_kotlin",
         sha256 = "6cbd4e5768bdfae1598662e40272729ec9ece8b7bded8f0d2c81c8ff96dc139d",
         url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.5.0-beta-4/rules_kotlin_release.tgz",
