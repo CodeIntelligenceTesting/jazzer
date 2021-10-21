@@ -271,34 +271,41 @@ engineered to minimize copying and generate both valid and invalid ASCII-only an
 
 ### Autofuzz mode
 
-The autofuzz mode enables fuzzing arbitrary methods without having to manually create fuzz targets. 
-This can be done with the `--autofuzz` flag which can be used to specify a method reference (e.g., `System.out::println`). 
-Here you can provide a specific method signature (e.g., `org.apache.commons.imaging.Imaging::getBufferedImage(java.io.InputStream,java.util.Map)`) 
-or simply only the function name. If no signature is provided, jazzer will fuzz all public methods with the that name 
-and picks one in each iteration. Jazzer then creates the objects needed to invoke the selected method. 
-Enabling to provide the method signature in this format makes it easy to copy-paste methods signatures from javadoc.
+The Autofuzz mode enables fuzzing arbitrary methods without having to manually create fuzz targets.
+Instead, Jazzer will attempt to generate suitable and varied inputs to a specified methods using only public API functions available on the classpath.
 
-Under the hoods, jazzer tries various ways of creating objects from the fuzzer input. For example, if a parameter is an 
-interface or an abstract class, we look for all non-abstract implementing classes in the class path. 
+To use Autofuzz, specify the `--autofuzz` flag and provide a fully qualified method reference, e.g.:
+```
+--autofuzz=org.apache.commons.imaging.Imaging::getBufferedImage
+```
+If there are multiple overloads and you want Jazzer to only fuzz one, you can optionally specify the signature of the method to fuzz:
+```
+--autofuzz=org.apache.commons.imaging.Imaging::getBufferedImage(java.io.InputStream,java.util.Map)
+```
+The format of the signature agrees with that obtained from the part after the `#` of the link to the Javadocs for the particular method.
+
+Under the hood, jazzer tries various ways of creating objects from the fuzzer input. For example, if a parameter is an
+interface or an abstract class, it will look for all concrete implementing classes on the classpath.
 Jazzer can also create objects from classes that follow the [builder design pattern](https://www.baeldung.com/creational-design-patterns#builder) 
 or have a default constructor and use setters to set the fields.
 
 Creating objects from fuzzer input can lead to many reported exceptions. 
 Jazzer addresses this issue by ignoring exceptions that the target method declares to throw. 
-In addition to that, you can provide a list of exceptions to be ignored during fuzzing. 
-You can specify concrete exceptions (e.g., `java.lang.NullPointerException`). 
-In this case, we ignore the specified exceptions and all corresponding subclasses. 
-Another option is to specify a glob pattern to ignore all exceptions in a specific package (`java.lang.*`).
+In addition to that, you can provide a list of exceptions to be ignored during fuzzing via the `--autofuzz_ignore` flag in the form of a comma-separated list.
+You can specify concrete exceptions (e.g., `java.lang.NullPointerException`), in which case also subclasses of these exception classes will be ignored, or glob patterns to ignore all exceptions in a specific package (e.g. `java.lang.*` or `com.company.**`).
+
+When fuzzing with `--autofuzz`, Jazzer automatically enables the `--keep_going` mode to keep fuzzing indefinitely after the first finding.
+Set `--keep_going=N` explicitly to stop after the `N`-th finding.
 
 #### Docker
-To facilitate using the autofuzz mode, we provide a docker image that you can use to fuzz libraries by providing their Maven coordinates. 
-The dependencies will then be downloaded and auto-fuzzed.
+To facilitate using the Autofuzz mode, there is a docker image that you can use to fuzz libraries just by providing their Maven coordinates.
+The dependencies will then be downloaded and autofuzzed:
 
 ```sh
-docker run cifuzz/jazzer-autofuzz <Maven coordinates> --autofuzz=<Method reference> <argunemts>
+docker run cifuzz/jazzer-autofuzz <Maven coordinates> --autofuzz=<method reference> <further arguments>
 ```
 
-Here is an example to show how you can fuzz the JSON sanitizer with the autofuzz mode.
+As an example, you can autofuzz the `json-sanitizer` library as follows:
 ```sh
 docker run -it cifuzz/jazzer-autofuzz \
    com.mikesamuel:json-sanitizer:1.2.0 \
