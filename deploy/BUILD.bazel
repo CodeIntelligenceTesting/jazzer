@@ -1,0 +1,13 @@
+load("@rules_jvm_external//:defs.bzl", "java_export")
+load("//:maven.bzl", "JAZZER_API_COORDINATES")
+
+# To publish a new release of the Jazzer API to Maven, run:
+# bazel run --config=maven --define "maven_user=..." --define "maven_password=..." --define gpg_sign=true //:api.publish
+# Build //:api-docs.jar to generate javadocs for the API.
+java_export(
+    name = "api",
+    maven_coordinates = JAZZER_API_COORDINATES,
+    pom_template = "//:jazzer-api.pom",
+    visibility = ["//visibility:public"],
+    runtime_deps = ["//agent/src/main/java/com/code_intelligence/jazzer/api"],
+)
