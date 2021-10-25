@@ -28,24 +28,8 @@ public class FuzzTargetTestWrapper {
     Runfiles runfiles;
     try {
       runfiles = Runfiles.create();
-      String driverRlocation;
-      if (System.getProperty("os.name").startsWith("Windows")) {
-        driverRlocation = args[0] + ".exe";
-      } else {
-        driverRlocation = args[0];
-      }
-      driverActualPath = runfiles.rlocation(driverRlocation);
-      if (driverActualPath == null) {
-        System.err.println("driverActualPath is null, driverRlocation=" + driverRlocation);
-        System.exit(1);
-        return;
-      }
-      jarActualPath = runfiles.rlocation(args[1]);
-      if (jarActualPath == null) {
-        System.err.println("jarActualPath is null, jarRlocation=" + jarActualPath);
-        System.exit(1);
-        return;
-      }
+      driverActualPath = runfiles.rlocation(rlocationPath(args[0]));
+      jarActualPath = runfiles.rlocation(rlocationPath(args[1]));
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
@@ -90,5 +74,14 @@ public class FuzzTargetTestWrapper {
       System.exit(2);
     }
     System.exit(0);
+  }
+
+  // Turns the result of Bazel's `$(rootpath ...)` into the correct format for rlocation.
+  private static String rlocationPath(String rootpath) {
+    if (rootpath.startsWith("external/")) {
+      return rootpath.substring("external/".length());
+    } else {
+      return "jazzer/" + rootpath;
+    }
   }
 }

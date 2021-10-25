@@ -48,13 +48,10 @@ def java_fuzz_target_test(
 
     if sanitizer == None:
         driver = "//driver:jazzer_driver"
-        driver_rlocation = "jazzer/driver/jazzer_driver"
     elif sanitizer == "address":
         driver = "//driver:jazzer_driver_asan"
-        driver_rlocation = "jazzer/driver/jazzer_driver_asan"
     elif sanitizer == "undefined":
         driver = "//driver:jazzer_driver_ubsan"
-        driver_rlocation = "jazzer/driver/jazzer_driver_ubsan"
     else:
         fail("Invalid sanitizer: " + sanitizer)
 
@@ -64,8 +61,8 @@ def java_fuzz_target_test(
         size = "enormous",
         timeout = "moderate",
         args = [
-            driver_rlocation,
-            "jazzer/$(rootpath :%s_deploy.jar)" % target_name,
+            "$(rootpath %s)" % driver,
+            "$(rootpath :%s_deploy.jar)" % target_name,
         ] + additional_args + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,
