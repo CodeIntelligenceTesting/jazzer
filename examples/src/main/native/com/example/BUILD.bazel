@@ -1,6 +1,6 @@
-load("@fmeum_rules_jni//jni:defs.bzl", "java_native_library")
+load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
 
-java_native_library(
+cc_jni_library(
     name = "native_asan",
     srcs = [
         "com_example_ExampleFuzzerWithNative.cpp",
@@ -9,7 +9,6 @@ java_native_library(
         "-fsanitize=fuzzer-no-link,address",
         "-fno-sanitize-blacklist",
     ],
-    java_lib = "//examples:example_fuzzer_with_native_lib",
     linkopts = select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "@platforms//os:windows": [
@@ -20,9 +19,12 @@ java_native_library(
         "//conditions:default": [],
     }),
     visibility = ["//examples:__pkg__"],
+    deps = [
+        "//examples:example_fuzzer_with_native_lib.hdrs",
+    ],
 )
 
-java_native_library(
+cc_jni_library(
     name = "native_ubsan",
     srcs = [
         "com_example_ExampleFuzzerWithNative.cpp",
@@ -31,7 +33,6 @@ java_native_library(
         "-fsanitize=fuzzer-no-link,undefined",
         "-fno-sanitize-recover=all",
     ],
-    java_lib = "//examples:example_fuzzer_with_native_lib",
     linkopts = select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "@platforms//os:windows": [
@@ -42,4 +43,7 @@ java_native_library(
         "//conditions:default": [],
     }),
     visibility = ["//examples:__pkg__"],
+    deps = [
+        "//examples:example_fuzzer_with_native_lib.hdrs",
+    ],
 )
