@@ -288,7 +288,7 @@ public class Meta {
       }
 
       try {
-        return builderMethod.invoke(builderObj);
+        return autofuzz(data, builderMethod, builderObj);
       } catch (Exception e) {
         throw new AutofuzzConstructionException(e);
       }
