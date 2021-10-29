@@ -187,9 +187,9 @@ public class FuzzTarget {
     Object returnValue = null;
     try {
       if (targetExecutable instanceof Method) {
-        returnValue = Meta.autofuzz(data, (Method) targetExecutable);
+        returnValue = Meta.autofuzz(data, (Method) targetExecutable, null);
       } else {
-        returnValue = Meta.autofuzz(data, (Constructor<?>) targetExecutable);
+        returnValue = Meta.autofuzz(data, (Constructor<?>) targetExecutable, null);
       }
       executionsSinceLastInvocation = 0;
     } catch (AutofuzzConstructionException e) {

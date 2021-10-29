@@ -14,10 +14,8 @@
 
 package com.code_intelligence.jazzer.autofuzz;
 
-import static org.junit.Assert.assertEquals;
+import static com.code_intelligence.jazzer.autofuzz.TestHelpers.consumeTestCase;
 
-import com.code_intelligence.jazzer.api.CannedFuzzedDataProvider;
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import java.util.Arrays;
 import java.util.Objects;
 import org.junit.Test;
@@ -79,29 +77,27 @@ class Employee {
 }
 
 public class BuilderPatternTest {
-  FuzzedDataProvider data =
-      CannedFuzzedDataProvider.create(Arrays.asList((byte) 1, // do not return null
-          0, // Select the first Builder
-          2, // Select two Builder methods returning a builder object (fluent design)
-          0, // Select the first build method
-          0, // pick the first remaining builder method (withAge)
-          0, // pick the first remaining builder method (withJobTitle)
-          0, // pick the first build method
-          (byte) 1, // do not return null
-          6, // remaining bytes
-          "foo", // firstName
-          (byte) 1, // do not return null
-          6, // remaining bytes
-          "bar", // lastName
-          20, // age
-          (byte) 1, // do not return null
-          6, // remaining bytes
-          "baz" // jobTitle
-          ));
-
   @Test
   public void testBuilderPattern() {
-    assertEquals(Meta.consume(data, Employee.class),
-        new Employee.Builder("foo", "bar").withAge(20).withJobTitle("baz").build());
+    consumeTestCase(new Employee.Builder("foo", "bar").withAge(20).withJobTitle("baz").build(),
+        "new com.code_intelligence.jazzer.autofuzz.Employee.Builder(\"foo\", \"bar\").withAge(20).withJobTitle(\"baz\").build()",
+        Arrays.asList((byte) 1, // do not return null
+            0, // Select the first Builder
+            2, // Select two Builder methods returning a builder object (fluent design)
+            0, // Select the first build method
+            0, // pick the first remaining builder method (withAge)
+            0, // pick the first remaining builder method (withJobTitle)
+            0, // pick the first build method
+            (byte) 1, // do not return null
+            6, // remaining bytes
+            "foo", // firstName
+            (byte) 1, // do not return null
+            6, // remaining bytes
+            "bar", // lastName
+            20, // age
+            (byte) 1, // do not return null
+            6, // remaining bytes
+            "baz" // jobTitle
+            ));
   }
 }

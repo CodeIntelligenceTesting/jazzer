@@ -14,32 +14,30 @@
 
 package com.code_intelligence.jazzer.autofuzz;
 
-import static org.junit.Assert.assertEquals;
+import static com.code_intelligence.jazzer.autofuzz.TestHelpers.consumeTestCase;
 
-import com.code_intelligence.jazzer.api.CannedFuzzedDataProvider;
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.autofuzz.testdata.EmployeeWithSetters;
 import java.util.Arrays;
 import org.junit.Test;
 
 public class SettersTest {
-  FuzzedDataProvider data = CannedFuzzedDataProvider.create(
-      Arrays.asList((byte) 1, // do not return null for EmployeeWithSetters
-          0, // pick first constructor
-          2, // pick two setters
-          1, // pick second setter
-          0, // pick first setter
-          (byte) 1, // do not return null for String
-          6, // remaining bytes
-          "foo", // setFirstName
-          26 // setAge
-          ));
-
   @Test
   public void testEmptyConstructorWithSetters() {
     EmployeeWithSetters employee = new EmployeeWithSetters();
     employee.setFirstName("foo");
     employee.setAge(26);
-    assertEquals(Meta.consume(data, EmployeeWithSetters.class), employee);
+
+    consumeTestCase(employee,
+        "((java.util.function.Supplier<com.code_intelligence.jazzer.autofuzz.testdata.EmployeeWithSetters>) (() -> {com.code_intelligence.jazzer.autofuzz.testdata.EmployeeWithSetters autofuzzVariable0 = new com.code_intelligence.jazzer.autofuzz.testdata.EmployeeWithSetters(); autofuzzVariable0.setFirstName(\"foo\"); autofuzzVariable0.setAge(26); return autofuzzVariable0;})).get()",
+        Arrays.asList((byte) 1, // do not return null for EmployeeWithSetters
+            0, // pick first constructor
+            2, // pick two setters
+            1, // pick second setter
+            0, // pick first setter
+            (byte) 1, // do not return null for String
+            6, // remaining bytes
+            "foo", // setFirstName
+            26 // setAge
+            ));
   }
 }
