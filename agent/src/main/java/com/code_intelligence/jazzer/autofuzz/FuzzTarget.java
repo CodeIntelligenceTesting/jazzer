@@ -40,6 +40,7 @@ public class FuzzTarget {
   private static Map<Executable, Class<?>[]> throwsDeclarations;
   private static Set<SimpleGlobMatcher> ignoredExceptionMatchers;
   private static long executionsSinceLastInvocation = 0;
+  private static AutofuzzCodegenVisitor codegenVisitor;
 
   public static void fuzzerInitialize(String[] args) {
     if (args.length == 0 || !args[0].contains("::")) {
@@ -178,6 +179,9 @@ public class FuzzTarget {
   }
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Throwable {
+    if (Meta.isDebug()) {
+      codegenVisitor = new AutofuzzCodegenVisitor();
+    }
     Executable targetExecutable;
     if (FuzzTarget.targetExecutables.length == 1) {
       targetExecutable = FuzzTarget.targetExecutables[0];
@@ -187,11 +191,14 @@ public class FuzzTarget {
     Object returnValue = null;
     try {
       if (targetExecutable instanceof Method) {
-        returnValue = Meta.autofuzz(data, (Method) targetExecutable, null);
+        returnValue = Meta.autofuzz(data, (Method) targetExecutable, codegenVisitor);
       } else {
-        returnValue = Meta.autofuzz(data, (Constructor<?>) targetExecutable, null);
+        returnValue = Meta.autofuzz(data, (Constructor<?>) targetExecutable, codegenVisitor);
       }
       executionsSinceLastInvocation = 0;
+      if (codegenVisitor != null) {
+        System.err.println(codegenVisitor.generate());
+      }
     } catch (AutofuzzConstructionException e) {
       if (Meta.isDebug()) {
         e.printStackTrace();
