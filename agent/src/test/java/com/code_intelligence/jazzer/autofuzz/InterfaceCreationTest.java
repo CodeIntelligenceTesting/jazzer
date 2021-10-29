@@ -14,10 +14,8 @@
 
 package com.code_intelligence.jazzer.autofuzz;
 
-import static org.junit.Assert.assertEquals;
+import static com.code_intelligence.jazzer.autofuzz.TestHelpers.consumeTestCase;
 
-import com.code_intelligence.jazzer.api.CannedFuzzedDataProvider;
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import java.util.Arrays;
 import java.util.Objects;
 import org.junit.Test;
@@ -89,24 +87,25 @@ class ClassB2 implements InterfaceA {
 }
 
 public class InterfaceCreationTest {
-  FuzzedDataProvider data =
-      CannedFuzzedDataProvider.create(Arrays.asList((byte) 1, // do not return null
-          0, // pick ClassB1
-          (byte) 1, // do not return null
-          0, // pick first constructor
-          5, // arg for ClassB1 constructor
-          (byte) 1, // do not return null
-          1, // pick ClassB2
-          (byte) 1, // do not return null
-          0, // pick first constructor
-          (byte) 1, // do not return null
-          8, // remaining bytes
-          "test" // arg for ClassB2 constructor
-          ));
-
   @Test
   public void testConsumeInterface() {
-    assertEquals(Meta.consume(data, InterfaceA.class), new ClassB1(5));
-    assertEquals(Meta.consume(data, InterfaceA.class), new ClassB2("test"));
+    consumeTestCase(InterfaceA.class, new ClassB1(5),
+        "(com.code_intelligence.jazzer.autofuzz.InterfaceA) new com.code_intelligence.jazzer.autofuzz.ClassB1(5)",
+        Arrays.asList((byte) 1, // do not return null
+            0, // pick ClassB1
+            (byte) 1, // do not return null
+            0, // pick first constructor
+            5 // arg for ClassB1 constructor
+            ));
+    consumeTestCase(InterfaceA.class, new ClassB2("test"),
+        "(com.code_intelligence.jazzer.autofuzz.InterfaceA) new com.code_intelligence.jazzer.autofuzz.ClassB2(\"test\")",
+        Arrays.asList((byte) 1, // do not return null
+            1, // pick ClassB2
+            (byte) 1, // do not return null
+            0, // pick first constructor
+            (byte) 1, // do not return null
+            8, // remaining bytes
+            "test" // arg for ClassB2 constructor
+            ));
   }
 }
