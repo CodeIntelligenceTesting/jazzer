@@ -91,8 +91,8 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "fmeum_rules_jni",
-        sha256 = "0c5a5b55cf63e146903fcf018c5d33a32144971f87089fcfcb38f244addf68fc",
-        url = "https://github.com/fmeum/rules_jni/releases/download/v0.2.0/rules_jni-v0.2.0.tar.gz",
+        sha256 = "79e37740234db3f70b050b056adf6c54831b835fef99d2deb9eff3cfde43b216",
+        url = "https://github.com/fmeum/rules_jni/releases/download/v0.2.1/rules_jni-v0.2.1.tar.gz",
     )
 
     maybe(
