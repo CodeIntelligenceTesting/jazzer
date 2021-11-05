@@ -36,9 +36,14 @@ import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -210,7 +215,8 @@ public class Meta {
     return consume(data, type, null);
   }
 
-  static Object consume(FuzzedDataProvider data, Class<?> type, AutofuzzCodegenVisitor visitor) {
+  static Object consume(FuzzedDataProvider data, Type genericType, AutofuzzCodegenVisitor visitor) {
+    Class<?> type = getRawType(genericType);
     if (type == byte.class || type == Byte.class) {
       byte result = data.consumeByte();
       if (visitor != null)
@@ -578,7 +584,7 @@ public class Meta {
       FuzzedDataProvider data, Executable executable, AutofuzzCodegenVisitor visitor) {
     Object[] result;
     try {
-      result = Arrays.stream(executable.getParameterTypes())
+      result = Arrays.stream(executable.getGenericParameterTypes())
                    .map((type) -> consume(data, type, visitor))
                    .toArray();
       return result;
@@ -615,5 +621,23 @@ public class Meta {
       throw new AutofuzzError("consume returned " + result.getClass() + ", but need " + types[i]);
     }
     return result;
+  }
+
+  private static Class<?> getRawType(Type genericType) {
+    if (genericType instanceof Class<?>) {
+      return (Class<?>) genericType;
+    } else if (genericType instanceof ParameterizedType) {
+      return getRawType(((ParameterizedType) genericType).getRawType());
+    } else if (genericType instanceof WildcardType) {
+      // TODO: Improve this.
+      return Object.class;
+    } else if (genericType instanceof TypeVariable<?>) {
+      throw new AutofuzzError("Did not expect genericType to be a TypeVariable: " + genericType);
+    } else if (genericType instanceof GenericArrayType) {
+      // TODO: Improve this;
+      return Object[].class;
+    } else {
+      throw new AutofuzzError("Got unexpected class implementing Type: " + genericType);
+    }
   }
 }
