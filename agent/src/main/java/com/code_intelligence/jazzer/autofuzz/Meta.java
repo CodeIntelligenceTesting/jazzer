@@ -215,6 +215,11 @@ public class Meta {
     return consume(data, type, null);
   }
 
+  // Invariant: The Java source code representation of the returned object visited by visitor must
+  // represent an object of the same type as genericType. For example, a null value returned for
+  // the genericType Class<java.lang.String> should lead to the generated code
+  // "(java.lang.String) null", not just "null". This makes it possible to safely use consume in
+  // recursive argument constructions.
   static Object consume(FuzzedDataProvider data, Type genericType, AutofuzzCodegenVisitor visitor) {
     Class<?> type = getRawType(genericType);
     if (type == byte.class || type == Byte.class) {
@@ -263,8 +268,13 @@ public class Meta {
     //       fact that TypeUtils can't distinguish between a primitive type and its wrapper and may
     //       thus easily cause false-positive NullPointerExceptions.
     if (!type.isPrimitive() && data.consumeByte((byte) 0, (byte) 19) == 0) {
-      if (visitor != null)
-        visitor.pushElement("null");
+      if (visitor != null) {
+        if (type == Object.class) {
+          visitor.pushElement("null");
+        } else {
+          visitor.pushElement(String.format("(%s) null", type.getCanonicalName()));
+        }
+      }
       return null;
     }
     if (type == String.class || type == CharSequence.class) {
