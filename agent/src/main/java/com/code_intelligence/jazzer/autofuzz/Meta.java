@@ -360,6 +360,55 @@ public class Meta {
                                     ", ", "new java.io.ByteArrayInputStream(new byte[]{", "})")));
       }
       return new ByteArrayInputStream(array);
+    } else if (type == Map.class) {
+      if (visitor != null) {
+        // Do not use Collectors.toMap() since it cannot handle null values.
+        visitor.pushGroup("java.util.stream.Stream.of(", ", ",
+            ").collect(java.util.HashMap::new, (map, e) -> map.put(e.getKey(), e.getValue()), java.util.HashMap::putAll)");
+      }
+      ParameterizedType mapType = (ParameterizedType) genericType;
+      if (mapType.getActualTypeArguments().length != 2) {
+        throw new AutofuzzError(
+            "Expected Map generic type to have two type parameters: " + mapType);
+      }
+      Type keyType = mapType.getActualTypeArguments()[0];
+      Type valueType = mapType.getActualTypeArguments()[1];
+      int remainingBytesBeforeFirstEntryCreation = data.remainingBytes();
+      if (visitor != null) {
+        visitor.pushGroup("new java.util.AbstractMap.SimpleEntry<>(", ", ", ")");
+      }
+      Object firstKey = consume(data, keyType, visitor);
+      Object firstValue = consume(data, valueType, visitor);
+      if (visitor != null) {
+        visitor.popGroup();
+      }
+      int remainingBytesAfterFirstEntryCreation = data.remainingBytes();
+      int sizeOfElementEstimate =
+          remainingBytesBeforeFirstEntryCreation - remainingBytesAfterFirstEntryCreation;
+      int mapSize = consumeArrayLength(data, sizeOfElementEstimate);
+      Map<Object, Object> map = new HashMap<>(mapSize);
+      for (int i = 0; i < mapSize; i++) {
+        if (i == 0) {
+          map.put(firstKey, firstValue);
+        } else {
+          if (visitor != null) {
+            visitor.pushGroup("new java.util.AbstractMap.SimpleEntry<>(", ", ", ")");
+          }
+          map.put(consume(data, keyType, visitor), consume(data, valueType, visitor));
+          if (visitor != null) {
+            visitor.popGroup();
+          }
+        }
+      }
+      if (visitor != null) {
+        if (mapSize == 0) {
+          // We implicitly pushed the first entry with the call to consume above, but it is not
+          // part of the array.
+          visitor.popElement();
+        }
+        visitor.popGroup();
+      }
+      return map;
     } else if (type.isEnum()) {
       Enum<?> enumValue = (Enum<?>) data.pickValue(type.getEnumConstants());
       if (visitor != null) {
