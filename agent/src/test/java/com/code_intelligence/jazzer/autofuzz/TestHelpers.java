@@ -24,6 +24,7 @@ import java.io.ByteArrayInputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.List;
 
 class TestHelpers {
@@ -57,8 +58,7 @@ class TestHelpers {
   }
 
   static void consumeTestCase(
-      Class<?> type, Object expectedResult, String expectedResultString, List<Object> cannedData) {
-    assertTrue(expectedResult == null || type.isAssignableFrom(expectedResult.getClass()));
+      Type type, Object expectedResult, String expectedResultString, List<Object> cannedData) {
     AutofuzzCodegenVisitor visitor = new AutofuzzCodegenVisitor();
     FuzzedDataProvider data = CannedFuzzedDataProvider.create(cannedData);
     assertGeneralEquals(expectedResult, Meta.consume(data, type, visitor));
