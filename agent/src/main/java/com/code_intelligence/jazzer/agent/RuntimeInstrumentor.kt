@@ -137,7 +137,7 @@ internal class RuntimeInstrumentor(
             try {
                 instrument(internalClassName, classfileBuffer, fullInstrumentation)
             } catch (e: CoverageIdException) {
-                println("ERROR: Coverage IDs are out of sync")
+                System.err.println("ERROR: Coverage IDs are out of sync")
                 e.printStackTrace()
                 exitProcess(1)
             } catch (e: Exception) {
