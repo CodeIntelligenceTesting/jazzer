@@ -1,4 +1,5 @@
 build --incompatible_strict_action_env
+build --sandbox_tmpfs_path=/tmp
 build --enable_platform_specific_config
 build -c opt
 
