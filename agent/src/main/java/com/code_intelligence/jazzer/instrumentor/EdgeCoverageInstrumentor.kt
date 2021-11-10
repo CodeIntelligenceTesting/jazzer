@@ -14,7 +14,7 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
-import com.code_intelligence.jazzer.generated.JAVA_NO_THROW_METHODS
+import com.code_intelligence.jazzer.generated.JavaNoThrowMethods
 import com.code_intelligence.jazzer.runtime.CoverageMap
 import com.code_intelligence.jazzer.third_party.jacoco.core.analysis.Analyzer
 import com.code_intelligence.jazzer.third_party.jacoco.core.analysis.ICoverageVisitor
@@ -178,7 +178,7 @@ class EdgeCoverageInstrumentor(
         if (!internalClassName.startsWith("java/"))
             return false
         val key = "$internalClassName#$methodName#$descriptor"
-        return key in JAVA_NO_THROW_METHODS
+        return key in JavaNoThrowMethods.LIST
     }
 
 // The remainder of this file interfaces with classes in org.jacoco.core.internal. Changes to this part should not be
