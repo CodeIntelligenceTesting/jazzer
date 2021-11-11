@@ -1,9 +1,7 @@
-commit 96d079e68e8897c425d85c7a5ff0afc755b246eb
-Author: Fabian Meumertzheim <meumertzheim@code-intelligence.com>
-Date:   Tue Apr 20 08:06:09 2021 +0200
-
-    Updated Jazzer patch
-
+// SPDX-License-Identifier: EPL-2.0 and Apache-2.0
+// These patches apply to JaCoCo (https://github.com/jacoco/jacoco) and are hereby made available under the terms of the
+// Eclipse Public License 2.0 available at:
+//   http://www.eclipse.org/legal/epl-2.0
 diff --git org.jacoco.core/src/org/jacoco/core/analysis/Analyzer.java org.jacoco.core/src/org/jacoco/core/analysis/Analyzer.java
 index 0cc06ada..b65efb03 100644
 --- org.jacoco.core/src/org/jacoco/core/analysis/Analyzer.java
@@ -57,74 +55,6 @@ index 0cc06ada..b65efb03 100644
  	}
  
  	private void analyzeClass(final byte[] source) {
-diff --git org.jacoco.core/src/org/jacoco/core/internal/analysis/InstructionsBuilder.java org.jacoco.core/src/org/jacoco/core/internal/analysis/InstructionsBuilder.java
-index a69f34c8..ea1f0352 100644
---- org.jacoco.core/src/org/jacoco/core/internal/analysis/InstructionsBuilder.java
-+++ org.jacoco.core/src/org/jacoco/core/internal/analysis/InstructionsBuilder.java
-@@ -147,7 +147,8 @@ class InstructionsBuilder {
- 	 */
- 	void addProbe(final int probeId, final int branch) {
- 		final boolean executed = probes != null && probes[probeId];
--		currentInsn.addBranch(executed, branch);
-+		if (currentInsn != null)
-+			currentInsn.addBranch(executed, branch);
- 	}
- 
- 	/**
-diff --git org.jacoco.core/src/org/jacoco/core/internal/flow/ClassProbesAdapter.java org.jacoco.core/src/org/jacoco/core/internal/flow/ClassProbesAdapter.java
-index 3ed19a88..f2b4f5d3 100644
---- org.jacoco.core/src/org/jacoco/core/internal/flow/ClassProbesAdapter.java
-+++ org.jacoco.core/src/org/jacoco/core/internal/flow/ClassProbesAdapter.java
-@@ -16,6 +16,7 @@ import org.jacoco.core.internal.instr.InstrSupport;
- import org.objectweb.asm.ClassVisitor;
- import org.objectweb.asm.MethodVisitor;
- import org.objectweb.asm.commons.AnalyzerAdapter;
-+import org.objectweb.asm.tree.MethodInsnNode;
- 
- /**
-  * A {@link org.objectweb.asm.ClassVisitor} that calculates probes for every
-@@ -28,6 +29,7 @@ public class ClassProbesAdapter extends ClassVisitor
- 	};
- 
- 	private final ClassProbesVisitor cv;
-+	private final IMethodProbesAdapterFactory methodProbesAdapterFactory;
- 
- 	private final boolean trackFrames;
- 
-@@ -45,9 +47,21 @@ public class ClassProbesAdapter extends ClassVisitor
- 	 */
- 	public ClassProbesAdapter(final ClassProbesVisitor cv,
- 			final boolean trackFrames) {
-+		this(cv, trackFrames, new IMethodProbesAdapterFactory() {
-+			@Override
-+			public MethodProbesAdapter makeMethodProbesAdapter(MethodProbesVisitor probesVisitor,
-+					IProbeIdGenerator idGenerator) {
-+				return new MethodProbesAdapter(probesVisitor, idGenerator);
-+			}
-+		});
-+	}
-+
-+	public ClassProbesAdapter(final ClassProbesVisitor cv,
-+			final boolean trackFrames, IMethodProbesAdapterFactory methodProbesAdapterFactory) {
- 		super(InstrSupport.ASM_API_VERSION, cv);
- 		this.cv = cv;
- 		this.trackFrames = trackFrames;
-+		this.methodProbesAdapterFactory = methodProbesAdapterFactory;
- 	}
- 
- 	@Override
-@@ -79,8 +93,9 @@ public class ClassProbesAdapter extends ClassVisitor
- 			public void visitEnd() {
- 				super.visitEnd();
- 				LabelFlowAnalyzer.markLabels(this);
--				final MethodProbesAdapter probesAdapter = new MethodProbesAdapter(
--						methodProbes, ClassProbesAdapter.this);
-+				final MethodProbesAdapter probesAdapter =
-+						methodProbesAdapterFactory.makeMethodProbesAdapter(
-+								methodProbes, ClassProbesAdapter.this);
- 				if (trackFrames) {
- 					final AnalyzerAdapter analyzer = new AnalyzerAdapter(
- 							ClassProbesAdapter.this.name, access, name, desc,
 diff --git org.jacoco.core/src/org/jacoco/core/internal/flow/IClassProbesAdapterFactory.java org.jacoco.core/src/org/jacoco/core/internal/flow/IClassProbesAdapterFactory.java
 new file mode 100644
 index 00000000..45fc2709
@@ -137,33 +67,3 @@ index 00000000..45fc2709
 +	ClassProbesAdapter makeClassProbesAdapter(ClassProbesVisitor cv,
 +			boolean trackFrames);
 +}
-diff --git org.jacoco.core/src/org/jacoco/core/internal/flow/IMethodProbesAdapterFactory.java org.jacoco.core/src/org/jacoco/core/internal/flow/IMethodProbesAdapterFactory.java
-new file mode 100644
-index 00000000..4e5460f1
---- /dev/null
-+++ org.jacoco.core/src/org/jacoco/core/internal/flow/IMethodProbesAdapterFactory.java
-@@ -0,0 +1,8 @@
-+package org.jacoco.core.internal.flow;
-+
-+import org.objectweb.asm.MethodVisitor;
-+
-+public interface IMethodProbesAdapterFactory {
-+	MethodProbesAdapter makeMethodProbesAdapter(MethodProbesVisitor probesVisitor,
-+			IProbeIdGenerator idGenerator);
-+}
-diff --git org.jacoco.core/src/org/jacoco/core/internal/flow/MethodProbesAdapter.java org.jacoco.core/src/org/jacoco/core/internal/flow/MethodProbesAdapter.java
-index 30253d02..e019a290 100644
---- org.jacoco.core/src/org/jacoco/core/internal/flow/MethodProbesAdapter.java
-+++ org.jacoco.core/src/org/jacoco/core/internal/flow/MethodProbesAdapter.java
-@@ -25,9 +25,9 @@ import org.objectweb.asm.commons.AnalyzerAdapter;
-  * Adapter that creates additional visitor events for probes to be inserted into
-  * a method.
-  */
--public final class MethodProbesAdapter extends MethodVisitor {
-+public class MethodProbesAdapter extends MethodVisitor {
- 
--	private final MethodProbesVisitor probesVisitor;
-+	protected final MethodProbesVisitor probesVisitor;
- 
- 	private final IProbeIdGenerator idGenerator;
- 

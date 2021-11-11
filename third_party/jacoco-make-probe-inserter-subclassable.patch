@@ -2,20 +2,6 @@
 // These patches apply to JaCoCo (https://github.com/jacoco/jacoco) and are hereby made available under the terms of the
 // Eclipse Public License 2.0 available at:
 //   http://www.eclipse.org/legal/epl-2.0
-diff --git org.jacoco.core/src/org/jacoco/core/internal/flow/LabelInfo.java org.jacoco.core/src/org/jacoco/core/internal/flow/LabelInfo.java
-index 122d62b5..5ba3cf8d 100644
---- org.jacoco.core/src/org/jacoco/core/internal/flow/LabelInfo.java
-+++ org.jacoco.core/src/org/jacoco/core/internal/flow/LabelInfo.java
-@@ -141,8 +141,7 @@ public final class LabelInfo {
- 	 */
- 	public static boolean needsProbe(final Label label) {
- 		final LabelInfo info = get(label);
--		return info != null && info.successor
--				&& (info.multiTarget || info.methodInvocationLine);
-+		return info != null && info.successor && info.multiTarget;
- 	}
- 
- 	/**
 diff --git org.jacoco.core/src/org/jacoco/core/internal/instr/ClassInstrumenter.java org.jacoco.core/src/org/jacoco/core/internal/instr/ClassInstrumenter.java
 index 476c9e34..bc192dc6 100644
 --- org.jacoco.core/src/org/jacoco/core/internal/instr/ClassInstrumenter.java
