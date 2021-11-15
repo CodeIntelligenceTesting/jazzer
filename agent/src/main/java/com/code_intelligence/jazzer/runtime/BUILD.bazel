@@ -11,6 +11,14 @@ java_library(
     ],
 )
 
+java_library(
+    name = "signal_handler",
+    srcs = ["SignalHandler.java"],
+    javacopts = [
+        "-XDenableSunApiLintControl",
+    ],
+)
+
 kt_jvm_library(
     name = "runtime",
     srcs = glob(
@@ -20,6 +28,7 @@ kt_jvm_library(
         ],
         exclude = [
             "FuzzedDataProviderImpl.java",
+            "SignalHandler.java",
         ],
     ),
     visibility = ["//visibility:public"],
@@ -28,6 +37,7 @@ kt_jvm_library(
     ],
     deps = [
         ":fuzzed_data_provider",
+        ":signal_handler",
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "//agent/src/main/java/com/code_intelligence/jazzer/utils",
     ],
