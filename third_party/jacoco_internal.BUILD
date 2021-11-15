@@ -7,7 +7,7 @@ java_library(
         "org.jacoco.core/src/org/jacoco/core/internal/flow/java_no_throw_methods_list.dat",
     ]),
     javacopts = [
-        "-Xep:EqualsHashCode:WARN",
+        "-Xep:EqualsHashCode:OFF",
     ],
     deps = [
         "@jazzer_ow2_asm//:asm",
