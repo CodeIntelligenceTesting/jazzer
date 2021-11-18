@@ -1,6 +1,12 @@
 java_library(
     name = "autofuzz",
-    srcs = glob(["*.java"]),
+    srcs = [
+        "AutofuzzCodegenVisitor.java",
+        "AutofuzzError.java",
+        "FuzzTarget.java",
+        "Meta.java",
+        "YourAverageJavaClass.java",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
