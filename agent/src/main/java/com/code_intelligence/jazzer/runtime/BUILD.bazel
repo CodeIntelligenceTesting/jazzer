@@ -21,16 +21,20 @@ java_library(
 
 kt_jvm_library(
     name = "runtime",
-    srcs = glob(
-        [
-            "*.java",
-            "*.kt",
-        ],
-        exclude = [
-            "FuzzedDataProviderImpl.java",
-            "SignalHandler.java",
-        ],
-    ),
+    srcs = [
+        "CoverageMap.java",
+        "ExceptionUtils.kt",
+        "HardToCatchError.java",
+        "JazzerInternal.java",
+        "ManifestUtils.kt",
+        "NativeLibHooks.java",
+        "RecordingFuzzedDataProvider.java",
+        "SignalHandler.java",
+        "TraceCmpHooks.java",
+        "TraceDataFlowNativeCallbacks.java",
+        "TraceDivHooks.java",
+        "TraceIndirHooks.java",
+    ],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/autofuzz",
