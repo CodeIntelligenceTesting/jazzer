@@ -26,8 +26,7 @@
 // which it records detailed information about the result of compares and
 // associates it with particular coverage locations.
 //
-// Note: Only the lower 12 bits of the caller_pc argument are used by
-// libFuzzer.
+// Note: Only the lower 9 bits of the caller_pc argument are used by libFuzzer.
 extern "C" {
 void __sanitizer_cov_trace_cmp4_with_pc(void *caller_pc, uint32_t arg1,
                                         uint32_t arg2);

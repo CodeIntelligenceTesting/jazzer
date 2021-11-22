@@ -24,17 +24,26 @@
 // HandleCmp and thus can't be mimicked without patching libFuzzer.
 //
 // We solve this problem via an inline assembly trampoline construction that
-// translates a runtime argument `fake_pc` in the range [0, 4095) into a call to
-// a hook with a fake return address whose lower 12 bits are `fake_pc` up to a
+// translates a runtime argument `fake_pc` in the range [0, 512) into a call to
+// a hook with a fake return address whose lower 9 bits are `fake_pc` up to a
 // constant shift. This is achieved by pushing a return address pointing into
-// 4096 ret instructions at offset `fake_pc` onto the stack and then jumping
+// 512 ret instructions at offset `fake_pc` onto the stack and then jumping
 // directly to the address of the hook.
+//
+// Note: We only set the lowest 9 bits of the return address since only these
+// bits are used by the libFuzzer value profiling mode for integer compares, see
+// https://github.com/llvm/llvm-project/blob/704d92607d26e696daba596b72cb70effe79a872/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp#L390
+// as well as
+// https://github.com/llvm/llvm-project/blob/704d92607d26e696daba596b72cb70effe79a872/compiler-rt/lib/fuzzer/FuzzerValueBitMap.h#L34
+// ValueProfileMap.AddValue() truncates its argument to 16 bits and shifts the
+// PC to the left by log_2(128)=7, which means that only the lowest 16 - 7 bits
+// of the return address matter. String compare hooks use the lowest 12 bits,
+// but take the return address as an argument and thus don't require the
+// indirection through a trampoline.
 
-#define REPEAT_4(a) a a a a
+#define REPEAT_8(a) a a a a a a a a
 
-#define REPEAT_16(a) REPEAT_4(REPEAT_4(a))
-
-#define REPEAT_4096(a) REPEAT_16(REPEAT_16(REPEAT_16(a)))
+#define REPEAT_512(a) REPEAT_8(REPEAT_8(REPEAT_8(a)))
 
 // The first four registers to pass arguments in according to the
 // platform-specific x64 calling convention.
@@ -77,8 +86,8 @@ __attribute__((noinline)) void trampoline(uint64_t arg1, uint64_t arg2,
       // Function arguments arg1 and arg2 are passed unchanged in the registers
       // RDI and RSI as governed by the x64 calling convention.
       "jmp *%[func] \n\t"
-      // Append a sled of 2^12=4096 ret instructions.
-      "ret_sled: \n\t" REPEAT_4096("ret \n\t")
+      // Append a sled of 2^9=512 ret instructions.
+      "ret_sled: \n\t" REPEAT_512("ret \n\t")
       :
       : "r"(arg1_loc),
         "r"(arg2_loc), [func] "r"(func_loc), [fake_pc] "r"(fake_pc_loc)
@@ -94,27 +103,27 @@ uintptr_t trampoline_offset = 0;
 }
 
 void set_trampoline_offset() {
-  // Stores the additive inverse of the current return address modulo 0x1000 in
+  // Stores the additive inverse of the current return address modulo 0x200u in
   // trampoline_offset.
   trampoline_offset =
-      0x1000u -
-      (reinterpret_cast<uintptr_t>(__builtin_return_address(0)) & 0xFFFu);
+      0x200u -
+      (reinterpret_cast<uintptr_t>(__builtin_return_address(0)) & 0x1FFu);
 }
 
 // Computes the additive shift that needs to be applied to the caller PC by
 // caller_pc_to_fake_pc to make caller PC and resulting fake return address
-// agree modulo 0x1000. This offset is constant for each binary, but may vary
+// in their lowest 9 bite. This offset is constant for each binary, but may vary
 // based on code generation specifics. By calibrating the trampoline, the fuzzer
 // behavior is fully determined by the seed.
 void CalibrateTrampoline() {
   trampoline(0, 0, reinterpret_cast<void *>(&set_trampoline_offset), 0);
 }
 
-// Masks any address down to its lower 12 bits, adjusting for the trampoline
+// Masks any address down to its lower 9 bits, adjusting for the trampoline
 // shift.
 __attribute__((always_inline)) inline uint16_t caller_pc_to_fake_pc(
     const void *caller_pc) {
-  return (reinterpret_cast<uintptr_t>(caller_pc) + trampoline_offset) & 0xFFFu;
+  return (reinterpret_cast<uintptr_t>(caller_pc) + trampoline_offset) & 0x1FFu;
 }
 
 // The original hooks exposed by libFuzzer. All of these get the caller's
