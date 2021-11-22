@@ -389,6 +389,19 @@ Jazzer options are passed via double dash command-line flags, i.e., as `--option
 A full list of command-line flags can be printed with the `--help` flag. For the available libFuzzer options please refer
 to [its documentation](https://llvm.org/docs/LibFuzzer.html) for a detailed description.
 
+### Passing JVM arguments
+
+Arguments for the JVM started by Jazzer can be supplied via the `--jvm_args` argument. 
+Multiple arguments are delimited by the classpath separator, which is `;` on Windows and `:` else.
+For example, to enable preview features as well as set a maximum heap size, add the following to the Jazzer invocation:
+
+```bash
+# Windows
+--jvm_args=--enable-preview;-Xmx1000m
+# Linux & macOS
+--jvm_args=--enable-preview:-Xmx1000m
+```
+
 ### Coverage Instrumentation
 
 The Jazzer agent inserts coverage markers into the JVM bytecode during class loading. libFuzzer uses this information
