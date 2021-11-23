@@ -21,7 +21,7 @@
 
 #include "gtest/gtest.h"
 
-static std::vector<uint16_t> gCoverageMap(4096);
+static std::vector<uint16_t> gCoverageMap(512);
 
 inline void __attribute__((always_inline)) RecordCoverage() {
   auto return_address =
@@ -65,7 +65,7 @@ bool HasSingleCoveredPc() {
 
 std::string PrettyPrintCoverage() {
   std::ostringstream out;
-  std::size_t break_after = sqrt(gCoverageMap.size());
+  std::size_t break_after = 16;
   out << "Coverage:" << std::endl;
   for (uintptr_t i = 0; i < gCoverageMap.size(); i++) {
     out << (gCoverageMap[i] ? "X" : "_");
