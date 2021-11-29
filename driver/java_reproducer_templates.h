@@ -34,7 +34,7 @@ public class Crash_$0 {
             try {
                 Method fuzzerInitialize = $2.class.getMethod("fuzzerInitialize", String[].class);
                 fuzzerInitialize.invoke(null, (Object) args);
-            } catch (NoSuchMethodException ignored) {
+            } catch (NoSuchMethodException ignored1) {
             } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
                 System.exit(1);
