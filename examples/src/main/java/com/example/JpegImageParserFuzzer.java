@@ -23,11 +23,15 @@ import org.apache.commons.imaging.formats.jpeg.JpegImageParser;
 // Found https://issues.apache.org/jira/browse/IMAGING-275.
 public class JpegImageParserFuzzer {
   public static void fuzzerInitialize() {
+    String foo = System.getProperty("foo");
+    String bar = System.getProperty("bar");
+    String baz = System.getProperty("baz");
     // Only used to verify that arguments are correctly passed down to child processes.
-    if (System.getProperty("foo") == null || System.getProperty("bar") == null
-        || System.getProperty("baz") == null) {
+    if (foo == null || bar == null || baz == null || !foo.equals("foo")
+        || !(bar.equals("b;ar") || bar.equals("b:ar")) || !baz.equals("baz")) {
       // Exit the process with an exit code different from that for a finding.
-      System.err.println("ERROR: Did not pass all jvm_args to child process.");
+      System.err.println("ERROR: Did not correctly pass all jvm_args to child process.");
+      System.err.printf("foo: %s%nbar: %s%nbaz: %s%n", foo, bar, baz);
       System.exit(3);
     }
   }

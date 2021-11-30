@@ -111,8 +111,10 @@ java_fuzz_target_test(
         "-fork=5",
         "--additional_jvm_args=-Dbaz=baz",
     ] + select({
-        "@platforms//os:windows": ["--jvm_args=-Dfoo=foo;-Dbar=bar"],
-        "//conditions:default": ["--jvm_args=-Dfoo=foo:-Dbar=bar"],
+        # \\\\ becomes \\ when evaluated as a Starlark string literal, then \ in
+        # java_fuzz_target_test.
+        "@platforms//os:windows": ["--jvm_args=-Dfoo=foo;-Dbar=b\\\\;ar"],
+        "//conditions:default": ["--jvm_args=-Dfoo=foo:-Dbar=b\\\\:ar"],
     }),
     target_class = "com.example.JpegImageParserFuzzer",
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
