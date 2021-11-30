@@ -95,7 +95,11 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             "gep" -> setOf(InstrumentationType.GEP)
             "indir" -> setOf(InstrumentationType.INDIR)
             "native" -> setOf(InstrumentationType.NATIVE)
-            "all" -> InstrumentationType.values().toSet()
+            // Disable GEP instrumentation by default as it appears to negatively affect fuzzing
+            // performance. Our current GEP instrumentation only reports constant indices, but even
+            // when we instead reported non-constant indices, they tended to completely fill up the
+            // table of recent compares and value profile map.
+            "all" -> InstrumentationType.values().toSet() - InstrumentationType.GEP
             else -> {
                 println("WARN: Skipping unknown instrumentation type $it")
                 emptySet()
