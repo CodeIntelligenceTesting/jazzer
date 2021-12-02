@@ -64,9 +64,18 @@ config_setting(
 )
 
 alias(
-    name = "clang_on_linux",
+    name = "clang_on_unix",
     actual = select({
         ":clang": "@platforms//os:linux",
+        "//conditions:default": ":clang_on_unix_2",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_on_unix_2",
+    actual = select({
+        ":clang": "@platforms//os:macos",
         "//conditions:default": ":clang",
     }),
     visibility = ["//visibility:public"],

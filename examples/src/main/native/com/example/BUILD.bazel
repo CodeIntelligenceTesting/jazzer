@@ -10,7 +10,7 @@ cc_jni_library(
         "-fno-sanitize-blacklist",
     ],
     linkopts = select({
-        "//:clang_on_linux": ["-fuse-ld=lld"],
+        "//:clang_on_unix": ["-fuse-ld=lld"],
         "@platforms//os:windows": [
             # Windows requires all symbols that should be imported from the main
             # executable to be defined by an import lib.
@@ -34,7 +34,7 @@ cc_jni_library(
         "-fno-sanitize-recover=all",
     ],
     linkopts = select({
-        "//:clang_on_linux": ["-fuse-ld=lld"],
+        "//:clang_on_unix": ["-fuse-ld=lld"],
         "@platforms//os:windows": [
             # Using the asan thunk is correct here as it contains symbols for
             # UBSan and SanCov as well.
