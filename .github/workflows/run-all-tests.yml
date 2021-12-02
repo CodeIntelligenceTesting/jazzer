@@ -41,17 +41,17 @@ jobs:
         with:
           java-version: ${{ matrix.jdk }}
 
-      - name: Mount Bazel disk cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ matrix.cache }}
-          key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
+      # - name: Mount Bazel disk cache
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ${{ matrix.cache }}
+      #     key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
 
       - name: Build
-        run: bazelisk build --config=ci --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }} --disk_cache=${{ matrix.cache }} --java_runtime_version=localjdk_${{ matrix.jdk }} //...
+        run: bazelisk build --config=ci --java_runtime_version=localjdk_${{ matrix.jdk }} //...
 
       - name: Test
-        run: bazelisk test --config=ci --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }} --disk_cache=${{ matrix.cache }} --java_runtime_version=localjdk_${{ matrix.jdk }} //...
+        run: bazelisk test --config=ci --java_runtime_version=localjdk_${{ matrix.jdk }} //...
 
       - name: Upload test logs
         if: always()
