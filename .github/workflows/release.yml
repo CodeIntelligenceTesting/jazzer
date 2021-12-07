@@ -13,10 +13,10 @@ jobs:
         include:
           - os: ubuntu-latest
             arch: "linux"
-            bazel_args: "--extra_toolchains=@llvm_toolchain//:cc-toolchain-linux --//third_party:toolchain"
+            bazel_args: "--config=toolchain"
           - os: macos-10.15
             arch: "darwin"
-            bazel_args: "--extra_toolchains=@llvm_toolchain//:cc-toolchain-darwin --//third_party:toolchain"
+            bazel_args: "--config=toolchain"
           - os: windows-2016
             arch: "windows"
             bazel_args: ""
