@@ -164,7 +164,7 @@ cc_binary(
     deps = [":driver_lib"] + select({
         # There is no static ASan runtime on macOS, so link to the dynamic
         # runtime library if on macOS and using the toolchain.
-        ":using_toolchain_on_osx": ["@llvm_toolchain//:macos_asan_dynamic"],
+        ":using_toolchain_on_osx": ["@llvm_toolchain_llvm//:macos_asan_dynamic"],
         "//conditions:default": [],
     }),
 )
