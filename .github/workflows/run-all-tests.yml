@@ -46,6 +46,9 @@ jobs:
       #   with:
       #     path: ${{ matrix.cache }}
       #     key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
+      
+      - name: Clean caches
+        run: bazelisk clean --expunge
 
       - name: Build
         run: bazelisk build --config=ci --java_runtime_version=localjdk_${{ matrix.jdk }} //...
