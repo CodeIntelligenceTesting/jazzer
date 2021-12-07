@@ -24,9 +24,8 @@ build --tool_java_language_version=9
 build:windows --extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl
 build:windows --extra_execution_platforms=//:x64_windows-clang-cl
 build:windows --features=static_link_msvcrt
-# Required so that the JDK can find itself when loading the instrument agent lib.
-# FIXME: Debug why this is the case even though sun.boot.library.path is correctly set to
-#        external\local_jdk\bin under the Bazel cache.
+# Required as PATH doubles as the shared library search path on Windows and the
+# Java agent functionality depends on system-provided shared libraries.
 test:windows --noincompatible_strict_action_env
 run:windows --noincompatible_strict_action_env
 
