@@ -33,7 +33,7 @@ run:windows --noincompatible_strict_action_env
 build:toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux,@llvm_toolchain//:cc-toolchain-x86_64-darwin
 build:toolchain --//third_party:toolchain
 
-# CI tests (not using the toolchain to test OSS-Fuzz compatibility)
+# CI tests (not using the toolchain to test OSS-Fuzz & local compatibility)
 build:ci --bes_results_url=https://app.buildbuddy.io/invocation/
 build:ci --bes_backend=grpcs://cloud.buildbuddy.io
 build:ci --remote_cache=grpcs://cloud.buildbuddy.io
