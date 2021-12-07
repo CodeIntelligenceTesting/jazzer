@@ -8,5 +8,5 @@ diff --git toolchain/BUILD.llvm_repo toolchain/BUILD.llvm_repo
 +
 +cc_import(
 +    name = "macos_asan_dynamic",
-+    shared_library = "lib/clang/12.0.0/lib/darwin/libclang_rt.asan_osx_dynamic.dylib",
++    shared_library = "lib/clang/13.0.0/lib/darwin/libclang_rt.asan_osx_dynamic.dylib",
 +)
