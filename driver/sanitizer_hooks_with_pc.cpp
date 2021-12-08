@@ -41,13 +41,22 @@
 // but take the return address as an argument and thus don't require the
 // indirection through a trampoline.
 
-#define REPEAT_8(a) a a a a a a a a
+#define REPEAT_2(a) a a
+
+#define REPEAT_8(a) REPEAT_2(REPEAT_2(REPEAT_2(a)))
+
+#define REPEAT_128(a) REPEAT_2(REPEAT_8(REPEAT_8(a)))
 
 #define REPEAT_512(a) REPEAT_8(REPEAT_8(REPEAT_8(a)))
 
 // The first four registers to pass arguments in according to the
 // platform-specific x64 calling convention.
-#ifdef _WIN64
+#ifdef __aarch64__
+#define REG_1 "x0"
+#define REG_2 "x1"
+#define REG_3 "x2"
+#define REG_4 "x3"
+#elif _WIN64
 #define REG_1 "rcx"
 #define REG_2 "rdx"
 #define REG_3 "r8"
@@ -64,13 +73,36 @@
 // offset.
 __attribute__((noinline)) void trampoline(uint64_t arg1, uint64_t arg2,
                                           void *func, uint16_t fake_pc) {
-  // arg1 and arg2 have to be forwarded according to the x64 calling convention.
+  // arg1 and arg2 have to be forwarded according to the calling convention.
   // We also fix func and fake_pc to their registers so that we can safely use
   // rax below.
   [[maybe_unused]] register uint64_t arg1_loc asm(REG_1) = arg1;
   [[maybe_unused]] register uint64_t arg2_loc asm(REG_2) = arg2;
   [[maybe_unused]] register void *func_loc asm(REG_3) = func;
   [[maybe_unused]] register uint64_t fake_pc_loc asm(REG_4) = fake_pc;
+#ifdef __aarch64__
+  asm volatile(
+      // Load address of the nop sled into the default register for the return
+      // address (offset of four instructions, which means 16 bytes).
+      "adr x30, 16 \n\t"
+      // Clear the lowest 2 bits of fake_pc. All arm64 instructions are four
+      // bytes long, so we can't get better return address granularity than
+      // multiples of 4.
+      "and %[fake_pc], %[fake_pc], #0xFFFFFFFFFFFFFFFC \n\t"
+      // Add the offset of the fake_pc-th ret (rounded to 0 mod 4 above).
+      "add x30, x30, %[fake_pc], lsl 0 \n\t"
+      // Call the function by jumping to it and reusing all registers except
+      // for the modified return address register r30.
+      "br %[func] \n\t"
+      // The nop sled for arm64 consists of 128 nop instructions, each of which
+      // is 4 bytes long. It thus has the same byte length of 4 * 128 = 512 as
+      // the x86_64 sled, but coarser granularity.
+      REPEAT_128("nop \n\t")
+      :
+      : "r"(arg1_loc),
+        "r"(arg2_loc), [func] "r"(func_loc), [fake_pc] "r"(fake_pc_loc)
+      : "memory", "x30");
+#else
   asm volatile goto(
       // Load RIP-relative address of the end of this function.
       "lea %l[end_of_function](%%rip), %%rax \n\t"
@@ -96,6 +128,7 @@ __attribute__((noinline)) void trampoline(uint64_t arg1, uint64_t arg2,
 
 end_of_function:
   return;
+#endif
 }
 
 namespace {
