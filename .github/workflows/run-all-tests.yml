@@ -14,11 +14,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-10.15, windows-latest]
         jdk: [8, 15, 17]
         exclude:
-          # Only test against JDK 15 with Ubuntu since this is what OSS-Fuzz runs on.
-          - os: macos-latest
+          # Only test against JDK 15 with Ubuntu since this is what OSS-Fuzz uses.
+          - os: macos-10.15
             jdk: 15
           - os: windows-latest
             jdk: 15
@@ -26,8 +26,10 @@ jobs:
           - os: ubuntu-latest
             arch: "linux"
             cache: "/home/runner/.cache/bazel-disk"
-          - os: macos-latest
-            arch: "darwin"
+          - os: macos-10.15
+            arch: "macos-x86_64"
+            # Always use the toolchain as UBSan produces linker errors with Apple LLVM 13.
+            bazel_args: "--config=toolchain"
             cache: "/private/var/tmp/bazel-disk"
           - os: windows-latest
             arch: "windows"
@@ -48,10 +50,10 @@ jobs:
           key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
 
       - name: Build
-        run: bazelisk build --config=ci --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }} --disk_cache=${{ matrix.cache }} --java_runtime_version=localjdk_${{ matrix.jdk }} //...
+        run: bazelisk build --config=ci --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }} --disk_cache=${{ matrix.cache }} --java_runtime_version=localjdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} //...
 
       - name: Test
-        run: bazelisk test --config=ci --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }} --disk_cache=${{ matrix.cache }} --java_runtime_version=localjdk_${{ matrix.jdk }} //...
+        run: bazelisk test --config=ci --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }} --disk_cache=${{ matrix.cache }} --java_runtime_version=localjdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} //...
 
       - name: Upload test logs
         if: always()
