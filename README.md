@@ -432,7 +432,7 @@ The particular instrumentation types to apply can be specified using the `--trac
 * `div`: divisors in integer divisions
 * `gep`: constant array indexes
 * `indir`: call through `Method#invoke`
-* `all`: shorthand to apply all available instrumentations
+* `all`: shorthand to apply all available instrumentations (except `gep`)
 
 Multiple instrumentation types can be combined with a colon.
 
