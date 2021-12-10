@@ -5,6 +5,7 @@ kt_jvm_library(
     srcs = [
         "Deserialization.kt",
         "ExpressionLanguageInjection.kt",
+        "NamingContextLookup.kt",
         "ReflectiveCall.kt",
         "Utils.kt",
     ],
