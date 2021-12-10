@@ -12,7 +12,7 @@ It is based on [libFuzzer](https://llvm.org/docs/LibFuzzer.html) and brings many
 The JVM bytecode is executed inside the fuzzer process, which ensures fast execution speeds and allows seamless fuzzing of
 native libraries.
 
-Jazzer supports Linux and (experimentally) macOS 10.15 and Windows, all on the x64 architecture.
+Jazzer supports Linux and (experimentally) macOS 10.15 and 11 as well as Windows, all on the x64 architecture.
 
 ## News: Jazzer available in OSS-Fuzz
 
@@ -374,6 +374,7 @@ Jazzer has so far uncovered the following vulnerabilities and bugs:
 | [FasterXML/jackson-dataformats-binary](https://github.com/FasterXML/jackson-dataformats-binary) | `CBORParser` throws an undeclared exception on dangling arrays | [fixed](https://github.com/FasterXML/jackson-dataformats-binary/issues/240) | | [Code Intelligence](https://code-intelligence.com) |
 | [ngageoint/tiff-java](https://github.com/ngageoint/tiff-java) | `readTiff ` Index Out Of Bounds | [fixed](https://github.com/ngageoint/tiff-java/issues/38) | | [@raminfp](https://github.com/raminfp) |
 | [google/re2j](https://github.com/google/re2j) | `NullPointerException` in `Pattern.compile` | [reported](https://github.com/google/re2j/issues/148) | | [@schirrmacher](https://github.com/schirrmacher) |
+| [google/gson](https://github.com/google/gson) | `ArrayIndexOutOfBounds` in `ParseString` | [fixed](https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=40838) | | [@DavidKorczynski](https://twitter.com/Davkorcz) |
 
 As Jazzer is used to fuzz JVM projects in OSS-Fuzz, an additional list of bugs can be found [on the OSS-Fuzz issue tracker](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=proj%3A%22json-sanitizer%22%20OR%20proj%3A%22fastjson2%22%20OR%20proj%3A%22jackson-core%22%20OR%20proj%3A%22jackson-dataformats-binary%22%20OR%20proj%3A%22jackson-dataformats-xml%22%20OR%20proj%3A%22apache-commons%22%20OR%20proj%3A%22jsoup%22&can=1).
 
