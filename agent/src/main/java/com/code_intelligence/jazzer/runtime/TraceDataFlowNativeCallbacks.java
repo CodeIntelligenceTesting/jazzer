@@ -73,5 +73,19 @@ final public class TraceDataFlowNativeCallbacks {
     return Long.compare(arg1, arg2);
   }
 
+  // The caller has to ensure that arg1 and arg2 have the same class.
+  public static void traceGenericCmp(Object arg1, Object arg2, int pc) {
+    if (arg1 instanceof String) {
+      traceStrcmp((String) arg1, (String) arg2, 1, pc);
+    } else if (arg1 instanceof Integer || arg1 instanceof Short || arg1 instanceof Byte
+        || arg1 instanceof Character) {
+      traceCmpInt((int) arg1, (int) arg2, pc);
+    } else if (arg1 instanceof Long) {
+      traceCmpLong((long) arg1, (long) arg2, pc);
+    } else if (arg1 instanceof byte[]) {
+      traceMemcmp((byte[]) arg1, (byte[]) arg2, 1, pc);
+    }
+  }
+
   public static native void handleLibraryLoad();
 }
