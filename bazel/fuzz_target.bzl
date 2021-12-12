@@ -23,6 +23,8 @@ def java_fuzz_target_test(
         tags = [],
         fuzzer_args = [],
         srcs = [],
+        size = None,
+        timeout = None,
         **kwargs):
     target_name = name + "_target"
     deploy_manifest_lines = []
@@ -58,8 +60,8 @@ def java_fuzz_target_test(
     native.java_test(
         name = name,
         runtime_deps = ["//bazel:fuzz_target_test_wrapper"],
-        size = "enormous",
-        timeout = "moderate",
+        size = size or "enormous",
+        timeout = timeout or "moderate",
         args = [
             "$(rootpath %s)" % driver,
             "$(rootpath :%s_deploy.jar)" % target_name,
