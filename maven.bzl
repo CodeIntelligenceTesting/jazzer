@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_jvm_external//:specs.bzl", "maven")
+
 JAZZER_API_VERSION = "0.10.0"
 JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_API_VERSION
 
@@ -31,6 +33,6 @@ MAVEN_ARTIFACTS = [
     "javax.xml.bind:jaxb-api:2.3.1",
     "javax.el:javax.el-api:3.0.1-b06",
     "org.hibernate:hibernate-validator:5.2.4.Final",
-    "org.apache.logging.log4j:log4j-api:jar:2.14.1",
-    "org.apache.logging.log4j:log4j-core:jar:2.14.1",
+    maven.artifact("org.apache.logging.log4j", "log4j-api", "2.14.1", testonly = True),
+    maven.artifact("org.apache.logging.log4j", "log4j-core", "2.14.1", testonly = True),
 ]

@@ -43,6 +43,7 @@ def java_fuzz_target_test(
         create_executable = False,
         deploy_manifest_lines = deploy_manifest_lines,
         deps = target_deps,
+        testonly = True,
         **kwargs
     )
 
