@@ -20,6 +20,7 @@ import com.code_intelligence.jazzer.api.Jazzer
 import com.code_intelligence.jazzer.api.MethodHook
 import com.code_intelligence.jazzer.api.MethodHooks
 import java.lang.invoke.MethodHandle
+import javax.naming.CommunicationException
 
 object NamingContextLookup {
 
@@ -32,56 +33,56 @@ object NamingContextLookup {
 
     @MethodHooks(
         MethodHook(
-            type = HookType.BEFORE,
+            type = HookType.REPLACE,
             targetClassName = "javax.naming.Context",
             targetMethod = "lookup",
             targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
         ),
         MethodHook(
-            type = HookType.BEFORE,
+            type = HookType.REPLACE,
             targetClassName = "javax.naming.InitialContext",
             targetMethod = "lookup",
             targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
         ),
         MethodHook(
-            type = HookType.BEFORE,
+            type = HookType.REPLACE,
             targetClassName = "javax.naming.InitialDirContext",
             targetMethod = "lookup",
             targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
         ),
         MethodHook(
-            type = HookType.BEFORE,
+            type = HookType.REPLACE,
             targetClassName = "javax.naming.InitialLdapContext",
             targetMethod = "lookup",
             targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
         ),
         MethodHook(
-            type = HookType.BEFORE,
+            type = HookType.REPLACE,
             targetClassName = "javax.naming.Context",
             targetMethod = "lookupLink",
             targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
         ),
         MethodHook(
-            type = HookType.BEFORE,
+            type = HookType.REPLACE,
             targetClassName = "javax.naming.InitialContext",
             targetMethod = "lookupLink",
             targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
         ),
         MethodHook(
-            type = HookType.BEFORE,
+            type = HookType.REPLACE,
             targetClassName = "javax.naming.InitialDirContext",
             targetMethod = "lookupLink",
             targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
         ),
         MethodHook(
-            type = HookType.BEFORE,
+            type = HookType.REPLACE,
             targetClassName = "javax.naming.InitialLdapContext",
             targetMethod = "lookupLink",
             targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
         ),
     )
     @JvmStatic
-    fun lookupHook(method: MethodHandle?, thisObject: Any?, args: Array<Any?>, hookId: Int) {
+    fun lookupHook(method: MethodHandle?, thisObject: Any?, args: Array<Any?>, hookId: Int): Any {
         val name = args[0] as String
         if (name.startsWith(RMI_MARKER) || name.startsWith(LDAP_MARKER)) {
             Jazzer.reportFindingFromHook(
@@ -94,5 +95,8 @@ version, lead to remote code execution or the exfiltration of information."""
         }
         Jazzer.guideTowardsEquality(name, RMI_MARKER, hookId)
         Jazzer.guideTowardsEquality(name, LDAP_MARKER, 31 * hookId)
+        // Pretend that the remote endpoint could not be reached for additional protection against
+        // accidental execution of remote code during fuzzing.
+        throw CommunicationException()
     }
 }
