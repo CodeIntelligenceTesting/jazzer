@@ -102,6 +102,8 @@ java_fuzz_target_test(
     target_compatible_with = SKIP_ON_MACOS,
 )
 
+# WARNING: This fuzz target uses a vulnerable version of log4j, which could result in the execution
+# of arbitrary code during fuzzing if executed with an older JDK. Use at your own risk.
 java_fuzz_target_test(
     name = "Log4jFuzzer",
     timeout = "long",
