@@ -73,7 +73,7 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "com_github_jhalterman_typetools",
-        build_file = "@jazzer//third_party:typetools.BUILD",
+        build_file = Label("//third_party:typetools.BUILD"),
         sha256 = "754f46de7d4c278cee2d4dba3c09ebe08fde03d0e67fc85d700611d9cdfb7868",
         strip_prefix = "typetools-887153d2a9adf032fac9f145594d0a0248618d48",
         url = "https://github.com/jhalterman/typetools/archive/887153d2a9adf032fac9f145594d0a0248618d48.tar.gz",
@@ -81,7 +81,7 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
-        build_file = "@jazzer//third_party:classgraph.BUILD",
+        build_file = Label("//third_party:classgraph.BUILD"),
         name = "com_github_classgraph_classgraph",
         sha256 = "535159d80c163d5b4d025c402b4562c92ed2d6d963db8c6c5255c0eb2c4e9f39",
         strip_prefix = "classgraph-classgraph-4.8.128",
@@ -97,7 +97,7 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
-        build_file = "@jazzer//third_party:asm.BUILD",
+        build_file = Label("//third_party:asm.BUILD"),
         name = "jazzer_ow2_asm",
         sha256 = "7b596cc584b241619911e99c5c96366fccd533b1a50b8720c151c2f74b5915e3",
         strip_prefix = "asm-ASM_9_2",
@@ -108,7 +108,7 @@ def jazzer_dependencies():
         http_archive,
         name = "jazzer_com_github_gflags_gflags",
         patches = [
-            "@jazzer//third_party:gflags-use-double-dash-args.patch",
+            Label("//third_party:gflags-use-double-dash-args.patch"),
         ],
         sha256 = "ce2931dd537eaab7dab78b25bec6136a0756ca0b2acbdab9aec0266998c0d9a7",
         strip_prefix = "gflags-827c769e5fc98e0f2a34c47cef953cc6328abced",
@@ -118,10 +118,10 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "jazzer_jacoco",
-        build_file = "@jazzer//third_party:jacoco_internal.BUILD",
+        build_file = Label("//third_party:jacoco_internal.BUILD"),
         patches = [
-            "@jazzer//third_party:jacoco-make-probe-adapter-subclassable.patch",
-            "@jazzer//third_party:jacoco-make-probe-inserter-subclassable.patch",
+            Label("//third_party:jacoco-make-probe-adapter-subclassable.patch"),
+            Label("//third_party:jacoco-make-probe-inserter-subclassable.patch"),
         ],
         sha256 = "4a3c65b8a8ca58ffcec77288820f557ed93125e8a0b43dd7460b776c58bb8ed9",
         strip_prefix = "jacoco-0.8.7-jazzer",
@@ -131,7 +131,7 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "jazzer_libfuzzer",
-        build_file = "@jazzer//third_party:libFuzzer.BUILD",
+        build_file = Label("//third_party:libFuzzer.BUILD"),
         sha256 = "efde37ab5a9e4fff67f8cd43b701be5ea5ddb74a3bc10e4d8e91a614070145c3",
         url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/releases/download/2021-11-30/jazzer-libfuzzer-2021-11-30.tar.gz",
     )
