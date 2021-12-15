@@ -24,7 +24,8 @@ RUN git clone --depth=1 https://github.com/CodeIntelligenceTesting/jazzer.git &&
     touch /usr/bin/ld && \
     touch /usr/bin/ld.gold && \
     BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1 \
-    ./bazelisk-linux-amd64 build --config=toolchain //agent:jazzer_agent_deploy.jar //driver:jazzer_driver
+    ./bazelisk-linux-amd64 build --config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux \
+      //agent:jazzer_agent_deploy.jar //driver:jazzer_driver
 
 FROM gcr.io/distroless/java
 

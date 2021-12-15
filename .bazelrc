@@ -30,7 +30,7 @@ test:windows --noincompatible_strict_action_env
 run:windows --noincompatible_strict_action_env
 
 # Toolchain
-build:toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux,@llvm_toolchain//:cc-toolchain-x86_64-darwin
+# Since the toolchain is conditional on OS and architecture, set it on the particular GitHub Action.
 build:toolchain --//third_party:toolchain
 
 # CI tests (not using the toolchain to test OSS-Fuzz & local compatibility)
