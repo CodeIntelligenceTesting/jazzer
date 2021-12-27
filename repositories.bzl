@@ -57,9 +57,9 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "com_google_absl",
-        sha256 = "5e1cbf25bf501f8e37866000a6052d02dbdd7b19a5b592251c59a4c9aa5c71ae",
-        strip_prefix = "abseil-cpp-f2dbd918d8d08529800eb72f23bd2829f92104a4",
-        url = "https://github.com/abseil/abseil-cpp/archive/f2dbd918d8d08529800eb72f23bd2829f92104a4.zip",
+        sha256 = "1a7edda1ff56967e33bc938a4f0a68bb9efc6ba73d62bb4a5f5662463698056c",
+        strip_prefix = "abseil-cpp-20210324.2",
+        url = "https://github.com/abseil/abseil-cpp/archive/refs/tags/20210324.2.zip",
     )
 
     maybe(

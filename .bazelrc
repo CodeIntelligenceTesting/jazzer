@@ -3,6 +3,9 @@ build --sandbox_tmpfs_path=/tmp
 build --enable_platform_specific_config
 build -c opt
 
+# bzlmod (requires Bazel 5+)
+build --experimental_enable_bzlmod
+
 # C/C++
 # Only relevant for tests and their dependencies. Everything that external
 # repositories can reference must build without this, e.g., by using a
