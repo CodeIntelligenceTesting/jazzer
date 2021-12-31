@@ -26,39 +26,32 @@ import java.util.Base64;
 
 // Wraps the native FuzzedDataProviderImpl and serializes all its return values
 // into a Base64-encoded string.
-final class RecordingFuzzedDataProvider implements InvocationHandler {
-  private final FuzzedDataProvider target = new FuzzedDataProviderImpl();
+final class RecordingFuzzedDataProvider implements FuzzedDataProvider {
+  private final FuzzedDataProvider target;
   private final ArrayList<Object> recordedReplies = new ArrayList<>();
 
-  private RecordingFuzzedDataProvider() {}
+  private RecordingFuzzedDataProvider(FuzzedDataProvider target) {
+    this.target = target;
+  }
 
   // Called from native code.
   public static FuzzedDataProvider makeFuzzedDataProviderProxy() {
-    return (FuzzedDataProvider) Proxy.newProxyInstance(
-        RecordingFuzzedDataProvider.class.getClassLoader(), new Class[] {FuzzedDataProvider.class},
-        new RecordingFuzzedDataProvider());
+    return makeFuzzedDataProviderProxy(new FuzzedDataProviderImpl());
+  }
+
+  static FuzzedDataProvider makeFuzzedDataProviderProxy(FuzzedDataProvider target) {
+    return new RecordingFuzzedDataProvider(target);
   }
 
   // Called from native code.
   public static String serializeFuzzedDataProviderProxy(FuzzedDataProvider proxy)
       throws IOException {
-    return ((RecordingFuzzedDataProvider) Proxy.getInvocationHandler(proxy)).serialize();
+    return ((RecordingFuzzedDataProvider) proxy).serialize();
   }
 
-  private Object recordAndReturn(Object object) {
+  private <T> T recordAndReturn(T object) {
     recordedReplies.add(object);
     return object;
-  }
-
-  @Override
-  public Object invoke(Object object, Method method, Object[] args) throws Throwable {
-    if (method.isDefault()) {
-      // Default methods in FuzzedDataProvider are implemented in Java and
-      // don't need to be recorded.
-      return method.invoke(target, args);
-    } else {
-      return recordAndReturn(method.invoke(target, args));
-    }
   }
 
   private String serialize() throws IOException {
@@ -70,5 +63,160 @@ final class RecordingFuzzedDataProvider implements InvocationHandler {
       rawOut = byteStream.toByteArray();
     }
     return Base64.getEncoder().encodeToString(rawOut);
+  }
+
+  @Override
+  public boolean consumeBoolean() {
+    return recordAndReturn(target.consumeBoolean());
+  }
+
+  @Override
+  public boolean[] consumeBooleans(int maxLength) {
+    return recordAndReturn(target.consumeBooleans(maxLength));
+  }
+
+  @Override
+  public byte consumeByte() {
+    return recordAndReturn(target.consumeByte());
+  }
+
+  @Override
+  public byte consumeByte(byte min, byte max) {
+    return recordAndReturn(target.consumeByte(min, max));
+  }
+
+  @Override
+  public byte[] consumeBytes(int maxLength) {
+    return recordAndReturn(target.consumeBytes(maxLength));
+  }
+
+  @Override
+  public byte[] consumeRemainingAsBytes() {
+    return recordAndReturn(target.consumeRemainingAsBytes());
+  }
+
+  @Override
+  public short consumeShort() {
+    return recordAndReturn(target.consumeShort());
+  }
+
+  @Override
+  public short consumeShort(short min, short max) {
+    return recordAndReturn(target.consumeShort(min, max));
+  }
+
+  @Override
+  public short[] consumeShorts(int maxLength) {
+    return recordAndReturn(target.consumeShorts(maxLength));
+  }
+
+  @Override
+  public int consumeInt() {
+    return recordAndReturn(target.consumeInt());
+  }
+
+  @Override
+  public int consumeInt(int min, int max) {
+    return recordAndReturn(target.consumeInt(min, max));
+  }
+
+  @Override
+  public int[] consumeInts(int maxLength) {
+    return recordAndReturn(target.consumeInts(maxLength));
+  }
+
+  @Override
+  public long consumeLong() {
+    return recordAndReturn(target.consumeLong());
+  }
+
+  @Override
+  public long consumeLong(long min, long max) {
+    return recordAndReturn(target.consumeLong(min, max));
+  }
+
+  @Override
+  public long[] consumeLongs(int maxLength) {
+    return recordAndReturn(target.consumeLongs(maxLength));
+  }
+
+  @Override
+  public float consumeFloat() {
+    return recordAndReturn(target.consumeFloat());
+  }
+
+  @Override
+  public float consumeRegularFloat() {
+    return recordAndReturn(target.consumeRegularFloat());
+  }
+
+  @Override
+  public float consumeRegularFloat(float min, float max) {
+    return recordAndReturn(target.consumeRegularFloat(min, max));
+  }
+
+  @Override
+  public float consumeProbabilityFloat() {
+    return recordAndReturn(target.consumeProbabilityFloat());
+  }
+
+  @Override
+  public double consumeDouble() {
+    return recordAndReturn(target.consumeDouble());
+  }
+
+  @Override
+  public double consumeRegularDouble() {
+    return recordAndReturn(target.consumeRegularDouble());
+  }
+
+  @Override
+  public double consumeRegularDouble(double min, double max) {
+    return recordAndReturn(target.consumeRegularDouble(min, max));
+  }
+
+  @Override
+  public double consumeProbabilityDouble() {
+    return recordAndReturn(target.consumeProbabilityDouble());
+  }
+
+  @Override
+  public char consumeChar() {
+    return recordAndReturn(target.consumeChar());
+  }
+
+  @Override
+  public char consumeChar(char min, char max) {
+    return recordAndReturn(target.consumeChar(min, max));
+  }
+
+  @Override
+  public char consumeCharNoSurrogates() {
+    return recordAndReturn(target.consumeCharNoSurrogates());
+  }
+
+  @Override
+  public String consumeString(int maxLength) {
+    return recordAndReturn(target.consumeString(maxLength));
+  }
+
+  @Override
+  public String consumeRemainingAsString() {
+    return recordAndReturn(target.consumeRemainingAsString());
+  }
+
+  @Override
+  public String consumeAsciiString(int maxLength) {
+    return recordAndReturn(target.consumeAsciiString(maxLength));
+  }
+
+  @Override
+  public String consumeRemainingAsAsciiString() {
+    return recordAndReturn(target.consumeRemainingAsAsciiString());
+  }
+
+  @Override
+  public int remainingBytes() {
+    return recordAndReturn(target.remainingBytes());
   }
 }
