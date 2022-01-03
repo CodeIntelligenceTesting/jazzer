@@ -91,7 +91,7 @@ final public class TraceCmpHooks {
   public static void
   genericEquals(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean returnValue) {
-    if (!returnValue && thisObject.getClass() == arguments[0].getClass()) {
+    if (!returnValue && arguments[0] != null && thisObject.getClass() == arguments[0].getClass()) {
       TraceDataFlowNativeCallbacks.traceGenericCmp(thisObject, arguments[0], hookId);
     }
   }
