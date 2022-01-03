@@ -77,11 +77,16 @@ final public class TraceDataFlowNativeCallbacks {
   public static void traceGenericCmp(Object arg1, Object arg2, int pc) {
     if (arg1 instanceof CharSequence) {
       traceStrcmp(arg1.toString(), arg2.toString(), 1, pc);
-    } else if (arg1 instanceof Integer || arg1 instanceof Short || arg1 instanceof Byte
-        || arg1 instanceof Character) {
+    } else if (arg1 instanceof Integer) {
       traceCmpInt((int) arg1, (int) arg2, pc);
     } else if (arg1 instanceof Long) {
       traceCmpLong((long) arg1, (long) arg2, pc);
+    } else if (arg1 instanceof Short) {
+      traceCmpInt((short) arg1, (short) arg2, pc);
+    } else if (arg1 instanceof Byte) {
+      traceCmpInt((byte) arg1, (byte) arg2, pc);
+    } else if (arg1 instanceof Character) {
+      traceCmpInt((char) arg1, (char) arg2, pc);
     } else if (arg1 instanceof Number) {
       traceCmpLong(((Number) arg1).longValue(), ((Number) arg2).longValue(), pc);
     } else if (arg1 instanceof byte[]) {
