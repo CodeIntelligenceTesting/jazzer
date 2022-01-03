@@ -32,7 +32,7 @@ public class ExampleValueProfileFuzzer {
     // Without -use_value_profile=1, the fuzzer gets stuck here as there is no direct correspondence
     // between the input bytes and the compared string. With value profile, the fuzzer can guess the
     // expected input byte by byte, which takes linear rather than exponential time.
-    if (base64(data.consumeBytes(6)).equals("SmF6emVy")) {
+    if (((Object) base64(data.consumeBytes(6))).equals("SmF6emVy")) {
       long[] plaintextBlocks = data.consumeLongs(2);
       if (plaintextBlocks.length != 2)
         return;

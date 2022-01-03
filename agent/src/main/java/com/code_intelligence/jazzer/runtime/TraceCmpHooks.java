@@ -80,6 +80,22 @@ final public class TraceCmpHooks {
     }
   }
 
+  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Object", targetMethod = "equals")
+  @MethodHook(
+      type = HookType.AFTER, targetClassName = "java.lang.CharSequence", targetMethod = "equals")
+  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Number", targetMethod = "equals")
+  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Byte", targetMethod = "equals")
+  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Integer", targetMethod = "equals")
+  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Short", targetMethod = "equals")
+  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Long", targetMethod = "equals")
+  public static void
+  genericEquals(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean returnValue) {
+    if (!returnValue && thisObject.getClass() == arguments[0].getClass()) {
+      TraceDataFlowNativeCallbacks.traceGenericCmp(thisObject, arguments[0], hookId);
+    }
+  }
+
   @MethodHook(
       type = HookType.AFTER, targetClassName = "java.lang.String", targetMethod = "compareTo")
   @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.String",
