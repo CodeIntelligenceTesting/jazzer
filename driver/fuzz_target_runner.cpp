@@ -183,6 +183,17 @@ FuzzTargetRunner::FuzzTargetRunner(
     exit(1);
   }
 
+  // Inform the agent about the fuzz target class.
+  auto on_fuzz_target_ready = jvm.GetStaticMethodID(
+      jazzer_, "onFuzzTargetReady", "(Ljava/lang/String;)V", true);
+  jstring fuzz_target_class = env.NewStringUTF(FLAGS_target_class.c_str());
+  env.CallStaticObjectMethod(jazzer_, on_fuzz_target_ready, fuzz_target_class);
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
+    return;
+  }
+  env.DeleteLocalRef(fuzz_target_class);
+
   // check existence of optional methods for initialization and destruction
   fuzzer_initialize_ =
       jvm.GetStaticMethodID(jclass_, "fuzzerInitialize", "()V", false);

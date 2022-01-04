@@ -26,4 +26,7 @@ final public class JazzerInternal {
     // target returns even if this Error is swallowed.
     throw new HardToCatchError();
   }
+
+  // Accessed from native code.
+  public static void onFuzzTargetReady(String fuzzTargetClass) {}
 }
