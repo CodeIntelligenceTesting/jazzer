@@ -45,7 +45,7 @@ If Jazzer produces a finding, the input that triggered it will be available in t
 Jazzer has the following dependencies when being built from source:
 
 * JDK 8 or later (e.g. [OpenJDK](https://openjdk.java.net/))
-* [Clang](https://clang.llvm.org/) 9.0 or later (using a recent version is strongly recommended)
+* [Clang](https://clang.llvm.org/) and [LLD](https://lld.llvm.org/) 9.0 or later (using a recent version is strongly recommended)
 
 #### Linux
 
