@@ -20,6 +20,9 @@ JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_API_VERS
 # **WARNING**: These Maven dependencies have known vulnerabilities and are only used to test that
 #              Jazzer finds these issues. DO NOT USE.
 MAVEN_ARTIFACTS = [
+    "org.soot-oss:soot:4.2.1",
+    "org.jgrapht:jgrapht-core:1.5.1",
+    "org.jgrapht:jgrapht-io:1.5.1",
     "junit:junit:4.12",
     "org.apache.commons:commons-imaging:1.0-alpha2",
     "com.mikesamuel:json-sanitizer:1.2.1",

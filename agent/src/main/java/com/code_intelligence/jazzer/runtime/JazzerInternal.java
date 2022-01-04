@@ -14,6 +14,8 @@
 
 package com.code_intelligence.jazzer.runtime;
 
+import com.code_intelligence.jazzer.static_analysis.CallGraphKt;
+
 final public class JazzerInternal {
   // Accessed from native code.
   private static Throwable lastFinding;
@@ -28,5 +30,7 @@ final public class JazzerInternal {
   }
 
   // Accessed from native code.
-  public static void onFuzzTargetReady(String fuzzTargetClass) {}
+  public static void onFuzzTargetReady(String fuzzTargetClass) {
+    CallGraphKt.computeCallGraph(fuzzTargetClass);
+  }
 }

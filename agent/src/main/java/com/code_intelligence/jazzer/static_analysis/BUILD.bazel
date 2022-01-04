@@ -1,0 +1,12 @@
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+
+kt_jvm_library(
+    name = "static_analysis",
+    srcs = glob(["*.kt"]),
+    visibility = ["//agent:__subpackages__"],
+    deps = [
+        "@maven//:org_jgrapht_jgrapht_core",
+        "@maven//:org_jgrapht_jgrapht_io",
+        "@maven//:org_soot_oss_soot",
+    ],
+)

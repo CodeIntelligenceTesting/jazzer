@@ -23,6 +23,7 @@ import com.code_intelligence.jazzer.runtime.NativeLibHooks
 import com.code_intelligence.jazzer.runtime.TraceCmpHooks
 import com.code_intelligence.jazzer.runtime.TraceDivHooks
 import com.code_intelligence.jazzer.runtime.TraceIndirHooks
+import com.code_intelligence.jazzer.static_analysis.InstrumentedClassProvider
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
@@ -176,6 +177,7 @@ internal class RuntimeInstrumentor(
             } else {
                 hooks(customHooks)
             }
+            InstrumentedClassProvider.registerInstrumentedClass(internalClassName, instrumentedBytecode)
             instrumentedBytecode
         }
     }
