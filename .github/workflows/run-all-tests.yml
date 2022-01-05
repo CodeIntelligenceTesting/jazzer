@@ -29,7 +29,7 @@ jobs:
           - os: macos-11
             arch: "macos-x86_64"
             # Always use the toolchain as UBSan produces linker errors with Apple LLVM 13.
-            bazel_args: "--config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-darwin"
+            bazel_args: "--config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-darwin --xcode_version_config=//.github:host_xcodes"
             cache: "/private/var/tmp/bazel-disk"
           - os: windows-latest
             arch: "windows"
