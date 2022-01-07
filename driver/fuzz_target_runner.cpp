@@ -19,6 +19,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -79,6 +80,11 @@ constexpr auto kJazzerClass =
     "com/code_intelligence/jazzer/runtime/JazzerInternal";
 constexpr auto kAutofuzzFuzzTargetClass =
     "com/code_intelligence/jazzer/autofuzz/FuzzTarget";
+
+// A constant pool CONSTANT_Utf8_info entry should be able to hold data of size
+// uint16, but somehow this does not seem to be the case and leads to invalid
+// code crash reproducer code. Reducing the size by one resolves the problem.
+constexpr auto dataChunkMaxLength = std::numeric_limits<uint16_t>::max() - 1;
 
 namespace jazzer {
 // split a string on unescaped spaces
@@ -371,8 +377,17 @@ void FuzzTargetRunner::DumpReproducer(const uint8_t *data, std::size_t size) {
                                      ? kTestOneInputWithData
                                      : kTestOneInputWithBytes;
   std::string data_sha1 = jazzer::Sha1Hash(data, size);
+
+  // The serialization of recorded FuzzedDataProvider invocations can get to
+  // long to be stored in one String variable in the template. This is
+  // mitigated by chunking the data and concatenating it again in the generated
+  // code.
+  absl::ByLength chunk_delimiter = absl::ByLength(dataChunkMaxLength);
+  std::string chunked_base64_data =
+      absl::StrJoin(absl::StrSplit(base64_data, chunk_delimiter), "\", \"");
+
   std::string reproducer =
-      absl::Substitute(kBaseReproducer, data_sha1, base64_data,
+      absl::Substitute(kBaseReproducer, data_sha1, chunked_base64_data,
                        FLAGS_target_class, fuzz_target_call);
   std::string reproducer_filename = absl::StrFormat("Crash_%s.java", data_sha1);
   std::string reproducer_full_path = absl::StrFormat(
