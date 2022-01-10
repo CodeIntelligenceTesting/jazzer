@@ -357,6 +357,7 @@ Jazzer has so far uncovered the following vulnerabilities and bugs:
 
 | Project | Bug      | Status | CVE | found by |
 | ------- | -------- | ------ | --- | -------- |
+| [protocolbuffers/protobuf](https://github.com/protocolbuffers/protobuf) | Small protobuf messages can consume minutes of CPU time | [fixed](https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-wrvw-hg22-4m67) | [CVE-2021-22569](https://nvd.nist.gov/vuln/detail/CVE-2021-22569) | [OSS-Fuzz](https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=39330) |
 | [jhy/jsoup](https://github.com/jhy/jsoup) | More than 19 Bugs found in HTML and XML parser | [fixed](https://github.com/jhy/jsoup/security/advisories/GHSA-m72m-mhq2-9p6c) | [CVE-2021-37714](https://nvd.nist.gov/vuln/detail/CVE-2021-37714) | [Code Intelligence](https://code-intelligence.com) |
 | [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | Infinite loop when loading a crafted 7z | fixed | [CVE-2021-35515](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-35515) | [Code Intelligence](https://code-intelligence.com) |
 | [Apache/commons-compress](https://commons.apache.org/proper/commons-compress/) | `OutOfMemoryError` when loading a crafted 7z | fixed | [CVE-2021-35516](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-35516) | [Code Intelligence](https://code-intelligence.com) |
