@@ -97,6 +97,14 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
+        name = "fmeum_rules_meta",
+        sha256 = "b4267a2fab3957fa1b73ed9fabaa03f715418cabeb006a96b3eec347ee0ea206",
+        strip_prefix = "rules_meta-1e4b2b1633bef33839bedf24afb4de586a1843d0",
+        url = "https://github.com/fmeum/rules_meta/archive/1e4b2b1633bef33839bedf24afb4de586a1843d0.tar.gz",
+    )
+
+    maybe(
+        http_archive,
         build_file = Label("//third_party:asm.BUILD"),
         name = "jazzer_ow2_asm",
         sha256 = "7b596cc584b241619911e99c5c96366fccd533b1a50b8720c151c2f74b5915e3",
