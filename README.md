@@ -396,7 +396,10 @@ to [its documentation](https://llvm.org/docs/LibFuzzer.html) for a detailed desc
 
 ### Passing JVM arguments
 
-Arguments for the JVM started by Jazzer can be supplied via the `--jvm_args` argument.
+When Jazzer is launched, it starts a JVM in which it executes the fuzz target.
+Arguments for this JVM can be provided via the `JAVA_OPTS` environment variable.
+
+Alternatively, arguments can also be supplied via the `--jvm_args` argument.
 Multiple arguments are delimited by the classpath separator, which is `;` on Windows and `:` else.
 For example, to enable preview features as well as set a maximum heap size, add the following to the Jazzer invocation:
 
@@ -406,6 +409,8 @@ For example, to enable preview features as well as set a maximum heap size, add 
 # Linux & macOS
 --jvm_args=--enable-preview:-Xmx1000m
 ```
+
+Arguments specified with `--jvm_args` take precendence over those in `JAVA_OPTS`.
 
 ### Coverage Instrumentation
 

@@ -14,6 +14,7 @@
 
 #include "jvm_tooling.h"
 
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -273,6 +274,19 @@ JVM::JVM(const std::string &executable_path) {
       JavaVMOption{.optionString = (char *)"-XX:-OmitStackTraceInFastThrow"});
   // Optimize GC for high throughput rather than low latency.
   options.push_back(JavaVMOption{.optionString = (char *)"-XX:+UseParallelGC"});
+
+  // Add additional JVM options set through JAVA_OPTS.
+  std::vector<std::string> java_opts_args;
+  const char *java_opts = std::getenv("JAVA_OPTS");
+  if (java_opts != nullptr) {
+    // Mimic the behavior of the JVM when it sees JAVA_TOOL_OPTIONS.
+    std::cerr << "Picked up JAVA_OPTS: " << java_opts << std::endl;
+    java_opts_args = absl::StrSplit(java_opts, ' ');
+    for (const std::string &java_opt : java_opts_args) {
+      options.push_back(
+          JavaVMOption{.optionString = const_cast<char *>(java_opt.c_str())});
+    }
+  }
 
   // add additional jvm options set through command line flags
   std::vector<std::string> jvm_args;

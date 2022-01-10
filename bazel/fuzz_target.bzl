@@ -25,6 +25,7 @@ def java_fuzz_target_test(
         srcs = [],
         size = None,
         timeout = None,
+        env = None,
         **kwargs):
     target_name = name + "_target"
     deploy_manifest_lines = []
@@ -72,6 +73,7 @@ def java_fuzz_target_test(
             "//agent:jazzer_agent_deploy.jar",
             driver,
         ] + native_libs,
+        env = env,
         main_class = "FuzzTargetTestWrapper",
         use_testrunner = False,
         tags = tags,
