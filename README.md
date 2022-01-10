@@ -289,11 +289,11 @@ The format of the signature agrees with that obtained from the part after the `#
 
 Under the hood, jazzer tries various ways of creating objects from the fuzzer input. For example, if a parameter is an
 interface or an abstract class, it will look for all concrete implementing classes on the classpath.
-Jazzer can also create objects from classes that follow the [builder design pattern](https://www.baeldung.com/creational-design-patterns#builder) 
+Jazzer can also create objects from classes that follow the [builder design pattern](https://www.baeldung.com/creational-design-patterns#builder)
 or have a default constructor and use setters to set the fields.
 
-Creating objects from fuzzer input can lead to many reported exceptions. 
-Jazzer addresses this issue by ignoring exceptions that the target method declares to throw. 
+Creating objects from fuzzer input can lead to many reported exceptions.
+Jazzer addresses this issue by ignoring exceptions that the target method declares to throw.
 In addition to that, you can provide a list of exceptions to be ignored during fuzzing via the `--autofuzz_ignore` flag in the form of a comma-separated list.
 You can specify concrete exceptions (e.g., `java.lang.NullPointerException`), in which case also subclasses of these exception classes will be ignored, or glob patterns to ignore all exceptions in a specific package (e.g. `java.lang.*` or `com.company.**`).
 
@@ -317,7 +317,7 @@ docker run -it cifuzz/jazzer-autofuzz \
    --keep_going=1
 ```
 
-#### 
+####
 
 ### Reproducing a bug
 
@@ -395,7 +395,7 @@ to [its documentation](https://llvm.org/docs/LibFuzzer.html) for a detailed desc
 
 ### Passing JVM arguments
 
-Arguments for the JVM started by Jazzer can be supplied via the `--jvm_args` argument. 
+Arguments for the JVM started by Jazzer can be supplied via the `--jvm_args` argument.
 Multiple arguments are delimited by the classpath separator, which is `;` on Windows and `:` else.
 For example, to enable preview features as well as set a maximum heap size, add the following to the Jazzer invocation:
 
