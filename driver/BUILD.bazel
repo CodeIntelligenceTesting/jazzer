@@ -1,4 +1,5 @@
 load("//bazel:cc.bzl", "cc_17_library")
+load("//bazel:constants.bzl", "jazzer_repo_name_define_value")
 
 cc_library(
     name = "sanitizer_hooks_with_pc",
@@ -71,7 +72,9 @@ cc_library(
         # libFuzzer. Instead, trigger a hard exit.
         "@platforms//os:windows": ["SIGUSR1=SIGTERM"],
         "//conditions:default": [],
-    }),
+    }) + [
+        "JAZZER_REPO_NAME=%s" % jazzer_repo_name_define_value(),
+    ],
     tags = [
         # Should be built through the cc_17_library driver_lib.
         "manual",

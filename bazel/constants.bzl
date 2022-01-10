@@ -12,6 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+def jazzer_repo_name():
+    # Skip over the '@'.
+    repo_name = native.repository_name()[1:]
+    if repo_name:
+        return repo_name
+    else:
+        # repository_name returns "@" for the main repo. In this case, we know that the name of the
+        # repository is also the name of the workspace or module we define, which is always just
+        # "jazzer".
+        return "jazzer"
+
+def jazzer_repo_name_define_value():
+    # One level of quoting for Starlark, one for the shell.
+    return "\\\"%s\\\"" % jazzer_repo_name()
+
 SKIP_ON_MACOS = select({
     "@platforms//os:macos": ["@platforms//:incompatible"],
     "//conditions:default": [],

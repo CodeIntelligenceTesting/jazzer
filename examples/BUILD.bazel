@@ -1,6 +1,6 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
-load("//bazel:compat.bzl", "SKIP_ON_MACOS", "SKIP_ON_WINDOWS")
+load("//bazel:constants.bzl", "SKIP_ON_MACOS", "SKIP_ON_WINDOWS", "jazzer_repo_name")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
 java_fuzz_target_test(
@@ -207,9 +207,9 @@ sh_test(
     name = "JsonSanitizerReplayerCrashTest",
     srcs = ["check_for_finding.sh"],
     args = [
-        "jazzer/$(rootpath :JsonSanitizerReplayerCrash)",
+        "%s/$(rootpath :JsonSanitizerReplayerCrash)" % jazzer_repo_name(),
         "com.example.JsonSanitizerDenylistFuzzer",
-        "jazzer/$(rootpath :json_sanitizer_denylist_crash)",
+        "%s/$(rootpath :json_sanitizer_denylist_crash)" % jazzer_repo_name(),
     ],
     data = [
         ":JsonSanitizerReplayerCrash",

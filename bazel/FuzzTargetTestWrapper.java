@@ -15,6 +15,7 @@
 import com.google.devtools.build.runfiles.Runfiles;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +29,8 @@ public class FuzzTargetTestWrapper {
     Runfiles runfiles;
     try {
       runfiles = Runfiles.create();
-      driverActualPath = runfiles.rlocation(rlocationPath(args[0]));
-      jarActualPath = runfiles.rlocation(rlocationPath(args[1]));
+      driverActualPath = runfiles.rlocation(normalizeRlocationPath(args[0]));
+      jarActualPath = runfiles.rlocation(normalizeRlocationPath(args[1]));
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
@@ -76,12 +77,11 @@ public class FuzzTargetTestWrapper {
     System.exit(0);
   }
 
-  // Turns the result of Bazel's `$(rootpath ...)` into the correct format for rlocation.
-  private static String rlocationPath(String rootpath) {
-    if (rootpath.startsWith("external/")) {
-      return rootpath.substring("external/".length());
-    } else {
-      return "jazzer/" + rootpath;
-    }
+  // Canonicalizes paths to external repositories (e.g. jazzer/../external_repo/foo.txt becomes
+  // external_repo/foo.txt) before passing them to rlocation.
+  private static String normalizeRlocationPath(String path) {
+    // Note: We can't use Paths#normalize here as Bazel runfiles paths are always Unix style paths,
+    // but the behavior of Paths#normalize depends on the OS.
+    return path.replaceAll("\\.\\./", "");
   }
 }

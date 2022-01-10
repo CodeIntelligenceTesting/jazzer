@@ -116,7 +116,9 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad_jazzer_initialize(JavaVM *vm,
 }
 
 namespace {
-constexpr auto kAgentBazelRunfilesPath = "jazzer/agent/jazzer_agent_deploy.jar";
+// The name of the Jazzer repository is injected as a define.
+constexpr auto kAgentBazelRunfilesPath =
+    JAZZER_REPO_NAME "/agent/jazzer_agent_deploy.jar";
 constexpr auto kAgentFileName = "jazzer_agent_deploy.jar";
 constexpr const char kExceptionUtilsClassName[] =
     "com/code_intelligence/jazzer/runtime/ExceptionUtils";

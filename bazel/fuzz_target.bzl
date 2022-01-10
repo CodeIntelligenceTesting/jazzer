@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load(":constants.bzl", "jazzer_repo_name")
+
 def java_fuzz_target_test(
         name,
         target_class = None,
@@ -64,8 +66,8 @@ def java_fuzz_target_test(
         size = size or "enormous",
         timeout = timeout or "moderate",
         args = [
-            "$(rootpath %s)" % driver,
-            "$(rootpath :%s_deploy.jar)" % target_name,
+            "%s/$(rootpath %s)" % (jazzer_repo_name(), driver),
+            "%s/$(rootpath :%s_deploy.jar)" % (jazzer_repo_name(), target_name),
         ] + additional_args + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,
