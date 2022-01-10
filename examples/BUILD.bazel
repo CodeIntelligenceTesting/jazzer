@@ -129,6 +129,9 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/JpegImageParserFuzzer.java",
     ],
+    env = {
+        "JAVA_OPTS": "-Dfoo=not_foo -Djava_opts=1",
+    },
     fuzzer_args = [
         "-fork=5",
         "--additional_jvm_args=-Dbaz=baz",
