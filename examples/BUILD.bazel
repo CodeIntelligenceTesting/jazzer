@@ -46,6 +46,7 @@ java_fuzz_target_test(
     fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_asan"],
     sanitizer = "address",
     target_class = "com.example.ExampleFuzzerWithNative",
+    verify_crash_reproducer = False,
     runtime_deps = [
         ":example_fuzzer_with_native_lib",
     ],
@@ -58,6 +59,7 @@ java_fuzz_target_test(
     target_class = "com.example.ExampleFuzzerWithNative",
     # Crashes at runtime without an error message.
     target_compatible_with = SKIP_ON_WINDOWS,
+    verify_crash_reproducer = False,
     runtime_deps = [
         ":example_fuzzer_with_native_lib",
     ],
@@ -295,11 +297,11 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/TurboJpegFuzzer.java",
     ],
+    data = [
+        "@libjpeg_turbo//:turbojpeg_native",
+    ],
     fuzzer_args = [
         "-rss_limit_mb=8196",
-    ],
-    native_libs = [
-        "@libjpeg_turbo//:turbojpeg_native",
     ],
     sanitizer = "address",
     tags = ["manual"],

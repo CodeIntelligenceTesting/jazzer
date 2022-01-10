@@ -15,31 +15,46 @@
 import com.google.devtools.build.runfiles.Runfiles;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaCompiler.CompilationTask;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
 
 public class FuzzTargetTestWrapper {
   public static void main(String[] args) {
-    String driverActualPath;
-    String jarActualPath;
     Runfiles runfiles;
+    String driverActualPath;
+    String apiActualPath;
+    String jarActualPath;
+    boolean verifyCrashInput;
+    boolean verifyCrashReproducer;
+    boolean executeCrashReproducer;
     try {
       runfiles = Runfiles.create();
       driverActualPath = runfiles.rlocation(rlocationPath(args[0]));
-      jarActualPath = runfiles.rlocation(rlocationPath(args[1]));
+      apiActualPath = runfiles.rlocation(rlocationPath(args[1]));
+      jarActualPath = runfiles.rlocation(rlocationPath(args[2]));
+      verifyCrashInput = Boolean.parseBoolean(args[3]);
+      verifyCrashReproducer = Boolean.parseBoolean(args[4]);
+      executeCrashReproducer = Boolean.parseBoolean(args[5]);
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
       return;
     }
-
-    ProcessBuilder processBuilder = new ProcessBuilder();
-    Map<String, String> environment = processBuilder.environment();
-    // Ensure that Jazzer can find its runfiles.
-    environment.putAll(runfiles.getEnvVars());
 
     // Crashes will be available as test outputs. These are cleared on the next run,
     // so this is only useful for examples.
@@ -49,8 +64,9 @@ public class FuzzTargetTestWrapper {
             .concat(Stream.of(driverActualPath, String.format("-artifact_prefix=%s/", outputDir),
                         String.format("--reproducer_path=%s", outputDir), "-seed=2735196724",
                         String.format("--cp=%s", jarActualPath)),
-                Arrays.stream(args).skip(2))
+                Arrays.stream(args).skip(6))
             .collect(Collectors.toList());
+    ProcessBuilder processBuilder = new ProcessBuilder();
     processBuilder.inheritIO();
     processBuilder.command(command);
 
@@ -66,12 +82,29 @@ public class FuzzTargetTestWrapper {
         System.exit(4);
       }
       // Verify that libFuzzer dumped a crashing input.
-      if (Arrays.stream(outputFiles).noneMatch(name -> name.startsWith("crash-"))) {
+      if (verifyCrashInput
+          && Arrays.stream(outputFiles).noneMatch(name -> name.startsWith("crash-"))) {
+        System.out.printf("No crashing input found in %s%n", outputDir);
         System.exit(5);
+      }
+      // Verify that libFuzzer dumped a crash reproducer.
+      if (verifyCrashReproducer
+          && Arrays.stream(outputFiles).noneMatch(name -> name.startsWith("Crash_"))) {
+        System.out.printf("No crash reproducer found in %s%n", outputDir);
+        System.exit(6);
       }
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
       System.exit(2);
+    }
+
+    if (executeCrashReproducer) {
+      try {
+        verifyCrashReproducer(outputDir, driverActualPath, apiActualPath, jarActualPath);
+      } catch (Exception e) {
+        e.printStackTrace();
+        System.exit(6);
+      }
     }
     System.exit(0);
   }
@@ -82,6 +115,54 @@ public class FuzzTargetTestWrapper {
       return rootpath.substring("external/".length());
     } else {
       return "jazzer/" + rootpath;
+    }
+  }
+
+  private static void verifyCrashReproducer(String outputDir, String driver, String api, String jar)
+      throws Exception {
+    File source =
+        Files.list(Paths.get(outputDir))
+            .filter(f -> f.toFile().getName().endsWith(".java"))
+            .findFirst()
+            .map(Path::toFile)
+            .orElseThrow(
+                () -> new IllegalStateException("Could not find crash reproducer in " + outputDir));
+    String crashReproducer = compile(source, driver, api, jar);
+    execute(crashReproducer, outputDir);
+  }
+
+  private static String compile(File source, String driver, String api, String jar)
+      throws IOException {
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null)) {
+      Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjects(source);
+      List<String> options =
+          Arrays.asList("-classpath", String.join(File.pathSeparator, driver, api, jar));
+      System.out.printf(
+          "Compile crash reproducer %s with options %s%n", source.getAbsolutePath(), options);
+      CompilationTask task =
+          compiler.getTask(null, fileManager, null, options, null, compilationUnits);
+      if (!task.call()) {
+        throw new IllegalStateException("Could not compile crash reproducer " + source);
+      }
+      return source.getName().substring(0, source.getName().indexOf("."));
+    }
+  }
+
+  private static void execute(String classFile, String outputDir)
+      throws IOException, ReflectiveOperationException {
+    try {
+      System.out.printf("Execute crash reproducer %s%n", classFile);
+      URLClassLoader classLoader =
+          new URLClassLoader(new URL[] {new URL("file://" + outputDir + "/")});
+      Class<?> crashReproducerClass = classLoader.loadClass(classFile);
+      Method main = crashReproducerClass.getMethod("main", String[].class);
+      main.invoke(null, new Object[] {new String[] {}});
+      throw new IllegalStateException("Crash not reproduced by " + classFile);
+    } catch (InvocationTargetException e) {
+      // expect the invocation to fail with the crash
+      // other reflection exceptions indicate a real problem
+      System.out.printf("Reproduced exception \"%s\"%n", e.getCause().getMessage());
     }
   }
 }

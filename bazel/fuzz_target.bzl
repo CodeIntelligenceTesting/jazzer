@@ -17,7 +17,7 @@ def java_fuzz_target_test(
         target_class = None,
         deps = [],
         hook_classes = [],
-        native_libs = [],
+        data = [],
         sanitizer = None,
         visibility = None,
         tags = [],
@@ -26,6 +26,9 @@ def java_fuzz_target_test(
         size = None,
         timeout = None,
         env = None,
+        verify_crash_input = True,
+        verify_crash_reproducer = True,
+        execute_crash_reproducer = False,
         **kwargs):
     target_name = name + "_target"
     deploy_manifest_lines = []
@@ -61,18 +64,27 @@ def java_fuzz_target_test(
 
     native.java_test(
         name = name,
-        runtime_deps = ["//bazel:fuzz_target_test_wrapper"],
+        runtime_deps = [
+            "//bazel:fuzz_target_test_wrapper",
+            "//agent:jazzer_api_deploy.jar",
+            ":%s_deploy.jar" % target_name,
+        ],
         size = size or "enormous",
         timeout = timeout or "moderate",
         args = [
             "$(rootpath %s)" % driver,
+            "$(rootpath //agent:jazzer_api_deploy.jar)",
             "$(rootpath :%s_deploy.jar)" % target_name,
+            str(verify_crash_input),
+            str(verify_crash_reproducer),
+            str(execute_crash_reproducer),
         ] + additional_args + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,
             "//agent:jazzer_agent_deploy.jar",
+            "//agent:jazzer_api_deploy.jar",
             driver,
-        ] + native_libs,
+        ] + data,
         env = env,
         main_class = "FuzzTargetTestWrapper",
         use_testrunner = False,
