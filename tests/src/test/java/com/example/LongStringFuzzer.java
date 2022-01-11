@@ -23,7 +23,7 @@ import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
  * <p>
  * Reproduces issue #269 (https://github.com/CodeIntelligenceTesting/jazzer/issues/269)
  */
-public class ExampleLongStringFuzzer {
+public class LongStringFuzzer {
   public static void fuzzerTestOneInput(byte[] data) {
     if (data.length > 1024 * 64) {
       throw new FuzzerSecurityIssueLow("String too long exception");
