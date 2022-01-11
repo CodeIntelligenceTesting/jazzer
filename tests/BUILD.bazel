@@ -1,20 +1,14 @@
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
-genrule(
-    name = "ExampleLongStringFailingInput",
-    outs = ["failingInput"],
-    cmd = "dd if=/dev/zero bs=100KB count=1 > \"$@\"",
-)
-
 java_fuzz_target_test(
     name = "ExampleLongStringFuzzer",
     srcs = [
         "src/main/java/com/example/ExampleLongStringFuzzer.java",
     ],
-    data = [":ExampleLongStringFailingInput"],
+    data = ["src/main/java/com/example/ExampleLongStringFuzzerInput"],
     execute_crash_reproducer = True,
     fuzzer_args = [
-        "$(rootpath :ExampleLongStringFailingInput)",
+        "$(rootpath src/main/java/com/example/ExampleLongStringFuzzerInput)",
     ],
     target_class = "com.example.ExampleLongStringFuzzer",
     verify_crash_input = False,
