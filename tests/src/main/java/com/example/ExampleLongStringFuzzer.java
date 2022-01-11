@@ -14,20 +14,18 @@
 
 package com.example;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
 
 /**
  * Provoke a finding with huge captured data to verify that the generated
  * crash reproducer is still compilable. This test uses a huge, predefined
  * corpus to speed up finding the issue.
- *
+ * <p>
  * Reproduces issue #269 (https://github.com/CodeIntelligenceTesting/jazzer/issues/269)
  */
 public class ExampleLongStringFuzzer {
-  public static void fuzzerTestOneInput(FuzzedDataProvider data) {
-    String input = data.consumeRemainingAsString();
-    if (input.getBytes().length > 1024 * 64) {
+  public static void fuzzerTestOneInput(byte[] data) {
+    if (data.length > 1024 * 64) {
       throw new FuzzerSecurityIssueLow("String too long exception");
     }
   }
