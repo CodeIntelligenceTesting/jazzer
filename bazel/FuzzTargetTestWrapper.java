@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.tools.JavaCompiler;
@@ -55,6 +56,11 @@ public class FuzzTargetTestWrapper {
       return;
     }
 
+    ProcessBuilder processBuilder = new ProcessBuilder();
+    Map<String, String> environment = processBuilder.environment();
+    // Ensure that Jazzer can find its runfiles.
+    environment.putAll(runfiles.getEnvVars());
+
     // Crashes will be available as test outputs. These are cleared on the next run,
     // so this is only useful for examples.
     String outputDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR");
@@ -65,7 +71,6 @@ public class FuzzTargetTestWrapper {
                         String.format("--cp=%s", jarActualPath)),
                 Arrays.stream(args).skip(6))
             .collect(Collectors.toList());
-    ProcessBuilder processBuilder = new ProcessBuilder();
     processBuilder.inheritIO();
     processBuilder.command(command);
 
