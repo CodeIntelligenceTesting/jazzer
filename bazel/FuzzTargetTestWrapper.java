@@ -64,12 +64,17 @@ public class FuzzTargetTestWrapper {
     // Crashes will be available as test outputs. These are cleared on the next run,
     // so this is only useful for examples.
     String outputDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR");
+
+    // Map all files/dirs to real location
+    Stream<String> arguments = Arrays.stream(args).skip(6).map(
+        arg -> arg.startsWith("-") ? arg : runfiles.rlocation(rlocationPath(arg)));
+
     List<String> command =
         Stream
             .concat(Stream.of(driverActualPath, String.format("-artifact_prefix=%s/", outputDir),
                         String.format("--reproducer_path=%s", outputDir), "-seed=2735196724",
                         String.format("--cp=%s", jarActualPath)),
-                Arrays.stream(args).skip(6))
+                arguments)
             .collect(Collectors.toList());
     processBuilder.inheritIO();
     processBuilder.command(command);
