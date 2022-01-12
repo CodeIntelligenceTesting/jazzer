@@ -1,0 +1,15 @@
+load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
+
+java_fuzz_target_test(
+    name = "LongStringFuzzer",
+    srcs = [
+        "src/test/java/com/example/LongStringFuzzer.java",
+    ],
+    data = ["src/test/java/com/example/LongStringFuzzerInput"],
+    execute_crash_reproducer = True,
+    fuzzer_args = [
+        "$(rootpath src/test/java/com/example/LongStringFuzzerInput)",
+    ],
+    target_class = "com.example.LongStringFuzzer",
+    verify_crash_input = False,
+)

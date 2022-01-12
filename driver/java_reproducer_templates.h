@@ -23,7 +23,7 @@ constexpr const char *kBaseReproducer =
 import java.lang.reflect.Method;
 
 public class Crash_$0 {
-    static final String base64Bytes = "$1";
+    static final String base64Bytes = String.join("", "$1");
 
     public static void main(String[] args) {
         ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
