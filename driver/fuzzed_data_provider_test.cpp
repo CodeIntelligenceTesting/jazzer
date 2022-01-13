@@ -242,7 +242,7 @@ const uint8_t kInput[] = {
 };
 
 TEST_F(FuzzedDataProviderTest, FuzzTargetWithDataProvider) {
-  FLAGS_target_class = "test/FuzzTargetWithDataProvider";
+  FLAGS_target_class = "test.FuzzTargetWithDataProvider";
   FLAGS_target_args = "";
   FuzzTargetRunner fuzz_target_runner(*jvm_);
 

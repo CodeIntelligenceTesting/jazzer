@@ -106,7 +106,7 @@ TEST_F(JvmToolingTest, JniProperties) {
 TEST_F(JvmToolingTest, SimpleFuzzTarget) {
   // see testdata/test/SimpleFuzzTarget.java for the implementation of the fuzz
   // target
-  FLAGS_target_class = "test/SimpleFuzzTarget";
+  FLAGS_target_class = "test.SimpleFuzzTarget";
   FLAGS_target_args = "";
   FuzzTargetRunner fuzz_target_runner(*jvm_);
 
@@ -150,7 +150,7 @@ TEST_F(JvmToolingTest, FuzzTargetWithInit) {
   // see testdata/test/FuzzTargetWithInit.java for the implementation of the
   // fuzz target. All string arguments provided in fuzzerInitialize(String[])
   // will cause a crash if input in fuzzerTestOneInput(byte[]).
-  FLAGS_target_class = "test/FuzzTargetWithInit";
+  FLAGS_target_class = "test.FuzzTargetWithInit";
   FLAGS_target_args = "crash_now crash_harder";
   FuzzTargetRunner fuzz_target_runner(*jvm_);
 
@@ -180,7 +180,7 @@ TEST_F(JvmToolingTest, TestCoverageMap) {
   auto coverage_counters_array = CoverageTracker::GetCoverageCounters();
   ASSERT_EQ(0, coverage_counters_array[0]);
 
-  FLAGS_target_class = "test/FuzzTargetWithCoverage";
+  FLAGS_target_class = "test.FuzzTargetWithCoverage";
   FLAGS_target_args = "";
   FuzzTargetRunner fuzz_target_runner(*jvm_);
   // run a fuzz target input which will cause the first coverage counter to
