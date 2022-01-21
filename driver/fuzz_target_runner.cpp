@@ -72,6 +72,9 @@ DEFINE_string(autofuzz_ignore, "",
               "Fully qualified class names of exceptions to ignore during "
               "autofuzz. Separated by comma.");
 
+DEFINE_string(call_graph_basepath, "",
+              "Basepath for call graph generation (.dot and .json)");
+
 DECLARE_bool(hooks);
 
 constexpr auto kManifestUtilsClass =
@@ -190,15 +193,20 @@ FuzzTargetRunner::FuzzTargetRunner(
   }
 
   // Inform the agent about the fuzz target class.
-  auto on_fuzz_target_ready = jvm.GetStaticMethodID(
-      jazzer_, "onFuzzTargetReady", "(Ljava/lang/String;)V", true);
+  auto on_fuzz_target_ready =
+      jvm.GetStaticMethodID(jazzer_, "onFuzzTargetReady",
+                            "(Ljava/lang/String;Ljava/lang/String;)V", true);
   jstring fuzz_target_class = env.NewStringUTF(FLAGS_target_class.c_str());
-  env.CallStaticObjectMethod(jazzer_, on_fuzz_target_ready, fuzz_target_class);
+  jstring call_graph_basepath =
+      env.NewStringUTF(FLAGS_call_graph_basepath.c_str());
+  env.CallStaticObjectMethod(jazzer_, on_fuzz_target_ready, fuzz_target_class,
+                             call_graph_basepath);
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     return;
   }
   env.DeleteLocalRef(fuzz_target_class);
+  env.DeleteLocalRef(call_graph_basepath);
 
   // check existence of optional methods for initialization and destruction
   fuzzer_initialize_ =

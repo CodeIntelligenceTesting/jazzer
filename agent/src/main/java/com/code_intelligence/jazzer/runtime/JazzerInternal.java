@@ -30,7 +30,9 @@ final public class JazzerInternal {
   }
 
   // Accessed from native code.
-  public static void onFuzzTargetReady(String fuzzTargetClass) {
-    CallGraphKt.computeCallGraph(fuzzTargetClass);
+  public static void onFuzzTargetReady(String fuzzTargetClass, String callGraphBasepath) {
+    if (!callGraphBasepath.isEmpty()) {
+      CallGraphKt.computeCallGraph(fuzzTargetClass, callGraphBasepath);
+    }
   }
 }

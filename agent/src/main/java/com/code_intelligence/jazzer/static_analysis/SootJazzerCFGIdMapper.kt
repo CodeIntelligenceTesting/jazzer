@@ -185,7 +185,7 @@ object SootJazzerCFGIdMapper {
      * * virtualinvoke l1.<java.nio.ByteBuffer: java.nio.ByteBuffer put(int,byte)>(0, tmp);
      *
      */
-    fun compute() {
+    fun compute(callGraphBasepath: String) {
         val icfg = JimpleBasedInterproceduralCFG()
 
         if (Scene.v().entryPoints.isNotEmpty()) {
@@ -197,10 +197,10 @@ object SootJazzerCFGIdMapper {
 
                 outputGraph.simplify()
                 val exporter = DOTExporter<Unit, DefaultEdge> { v -> "\"${v.uniqueString()}\"" }
-                exporter.exportGraph(outputGraph, File("/tmp/icfg.dot"))
+                exporter.exportGraph(outputGraph, File("$callGraphBasepath.dot"))
 
                 val exporter2 = JSONExporter<Unit, DefaultEdge> { it.uniqueString() }
-                exporter2.exportGraph(outputGraph, File("/tmp/icfg.json"))
+                exporter2.exportGraph(outputGraph, File("$callGraphBasepath.json"))
 
                 println("INFO: Created ICFG")
             }

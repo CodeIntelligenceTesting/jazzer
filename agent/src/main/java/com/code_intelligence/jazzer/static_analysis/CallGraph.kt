@@ -16,7 +16,7 @@ package com.code_intelligence.jazzer.static_analysis
 
 import soot.Scene
 
-fun computeCallGraph(fuzzTargetClass: String) {
+fun computeCallGraph(fuzzTargetClass: String, callGraphBasepath: String) {
     SootConfigurator.configure()
 
     Scene.v().apply {
@@ -33,5 +33,5 @@ fun computeCallGraph(fuzzTargetClass: String) {
 
     SootCallGraphComputer.compute(CallGraphAlgorithm.CHA)
 
-    SootJazzerCFGIdMapper.compute()
+    SootJazzerCFGIdMapper.compute(callGraphBasepath)
 }
