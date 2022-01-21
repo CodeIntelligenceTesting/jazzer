@@ -14,10 +14,10 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
-import com.code_intelligence.jazzer.third_party.objectweb.asm.ClassReader
-import com.code_intelligence.jazzer.third_party.objectweb.asm.ClassVisitor
-import com.code_intelligence.jazzer.third_party.objectweb.asm.ClassWriter
-import com.code_intelligence.jazzer.third_party.objectweb.asm.MethodVisitor
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.MethodVisitor
 
 internal class HookInstrumentor(private val hooks: Iterable<Hook>, private val java6Mode: Boolean) : Instrumentor {
 

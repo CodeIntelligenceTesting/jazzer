@@ -15,16 +15,16 @@
 package com.code_intelligence.jazzer.instrumentor
 
 import com.code_intelligence.jazzer.runtime.CoverageMap
-import com.code_intelligence.jazzer.third_party.jacoco.core.analysis.CoverageBuilder
-import com.code_intelligence.jazzer.third_party.jacoco.core.data.ExecutionData
-import com.code_intelligence.jazzer.third_party.jacoco.core.data.ExecutionDataReader
-import com.code_intelligence.jazzer.third_party.jacoco.core.data.ExecutionDataStore
-import com.code_intelligence.jazzer.third_party.jacoco.core.data.ExecutionDataWriter
-import com.code_intelligence.jazzer.third_party.jacoco.core.data.SessionInfo
-import com.code_intelligence.jazzer.third_party.jacoco.core.data.SessionInfoStore
-import com.code_intelligence.jazzer.third_party.jacoco.core.internal.data.CRC64
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import io.github.classgraph.ClassGraph
+import org.jacoco.core.analysis.CoverageBuilder
+import org.jacoco.core.data.ExecutionData
+import org.jacoco.core.data.ExecutionDataReader
+import org.jacoco.core.data.ExecutionDataStore
+import org.jacoco.core.data.ExecutionDataWriter
+import org.jacoco.core.data.SessionInfo
+import org.jacoco.core.data.SessionInfoStore
+import org.jacoco.core.internal.data.CRC64
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.time.Instant

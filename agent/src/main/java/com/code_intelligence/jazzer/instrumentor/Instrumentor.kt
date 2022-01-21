@@ -14,8 +14,8 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
-import com.code_intelligence.jazzer.third_party.objectweb.asm.Opcodes
-import com.code_intelligence.jazzer.third_party.objectweb.asm.tree.MethodNode
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.tree.MethodNode
 
 enum class InstrumentationType {
     CMP,
