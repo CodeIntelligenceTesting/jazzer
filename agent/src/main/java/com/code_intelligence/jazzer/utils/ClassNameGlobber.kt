@@ -31,6 +31,7 @@ private val BASE_EXCLUDED_CLASS_NAME_GLOBS = listOf(
     "jdk.**",
     "kotlin.**",
     "sun.**",
+    "soot.**",
 )
 
 class ClassNameGlobber(includes: List<String>, excludes: List<String>) {
