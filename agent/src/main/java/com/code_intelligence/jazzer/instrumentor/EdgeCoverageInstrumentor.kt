@@ -170,6 +170,8 @@ class EdgeCoverageInstrumentor(
             val newMaxStack = max(maxStack + instrumentControlFlowEdgeStackSize, loadCoverageMapStackSize)
             mv.visitMaxs(newMaxStack, maxLocals + 1)
         }
+
+        override fun getLocalType() = "java/nio/ByteBuffer"
     }
 
     private val edgeCoverageProbeInserterFactory =

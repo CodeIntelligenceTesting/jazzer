@@ -63,21 +63,8 @@ index 00000000..19c2a7e2
 +    ProbeInserter makeProbeInserter(int access, String name, String desc,
 +            MethodVisitor mv, IProbeArrayStrategy arrayStrategy);
 +}
-diff --git org.jacoco.core/src/org/jacoco/core/internal/instr/InstrSupport.java org.jacoco.core/src/org/jacoco/core/internal/instr/InstrSupport.java
-index 71808ac8..3df93f63 100644
---- org.jacoco.core/src/org/jacoco/core/internal/instr/InstrSupport.java
-+++ org.jacoco.core/src/org/jacoco/core/internal/instr/InstrSupport.java
-@@ -78,7 +78,7 @@ public final class InstrSupport {
- 	 * Data type of the field that stores coverage information for a class (
- 	 * <code>boolean[]</code>).
- 	 */
--	public static final String DATAFIELD_DESC = "[Z";
-+	public static final String DATAFIELD_DESC = "java/nio/ByteBuffer";
- 
- 	// === Init Method ===
- 
 diff --git org.jacoco.core/src/org/jacoco/core/internal/instr/ProbeInserter.java org.jacoco.core/src/org/jacoco/core/internal/instr/ProbeInserter.java
-index 0f5b99ff..ba5daa6d 100644
+index 0f5b99ff..80965dfe 100644
 --- org.jacoco.core/src/org/jacoco/core/internal/instr/ProbeInserter.java
 +++ org.jacoco.core/src/org/jacoco/core/internal/instr/ProbeInserter.java
 @@ -25,7 +25,7 @@ import org.objectweb.asm.TypePath;
@@ -107,3 +94,55 @@ index 0f5b99ff..ba5daa6d 100644
  			final MethodVisitor mv, final IProbeArrayStrategy arrayStrategy) {
  		super(InstrSupport.ASM_API_VERSION, mv);
  		this.clinit = InstrSupport.CLINIT_NAME.equals(name);
+@@ -91,6 +91,10 @@ class ProbeInserter extends MethodVisitor implements IProbeInserter {
+ 		mv.visitInsn(Opcodes.BASTORE);
+ 	}
+ 
++	protected Object getLocalVariableType() {
++		return InstrSupport.DATAFIELD_DESC;
++	}
++
+ 	@Override
+ 	public void visitCode() {
+ 		accessorStackSize = arrayStrategy.storeInstance(mv, clinit, variable);
+@@ -118,6 +122,10 @@ class ProbeInserter extends MethodVisitor implements IProbeInserter {
+ 	public AnnotationVisitor visitLocalVariableAnnotation(final int typeRef,
+ 			final TypePath typePath, final Label[] start, final Label[] end,
+ 			final int[] index, final String descriptor, final boolean visible) {
++		if (getLocalVariableType() == null) {
++			return visitLocalVariableAnnotation(typeRef, typePath, start, end, index, descriptor, visible);
++		}
++
+ 		final int[] newIndex = new int[index.length];
+ 		for (int i = 0; i < newIndex.length; i++) {
+ 			newIndex[i] = map(index[i]);
+@@ -137,6 +145,9 @@ class ProbeInserter extends MethodVisitor implements IProbeInserter {
+ 	}
+ 
+ 	private int map(final int var) {
++		if (getLocalVariableType() == null) {
++			return var;
++		}
+ 		if (var < variable) {
+ 			return var;
+ 		} else {
+@@ -153,13 +164,18 @@ class ProbeInserter extends MethodVisitor implements IProbeInserter {
+ 					"ClassReader.accept() should be called with EXPAND_FRAMES flag");
+ 		}
+ 
++        if (getLocalVariableType() == null) {
++			mv.visitFrame(type, nLocal, local, nStack, stack);
++			return;
++		}
++
+ 		final Object[] newLocal = new Object[Math.max(nLocal, variable) + 1];
+ 		int idx = 0; // Arrays index for existing locals
+ 		int newIdx = 0; // Array index for new locals
+ 		int pos = 0; // Current variable position
+ 		while (idx < nLocal || pos <= variable) {
+ 			if (pos == variable) {
+-				newLocal[newIdx++] = InstrSupport.DATAFIELD_DESC;
++				newLocal[newIdx++] = getLocalVariableType();
+ 				pos++;
+ 			} else {
+ 				if (idx < nLocal) {
