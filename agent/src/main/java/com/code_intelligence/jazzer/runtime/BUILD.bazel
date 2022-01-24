@@ -17,9 +17,6 @@ java_library(
 java_library(
     name = "signal_handler",
     srcs = ["SignalHandler.java"],
-    javacopts = [
-        "-XDenableSunApiLintControl",
-    ],
 )
 
 kt_jvm_library(
@@ -32,7 +29,6 @@ kt_jvm_library(
         "ManifestUtils.kt",
         "NativeLibHooks.java",
         "RecordingFuzzedDataProvider.java",
-        "SignalHandler.java",
         "TraceCmpHooks.java",
         "TraceDataFlowNativeCallbacks.java",
         "TraceDivHooks.java",

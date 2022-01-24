@@ -16,7 +16,6 @@ package com.code_intelligence.jazzer.runtime;
 
 import sun.misc.Signal;
 
-@SuppressWarnings({"unused", "sunapi"})
 final class SignalHandler {
   public static native void handleInterrupt();
 
