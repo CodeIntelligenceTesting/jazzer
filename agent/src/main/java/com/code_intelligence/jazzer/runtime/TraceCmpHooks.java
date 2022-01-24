@@ -276,6 +276,7 @@ final public class TraceCmpHooks {
   // key closest to the current lookup key in the mapGet hook.
   private static final int MAX_NUM_KEYS_TO_ENUMERATE = 100;
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   @MethodHook(type = HookType.AFTER, targetClassName = "com.google.common.collect.ImmutableMap",
       targetMethod = "get")
   @MethodHook(
