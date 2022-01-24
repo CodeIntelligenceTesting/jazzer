@@ -22,11 +22,15 @@ import java.nio.ByteBuffer;
  * native code.
  */
 final public class CoverageMap {
-  public static ByteBuffer mem = ByteBuffer.allocateDirect(0);
+  public static ByteBuffer counters = ByteBuffer.allocateDirect(0);
 
-  public static void enlargeCoverageMap() {
-    registerNewCoverageCounters();
-    System.out.println("INFO: New number of inline 8-bit counters: " + mem.capacity());
+  // Called via reflection.
+  @SuppressWarnings("unused")
+  public static void enlargeIfNeeded(int nextId) {
+    if (nextId >= counters.capacity()) {
+      registerNewCoverageCounters();
+      System.out.println("INFO: New number of inline 8-bit counters: " + counters.capacity());
+    }
   }
 
   private static native void registerNewCoverageCounters();

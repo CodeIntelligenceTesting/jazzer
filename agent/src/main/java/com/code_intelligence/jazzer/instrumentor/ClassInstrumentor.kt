@@ -14,6 +14,8 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
+import com.code_intelligence.jazzer.runtime.CoverageMap
+
 fun extractClassFileMajorVersion(classfileBuffer: ByteArray): Int {
     return ((classfileBuffer[6].toInt() and 0xff) shl 8) or (classfileBuffer[7].toInt() and 0xff)
 }
@@ -24,7 +26,11 @@ class ClassInstrumentor constructor(bytecode: ByteArray) {
         private set
 
     fun coverage(initialEdgeId: Int): Int {
-        val edgeCoverageInstrumentor = EdgeCoverageInstrumentor(initialEdgeId)
+        val edgeCoverageInstrumentor = EdgeCoverageInstrumentor(
+            defaultEdgeCoverageStrategy,
+            defaultCoverageMap,
+            initialEdgeId,
+        )
         instrumentedBytecode = edgeCoverageInstrumentor.instrument(instrumentedBytecode)
         return edgeCoverageInstrumentor.numEdges
     }
@@ -49,5 +55,8 @@ class ClassInstrumentor constructor(bytecode: ByteArray) {
                 // Make it possible to use (parts of) the agent without the driver.
             }
         }
+
+        val defaultEdgeCoverageStrategy = DirectByteBufferStrategy
+        val defaultCoverageMap = CoverageMap::class.java
     }
 }

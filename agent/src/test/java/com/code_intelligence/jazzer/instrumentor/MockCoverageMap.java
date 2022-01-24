@@ -20,8 +20,7 @@ import java.util.Arrays;
 
 public class MockCoverageMap {
   public static final int SIZE = 65536;
-  public static final ByteBuffer mem = ByteBuffer.allocate(SIZE);
-  public static int prev_location = 0; // is used in byte code directly
+  public static final ByteBuffer counters = ByteBuffer.allocate(SIZE);
 
   private static final ByteBuffer previous_mem = ByteBuffer.allocate(SIZE);
   public static ArrayList<Integer> locations = new ArrayList<>();
@@ -29,16 +28,20 @@ public class MockCoverageMap {
   public static void updated() {
     int updated_pos = -1;
     for (int i = 0; i < SIZE; i++) {
-      if (previous_mem.get(i) != mem.get(i)) {
+      if (previous_mem.get(i) != counters.get(i)) {
         updated_pos = i;
       }
     }
     locations.add(updated_pos);
-    System.arraycopy(mem.array(), 0, previous_mem.array(), 0, SIZE);
+    System.arraycopy(counters.array(), 0, previous_mem.array(), 0, SIZE);
+  }
+
+  public static void enlargeIfNeeded(int nextId) {
+    // This mock coverage map is statically sized.
   }
 
   public static void clear() {
-    Arrays.fill(mem.array(), (byte) 0);
+    Arrays.fill(counters.array(), (byte) 0);
     Arrays.fill(previous_mem.array(), (byte) 0);
     locations.clear();
   }

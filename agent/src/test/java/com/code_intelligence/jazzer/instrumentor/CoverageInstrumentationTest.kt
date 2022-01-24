@@ -14,12 +14,43 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
+import org.jacoco.core.internal.flow.JavaNoThrowMethods
 import org.junit.Test
+import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
 import java.io.File
 import kotlin.test.assertEquals
 
+/**
+ * Amends the instrumentation performed by [strategy] to call the map's public static void method
+ * updated() after every update to coverage counters.
+ *
+ * Note: Calling this method also enables the testing mode of [JavaNoThrowMethods] globally, which
+ * means that calls to methods in com.code_intelligence.jazzer.** will also be instrumented.
+ */
+private fun makeTestable(strategy: EdgeCoverageStrategy): EdgeCoverageStrategy =
+    object : EdgeCoverageStrategy by strategy {
+        init {
+            JavaNoThrowMethods.isTesting = true
+        }
+
+        override fun instrumentControlFlowEdge(
+            mv: MethodVisitor,
+            edgeId: Int,
+            variable: Int,
+            coverageMapInternalClassName: String
+        ) {
+            strategy.instrumentControlFlowEdge(mv, edgeId, variable, coverageMapInternalClassName)
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, coverageMapInternalClassName, "updated", "()V", false)
+        }
+    }
+
 private fun applyInstrumentation(bytecode: ByteArray): ByteArray {
-    return EdgeCoverageInstrumentor(0, MockCoverageMap::class.java).instrument(bytecode)
+    return EdgeCoverageInstrumentor(
+        makeTestable(ClassInstrumentor.defaultEdgeCoverageStrategy),
+        MockCoverageMap::class.java,
+        0
+    ).instrument(bytecode)
 }
 
 private fun getOriginalInstrumentationTargetInstance(): DynamicTestContract {
@@ -114,12 +145,12 @@ class CoverageInstrumentationTest {
         var lastCounter = 0.toUByte()
         for (i in 1..600) {
             assertSelfCheck(target)
-            assertEquals(1, MockCoverageMap.mem[takenOnceEdge])
+            assertEquals(1, MockCoverageMap.counters[takenOnceEdge])
             // Verify that the counter increments, but is never zero.
             val expectedCounter = (lastCounter + 1U).toUByte().takeUnless { it == 0.toUByte() }
                 ?: (lastCounter + 2U).toUByte()
             lastCounter = expectedCounter
-            val actualCounter = MockCoverageMap.mem[takenOnEveryRunEdge].toUByte()
+            val actualCounter = MockCoverageMap.counters[takenOnEveryRunEdge].toUByte()
             assertEquals(expectedCounter, actualCounter, "After $i runs:")
         }
     }
