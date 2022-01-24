@@ -52,21 +52,21 @@ object CoverageRecorder {
     }
 
     /**
-     * Manually records coverage IDs based on the current state of [CoverageMap.mem].
+     * Manually records coverage IDs based on the current state of [CoverageMap.counters].
      * Should be called after static initializers have run.
      */
     @JvmStatic
     fun updateCoveredIdsWithCoverageMap() {
-        val mem = CoverageMap.mem
-        val size = mem.capacity()
-        additionalCoverage.addAll((0 until size).filter { mem[it] > 0 })
+        val counters = CoverageMap.counters
+        val size = counters.capacity()
+        additionalCoverage.addAll((0 until size).filter { counters[it] > 0 })
     }
 
     @JvmStatic
     fun replayCoveredIds() {
-        val mem = CoverageMap.mem
+        val counters = CoverageMap.counters
         for (coverageId in additionalCoverage) {
-            mem.put(coverageId, 1)
+            counters.put(coverageId, 1)
         }
     }
 
@@ -173,12 +173,13 @@ object CoverageRecorder {
                 }
             }
             for ((internalClassName, info) in instrumentedClassInfo) {
-                EdgeCoverageInstrumentor(0).analyze(
-                    executionDataStore,
-                    coverage,
-                    info.bytecode,
-                    internalClassName
-                )
+                EdgeCoverageInstrumentor(ClassInstrumentor.defaultEdgeCoverageStrategy, ClassInstrumentor.defaultCoverageMap, 0)
+                    .analyze(
+                        executionDataStore,
+                        coverage,
+                        info.bytecode,
+                        internalClassName
+                    )
             }
             coverage
         } catch (e: Exception) {
@@ -215,7 +216,7 @@ object CoverageRecorder {
                     .filterNot { classInfo -> classInfo.name in coveredClassNames }
                     .forEach { classInfo ->
                         classInfo.resource.use { resource ->
-                            EdgeCoverageInstrumentor(0).analyze(
+                            EdgeCoverageInstrumentor(ClassInstrumentor.defaultEdgeCoverageStrategy, ClassInstrumentor.defaultCoverageMap, 0).analyze(
                                 emptyExecutionDataStore,
                                 coverage,
                                 resource.load(),

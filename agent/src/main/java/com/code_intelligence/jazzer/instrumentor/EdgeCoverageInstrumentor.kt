@@ -14,14 +14,12 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
-import com.code_intelligence.jazzer.runtime.CoverageMap
 import org.jacoco.core.analysis.Analyzer
 import org.jacoco.core.analysis.ICoverageVisitor
 import org.jacoco.core.data.ExecutionDataStore
 import org.jacoco.core.internal.flow.ClassProbesAdapter
 import org.jacoco.core.internal.flow.ClassProbesVisitor
 import org.jacoco.core.internal.flow.IClassProbesAdapterFactory
-import org.jacoco.core.internal.flow.JavaNoThrowMethods
 import org.jacoco.core.internal.instr.ClassInstrumenter
 import org.jacoco.core.internal.instr.IProbeArrayStrategy
 import org.jacoco.core.internal.instr.IProbeInserterFactory
@@ -31,20 +29,77 @@ import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes
+import java.lang.invoke.MethodHandle
+import java.lang.invoke.MethodHandles.publicLookup
+import java.lang.invoke.MethodType.methodType
 import kotlin.math.max
 
+/**
+ * A particular way to instrument bytecode for edge coverage using a coverage map class available to
+ * hold the collected coverage data at runtime.
+ */
+interface EdgeCoverageStrategy {
+
+    /**
+     * Inject bytecode instrumentation on a control flow edge with ID [edgeId], with access to the
+     * local variable [variable] that is populated at the beginning of each method by the
+     * instrumentation injected in [loadLocalVariable].
+     */
+    fun instrumentControlFlowEdge(
+        mv: MethodVisitor,
+        edgeId: Int,
+        variable: Int,
+        coverageMapInternalClassName: String
+    )
+
+    /**
+     * The maximal number of stack elements used by [instrumentControlFlowEdge].
+     */
+    val instrumentControlFlowEdgeStackSize: Int
+
+    /**
+     * The type of the local variable used by the instrumentation in the format used by
+     * [MethodVisitor.visitFrame]'s `local` parameter, or `null` if the instrumentation does not use
+     * one.
+     * @see https://asm.ow2.io/javadoc/org/objectweb/asm/MethodVisitor.html#visitFrame(int,int,java.lang.Object%5B%5D,int,java.lang.Object%5B%5D)
+     */
+    val localVariableType: Any?
+
+    /**
+     * Inject bytecode that loads the coverage counters of the coverage map class described by
+     * [coverageMapInternalClassName] into the local variable [variable].
+     */
+    fun loadLocalVariable(mv: MethodVisitor, variable: Int, coverageMapInternalClassName: String)
+
+    /**
+     * The maximal number of stack elements used by [loadLocalVariable].
+     */
+    val loadLocalVariableStackSize: Int
+}
+
+// An instance of EdgeCoverageInstrumentor should only be used to instrument a single class as it
+// internally tracks the edge IDs, which have to be globally unique.
 class EdgeCoverageInstrumentor(
+    private val strategy: EdgeCoverageStrategy,
+    /**
+     * The class must have the following public static member
+     *  - method enlargeIfNeeded(int nextEdgeId): Called before a new edge ID is emitted.
+     */
+    coverageMapClass: Class<*>,
     private val initialEdgeId: Int,
-    private val coverageMapClass: Class<*> = CoverageMap::class.java
 ) : Instrumentor {
     private var nextEdgeId = initialEdgeId
+
     private val coverageMapInternalClassName = coverageMapClass.name.replace('.', '/')
-    init {
-        if (isTesting) {
-            JavaNoThrowMethods.isTesting = true
-        }
-    }
+    private val enlargeIfNeeded: MethodHandle =
+        publicLookup().findStatic(
+            coverageMapClass,
+            "enlargeIfNeeded",
+            methodType(
+                Void::class.javaPrimitiveType,
+                Int::class.javaPrimitiveType
+            )
+        )
 
     override fun instrument(bytecode: ByteArray): ByteArray {
         val reader = InstrSupport.classReaderFor(bytecode)
@@ -67,93 +122,14 @@ class EdgeCoverageInstrumentor(
     val numEdges
         get() = nextEdgeId - initialEdgeId
 
-    private val isTesting
-        get() = coverageMapClass != CoverageMap::class.java
-
     private fun nextEdgeId(): Int {
-        if (nextEdgeId >= CoverageMap.mem.capacity()) {
-            if (!isTesting) {
-                CoverageMap.enlargeCoverageMap()
-            }
-        }
+        enlargeIfNeeded.invokeExact(nextEdgeId)
         return nextEdgeId++
     }
 
     /**
-     * The maximal number of stack elements used by [loadCoverageMap].
-     */
-    private val loadCoverageMapStackSize = 1
-
-    /**
-     * Inject bytecode that loads the coverage map into local variable [variable].
-     */
-    private fun loadCoverageMap(mv: MethodVisitor, variable: Int) {
-        mv.apply {
-            visitFieldInsn(
-                Opcodes.GETSTATIC,
-                coverageMapInternalClassName,
-                "mem",
-                "Ljava/nio/ByteBuffer;"
-            )
-            // Stack: mem (maxStack: 1)
-            visitVarInsn(Opcodes.ASTORE, variable)
-        }
-    }
-
-    /**
-     * The maximal number of stack elements used by [instrumentControlFlowEdge].
-     */
-    private val instrumentControlFlowEdgeStackSize = 5
-
-    /**
-     * Inject bytecode instrumentation on a control flow edge with ID [edgeId]. The coverage map can be loaded from
-     * local variable [variable].
-     */
-    private fun instrumentControlFlowEdge(mv: MethodVisitor, edgeId: Int, variable: Int) {
-        mv.apply {
-            visitVarInsn(Opcodes.ALOAD, variable)
-            // Stack: mem
-            push(edgeId)
-            // Stack: mem | edgeId
-            visitInsn(Opcodes.DUP2)
-            // Stack: mem | edgeId | mem | edgeId
-            visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/nio/ByteBuffer", "get", "(I)B", false)
-            // Increment the counter, but ensure that it never stays at 0 after an overflow by incrementing it again in
-            // that case.
-            // This approach performs better than saturating the counter at 255 (see Section 3.3 of
-            // https://www.usenix.org/system/files/woot20-paper-fioraldi.pdf)
-            // Stack: mem | edgeId | counter (sign-extended to int)
-            push(0xff)
-            // Stack: mem | edgeId | counter (sign-extended to int) | 0x000000ff
-            visitInsn(Opcodes.IAND)
-            // Stack: mem | edgeId | counter (zero-extended to int)
-            push(1)
-            // Stack: mem | edgeId | counter | 1
-            visitInsn(Opcodes.IADD)
-            // Stack: mem | edgeId | counter + 1
-            visitInsn(Opcodes.DUP)
-            // Stack: mem | edgeId | counter + 1 | counter + 1
-            push(8)
-            // Stack: mem | edgeId | counter + 1 | counter + 1 | 8 (maxStack: +5)
-            visitInsn(Opcodes.ISHR)
-            // Stack: mem | edgeId | counter + 1 | 1 if the increment overflowed to 0, 0 otherwise
-            visitInsn(Opcodes.IADD)
-            // Stack: mem | edgeId | counter + 2 if the increment overflowed, counter + 1 otherwise
-            visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/nio/ByteBuffer", "put", "(IB)Ljava/nio/ByteBuffer;", false)
-            // Stack: mem
-            visitInsn(Opcodes.POP)
-            if (isTesting) {
-                visitMethodInsn(Opcodes.INVOKESTATIC, coverageMapInternalClassName, "updated", "()V", false)
-            }
-        }
-    }
-
-// The remainder of this file interfaces with classes in org.jacoco.core.internal. Changes to this part should not be
-// necessary unless JaCoCo is updated or the way we instrument for coverage changes fundamentally.
-
-    /**
-     * A [ProbeInserter] that injects the bytecode instrumentation returned by [instrumentControlFlowEdge] and modifies
-     * the stack size and number of local variables accordingly.
+     * A [ProbeInserter] that injects bytecode instrumentation at every control flow edge and
+     * modifies the stack size and number of local variables accordingly.
      */
     private inner class EdgeCoverageProbeInserter(
         access: Int,
@@ -163,15 +139,16 @@ class EdgeCoverageInstrumentor(
         arrayStrategy: IProbeArrayStrategy,
     ) : ProbeInserter(access, name, desc, mv, arrayStrategy) {
         override fun insertProbe(id: Int) {
-            instrumentControlFlowEdge(mv, id, variable)
+            strategy.instrumentControlFlowEdge(mv, id, variable, coverageMapInternalClassName)
         }
 
         override fun visitMaxs(maxStack: Int, maxLocals: Int) {
-            val newMaxStack = max(maxStack + instrumentControlFlowEdgeStackSize, loadCoverageMapStackSize)
-            mv.visitMaxs(newMaxStack, maxLocals + 1)
+            val newMaxStack = max(maxStack + strategy.instrumentControlFlowEdgeStackSize, strategy.loadLocalVariableStackSize)
+            val newMaxLocals = maxLocals + if (strategy.localVariableType != null) 1 else 0
+            mv.visitMaxs(newMaxStack, newMaxLocals)
         }
 
-        override fun getLocalType() = "java/nio/ByteBuffer"
+        override fun getLocalVariableType() = strategy.localVariableType
     }
 
     private val edgeCoverageProbeInserterFactory =
@@ -179,9 +156,16 @@ class EdgeCoverageInstrumentor(
             EdgeCoverageProbeInserter(access, name, desc, mv, arrayStrategy)
         }
 
-    private inner class EdgeCoverageClassProbesAdapter(cv: ClassProbesVisitor, trackFrames: Boolean) :
-        ClassProbesAdapter(cv, trackFrames) {
+    private inner class EdgeCoverageClassProbesAdapter(private val cpv: ClassProbesVisitor, trackFrames: Boolean) :
+        ClassProbesAdapter(cpv, trackFrames) {
         override fun nextId(): Int = nextEdgeId()
+
+        override fun visitEnd() {
+            cpv.visitTotalProbeCount(numEdges)
+            // Avoid calling super.visitEnd() as that invokes cpv.visitTotalProbeCount with an
+            // incorrect value of `count`.
+            cv.visitEnd()
+        }
     }
 
     private val edgeCoverageClassProbesAdapterFactory = IClassProbesAdapterFactory { probesVisitor, trackFrames ->
@@ -190,14 +174,14 @@ class EdgeCoverageInstrumentor(
 
     private val edgeCoverageProbeArrayStrategy = object : IProbeArrayStrategy {
         override fun storeInstance(mv: MethodVisitor, clinit: Boolean, variable: Int): Int {
-            loadCoverageMap(mv, variable)
-            return loadCoverageMapStackSize
+            strategy.loadLocalVariable(mv, variable, coverageMapInternalClassName)
+            return strategy.loadLocalVariableStackSize
         }
 
         override fun addMembers(cv: ClassVisitor, probeCount: Int) {}
     }
+}
 
-    private fun MethodVisitor.push(value: Int) {
-        InstrSupport.push(this, value)
-    }
+fun MethodVisitor.push(value: Int) {
+    InstrSupport.push(this, value)
 }

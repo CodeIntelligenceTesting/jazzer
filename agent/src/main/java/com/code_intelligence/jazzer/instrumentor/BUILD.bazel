@@ -8,6 +8,7 @@ kt_jvm_library(
         "CoverageRecorder.kt",
         "DescriptorUtils.kt",
         "DeterministicRandom.kt",
+        "DirectByteBufferStrategy.kt",
         "EdgeCoverageInstrumentor.kt",
         "Hook.kt",
         "HookInstrumentor.kt",

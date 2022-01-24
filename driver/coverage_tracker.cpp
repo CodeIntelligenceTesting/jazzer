@@ -104,8 +104,9 @@ void JNICALL CoverageTracker::RegisterNewCoverageCounters(JNIEnv &env,
                                                           jclass cls) {
   jclass coverage_map = env.FindClass(kCoverageMapClass);
   AssertNoException(env);
-  jfieldID counters_buffer_id = env.GetStaticFieldID(
-      coverage_map, "mem", absl::StrFormat("L%s;", kByteBufferClass).c_str());
+  jfieldID counters_buffer_id =
+      env.GetStaticFieldID(coverage_map, "counters",
+                           absl::StrFormat("L%s;", kByteBufferClass).c_str());
   AssertNoException(env);
   jobject counters_buffer =
       env.GetStaticObjectField(coverage_map, counters_buffer_id);
