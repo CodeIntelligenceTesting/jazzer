@@ -31,6 +31,7 @@ object NamingContextLookup {
     private const val LDAP_MARKER = "ldap://g.co/"
     private const val RMI_MARKER = "rmi://g.co/"
 
+    @Suppress("UNUSED_PARAMETER")
     @MethodHooks(
         MethodHook(
             type = HookType.REPLACE,
