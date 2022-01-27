@@ -87,9 +87,9 @@ fun <E> DefaultDirectedGraph<Unit, E>.simplify() {
         }
 }
 
-object SootJazzerCFGIdMapper {
-    val outputGraph = DefaultDirectedGraph<Unit, DefaultEdge>(DefaultEdge::class.java)
-    val visited = mutableSetOf<Unit>()
+class SootJazzerCFGIdMapper {
+    private val outputGraph = DefaultDirectedGraph<Unit, DefaultEdge>(DefaultEdge::class.java)
+    private val visited = mutableSetOf<Unit>()
 
     /**
      * Traverses ICFG using Depth First Search and provides a pruned graph.
@@ -102,7 +102,7 @@ object SootJazzerCFGIdMapper {
     private fun getJazzerIds(
         icfg: JimpleBasedInterproceduralCFG,
         m: SootMethod
-    ): MutableList<Unit> {
+    ) {
         val stackToBeProcessed = Stack<Unit>()
         stackToBeProcessed.addAll(icfg.getStartPointsOf(m))
 
@@ -169,7 +169,6 @@ object SootJazzerCFGIdMapper {
                 }
             }
         }
-        return visited
     }
 
     /**

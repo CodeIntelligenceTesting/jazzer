@@ -33,5 +33,5 @@ fun computeCallGraph(fuzzTargetClass: String, callGraphBasepath: String) {
 
     SootCallGraphComputer.compute(CallGraphAlgorithm.CHA)
 
-    SootJazzerCFGIdMapper.compute(callGraphBasepath)
+    SootJazzerCFGIdMapper().compute(callGraphBasepath)
 }
