@@ -23,6 +23,17 @@ java_library(
 )
 
 java_library(
+    name = "asm_util",
+    srcs = glob(["asm-util/src/main/**/*.java"]),
+    deps = [
+        ":asm",
+        ":asm_analysis",
+        ":asm_tree",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+java_library(
     name = "asm_analysis",
     srcs = glob(["asm-analysis/src/main/**/*.java"]),
     deps = [

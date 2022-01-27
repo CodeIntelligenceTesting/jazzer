@@ -97,6 +97,12 @@ maven_install(
     artifacts = MAVEN_ARTIFACTS,
     fail_if_repin_required = True,
     maven_install_json = "//:maven_install.json",
+    override_targets = {
+        "org.ow2.asm:asm": "@jazzer_ow2_asm//:asm",
+        "org.ow2.asm:asm-commons": "@jazzer_ow2_asm//:asm_commons",
+        "org.ow2.asm:asm-tree": "@jazzer_ow2_asm//:asm_tree",
+        "org.ow2.asm:asm-util": "@jazzer_ow2_asm//:asm_util",
+    },
     repositories = [
         "https://repo1.maven.org/maven2",
     ],
