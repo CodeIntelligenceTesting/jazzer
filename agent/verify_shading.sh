@@ -23,4 +23,5 @@
     -e '^com/code_intelligence/$' \
     -e '^com/code_intelligence/jazzer/' \
     -e '^jaz/' \
+    -e '^soot/' \
     -e '^META-INF/'
