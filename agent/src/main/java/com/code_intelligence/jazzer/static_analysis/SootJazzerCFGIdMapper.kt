@@ -89,7 +89,7 @@ fun <E> DefaultDirectedGraph<Unit, E>.simplify() {
 
 object SootJazzerCFGIdMapper {
     val outputGraph = DefaultDirectedGraph<Unit, DefaultEdge>(DefaultEdge::class.java)
-    val visited = ArrayList<Unit>()
+    val visited = mutableSetOf<Unit>()
 
     /**
      * Traverses ICFG using Depth First Search and provides a pruned graph.
