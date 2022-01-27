@@ -31,7 +31,7 @@ jobs:
 
       - name: Build
         run: |
-          bazelisk build --config=ci --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }} ${{ matrix.bazel_args }} //agent/src/main/java/com/code_intelligence/jazzer/replay:Replayer_deploy.jar //:jazzer_release
+          bazelisk build ${{ matrix.bazel_args }} //agent/src/main/java/com/code_intelligence/jazzer/replay:Replayer_deploy.jar //:jazzer_release
           cp -L bazel-bin/agent/src/main/java/com/code_intelligence/jazzer/replay/Replayer_deploy.jar replayer.jar
           cp -L bazel-bin/jazzer_release.tar.gz release-${{ matrix.arch }}.tar.gz
 
