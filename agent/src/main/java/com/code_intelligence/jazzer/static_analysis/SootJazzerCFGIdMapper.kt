@@ -87,7 +87,7 @@ fun <E> DefaultDirectedGraph<Unit, E>.simplify() {
         }
 }
 
-class SootJazzerCFGIdMapper {
+object SootJazzerCFGIdMapper {
     val outputGraph = DefaultDirectedGraph<Unit, DefaultEdge>(DefaultEdge::class.java)
     val visited = ArrayList<Unit>()
 
