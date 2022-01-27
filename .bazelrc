@@ -33,12 +33,6 @@ run:windows --noincompatible_strict_action_env
 # Since the toolchain is conditional on OS and architecture, set it on the particular GitHub Action.
 build:toolchain --//third_party:toolchain
 
-# CI tests (not using the toolchain to test OSS-Fuzz & local compatibility)
-build:ci --bes_results_url=https://app.buildbuddy.io/invocation/
-build:ci --bes_backend=grpcs://cloud.buildbuddy.io
-build:ci --remote_cache=grpcs://cloud.buildbuddy.io
-build:ci --remote_timeout=3600
-
 # Maven publishing (local only, requires GPG signature)
 build:maven --config=toolchain
 build:maven --stamp
