@@ -52,6 +52,7 @@ public class CoverageInstrumentationBenchmark {
 
   MethodHandle uninstrumented_sanitize;
   MethodHandle local_DirectByteBuffer_NeverZero_sanitize;
+  MethodHandle staticMethod_DirectByteBuffer_NeverZero_sanitize;
 
   public static MethodHandle handleForTargetMethod(ClassLoader classLoader)
       throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException {
@@ -78,6 +79,8 @@ public class CoverageInstrumentationBenchmark {
     uninstrumented_sanitize = instrumentWithStrategy(null, null);
     local_DirectByteBuffer_NeverZero_sanitize = instrumentWithStrategy(
         DirectByteBufferStrategy.INSTANCE, DirectByteBufferCoverageMap.class);
+    staticMethod_DirectByteBuffer_NeverZero_sanitize =
+        instrumentWithStrategy(new StaticMethodStrategy(), DirectByteBufferCoverageMap.class);
   }
 
   @Benchmark
@@ -88,6 +91,11 @@ public class CoverageInstrumentationBenchmark {
   @Benchmark
   public String local_DirectByteBuffer_NeverZero() throws Throwable {
     return (String) local_DirectByteBuffer_NeverZero_sanitize.invokeExact(TARGET_ARG);
+  }
+
+  @Benchmark
+  public String staticMethod_DirectByteBuffer_NeverZero() throws Throwable {
+    return (String) staticMethod_DirectByteBuffer_NeverZero_sanitize.invokeExact(TARGET_ARG);
   }
 }
 
