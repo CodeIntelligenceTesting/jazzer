@@ -24,4 +24,13 @@ public final class DirectByteBufferCoverageMap {
   public static void enlargeIfNeeded(int nextId) {
     // Statically sized counters buffer.
   }
+
+  public static void recordCoverage(final int id) {
+    final byte counter = counters.get(id);
+    if (counter == -1) {
+      counters.put(id, (byte) 1);
+    } else {
+      counters.put(id, (byte) (counter + 1));
+    }
+  }
 }
