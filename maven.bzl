@@ -21,6 +21,8 @@ JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_API_VERS
 #              Jazzer finds these issues. DO NOT USE.
 MAVEN_ARTIFACTS = [
     "junit:junit:4.12",
+    "org.openjdk.jmh:jmh-core:1.34",
+    "org.openjdk.jmh:jmh-generator-annprocess:1.34",
     "org.apache.commons:commons-imaging:1.0-alpha2",
     "com.mikesamuel:json-sanitizer:1.2.1",
     "com.google.code.gson:gson:2.8.6",
