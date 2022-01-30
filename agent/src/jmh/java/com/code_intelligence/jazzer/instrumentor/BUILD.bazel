@@ -1,9 +1,37 @@
 java_binary(
     name = "CoverageInstrumentationBenchmark",
-    srcs = [
-        "CoverageInstrumentationBenchmark.java",
+    main_class = "org.openjdk.jmh.Main",
+    runtime_deps = [
+        ":coverage_instrumentation_benchmark",
+    ],
+)
+
+java_test(
+    name = "CoverageInstrumentationBenchmarkTest",
+    args = [
+        # Fail fast on any exceptions produced by benchmarks.
+        "-foe true",
+        "-wf 1",
+        "-f 1",
+        "-wi 1",
+        "-i 1",
+        "-r 1s",
+        "-w 1s",
+    ],
+    jvm_flags = [
+        "-XX:CompileCommand=print,*CoverageMap.recordCoverage",
     ],
     main_class = "org.openjdk.jmh.Main",
+    # Directly invoke JMH's main without using a testrunner.
+    use_testrunner = False,
+    runtime_deps = [
+        ":coverage_instrumentation_benchmark",
+    ],
+)
+
+java_library(
+    name = "coverage_instrumentation_benchmark",
+    srcs = ["CoverageInstrumentationBenchmark.java"],
     plugins = [":JmhGeneratorAnnotationProcessor"],
     runtime_deps = [
         "@maven//:com_mikesamuel_json_sanitizer",
