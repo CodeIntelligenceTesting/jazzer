@@ -53,7 +53,11 @@ public class CoverageInstrumentationBenchmark {
   MethodHandle uninstrumented_sanitize;
   MethodHandle local_DirectByteBuffer_NeverZero_sanitize;
   MethodHandle staticMethod_DirectByteBuffer_NeverZero_sanitize;
+  MethodHandle staticMethod_DirectByteBuffer2_NeverZero_sanitize;
   MethodHandle staticMethod_Unsafe_NeverZero_sanitize;
+  MethodHandle staticMethod_Unsafe_NeverZero2_sanitize;
+  MethodHandle staticMethod_Unsafe_NeverZeroBranchfree_sanitize;
+  MethodHandle staticMethod_Unsafe_SimpleIncrement_sanitize;
 
   public static MethodHandle handleForTargetMethod(ClassLoader classLoader)
       throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException {
@@ -82,8 +86,16 @@ public class CoverageInstrumentationBenchmark {
         DirectByteBufferStrategy.INSTANCE, DirectByteBufferCoverageMap.class);
     staticMethod_DirectByteBuffer_NeverZero_sanitize =
         instrumentWithStrategy(new StaticMethodStrategy(), DirectByteBufferCoverageMap.class);
+    staticMethod_DirectByteBuffer2_NeverZero_sanitize =
+        instrumentWithStrategy(new StaticMethodStrategy(), DirectByteBuffer2CoverageMap.class);
     staticMethod_Unsafe_NeverZero_sanitize =
         instrumentWithStrategy(new StaticMethodStrategy(), UnsafeCoverageMap.class);
+    staticMethod_Unsafe_NeverZero2_sanitize =
+        instrumentWithStrategy(new StaticMethodStrategy(), Unsafe2CoverageMap.class);
+    staticMethod_Unsafe_SimpleIncrement_sanitize =
+        instrumentWithStrategy(new StaticMethodStrategy(), UnsafeSimpleIncrementCoverageMap.class);
+    staticMethod_Unsafe_NeverZeroBranchfree_sanitize =
+        instrumentWithStrategy(new StaticMethodStrategy(), UnsafeBranchfreeCoverageMap.class);
   }
 
   @Benchmark
@@ -102,8 +114,28 @@ public class CoverageInstrumentationBenchmark {
   }
 
   @Benchmark
+  public String staticMethod_DirectByteBuffer2_NeverZero() throws Throwable {
+    return (String) staticMethod_DirectByteBuffer2_NeverZero_sanitize.invokeExact(TARGET_ARG);
+  }
+
+  @Benchmark
   public String staticMethod_Unsafe_NeverZero() throws Throwable {
     return (String) staticMethod_Unsafe_NeverZero_sanitize.invokeExact(TARGET_ARG);
+  }
+
+  @Benchmark
+  public String staticMethod_Unsafe_NeverZero2() throws Throwable {
+    return (String) staticMethod_Unsafe_NeverZero2_sanitize.invokeExact(TARGET_ARG);
+  }
+
+  @Benchmark
+  public String staticMethod_Unsafe_SimpleIncrement() throws Throwable {
+    return (String) staticMethod_Unsafe_SimpleIncrement_sanitize.invokeExact(TARGET_ARG);
+  }
+
+  @Benchmark
+  public String staticMethod_Unsafe_NeverZeroBranchfree() throws Throwable {
+    return (String) staticMethod_Unsafe_NeverZeroBranchfree_sanitize.invokeExact(TARGET_ARG);
   }
 }
 
