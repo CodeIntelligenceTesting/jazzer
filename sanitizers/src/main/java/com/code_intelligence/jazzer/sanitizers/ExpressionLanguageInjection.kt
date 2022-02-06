@@ -52,10 +52,8 @@ object ExpressionLanguageInjection {
         arguments: Array<Any>,
         hookId: Int
     ) {
-        if (arguments[1] is String) {
-            val expression = arguments[1] as String
-            Jazzer.guideTowardsContainment(expression, EXPRESSION_LANGUAGE_ATTACK, hookId)
-        }
+        val expression = arguments[1] as? String ?: return
+        Jazzer.guideTowardsContainment(expression, EXPRESSION_LANGUAGE_ATTACK, hookId)
     }
 
     // With default configurations the argument to
