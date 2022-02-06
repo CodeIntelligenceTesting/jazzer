@@ -29,7 +29,7 @@ import java.util.WeakHashMap
 /**
  * Detects unsafe deserialization that leads to attacker-controlled method calls, in particular to [Object.finalize].
  */
-@Suppress("unused_parameter")
+@Suppress("unused_parameter", "unused")
 object Deserialization {
 
     private val OBJECT_INPUT_STREAM_HEADER =
