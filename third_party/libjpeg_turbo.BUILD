@@ -23,13 +23,16 @@ cc_import(
 cmake(
     name = "libjpeg_turbo",
     cache_entries = {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_C_FLAGS": "-fsanitize=address,fuzzer-no-link",
-        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,fuzzer-no-link",
         "WITH_JAVA": "1",
     },
+    copts = [
+        "-fsanitize=address,fuzzer-no-link",
+        "-fPIC",
+    ],
     lib_source = ":all_files",
+    linkopts = [
+        "-fsanitize=address,fuzzer-no-link",
+    ],
     out_shared_libs = [
         "libjpeg.so",
         "libturbojpeg.so",

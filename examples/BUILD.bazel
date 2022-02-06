@@ -325,6 +325,7 @@ java_fuzz_target_test(
     ],
     fuzzer_args = [
         "-rss_limit_mb=8196",
+        "--jvm_args=-Djava.library.path=../libjpeg_turbo",
     ],
     sanitizer = "address",
     tags = ["manual"],
