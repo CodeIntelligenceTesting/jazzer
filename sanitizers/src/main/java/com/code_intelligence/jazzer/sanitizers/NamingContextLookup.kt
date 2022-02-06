@@ -22,6 +22,7 @@ import com.code_intelligence.jazzer.api.MethodHooks
 import java.lang.invoke.MethodHandle
 import javax.naming.CommunicationException
 
+@Suppress("unused")
 object NamingContextLookup {
 
     // The particular URL g.co is used here since it is:

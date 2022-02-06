@@ -22,7 +22,7 @@ import java.lang.invoke.MethodHandle
 /**
  * Detects unsafe reflective calls that lead to attacker-controlled method calls.
  */
-@Suppress("unused_parameter")
+@Suppress("unused_parameter", "unused")
 object ReflectiveCall {
 
     @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Class", targetMethod = "forName")

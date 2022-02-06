@@ -24,7 +24,7 @@ import java.lang.invoke.MethodHandle
 /**
  * Detects injectable inputs to an expression language interpreter which may lead to remote code execution.
  */
-@Suppress("unused_parameter")
+@Suppress("unused_parameter", "unused")
 object ExpressionLanguageInjection {
 
     /**
