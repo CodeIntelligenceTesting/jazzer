@@ -19,6 +19,11 @@ java_library(
     srcs = ["SignalHandler.java"],
 )
 
+java_library(
+    name = "unsafe_provider",
+    srcs = ["UnsafeProvider.java"],
+)
+
 kt_jvm_library(
     name = "runtime",
     srcs = [
