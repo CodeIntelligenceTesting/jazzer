@@ -15,6 +15,9 @@
 package com.code_intelligence.jazzer.runtime;
 
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents the Java view on a libFuzzer 8 bit counter coverage map.
@@ -30,6 +33,22 @@ final public class CoverageMap {
     if (nextId >= counters.capacity()) {
       registerNewCoverageCounters();
       System.out.println("INFO: New number of inline 8-bit counters: " + counters.capacity());
+    }
+  }
+
+  public static Set<Integer> getCoveredIds() {
+    Set<Integer> coveredIds = new HashSet<>();
+    for (int id = 0; id < counters.capacity(); id++) {
+      if (counters.get(id) > 0) {
+        coveredIds.add(id);
+      }
+    }
+    return Collections.unmodifiableSet(coveredIds);
+  }
+
+  public static void replayCoveredIds(Set<Integer> coveredIds) {
+    for (int id : coveredIds) {
+      counters.put(id, (byte) 1);
     }
   }
 

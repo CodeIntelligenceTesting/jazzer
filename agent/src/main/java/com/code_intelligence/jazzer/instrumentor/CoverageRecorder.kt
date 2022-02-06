@@ -52,22 +52,17 @@ object CoverageRecorder {
     }
 
     /**
-     * Manually records coverage IDs based on the current state of [CoverageMap.counters].
+     * Manually records coverage IDs based on the current state of [CoverageMap].
      * Should be called after static initializers have run.
      */
     @JvmStatic
     fun updateCoveredIdsWithCoverageMap() {
-        val counters = CoverageMap.counters
-        val size = counters.capacity()
-        additionalCoverage.addAll((0 until size).filter { counters[it] > 0 })
+        additionalCoverage.addAll(CoverageMap.getCoveredIds())
     }
 
     @JvmStatic
     fun replayCoveredIds() {
-        val counters = CoverageMap.counters
-        for (coverageId in additionalCoverage) {
-            counters.put(coverageId, 1)
-        }
+        CoverageMap.replayCoveredIds(additionalCoverage)
     }
 
     @JvmStatic
