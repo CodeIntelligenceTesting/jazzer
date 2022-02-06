@@ -279,7 +279,7 @@ FuzzTargetRunner::~FuzzTargetRunner() {
 RunResult FuzzTargetRunner::Run(const uint8_t *data, const std::size_t size) {
   auto &env = jvm_.GetEnv();
   static std::size_t run_count = 0;
-  if (run_count < 2) {
+  if (run_count < 2 && FLAGS_hooks) {
     run_count++;
     // For the first two runs only, replay the coverage recorded from static
     // initializers. libFuzzer cleared the coverage map after they ran and could

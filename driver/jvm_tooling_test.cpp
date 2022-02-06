@@ -175,8 +175,6 @@ TEST_F(JvmToolingTest, FuzzTargetWithInit) {
 }
 
 TEST_F(JvmToolingTest, TestCoverageMap) {
-  CoverageTracker::Clear();
-  // check that after the initial clear the first coverage counter is 0
   auto coverage_counters_array = CoverageTracker::GetCoverageCounters();
   ASSERT_EQ(0, coverage_counters_array[0]);
 
@@ -187,13 +185,10 @@ TEST_F(JvmToolingTest, TestCoverageMap) {
   // increase
   fuzz_target_runner.Run(nullptr, 0);
   ASSERT_EQ(1, coverage_counters_array[0]);
-  CoverageTracker::Clear();
-  // back to initial state
-  ASSERT_EQ(0, coverage_counters_array[0]);
 
-  // calling the fuzz target twice
+  // calling the fuzz target twice more
   fuzz_target_runner.Run(nullptr, 0);
   fuzz_target_runner.Run(nullptr, 0);
-  ASSERT_EQ(2, coverage_counters_array[0]);
+  ASSERT_EQ(3, coverage_counters_array[0]);
 }
 }  // namespace jazzer

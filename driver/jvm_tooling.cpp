@@ -111,7 +111,6 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad_jazzer_initialize(JavaVM *vm,
     exit(1);
   }
   jazzer::registerFuzzerCallbacks(*env);
-  jazzer::CoverageTracker::Setup(*env);
   jazzer::SignalHandler::Setup(*env);
   return JNI_VERSION_1_8;
 }

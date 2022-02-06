@@ -19,8 +19,7 @@
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
-
-#include "absl/strings/str_format.h"
+#include <vector>
 
 extern "C" void __sanitizer_cov_8bit_counters_init(uint8_t *start,
                                                    uint8_t *end);
@@ -28,21 +27,8 @@ extern "C" void __sanitizer_cov_pcs_init(const uintptr_t *pcs_beg,
                                          const uintptr_t *pcs_end);
 extern "C" size_t __sanitizer_cov_get_observed_pcs(uintptr_t **pc_entries);
 
-constexpr auto kCoverageMapClass =
-    "com/code_intelligence/jazzer/runtime/CoverageMap";
-constexpr auto kByteBufferClass = "java/nio/ByteBuffer";
 constexpr auto kCoverageRecorderClass =
     "com/code_intelligence/jazzer/instrumentor/CoverageRecorder";
-
-// The initial size of the Java coverage map (512 counters).
-constexpr std::size_t kInitialCoverageCountersBufferSize = 1u << 9u;
-// The maximum size of the Java coverage map (1,048,576 counters).
-// Since the memory for the coverage map needs to be allocated contiguously,
-// increasing the maximum size incurs additional memory (but not runtime)
-// overhead for all fuzz targets.
-constexpr std::size_t kMaxCoverageCountersBufferSize = 1u << 20u;
-static_assert(kMaxCoverageCountersBufferSize <=
-              std::numeric_limits<jint>::max());
 
 namespace {
 void AssertNoException(JNIEnv &env) {
@@ -60,18 +46,33 @@ uint8_t *CoverageTracker::counters_ = nullptr;
 uint32_t *CoverageTracker::fake_instructions_ = nullptr;
 PCTableEntry *CoverageTracker::pc_entries_ = nullptr;
 
-void CoverageTracker::Setup(JNIEnv &env) {
+void CoverageTracker::Initialize(JNIEnv &env, jobject buffer) {
   if (counters_ != nullptr) {
     throw std::runtime_error(
-        "CoverageTracker::Setup must not be called more than once");
+        "CoverageTracker::Initialize must not be called more than once");
   }
-  JNINativeMethod coverage_tracker_native_methods[]{
-      {(char *)"registerNewCoverageCounters", (char *)"()V",
-       (void *)&RegisterNewCoverageCounters},
-  };
-  jclass coverage_map = env.FindClass(kCoverageMapClass);
-  env.RegisterNatives(coverage_map, coverage_tracker_native_methods, 1);
+  void *counters = env.GetDirectBufferAddress(buffer);
+  AssertNoException(env);
+  if (counters == nullptr) {
+    throw std::runtime_error("Failed to obtain address of counters buffer");
+  }
+  counters_ = static_cast<uint8_t *>(counters);
+}
 
+void CoverageTracker::RegisterNewCounters(JNIEnv &env, jint old_num_counters,
+                                          jint new_num_counters) {
+  if (counters_ == nullptr) {
+    throw std::runtime_error(
+        "CoverageTracker::Initialize should have been called first");
+  }
+  if (new_num_counters < old_num_counters) {
+    throw std::runtime_error(
+        "new_num_counters must not be smaller than old_num_counters");
+  }
+  if (new_num_counters == old_num_counters) {
+    return;
+  }
+  std::size_t diff_num_counters = new_num_counters - old_num_counters;
   // libFuzzer requires an array containing the instruction addresses associated
   // with the coverage counters registered above. Given that we are
   // instrumenting Java code, we need to synthesize addresses that are known not
@@ -80,75 +81,20 @@ void CoverageTracker::Setup(JNIEnv &env) {
   // allocated buffer. Note: We intentionally never deallocate the allocations
   // made here as they have static lifetime and we can't guarantee they wouldn't
   // be freed before libFuzzer stops using them.
-  constexpr std::size_t counters_size = kMaxCoverageCountersBufferSize;
-  counters_ = new uint8_t[counters_size];
-  Clear();
+  fake_instructions_ = new uint32_t[diff_num_counters];
+  std::fill(fake_instructions_, fake_instructions_ + diff_num_counters, 0);
 
   // Never deallocated, see above.
-  fake_instructions_ = new uint32_t[counters_size];
-  std::fill(fake_instructions_, fake_instructions_ + counters_size, 0);
-
-  // Never deallocated, see above.
-  pc_entries_ = new PCTableEntry[counters_size];
-  for (std::size_t i = 0; i < counters_size; ++i) {
+  pc_entries_ = new PCTableEntry[diff_num_counters];
+  for (std::size_t i = 0; i < diff_num_counters; ++i) {
     pc_entries_[i].PC = reinterpret_cast<uintptr_t>(fake_instructions_ + i);
     // TODO: Label Java PCs corresponding to functions as such.
     pc_entries_[i].PCFlags = 0;
   }
-
-  // Register the first batch of coverage counters.
-  RegisterNewCoverageCounters(env, nullptr);
-}
-
-void JNICALL CoverageTracker::RegisterNewCoverageCounters(JNIEnv &env,
-                                                          jclass cls) {
-  jclass coverage_map = env.FindClass(kCoverageMapClass);
-  AssertNoException(env);
-  jfieldID counters_buffer_id =
-      env.GetStaticFieldID(coverage_map, "counters",
-                           absl::StrFormat("L%s;", kByteBufferClass).c_str());
-  AssertNoException(env);
-  jobject counters_buffer =
-      env.GetStaticObjectField(coverage_map, counters_buffer_id);
-  AssertNoException(env);
-
-  jclass byte_buffer = env.FindClass(kByteBufferClass);
-  AssertNoException(env);
-  jmethodID byte_buffer_capacity_id =
-      env.GetMethodID(byte_buffer, "capacity", "()I");
-  AssertNoException(env);
-  jint old_counters_buffer_size =
-      env.CallIntMethod(counters_buffer, byte_buffer_capacity_id);
-  AssertNoException(env);
-
-  jint new_counters_buffer_size;
-  if (old_counters_buffer_size == 0) {
-    new_counters_buffer_size = kInitialCoverageCountersBufferSize;
-  } else {
-    new_counters_buffer_size = 2 * old_counters_buffer_size;
-    if (new_counters_buffer_size > kMaxCoverageCountersBufferSize) {
-      throw std::runtime_error(
-          "Maximal size of the coverage counters buffer exceeded");
-    }
-  }
-
-  jobject new_counters_buffer = env.NewDirectByteBuffer(
-      static_cast<void *>(counters_), new_counters_buffer_size);
-  AssertNoException(env);
-  env.SetStaticObjectField(coverage_map, counters_buffer_id,
-                           new_counters_buffer);
-  AssertNoException(env);
-
-  // Register only the new second half of the counters buffer with libFuzzer.
-  __sanitizer_cov_8bit_counters_init(counters_ + old_counters_buffer_size,
-                                     counters_ + new_counters_buffer_size);
-  __sanitizer_cov_pcs_init(
-      (uintptr_t *)(pc_entries_ + old_counters_buffer_size),
-      (uintptr_t *)(pc_entries_ + new_counters_buffer_size));
-}
-
-void CoverageTracker::Clear() {
-  std::fill(counters_, counters_ + kMaxCoverageCountersBufferSize, 0);
+  __sanitizer_cov_8bit_counters_init(counters_ + old_num_counters,
+                                     counters_ + new_num_counters);
+  __sanitizer_cov_pcs_init((uintptr_t *)(pc_entries_),
+                           (uintptr_t *)(pc_entries_ + diff_num_counters));
 }
 
 uint8_t *CoverageTracker::GetCoverageCounters() { return counters_; }
@@ -214,3 +160,18 @@ std::string CoverageTracker::ComputeCoverage(JNIEnv &env) {
   return file_coverage;
 }
 }  // namespace jazzer
+
+extern "C" {
+JNIEXPORT void JNICALL
+Java_com_code_1intelligence_jazzer_runtime_CoverageMap_initialize(
+    JNIEnv &env, jclass cls, jobject buffer) {
+  ::jazzer::CoverageTracker::Initialize(env, buffer);
+}
+
+JNIEXPORT void JNICALL
+Java_com_code_1intelligence_jazzer_runtime_CoverageMap_registerNewCounters(
+    JNIEnv &env, jclass cls, jint old_num_counters, jint new_num_counters) {
+  ::jazzer::CoverageTracker::RegisterNewCounters(env, old_num_counters,
+                                                 new_num_counters);
+}
+}
