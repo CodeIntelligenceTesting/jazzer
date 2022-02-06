@@ -20,19 +20,61 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Represents the Java view on a libFuzzer 8 bit counter coverage map.
- * By using a direct ByteBuffer, the counter array is shared directly with
- * native code.
+ * Represents the Java view on a libFuzzer 8 bit counter coverage map. By using a direct ByteBuffer,
+ * the counters are shared directly with native code.
  */
 final public class CoverageMap {
-  public static ByteBuffer counters = ByteBuffer.allocateDirect(0);
+  private static final String ENV_MAX_NUM_COUNTERS = "JAZZER_MAX_NUM_COUNTERS";
+
+  private static final int MAX_NUM_COUNTERS = System.getenv(ENV_MAX_NUM_COUNTERS) != null
+      ? Integer.parseInt(System.getenv(ENV_MAX_NUM_COUNTERS))
+      : 1 << 20;
+
+  /**
+   * The collection of coverage counters directly interacted with by classes that are instrumented
+   * for coverage. The instrumentation assumes that this is always one contiguous block of memory,
+   * so it is allocated once at maximum size. Using a larger number here increases the memory usage
+   * of all fuzz targets, but has otherwise no impact on performance.
+   */
+  public static final ByteBuffer counters = ByteBuffer.allocateDirect(MAX_NUM_COUNTERS);
+
+  static {
+    initialize(counters);
+  }
+
+  private static final int INITIAL_NUM_COUNTERS = 1 << 9;
+
+  static {
+    registerNewCounters(0, INITIAL_NUM_COUNTERS);
+  }
+
+  /**
+   * The number of coverage counters that are currently registered with libFuzzer. This number grows
+   * dynamically as classes are instrumented and should be kept as low as possible as libFuzzer has
+   * to iterate over the whole map for every execution.
+   */
+  private static int currentNumCounters = INITIAL_NUM_COUNTERS;
 
   // Called via reflection.
   @SuppressWarnings("unused")
   public static void enlargeIfNeeded(int nextId) {
-    if (nextId >= counters.capacity()) {
-      registerNewCoverageCounters();
-      System.out.println("INFO: New number of inline 8-bit counters: " + counters.capacity());
+    int newNumCounters = currentNumCounters;
+    while (nextId >= newNumCounters) {
+      newNumCounters = 2 * currentNumCounters;
+      if (newNumCounters > MAX_NUM_COUNTERS) {
+        System.out.printf("ERROR: Maximum number (%s) of coverage counters exceeded. Try to%n"
+                + "       limit the scope of a single fuzz target as much as possible to keep the%n"
+                + "       fuzzer fast.%n"
+                + "       If that is not possible, the maximum number of counters can be increased%n"
+                + "       via the JAZZER_MAX_NUM_COUNTERS environment variable.",
+            MAX_NUM_COUNTERS);
+        System.exit(1);
+      }
+    }
+    if (newNumCounters > currentNumCounters) {
+      registerNewCounters(currentNumCounters, newNumCounters);
+      currentNumCounters = newNumCounters;
+      System.out.println("INFO: New number of coverage counters: " + currentNumCounters);
     }
   }
 
@@ -52,5 +94,7 @@ final public class CoverageMap {
     }
   }
 
-  private static native void registerNewCoverageCounters();
+  private static native void initialize(ByteBuffer counters);
+
+  private static native void registerNewCounters(int oldNumCounters, int newNumCounters);
 }

@@ -39,14 +39,10 @@ class CoverageTracker : public ExceptionPrinter {
   static uint32_t *fake_instructions_;
   static PCTableEntry *pc_entries_;
 
-  static void JNICALL RegisterNewCoverageCounters(JNIEnv &env, jclass cls);
-
  public:
-  static void Setup(JNIEnv &env);
-  // Clears the coverage counters array manually. It is cleared automatically
-  // by libFuzzer prior to running the fuzz target, so this function is only
-  // used in tests.
-  static void Clear();
+  static void Initialize(JNIEnv &env, jobject buffer);
+  static void RegisterNewCounters(JNIEnv &env, jint old_num_counters,
+                                  jint new_num_counters);
 
   // Returns the address of the coverage counters array.
   static uint8_t *GetCoverageCounters();
