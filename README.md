@@ -23,12 +23,7 @@ Jazzer currently supports the following platforms:
 
 If you want to learn more about Jazzer and OSS-Fuzz, [watch the FuzzCon 2020 talk](https://www.youtube.com/watch?v=SmH3Ys_k8vA&list=PLI0R_0_8-TV55gJU-UXrOzZoPbVOj1CW6&index=3) by [Abhishek Arya](https://twitter.com/infernosec) and [Fabian Meumertzheim](https://twitter.com/fhenneke).
 
-## Installation
-
-The preferred way to install Jazzer is to compile it from source using [Bazel](https://bazel.build), but binary distributions for x64 Linux as well as a Docker image are also available.
-Note that these binaries might be outdated as Jazzer follows the "Live at Head" philosophy - you should be able to just checkout the latest commit from `main` and build it.
-
-Support for Jazzer has recently been added to [rules_fuzzing](https://github.com/bazelbuild/rules_fuzzing), the official Bazel rules for fuzzing. See their README for instructions on how to use Jazzer in a Java Bazel project.
+## Getting Jazzer
 
 ### Using Docker
 
@@ -40,29 +35,35 @@ docker run -v path/containing/the/application:/fuzzing cifuzz/jazzer <arguments>
 
 If Jazzer produces a finding, the input that triggered it will be available in the same directory.
 
-### Using Bazel
+### Compiling with Bazel
+
+#### Dependencies
 
 Jazzer has the following dependencies when being built from source:
 
+* Bazel 4 or later
 * JDK 8 or later (e.g. [OpenJDK](https://openjdk.java.net/))
 * [Clang](https://clang.llvm.org/) and [LLD](https://lld.llvm.org/) 9.0 or later (using a recent version is strongly recommended)
 
-#### Linux
+It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) to automatically download and install Bazel.
+Simply download the release binary for your OS and architecture and ensure that it is available in the `PATH`.
+The instructions below will assume that this binary is called `bazel` - Bazelisk is a thin wrapper around the actual Bazel binary and can be used interchangeably.
 
-Jazzer uses [Bazelisk](https://github.com/bazelbuild/bazelisk) to automatically download and install Bazel on Linux.
-Building Jazzer from source and running it thus only requires the following assuming the dependencies are installed:
+#### Compilation
+
+Assuming the dependencies are installed, build Jazzer from source as follows:
 
 ```bash
-git clone https://github.com/CodeIntelligenceTesting/jazzer
-cd jazzer
+$ git clone https://github.com/CodeIntelligenceTesting/jazzer
+$ cd jazzer
 # Note the double dash used to pass <arguments> to Jazzer rather than Bazel.
-./bazelisk-linux-amd64 run //:jazzer -- <arguments>
+$ bazel run //:jazzer -- <arguments>
 ```
 
 If you prefer to build binaries that can be run without Bazel, use the following command to build your own archive with release binaries:
 
 ```bash
-$ ./bazelisk-linux-amd64 build //:jazzer_release
+$ bazel build //:jazzer_release
 ...
 INFO: Found 1 target...
 Target //:jazzer_release up-to-date:
@@ -72,45 +73,27 @@ Target //:jazzer_release up-to-date:
 
 This will print the path of a `jazzer_release.tar.gz` archive that contains the same binaries that would be part of a release.
 
-#### macOS
-
-Since Jazzer does not ship the macOS version of [Bazelisk](https://github.com/bazelbuild/bazelisk), a tool that automatically downloads and installs the correct version of Bazel, download [the most recent release](https://github.com/bazelbuild/bazelisk/releases) of `bazelisk-darwin`.
-Afterwards, clone Jazzer and run it via:
-
-```bash
-git clone https://github.com/CodeIntelligenceTesting/jazzer
-cd jazzer
-# Note the double dash used to pass <arguments> to Jazzer rather than Bazel.
-/path/to/bazelisk-darwin run //:jazzer -- <arguments>
-```
-
-If you prefer to build binaries that can be run without Bazel, use the following command to build your own archive with release binaries:
-
-```bash
-$ /path/to/bazelisk-darwin build //:jazzer_release
-...
-INFO: Found 1 target...
-Target //:jazzer_release up-to-date:
-  bazel-bin/jazzer_release.tar.gz
-...
-```
-
-This will print the path of a `jazzer_release.tar.gz` archive that contains the same binaries that would be part of a release.
+##### macOS
 
 The build may fail with the clang shipped with Xcode. If you encounter issues during the build, add `--config=toolchain`
 right after `run` or `build` in the `bazelisk` commands above to use a checked-in toolchain that is known to work.
+Alternatively, manually install LLVM and set `CC` to the path of LLVM clang.
+
+#### rules_fuzzing
+
+Support for Jazzer has recently been added to [rules_fuzzing](https://github.com/bazelbuild/rules_fuzzing), the official Bazel rules for fuzzing.
+See their README for instructions on how to use Jazzer in a Java Bazel project.
 
 ### Using the provided binaries
 
-Binary releases are available under [Releases](https://github.com/CodeIntelligenceTesting/jazzer/releases) and are built
-using an [LLVM 11 Bazel toolchain](https://github.com/CodeIntelligenceTesting/llvm-toolchain).
+Binary releases are available under [Releases](https://github.com/CodeIntelligenceTesting/jazzer/releases),
+but do not always include the latest changes.
 
 The binary distributions of Jazzer consist of the following components:
 
-- `jazzer_driver` - native binary that interfaces between libFuzzer and the JVM fuzz target
-- `jazzer_agent_deploy.jar` - Java agent that performs bytecode instrumentation and tracks coverage
+- `jazzer` - main binary
+- `jazzer_agent_deploy.jar` - Java agent that performs bytecode instrumentation and tracks coverage (automatically loaded by `jazzer`)
 - `jazzer_api_deploy.jar` - contains convenience methods for creating fuzz targets and defining custom hooks
-- `jazzer` - convenience shell script that runs the Jazzer driver with the local JRE shared libraries added to `LD_LIBRARY_PATH`
 
 The additional release artifact `examples_deploy.jar` contains most of the examples and can be used to run them without having to build them (see Examples below).
 
@@ -129,8 +112,8 @@ Multiple examples for instructive and real-world Jazzer fuzz targets can be foun
 A toy example can be run as follows:
 
 ```bash
-# Using Bazelisk:
-./bazelisk-linux-amd64 run //examples:ExampleFuzzer
+# Using Bazel:
+bazel run //examples:ExampleFuzzer
 # Using the binary release and examples_deploy.jar:
 ./jazzer --cp=examples_deploy.jar
 ```
@@ -514,7 +497,7 @@ pre-loading the mutator library:
 
 ```bash
 # Using Bazel:
-LD_PRELOAD=libcustom_mutator.so ./bazelisk-linux-amd64 run //:jazzer -- <arguments>
+LD_PRELOAD=libcustom_mutator.so bazel run //:jazzer -- <arguments>
 # Using the binary release:
 LD_PRELOAD=libcustom_mutator.so ./jazzer <arguments>
 ```
