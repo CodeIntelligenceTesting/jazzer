@@ -14,7 +14,7 @@
 
 """Contains the external dependencies required to build Jazzer (but not the examples)."""
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_jar")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 def jazzer_dependencies():
@@ -97,12 +97,24 @@ def jazzer_dependencies():
     )
 
     maybe(
-        http_archive,
-        build_file = Label("//third_party:asm.BUILD"),
-        name = "jazzer_ow2_asm",
-        sha256 = "7b596cc584b241619911e99c5c96366fccd533b1a50b8720c151c2f74b5915e3",
-        strip_prefix = "asm-ASM_9_2",
-        url = "https://gitlab.ow2.org/asm/asm/-/archive/ASM_9_2/asm-ASM_9_2.tar.gz",
+        http_jar,
+        name = "org_ow2_asm_asm",
+        sha256 = "b9d4fe4d71938df38839f0eca42aaaa64cf8b313d678da036f0cb3ca199b47f5",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm/9.2/asm-9.2.jar",
+    )
+
+    maybe(
+        http_jar,
+        name = "org_ow2_asm_asm_commons",
+        sha256 = "be4ce53138a238bb522cd781cf91f3ba5ce2f6ca93ec62d46a162a127225e0a6",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-commons/9.2/asm-commons-9.2.jar",
+    )
+
+    maybe(
+        http_jar,
+        name = "org_ow2_asm_asm_tree",
+        sha256 = "aabf9bd23091a4ebfc109c1f3ee7cf3e4b89f6ba2d3f51c5243f16b3cffae011",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-tree/9.2/asm-tree-9.2.jar",
     )
 
     maybe(
