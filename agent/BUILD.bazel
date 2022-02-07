@@ -15,11 +15,22 @@ java_binary(
     ],
 )
 
-jar_jar(
+genrule(
     name = "jazzer_agent_deploy",
+    srcs = [":jazzer_agent_shaded_deploy"],
+    outs = ["jazzer_agent_deploy.jar"],
+    cmd = """
+$(execpath //bazel/tools/java:JarStripper) $(execpath :jazzer_agent_shaded_deploy) $@ \
+module-info.class
+""",
+    exec_tools = ["//bazel/tools/java:JarStripper"],
+    visibility = ["//visibility:public"],
+)
+
+jar_jar(
+    name = "jazzer_agent_shaded_deploy",
     input_jar = "jazzer_agent_unshaded_deploy.jar",
     rules = "agent_shade_rules",
-    visibility = ["//visibility:public"],
 )
 
 sh_test(

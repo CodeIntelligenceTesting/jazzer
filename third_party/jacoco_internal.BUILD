@@ -10,9 +10,9 @@ java_library(
         "-Xep:EqualsHashCode:OFF",
     ],
     deps = [
-        "@jazzer_ow2_asm//:asm",
-        "@jazzer_ow2_asm//:asm_commons",
-        "@jazzer_ow2_asm//:asm_tree",
+        "@org_ow2_asm_asm//jar",
+        "@org_ow2_asm_asm_commons//jar",
+        "@org_ow2_asm_asm_tree//jar",
     ],
     visibility = ["//visibility:public"],
 )
