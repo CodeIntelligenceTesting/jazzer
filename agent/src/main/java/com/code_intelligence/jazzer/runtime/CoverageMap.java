@@ -66,8 +66,8 @@ final public class CoverageMap {
                 + "       limit the scope of a single fuzz target as much as possible to keep the%n"
                 + "       fuzzer fast.%n"
                 + "       If that is not possible, the maximum number of counters can be increased%n"
-                + "       via the JAZZER_MAX_NUM_COUNTERS environment variable.",
-            MAX_NUM_COUNTERS);
+                + "       via the %s environment variable.",
+            MAX_NUM_COUNTERS, ENV_MAX_NUM_COUNTERS);
         System.exit(1);
       }
     }
