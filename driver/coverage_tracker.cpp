@@ -46,17 +46,12 @@ uint8_t *CoverageTracker::counters_ = nullptr;
 uint32_t *CoverageTracker::fake_instructions_ = nullptr;
 PCTableEntry *CoverageTracker::pc_entries_ = nullptr;
 
-void CoverageTracker::Initialize(JNIEnv &env, jobject buffer) {
+void CoverageTracker::Initialize(JNIEnv &env, jlong counters) {
   if (counters_ != nullptr) {
     throw std::runtime_error(
         "CoverageTracker::Initialize must not be called more than once");
   }
-  void *counters = env.GetDirectBufferAddress(buffer);
-  AssertNoException(env);
-  if (counters == nullptr) {
-    throw std::runtime_error("Failed to obtain address of counters buffer");
-  }
-  counters_ = static_cast<uint8_t *>(counters);
+  counters_ = reinterpret_cast<uint8_t *>(static_cast<uintptr_t>(counters));
 }
 
 void CoverageTracker::RegisterNewCounters(JNIEnv &env, jint old_num_counters,
@@ -164,8 +159,8 @@ std::string CoverageTracker::ComputeCoverage(JNIEnv &env) {
 extern "C" {
 JNIEXPORT void JNICALL
 Java_com_code_1intelligence_jazzer_runtime_CoverageMap_initialize(
-    JNIEnv &env, jclass cls, jobject buffer) {
-  ::jazzer::CoverageTracker::Initialize(env, buffer);
+    JNIEnv &env, jclass cls, jlong counters) {
+  ::jazzer::CoverageTracker::Initialize(env, counters);
 }
 
 JNIEXPORT void JNICALL

@@ -1,3 +1,5 @@
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+
 java_binary(
     name = "CoverageInstrumentationBenchmark",
     main_class = "org.openjdk.jmh.Main",
@@ -37,6 +39,7 @@ java_library(
         "@maven//:com_mikesamuel_json_sanitizer",
     ],
     deps = [
+        ":kotlin_strategies",
         ":strategies",
         "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",
         "@maven//:org_openjdk_jmh_jmh_core",
@@ -48,12 +51,21 @@ java_library(
     srcs = [
         "DirectByteBuffer2CoverageMap.java",
         "DirectByteBufferCoverageMap.java",
-        "StaticMethodStrategy.java",
         "Unsafe2CoverageMap.java",
         "UnsafeBranchfreeCoverageMap.java",
         "UnsafeCoverageMap.java",
         "UnsafeSimpleIncrementCoverageMap.java",
     ],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",
+        "@jazzer_jacoco//:jacoco_internal",
+        "@jazzer_ow2_asm//:asm",
+    ],
+)
+
+kt_jvm_library(
+    name = "kotlin_strategies",
+    srcs = ["DirectByteBufferStrategy.kt"],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",
         "@jazzer_jacoco//:jacoco_internal",

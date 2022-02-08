@@ -40,7 +40,7 @@ class CoverageTracker : public ExceptionPrinter {
   static PCTableEntry *pc_entries_;
 
  public:
-  static void Initialize(JNIEnv &env, jobject buffer);
+  static void Initialize(JNIEnv &env, jlong counters);
   static void RegisterNewCounters(JNIEnv &env, jint old_num_counters,
                                   jint new_num_counters);
 

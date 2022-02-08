@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import sun.misc.Unsafe;
 
 /**
  * Represents the Java view on a libFuzzer 8 bit counter coverage map. By using a direct ByteBuffer,
@@ -30,16 +31,28 @@ final public class CoverageMap {
       ? Integer.parseInt(System.getenv(ENV_MAX_NUM_COUNTERS))
       : 1 << 20;
 
+  private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
+
+  static {
+    if (UNSAFE == null) {
+      System.out.println("ERROR: Failed to get Unsafe instance for CoverageMap.%n"
+          + "       Please file a bug at:%n"
+          + "         https://github.com/CodeIntelligenceTesting/jazzer/issues/new");
+      System.exit(1);
+    }
+  }
+
   /**
    * The collection of coverage counters directly interacted with by classes that are instrumented
    * for coverage. The instrumentation assumes that this is always one contiguous block of memory,
    * so it is allocated once at maximum size. Using a larger number here increases the memory usage
    * of all fuzz targets, but has otherwise no impact on performance.
    */
-  public static final ByteBuffer counters = ByteBuffer.allocateDirect(MAX_NUM_COUNTERS);
+  public static final long countersAddress = UNSAFE.allocateMemory(MAX_NUM_COUNTERS);
 
   static {
-    initialize(counters);
+    UNSAFE.setMemory(countersAddress, MAX_NUM_COUNTERS, (byte) 0);
+    initialize(countersAddress);
   }
 
   private static final int INITIAL_NUM_COUNTERS = 1 << 9;
@@ -78,10 +91,18 @@ final public class CoverageMap {
     }
   }
 
+  // Called by the coverage instrumentation.
+  @SuppressWarnings("unused")
+  public static void recordCoverage(final int id) {
+    final long address = countersAddress + id;
+    final byte counter = UNSAFE.getByte(address);
+    UNSAFE.putByte(address, (byte) (counter == -1 ? 1 : counter + 1));
+  }
+
   public static Set<Integer> getCoveredIds() {
     Set<Integer> coveredIds = new HashSet<>();
-    for (int id = 0; id < counters.capacity(); id++) {
-      if (counters.get(id) > 0) {
+    for (int id = 0; id < currentNumCounters; id++) {
+      if (UNSAFE.getByte(countersAddress + id) > 0) {
         coveredIds.add(id);
       }
     }
@@ -90,11 +111,11 @@ final public class CoverageMap {
 
   public static void replayCoveredIds(Set<Integer> coveredIds) {
     for (int id : coveredIds) {
-      counters.put(id, (byte) 1);
+      UNSAFE.putByte(countersAddress + id, (byte) 1);
     }
   }
 
-  private static native void initialize(ByteBuffer counters);
+  private static native void initialize(long countersAddress);
 
   private static native void registerNewCounters(int oldNumCounters, int newNumCounters);
 }
