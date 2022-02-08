@@ -56,7 +56,7 @@ class ClassInstrumentor constructor(bytecode: ByteArray) {
             }
         }
 
-        val defaultEdgeCoverageStrategy = DirectByteBufferStrategy
+        val defaultEdgeCoverageStrategy = StaticMethodStrategy()
         val defaultCoverageMap = CoverageMap::class.java
     }
 }

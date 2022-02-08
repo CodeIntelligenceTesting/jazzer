@@ -19,10 +19,6 @@ import com.code_intelligence.jazzer.runtime.CoverageMap;
 public class FuzzTargetWithCoverage {
   public static void fuzzerTestOneInput(byte[] input) {
     // manually increase the first coverage counter
-    byte counter = CoverageMap.counters.get(0);
-    counter++;
-    if (counter == 0)
-      counter--;
-    CoverageMap.counters.put(0, counter);
+    CoverageMap.recordCoverage(0);
   }
 }

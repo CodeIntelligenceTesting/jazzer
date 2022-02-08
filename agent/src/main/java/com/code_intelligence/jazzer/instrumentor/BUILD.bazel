@@ -8,12 +8,12 @@ kt_jvm_library(
         "CoverageRecorder.kt",
         "DescriptorUtils.kt",
         "DeterministicRandom.kt",
-        "DirectByteBufferStrategy.kt",
         "EdgeCoverageInstrumentor.kt",
         "Hook.kt",
         "HookInstrumentor.kt",
         "HookMethodVisitor.kt",
         "Instrumentor.kt",
+        "StaticMethodStrategy.java",
         "TraceDataFlowInstrumentor.kt",
     ],
     visibility = [

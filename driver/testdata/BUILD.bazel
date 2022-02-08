@@ -6,5 +6,6 @@ java_binary(
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:coverage_map",
     ],
 )

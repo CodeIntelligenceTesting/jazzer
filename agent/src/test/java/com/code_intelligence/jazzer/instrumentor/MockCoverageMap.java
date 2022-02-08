@@ -40,6 +40,11 @@ public class MockCoverageMap {
     // This mock coverage map is statically sized.
   }
 
+  public static void recordCoverage(int id) {
+    byte counter = counters.get(id);
+    counters.put(id, (byte) (counter == -1 ? 1 : counter + 1));
+  }
+
   public static void clear() {
     Arrays.fill(counters.array(), (byte) 0);
     Arrays.fill(previous_mem.array(), (byte) 0);
