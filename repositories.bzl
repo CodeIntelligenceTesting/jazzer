@@ -21,10 +21,10 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "platforms",
-        sha256 = "079945598e4b6cc075846f7fd6a9d0857c33a7afc0de868c2ccb96405225135d",
+        sha256 = "379113459b0feaf6bfbb584a91874c065078aa673222846ac765f86661c27407",
         urls = [
-            "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.4/platforms-0.0.4.tar.gz",
-            "https://github.com/bazelbuild/platforms/releases/download/0.0.4/platforms-0.0.4.tar.gz",
+            "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.5/platforms-0.0.5.tar.gz",
+            "https://github.com/bazelbuild/platforms/releases/download/0.0.5/platforms-0.0.5.tar.gz",
         ],
     )
 
@@ -49,9 +49,9 @@ def jazzer_dependencies():
         http_archive,
         name = "com_google_glog",
         repo_mapping = {"@com_github_gflags_gflags": "@jazzer_com_github_gflags_gflags"},
-        sha256 = "5a39d51a6058348e6b683f5343a24d94e01c518c7a045101045e301a27efab13",
-        strip_prefix = "glog-a4a725d547a6c1329607db50af044c4fa329e07a",
-        url = "https://github.com/google/glog/archive/a4a725d547a6c1329607db50af044c4fa329e07a.tar.gz",
+        sha256 = "eede71f28371bf39aa69b45de23b329d37214016e2055269b3b5e7cfd40b59f5",
+        strip_prefix = "glog-0.5.0",
+        url = "https://github.com/google/glog/archive/refs/tags/v0.5.0.tar.gz",
     )
 
     maybe(
@@ -65,18 +65,18 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "com_github_johnynek_bazel_jar_jar",
-        sha256 = "97c5f862482a05f385bd8f9d28a9bbf684b0cf3fae93112ee96f3fb04d34b193",
-        strip_prefix = "bazel_jar_jar-171f268569384c57c19474b04aebe574d85fde0d",
-        url = "https://github.com/johnynek/bazel_jar_jar/archive/171f268569384c57c19474b04aebe574d85fde0d.tar.gz",
+        sha256 = "44dbf93907c361594057bcf1205dab91e1169f3b7a89db8c778161459588b5d6",
+        strip_prefix = "bazel_jar_jar-commit-171f268569384c57c19474b04aebe574d85fde0d",
+        url = "https://github.com/CodeIntelligenceTesting/bazel_jar_jar/archive/refs/tags/commit-171f268569384c57c19474b04aebe574d85fde0d.tar.gz",
     )
 
     maybe(
         http_archive,
         name = "com_github_jhalterman_typetools",
         build_file = Label("//third_party:typetools.BUILD"),
-        sha256 = "754f46de7d4c278cee2d4dba3c09ebe08fde03d0e67fc85d700611d9cdfb7868",
-        strip_prefix = "typetools-887153d2a9adf032fac9f145594d0a0248618d48",
-        url = "https://github.com/jhalterman/typetools/archive/887153d2a9adf032fac9f145594d0a0248618d48.tar.gz",
+        sha256 = "4e11a613aebb3c35deef58d5d942e44802da1a6c6ef7f127419261f00a0a082c",
+        strip_prefix = "typetools-commit-887153d2a9adf032fac9f145594d0a0248618d48",
+        url = "https://github.com/CodeIntelligenceTesting/typetools/archive/refs/tags/commit-887153d2a9adf032fac9f145594d0a0248618d48.tar.gz",
     )
 
     maybe(
@@ -123,9 +123,9 @@ def jazzer_dependencies():
         patches = [
             Label("//third_party:gflags-use-double-dash-args.patch"),
         ],
-        sha256 = "ce2931dd537eaab7dab78b25bec6136a0756ca0b2acbdab9aec0266998c0d9a7",
-        strip_prefix = "gflags-827c769e5fc98e0f2a34c47cef953cc6328abced",
-        url = "https://github.com/gflags/gflags/archive/827c769e5fc98e0f2a34c47cef953cc6328abced.tar.gz",
+        sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
+        strip_prefix = "gflags-2.2.2",
+        url = "https://github.com/gflags/gflags/archive/refs/tags/v2.2.2.tar.gz",
     )
 
     maybe(
@@ -138,7 +138,7 @@ def jazzer_dependencies():
         ],
         sha256 = "4a3c65b8a8ca58ffcec77288820f557ed93125e8a0b43dd7460b776c58bb8ed9",
         strip_prefix = "jacoco-0.8.7-jazzer",
-        url = "https://github.com/CodeIntelligenceTesting/jacoco/archive/v0.8.7-jazzer.tar.gz",
+        url = "https://github.com/CodeIntelligenceTesting/jacoco/archive/refs/tags/v0.8.7-jazzer.tar.gz",
     )
 
     maybe(
