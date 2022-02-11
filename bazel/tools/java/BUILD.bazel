@@ -1,0 +1,13 @@
+java_library(
+    name = "fuzz_target_test_wrapper",
+    srcs = ["com/code_intelligence/jazzer/tools/FuzzTargetTestWrapper.java"],
+    visibility = ["//:__subpackages__"],
+    deps = ["@bazel_tools//tools/java/runfiles"],
+)
+
+java_binary(
+    name = "JarStripper",
+    srcs = ["com/code_intelligence/jazzer/tools/JarStripper.java"],
+    main_class = "com.code_intelligence.jazzer.tools.JarStripper",
+    visibility = ["//visibility:public"],
+)
