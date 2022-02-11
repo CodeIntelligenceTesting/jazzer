@@ -45,7 +45,7 @@ class InvalidHookMocks {
     return true;
   }
 
-  @MethodHook(type = HookType.REPLACE, targetClassName = "java.lang.StringBuilder",
+  @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.StringBuilder",
       targetMethod = "<init>", targetMethodDescriptor = "(Ljava/lang/String;)V")
   public static Object
   invalidReturnType(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
@@ -58,4 +58,10 @@ class InvalidHookMocks {
   public static void
   primitiveReturnValueMustBeWrapped(MethodHandle method, String thisObject, Object[] arguments,
       int hookId, boolean returnValue) {}
+
+  @MethodHook(type = HookType.REPLACE, targetClassName = "java.lang.StringBuilder",
+      targetMethod = "<init>", targetMethodDescriptor = "(Ljava/lang/String;)V")
+  public static void
+  replaceOnInit(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
+      throws Throwable {}
 }
