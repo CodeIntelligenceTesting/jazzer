@@ -55,6 +55,10 @@ class Hook private constructor(hookMethod: Method, annotation: MethodHook) {
             require(Modifier.isPublic(hookMethod.modifiers)) { "$potentialHook: hook method must be public" }
             require(Modifier.isStatic(hookMethod.modifiers)) { "$potentialHook: hook method must be static" }
 
+            require(hookData.targetMethod != "<init>" || hookData.type != HookType.REPLACE) {
+                "$potentialHook: REPLACE hooks can't be applied to <init>"
+            }
+
             // Verify the hook method's parameter count.
             val numParameters = hookMethod.parameters.size
             when (hookData.type) {
