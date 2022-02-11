@@ -1,6 +1,0 @@
-java_library(
-    name = "fuzz_target_test_wrapper",
-    srcs = ["FuzzTargetTestWrapper.java"],
-    visibility = ["//:__subpackages__"],
-    deps = ["@bazel_tools//tools/java/runfiles"],
-)

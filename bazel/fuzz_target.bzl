@@ -65,7 +65,7 @@ def java_fuzz_target_test(
     native.java_test(
         name = name,
         runtime_deps = [
-            "//bazel:fuzz_target_test_wrapper",
+            "//bazel/tools/java:fuzz_target_test_wrapper",
             "//agent:jazzer_api_deploy.jar",
             ":%s_deploy.jar" % target_name,
         ],
@@ -86,7 +86,7 @@ def java_fuzz_target_test(
             driver,
         ] + data,
         env = env,
-        main_class = "FuzzTargetTestWrapper",
+        main_class = "com.code_intelligence.jazzer.tools.FuzzTargetTestWrapper",
         use_testrunner = False,
         tags = tags,
         visibility = visibility,
