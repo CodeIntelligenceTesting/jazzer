@@ -368,11 +368,6 @@ public class Meta {
       }
       return new ByteArrayInputStream(array);
     } else if (type == Map.class) {
-      if (visitor != null) {
-        // Do not use Collectors.toMap() since it cannot handle null values.
-        visitor.pushGroup("java.util.stream.Stream.of(", ", ",
-            ").collect(java.util.HashMap::new, (map, e) -> map.put(e.getKey(), e.getValue()), java.util.HashMap::putAll)");
-      }
       ParameterizedType mapType = (ParameterizedType) genericType;
       if (mapType.getActualTypeArguments().length != 2) {
         throw new AutofuzzError(
@@ -380,6 +375,16 @@ public class Meta {
       }
       Type keyType = mapType.getActualTypeArguments()[0];
       Type valueType = mapType.getActualTypeArguments()[1];
+      if (visitor != null) {
+        // Do not use Collectors.toMap() since it cannot handle null values.
+        // Also annotate the type of the entry stream since it might be empty, in which case type
+        // inference on the accumulator could fail.
+        visitor.pushGroup(
+            String.format("java.util.stream.Stream.<java.util.AbstractMap.SimpleEntry<%s, %s>>of(",
+                keyType.getTypeName(), valueType.getTypeName()),
+            ", ",
+            ").collect(java.util.HashMap::new, (map, e) -> map.put(e.getKey(), e.getValue()), java.util.HashMap::putAll)");
+      }
       int remainingBytesBeforeFirstEntryCreation = data.remainingBytes();
       if (visitor != null) {
         visitor.pushGroup("new java.util.AbstractMap.SimpleEntry<>(", ", ", ")");

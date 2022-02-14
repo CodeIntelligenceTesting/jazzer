@@ -126,7 +126,7 @@ public class MetaTest {
             .collect(java.util.HashMap::new,
                 (map, e) -> map.put(e.getKey(), e.getValue()), java.util.HashMap::putAll);
     consumeTestCase(stringStringMapType, expectedMap,
-        "java.util.stream.Stream.of(new java.util.AbstractMap.SimpleEntry<>(\"key0\", \"value0\"), new java.util.AbstractMap.SimpleEntry<>(\"key1\", \"value1\"), new java.util.AbstractMap.SimpleEntry<>(\"key2\", (java.lang.String) null)).collect(java.util.HashMap::new, (map, e) -> map.put(e.getKey(), e.getValue()), java.util.HashMap::putAll)",
+        "java.util.stream.Stream.<java.util.AbstractMap.SimpleEntry<java.lang.String, java.lang.String>>of(new java.util.AbstractMap.SimpleEntry<>(\"key0\", \"value0\"), new java.util.AbstractMap.SimpleEntry<>(\"key1\", \"value1\"), new java.util.AbstractMap.SimpleEntry<>(\"key2\", (java.lang.String) null)).collect(java.util.HashMap::new, (map, e) -> map.put(e.getKey(), e.getValue()), java.util.HashMap::putAll)",
         Arrays.asList((byte) 1, // do not return null for the map
             32, // remaining bytes
             (byte) 1, // do not return null for the string
