@@ -42,9 +42,9 @@ internal class RuntimeInstrumentor(
 ) : ClassFileTransformer {
 
     private val coverageIdSynchronizer = if (idSyncFile != null)
-        SynchronizedCoverageIdStrategy(idSyncFile)
+        FileSyncCoverageIdStrategy(idSyncFile)
     else
-        TrivialCoverageIdStrategy()
+        MemSyncCoverageIdStrategy()
 
     private val includedHooks = instrumentationTypes
         .mapNotNull { type ->
@@ -165,14 +165,16 @@ internal class RuntimeInstrumentor(
                 // trigger the GEP callbacks for ByteBuffer.
                 traceDataFlow(instrumentationTypes)
                 hooks(includedHooks + customHooks)
-                val firstId = coverageIdSynchronizer.obtainFirstId(internalClassName)
-                var actualNumEdgeIds = 0
-                try {
-                    actualNumEdgeIds = coverage(firstId)
-                } finally {
-                    coverageIdSynchronizer.commitIdCount(actualNumEdgeIds)
+                coverageIdSynchronizer.withIdForClass(internalClassName) { firstId ->
+                    coverage(firstId).also { actualNumEdgeIds ->
+                        CoverageRecorder.recordInstrumentedClass(
+                            internalClassName,
+                            bytecode,
+                            firstId,
+                            firstId + actualNumEdgeIds
+                        )
+                    }
                 }
-                CoverageRecorder.recordInstrumentedClass(internalClassName, bytecode, firstId, firstId + actualNumEdgeIds)
             } else {
                 hooks(customHooks)
             }
