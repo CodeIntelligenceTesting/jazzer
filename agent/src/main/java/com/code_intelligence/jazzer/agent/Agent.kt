@@ -83,7 +83,7 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
         (argumentMap["instrumentation_excludes"] ?: emptyList()) + customHookNames
     )
     CoverageRecorder.classNameGlobber = classNameGlobber
-    val dependencyClassNameGlobber = ClassNameGlobber(
+    val customHookClassNameGlobber = ClassNameGlobber(
         argumentMap["custom_hook_includes"] ?: emptyList(),
         (argumentMap["custom_hook_excludes"] ?: emptyList()) + customHookNames
     )
@@ -123,7 +123,7 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
     val runtimeInstrumentor = RuntimeInstrumentor(
         instrumentation,
         classNameGlobber,
-        dependencyClassNameGlobber,
+        customHookClassNameGlobber,
         instrumentationTypes,
         idSyncFile,
         dumpClassesDir,
@@ -134,7 +134,7 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
 
     val relevantClassesLoadedBeforeCustomHooks = instrumentation.allLoadedClasses
         .map { it.name }
-        .filter { classNameGlobber.includes(it) || dependencyClassNameGlobber.includes(it) }
+        .filter { classNameGlobber.includes(it) || customHookClassNameGlobber.includes(it) }
         .toSet()
     val customHooks = customHookNames.toSet().flatMap { hookClassName ->
         try {
@@ -148,7 +148,7 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
     }
     val relevantClassesLoadedAfterCustomHooks = instrumentation.allLoadedClasses
         .map { it.name }
-        .filter { classNameGlobber.includes(it) || dependencyClassNameGlobber.includes(it) }
+        .filter { classNameGlobber.includes(it) || customHookClassNameGlobber.includes(it) }
         .toSet()
     val nonHookClassesLoadedByHooks = relevantClassesLoadedAfterCustomHooks - relevantClassesLoadedBeforeCustomHooks
     if (nonHookClassesLoadedByHooks.isNotEmpty()) {

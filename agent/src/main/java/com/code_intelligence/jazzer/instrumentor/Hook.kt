@@ -28,9 +28,10 @@ class Hook private constructor(hookMethod: Method, annotation: MethodHook) {
     // Allowing arbitrary exterior whitespace in the target class name allows for an easy workaround
     // for mangled hooks due to shading applied to hooks.
     private val targetClassName = annotation.targetClassName.trim()
-    val targetMethodName = annotation.targetMethod
-    val targetMethodDescriptor = annotation.targetMethodDescriptor.takeIf { it.isNotEmpty() }
     val hookType = annotation.type
+    val targetMethodName = annotation.targetMethod
+    val targetMethodDescriptor = annotation.targetMethodDescriptor.takeIf { it.isNotBlank() }
+    val additionalClassesToHook = annotation.additionalClassesToHook.asList()
 
     val targetInternalClassName = targetClassName.replace('.', '/')
     private val targetReturnTypeDescriptor = targetMethodDescriptor?.let { extractReturnTypeDescriptor(it) }
@@ -42,7 +43,7 @@ class Hook private constructor(hookMethod: Method, annotation: MethodHook) {
     val hookMethodDescriptor = hookMethod.descriptor
 
     override fun toString(): String {
-        return "$hookType $targetClassName.$targetMethodName: $hookClassName.$hookMethodName"
+        return "$hookType $targetClassName.$targetMethodName: $hookClassName.$hookMethodName $additionalClassesToHook"
     }
 
     companion object {
