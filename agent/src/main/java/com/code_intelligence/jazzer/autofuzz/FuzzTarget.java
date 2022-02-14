@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.List;
@@ -96,8 +97,13 @@ public class FuzzTarget {
                       || Utils.getReadableDescriptor(constructor).equals(descriptor))
               .toArray(Executable[] ::new);
     } else {
+      // We use getDeclaredMethods and filter for the public access modifier instead of using
+      // getMethods as we want to exclude methods inherited from superclasses or interfaces, which
+      // can lead to unexpected results when autofuzzing. If desired, these can be autofuzzed
+      // explicitly instead.
       targetExecutables =
-          Arrays.stream(targetClass.getMethods())
+          Arrays.stream(targetClass.getDeclaredMethods())
+              .filter(method -> Modifier.isPublic(method.getModifiers()))
               .filter(method
                   -> method.getName().equals(methodName)
                       && (descriptor == null
