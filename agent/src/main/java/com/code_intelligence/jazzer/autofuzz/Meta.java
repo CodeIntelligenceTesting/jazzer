@@ -69,9 +69,12 @@ public class Meta {
         visitor.pushGroup(
             String.format("%s.", method.getDeclaringClass().getCanonicalName()), "", "");
       }
-      result = autofuzz(data, method, null, visitor);
-      if (visitor != null) {
-        visitor.popGroup();
+      try {
+        result = autofuzz(data, method, null, visitor);
+      } finally {
+        if (visitor != null) {
+          visitor.popGroup();
+        }
       }
     } else {
       if (visitor != null) {
@@ -82,9 +85,12 @@ public class Meta {
       if (thisObject == null) {
         throw new AutofuzzConstructionException();
       }
-      result = autofuzz(data, method, thisObject, visitor);
-      if (visitor != null) {
-        visitor.popGroup();
+      try {
+        result = autofuzz(data, method, thisObject, visitor);
+      } finally {
+        if (visitor != null) {
+          visitor.popGroup();
+        }
       }
     }
     return result;
