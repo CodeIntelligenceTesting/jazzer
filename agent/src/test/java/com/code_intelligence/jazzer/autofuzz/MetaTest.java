@@ -169,7 +169,7 @@ public class MetaTest {
         MetaTest.class.getMethod("isFive", int.class), Collections.singletonList(5));
     autofuzzTestCase(false, "com.code_intelligence.jazzer.autofuzz.MetaTest.intEquals(5, 4)",
         MetaTest.class.getMethod("intEquals", int.class, int.class), Arrays.asList(5, 4));
-    autofuzzTestCase("foobar", "\"foo\".concat(\"bar\")",
+    autofuzzTestCase("foobar", "(\"foo\").concat(\"bar\")",
         String.class.getMethod("concat", String.class),
         Arrays.asList((byte) 1, 6, "foo", (byte) 1, 6, "bar"));
     autofuzzTestCase("jazzer", "new java.lang.String(\"jazzer\")",
