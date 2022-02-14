@@ -6,6 +6,7 @@ kt_jvm_library(
         "Deserialization.kt",
         "ExpressionLanguageInjection.kt",
         "NamingContextLookup.kt",
+        "OsCommandInjection.kt",
         "ReflectiveCall.kt",
         "Utils.kt",
     ],

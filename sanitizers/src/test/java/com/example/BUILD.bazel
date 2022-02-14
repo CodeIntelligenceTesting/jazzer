@@ -30,3 +30,19 @@ java_fuzz_target_test(
         "@maven//:org_hibernate_hibernate_validator",
     ],
 )
+
+java_fuzz_target_test(
+    name = "OsCommandInjectionProcessBuilder",
+    srcs = [
+        "OsCommandInjectionProcessBuilder.java",
+    ],
+    target_class = "com.example.OsCommandInjectionProcessBuilder",
+)
+
+java_fuzz_target_test(
+    name = "OsCommandInjectionRuntimeExec",
+    srcs = [
+        "OsCommandInjectionRuntimeExec.java",
+    ],
+    target_class = "com.example.OsCommandInjectionRuntimeExec",
+)

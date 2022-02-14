@@ -18,6 +18,7 @@ _sanitizer_class_names = [
     "Deserialization",
     "ExpressionLanguageInjection",
     "NamingContextLookup",
+    "OsCommandInjection",
     "ReflectiveCall",
 ]
 
