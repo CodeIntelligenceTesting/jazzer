@@ -356,6 +356,35 @@ jthrowable FuzzTargetRunner::GetFinding() const {
 
 void FuzzTargetRunner::DumpReproducer(const uint8_t *data, std::size_t size) {
   auto &env = jvm_.GetEnv();
+  std::string data_sha1 = jazzer::Sha1Hash(data, size);
+  if (!FLAGS_autofuzz.empty()) {
+    auto autofuzz_fuzz_target_class = env.FindClass(kAutofuzzFuzzTargetClass);
+    if (env.ExceptionCheck()) {
+      env.ExceptionDescribe();
+      return;
+    }
+    auto dump_reproducer = env.GetStaticMethodID(
+        autofuzz_fuzz_target_class, "dumpReproducer",
+        "(Lcom/code_intelligence/jazzer/api/FuzzedDataProvider;Ljava/lang/"
+        "String;Ljava/lang/String;)V");
+    if (env.ExceptionCheck()) {
+      env.ExceptionDescribe();
+      return;
+    }
+    FeedFuzzedDataProvider(data, size);
+    auto reproducer_path_jni = env.NewStringUTF(FLAGS_reproducer_path.c_str());
+    auto data_sha1_jni = env.NewStringUTF(data_sha1.c_str());
+    env.CallStaticVoidMethod(autofuzz_fuzz_target_class, dump_reproducer,
+                             GetFuzzedDataProviderJavaObject(jvm_),
+                             reproducer_path_jni, data_sha1_jni);
+    if (env.ExceptionCheck()) {
+      env.ExceptionDescribe();
+      return;
+    }
+    env.DeleteLocalRef(data_sha1_jni);
+    env.DeleteLocalRef(reproducer_path_jni);
+    return;
+  }
   std::string base64_data;
   if (fuzzer_test_one_input_data_) {
     // Record the data retrieved from the FuzzedDataProvider and supply it to a
@@ -376,8 +405,6 @@ void FuzzTargetRunner::DumpReproducer(const uint8_t *data, std::size_t size) {
   const char *fuzz_target_call = fuzzer_test_one_input_data_
                                      ? kTestOneInputWithData
                                      : kTestOneInputWithBytes;
-  std::string data_sha1 = jazzer::Sha1Hash(data, size);
-
   // The serialization of recorded FuzzedDataProvider invocations can get to
   // long to be stored in one String variable in the template. This is
   // mitigated by chunking the data and concatenating it again in the generated

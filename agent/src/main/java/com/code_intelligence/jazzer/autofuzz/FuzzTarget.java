@@ -20,12 +20,18 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.utils.SimpleGlobMatcher;
 import com.code_intelligence.jazzer.utils.Utils;
 import java.io.Closeable;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +39,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class FuzzTarget {
+public final class FuzzTarget {
+  private static final String AUTOFUZZ_REPRODUCER_TEMPLATE = "public class Crash_%s {\n"
+      + "  public static void main(String[] args) throws Throwable {\n"
+      + "    %s;\n"
+      + "  }\n"
+      + "}";
   private static final long MAX_EXECUTIONS_WITHOUT_INVOCATION = 100;
 
   private static String methodReference;
@@ -41,7 +52,6 @@ public class FuzzTarget {
   private static Map<Executable, Class<?>[]> throwsDeclarations;
   private static Set<SimpleGlobMatcher> ignoredExceptionMatchers;
   private static long executionsSinceLastInvocation = 0;
-  private static AutofuzzCodegenVisitor codegenVisitor;
 
   public static void fuzzerInitialize(String[] args) {
     if (args.length == 0 || !args[0].contains("::")) {
@@ -185,9 +195,36 @@ public class FuzzTarget {
   }
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Throwable {
+    AutofuzzCodegenVisitor codegenVisitor = null;
     if (Meta.isDebug()) {
       codegenVisitor = new AutofuzzCodegenVisitor();
     }
+    fuzzerTestOneInput(data, codegenVisitor);
+    if (codegenVisitor != null) {
+      System.err.println(codegenVisitor.generate());
+    }
+  }
+
+  public static void dumpReproducer(FuzzedDataProvider data, String reproducerPath, String sha) {
+    AutofuzzCodegenVisitor codegenVisitor = new AutofuzzCodegenVisitor();
+    try {
+      fuzzerTestOneInput(data, codegenVisitor);
+    } catch (Throwable ignored) {
+    }
+    String javaSource = String.format(AUTOFUZZ_REPRODUCER_TEMPLATE, sha, codegenVisitor.generate());
+    Path javaPath = Paths.get(reproducerPath, String.format("Crash_%s.java", sha));
+    try {
+      Files.write(javaPath, javaSource.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+    } catch (IOException e) {
+      System.err.printf("ERROR: Failed to write Java reproducer to %s%n", javaPath);
+      e.printStackTrace();
+    }
+    System.out.printf(
+        "reproducer_path='%s'; Java reproducer written to %s%n", reproducerPath, javaPath);
+  }
+
+  private static void fuzzerTestOneInput(
+      FuzzedDataProvider data, AutofuzzCodegenVisitor codegenVisitor) throws Throwable {
     Executable targetExecutable;
     if (FuzzTarget.targetExecutables.length == 1) {
       targetExecutable = FuzzTarget.targetExecutables[0];
@@ -202,9 +239,6 @@ public class FuzzTarget {
         returnValue = Meta.autofuzz(data, (Constructor<?>) targetExecutable, codegenVisitor);
       }
       executionsSinceLastInvocation = 0;
-      if (codegenVisitor != null) {
-        System.err.println(codegenVisitor.generate());
-      }
     } catch (AutofuzzConstructionException e) {
       if (Meta.isDebug()) {
         e.printStackTrace();

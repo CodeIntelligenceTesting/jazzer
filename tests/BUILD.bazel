@@ -13,3 +13,17 @@ java_fuzz_target_test(
     target_class = "com.example.LongStringFuzzer",
     verify_crash_input = False,
 )
+
+java_fuzz_target_test(
+    name = "JpegImageParserAutofuzz",
+    execute_crash_reproducer = True,
+    fuzzer_args = [
+        "--autofuzz=org.apache.commons.imaging.formats.jpeg.JpegImageParser::getBufferedImage",
+        # Exit after the first finding for testing purposes.
+        "--keep_going=1",
+        "--autofuzz_ignore=java.lang.NullPointerException",
+    ],
+    runtime_deps = [
+        "@maven//:org_apache_commons_commons_imaging",
+    ],
+)
