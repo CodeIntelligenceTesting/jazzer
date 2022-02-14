@@ -5,6 +5,7 @@ load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
 java_fuzz_target_test(
     name = "Autofuzz",
+    execute_crash_reproducer = True,
     fuzzer_args = [
         "--autofuzz=com.google.json.JsonSanitizer::sanitize",
         # Exit after the first finding for testing purposes.
