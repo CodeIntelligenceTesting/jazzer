@@ -34,8 +34,8 @@ import kotlin.time.measureTimedValue
 
 internal class RuntimeInstrumentor(
     private val instrumentation: Instrumentation,
-    private val classesToInstrument: ClassNameGlobber,
-    private val dependencyClassesToInstrument: ClassNameGlobber,
+    private val classesToFullyInstrument: ClassNameGlobber,
+    private val classesToHookInstrument: ClassNameGlobber,
     private val instrumentationTypes: Set<InstrumentationType>,
     idSyncFile: Path?,
     private val dumpClassesDir: Path?,
@@ -57,10 +57,22 @@ internal class RuntimeInstrumentor(
             }
         }
         .flatMap { loadHooks(it) }
-    private val customHooks = emptyList<Hook>().toMutableList()
+
+    // Dedicated name globber for additional classes to hook stated in hook annotations is needed due to
+    // existing include and exclude pattern of classesToHookInstrument. All classes are included in hook
+    // instrumentation except the ones from default excludes, like JDK and Kotlin classes. But additional
+    // classes to hook, based on annotations, are allowed to reference normally ignored ones, like JDK
+    // and Kotlin internals.
+    // FIXME: Adding an additional class to hook will apply _all_ hooks to it and not only the one it's
+    // defined in. At some point we might want to track the list of classes per custom hook rather than globally.
+    private var additionalClassesToHookInstrument: ClassNameGlobber = ClassNameGlobber(emptyList(), listOf())
+    private val customHooks = mutableListOf<Hook>()
 
     fun registerCustomHooks(hooks: List<Hook>) {
         customHooks.addAll(hooks)
+        additionalClassesToHookInstrument = additionalClassesToHookInstrument.withAdditionalIncludes(
+            hooks.flatMap(Hook::additionalClassesToHook)
+        )
     }
 
     @OptIn(kotlin.time.ExperimentalTime::class)
@@ -128,8 +140,9 @@ internal class RuntimeInstrumentor(
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun transformInternal(internalClassName: String, classfileBuffer: ByteArray): ByteArray? {
         val fullInstrumentation = when {
-            classesToInstrument.includes(internalClassName) -> true
-            dependencyClassesToInstrument.includes(internalClassName) -> false
+            classesToFullyInstrument.includes(internalClassName) -> true
+            classesToHookInstrument.includes(internalClassName) -> false
+            additionalClassesToHookInstrument.includes(internalClassName) -> false
             else -> return null
         }
         val prettyClassName = internalClassName.replace('/', '.')

@@ -23,11 +23,12 @@ import java.lang.annotation.Target;
 import java.lang.invoke.MethodType;
 
 /**
- * Registers this method as a hook that should run after the method
- * specified by the annotation parameters has returned.
+ * Registers the annotated method as a hook that should run before, instead or
+ * after the method specified by the annotation parameters.
  * <p>
- * This method will be called after every call to the target method and has
- * access to its return value. The target method is specified by
+ * Depending on {@link #type()} this method will be called after, instead or
+ * before every call to the target method and has
+ * access to its parameters and return value. The target method is specified by
  * {@link #targetClassName()} and {@link #targetMethod()}. In case of an
  * overloaded method, {@link #targetMethodDescriptor()} can be used to restrict
  * the application of the hook to a particular overload.
@@ -180,4 +181,15 @@ public @interface MethodHook {
    * @return the descriptor of the method to be hooked
    */
   String targetMethodDescriptor() default "";
+
+  /**
+   * Array of additional classes to hook.
+   * <p>
+   * Hooks are applied on call sites. This means that classes calling the one
+   * defined in this annotation need to be instrumented to actually execute
+   * the hook. This property can be used to hook normally ignored classes.
+   *
+   * @return fully qualified class names to hook
+   */
+  String[] additionalClassesToHook() default {};
 }
