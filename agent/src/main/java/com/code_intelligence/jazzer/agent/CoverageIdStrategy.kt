@@ -14,7 +14,8 @@
 
 package com.code_intelligence.jazzer.agent
 
-import java.nio.ByteBuffer
+import com.code_intelligence.jazzer.utils.append
+import com.code_intelligence.jazzer.utils.readFully
 import java.nio.channels.FileChannel
 import java.nio.channels.FileLock
 import java.nio.file.Path
@@ -27,56 +28,39 @@ import java.util.UUID
 internal class CoverageIdException(cause: Throwable? = null) :
     RuntimeException("Failed to synchronize coverage IDs", cause)
 
+/**
+ * [CoverageIdStrategy] provides an abstraction to switch between context specific coverage ID generation.
+ *
+ * Coverage (i.e., edge) IDs differ from other kinds of IDs, such as those generated for call sites or cmp
+ * instructions, in that they should be consecutive, collision-free, and lie in a known, small range.
+ * This precludes us from generating them simply as hashes of class names.
+ */
 interface CoverageIdStrategy {
-    /**
-     * Obtain the first coverage ID to be used for the class [className].
-     * The caller *must* also call [commitIdCount] once it has instrumented that class, even if instrumentation fails.
-     */
-    @Throws(CoverageIdException::class)
-    fun obtainFirstId(className: String): Int
 
     /**
-     * Records the number of coverage IDs used to instrument the class specified in a previous call to [obtainFirstId].
-     * If instrumenting the class should fail, this function must still be called. In this case, [idCount] is set to 0.
+     * [withIdForClass] provides the initial coverage ID of the given [className] as parameter to the
+     * [block] to execute. [block] has to return the number of additionally used IDs.
      */
     @Throws(CoverageIdException::class)
-    fun commitIdCount(idCount: Int)
+    fun withIdForClass(className: String, block: (Int) -> Int)
 }
 
 /**
- * An unsynchronized strategy for coverage ID generation that simply increments a global counter.
+ * A memory synced strategy for coverage ID generation.
+ *
+ * This strategy uses a synchronized block to guard access to a global edge ID counter.
+ * Even though concurrent fuzzing is not fully supported this strategy enables consistent coverage
+ * IDs in case of concurrent class loading.
+ *
+ * It only prevents races within one VM instance.
  */
-internal class TrivialCoverageIdStrategy : CoverageIdStrategy {
+internal class MemSyncCoverageIdStrategy : CoverageIdStrategy {
     private var nextEdgeId = 0
 
-    override fun obtainFirstId(className: String) = nextEdgeId
-
-    override fun commitIdCount(idCount: Int) {
-        nextEdgeId += idCount
+    @Synchronized
+    override fun withIdForClass(className: String, block: (Int) -> Int) {
+        nextEdgeId += block(nextEdgeId)
     }
-}
-
-/**
- * Reads the [FileChannel] to the end as a UTF-8 string.
- */
-private fun FileChannel.readFully(): String {
-    check(size() <= Int.MAX_VALUE)
-    val buffer = ByteBuffer.allocate(size().toInt())
-    while (buffer.hasRemaining()) {
-        when (read(buffer)) {
-            0 -> throw IllegalStateException("No bytes read")
-            -1 -> break
-        }
-    }
-    return String(buffer.array())
-}
-
-/**
- * Appends [string] to the end of the [FileChannel].
- */
-private fun FileChannel.append(string: String) {
-    position(size())
-    write(ByteBuffer.wrap(string.toByteArray()))
 }
 
 /**
@@ -84,19 +68,30 @@ private fun FileChannel.append(string: String) {
  * specified [idSyncFile].
  * This class takes care of synchronizing the access to the file between multiple processes as long as the general
  * contract of [CoverageIdStrategy] is followed.
- *
- * Rationale: Coverage (i.e., edge) IDs differ from other kinds of IDs, such as those generated for call sites or cmp
- * instructions, in that they should be consecutive, collision-free, and lie in a known, small range. This precludes us
- * from generating them simply as hashes of class names and explains why go through the arduous process of synchronizing
- * them across multiple agents.
  */
-internal class SynchronizedCoverageIdStrategy(private val idSyncFile: Path) : CoverageIdStrategy {
-    val uuid: UUID = UUID.randomUUID()
-    var idFileLock: FileLock? = null
+internal class FileSyncCoverageIdStrategy(private val idSyncFile: Path) : CoverageIdStrategy {
+    private val uuid: UUID = UUID.randomUUID()
+    private var idFileLock: FileLock? = null
 
-    var cachedFirstId: Int? = null
-    var cachedClassName: String? = null
-    var cachedIdCount: Int? = null
+    private var cachedFirstId: Int? = null
+    private var cachedClassName: String? = null
+    private var cachedIdCount: Int? = null
+
+    /**
+     * This method is synchronized to prevent concurrent access to the internal file lock which would result in
+     * [java.nio.channels.OverlappingFileLockException]. Furthermore, every coverage ID obtained by [obtainFirstId]
+     * is always committed back again to the sync file by [commitIdCount].
+     */
+    @Synchronized
+    override fun withIdForClass(className: String, block: (Int) -> Int) {
+        var actualNumEdgeIds = 0
+        try {
+            val firstId = obtainFirstId(className)
+            actualNumEdgeIds = block(firstId)
+        } finally {
+            commitIdCount(actualNumEdgeIds)
+        }
+    }
 
     /**
      * Obtains a coverage ID for [className] such that all cooperating agent processes will obtain the same ID.
@@ -108,7 +103,7 @@ internal class SynchronizedCoverageIdStrategy(private val idSyncFile: Path) : Co
      *   In this case, the lock on the file is returned immediately and the extracted first coverage ID is returned to
      *   the caller. The caller is still expected to call [commitIdCount] so that desynchronization can be detected.
      */
-    override fun obtainFirstId(className: String): Int {
+    private fun obtainFirstId(className: String): Int {
         try {
             check(idFileLock == null) { "Already holding a lock on the ID file" }
             val localIdFile = FileChannel.open(
@@ -170,7 +165,11 @@ internal class SynchronizedCoverageIdStrategy(private val idSyncFile: Path) : Co
         }
     }
 
-    override fun commitIdCount(idCount: Int) {
+    /**
+     * Records the number of coverage IDs used to instrument the class specified in a previous call to [obtainFirstId].
+     * If instrumenting the class should fail, this function must still be called. In this case, [idCount] is set to 0.
+     */
+    private fun commitIdCount(idCount: Int) {
         val localIdFileLock = idFileLock
         try {
             check(cachedClassName != null)
