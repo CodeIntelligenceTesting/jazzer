@@ -285,8 +285,8 @@ public final class FuzzTarget {
     }
   }
 
-  // Removes all stack trace elements that live in the Java standard library, internal JDK classes
-  // or the autofuzz package from the bottom of all stack frames.
+  // Removes all stack trace elements that live in the Java reflection packages or the autofuzz
+  // package from the bottom of all stack frames.
   private static void cleanStackTraces(Throwable t) {
     Throwable cause = t;
     while (cause != null) {
@@ -295,8 +295,9 @@ public final class FuzzTarget {
       for (firstInterestingPos = elements.length - 1; firstInterestingPos > 0;
            firstInterestingPos--) {
         String className = elements[firstInterestingPos].getClassName();
-        if (!className.startsWith("com.code_intelligence.jazzer.autofuzz")
-            && !className.startsWith("java.") && !className.startsWith("jdk.")) {
+        if (!className.startsWith("com.code_intelligence.jazzer.autofuzz.")
+            && !className.startsWith("java.lang.reflect.")
+            && !className.startsWith("jdk.internal.reflect.")) {
           break;
         }
       }
