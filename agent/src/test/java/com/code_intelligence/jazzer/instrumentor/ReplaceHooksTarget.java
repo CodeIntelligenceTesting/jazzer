@@ -60,6 +60,9 @@ public class ReplaceHooksTarget implements ReplaceHooksTargetContract {
     boolList.add(false);
     results.put("arrayListGet", boolList.get(0));
 
+    results.put("shouldInitialize", new ReplaceHooksInit().initialized);
+    results.put("shouldInitializeWithParams", new ReplaceHooksInit(false, "foo").initialized);
+
     return results;
   }
 

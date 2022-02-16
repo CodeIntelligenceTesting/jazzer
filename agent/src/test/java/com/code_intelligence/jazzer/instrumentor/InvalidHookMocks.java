@@ -18,6 +18,7 @@ import com.code_intelligence.jazzer.api.HookType;
 import com.code_intelligence.jazzer.api.MethodHook;
 import java.lang.invoke.MethodHandle;
 
+@SuppressWarnings({"unused", "RedundantThrows"})
 class InvalidHookMocks {
   @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.String", targetMethod = "equals")
   public static void incorrectHookIdType(
@@ -62,6 +63,14 @@ class InvalidHookMocks {
   @MethodHook(type = HookType.REPLACE, targetClassName = "java.lang.StringBuilder",
       targetMethod = "<init>", targetMethodDescriptor = "(Ljava/lang/String;)V")
   public static void
-  replaceOnInit(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
-      throws Throwable {}
+  replaceOnInitWithoutReturnType(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) throws Throwable {}
+
+  @MethodHook(type = HookType.REPLACE, targetClassName = "java.lang.StringBuilder",
+      targetMethod = "<init>", targetMethodDescriptor = "(Ljava/lang/String;)V")
+  public static Object
+  replaceOnInitWithIncompatibleType(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) throws Throwable {
+    return new Object();
+  }
 }

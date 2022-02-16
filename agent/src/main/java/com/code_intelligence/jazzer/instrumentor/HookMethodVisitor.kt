@@ -144,6 +144,12 @@ private class HookMethodVisitor(
 
         // Start to build the arguments for the hook method.
         if (methodName == "<init>") {
+            // Constructor is invoked on an uninitialized object, and that's still on the stack.
+            // In case of REPLACE pop it from the stack and replace it afterwards with the returned
+            // one from the hook.
+            if (hook.hookType == HookType.REPLACE) {
+                mv.visitInsn(Opcodes.POP)
+            }
             // Special case for constructors:
             // We cannot create a MethodHandle for a constructor, so we push null instead.
             mv.visitInsn(Opcodes.ACONST_NULL) // push nullref
