@@ -45,9 +45,9 @@ public class FuzzTargetTestWrapper {
     boolean executeCrashReproducer;
     try {
       runfiles = Runfiles.create();
-      driverActualPath = runfiles.rlocation(rlocationPath(args[0]));
-      apiActualPath = runfiles.rlocation(rlocationPath(args[1]));
-      jarActualPath = runfiles.rlocation(rlocationPath(args[2]));
+      driverActualPath = lookUpRunfile(runfiles, args[0]);
+      apiActualPath = lookUpRunfile(runfiles, args[1]);
+      jarActualPath = lookUpRunfile(runfiles, args[2]);
       verifyCrashInput = Boolean.parseBoolean(args[3]);
       verifyCrashReproducer = Boolean.parseBoolean(args[4]);
       executeCrashReproducer = Boolean.parseBoolean(args[5]);
@@ -68,7 +68,7 @@ public class FuzzTargetTestWrapper {
 
     // Map all files/dirs to real location
     Stream<String> arguments = Arrays.stream(args).skip(6).map(
-        arg -> arg.startsWith("-") ? arg : runfiles.rlocation(rlocationPath(arg)));
+        arg -> arg.startsWith("-") ? arg : lookUpRunfileWithFallback(runfiles, arg));
 
     List<String> command =
         Stream
@@ -117,6 +117,29 @@ public class FuzzTargetTestWrapper {
       }
     }
     System.exit(0);
+  }
+
+  // Looks up a Bazel "rootpath" in this binary's runfiles and returns the resulting path.
+  private static String lookUpRunfile(Runfiles runfiles, String rootpath) {
+    return runfiles.rlocation(rlocationPath(rootpath));
+  }
+
+  // Looks up a Bazel "rootpath" in this binary's runfiles and returns the resulting path if it
+  // exists. If not, returns the original path unmodified.
+  private static String lookUpRunfileWithFallback(Runfiles runfiles, String rootpath) {
+    String candidatePath;
+    try {
+      candidatePath = lookUpRunfile(runfiles, rootpath);
+    } catch (IllegalArgumentException unused) {
+      // The argument to Runfiles.rlocation had an invalid format, which indicates that rootpath
+      // is not a Bazel "rootpath" but a user-supplied path that should be returned unchanged.
+      return rootpath;
+    }
+    if (new File(candidatePath).exists()) {
+      return candidatePath;
+    } else {
+      return rootpath;
+    }
   }
 
   // Turns the result of Bazel's `$(rootpath ...)` into the correct format for rlocation.
