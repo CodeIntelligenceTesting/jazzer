@@ -46,3 +46,9 @@ java_fuzz_target_test(
     ],
     target_class = "com.example.OsCommandInjectionRuntimeExec",
 )
+
+java_fuzz_target_test(
+    name = "RegexCanonEqInjection",
+    srcs = ["RegexCanonEqInjection.java"],
+    target_class = "com.example.RegexCanonEqInjection",
+)
