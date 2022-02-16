@@ -130,6 +130,7 @@ wrapped_kt_jvm_test(
     size = "small",
     srcs = [
         "ReplaceHooks.java",
+        "ReplaceHooksInit.java",
         "ReplaceHooksPatchTest.kt",
         "ReplaceHooksTarget.java",
         "ReplaceHooksTargetContract.java",

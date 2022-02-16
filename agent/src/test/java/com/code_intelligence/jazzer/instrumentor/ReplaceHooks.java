@@ -18,6 +18,7 @@ import com.code_intelligence.jazzer.api.HookType;
 import com.code_intelligence.jazzer.api.MethodHook;
 import java.lang.invoke.MethodHandle;
 
+@SuppressWarnings("unused")
 public class ReplaceHooks {
   @MethodHook(type = HookType.REPLACE,
       targetClassName = "com.code_intelligence.jazzer.instrumentor.ReplaceHooksTarget",
@@ -105,5 +106,24 @@ public class ReplaceHooks {
   public static Object
   patchAbstractListGet(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     return true;
+  }
+
+  @MethodHook(type = HookType.REPLACE,
+      targetClassName = "com.code_intelligence.jazzer.instrumentor.ReplaceHooksInit",
+      targetMethod = "<init>", targetMethodDescriptor = "()V")
+  public static ReplaceHooksInit
+  patchInit(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    // Test with subclass
+    return new ReplaceHooksInit() {
+      { initialized = true; }
+    };
+  }
+
+  @MethodHook(type = HookType.REPLACE,
+      targetClassName = "com.code_intelligence.jazzer.instrumentor.ReplaceHooksInit",
+      targetMethod = "<init>", targetMethodDescriptor = "(ZLjava/lang/String;)V")
+  public static ReplaceHooksInit
+  patchInitWithParams(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    return new ReplaceHooksInit(true, "");
   }
 }

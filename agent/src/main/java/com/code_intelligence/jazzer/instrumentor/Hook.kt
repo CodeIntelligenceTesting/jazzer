@@ -55,10 +55,6 @@ class Hook private constructor(hookMethod: Method, annotation: MethodHook) {
             require(Modifier.isPublic(hookMethod.modifiers)) { "$potentialHook: hook method must be public" }
             require(Modifier.isStatic(hookMethod.modifiers)) { "$potentialHook: hook method must be static" }
 
-            require(hookData.targetMethod != "<init>" || hookData.type != HookType.REPLACE) {
-                "$potentialHook: REPLACE hooks can't be applied to <init>"
-            }
-
             // Verify the hook method's parameter count.
             val numParameters = hookMethod.parameters.size
             when (hookData.type) {
@@ -79,12 +75,13 @@ class Hook private constructor(hookMethod: Method, annotation: MethodHook) {
                     "$potentialHook: return type must be void"
                 }
                 HookType.REPLACE -> if (potentialHook.targetReturnTypeDescriptor != null) {
-                    val returnTypeDescriptor = hookMethod.returnType.descriptor
-                    if (potentialHook.targetReturnTypeDescriptor == "V") {
-                        require(returnTypeDescriptor == "V") { "$potentialHook: return type must be void to match targetMethodDescriptor" }
+                    if (hookData.targetMethod == "<init>") {
+                        require(hookMethod.returnType.name == potentialHook.targetClassName) { "$potentialHook: return type must be ${potentialHook.targetClassName} to match target constructor" }
+                    } else if (potentialHook.targetReturnTypeDescriptor == "V") {
+                        require(hookMethod.returnType.descriptor == "V") { "$potentialHook: return type must be void to match targetMethodDescriptor" }
                     } else {
                         require(
-                            returnTypeDescriptor in listOf(
+                            hookMethod.returnType.descriptor in listOf(
                                 java.lang.Object::class.java.descriptor,
                                 potentialHook.targetReturnTypeDescriptor,
                                 potentialHook.targetWrappedReturnTypeDescriptor
