@@ -35,14 +35,11 @@ public final class ReflectionUtils {
     }
   }
 
-  public static Object newInstance(Constructor<?> constructor, Object... initargs)
-      throws Throwable {
+  public static Object newInstance(Constructor<?> constructor, Object... initargs) {
     try {
       return constructor.newInstance(initargs);
-    } catch (InstantiationException | IllegalAccessException e) {
+    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
       throw new ReflectionError(e);
-    } catch (InvocationTargetException e) {
-      throw e.getCause();
     }
   }
 
@@ -71,6 +68,30 @@ public final class ReflectionUtils {
       return field(clazz, fieldName);
     } catch (ReflectionError e) {
       return null;
+    }
+  }
+
+  public static Object fieldGet(Field field, Object obj) {
+    try {
+      return field.get(obj);
+    } catch (IllegalAccessException e) {
+      throw new ReflectionError(e);
+    }
+  }
+
+  public static void fieldSet(Field field, Object obj, Object value) {
+    try {
+      field.set(obj, value);
+    } catch (IllegalAccessException e) {
+      throw new ReflectionError(e);
+    }
+  }
+
+  public static int intFieldGet(Field field, Object obj) {
+    try {
+      return field.getInt(obj);
+    } catch (IllegalAccessException e) {
+      throw new ReflectionError(e);
     }
   }
 }

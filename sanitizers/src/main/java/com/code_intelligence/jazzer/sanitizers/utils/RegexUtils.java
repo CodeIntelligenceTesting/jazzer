@@ -17,11 +17,13 @@ package com.code_intelligence.jazzer.sanitizers.utils;
 import static com.code_intelligence.jazzer.sanitizers.utils.ReflectionUtils.clazz;
 import static com.code_intelligence.jazzer.sanitizers.utils.ReflectionUtils.constructor;
 import static com.code_intelligence.jazzer.sanitizers.utils.ReflectionUtils.field;
+import static com.code_intelligence.jazzer.sanitizers.utils.ReflectionUtils.fieldGet;
 import static com.code_intelligence.jazzer.sanitizers.utils.ReflectionUtils.fieldOrNull;
+import static com.code_intelligence.jazzer.sanitizers.utils.ReflectionUtils.fieldSet;
+import static com.code_intelligence.jazzer.sanitizers.utils.ReflectionUtils.intFieldGet;
 import static com.code_intelligence.jazzer.sanitizers.utils.ReflectionUtils.nestedClass;
 import static com.code_intelligence.jazzer.sanitizers.utils.ReflectionUtils.newInstance;
 
-import com.code_intelligence.jazzer.sanitizers.utils.ReflectionUtils.ReflectionError;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -234,41 +236,13 @@ public class RegexUtils {
     // only exceptions are the optimized subclasses of CharPropertyGreedy, which we replace by an
     // equivalent Curly.
     if (CHAR_PROPERTY_GREEDY.isInstance(node)) {
-      Object predicate;
-      try {
-        predicate = CHAR_PROPERTY_GREEDY_PREDICATE.get(node);
-      } catch (IllegalAccessException e) {
-        throw new ReflectionError(e);
-      }
-      Object predicateNode = null;
-      if (predicate != null) {
-        try {
-          predicateNode = newInstance(CHAR_PROPERTY_CONSTRUCTOR, predicate);
-        } catch (Throwable e) {
-          // This should never happen as the constructor does not throw exceptions.
-          throw new ReflectionError(e);
-        }
-      }
-      int cmin;
-      try {
-        cmin = CHAR_PROPERTY_GREEDY_CMIN.getInt(node);
-      } catch (IllegalAccessException e) {
-        throw new ReflectionError(e);
-      }
-      Object newNode;
-      try {
-        // Inlined value of java.util.regex.Pattern.MAX_REPS.
-        int cmax = limitedCmaxCount(cmin, 0x7FFFFFFF);
-        newNode = newInstance(CURLY_CONSTRUCTOR, predicateNode, cmin, cmax, QTYPE_GREEDY);
-      } catch (Throwable e) {
-        // This should never happen as the constructor does not throw exceptions.
-        throw new ReflectionError(e);
-      }
-      try {
-        NODE_NEXT.set(newNode, NODE_NEXT.get(node));
-      } catch (IllegalAccessException e) {
-        throw new ReflectionError(e);
-      }
+      Object predicate = fieldGet(CHAR_PROPERTY_GREEDY_PREDICATE, node);
+      Object predicateNode = newInstance(CHAR_PROPERTY_CONSTRUCTOR, predicate);
+      int cmin = intFieldGet(CHAR_PROPERTY_GREEDY_CMIN, node);
+      // Inlined value of java.util.regex.Pattern.MAX_REPS.
+      int cmax = limitedCmaxCount(cmin, 0x7FFFFFFF);
+      Object newNode = newInstance(CURLY_CONSTRUCTOR, predicateNode, cmin, cmax, QTYPE_GREEDY);
+      fieldSet(NODE_NEXT, newNode, fieldGet(NODE_NEXT, node));
       return newNode;
     }
 
@@ -279,12 +253,8 @@ public class RegexUtils {
       return node;
     }
 
-    try {
-      cmaxField.setInt(node, limitedCmaxCount(cminField.getInt(node), cmaxField.getInt(node)));
-      return node;
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
+    fieldSet(cmaxField, node, limitedCmaxCount(intFieldGet(cminField, node), intFieldGet(cmaxField, node)));
+    return node;
   }
 
   private static int limitedCmaxCount(int cmin, int cmax) {
