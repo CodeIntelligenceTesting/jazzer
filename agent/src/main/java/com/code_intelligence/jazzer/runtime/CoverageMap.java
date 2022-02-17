@@ -73,7 +73,7 @@ final public class CoverageMap {
   public static void enlargeIfNeeded(int nextId) {
     int newNumCounters = currentNumCounters;
     while (nextId >= newNumCounters) {
-      newNumCounters = 2 * currentNumCounters;
+      newNumCounters = 2 * newNumCounters;
       if (newNumCounters > MAX_NUM_COUNTERS) {
         System.out.printf("ERROR: Maximum number (%s) of coverage counters exceeded. Try to%n"
                 + "       limit the scope of a single fuzz target as much as possible to keep the%n"
