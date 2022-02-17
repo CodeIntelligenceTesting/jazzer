@@ -1,0 +1,16 @@
+java_library(
+    name = "regex_utils",
+    srcs = ["RegexUtils.java"],
+    visibility = [
+        "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers:__pkg__",
+        "//sanitizers/src/test/java/com/code_intelligence/jazzer/sanitizers/regex:__pkg__",
+    ],
+    deps = [
+        ":reflection_utils",
+    ],
+)
+
+java_library(
+    name = "reflection_utils",
+    srcs = ["ReflectionUtils.java"],
+)

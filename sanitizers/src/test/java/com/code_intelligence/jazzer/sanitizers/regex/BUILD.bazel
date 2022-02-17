@@ -1,0 +1,12 @@
+java_test(
+    name = "RegexUtilsTest",
+    srcs = ["RegexUtilsTest.java"],
+    jvm_flags = [
+        "--add-opens",
+        "java.base/java.util.regex=ALL-UNNAMED",
+    ],
+    deps = [
+        "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers/utils:regex_utils",
+        "@maven//:junit_junit",
+    ],
+)
