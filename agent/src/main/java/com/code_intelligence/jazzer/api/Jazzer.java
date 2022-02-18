@@ -18,11 +18,25 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
+import java.security.SecureRandom;
 
 /**
  * Helper class with static methods that interact with Jazzer at runtime.
  */
 final public class Jazzer {
+  /**
+   * A 32-bit random number that hooks can use to make pseudo-random choices
+   * between multiple possible mutations they could guide the fuzzer towards.
+   * Hooks <b>must not</b> base the decision whether or not to report a finding
+   * on this number as this will make findings non-reproducible.
+   *
+   * This is the same number that libFuzzer uses as a seed internally, which
+   * makes it possible to deterministically reproduce a previous fuzzing run by
+   * supplying the seed value printed by libFuzzer as the value of the
+   * {@code -seed}.
+   */
+  public static final int SEED = getLibFuzzerSeed();
+
   private static Class<?> jazzerInternal = null;
 
   private static MethodHandle traceStrcmp = null;
@@ -489,6 +503,18 @@ final public class Jazzer {
         e.printStackTrace();
       }
     }
+  }
+
+  private static int getLibFuzzerSeed() {
+    // The Jazzer driver sets this property based on the value of libFuzzer's -seed command-line
+    // option, which allows for fully reproducible fuzzing runs if set. If not running in the
+    // context of the driver, fall back to a random number instead.
+    String rawSeed = System.getProperty("jazzer.seed");
+    if (rawSeed == null) {
+      return new SecureRandom().nextInt();
+    }
+    // If jazzer.seed is set, we expect it to be a valid integer.
+    return Integer.parseUnsignedInt(rawSeed);
   }
 
   // Rethrows a (possibly checked) exception while avoiding a throws declaration.

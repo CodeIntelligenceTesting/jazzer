@@ -55,7 +55,7 @@ class JvmToolingTest : public ::testing::Test {
     Runfiles *runfiles = Runfiles::CreateForTest();
     FLAGS_cp = runfiles->Rlocation(FLAGS_cp);
 
-    jvm_ = std::make_unique<JVM>("test_executable");
+    jvm_ = std::make_unique<JVM>("test_executable", "1234");
   }
 
   static void TearDownTestCase() { jvm_.reset(nullptr); }
