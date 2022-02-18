@@ -155,9 +155,9 @@ void DumpJvmStackTraces() {
   // Do not detach as we may be the main thread (but the JVM exits anyway).
 }
 
-std::string dirFromFullPath(const std::string &path) {
+std::string_view dirFromFullPath(std::string_view path) {
   const auto pos = path.rfind(kPathSeparator);
-  if (pos != std::string::npos) {
+  if (pos != std::string_view::npos) {
     return path.substr(0, pos);
   }
   return "";
@@ -165,7 +165,7 @@ std::string dirFromFullPath(const std::string &path) {
 
 // getInstrumentorAgentPath searches for the fuzzing instrumentation agent and
 // returns the location if it is found. Otherwise it calls exit(0).
-std::string getInstrumentorAgentPath(const std::string &executable_path) {
+std::string getInstrumentorAgentPath(std::string_view executable_path) {
   // User provided agent location takes precedence.
   if (!FLAGS_agent_path.empty()) {
     if (std::ifstream(FLAGS_agent_path).good()) return FLAGS_agent_path;
@@ -179,7 +179,7 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
     using bazel::tools::cpp::runfiles::Runfiles;
     std::string error;
     std::unique_ptr<Runfiles> runfiles(
-        Runfiles::Create(executable_path, &error));
+        Runfiles::Create(std::string(executable_path), &error));
     if (runfiles != nullptr) {
       auto bazel_path = runfiles->Rlocation(kAgentBazelRunfilesPath);
       if (!bazel_path.empty() && std::ifstream(bazel_path).good())
@@ -248,7 +248,7 @@ std::vector<std::string> splitEscaped(const std::string &str) {
   return parts;
 }
 
-JVM::JVM(const std::string &executable_path) {
+JVM::JVM(std::string_view executable_path) {
   // combine class path from command line flags and JAVA_FUZZER_CLASSPATH env
   // variable
   std::string class_path = absl::StrFormat("-Djava.class.path=%s", FLAGS_cp);

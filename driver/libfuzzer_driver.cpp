@@ -57,7 +57,6 @@ extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
 }
 
 namespace {
-char *additional_arg;
 std::vector<char *> modified_argv;
 
 std::string GetNewTempFilePath() {
@@ -90,9 +89,11 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
   google::InitGoogleLogging((*argv)[0]);
   rules_jni_init((*argv)[0]);
 
-  auto argv_start = *argv;
-  auto argv_end = *argv + *argc;
+  const auto argv_start = *argv;
+  const auto argv_end = *argv + *argc;
 
+  // Parse libFuzzer flags to determine Jazzer flag defaults before letting
+  // gflags parse the command line.
   if (std::find(argv_start, argv_end, "-use_value_profile=1"s) != argv_end) {
     FLAGS_fake_pcs = true;
   }
@@ -110,7 +111,12 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
   // libFuzzer forwards the command line (e.g. with -jobs or -minimize_crash).
   gflags::ParseCommandLineFlags(&our_argc, &our_argv, false);
 
-  if (std::any_of(argv_start, argv_end, [](const std::string_view &arg) {
+  // Perform modifications of the command line arguments passed to libFuzzer if
+  // necessary by modifying this copy, which will be made the regular argv at
+  // the end of this function.
+  modified_argv = std::vector<char *>(argv_start, argv_end);
+
+  if (std::any_of(argv_start, argv_end, [](std::string_view arg) {
         return absl::StartsWith(arg, "-fork=") ||
                absl::StartsWith(arg, "-jobs=") ||
                absl::StartsWith(arg, "-merge=");
@@ -130,17 +136,8 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
           absl::StrFormat("--id_sync_file=%s", FLAGS_id_sync_file);
       // This argument can be accessed by libFuzzer at any (later) time and thus
       // cannot be safely freed by us.
-      additional_arg = strdup(new_arg.c_str());
-      modified_argv = std::vector<char *>(argv_start, argv_end);
-      modified_argv.push_back(additional_arg);
-      // Terminate modified_argv.
-      modified_argv.push_back(nullptr);
-      // Modify argv and argc for libFuzzer. modified_argv must not be changed
-      // after this point.
+      modified_argv.push_back(strdup(new_arg.c_str()));
       *argc += 1;
-      *argv = modified_argv.data();
-      argv_start = *argv;
-      argv_end = *argv + *argc;
     }
     // Creates the file, truncating it if it exists.
     std::ofstream touch_file(FLAGS_id_sync_file, std::ios_base::trunc);
@@ -155,10 +152,16 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
     std::atexit(cleanup_fn);
   }
 
-  initJvm(*argv_start);
+  // Terminate modified_argv.
+  modified_argv.push_back(nullptr);
+  // Modify argv and argc for libFuzzer. modified_argv must not be changed
+  // after this point.
+  *argv = modified_argv.data();
+
+  initJvm(**argv);
 }
 
-void AbstractLibfuzzerDriver::initJvm(const std::string &executable_path) {
+void AbstractLibfuzzerDriver::initJvm(std::string_view executable_path) {
   jvm_ = std::make_unique<jazzer::JVM>(executable_path);
 }
 
