@@ -23,6 +23,7 @@ namespace jazzer {
 // notifies the driver via native callbacks when the handlers fire.
 class SignalHandler {
  public:
+  SignalHandler() = delete;
   // Set up handlers for signal in Java.
   static void Setup(JNIEnv &env);
 };
