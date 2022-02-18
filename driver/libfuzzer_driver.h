@@ -49,7 +49,7 @@ class AbstractLibfuzzerDriver {
   std::unique_ptr<jazzer::JVM> jvm_;
 
  private:
-  void initJvm(const std::string &executable_path);
+  void initJvm(std::string_view executable_path);
 };
 
 class LibfuzzerDriver : public AbstractLibfuzzerDriver {
