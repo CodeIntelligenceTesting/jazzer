@@ -49,9 +49,6 @@ class AbstractLibfuzzerDriver {
   std::unique_ptr<jazzer::JVM> jvm_;
 
  private:
-  // forwards signals caught while the JVM is running
-  std::unique_ptr<jazzer::SignalHandler> signal_handler_;
-
   void initJvm(const std::string &executable_path);
 };
 
