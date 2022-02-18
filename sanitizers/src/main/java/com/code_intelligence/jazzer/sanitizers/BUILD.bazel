@@ -5,6 +5,7 @@ kt_jvm_library(
     srcs = [
         "Deserialization.kt",
         "ExpressionLanguageInjection.kt",
+        "LdapInjection.kt",
         "NamingContextLookup.kt",
         "OsCommandInjection.kt",
         "ReflectiveCall.kt",
