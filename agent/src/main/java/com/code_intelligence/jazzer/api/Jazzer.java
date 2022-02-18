@@ -37,25 +37,40 @@ final public class Jazzer {
    */
   public static final int SEED = getLibFuzzerSeed();
 
-  private static Class<?> jazzerInternal = null;
+  private static final Class<?> JAZZER_INTERNAL;
 
-  private static MethodHandle traceStrcmp = null;
-  private static MethodHandle traceStrstr = null;
-  private static MethodHandle traceMemcmp = null;
+  private static final MethodHandle TRACE_STRCMP;
+  private static final MethodHandle TRACE_STRSTR;
+  private static final MethodHandle TRACE_MEMCMP;
 
-  private static MethodHandle consume = null;
-  private static MethodHandle autofuzzFunction1 = null;
-  private static MethodHandle autofuzzFunction2 = null;
-  private static MethodHandle autofuzzFunction3 = null;
-  private static MethodHandle autofuzzFunction4 = null;
-  private static MethodHandle autofuzzFunction5 = null;
-  private static MethodHandle autofuzzConsumer1 = null;
-  private static MethodHandle autofuzzConsumer2 = null;
-  private static MethodHandle autofuzzConsumer3 = null;
-  private static MethodHandle autofuzzConsumer4 = null;
-  private static MethodHandle autofuzzConsumer5 = null;
+  private static final MethodHandle CONSUME;
+  private static final MethodHandle AUTOFUZZ_FUNCTION_1;
+  private static final MethodHandle AUTOFUZZ_FUNCTION_2;
+  private static final MethodHandle AUTOFUZZ_FUNCTION_3;
+  private static final MethodHandle AUTOFUZZ_FUNCTION_4;
+  private static final MethodHandle AUTOFUZZ_FUNCTION_5;
+  private static final MethodHandle AUTOFUZZ_CONSUMER_1;
+  private static final MethodHandle AUTOFUZZ_CONSUMER_2;
+  private static final MethodHandle AUTOFUZZ_CONSUMER_3;
+  private static final MethodHandle AUTOFUZZ_CONSUMER_4;
+  private static final MethodHandle AUTOFUZZ_CONSUMER_5;
 
   static {
+    Class<?> jazzerInternal = null;
+    MethodHandle traceStrcmp = null;
+    MethodHandle traceStrstr = null;
+    MethodHandle traceMemcmp = null;
+    MethodHandle consume = null;
+    MethodHandle autofuzzFunction1 = null;
+    MethodHandle autofuzzFunction2 = null;
+    MethodHandle autofuzzFunction3 = null;
+    MethodHandle autofuzzFunction4 = null;
+    MethodHandle autofuzzFunction5 = null;
+    MethodHandle autofuzzConsumer1 = null;
+    MethodHandle autofuzzConsumer2 = null;
+    MethodHandle autofuzzConsumer3 = null;
+    MethodHandle autofuzzConsumer4 = null;
+    MethodHandle autofuzzConsumer5 = null;
     try {
       jazzerInternal = Class.forName("com.code_intelligence.jazzer.runtime.JazzerInternal");
       Class<?> traceDataFlowNativeCallbacks =
@@ -110,6 +125,21 @@ final public class Jazzer {
       e.printStackTrace();
       System.exit(1);
     }
+    JAZZER_INTERNAL = jazzerInternal;
+    TRACE_STRCMP = traceStrcmp;
+    TRACE_STRSTR = traceStrstr;
+    TRACE_MEMCMP = traceMemcmp;
+    CONSUME = consume;
+    AUTOFUZZ_FUNCTION_1 = autofuzzFunction1;
+    AUTOFUZZ_FUNCTION_2 = autofuzzFunction2;
+    AUTOFUZZ_FUNCTION_3 = autofuzzFunction3;
+    AUTOFUZZ_FUNCTION_4 = autofuzzFunction4;
+    AUTOFUZZ_FUNCTION_5 = autofuzzFunction5;
+    AUTOFUZZ_CONSUMER_1 = autofuzzConsumer1;
+    AUTOFUZZ_CONSUMER_2 = autofuzzConsumer2;
+    AUTOFUZZ_CONSUMER_3 = autofuzzConsumer3;
+    AUTOFUZZ_CONSUMER_4 = autofuzzConsumer4;
+    AUTOFUZZ_CONSUMER_5 = autofuzzConsumer5;
   }
 
   private Jazzer() {}
@@ -134,7 +164,7 @@ final public class Jazzer {
   @SuppressWarnings("unchecked")
   public static <T1, R> R autofuzz(FuzzedDataProvider data, Function1<T1, R> func) {
     try {
-      return (R) autofuzzFunction1.invoke(data, func);
+      return (R) AUTOFUZZ_FUNCTION_1.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
       rethrowUnchecked(e.getCause());
     } catch (Throwable t) {
@@ -164,7 +194,7 @@ final public class Jazzer {
   @SuppressWarnings("unchecked")
   public static <T1, T2, R> R autofuzz(FuzzedDataProvider data, Function2<T1, T2, R> func) {
     try {
-      return (R) autofuzzFunction2.invoke(data, func);
+      return (R) AUTOFUZZ_FUNCTION_2.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
       rethrowUnchecked(e.getCause());
     } catch (Throwable t) {
@@ -194,7 +224,7 @@ final public class Jazzer {
   @SuppressWarnings("unchecked")
   public static <T1, T2, T3, R> R autofuzz(FuzzedDataProvider data, Function3<T1, T2, T3, R> func) {
     try {
-      return (R) autofuzzFunction3.invoke(data, func);
+      return (R) AUTOFUZZ_FUNCTION_3.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
       rethrowUnchecked(e.getCause());
     } catch (Throwable t) {
@@ -225,7 +255,7 @@ final public class Jazzer {
   public static <T1, T2, T3, T4, R> R autofuzz(
       FuzzedDataProvider data, Function4<T1, T2, T3, T4, R> func) {
     try {
-      return (R) autofuzzFunction4.invoke(data, func);
+      return (R) AUTOFUZZ_FUNCTION_4.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
       rethrowUnchecked(e.getCause());
     } catch (Throwable t) {
@@ -256,7 +286,7 @@ final public class Jazzer {
   public static <T1, T2, T3, T4, T5, R> R autofuzz(
       FuzzedDataProvider data, Function5<T1, T2, T3, T4, T5, R> func) {
     try {
-      return (R) autofuzzFunction5.invoke(data, func);
+      return (R) AUTOFUZZ_FUNCTION_5.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
       rethrowUnchecked(e.getCause());
     } catch (Throwable t) {
@@ -283,7 +313,7 @@ final public class Jazzer {
    */
   public static <T1> void autofuzz(FuzzedDataProvider data, Consumer1<T1> func) {
     try {
-      autofuzzConsumer1.invoke(data, func);
+      AUTOFUZZ_CONSUMER_1.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
       rethrowUnchecked(e.getCause());
     } catch (Throwable t) {
@@ -308,7 +338,7 @@ final public class Jazzer {
    */
   public static <T1, T2> void autofuzz(FuzzedDataProvider data, Consumer2<T1, T2> func) {
     try {
-      autofuzzConsumer2.invoke(data, func);
+      AUTOFUZZ_CONSUMER_2.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
       rethrowUnchecked(e.getCause());
     } catch (Throwable t) {
@@ -333,7 +363,7 @@ final public class Jazzer {
    */
   public static <T1, T2, T3> void autofuzz(FuzzedDataProvider data, Consumer3<T1, T2, T3> func) {
     try {
-      autofuzzConsumer3.invoke(data, func);
+      AUTOFUZZ_CONSUMER_3.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
       rethrowUnchecked(e.getCause());
     } catch (Throwable t) {
@@ -359,7 +389,7 @@ final public class Jazzer {
   public static <T1, T2, T3, T4> void autofuzz(
       FuzzedDataProvider data, Consumer4<T1, T2, T3, T4> func) {
     try {
-      autofuzzConsumer4.invoke(data, func);
+      AUTOFUZZ_CONSUMER_4.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
       rethrowUnchecked(e.getCause());
     } catch (Throwable t) {
@@ -385,7 +415,7 @@ final public class Jazzer {
   public static <T1, T2, T3, T4, T5> void autofuzz(
       FuzzedDataProvider data, Consumer5<T1, T2, T3, T4, T5> func) {
     try {
-      autofuzzConsumer5.invoke(data, func);
+      AUTOFUZZ_CONSUMER_5.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
       rethrowUnchecked(e.getCause());
     } catch (Throwable t) {
@@ -408,7 +438,7 @@ final public class Jazzer {
   @SuppressWarnings("unchecked")
   public static <T> T consume(FuzzedDataProvider data, Class<T> type) {
     try {
-      return (T) consume.invokeExact(data, type);
+      return (T) CONSUME.invokeExact(data, type);
     } catch (AutofuzzConstructionException ignored) {
       return null;
     } catch (Throwable t) {
@@ -432,7 +462,7 @@ final public class Jazzer {
    */
   public static void guideTowardsEquality(String current, String target, int id) {
     try {
-      traceStrcmp.invokeExact(current, target, 1, id);
+      TRACE_STRCMP.invokeExact(current, target, 1, id);
     } catch (Throwable e) {
       e.printStackTrace();
     }
@@ -452,7 +482,7 @@ final public class Jazzer {
    */
   public static void guideTowardsEquality(byte[] current, byte[] target, int id) {
     try {
-      traceMemcmp.invokeExact(current, target, 1, id);
+      TRACE_MEMCMP.invokeExact(current, target, 1, id);
     } catch (Throwable e) {
       e.printStackTrace();
     }
@@ -473,7 +503,7 @@ final public class Jazzer {
    */
   public static void guideTowardsContainment(String haystack, String needle, int id) {
     try {
-      traceStrstr.invokeExact(haystack, needle, id);
+      TRACE_STRSTR.invokeExact(haystack, needle, id);
     } catch (Throwable e) {
       e.printStackTrace();
     }
@@ -488,7 +518,7 @@ final public class Jazzer {
    */
   public static void reportFindingFromHook(Throwable finding) {
     try {
-      jazzerInternal.getMethod("reportFindingFromHook", Throwable.class).invoke(null, finding);
+      JAZZER_INTERNAL.getMethod("reportFindingFromHook", Throwable.class).invoke(null, finding);
     } catch (NullPointerException | IllegalAccessException | NoSuchMethodException e) {
       // We can only reach this point if the runtime is not in the classpath, but it must be if
       // hooks work and this function should only be called from them.
