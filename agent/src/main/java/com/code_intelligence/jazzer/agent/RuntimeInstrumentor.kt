@@ -68,11 +68,14 @@ internal class RuntimeInstrumentor(
     private var additionalClassesToHookInstrument: ClassNameGlobber = ClassNameGlobber(emptyList(), listOf())
     private val customHooks = mutableListOf<Hook>()
 
-    fun registerCustomHooks(hooks: List<Hook>) {
+    // Returns the globber of all classes to be instrumented with hooks that were added upon a
+    // hook's request.
+    fun registerCustomHooks(hooks: List<Hook>): ClassNameGlobber {
         customHooks.addAll(hooks)
         additionalClassesToHookInstrument = additionalClassesToHookInstrument.withAdditionalIncludes(
             hooks.flatMap(Hook::additionalClassesToHook)
         )
+        return additionalClassesToHookInstrument
     }
 
     @OptIn(kotlin.time.ExperimentalTime::class)

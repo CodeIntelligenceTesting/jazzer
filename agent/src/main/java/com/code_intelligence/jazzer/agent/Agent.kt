@@ -132,7 +132,7 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
         addTransformer(runtimeInstrumentor)
     }
 
-    val relevantClassesLoadedBeforeCustomHooks = instrumentation.allLoadedClasses
+    val classesLoadedBeforeCustomHooks = instrumentation.allLoadedClasses
         .map { it.name }
         .filter { classNameGlobber.includes(it) || customHookClassNameGlobber.includes(it) }
         .toSet()
@@ -146,15 +146,19 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             emptySet()
         }
     }
+    val additionalClassesToHookInstrumentor = runtimeInstrumentor.registerCustomHooks(customHooks)
     val relevantClassesLoadedAfterCustomHooks = instrumentation.allLoadedClasses
         .map { it.name }
-        .filter { classNameGlobber.includes(it) || customHookClassNameGlobber.includes(it) }
+        .filter {
+            classNameGlobber.includes(it) ||
+                customHookClassNameGlobber.includes(it) ||
+                additionalClassesToHookInstrumentor.includes(it)
+        }
         .toSet()
-    val nonHookClassesLoadedByHooks = relevantClassesLoadedAfterCustomHooks - relevantClassesLoadedBeforeCustomHooks
+    val nonHookClassesLoadedByHooks =
+        relevantClassesLoadedAfterCustomHooks - classesLoadedBeforeCustomHooks
     if (nonHookClassesLoadedByHooks.isNotEmpty()) {
         println("WARN: Hooks were not applied to the following classes as they are dependencies of hooks:")
         println("WARN: ${nonHookClassesLoadedByHooks.joinToString()}")
     }
-
-    runtimeInstrumentor.registerCustomHooks(customHooks)
 }
