@@ -35,6 +35,7 @@ MAVEN_ARTIFACTS = [
     "javax.xml.bind:jaxb-api:2.3.1",
     "javax.el:javax.el-api:3.0.1-b06",
     "org.hibernate:hibernate-validator:5.2.4.Final",
+    "com.unboundid:unboundid-ldapsdk:6.0.3",
     maven.artifact("org.apache.logging.log4j", "log4j-api", "2.14.1", testonly = True),
     maven.artifact("org.apache.logging.log4j", "log4j-core", "2.14.1", testonly = True),
 ]

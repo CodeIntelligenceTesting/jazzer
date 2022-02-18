@@ -48,6 +48,32 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "LdapSearchInjection",
+    srcs = [
+        "LdapSearchInjection.java",
+        "ldap/MockInitialContextFactory.java",
+        "ldap/MockLdapContext.java",
+    ],
+    target_class = "com.example.LdapSearchInjection",
+    deps = [
+        "@maven//:com_unboundid_unboundid_ldapsdk",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "LdapDnInjection",
+    srcs = [
+        "LdapDnInjection.java",
+        "ldap/MockInitialContextFactory.java",
+        "ldap/MockLdapContext.java",
+    ],
+    target_class = "com.example.LdapDnInjection",
+    deps = [
+        "@maven//:com_unboundid_unboundid_ldapsdk",
+    ],
+)
+
+java_fuzz_target_test(
     name = "RegexCanonEqInjection",
     srcs = ["RegexCanonEqInjection.java"],
     target_class = "com.example.RegexCanonEqInjection",
