@@ -41,11 +41,13 @@ val KNOWN_ARGUMENTS = listOf(
 )
 
 private object AgentJarFinder {
-    private val agentJarPath = AgentJarFinder::class.java.protectionDomain?.codeSource?.location?.toURI()
+    private val agentJarPath =
+        AgentJarFinder::class.java.protectionDomain?.codeSource?.location?.toURI()
     val agentJarFile = agentJarPath?.let { JarFile(File(it)) }
 }
 
-private val argumentDelimiter = if (System.getProperty("os.name").startsWith("Windows")) ";" else ":"
+private val argumentDelimiter =
+    if (System.getProperty("os.name").startsWith("Windows")) ";" else ":"
 
 @OptIn(ExperimentalPathApi::class)
 fun premain(agentArgs: String?, instrumentation: Instrumentation) {
@@ -74,9 +76,10 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
                 else -> splitArg[0] to splitArg[1].split(argumentDelimiter)
             }
         }.toMap()
-    val manifestCustomHookNames = ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES).flatMap {
-        it.split(':')
-    }
+    val manifestCustomHookNames =
+        ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES).flatMap {
+            it.split(':')
+        }
     val customHookNames = manifestCustomHookNames + (argumentMap["custom_hooks"] ?: emptyList())
     val classNameGlobber = ClassNameGlobber(
         argumentMap["instrumentation_includes"] ?: emptyList(),
