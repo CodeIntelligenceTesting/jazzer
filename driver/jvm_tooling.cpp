@@ -248,7 +248,7 @@ std::vector<std::string> splitEscaped(const std::string &str) {
   return parts;
 }
 
-JVM::JVM(std::string_view executable_path) {
+JVM::JVM(std::string_view executable_path, std::string_view seed) {
   // combine class path from command line flags and JAVA_FUZZER_CLASSPATH env
   // variable
   std::string class_path = absl::StrFormat("-Djava.class.path=%s", FLAGS_cp);
@@ -273,6 +273,11 @@ JVM::JVM(std::string_view executable_path) {
       JavaVMOption{.optionString = (char *)"-XX:-OmitStackTraceInFastThrow"});
   // Optimize GC for high throughput rather than low latency.
   options.push_back(JavaVMOption{.optionString = (char *)"-XX:+UseParallelGC"});
+  // Forward libFuzzer's random seed so that Jazzer hooks can base their
+  // mutations on it.
+  std::string seed_property = absl::StrFormat("-Djazzer.seed=%s", seed);
+  options.push_back(
+      JavaVMOption{.optionString = const_cast<char *>(seed_property.c_str())});
 
   // Add additional JVM options set through JAVA_OPTS.
   std::vector<std::string> java_opts_args;
