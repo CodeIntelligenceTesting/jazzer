@@ -82,7 +82,7 @@ __attribute__((noinline)) void trampoline(uint64_t arg1, uint64_t arg2,
   [[maybe_unused]] register uint64_t fake_pc_loc asm(REG_4) = fake_pc;
 #ifdef __aarch64__
   asm volatile(
-      // Load address of the nop sled into the default register for the return
+      // Load address of the ret sled into the default register for the return
       // address (offset of four instructions, which means 16 bytes).
       "adr x30, 16 \n\t"
       // Clear the lowest 2 bits of fake_pc. All arm64 instructions are four
@@ -94,10 +94,11 @@ __attribute__((noinline)) void trampoline(uint64_t arg1, uint64_t arg2,
       // Call the function by jumping to it and reusing all registers except
       // for the modified return address register r30.
       "br %[func] \n\t"
-      // The nop sled for arm64 consists of 128 nop instructions, each of which
-      // is 4 bytes long. It thus has the same byte length of 4 * 128 = 512 as
-      // the x86_64 sled, but coarser granularity.
-      REPEAT_128("nop \n\t")
+      // The ret sled for arm64 consists of 128 b instructions jumping to the
+      // end of the function. Each instruction is 4 bytes long. The sled thus
+      // has the same byte length of 4 * 128 = 512 as the x86_64 sled, but
+      // coarser granularity.
+      REPEAT_128("b end_of_function\n\t") "end_of_function:\n\t"
       :
       : "r"(arg1_loc),
         "r"(arg2_loc), [func] "r"(func_loc), [fake_pc] "r"(fake_pc_loc)
