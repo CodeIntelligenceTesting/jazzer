@@ -133,7 +133,7 @@ internal class TraceDataFlowInstrumentor(private val types: Set<InstrumentationT
     }
 
     private fun InsnList.pushFakePc() {
-        add(LdcInsnNode(random.nextInt(4096)))
+        add(LdcInsnNode(random.nextInt(512)))
     }
 
     private fun longCmpInstrumentation() = InsnList().apply {
