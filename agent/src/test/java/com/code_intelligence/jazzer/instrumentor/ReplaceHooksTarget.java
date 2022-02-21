@@ -15,9 +15,9 @@
 package com.code_intelligence.jazzer.instrumentor;
 
 import java.security.SecureRandom;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 // selfCheck() only passes with the hooks in ReplaceHooks.java applied.
@@ -56,9 +56,12 @@ public class ReplaceHooksTarget implements ReplaceHooksTargetContract {
       shouldCallPass();
     }
 
-    AbstractList<Boolean> boolList = new ArrayList<>();
+    ArrayList<Boolean> boolList = new ArrayList<>();
     boolList.add(false);
     results.put("arrayListGet", boolList.get(0));
+
+    HashSet<Boolean> boolSet = new HashSet<>();
+    results.put("stringSetGet", boolSet.contains(Boolean.TRUE));
 
     results.put("shouldInitialize", new ReplaceHooksInit().initialized);
     results.put("shouldInitializeWithParams", new ReplaceHooksInit(false, "foo").initialized);

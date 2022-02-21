@@ -18,47 +18,65 @@ package com.code_intelligence.jazzer.instrumentor
 
 import com.code_intelligence.jazzer.api.HookType
 import com.code_intelligence.jazzer.api.MethodHook
-import com.code_intelligence.jazzer.api.MethodHooks
 import com.code_intelligence.jazzer.utils.descriptor
 import java.lang.invoke.MethodHandle
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 
-class Hook private constructor(hookMethod: Method, annotation: MethodHook) {
-    // Allowing arbitrary exterior whitespace in the target class name allows for an easy workaround
-    // for mangled hooks due to shading applied to hooks.
-    private val targetClassName = annotation.targetClassName.trim()
-    val hookType = annotation.type
-    val targetMethodName = annotation.targetMethod
-    val targetMethodDescriptor = annotation.targetMethodDescriptor.takeIf { it.isNotBlank() }
-    val additionalClassesToHook = annotation.additionalClassesToHook.asList()
-
-    val targetInternalClassName = targetClassName.replace('.', '/')
-    private val targetReturnTypeDescriptor = targetMethodDescriptor?.let { extractReturnTypeDescriptor(it) }
-    private val targetWrappedReturnTypeDescriptor = targetReturnTypeDescriptor?.let { getWrapperTypeDescriptor(it) }
-
-    private val hookClassName: String = hookMethod.declaringClass.name
-    val hookInternalClassName = hookClassName.replace('.', '/')
-    val hookMethodName: String = hookMethod.name
-    val hookMethodDescriptor = hookMethod.descriptor
+class Hook private constructor(
+    private val targetClassName: String,
+    val hookType: HookType,
+    val targetMethodName: String,
+    val targetMethodDescriptor: String?,
+    val additionalClassesToHook: List<String>,
+    val targetInternalClassName: String,
+    private val targetReturnTypeDescriptor: String?,
+    private val targetWrappedReturnTypeDescriptor: String?,
+    private val hookClassName: String,
+    val hookInternalClassName: String,
+    val hookMethodName: String,
+    val hookMethodDescriptor: String
+) {
 
     override fun toString(): String {
         return "$hookType $targetClassName.$targetMethodName: $hookClassName.$hookMethodName $additionalClassesToHook"
     }
 
     companion object {
+        fun createAndVerifyHook(hookMethod: Method, hookData: MethodHook, className: String): Hook {
+            return createHook(hookMethod, hookData, className).also {
+                verify(hookMethod, it)
+            }
+        }
 
-        fun verifyAndGetHook(hookMethod: Method, hookData: MethodHook): Hook {
-            // Verify the annotation type and extract information for debug statements.
-            val potentialHook = Hook(hookMethod, hookData)
+        private fun createHook(hookMethod: Method, annotation: MethodHook, targetClassName: String): Hook {
+            val targetReturnTypeDescriptor = annotation.targetMethodDescriptor
+                .takeIf { it.isNotBlank() }?.let { extractReturnTypeDescriptor(it) }
+            val hookClassName: String = hookMethod.declaringClass.name
+            return Hook(
+                targetClassName = targetClassName,
+                hookType = annotation.type,
+                targetMethodName = annotation.targetMethod,
+                targetMethodDescriptor = annotation.targetMethodDescriptor.takeIf { it.isNotBlank() },
+                additionalClassesToHook = annotation.additionalClassesToHook.asList(),
+                targetInternalClassName = targetClassName.replace('.', '/'),
+                targetReturnTypeDescriptor = targetReturnTypeDescriptor,
+                targetWrappedReturnTypeDescriptor = targetReturnTypeDescriptor?.let { getWrapperTypeDescriptor(it) },
+                hookClassName = hookClassName,
+                hookInternalClassName = hookClassName.replace('.', '/'),
+                hookMethodName = hookMethod.name,
+                hookMethodDescriptor = hookMethod.descriptor
+            )
+        }
 
+        private fun verify(hookMethod: Method, potentialHook: Hook) {
             // Verify the hook method's modifiers (public static).
             require(Modifier.isPublic(hookMethod.modifiers)) { "$potentialHook: hook method must be public" }
             require(Modifier.isStatic(hookMethod.modifiers)) { "$potentialHook: hook method must be static" }
 
             // Verify the hook method's parameter count.
             val numParameters = hookMethod.parameters.size
-            when (hookData.type) {
+            when (potentialHook.hookType) {
                 HookType.BEFORE, HookType.REPLACE -> require(numParameters == 4) { "$potentialHook: incorrect number of parameters (expected 4)" }
                 HookType.AFTER -> require(numParameters == 5) { "$potentialHook: incorrect number of parameters (expected 5)" }
             }
@@ -71,12 +89,12 @@ class Hook private constructor(hookMethod: Method, annotation: MethodHook) {
             require(parameterTypes[3] == Int::class.javaPrimitiveType) { "$potentialHook: fourth parameter must have type int" }
 
             // Verify the hook method's return type if possible.
-            when (hookData.type) {
+            when (potentialHook.hookType) {
                 HookType.BEFORE, HookType.AFTER -> require(hookMethod.returnType == Void.TYPE) {
                     "$potentialHook: return type must be void"
                 }
                 HookType.REPLACE -> if (potentialHook.targetReturnTypeDescriptor != null) {
-                    if (hookData.targetMethod == "<init>") {
+                    if (potentialHook.targetMethodName == "<init>") {
                         require(hookMethod.returnType.name == potentialHook.targetClassName) { "$potentialHook: return type must be ${potentialHook.targetClassName} to match target constructor" }
                     } else if (potentialHook.targetReturnTypeDescriptor == "V") {
                         require(hookMethod.returnType.descriptor == "V") { "$potentialHook: return type must be void to match targetMethodDescriptor" }
@@ -95,7 +113,7 @@ class Hook private constructor(hookMethod: Method, annotation: MethodHook) {
             }
 
             // AfterMethodHook only: Verify the type of the last parameter if known.
-            if (hookData.type == HookType.AFTER && potentialHook.targetReturnTypeDescriptor != null) {
+            if (potentialHook.hookType == HookType.AFTER && potentialHook.targetReturnTypeDescriptor != null) {
                 require(
                     parameterTypes[4] == java.lang.Object::class.java ||
                         parameterTypes[4].descriptor == potentialHook.targetWrappedReturnTypeDescriptor
@@ -103,19 +121,6 @@ class Hook private constructor(hookMethod: Method, annotation: MethodHook) {
                     "$potentialHook: fifth parameter must have type Object or match the descriptor ${potentialHook.targetWrappedReturnTypeDescriptor}"
                 }
             }
-
-            return potentialHook
         }
     }
-}
-
-fun loadHooks(hookClass: Class<*>): List<Hook> {
-    val hooks = mutableListOf<Hook>()
-    for (method in hookClass.methods) {
-        method.getAnnotation(MethodHook::class.java)?.let { hooks.add(Hook.verifyAndGetHook(method, it)) }
-        method.getAnnotation(MethodHooks::class.java)?.let {
-            it.value.forEach { hookAnnotation -> hooks.add(Hook.verifyAndGetHook(method, hookAnnotation)) }
-        }
-    }
-    return hooks
 }

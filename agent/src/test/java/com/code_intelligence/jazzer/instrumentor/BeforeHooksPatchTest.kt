@@ -18,7 +18,8 @@ import org.junit.Test
 import java.io.File
 
 private fun applyBeforeHooks(bytecode: ByteArray): ByteArray {
-    return HookInstrumentor(loadHooks(BeforeHooks::class.java), false).instrument(bytecode)
+    val hooks = Hooks.loadHooks(setOf(BeforeHooks::class.java.name)).first().hooks
+    return HookInstrumentor(hooks, false).instrument(bytecode)
 }
 
 private fun getOriginalBeforeHooksTargetInstance(): BeforeHooksTargetContract {

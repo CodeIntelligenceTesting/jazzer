@@ -17,10 +17,14 @@
 package com.code_intelligence.jazzer.agent
 
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
+import com.code_intelligence.jazzer.instrumentor.Hooks
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
-import com.code_intelligence.jazzer.instrumentor.loadHooks
 import com.code_intelligence.jazzer.runtime.ManifestUtils
+import com.code_intelligence.jazzer.runtime.NativeLibHooks
 import com.code_intelligence.jazzer.runtime.SignalHandler
+import com.code_intelligence.jazzer.runtime.TraceCmpHooks
+import com.code_intelligence.jazzer.runtime.TraceDivHooks
+import com.code_intelligence.jazzer.runtime.TraceIndirHooks
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import java.io.File
 import java.lang.instrument.Instrumentation
@@ -127,49 +131,56 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             }
         }
     }
-    val runtimeInstrumentor = RuntimeInstrumentor(
-        instrumentation,
-        classNameGlobber,
-        customHookClassNameGlobber,
-        instrumentationTypes,
-        idSyncFile,
-        dumpClassesDir,
-    )
-    instrumentation.apply {
-        addTransformer(runtimeInstrumentor, true)
-    }
+    val includedHookNames = instrumentationTypes
+        .mapNotNull { type ->
+            when (type) {
+                InstrumentationType.CMP -> TraceCmpHooks::class.java.name
+                InstrumentationType.DIV -> TraceDivHooks::class.java.name
+                InstrumentationType.INDIR -> TraceIndirHooks::class.java.name
+                InstrumentationType.NATIVE -> NativeLibHooks::class.java.name
+                else -> null
+            }
+        }
+    val coverageIdSynchronizer = if (idSyncFile != null)
+        FileSyncCoverageIdStrategy(idSyncFile)
+    else
+        MemSyncCoverageIdStrategy()
 
     val classesToHookBeforeLoadingCustomHooks = instrumentation.allLoadedClasses
         .map { it.name }
         .filter { customHookClassNameGlobber.includes(it) }
         .toSet()
-    val customHooks = customHookNames.toSet().flatMap { hookClassName ->
-        try {
-            val hookClass = Class.forName(hookClassName)
-            loadHooks(hookClass).also {
-                println("INFO: Loaded ${it.size} hooks from $hookClassName")
-            }.map { Pair(it, hookClass) }
-        } catch (_: ClassNotFoundException) {
-            println("WARN: Failed to load hooks from $hookClassName")
-            emptyList()
-        }
-    }
+
+    val (includedHooks, customHooks) = Hooks.loadHooks(includedHookNames.toSet(), customHookNames.toSet())
     // If we don't append the JARs containing the custom hooks to the bootstrap class loader,
     // third-party hooks not contained in the agent JAR will not be able to instrument Java standard
     // library classes. These classes are loaded by the bootstrap / system class loader and would
     // not be considered when resolving references to hook methods, leading to NoClassDefFoundError
     // being thrown.
-    customHooks
-        .mapNotNull { jarUriForClass(it.second) }
+    customHooks.hookClasses
+        .mapNotNull { jarUriForClass(it) }
         .toSet()
         .map { JarFile(File(it)) }
         .forEach { instrumentation.appendToBootstrapClassLoaderSearch(it) }
-    val additionalClassesToHookInstrument = runtimeInstrumentor.registerCustomHooks(customHooks.map { it.first })
+
+    val runtimeInstrumentor = RuntimeInstrumentor(
+        instrumentation,
+        classNameGlobber,
+        customHookClassNameGlobber,
+        instrumentationTypes,
+        includedHooks.hooks,
+        customHooks.hooks,
+        customHooks.additionalHookClassNameGlobber,
+        coverageIdSynchronizer,
+        dumpClassesDir,
+    )
+    instrumentation.addTransformer(runtimeInstrumentor, true)
+
     val classesToHookAfterLoadingCustomHooks = instrumentation.allLoadedClasses
         .map { it.name }
         .filter {
             customHookClassNameGlobber.includes(it) ||
-                additionalClassesToHookInstrument.includes(it)
+                customHooks.additionalHookClassNameGlobber.includes(it)
         }
         .toSet()
     val classesMissingHooks =
