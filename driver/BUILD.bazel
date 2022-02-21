@@ -5,6 +5,9 @@ cc_library(
     srcs = ["sanitizer_hooks_with_pc.cpp"],
     hdrs = ["sanitizer_hooks_with_pc.h"],
     linkstatic = True,
+    visibility = [
+        "//agent/src/jmh/native/com/code_intelligence/jazzer/runtime:__pkg__",
+    ],
 )
 
 cc_test(

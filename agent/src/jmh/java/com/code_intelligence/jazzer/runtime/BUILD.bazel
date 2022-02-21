@@ -1,0 +1,50 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+load("//agent/src/jmh/java/com/code_intelligence/jazzer:jmh.bzl", "JMH_TEST_ARGS")
+
+java_binary(
+    name = "FuzzerCallbacksBenchmark",
+    main_class = "org.openjdk.jmh.Main",
+    runtime_deps = [
+        ":fuzzer_callbacks_benchmark",
+    ],
+)
+
+java_test(
+    name = "FuzzerCallbacksBenchmarkTest",
+    args = JMH_TEST_ARGS,
+    main_class = "org.openjdk.jmh.Main",
+    # Directly invoke JMH's main without using a testrunner.
+    use_testrunner = False,
+    runtime_deps = [
+        ":fuzzer_callbacks_benchmark",
+    ],
+)
+
+java_library(
+    name = "fuzzer_callbacks_benchmark",
+    srcs = ["FuzzerCallbacksBenchmark.java"],
+    plugins = ["//agent/src/jmh/java/com/code_intelligence/jazzer:JmhGeneratorAnnotationProcessor"],
+    deps = [
+        ":fuzzer_callbacks",
+        "@maven//:org_openjdk_jmh_jmh_core",
+    ],
+)
+
+java_jni_library(
+    name = "fuzzer_callbacks",
+    srcs = [
+        "FuzzerCallbacks.java",
+        "FuzzerCallbacksOptimizedCritical.java",
+        "FuzzerCallbacksOptimizedNonCritical.java",
+        # Uncomment to benchmark Project Panama-backed implementation (requires JDK 16+).
+        #        "FuzzerCallbacksPanama.java",
+        "FuzzerCallbacksWithPc.java",
+    ],
+    javacopts = [
+        # Uncomment to benchmark Project Panama-backed implementation (requires JDK 16+).
+        #        "--add-modules",
+        #        "jdk.incubator.foreign",
+    ],
+    native_libs = ["//agent/src/jmh/native/com/code_intelligence/jazzer/runtime:fuzzer_callbacks"],
+    visibility = ["//agent/src/jmh/native/com/code_intelligence/jazzer/runtime:__pkg__"],
+)

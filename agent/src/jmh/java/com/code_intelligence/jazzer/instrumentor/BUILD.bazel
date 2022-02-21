@@ -1,4 +1,5 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("//agent/src/jmh/java/com/code_intelligence/jazzer:jmh.bzl", "JMH_TEST_ARGS")
 
 java_binary(
     name = "CoverageInstrumentationBenchmark",
@@ -10,16 +11,7 @@ java_binary(
 
 java_test(
     name = "CoverageInstrumentationBenchmarkTest",
-    args = [
-        # Fail fast on any exceptions produced by benchmarks.
-        "-foe true",
-        "-wf 1",
-        "-f 1",
-        "-wi 1",
-        "-i 1",
-        "-r 1s",
-        "-w 1s",
-    ],
+    args = JMH_TEST_ARGS,
     jvm_flags = [
         "-XX:CompileCommand=print,*CoverageMap.recordCoverage",
     ],
@@ -34,7 +26,7 @@ java_test(
 java_library(
     name = "coverage_instrumentation_benchmark",
     srcs = ["CoverageInstrumentationBenchmark.java"],
-    plugins = [":JmhGeneratorAnnotationProcessor"],
+    plugins = ["//agent/src/jmh/java/com/code_intelligence/jazzer:JmhGeneratorAnnotationProcessor"],
     runtime_deps = [
         "@maven//:com_mikesamuel_json_sanitizer",
     ],
@@ -71,10 +63,4 @@ kt_jvm_library(
         "@jazzer_jacoco//:jacoco_internal",
         "@org_ow2_asm_asm//jar",
     ],
-)
-
-java_plugin(
-    name = "JmhGeneratorAnnotationProcessor",
-    processor_class = "org.openjdk.jmh.generators.BenchmarkProcessor",
-    deps = ["@maven//:org_openjdk_jmh_jmh_generator_annprocess"],
 )
