@@ -1,0 +1,6 @@
+java_plugin(
+    name = "JmhGeneratorAnnotationProcessor",
+    processor_class = "org.openjdk.jmh.generators.BenchmarkProcessor",
+    visibility = ["//agent/src/jmh/java:__subpackages__"],
+    deps = ["@maven//:org_openjdk_jmh_jmh_generator_annprocess"],
+)

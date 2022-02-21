@@ -1,0 +1,12 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
+
+cc_jni_library(
+    name = "fuzzer_callbacks",
+    srcs = ["fuzzer_callbacks.cpp"],
+    visibility = ["//agent/src/jmh/java/com/code_intelligence/jazzer/runtime:__pkg__"],
+    deps = [
+        "//agent/src/jmh/java/com/code_intelligence/jazzer/runtime:fuzzer_callbacks.hdrs",
+        "//driver:sanitizer_hooks_with_pc",
+        "@jazzer_libfuzzer//:libFuzzer",
+    ],
+)
