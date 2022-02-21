@@ -143,6 +143,11 @@ public @interface MethodHook {
    * The name of the class that contains the method that should be hooked,
    * as returned by {@link Class#getName()}.
    * <p>
+   * If an interface or abstract class is specified, also calls to all
+   * implementations and subclasses available on the classpath during startup
+   * are hooked, respectively. Interfaces and subclasses are not taken into
+   * account for concrete classes.
+   * <p>
    * Examples:
    * <p><ul>
    * <li>{@link String}: {@code "java.lang.String"}

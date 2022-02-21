@@ -12,6 +12,7 @@ kt_jvm_library(
         "Hook.kt",
         "HookInstrumentor.kt",
         "HookMethodVisitor.kt",
+        "Hooks.kt",
         "Instrumentor.kt",
         "StaticMethodStrategy.java",
         "TraceDataFlowInstrumentor.kt",

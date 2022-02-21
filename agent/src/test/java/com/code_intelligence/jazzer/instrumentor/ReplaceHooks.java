@@ -108,6 +108,13 @@ public class ReplaceHooks {
     return true;
   }
 
+  @MethodHook(type = HookType.REPLACE, targetClassName = "java.util.Set", targetMethod = "contains",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  public static boolean
+  patchSetGet(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    return true;
+  }
+
   @MethodHook(type = HookType.REPLACE,
       targetClassName = "com.code_intelligence.jazzer.instrumentor.ReplaceHooksInit",
       targetMethod = "<init>", targetMethodDescriptor = "()V")

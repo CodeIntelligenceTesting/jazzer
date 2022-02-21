@@ -33,9 +33,9 @@ private val BASE_EXCLUDED_CLASS_NAME_GLOBS = listOf(
     "sun.**",
 )
 
-class ClassNameGlobber(private val includes: List<String>, private val excludes: List<String>) {
+class ClassNameGlobber(includes: List<String>, excludes: List<String>) {
     // If no include globs are provided, start with all classes.
-    private val includeMatchers = (if (includes.isEmpty()) BASE_INCLUDED_CLASS_NAME_GLOBS else includes)
+    private val includeMatchers = includes.ifEmpty { BASE_INCLUDED_CLASS_NAME_GLOBS }
         .map(::SimpleGlobMatcher)
 
     // If no include globs are provided, additionally exclude stdlib classes as well as our own classes.
@@ -45,9 +45,6 @@ class ClassNameGlobber(private val includes: List<String>, private val excludes:
     fun includes(className: String): Boolean {
         return includeMatchers.any { it.matches(className) } && excludeMatchers.none { it.matches(className) }
     }
-
-    fun withAdditionalIncludes(includes: List<String>): ClassNameGlobber =
-        ClassNameGlobber(this.includes + includes, excludes)
 }
 
 class SimpleGlobMatcher(val glob: String) {

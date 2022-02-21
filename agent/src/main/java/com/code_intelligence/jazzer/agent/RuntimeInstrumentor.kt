@@ -18,11 +18,6 @@ import com.code_intelligence.jazzer.instrumentor.ClassInstrumentor
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hook
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
-import com.code_intelligence.jazzer.instrumentor.loadHooks
-import com.code_intelligence.jazzer.runtime.NativeLibHooks
-import com.code_intelligence.jazzer.runtime.TraceCmpHooks
-import com.code_intelligence.jazzer.runtime.TraceDivHooks
-import com.code_intelligence.jazzer.runtime.TraceIndirHooks
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
@@ -37,27 +32,8 @@ internal class RuntimeInstrumentor(
     private val classesToFullyInstrument: ClassNameGlobber,
     private val classesToHookInstrument: ClassNameGlobber,
     private val instrumentationTypes: Set<InstrumentationType>,
-    idSyncFile: Path?,
-    private val dumpClassesDir: Path?,
-) : ClassFileTransformer {
-
-    private val coverageIdSynchronizer = if (idSyncFile != null)
-        FileSyncCoverageIdStrategy(idSyncFile)
-    else
-        MemSyncCoverageIdStrategy()
-
-    private val includedHooks = instrumentationTypes
-        .mapNotNull { type ->
-            when (type) {
-                InstrumentationType.CMP -> TraceCmpHooks::class.java
-                InstrumentationType.DIV -> TraceDivHooks::class.java
-                InstrumentationType.INDIR -> TraceIndirHooks::class.java
-                InstrumentationType.NATIVE -> NativeLibHooks::class.java
-                else -> null
-            }
-        }
-        .flatMap { loadHooks(it) }
-
+    private val includedHooks: List<Hook>,
+    private val customHooks: List<Hook>,
     // Dedicated name globber for additional classes to hook stated in hook annotations is needed due to
     // existing include and exclude pattern of classesToHookInstrument. All classes are included in hook
     // instrumentation except the ones from default excludes, like JDK and Kotlin classes. But additional
@@ -65,18 +41,10 @@ internal class RuntimeInstrumentor(
     // and Kotlin internals.
     // FIXME: Adding an additional class to hook will apply _all_ hooks to it and not only the one it's
     // defined in. At some point we might want to track the list of classes per custom hook rather than globally.
-    private var additionalClassesToHookInstrument: ClassNameGlobber = ClassNameGlobber(emptyList(), listOf())
-    private val customHooks = mutableListOf<Hook>()
-
-    // Returns the globber of all classes to be instrumented with hooks that were added upon a
-    // hook's request.
-    fun registerCustomHooks(hooks: List<Hook>): ClassNameGlobber {
-        customHooks.addAll(hooks)
-        additionalClassesToHookInstrument = additionalClassesToHookInstrument.withAdditionalIncludes(
-            hooks.flatMap(Hook::additionalClassesToHook)
-        )
-        return additionalClassesToHookInstrument
-    }
+    private val additionalClassesToHookInstrument: ClassNameGlobber,
+    private val coverageIdSynchronizer: CoverageIdStrategy,
+    private val dumpClassesDir: Path?,
+) : ClassFileTransformer {
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     override fun transform(

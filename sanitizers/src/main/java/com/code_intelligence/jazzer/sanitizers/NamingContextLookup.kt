@@ -42,43 +42,7 @@ object NamingContextLookup {
         ),
         MethodHook(
             type = HookType.REPLACE,
-            targetClassName = "javax.naming.InitialContext",
-            targetMethod = "lookup",
-            targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "javax.naming.InitialDirContext",
-            targetMethod = "lookup",
-            targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "javax.naming.InitialLdapContext",
-            targetMethod = "lookup",
-            targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
             targetClassName = "javax.naming.Context",
-            targetMethod = "lookupLink",
-            targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "javax.naming.InitialContext",
-            targetMethod = "lookupLink",
-            targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "javax.naming.InitialDirContext",
-            targetMethod = "lookupLink",
-            targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "javax.naming.InitialLdapContext",
             targetMethod = "lookupLink",
             targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;",
         ),

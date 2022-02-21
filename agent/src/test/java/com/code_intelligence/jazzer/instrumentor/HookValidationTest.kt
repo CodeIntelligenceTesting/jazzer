@@ -22,7 +22,8 @@ import kotlin.test.assertFailsWith
 class HookValidationTest {
     @Test
     fun testValidHooks() {
-        assertEquals(6, loadHooks(ValidHookMocks::class.java).size)
+        val hooks = Hooks.loadHooks(setOf(ValidHookMocks::class.java.name)).first().hooks
+        assertEquals(6, hooks.size)
     }
 
     @Test
@@ -30,7 +31,8 @@ class HookValidationTest {
         for (method in InvalidHookMocks::class.java.methods) {
             if (method.isAnnotationPresent(MethodHook::class.java)) {
                 assertFailsWith<IllegalArgumentException>("Expected ${method.name} to be an invalid hook") {
-                    Hook.verifyAndGetHook(method, method.declaredAnnotations.first() as MethodHook)
+                    val methodHook = method.declaredAnnotations.first() as MethodHook
+                    Hook.createAndVerifyHook(method, methodHook, methodHook.targetClassName)
                 }
             }
         }

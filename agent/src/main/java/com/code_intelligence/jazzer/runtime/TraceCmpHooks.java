@@ -84,10 +84,6 @@ final public class TraceCmpHooks {
   @MethodHook(
       type = HookType.AFTER, targetClassName = "java.lang.CharSequence", targetMethod = "equals")
   @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Number", targetMethod = "equals")
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Byte", targetMethod = "equals")
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Integer", targetMethod = "equals")
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Short", targetMethod = "equals")
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Long", targetMethod = "equals")
   public static void
   genericEquals(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean returnValue) {
@@ -277,21 +273,8 @@ final public class TraceCmpHooks {
   private static final int MAX_NUM_KEYS_TO_ENUMERATE = 100;
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  @MethodHook(type = HookType.AFTER, targetClassName = "com.google.common.collect.ImmutableMap",
-      targetMethod = "get")
-  @MethodHook(
-      type = HookType.AFTER, targetClassName = "java.util.AbstractMap", targetMethod = "get")
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.util.EnumMap", targetMethod = "get")
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.util.HashMap", targetMethod = "get")
-  @MethodHook(
-      type = HookType.AFTER, targetClassName = "java.util.LinkedHashMap", targetMethod = "get")
   @MethodHook(type = HookType.AFTER, targetClassName = "java.util.Map", targetMethod = "get")
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.util.SortedMap", targetMethod = "get")
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.util.TreeMap", targetMethod = "get")
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.util.concurrent.ConcurrentMap",
-      targetMethod = "get")
-  public static void
-  mapGet(
+  public static void mapGet(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Object returnValue) {
     if (returnValue != null)
       return;
