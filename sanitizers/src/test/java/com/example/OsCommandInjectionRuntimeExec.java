@@ -17,14 +17,13 @@ package com.example;
 import static java.lang.Runtime.getRuntime;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class OsCommandInjectionRuntimeExec {
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     String input = data.consumeRemainingAsAsciiString();
     try {
-      Process process = getRuntime().exec(input);
+      Process process = getRuntime().exec(input, new String[] {});
       // This should be way faster, but we have to wait until the call is done
       if (!process.waitFor(10, TimeUnit.MILLISECONDS)) {
         process.destroyForcibly();

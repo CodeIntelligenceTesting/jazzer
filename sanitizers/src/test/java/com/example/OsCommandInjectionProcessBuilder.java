@@ -15,14 +15,15 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class OsCommandInjectionProcessBuilder {
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     String input = data.consumeRemainingAsAsciiString();
     try {
-      Process process = new ProcessBuilder(input).start();
+      ProcessBuilder processBuilder = new ProcessBuilder(input);
+      processBuilder.environment().clear();
+      Process process = processBuilder.start();
       // This should be way faster, but we have to wait until the call is done
       if (!process.waitFor(10, TimeUnit.MILLISECONDS)) {
         process.destroyForcibly();
