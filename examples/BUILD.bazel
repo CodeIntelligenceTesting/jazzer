@@ -87,6 +87,15 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "MazeFuzzer",
+    srcs = [
+        "src/main/java/com/example/MazeFuzzer.java",
+    ],
+    fuzzer_args = ["-use_value_profile=1"],
+    target_class = "com.example.MazeFuzzer",
+)
+
+java_fuzz_target_test(
     name = "ExampleOutOfMemoryFuzzer",
     srcs = [
         "src/main/java/com/example/ExampleOutOfMemoryFuzzer.java",
