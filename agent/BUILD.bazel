@@ -7,6 +7,7 @@ java_binary(
     create_executable = False,
     deploy_manifest_lines = [
         "Premain-Class: com.code_intelligence.jazzer.agent.Agent",
+        "Can-Retransform-Classes: true",
         "Jazzer-Hook-Classes: {}".format(":".join(SANITIZER_CLASSES)),
     ],
     runtime_deps = [

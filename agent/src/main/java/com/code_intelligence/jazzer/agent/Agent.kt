@@ -132,12 +132,12 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
         dumpClassesDir,
     )
     instrumentation.apply {
-        addTransformer(runtimeInstrumentor)
+        addTransformer(runtimeInstrumentor, true)
     }
 
-    val classesLoadedBeforeCustomHooks = instrumentation.allLoadedClasses
+    val classesToHookBeforeLoadingCustomHooks = instrumentation.allLoadedClasses
         .map { it.name }
-        .filter { classNameGlobber.includes(it) || customHookClassNameGlobber.includes(it) }
+        .filter { customHookClassNameGlobber.includes(it) }
         .toSet()
     val customHooks = customHookNames.toSet().flatMap { hookClassName ->
         try {
@@ -150,18 +150,31 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
         }
     }
     val additionalClassesToHookInstrumentor = runtimeInstrumentor.registerCustomHooks(customHooks)
-    val relevantClassesLoadedAfterCustomHooks = instrumentation.allLoadedClasses
+    val classesToHookAfterLoadingCustomHooks = instrumentation.allLoadedClasses
         .map { it.name }
         .filter {
-            classNameGlobber.includes(it) ||
-                customHookClassNameGlobber.includes(it) ||
+            customHookClassNameGlobber.includes(it) ||
                 additionalClassesToHookInstrumentor.includes(it)
         }
         .toSet()
-    val nonHookClassesLoadedByHooks =
-        relevantClassesLoadedAfterCustomHooks - classesLoadedBeforeCustomHooks
-    if (nonHookClassesLoadedByHooks.isNotEmpty()) {
-        println("WARN: Hooks were not applied to the following classes as they are dependencies of hooks:")
-        println("WARN: ${nonHookClassesLoadedByHooks.joinToString()}")
+    val classesMissingHooks =
+        (classesToHookAfterLoadingCustomHooks - classesToHookBeforeLoadingCustomHooks).toMutableSet()
+    if (classesMissingHooks.isNotEmpty()) {
+        if (instrumentation.isRetransformClassesSupported) {
+            // Only retransform classes that are not subject to coverage instrumentation since
+            // our coverage instrumentation does not support retransformation yet.
+            val classesToHook = classesMissingHooks
+                .filter { !classNameGlobber.includes(it) }
+                .map { Class.forName(it) }
+                .toTypedArray()
+            if (classesToHook.isNotEmpty()) {
+                instrumentation.retransformClasses(*classesToHook)
+            }
+            classesMissingHooks -= classesToHook.map { it.name }.toSet()
+        }
+        if (classesMissingHooks.isNotEmpty()) {
+            println("WARN: Hooks were not applied to the following classes as they are dependencies of hooks:")
+            println("WARN: ${classesMissingHooks.joinToString()}")
+        }
     }
 }
