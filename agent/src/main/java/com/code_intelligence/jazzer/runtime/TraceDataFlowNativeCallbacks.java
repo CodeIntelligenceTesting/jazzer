@@ -57,7 +57,7 @@ final public class TraceDataFlowNativeCallbacks {
 
   /* indirect-calls */
   // Calls: void __sanitizer_cov_trace_pc_indir(uintptr_t Callee);
-  private static native void tracePcIndir(int callee, int caller);
+  public static native void tracePcIndir(int callee, int caller);
 
   public static void traceReflectiveCall(Executable callee, int pc) {
     String className = callee.getDeclaringClass().getCanonicalName();

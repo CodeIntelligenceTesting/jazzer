@@ -42,6 +42,7 @@ final public class Jazzer {
   private static final MethodHandle TRACE_STRCMP;
   private static final MethodHandle TRACE_STRSTR;
   private static final MethodHandle TRACE_MEMCMP;
+  private static final MethodHandle TRACE_PC_INDIR;
 
   private static final MethodHandle CONSUME;
   private static final MethodHandle AUTOFUZZ_FUNCTION_1;
@@ -60,6 +61,7 @@ final public class Jazzer {
     MethodHandle traceStrcmp = null;
     MethodHandle traceStrstr = null;
     MethodHandle traceMemcmp = null;
+    MethodHandle tracePcIndir = null;
     MethodHandle consume = null;
     MethodHandle autofuzzFunction1 = null;
     MethodHandle autofuzzFunction2 = null;
@@ -89,6 +91,9 @@ final public class Jazzer {
           MethodType.methodType(void.class, byte[].class, byte[].class, int.class, int.class);
       traceMemcmp = MethodHandles.publicLookup().findStatic(
           traceDataFlowNativeCallbacks, "traceMemcmp", traceMemcmpType);
+      MethodType tracePcIndirType = MethodType.methodType(void.class, int.class, int.class);
+      tracePcIndir = MethodHandles.publicLookup().findStatic(
+          traceDataFlowNativeCallbacks, "tracePcIndir", tracePcIndirType);
 
       Class<?> metaClass = Class.forName("com.code_intelligence.jazzer.autofuzz.Meta");
       MethodType consumeType =
@@ -129,6 +134,7 @@ final public class Jazzer {
     TRACE_STRCMP = traceStrcmp;
     TRACE_STRSTR = traceStrstr;
     TRACE_MEMCMP = traceMemcmp;
+    TRACE_PC_INDIR = tracePcIndir;
     CONSUME = consume;
     AUTOFUZZ_FUNCTION_1 = autofuzzFunction1;
     AUTOFUZZ_FUNCTION_2 = autofuzzFunction2;
@@ -504,6 +510,54 @@ final public class Jazzer {
   public static void guideTowardsContainment(String haystack, String needle, int id) {
     try {
       TRACE_STRSTR.invokeExact(haystack, needle, id);
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Instructs the fuzzer to attain as many possible values for the absolute value of {@code state}
+   * as possible.
+   *
+   * Call this function from a fuzz target or a hook to help the fuzzer track partial progress
+   * (e.g. by passing the length of a common prefix of two lists that should become equal) or
+   * explore different values of state that is not directly related to code coverage (see the
+   * MazeFuzzer example).
+   *
+   * <b>Note:</b> This hint only takes effect if the fuzzer is run with the argument
+   * {@code -use_value_profile=1}.
+   *
+   * @param state a numeric encoding of a state that should be varied by the fuzzer
+   * @param id a (probabilistically) unique identifier for this particular state hint
+   */
+  public static void exploreState(byte state, int id) {
+    // We only use the lower 7 bits of state, which allows for 128 different state values tracked
+    // per id. The particular amount of 7 bits of state is also used in libFuzzer's
+    // TracePC::HandleCmp:
+    // https://github.com/llvm/llvm-project/blob/c12d49c4e286fa108d4d69f1c6d2b8d691993ffd/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp#L390
+    // This value should be large enough for most use cases (e.g. tracking the length of a prefix in
+    // a comparison) while being small enough that the bitmap isn't filled up too quickly
+    // (65536 bits/ 128 bits per id = 512 ids).
+
+    // We use tracePcIndir as a way to set a bit in libFuzzer's value profile bitmap. In
+    // TracePC::HandleCallerCallee, which is what this function ultimately calls through to, the
+    // lower 12 bits of each argument are combined into a 24-bit index into the bitmap, which is
+    // then reduced modulo a 16-bit prime. To keep the modulo bias small, we should fill as many
+    // of the relevant bits as possible. However, there are the following restrictions:
+    // 1. Since we use the return address trampoline to set the caller address indirectly, its
+    //    upper 3 bits are fixed, which leaves a total of 21 variable bits on x86_64.
+    // 2. On arm64 macOS, where every instruction is aligned to 4 bytes, the lower 2 bits of the
+    //    caller address will always be zero, further reducing the number of variable bits in the
+    //    caller parameter to 7.
+    // https://github.com/llvm/llvm-project/blob/c12d49c4e286fa108d4d69f1c6d2b8d691993ffd/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp#L121
+    // Even taking these restrictions into consideration, we pass state in the lowest bits of the
+    // caller address, which is used to form the lowest bits of the bitmap index. This should result
+    // in the best caching behavior as state is expected to change quickly in consecutive runs and
+    // in this way all its bitmap entries would be located close to each other in memory.
+    int lowerBits = (state & 0x7f) | (id << 7);
+    int upperBits = id >>> 5;
+    try {
+      TRACE_PC_INDIR.invokeExact(upperBits, lowerBits);
     } catch (Throwable e) {
       e.printStackTrace();
     }
