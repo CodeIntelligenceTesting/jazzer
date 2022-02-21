@@ -61,9 +61,9 @@ public final class MazeFuzzer {
       // every new combination of x and y as a new feature. Without it, the fuzzer would be
       // completely lost in the maze as guessing an escaping path by chance is close to impossible.
       Jazzer.exploreState(hash(x, y), 0);
-      if (REACHED_FIELDS[x][y] == ' ') {
+      if (REACHED_FIELDS[y][x] == ' ') {
         // Fuzzer reached a new field in the maze, print its progress.
-        REACHED_FIELDS[x][y] = '.';
+        REACHED_FIELDS[y][x] = '.';
         System.out.println(renderMaze(REACHED_FIELDS));
       }
     });
@@ -95,23 +95,25 @@ public final class MazeFuzzer {
     for (byte command : commands) {
       byte nextX = x;
       byte nextY = y;
-      switch (command % 4) {
-        case 0:
+      switch (command) {
+        case 'L':
           nextX--;
           break;
-        case 1:
+        case 'R':
           nextX++;
           break;
-        case 2:
+        case 'U':
           nextY--;
           break;
-        case 3:
+        case 'D':
           nextY++;
           break;
+        default:
+          return;
       }
       char nextFieldType;
       try {
-        nextFieldType = MAZE[nextX][nextY];
+        nextFieldType = MAZE[nextY][nextX];
       } catch (IndexOutOfBoundsException e) {
         // Fuzzer tried to walk through the exterior walls of the maze.
         continue;
@@ -139,7 +141,7 @@ public final class MazeFuzzer {
     char[][] mutableMaze = parseMaze();
     executeCommands(commands, (x, y, won) -> {
       if (!won) {
-        mutableMaze[x][y] = '.';
+        mutableMaze[y][x] = '.';
       }
     });
     return renderMaze(mutableMaze);
