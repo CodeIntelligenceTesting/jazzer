@@ -14,7 +14,10 @@
 
 package com.code_intelligence.jazzer.sanitizers
 
-import com.code_intelligence.jazzer.api.*
+import com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical
+import com.code_intelligence.jazzer.api.HookType
+import com.code_intelligence.jazzer.api.Jazzer
+import com.code_intelligence.jazzer.api.MethodHook
 import java.lang.invoke.MethodHandle
 
 /**
