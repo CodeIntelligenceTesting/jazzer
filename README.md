@@ -506,7 +506,7 @@ LD_PRELOAD=libcustom_mutator.so ./jazzer <arguments>
 
 ## Credit
 
-The following developers have contributed to Jazzer:
+The following developers have contributed to Jazzer before its public release:
 
 [Sergej Dechand](https://github.com/serj),
 [Christian Hartlage](https://github.com/dende),
