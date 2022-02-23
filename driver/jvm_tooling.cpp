@@ -27,7 +27,6 @@
 #include "absl/strings/str_split.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "libfuzzer_callbacks.h"
 #include "tools/cpp/runfiles/runfiles.h"
 #include "utils.h"
 
@@ -87,28 +86,16 @@ DEFINE_bool(hooks, true,
             "coverage information will be processed. This can be useful for "
             "running a regression test on non-instrumented bytecode.");
 
+DECLARE_bool(fake_pcs);
+
 #ifdef _WIN32
 #define ARG_SEPARATOR ";"
 #else
 #define ARG_SEPARATOR ":"
 #endif
 
-// Called by the agent when
-// com.code_intelligence.jazzer.instrumentor.ClassInstrumentor is initialized.
-// This only happens when FLAGS_hooks is true.
 extern "C" JNIEXPORT jint JNICALL JNI_OnLoad_jazzer_initialize(JavaVM *vm,
                                                                void *) {
-  if (!FLAGS_hooks) {
-    LOG(ERROR) << "JNI_OnLoad_jazzer_initialize called with --nohooks";
-    exit(1);
-  }
-  JNIEnv *env = nullptr;
-  jint result = vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_8);
-  if (result != JNI_OK) {
-    LOG(FATAL) << "Failed to get JNI environment";
-    exit(1);
-  }
-  jazzer::registerFuzzerCallbacks(*env);
   return JNI_VERSION_1_8;
 }
 
@@ -275,6 +262,10 @@ JVM::JVM(std::string_view executable_path, std::string_view seed) {
   std::string seed_property = absl::StrFormat("-Djazzer.seed=%s", seed);
   options.push_back(
       JavaVMOption{.optionString = const_cast<char *>(seed_property.c_str())});
+  std::string fake_pcs_property = absl::StrFormat(
+      "-Djazzer.fake_pcs=%s", FLAGS_fake_pcs ? "true" : "false");
+  options.push_back(JavaVMOption{
+      .optionString = const_cast<char *>(fake_pcs_property.c_str())});
 
   // Add additional JVM options set through JAVA_OPTS.
   std::vector<std::string> java_opts_args;

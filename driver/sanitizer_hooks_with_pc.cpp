@@ -148,7 +148,7 @@ void set_trampoline_offset() {
 // in their lowest 9 bite. This offset is constant for each binary, but may vary
 // based on code generation specifics. By calibrating the trampoline, the fuzzer
 // behavior is fully determined by the seed.
-void CalibrateTrampoline() {
+__attribute__((constructor)) void CalibrateTrampoline() {
   trampoline(0, 0, reinterpret_cast<void *>(&set_trampoline_offset), 0);
 }
 

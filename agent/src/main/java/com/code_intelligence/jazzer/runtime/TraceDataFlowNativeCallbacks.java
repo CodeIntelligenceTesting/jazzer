@@ -19,47 +19,90 @@ import java.lang.reflect.Executable;
 
 @SuppressWarnings("unused")
 final public class TraceDataFlowNativeCallbacks {
+  // Making this static final ensures that the JIT will eliminate the dead branch of a construct
+  // such as:
+  // if (USE_FAKE_PCS) ... else ...
+  private static final boolean USE_FAKE_PCS = useFakePcs();
+
   /* trace-cmp */
-  // Calls: void __sanitizer_cov_trace_cmp4(uint32_t Arg1, uint32_t Arg2);
-  public static native void traceCmpInt(int arg1, int arg2, int pc);
+  public static void traceCmpInt(int arg1, int arg2, int pc) {
+    if (USE_FAKE_PCS) {
+      traceCmpIntWithPc(arg1, arg2, pc);
+    } else {
+      traceCmpInt(arg1, arg2);
+    }
+  }
 
-  // Calls: void __sanitizer_cov_trace_const_cmp4(uint32_t Arg1, uint32_t Arg2);
-  public static native void traceConstCmpInt(int arg1, int arg2, int pc);
+  public static void traceConstCmpInt(int arg1, int arg2, int pc) {
+    if (USE_FAKE_PCS) {
+      traceConstCmpIntWithPc(arg1, arg2, pc);
+    } else {
+      traceConstCmpInt(arg1, arg2);
+    }
+  }
 
-  // Calls: void __sanitizer_cov_trace_cmp4(uint32_t Arg1, uint32_t Arg2);
-  public static native void traceCmpLong(long arg1, long arg2, int pc);
+  public static void traceCmpLong(long arg1, long arg2, int pc) {
+    if (USE_FAKE_PCS) {
+      traceCmpLongWithPc(arg1, arg2, pc);
+    } else {
+      traceCmpLong(arg1, arg2);
+    }
+  }
 
-  // Calls: void __sanitizer_cov_trace_switch(uint64_t Val, uint64_t *Cases);
-  public static native void traceSwitch(long val, long[] cases, int pc);
+  public static void traceSwitch(long val, long[] cases, int pc) {
+    if (USE_FAKE_PCS) {
+      traceSwitchWithPc(val, cases, pc);
+    } else {
+      traceSwitch(val, cases);
+    }
+  }
 
-  // Calls: void __sanitizer_weak_hook_memcmp(void *caller_pc, const void *b1, const void *b2,
-  // size_t n, int result);
   public static native void traceMemcmp(byte[] b1, byte[] b2, int result, int pc);
-
-  // Calls: void __sanitizer_weak_hook_strcmp(void *called_pc, const char *s1, const char *s2, int
-  // result);
   public static native void traceStrcmp(String s1, String s2, int result, int pc);
-
-  // Calls: void __sanitizer_weak_hook_strstr(void *called_pc, const char *s1, const char *s2, char
-  // *result);
   public static native void traceStrstr(String s1, String s2, int pc);
 
   /* trace-div */
-  // Calls: void __sanitizer_cov_trace_div4(uint32_t Val);
-  public static native void traceDivInt(int val, int pc);
+  public static void traceDivInt(int val, int pc) {
+    if (USE_FAKE_PCS) {
+      traceDivIntWithPc(val, pc);
+    } else {
+      traceDivInt(val);
+    }
+  }
 
-  // Calls: void __sanitizer_cov_trace_div8(uint64_t Val);
-  public static native void traceDivLong(long val, int pc);
+  public static void traceDivLong(long val, int pc) {
+    if (USE_FAKE_PCS) {
+      traceDivLongWithPc(val, pc);
+    } else {
+      traceDivLong(val);
+    }
+  }
 
   /* trace-gep */
-  // Calls: void __sanitizer_cov_trace_gep(uintptr_t Idx);
-  public static native void traceGep(long val, int pc);
+  public static void traceGep(long val, int pc) {
+    if (USE_FAKE_PCS) {
+      traceGepWithPc(val, pc);
+    } else {
+      traceGep(val);
+    }
+  }
 
   /* indirect-calls */
-  // Calls: void __sanitizer_cov_trace_pc_indir(uintptr_t Callee);
-  public static native void tracePcIndir(int callee, int caller);
+  public static void tracePcIndir(int callee, int caller) {
+    if (!USE_FAKE_PCS) {
+      // Without fake PCs, tracePcIndir will not record the relation between callee and pc, which
+      // makes it useless.
+      return;
+    }
+    tracePcIndir0(callee, caller);
+  }
 
   public static void traceReflectiveCall(Executable callee, int pc) {
+    if (!USE_FAKE_PCS) {
+      // Without fake PCs, tracePcIndir will not record the relation between callee and pc, which
+      // makes it useless.
+      return;
+    }
     String className = callee.getDeclaringClass().getCanonicalName();
     String executableName = callee.getName();
     String descriptor = Utils.getDescriptor(callee);
@@ -95,4 +138,28 @@ final public class TraceDataFlowNativeCallbacks {
   }
 
   public static native void handleLibraryLoad();
+
+  private static boolean useFakePcs() {
+    String rawFakePcs = System.getProperty("jazzer.fake_pcs");
+    if (rawFakePcs == null) {
+      return false;
+    }
+    return Boolean.parseBoolean(rawFakePcs);
+  }
+
+  private static native void traceCmpInt(int arg1, int arg2);
+  private static native void traceCmpIntWithPc(int arg1, int arg2, int pc);
+  private static native void traceConstCmpInt(int arg1, int arg2);
+  private static native void traceConstCmpIntWithPc(int arg1, int arg2, int pc);
+  private static native void traceCmpLong(long arg1, long arg2);
+  private static native void traceCmpLongWithPc(long arg1, long arg2, int pc);
+  private static native void traceSwitch(long val, long[] cases);
+  private static native void traceSwitchWithPc(long val, long[] cases, int pc);
+  private static native void traceDivInt(int val);
+  private static native void traceDivIntWithPc(int val, int pc);
+  private static native void traceDivLong(long val);
+  private static native void traceDivLongWithPc(long val, int pc);
+  private static native void traceGep(long val);
+  private static native void traceGepWithPc(long val, int pc);
+  private static native void tracePcIndir0(int callee, int caller);
 }
