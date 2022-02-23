@@ -48,9 +48,21 @@ cc_library(
 )
 
 cc_library(
+    name = "coverage_tracker",
+    srcs = ["coverage_tracker.cpp"],
+    hdrs = ["coverage_tracker.h"],
+    linkstatic = True,
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:coverage_map.hdrs",
+        "@fmeum_rules_jni//jni",
+    ],
+    # Symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
     name = "jvm_tooling_lib",
     srcs = [
-        "coverage_tracker.cpp",
         "fuzz_target_runner.cpp",
         "java_reproducer.cpp",
         "java_reproducer.h",
@@ -63,7 +75,6 @@ cc_library(
         "utils.h",
     ],
     hdrs = [
-        "coverage_tracker.h",
         "fuzz_target_runner.h",
         "fuzzed_data_provider.h",
         "jvm_tooling.h",
@@ -82,6 +93,7 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":coverage_tracker",
         ":fuzzed_data_provider",
         ":sanitizer_hooks_with_pc",
         ":signal_handler",
@@ -227,6 +239,7 @@ cc_test(
         ],
     }),
     deps = [
+        ":coverage_tracker",
         ":jvm_tooling_lib",
         ":test_main",
         "@bazel_tools//tools/cpp/runfiles",

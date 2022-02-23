@@ -20,8 +20,6 @@
 
 #include <string>
 
-#include "jvm_tooling.h"
-
 namespace jazzer {
 
 // The members of this struct are only accessed by libFuzzer.
@@ -30,9 +28,8 @@ struct __attribute__((packed)) PCTableEntry {
 };
 
 // CoverageTracker registers an array of 8-bit coverage counters with
-// libFuzzer. The array is backed by a MappedByteBuffer on the Java
-// side, where it is populated with the actual coverage information.
-class CoverageTracker : public ExceptionPrinter {
+// libFuzzer. The array is populated from Java using Unsafe.
+class CoverageTracker {
  private:
   static uint8_t *counters_;
 

@@ -21,6 +21,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "com_code_intelligence_jazzer_runtime_CoverageMap.h"
+
 extern "C" void __sanitizer_cov_8bit_counters_init(uint8_t *start,
                                                    uint8_t *end);
 extern "C" void __sanitizer_cov_pcs_init(const uintptr_t *pcs_beg,
@@ -143,17 +145,15 @@ std::string CoverageTracker::ComputeCoverage(JNIEnv &env) {
 }
 }  // namespace jazzer
 
-extern "C" {
-JNIEXPORT void JNICALL
+[[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_CoverageMap_initialize(
-    JNIEnv &env, jclass cls, jlong counters) {
-  ::jazzer::CoverageTracker::Initialize(env, counters);
+    JNIEnv *env, jclass cls, jlong counters) {
+  ::jazzer::CoverageTracker::Initialize(*env, counters);
 }
 
-JNIEXPORT void JNICALL
+[[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_CoverageMap_registerNewCounters(
-    JNIEnv &env, jclass cls, jint old_num_counters, jint new_num_counters) {
-  ::jazzer::CoverageTracker::RegisterNewCounters(env, old_num_counters,
+    JNIEnv *env, jclass cls, jint old_num_counters, jint new_num_counters) {
+  ::jazzer::CoverageTracker::RegisterNewCounters(*env, old_num_counters,
                                                  new_num_counters);
-}
 }
