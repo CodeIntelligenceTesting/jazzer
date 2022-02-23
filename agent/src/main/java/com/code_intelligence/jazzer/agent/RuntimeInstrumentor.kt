@@ -118,26 +118,34 @@ internal class RuntimeInstrumentor(
         protectionDomain: ProtectionDomain?,
         classfileBuffer: ByteArray
     ): ByteArray? {
-        if (module != null && !module.canRead(RuntimeInstrumentor::class.java.module)) {
-            // Make all other modules read our (unnamed) module, which allows them to access the classes needed by the
-            // instrumentations, e.g. CoverageMap. If a module can't be modified, it should not be instrumented as the
-            // injected bytecode might throw NoClassDefFoundError.
-            // https://mail.openjdk.java.net/pipermail/jigsaw-dev/2021-May/014663.html
-            if (!instrumentation.isModifiableModule(module)) {
-                val prettyClassName = internalClassName.replace('/', '.')
-                println("WARN: Failed to instrument $prettyClassName in unmodifiable module ${module.name}, skipping")
-                return null
+        return try {
+            if (module != null && !module.canRead(RuntimeInstrumentor::class.java.module)) {
+                // Make all other modules read our (unnamed) module, which allows them to access the classes needed by the
+                // instrumentations, e.g. CoverageMap. If a module can't be modified, it should not be instrumented as the
+                // injected bytecode might throw NoClassDefFoundError.
+                // https://mail.openjdk.java.net/pipermail/jigsaw-dev/2021-May/014663.html
+                if (!instrumentation.isModifiableModule(module)) {
+                    val prettyClassName = internalClassName.replace('/', '.')
+                    println("WARN: Failed to instrument $prettyClassName in unmodifiable module ${module.name}, skipping")
+                    return null
+                }
+                instrumentation.redefineModule(
+                    module,
+                    /* extraReads */ setOf(RuntimeInstrumentor::class.java.module),
+                    emptyMap(),
+                    emptyMap(),
+                    emptySet(),
+                    emptyMap()
+                )
             }
-            instrumentation.redefineModule(
-                module,
-                /* extraReads */ setOf(RuntimeInstrumentor::class.java.module),
-                emptyMap(),
-                emptyMap(),
-                emptySet(),
-                emptyMap()
-            )
+            transform(loader, internalClassName, classBeingRedefined, protectionDomain, classfileBuffer)
+        } catch (t: Throwable) {
+            // Throwables raised from transform are silently dropped, making it extremely hard to detect instrumentation
+            // failures. The docs advise to use a top-level try-catch.
+            // https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/ClassFileTransformer.html
+            t.printStackTrace()
+            throw t
         }
-        return transform(loader, internalClassName, classBeingRedefined, protectionDomain, classfileBuffer)
     }
 
     @OptIn(kotlin.time.ExperimentalTime::class)
