@@ -23,7 +23,6 @@
 #include "fuzz_target_runner.h"
 #include "fuzzed_data_provider.h"
 #include "jvm_tooling.h"
-#include "libfuzzer_callbacks.h"
 
 namespace jazzer {
 

@@ -61,6 +61,22 @@ cc_library(
 )
 
 cc_library(
+    name = "libfuzzer_callbacks",
+    srcs = ["libfuzzer_callbacks.cpp"],
+    linkstatic = True,
+    deps = [
+        ":sanitizer_hooks_with_pc",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
+        "@com_google_absl//absl/strings",
+        "@com_google_glog//:glog",
+        "@fmeum_rules_jni//jni",
+        "@jazzer_com_github_gflags_gflags//:gflags",
+    ],
+    # Symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
     name = "jvm_tooling_lib",
     srcs = [
         "fuzz_target_runner.cpp",
@@ -68,8 +84,6 @@ cc_library(
         "java_reproducer.h",
         "java_reproducer_templates.h",
         "jvm_tooling.cpp",
-        "libfuzzer_callbacks.cpp",
-        "libfuzzer_callbacks.h",
         "libfuzzer_driver.cpp",
         "utils.cpp",
         "utils.h",
@@ -95,7 +109,7 @@ cc_library(
     deps = [
         ":coverage_tracker",
         ":fuzzed_data_provider",
-        ":sanitizer_hooks_with_pc",
+        ":libfuzzer_callbacks",
         ":signal_handler",
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/strings",
