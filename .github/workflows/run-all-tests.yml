@@ -69,4 +69,6 @@ jobs:
         with:
           name: testlogs-${{ matrix.arch }}-${{ matrix.jdk }}
           # https://github.com/actions/upload-artifact/issues/92#issuecomment-711107236
-          path: bazel-testlogs*/**/test.log
+          path: |
+            bazel-testlogs*/**/test.log
+            bazel-out*/**/hs_err_pid*.log
