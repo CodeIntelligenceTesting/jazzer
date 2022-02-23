@@ -26,6 +26,12 @@ java_library(
     ],
 )
 
+jni_headers(
+    name = "coverage_map.hdrs",
+    lib = ":coverage_map",
+    visibility = ["//driver:__pkg__"],
+)
+
 java_library(
     name = "signal_handler",
     srcs = ["SignalHandler.java"],
