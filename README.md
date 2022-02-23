@@ -459,6 +459,7 @@ for more details.
 
 To use the compiled method hooks they have to be available on the classpath provided by `--cp` and can then be loaded by providing the
 flag `--custom_hooks`, which takes a colon-separated list of names of classes to load hooks from.
+If a hook is meant to be applied to a class in the Java standard library, it has to be loaded from a JAR file so that Jazzer can [add it to the bootstrap class loader search](https://docs.oracle.com/javase/8/docs/api/java/lang/instrument/Instrumentation.html#appendToBootstrapClassLoaderSearch-java.util.jar.JarFile-).
 This list of custom hooks can alternatively be specified via the `Jazzer-Hook-Classes` attribute in the fuzz target
 JAR's manifest.
 

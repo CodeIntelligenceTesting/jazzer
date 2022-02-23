@@ -23,6 +23,7 @@ import com.code_intelligence.jazzer.runtime.ManifestUtils
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import java.io.File
 import java.lang.instrument.Instrumentation
+import java.net.URI
 import java.nio.file.Paths
 import java.util.jar.JarFile
 import kotlin.io.path.ExperimentalPathApi
@@ -41,9 +42,11 @@ val KNOWN_ARGUMENTS = listOf(
 )
 
 private object AgentJarFinder {
-    private val agentJarPath =
-        AgentJarFinder::class.java.protectionDomain?.codeSource?.location?.toURI()
-    val agentJarFile = agentJarPath?.let { JarFile(File(it)) }
+    val agentJarFile = jarUriForClass(AgentJarFinder::class.java)?.let { JarFile(File(it)) }
+}
+
+fun jarUriForClass(clazz: Class<*>): URI? {
+    return clazz.protectionDomain?.codeSource?.location?.toURI()
 }
 
 private val argumentDelimiter =
@@ -141,20 +144,31 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
         .toSet()
     val customHooks = customHookNames.toSet().flatMap { hookClassName ->
         try {
-            loadHooks(Class.forName(hookClassName)).also {
+            val hookClass = Class.forName(hookClassName)
+            loadHooks(hookClass).also {
                 println("INFO: Loaded ${it.size} hooks from $hookClassName")
-            }
+            }.map { Pair(it, hookClass) }
         } catch (_: ClassNotFoundException) {
             println("WARN: Failed to load hooks from $hookClassName")
-            emptySet()
+            emptyList()
         }
     }
-    val additionalClassesToHookInstrumentor = runtimeInstrumentor.registerCustomHooks(customHooks)
+    // If we don't append the JARs containing the custom hooks to the bootstrap class loader,
+    // third-party hooks not contained in the agent JAR will not be able to instrument Java standard
+    // library classes. These classes are loaded by the bootstrap / system class loader and would
+    // not be considered when resolving references to hook methods, leading to NoClassDefFoundError
+    // being thrown.
+    customHooks
+        .mapNotNull { jarUriForClass(it.second) }
+        .toSet()
+        .map { JarFile(File(it)) }
+        .forEach { instrumentation.appendToBootstrapClassLoaderSearch(it) }
+    val additionalClassesToHookInstrument = runtimeInstrumentor.registerCustomHooks(customHooks.map { it.first })
     val classesToHookAfterLoadingCustomHooks = instrumentation.allLoadedClasses
         .map { it.name }
         .filter {
             customHookClassNameGlobber.includes(it) ||
-                additionalClassesToHookInstrumentor.includes(it)
+                additionalClassesToHookInstrument.includes(it)
         }
         .toSet()
     val classesMissingHooks =
