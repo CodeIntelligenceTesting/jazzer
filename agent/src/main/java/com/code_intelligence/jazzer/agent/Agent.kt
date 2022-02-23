@@ -20,6 +20,7 @@ import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.instrumentor.loadHooks
 import com.code_intelligence.jazzer.runtime.ManifestUtils
+import com.code_intelligence.jazzer.runtime.SignalHandler
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import java.io.File
 import java.lang.instrument.Instrumentation
@@ -191,4 +192,6 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             println("WARN: ${classesMissingHooks.joinToString()}")
         }
     }
+
+    SignalHandler.initialize()
 }

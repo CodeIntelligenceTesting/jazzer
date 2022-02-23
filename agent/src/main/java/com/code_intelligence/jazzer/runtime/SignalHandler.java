@@ -16,10 +16,14 @@ package com.code_intelligence.jazzer.runtime;
 
 import sun.misc.Signal;
 
-final class SignalHandler {
-  public static native void handleInterrupt();
-
-  public static void setupSignalHandlers() {
+public final class SignalHandler {
+  static {
     Signal.handle(new Signal("INT"), sig -> handleInterrupt());
   }
+
+  public static void initialize() {
+    // Implicitly runs the static initializer.
+  }
+
+  private static native void handleInterrupt();
 }

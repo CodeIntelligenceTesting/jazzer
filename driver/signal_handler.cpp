@@ -12,19 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "signal_handler.h"
-
 #include <jni.h>
 
 #include <atomic>
 #include <csignal>
-#include <stdexcept>
 
-constexpr auto kSignalHandlerClass =
-    "com/code_intelligence/jazzer/runtime/SignalHandler";
+#include "com_code_intelligence_jazzer_runtime_SignalHandler.h"
+
+#ifdef _WIN32
+// Windows does not have SIGUSR1, which triggers a graceful exit of libFuzzer.
+// Instead, trigger a hard exit.
+#define SIGUSR1 SIGTERM
+#endif
 
 // Handles SIGINT raised while running Java code.
-void JNICALL handleInterrupt(JNIEnv, jclass) {
+void Java_com_code_1intelligence_jazzer_runtime_SignalHandler_handleInterrupt(
+    JNIEnv *, jclass) {
   static std::atomic<bool> already_exiting{false};
   if (!already_exiting.exchange(true)) {
     // Let libFuzzer exit gracefully when the JVM received SIGINT.
@@ -34,33 +37,3 @@ void JNICALL handleInterrupt(JNIEnv, jclass) {
     raise(SIGTERM);
   }
 }
-
-namespace jazzer {
-void SignalHandler::Setup(JNIEnv &env) {
-  jclass signal_handler_class = env.FindClass(kSignalHandlerClass);
-  if (env.ExceptionCheck()) {
-    env.ExceptionDescribe();
-    throw std::runtime_error("could not find signal handler class");
-  }
-  JNINativeMethod signal_handler_methods[]{
-      {(char *)"handleInterrupt", (char *)"()V", (void *)&handleInterrupt},
-  };
-  env.RegisterNatives(signal_handler_class, signal_handler_methods, 1);
-  if (env.ExceptionCheck()) {
-    env.ExceptionDescribe();
-    throw std::runtime_error(
-        "could not register native callbacks 'handleInterrupt'");
-  }
-  jmethodID setup_signal_handlers_method_ =
-      env.GetStaticMethodID(signal_handler_class, "setupSignalHandlers", "()V");
-  if (env.ExceptionCheck()) {
-    env.ExceptionDescribe();
-    throw std::runtime_error("could not find setupSignalHandlers method");
-  }
-  env.CallStaticVoidMethod(signal_handler_class, setup_signal_handlers_method_);
-  if (env.ExceptionCheck()) {
-    env.ExceptionDescribe();
-    throw std::runtime_error("failed to set up signal handlers");
-  }
-}
-}  // namespace jazzer

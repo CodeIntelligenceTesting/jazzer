@@ -36,6 +36,18 @@ cc_library(
 )
 
 cc_library(
+    name = "signal_handler",
+    srcs = ["signal_handler.cpp"],
+    linkstatic = True,
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:signal_handler.hdrs",
+        "@fmeum_rules_jni//jni",
+    ],
+    # Symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
     name = "jvm_tooling_lib",
     srcs = [
         "coverage_tracker.cpp",
@@ -47,8 +59,6 @@ cc_library(
         "libfuzzer_callbacks.cpp",
         "libfuzzer_callbacks.h",
         "libfuzzer_driver.cpp",
-        "signal_handler.cpp",
-        "signal_handler.h",
         "utils.cpp",
         "utils.h",
     ],
@@ -66,12 +76,6 @@ cc_library(
     # Needs to be linked statically for JNI_OnLoad_jazzer_initialize to be found
     # by the JVM.
     linkstatic = True,
-    local_defines = select({
-        # Windows does not have SIGUSR1, which triggers a graceful exit of
-        # libFuzzer. Instead, trigger a hard exit.
-        "@platforms//os:windows": ["SIGUSR1=SIGTERM"],
-        "//conditions:default": [],
-    }),
     tags = [
         # Should be built through the cc_17_library driver_lib.
         "manual",
@@ -80,6 +84,7 @@ cc_library(
     deps = [
         ":fuzzed_data_provider",
         ":sanitizer_hooks_with_pc",
+        ":signal_handler",
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",

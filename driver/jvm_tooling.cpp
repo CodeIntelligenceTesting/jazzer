@@ -29,7 +29,6 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "libfuzzer_callbacks.h"
-#include "signal_handler.h"
 #include "tools/cpp/runfiles/runfiles.h"
 #include "utils.h"
 
@@ -111,7 +110,6 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad_jazzer_initialize(JavaVM *vm,
     exit(1);
   }
   jazzer::registerFuzzerCallbacks(*env);
-  jazzer::SignalHandler::Setup(*env);
   return JNI_VERSION_1_8;
 }
 
