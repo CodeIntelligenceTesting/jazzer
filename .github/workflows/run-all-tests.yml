@@ -49,11 +49,15 @@ jobs:
           path: ${{ matrix.cache }}
           key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
 
+      - name: Set Build Buddy config
+        run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
+        shell: bash
+
       - name: Build
-        run: bazelisk build --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} //...
+        run: bazelisk build ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} //...
 
       - name: Test
-        run: bazelisk test --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} //...
+        run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} //...
 
       - name: Print JDK used
         if: matrix.os != 'windows-latest'
