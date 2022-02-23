@@ -34,3 +34,13 @@ java_fuzz_target_test(
     hook_classes = ["com.example.HookDependenciesFuzzer"],
     target_class = "com.example.HookDependenciesFuzzer",
 )
+
+java_fuzz_target_test(
+    name = "AutofuzzWithoutCoverage",
+    fuzzer_args = [
+        # Autofuzz a method that triggers no coverage instrumentation (the Java standard library is
+        # excluded by default).
+        "--autofuzz=java.util.regex.Pattern::compile",
+        "--keep_going=1",
+    ],
+)
