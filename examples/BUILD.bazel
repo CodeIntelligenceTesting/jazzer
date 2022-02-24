@@ -145,7 +145,7 @@ java_fuzz_target_test(
         "JAVA_OPTS": "-Dfoo=not_foo -Djava_opts=1",
     },
     fuzzer_args = [
-        "-fork=5",
+        "-fork=6",
         "--additional_jvm_args=-Dbaz=baz",
     ] + select({
         # \\\\ becomes \\ when evaluated as a Starlark string literal, then \ in
