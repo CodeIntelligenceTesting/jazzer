@@ -467,6 +467,9 @@ final public class Jazzer {
    * @param id a (probabilistically) unique identifier for this particular compare hint
    */
   public static void guideTowardsEquality(String current, String target, int id) {
+    if (TRACE_STRCMP == null) {
+      return;
+    }
     try {
       TRACE_STRCMP.invokeExact(current, target, 1, id);
     } catch (Throwable e) {
@@ -487,6 +490,9 @@ final public class Jazzer {
    * @param id a (probabilistically) unique identifier for this particular compare hint
    */
   public static void guideTowardsEquality(byte[] current, byte[] target, int id) {
+    if (TRACE_MEMCMP == null) {
+      return;
+    }
     try {
       TRACE_MEMCMP.invokeExact(current, target, 1, id);
     } catch (Throwable e) {
@@ -508,6 +514,9 @@ final public class Jazzer {
    * @param id a (probabilistically) unique identifier for this particular compare hint
    */
   public static void guideTowardsContainment(String haystack, String needle, int id) {
+    if (TRACE_STRSTR == null) {
+      return;
+    }
     try {
       TRACE_STRSTR.invokeExact(haystack, needle, id);
     } catch (Throwable e) {
@@ -531,6 +540,9 @@ final public class Jazzer {
    * @param id a (probabilistically) unique identifier for this particular state hint
    */
   public static void exploreState(byte state, int id) {
+    if (TRACE_PC_INDIR == null) {
+      return;
+    }
     // We only use the lower 7 bits of state, which allows for 128 different state values tracked
     // per id. The particular amount of 7 bits of state is also used in libFuzzer's
     // TracePC::HandleCmp:
