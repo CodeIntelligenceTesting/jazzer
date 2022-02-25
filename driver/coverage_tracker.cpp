@@ -69,22 +69,16 @@ void CoverageTracker::RegisterNewCounters(JNIEnv &env, jint old_num_counters,
   }
   std::size_t diff_num_counters = new_num_counters - old_num_counters;
   // libFuzzer requires an array containing the instruction addresses associated
-  // with the coverage counters registered above. Given that we are
-  // instrumenting Java code, we need to synthesize addresses that are known not
-  // to conflict with any valid instruction address in native code. Just like
-  // atheris we ensure there are no collisions by using the addresses of an
-  // allocated buffer. Note: We intentionally never deallocate the allocations
-  // made here as they have static lifetime and we can't guarantee they wouldn't
-  // be freed before libFuzzer stops using them.
-  fake_instructions_ = new uint32_t[diff_num_counters];
-  std::fill(fake_instructions_, fake_instructions_ + diff_num_counters, 0);
-
-  // Never deallocated, see above.
+  // with the coverage counters registered above. This is required to report how
+  // many edges have been covered. However, libFuzzer only checks these
+  // addresses when the corresponding flag is set to 1. Therefore, it is safe to
+  // set the all PC entries to any value as long as the corresponding flag is
+  // set to zero. We set the value of each PC to the index of the corresponding
+  // edge ID. This facilitates finding the edge ID of each covered PC reported
+  // by libFuzzer.
   pc_entries_ = new PCTableEntry[diff_num_counters];
   for (std::size_t i = 0; i < diff_num_counters; ++i) {
-    pc_entries_[i].PC = reinterpret_cast<uintptr_t>(fake_instructions_ + i);
-    // TODO: Label Java PCs corresponding to functions as such.
-    pc_entries_[i].PCFlags = 0;
+    pc_entries_[i] = {i, 0};
   }
   __sanitizer_cov_8bit_counters_init(counters_ + old_num_counters,
                                      counters_ + new_num_counters);
@@ -122,15 +116,8 @@ void CoverageTracker::ReplayInitialCoverage(JNIEnv &env) {
 std::string CoverageTracker::ComputeCoverage(JNIEnv &env) {
   uintptr_t *covered_pcs;
   size_t num_covered_pcs = __sanitizer_cov_get_observed_pcs(&covered_pcs);
-  std::vector<jint> covered_edge_ids{};
-  covered_edge_ids.reserve(num_covered_pcs);
-  const uintptr_t first_pc = pc_entries_[0].PC;
-  std::for_each(covered_pcs, covered_pcs + num_covered_pcs,
-                [&covered_edge_ids, first_pc](const uintptr_t pc) {
-                  jint edge_id =
-                      (pc - first_pc) / sizeof(fake_instructions_[0]);
-                  covered_edge_ids.push_back(edge_id);
-                });
+  std::vector<jint> covered_edge_ids(covered_pcs,
+                                     covered_pcs + num_covered_pcs);
   delete[] covered_pcs;
 
   jclass coverage_recorder = env.FindClass(kCoverageRecorderClass);
