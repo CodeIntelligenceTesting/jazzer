@@ -14,7 +14,6 @@
 
 package com.code_intelligence.jazzer.runtime;
 
-import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
