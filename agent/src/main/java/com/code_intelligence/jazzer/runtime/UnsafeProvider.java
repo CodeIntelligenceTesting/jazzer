@@ -18,10 +18,10 @@ import java.lang.reflect.Field;
 import sun.misc.Unsafe;
 
 public final class UnsafeProvider {
-  private static final Unsafe unsafe = getUnsafeInternal();
+  private static final Unsafe UNSAFE = getUnsafeInternal();
 
   public static Unsafe getUnsafe() {
-    return unsafe;
+    return UNSAFE;
   }
 
   private static Unsafe getUnsafeInternal() {

@@ -45,7 +45,6 @@ void AssertNoException(JNIEnv &env) {
 namespace jazzer {
 
 uint8_t *CoverageTracker::counters_ = nullptr;
-uint32_t *CoverageTracker::fake_instructions_ = nullptr;
 PCTableEntry *CoverageTracker::pc_entries_ = nullptr;
 
 void CoverageTracker::Initialize(JNIEnv &env, jlong counters) {

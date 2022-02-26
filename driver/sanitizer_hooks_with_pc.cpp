@@ -146,7 +146,7 @@ void set_trampoline_offset() {
 
 // Computes the additive shift that needs to be applied to the caller PC by
 // caller_pc_to_fake_pc to make caller PC and resulting fake return address
-// in their lowest 9 bite. This offset is constant for each binary, but may vary
+// in their lowest 9 bits. This offset is constant for each binary, but may vary
 // based on code generation specifics. By calibrating the trampoline, the fuzzer
 // behavior is fully determined by the seed.
 __attribute__((constructor)) void CalibrateTrampoline() {

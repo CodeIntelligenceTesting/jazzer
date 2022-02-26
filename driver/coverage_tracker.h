@@ -32,8 +32,6 @@ struct __attribute__((packed)) PCTableEntry {
 class CoverageTracker {
  private:
   static uint8_t *counters_;
-
-  static uint32_t *fake_instructions_;
   static PCTableEntry *pc_entries_;
 
  public:
