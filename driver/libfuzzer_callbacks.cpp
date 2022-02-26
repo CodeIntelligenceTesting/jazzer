@@ -66,6 +66,22 @@ inline __attribute__((always_inline)) void *idToPc(jint id) {
   return reinterpret_cast<void *>(static_cast<uintptr_t>(id));
 }
 
+
+std::string string_to_hex(const std::string& input)
+{
+  static const char hex_digits[] = "0123456789abcdef";
+
+  std::string output;
+  output.reserve(input.length() * 2);
+  for (unsigned char c : input)
+  {
+    output.push_back(hex_digits[c >> 4]);
+    output.push_back(hex_digits[c & 15]);
+    output.push_back(' ');
+  }
+  return output;
+}
+
 void JNICALL libfuzzerStringCompareCallback(JNIEnv &env, jclass cls, jstring s1,
                                             jstring s2, jint result, jint id) {
   const char *s1_native = env.GetStringUTFChars(s1, nullptr);
@@ -76,6 +92,8 @@ void JNICALL libfuzzerStringCompareCallback(JNIEnv &env, jclass cls, jstring s1,
   if (env.ExceptionCheck()) env.ExceptionDescribe();
   std::size_t n2 = env.GetStringUTFLength(s2);
   if (env.ExceptionCheck()) env.ExceptionDescribe();
+  std::cout << "strcmp s1:\n" << string_to_hex(std::string(s1_native, n1)) <<  std::endl;
+  std::cout << "strcmp s2:\n" << string_to_hex(std::string(s2_native, n2)) <<  std::endl;
   __sanitizer_weak_hook_compare_bytes(idToPc(id), s1_native, s2_native, n1, n2,
                                       result);
   env.ReleaseStringUTFChars(s1, s1_native);

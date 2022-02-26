@@ -27,3 +27,27 @@ java_fuzz_target_test(
         "@maven//:org_apache_commons_commons_imaging",
     ],
 )
+
+java_fuzz_target_test(
+    name = "QuickAsciiStringCompareFuzzer",
+    srcs = ["src/test/java/com/example/QuickAsciiStringCompareFuzzer.java"],
+    fuzzer_args = [
+        "-runs=10000",
+    ],
+    target_class = "com.example.QuickAsciiStringCompareFuzzer",
+)
+
+java_fuzz_target_test(
+    name = "QuickStringCompareFuzzer",
+    srcs = ["src/test/java/com/example/QuickStringCompareFuzzer.java"],
+    fuzzer_args = [
+        "-runs=10000",
+    ],
+    target_class = "com.example.QuickStringCompareFuzzer",
+)
+
+java_fuzz_target_test(
+    name = "QuickVariableStringLengthFuzzer",
+    srcs = ["src/test/java/com/example/QuickVariableStringLengthFuzzer.java"],
+    target_class = "com.example.QuickVariableStringLengthFuzzer",
+)

@@ -53,6 +53,12 @@
 
 #include "absl/strings/str_format.h"
 
+extern "C" {
+void __sanitizer_weak_hook_compare_bytes(void *caller_pc, const void *s1,
+                                         const void *s2, std::size_t n1,
+                                         std::size_t n2, int result);
+}
+
 namespace {
 
 const uint8_t *gDataPtr = nullptr;
@@ -304,6 +310,21 @@ enum class Utf8GenerationState {
   SecondContinuationByte_LowSurrogate,
 };
 
+std::string string_to_hex(const std::string& input)
+{
+  static const char hex_digits[] = "0123456789abcdef";
+
+  std::string output;
+  output.reserve(input.length() * 2);
+  for (unsigned char c : input)
+  {
+    output.push_back(hex_digits[c >> 4]);
+    output.push_back(hex_digits[c & 15]);
+    output.push_back(' ');
+  }
+  return output;
+}
+
 // Consumes up to `max_bytes` arbitrary bytes pointed to by `ptr` and returns a
 // valid "modified UTF-8" string of length at most `max_length` that resembles
 // the input bytes as closely as possible as well as the number of consumed
@@ -371,7 +392,9 @@ std::pair<std::string, std::size_t> FixUpModifiedUtf8(const uint8_t *data,
             // UTF-8.
             if (c == 0) {
               str += static_cast<char>(kTwoByteZeroLeadingByte);
-              c = kTwoByteZeroContinuationByte;
+              str += static_cast<char>(kTwoByteZeroContinuationByte);
+              ++length;
+              continue;
             } else if (stop_on_backslash && c == '\\') {
               state = Utf8GenerationState::LeadingByte_AfterBackslash;
               // The slash either signals the end of the string or is skipped,
@@ -531,6 +554,7 @@ std::pair<std::string, std::size_t> FixUpModifiedUtf8(const uint8_t *data,
       }
     }
     str += static_cast<uint8_t>(c);
+    *(const_cast<uint8_t*>(pos)) = c;
   }
 
   // Backtrack the current incomplete character.
@@ -562,6 +586,8 @@ std::pair<std::string, std::size_t> FixUpModifiedUtf8(const uint8_t *data,
   }
 
 done:
+  std::cout << "FDP consumed input:\n" << string_to_hex(std::string(reinterpret_cast<const char*>(data), pos - data)) << std::endl;
+  std::cout << "FDP string output:\n" << string_to_hex(str) << std::endl;
   return std::make_pair(str, pos - data);
 }
 }  // namespace
@@ -597,9 +623,15 @@ jstring ConsumeStringInternal(JNIEnv &env, jint max_length, bool ascii_only,
     return nullptr;
   }
 
-  if (max_length == 0 || gRemainingBytes == 0) return env.NewStringUTF("");
+  if (max_length == 0 || gRemainingBytes == 0) {
+    std::cout << "FDP consumed input:\n" << std::endl;
+    std::cout << "FDP string output:\n" << std::endl;
+    return env.NewStringUTF("");
+  }
 
   if (gRemainingBytes == 1) {
+    std::cout << "FDP consumed input:\n" << string_to_hex(std::string(reinterpret_cast<const char*>(gDataPtr), 1)) << std::endl;
+    std::cout << "FDP string output:\n" << std::endl;
     Advance(1);
     return env.NewStringUTF("");
   }
