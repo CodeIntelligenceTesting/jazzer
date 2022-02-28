@@ -115,6 +115,13 @@ import java.lang.invoke.MethodType;
  * will be wrapped into their corresponding wrapper type (e.g. {@link Boolean}).
  * If the original method has return type {@code void}, this value will be
  * {@code null}.
+ * <p>
+ * Multiple {@link HookType#BEFORE} and {@link HookType#AFTER} hooks are
+ * allowed to reference the same target method. Exclusively one
+ * {@link HookType#REPLACE} hook may reference a target method, no other types
+ * allowed. Attention must be paid to not guide the Fuzzer in different
+ * directions via {@link Jazzer}'s {@code guideTowardsXY} methods in the
+ * different hooks.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
