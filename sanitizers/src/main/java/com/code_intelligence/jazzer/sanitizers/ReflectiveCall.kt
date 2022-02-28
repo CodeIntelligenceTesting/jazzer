@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.sanitizers
 
+import com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh
 import com.code_intelligence.jazzer.api.HookType
 import com.code_intelligence.jazzer.api.Jazzer
 import com.code_intelligence.jazzer.api.MethodHook
@@ -48,5 +49,24 @@ object ReflectiveCall {
     fun loadClassWithModuleHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
         val className = args[1] as? String ?: return
         Jazzer.guideTowardsEquality(className, HONEYPOT_CLASS_NAME, hookId)
+    }
+
+    @MethodHooks(
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Runtime", targetMethod = "load"),
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Runtime", targetMethod = "loadLibrary"),
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.System", targetMethod = "load"),
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.System", targetMethod = "loadLibrary"),
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.System", targetMethod = "mapLibraryName"),
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.ClassLoader", targetMethod = "findLibrary"),
+    )
+    @JvmStatic
+    fun loadLibraryHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
+        val libraryName = args[0] as? String ?: return
+        if (libraryName == HONEYPOT_LIBRARY_NAME) {
+            Jazzer.reportFindingFromHook(
+                FuzzerSecurityIssueHigh("load arbitrary library")
+            )
+        }
+        Jazzer.guideTowardsEquality(libraryName, HONEYPOT_LIBRARY_NAME, hookId)
     }
 }

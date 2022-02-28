@@ -21,6 +21,7 @@ import java.io.InputStream
  * jaz.Zer is a honeypot class: All of its methods report a finding when called.
  */
 const val HONEYPOT_CLASS_NAME = "jaz.Zer"
+const val HONEYPOT_LIBRARY_NAME = "jazzer_honeypot"
 
 internal fun Short.toBytes(): ByteArray {
     return byteArrayOf(
