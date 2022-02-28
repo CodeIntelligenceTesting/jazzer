@@ -1,4 +1,5 @@
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
+load("//bazel:compat.bzl", "SKIP_ON_MACOS")
 
 java_fuzz_target_test(
     name = "ObjectInputStreamDeserialization",
@@ -14,6 +15,17 @@ java_fuzz_target_test(
         "ReflectiveCall.java",
     ],
     target_class = "com.example.ReflectiveCall",
+)
+
+java_fuzz_target_test(
+    name = "LibraryLoad",
+    srcs = [
+        "LibraryLoad.java",
+    ],
+    target_class = "com.example.LibraryLoad",
+    # loading of native libraries is very slow on macos,
+    # especially using Java 17
+    target_compatible_with = SKIP_ON_MACOS,
 )
 
 java_fuzz_target_test(

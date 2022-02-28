@@ -277,15 +277,17 @@ private class HookMethodVisitor(
             val withDescriptorKey = "$withoutDescriptorKey#$descriptor"
             hooks[withDescriptorKey].orEmpty() + hooks[withoutDescriptorKey].orEmpty()
         }.sortedBy { it.hookType }
+        val replaceHookCount = result.count { it.hookType == HookType.REPLACE }
         check(
-            result.isEmpty() ||
-                result.count { it.hookType != HookType.REPLACE } == result.size ||
-                result.count { it.hookType == HookType.REPLACE } == 1
+            replaceHookCount == 0 ||
+                (replaceHookCount == 1 && result.size == 1)
         ) {
             "For a given method, You can either have a single REPLACE hook or BEFORE/AFTER hooks. Found:\n $result"
         }
 
-        return result.filter { !isReplaceHookInJava6mode(it) }
+        return result
+            .filter { !isReplaceHookInJava6mode(it) }
+            .sortedByDescending { it.toString() }
     }
 
     private fun isReplaceHookInJava6mode(hook: Hook): Boolean {
