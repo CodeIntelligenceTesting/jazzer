@@ -25,15 +25,11 @@ size_t __sanitizer_cov_get_observed_pcs(uintptr_t **pc_entries) {
   *pc_entries = new uintptr_t[0];
   return 0;
 }
-void __sanitizer_weak_hook_memcmp(void *caller_pc, const void *s1,
-                                  const void *s2, std::size_t n, int result) {}
-void __sanitizer_weak_hook_strcmp(void *caller_pc, const char *s1,
-                                  const char *s2, int result) {}
 void __sanitizer_weak_hook_compare_bytes(void *caller_pc, const void *s1,
                                          const void *s2, std::size_t n1,
                                          std::size_t n2, int result) {}
-void __sanitizer_weak_hook_strstr(void *caller_pc, const char *s1,
-                                  const char *s2, int result) {}
+void __sanitizer_weak_hook_memmem(void *called_pc, const void *s1, size_t len1,
+                                  const void *s2, size_t len2, void *result) {}
 void __sanitizer_cov_trace_cmp4(uint32_t arg1, uint32_t arg2) {}
 void __sanitizer_cov_trace_cmp8(uint64_t arg1, uint64_t arg2) {}
 void __sanitizer_cov_trace_switch(uint64_t val, uint64_t *cases) {}

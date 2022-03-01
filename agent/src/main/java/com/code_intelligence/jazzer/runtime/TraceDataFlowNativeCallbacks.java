@@ -16,6 +16,7 @@ package com.code_intelligence.jazzer.runtime;
 
 import com.code_intelligence.jazzer.utils.Utils;
 import java.lang.reflect.Executable;
+import java.nio.charset.Charset;
 
 @SuppressWarnings("unused")
 final public class TraceDataFlowNativeCallbacks {
@@ -23,6 +24,12 @@ final public class TraceDataFlowNativeCallbacks {
   // such as:
   // if (USE_FAKE_PCS) ... else ...
   private static final boolean USE_FAKE_PCS = useFakePcs();
+  // Note that we are not encoding as modified UTF-8 here: The FuzzedDataProvider transparently
+  // converts CESU8 into modified UTF-8 by coding null bytes on two bytes. Since the fuzzer is more
+  // likely to insert literal null bytes, having both the fuzzer input and the reported string
+  // comparisons be CESU8 should perform even better than the current implementation using modified
+  // UTF-8.
+  private static final Charset FUZZED_DATA_CHARSET = Charset.forName("CESU8");
 
   /* trace-cmp */
   public static void traceCmpInt(int arg1, int arg2, int pc) {
@@ -58,8 +65,14 @@ final public class TraceDataFlowNativeCallbacks {
   }
 
   public static native void traceMemcmp(byte[] b1, byte[] b2, int result, int pc);
-  public static native void traceStrcmp(String s1, String s2, int result, int pc);
-  public static native void traceStrstr(String s1, String s2, int pc);
+
+  public static void traceStrcmp(String s1, String s2, int result, int pc) {
+    traceMemcmp(encodeForLibFuzzer(s1), encodeForLibFuzzer(s2), result, pc);
+  }
+
+  public static void traceStrstr(String s1, String s2, int pc) {
+    traceStrstr0(encodeForLibFuzzer(s2), pc);
+  }
 
   /* trace-div */
   public static void traceDivInt(int val, int pc) {
@@ -139,6 +152,12 @@ final public class TraceDataFlowNativeCallbacks {
 
   public static native void handleLibraryLoad();
 
+  private static byte[] encodeForLibFuzzer(String str) {
+    // libFuzzer string hooks only ever consume the first 64 bytes, so we can definitely cut the
+    // string off after 64 characters.
+    return str.substring(0, Math.min(str.length(), 64)).getBytes(FUZZED_DATA_CHARSET);
+  }
+
   private static boolean useFakePcs() {
     String rawFakePcs = System.getProperty("jazzer.fake_pcs");
     if (rawFakePcs == null) {
@@ -146,6 +165,8 @@ final public class TraceDataFlowNativeCallbacks {
     }
     return Boolean.parseBoolean(rawFakePcs);
   }
+
+  private static native void traceStrstr0(byte[] needle, int pc);
 
   private static native void traceCmpInt(int arg1, int arg2);
   private static native void traceCmpIntWithPc(int arg1, int arg2, int pc);
