@@ -1,3 +1,4 @@
+load("//bazel:compat.bzl", "SKIP_ON_MACOS")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
 java_fuzz_target_test(
@@ -6,7 +7,7 @@ java_fuzz_target_test(
         "src/test/java/com/example/LongStringFuzzer.java",
     ],
     data = ["src/test/java/com/example/LongStringFuzzerInput"],
-    execute_crash_reproducer = True,
+    expected_finding = "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
     fuzzer_args = [
         "$(rootpath src/test/java/com/example/LongStringFuzzerInput)",
     ],
@@ -16,7 +17,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "JpegImageParserAutofuzz",
-    execute_crash_reproducer = True,
+    expected_finding = "java.lang.NegativeArraySizeException",
     fuzzer_args = [
         "--autofuzz=org.apache.commons.imaging.formats.jpeg.JpegImageParser::getBufferedImage",
         # Exit after the first finding for testing purposes.
@@ -37,10 +38,35 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "AutofuzzWithoutCoverage",
+    expected_finding = "java.lang.NullPointerException",
     fuzzer_args = [
         # Autofuzz a method that triggers no coverage instrumentation (the Java standard library is
         # excluded by default).
         "--autofuzz=java.util.regex.Pattern::compile",
         "--keep_going=1",
     ],
+)
+
+java_fuzz_target_test(
+    name = "ForkModeFuzzer",
+    size = "enormous",
+    srcs = [
+        "src/test/java/com/example/ForkModeFuzzer.java",
+    ],
+    env = {
+        "JAVA_OPTS": "-Dfoo=not_foo -Djava_opts=1",
+    },
+    expected_finding = "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+    fuzzer_args = [
+        "-fork=3",
+        "--additional_jvm_args=-Dbaz=baz",
+    ] + select({
+        # \\\\ becomes \\ when evaluated as a Starlark string literal, then \ in
+        # java_fuzz_target_test.
+        "@platforms//os:windows": ["--jvm_args=-Dfoo=foo;-Dbar=b\\\\;ar"],
+        "//conditions:default": ["--jvm_args=-Dfoo=foo:-Dbar=b\\\\:ar"],
+    }),
+    target_class = "com.example.ForkModeFuzzer",
+    # The exit codes of the forked libFuzzer processes are not picked up correctly.
+    target_compatible_with = SKIP_ON_MACOS,
 )

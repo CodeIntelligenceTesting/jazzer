@@ -35,6 +35,8 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 public class FuzzTargetTestWrapper {
+  private static final boolean JAZZER_CI = "1".equals(System.getenv("JAZZER_CI"));
+
   public static void main(String[] args) {
     Runfiles runfiles;
     String driverActualPath;
@@ -42,7 +44,7 @@ public class FuzzTargetTestWrapper {
     String jarActualPath;
     boolean verifyCrashInput;
     boolean verifyCrashReproducer;
-    boolean executeCrashReproducer;
+    String expectedFinding;
     try {
       runfiles = Runfiles.create();
       driverActualPath = lookUpRunfile(runfiles, args[0]);
@@ -50,7 +52,7 @@ public class FuzzTargetTestWrapper {
       jarActualPath = lookUpRunfile(runfiles, args[2]);
       verifyCrashInput = Boolean.parseBoolean(args[3]);
       verifyCrashReproducer = Boolean.parseBoolean(args[4]);
-      executeCrashReproducer = Boolean.parseBoolean(args[5]);
+      expectedFinding = args[5];
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
@@ -92,13 +94,13 @@ public class FuzzTargetTestWrapper {
         System.exit(4);
       }
       // Verify that libFuzzer dumped a crashing input.
-      if (verifyCrashInput
+      if (JAZZER_CI && verifyCrashInput
           && Arrays.stream(outputFiles).noneMatch(name -> name.startsWith("crash-"))) {
         System.out.printf("No crashing input found in %s%n", outputDir);
         System.exit(5);
       }
       // Verify that libFuzzer dumped a crash reproducer.
-      if (verifyCrashReproducer
+      if (JAZZER_CI && verifyCrashReproducer
           && Arrays.stream(outputFiles).noneMatch(name -> name.startsWith("Crash_"))) {
         System.out.printf("No crash reproducer found in %s%n", outputDir);
         System.exit(6);
@@ -108,9 +110,10 @@ public class FuzzTargetTestWrapper {
       System.exit(2);
     }
 
-    if (executeCrashReproducer) {
+    if (JAZZER_CI && verifyCrashReproducer) {
       try {
-        verifyCrashReproducer(outputDir, driverActualPath, apiActualPath, jarActualPath);
+        verifyCrashReproducer(
+            outputDir, driverActualPath, apiActualPath, jarActualPath, expectedFinding);
       } catch (Exception e) {
         e.printStackTrace();
         System.exit(6);
@@ -151,8 +154,8 @@ public class FuzzTargetTestWrapper {
     }
   }
 
-  private static void verifyCrashReproducer(String outputDir, String driver, String api, String jar)
-      throws Exception {
+  private static void verifyCrashReproducer(String outputDir, String driver, String api, String jar,
+      String expectedFinding) throws Exception {
     File source =
         Files.list(Paths.get(outputDir))
             .filter(f -> f.toFile().getName().endsWith(".java"))
@@ -161,7 +164,7 @@ public class FuzzTargetTestWrapper {
             .orElseThrow(
                 () -> new IllegalStateException("Could not find crash reproducer in " + outputDir));
     String crashReproducer = compile(source, driver, api, jar);
-    execute(crashReproducer, outputDir);
+    execute(crashReproducer, outputDir, expectedFinding);
   }
 
   private static String compile(File source, String driver, String api, String jar)
@@ -182,7 +185,7 @@ public class FuzzTargetTestWrapper {
     }
   }
 
-  private static void execute(String classFile, String outputDir)
+  private static void execute(String classFile, String outputDir, String expectedFinding)
       throws IOException, ReflectiveOperationException {
     try {
       System.out.printf("Execute crash reproducer %s%n", classFile);
@@ -190,12 +193,22 @@ public class FuzzTargetTestWrapper {
           new URLClassLoader(new URL[] {new URL("file://" + outputDir + "/")});
       Class<?> crashReproducerClass = classLoader.loadClass(classFile);
       Method main = crashReproducerClass.getMethod("main", String[].class);
+      System.setProperty("jazzer.is_reproducer", "true");
       main.invoke(null, new Object[] {new String[] {}});
-      throw new IllegalStateException("Crash not reproduced by " + classFile);
+      if (!expectedFinding.equals("none")) {
+        throw new IllegalStateException("Crash not reproduced by " + classFile);
+      }
     } catch (InvocationTargetException e) {
-      // expect the invocation to fail with the crash
-      // other reflection exceptions indicate a real problem
-      System.out.printf("Reproduced exception \"%s\"%n", e.getCause().getMessage());
+      // expect the invocation to fail with the prescribed finding
+      Throwable finding = e.getCause();
+      if (expectedFinding.equals("none")) {
+        throw new IllegalStateException("Did not expect " + classFile + " to crash", finding);
+      } else if (finding.getClass().getName().equals(expectedFinding)) {
+        System.out.printf("Reproduced exception \"%s\"%n", finding.getMessage());
+      } else {
+        throw new IllegalStateException(
+            classFile + " did not crash with " + expectedFinding, finding);
+      }
     }
   }
 }

@@ -28,7 +28,8 @@ def java_fuzz_target_test(
         env = None,
         verify_crash_input = True,
         verify_crash_reproducer = True,
-        execute_crash_reproducer = False,
+        # Default is that the reproducer does not throw any exception.
+        expected_finding = "none",
         **kwargs):
     target_name = name + "_target"
     deploy_manifest_lines = []
@@ -62,12 +63,19 @@ def java_fuzz_target_test(
     else:
         fail("Invalid sanitizer: " + sanitizer)
 
+    if type(expected_finding) == type(""):
+        expected_finding = [expected_finding]
     native.java_test(
         name = name,
         runtime_deps = [
             "//bazel/tools/java:fuzz_target_test_wrapper",
             "//agent:jazzer_api_deploy.jar",
             ":%s_deploy.jar" % target_name,
+        ],
+        jvm_flags = [
+            # Use the same memory settings for reproducers as those suggested by Jazzer when
+            # encountering an OutOfMemoryError.
+            "-Xmx1620m",
         ],
         size = size or "enormous",
         timeout = timeout or "moderate",
@@ -77,8 +85,7 @@ def java_fuzz_target_test(
             "$(rootpath :%s_deploy.jar)" % target_name,
             str(verify_crash_input),
             str(verify_crash_reproducer),
-            str(execute_crash_reproducer),
-        ] + additional_args + fuzzer_args,
+        ] + expected_finding + additional_args + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,
             "//agent:jazzer_agent_deploy.jar",

@@ -34,6 +34,7 @@ run:windows --noincompatible_strict_action_env
 build:toolchain --//third_party:toolchain
 
 # CI tests (not using the toolchain to test OSS-Fuzz & local compatibility)
+test:ci --test_env=JAZZER_CI=1
 build:ci --bes_results_url=https://app.buildbuddy.io/invocation/
 build:ci --bes_backend=grpcs://cloud.buildbuddy.io
 build:ci --remote_cache=grpcs://cloud.buildbuddy.io
