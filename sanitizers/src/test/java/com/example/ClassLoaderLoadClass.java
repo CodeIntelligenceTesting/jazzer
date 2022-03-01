@@ -15,16 +15,16 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import java.lang.reflect.InvocationTargetException;
 
-public class ReflectiveCall {
-  public static void fuzzerTestOneInput(FuzzedDataProvider data) {
+public class ClassLoaderLoadClass {
+  public static void fuzzerTestOneInput(FuzzedDataProvider data) throws InterruptedException {
     String input = data.consumeRemainingAsAsciiString();
-    if (input.startsWith("@")) {
-      String className = input.substring(1);
-      try {
-        Class.forName(className);
-      } catch (ClassNotFoundException ignored) {
-      }
+    try {
+      // create an instance to trigger class initialization
+      ClassLoaderLoadClass.class.getClassLoader().loadClass(input).getConstructor().newInstance();
+    } catch (ClassNotFoundException | InvocationTargetException | InstantiationException
+        | IllegalAccessException | NoSuchMethodException ignored) {
     }
   }
 }
