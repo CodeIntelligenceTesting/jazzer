@@ -59,6 +59,9 @@ jni_headers(
 java_library(
     name = "unsafe_provider",
     srcs = ["UnsafeProvider.java"],
+    visibility = [
+        "//sanitizers/src/main/java:__subpackages__",
+    ],
 )
 
 kt_jvm_library(

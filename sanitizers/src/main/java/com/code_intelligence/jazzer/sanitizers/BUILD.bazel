@@ -1,5 +1,15 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
+java_library(
+    name = "regex_roadblocks",
+    srcs = ["RegexRoadblocks.java"],
+    deps = [
+        "//agent:jazzer_api_compile_only",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:unsafe_provider",
+        "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers/utils:reflection_utils",
+    ],
+)
+
 kt_jvm_library(
     name = "sanitizers",
     srcs = [
@@ -13,6 +23,9 @@ kt_jvm_library(
         "Utils.kt",
     ],
     visibility = ["//sanitizers:__pkg__"],
+    runtime_deps = [
+        ":regex_roadblocks",
+    ],
     deps = [
         "//agent:jazzer_api_compile_only",
         "//sanitizers/src/main/java/jaz",

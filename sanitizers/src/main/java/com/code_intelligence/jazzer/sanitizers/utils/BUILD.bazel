@@ -1,0 +1,7 @@
+java_library(
+    name = "reflection_utils",
+    srcs = ["ReflectionUtils.java"],
+    visibility = [
+        "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers:__pkg__",
+    ],
+)
