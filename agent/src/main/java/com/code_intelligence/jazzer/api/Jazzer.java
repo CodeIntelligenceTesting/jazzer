@@ -39,6 +39,8 @@ final public class Jazzer {
 
   private static final Class<?> JAZZER_INTERNAL;
 
+  private static final MethodHandle ON_FUZZ_TARGET_READY;
+
   private static final MethodHandle TRACE_STRCMP;
   private static final MethodHandle TRACE_STRSTR;
   private static final MethodHandle TRACE_MEMCMP;
@@ -58,6 +60,7 @@ final public class Jazzer {
 
   static {
     Class<?> jazzerInternal = null;
+    MethodHandle onFuzzTargetReady = null;
     MethodHandle traceStrcmp = null;
     MethodHandle traceStrstr = null;
     MethodHandle traceMemcmp = null;
@@ -75,6 +78,9 @@ final public class Jazzer {
     MethodHandle autofuzzConsumer5 = null;
     try {
       jazzerInternal = Class.forName("com.code_intelligence.jazzer.runtime.JazzerInternal");
+      MethodType onFuzzTargetReadyType = MethodType.methodType(void.class, Runnable.class);
+      onFuzzTargetReady = MethodHandles.publicLookup().findStatic(
+          jazzerInternal, "registerOnFuzzTargetReadyCallback", onFuzzTargetReadyType);
       Class<?> traceDataFlowNativeCallbacks =
           Class.forName("com.code_intelligence.jazzer.runtime.TraceDataFlowNativeCallbacks");
 
@@ -131,6 +137,7 @@ final public class Jazzer {
       System.exit(1);
     }
     JAZZER_INTERNAL = jazzerInternal;
+    ON_FUZZ_TARGET_READY = onFuzzTargetReady;
     TRACE_STRCMP = traceStrcmp;
     TRACE_STRSTR = traceStrstr;
     TRACE_MEMCMP = traceMemcmp;
@@ -598,6 +605,22 @@ final public class Jazzer {
       } else {
         e.printStackTrace();
       }
+    }
+  }
+
+  /**
+   * Register a callback to be executed right before the fuzz target is executed for the first time.
+   *
+   * This can be used to disable hooks until after Jazzer has been fully initializing, e.g. to
+   * prevent Jazzer internals from triggering hooks on Java standard library classes.
+   *
+   * @param callback the callback to execute
+   */
+  public static void onFuzzTargetReady(Runnable callback) {
+    try {
+      ON_FUZZ_TARGET_READY.invokeExact(callback);
+    } catch (Throwable e) {
+      e.printStackTrace();
     }
   }
 
