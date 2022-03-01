@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
 public class Crash_$0 {
     static final String base64Bytes = String.join("", "$1");
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Throwable {
         ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
         try {
             Method fuzzerInitialize = $2.class.getMethod("fuzzerInitialize");
