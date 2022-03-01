@@ -205,9 +205,9 @@ final public class TraceCmpHooks {
   replace(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, String returnValue) {
     String original = (String) thisObject;
-    String target = arguments[0].toString();
     // Report only if the replacement was not successful.
     if (original.equals(returnValue)) {
+      String target = arguments[0].toString();
       TraceDataFlowNativeCallbacks.traceStrstr(original, target, hookId);
     }
   }
@@ -217,11 +217,11 @@ final public class TraceCmpHooks {
   public static void
   arraysEquals(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean returnValue) {
+    if (returnValue)
+      return;
     byte[] first = (byte[]) arguments[0];
     byte[] second = (byte[]) arguments[1];
-    if (!returnValue) {
-      TraceDataFlowNativeCallbacks.traceMemcmp(first, second, 1, hookId);
-    }
+    TraceDataFlowNativeCallbacks.traceMemcmp(first, second, 1, hookId);
   }
 
   @MethodHook(type = HookType.AFTER, targetClassName = "java.util.Arrays", targetMethod = "equals",
@@ -229,13 +229,13 @@ final public class TraceCmpHooks {
   public static void
   arraysEqualsRange(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean returnValue) {
+    if (returnValue)
+      return;
     byte[] first =
         Arrays.copyOfRange((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
     byte[] second =
         Arrays.copyOfRange((byte[]) arguments[3], (int) arguments[4], (int) arguments[5]);
-    if (!returnValue) {
-      TraceDataFlowNativeCallbacks.traceMemcmp(first, second, 1, hookId);
-    }
+    TraceDataFlowNativeCallbacks.traceMemcmp(first, second, 1, hookId);
   }
 
   @MethodHook(type = HookType.AFTER, targetClassName = "java.util.Arrays", targetMethod = "compare",
@@ -245,11 +245,11 @@ final public class TraceCmpHooks {
   public static void
   arraysCompare(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Integer returnValue) {
+    if (returnValue == 0)
+      return;
     byte[] first = (byte[]) arguments[0];
     byte[] second = (byte[]) arguments[1];
-    if (returnValue != 0) {
-      TraceDataFlowNativeCallbacks.traceMemcmp(first, second, returnValue, hookId);
-    }
+    TraceDataFlowNativeCallbacks.traceMemcmp(first, second, returnValue, hookId);
   }
 
   @MethodHook(type = HookType.AFTER, targetClassName = "java.util.Arrays", targetMethod = "compare",
@@ -259,13 +259,13 @@ final public class TraceCmpHooks {
   public static void
   arraysCompareRange(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Integer returnValue) {
+    if (returnValue == 0)
+      return;
     byte[] first =
         Arrays.copyOfRange((byte[]) arguments[0], (int) arguments[1], (int) arguments[2]);
     byte[] second =
         Arrays.copyOfRange((byte[]) arguments[3], (int) arguments[4], (int) arguments[5]);
-    if (returnValue != 0) {
-      TraceDataFlowNativeCallbacks.traceMemcmp(first, second, returnValue, hookId);
-    }
+    TraceDataFlowNativeCallbacks.traceMemcmp(first, second, returnValue, hookId);
   }
 
   // The maximal number of elements of a non-TreeMap Map that will be sorted and searched for the
