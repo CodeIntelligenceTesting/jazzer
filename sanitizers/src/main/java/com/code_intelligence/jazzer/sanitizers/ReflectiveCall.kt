@@ -17,18 +17,36 @@ package com.code_intelligence.jazzer.sanitizers
 import com.code_intelligence.jazzer.api.HookType
 import com.code_intelligence.jazzer.api.Jazzer
 import com.code_intelligence.jazzer.api.MethodHook
+import com.code_intelligence.jazzer.api.MethodHooks
 import java.lang.invoke.MethodHandle
 
 /**
- * Detects unsafe reflective calls that lead to attacker-controlled method calls.
+ * Detects unsafe calls that lead to attacker-controlled class loading.
+ *
+ * Guide the fuzzer to load honeypot class via [Class.forName] or [ClassLoader.loadClass].
  */
 @Suppress("unused_parameter", "unused")
 object ReflectiveCall {
 
-    @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Class", targetMethod = "forName")
+    @MethodHooks(
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Class", targetMethod = "forName", targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Class;"),
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Class", targetMethod = "forName", targetMethodDescriptor = "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;"),
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.ClassLoader", targetMethod = "loadClass", targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Class;"),
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.ClassLoader", targetMethod = "loadClass", targetMethodDescriptor = "(Ljava/lang/String;Z)Ljava/lang/Class;"),
+    )
     @JvmStatic
-    fun classForNameHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
+    fun loadClassHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
         val className = args[0] as? String ?: return
+        Jazzer.guideTowardsEquality(className, HONEYPOT_CLASS_NAME, hookId)
+    }
+
+    @MethodHooks(
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Class", targetMethod = "forName", targetMethodDescriptor = "(Ljava/lang/Module;Ljava/lang/String;)Ljava/lang/Class;"),
+        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.ClassLoader", targetMethod = "loadClass", targetMethodDescriptor = "(Ljava/lang/Module;Ljava/lang/String;)Ljava/lang/Class;"),
+    )
+    @JvmStatic
+    fun loadClassWithModuleHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
+        val className = args[1] as? String ?: return
         Jazzer.guideTowardsEquality(className, HONEYPOT_CLASS_NAME, hookId)
     }
 }

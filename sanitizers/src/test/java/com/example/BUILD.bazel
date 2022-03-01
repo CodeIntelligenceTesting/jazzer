@@ -78,6 +78,16 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "RegexCanonEqInjection",
-    srcs = ["RegexCanonEqInjection.java"],
+    srcs = [
+        "RegexCanonEqInjection.java",
+    ],
     target_class = "com.example.RegexCanonEqInjection",
+)
+
+java_fuzz_target_test(
+    name = "ClassLoaderLoadClass",
+    srcs = [
+        "ClassLoaderLoadClass.java",
+    ],
+    target_class = "com.example.ClassLoaderLoadClass",
 )
