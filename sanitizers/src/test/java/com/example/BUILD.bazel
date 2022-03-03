@@ -77,6 +77,12 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "RegexInsecureQuoteInjection",
+    srcs = ["RegexInsecureQuoteInjection.java"],
+    target_class = "com.example.RegexInsecureQuoteInjection",
+)
+
+java_fuzz_target_test(
     name = "RegexCanonEqInjection",
     srcs = [
         "RegexCanonEqInjection.java",
