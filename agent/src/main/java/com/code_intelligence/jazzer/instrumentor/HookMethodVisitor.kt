@@ -20,6 +20,7 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.commons.LocalVariablesSorter
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal fun makeHookMethodVisitor(
     access: Int,
@@ -40,6 +41,10 @@ private class HookMethodVisitor(
     private val java6Mode: Boolean,
     private val random: DeterministicRandom,
 ) : MethodVisitor(Instrumentor.ASM_API_VERSION, methodVisitor) {
+
+    companion object {
+        private val showUnsupportedHookWarning = AtomicBoolean(true)
+    }
 
     val lvs = object : LocalVariablesSorter(Instrumentor.ASM_API_VERSION, access, descriptor, this) {
         override fun updateNewLocals(newLocals: Array<Any>) {
@@ -119,6 +124,19 @@ private class HookMethodVisitor(
     ) {
         val hook = findMatchingHook(hookType, owner, methodName, methodDescriptor)
         if (hook == null) {
+            visitNextHookTypeOrCall(hookType, false, opcode, owner, methodName, methodDescriptor, isInterface)
+            return
+        }
+
+        if (java6Mode && hookType == HookType.REPLACE) {
+            if (showUnsupportedHookWarning.getAndSet(false)) {
+                println(
+                    """WARN: Some hooks could not be applied to class files built for Java 7 or lower.
+                      |WARN: Ensure that the fuzz target and its dependencies are compiled with
+                      |WARN: -target 8 or higher to identify as many bugs as possible.
+            """.trimMargin()
+                )
+            }
             visitNextHookTypeOrCall(hookType, false, opcode, owner, methodName, methodDescriptor, isInterface)
             return
         }
