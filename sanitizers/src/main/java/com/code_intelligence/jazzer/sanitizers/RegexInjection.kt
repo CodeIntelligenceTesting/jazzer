@@ -19,12 +19,10 @@ import com.code_intelligence.jazzer.api.HookType
 import com.code_intelligence.jazzer.api.Jazzer
 import com.code_intelligence.jazzer.api.MethodHook
 import java.lang.invoke.MethodHandle
+import java.util.regex.Pattern
 
 @Suppress("unused_parameter", "unused")
 object RegexInjection {
-    // Inlined value of java.util.regex.Pattern.CANON_EQ to prevent a runtime dependency on Pattern.
-    private const val PATTERN_CANON_EQ = 0x80
-
     /**
      * Part of an OOM "exploit" for [java.util.regex.Pattern.compile] with the
      * [java.util.regex.Pattern.CANON_EQ] flag, formed by three consecutive combining marks, in this
@@ -49,7 +47,7 @@ object RegexInjection {
     fun patternCompileWithFlagsHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
         val pattern = args[0] as? String ?: return
         val flags = args[1] as? Int ?: return
-        if (flags and PATTERN_CANON_EQ == 0) return
+        if (flags and Pattern.CANON_EQ == 0) return
         if (pattern.contains(CANON_EQ_ALMOST_EXPLOIT)) {
             Jazzer.reportFindingFromHook(
                 FuzzerSecurityIssueLow(
