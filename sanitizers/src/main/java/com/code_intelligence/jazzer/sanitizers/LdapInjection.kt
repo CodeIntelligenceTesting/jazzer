@@ -101,7 +101,7 @@ object LdapInjection {
                 }
             }
         } catch (e: Exception) {
-            return when (e) {
+            when (e) {
                 is InvalidSearchFilterException ->
                     Jazzer.reportFindingFromHook(
                         FuzzerSecurityIssueCritical(
@@ -116,8 +116,8 @@ Search filters based on untrusted data must be escape as specified in RFC 4515."
 Distinguished Names based on untrusted data must be escaped as specified in RFC 2253."""
                         )
                     )
-                else -> throw e
             }
+            throw e
         }
     }
 }
