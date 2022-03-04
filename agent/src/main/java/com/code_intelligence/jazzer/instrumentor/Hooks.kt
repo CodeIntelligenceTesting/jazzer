@@ -17,6 +17,7 @@ package com.code_intelligence.jazzer.instrumentor
 import com.code_intelligence.jazzer.api.MethodHook
 import com.code_intelligence.jazzer.api.MethodHooks
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
+import com.code_intelligence.jazzer.utils.descriptor
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.ScanResult
 import java.lang.reflect.Method
@@ -76,7 +77,7 @@ data class Hooks(
 
             private fun loadHooks(hookClass: Class<*>): List<Hook> {
                 val hooks = mutableListOf<Hook>()
-                for (method in hookClass.methods) {
+                for (method in hookClass.methods.sortedBy { it.descriptor }) {
                     method.getAnnotation(MethodHook::class.java)?.let {
                         hooks.addAll(verifyAndGetHooks(method, it))
                     }
@@ -106,7 +107,7 @@ data class Hooks(
                     targetClassInfo.isAbstract -> scanResult.getSubclasses(targetClassName)
                     else -> emptyList()
                 }
-                return listOf(targetClassName) + additionalTargetClasses.map { it.name }
+                return (listOf(targetClassName) + additionalTargetClasses.map { it.name }).sorted()
             }
         }
     }
