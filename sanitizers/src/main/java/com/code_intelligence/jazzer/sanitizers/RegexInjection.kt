@@ -29,7 +29,7 @@ object RegexInjection {
      * Part of an OOM "exploit" for [java.util.regex.Pattern.compile] with the
      * [java.util.regex.Pattern.CANON_EQ] flag, formed by three consecutive combining marks, in this
      * case grave accents: ◌̀.
-     * See [patternCompileWithFlagsHook] for details.
+     * See [compileWithFlagsHook] for details.
      */
     private const val CANON_EQ_ALMOST_EXPLOIT = "\u0300\u0300\u0300"
 
@@ -49,7 +49,7 @@ object RegexInjection {
     fun compileWithFlagsHook(method: MethodHandle, alwaysNull: Any?, args: Array<Any?>, hookId: Int): Any? {
         val pattern = args[0] as String?
         val hasCanonEqFlag = ((args[1] as Int) and Pattern.CANON_EQ) != 0
-        return hookInternal(method, pattern, hasCanonEqFlag, args, hookId)
+        return hookInternal(method, pattern, hasCanonEqFlag, hookId, *args)
     }
 
     @MethodHooks(
@@ -65,6 +65,13 @@ object RegexInjection {
             targetMethod = "matches",
             targetMethodDescriptor = "(Ljava/lang/String;Ljava/lang/CharSequence;)Z"
         ),
+    )
+    @JvmStatic
+    fun patternHook(method: MethodHandle, alwaysNull: Any?, args: Array<Any?>, hookId: Int): Any? {
+        return hookInternal(method, args[0] as String?, false, hookId, *args)
+    }
+
+    @MethodHooks(
         MethodHook(
             type = HookType.REPLACE,
             targetClassName = "java.lang.String",
@@ -97,11 +104,17 @@ object RegexInjection {
         ),
     )
     @JvmStatic
-    fun patternHook(method: MethodHandle, alwaysNull: Any?, args: Array<Any?>, hookId: Int): Any? {
-        return hookInternal(method, args[0] as String?, false, args, hookId)
+    fun stringHook(method: MethodHandle, thisObject: Any?, args: Array<Any?>, hookId: Int): Any? {
+        return hookInternal(method, args[0] as String?, false, hookId, thisObject, *args)
     }
 
-    private fun hookInternal(method: MethodHandle, pattern: String?, hasCanonEqFlag: Boolean, args: Array<Any?>, hookId: Int): Any? {
+    private fun hookInternal(
+        method: MethodHandle,
+        pattern: String?,
+        hasCanonEqFlag: Boolean,
+        hookId: Int,
+        vararg args: Any?
+    ): Any? {
         if (hasCanonEqFlag && pattern != null) {
             // With CANON_EQ enabled, Pattern.compile allocates an array with a size that is
             // (super-)exponential in the number of consecutive Unicode combining marks. We use a mild case
