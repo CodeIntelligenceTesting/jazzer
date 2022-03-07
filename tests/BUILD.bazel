@@ -7,7 +7,7 @@ java_fuzz_target_test(
         "src/test/java/com/example/LongStringFuzzer.java",
     ],
     data = ["src/test/java/com/example/LongStringFuzzerInput"],
-    expected_finding = "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = [
         "$(rootpath src/test/java/com/example/LongStringFuzzerInput)",
     ],
@@ -17,7 +17,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "JpegImageParserAutofuzz",
-    expected_finding = "java.lang.NegativeArraySizeException",
+    expected_findings = ["java.lang.NegativeArraySizeException"],
     fuzzer_args = [
         "--autofuzz=org.apache.commons.imaging.formats.jpeg.JpegImageParser::getBufferedImage",
         # Exit after the first finding for testing purposes.
@@ -38,7 +38,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "AutofuzzWithoutCoverage",
-    expected_finding = "java.lang.NullPointerException",
+    expected_findings = ["java.lang.NullPointerException"],
     fuzzer_args = [
         # Autofuzz a method that triggers no coverage instrumentation (the Java standard library is
         # excluded by default).
@@ -56,7 +56,7 @@ java_fuzz_target_test(
     env = {
         "JAVA_OPTS": "-Dfoo=not_foo -Djava_opts=1",
     },
-    expected_finding = "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = [
         "-fork=3",
         "--additional_jvm_args=-Dbaz=baz",

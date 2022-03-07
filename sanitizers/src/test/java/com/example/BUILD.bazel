@@ -55,7 +55,7 @@ java_fuzz_target_test(
         "ldap/MockInitialContextFactory.java",
         "ldap/MockLdapContext.java",
     ],
-    expected_finding = "javax.naming.directory.InvalidSearchFilterException",
+    expected_findings = ["javax.naming.directory.InvalidSearchFilterException"],
     target_class = "com.example.LdapSearchInjection",
     deps = [
         "@maven//:com_unboundid_unboundid_ldapsdk",
@@ -69,7 +69,7 @@ java_fuzz_target_test(
         "ldap/MockInitialContextFactory.java",
         "ldap/MockLdapContext.java",
     ],
-    expected_finding = "javax.naming.NamingException",
+    expected_findings = ["javax.naming.NamingException"],
     target_class = "com.example.LdapDnInjection",
     deps = [
         "@maven//:com_unboundid_unboundid_ldapsdk",

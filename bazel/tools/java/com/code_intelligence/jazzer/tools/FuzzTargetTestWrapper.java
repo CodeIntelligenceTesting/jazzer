@@ -24,8 +24,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.tools.JavaCompiler;
@@ -44,7 +46,7 @@ public class FuzzTargetTestWrapper {
     String jarActualPath;
     boolean verifyCrashInput;
     boolean verifyCrashReproducer;
-    String expectedFinding;
+    Set<String> expectedFindings;
     try {
       runfiles = Runfiles.create();
       driverActualPath = lookUpRunfile(runfiles, args[0]);
@@ -52,7 +54,8 @@ public class FuzzTargetTestWrapper {
       jarActualPath = lookUpRunfile(runfiles, args[2]);
       verifyCrashInput = Boolean.parseBoolean(args[3]);
       verifyCrashReproducer = Boolean.parseBoolean(args[4]);
-      expectedFinding = args[5];
+      expectedFindings =
+          Arrays.stream(args[5].split(",")).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
@@ -113,7 +116,7 @@ public class FuzzTargetTestWrapper {
     if (JAZZER_CI && verifyCrashReproducer) {
       try {
         verifyCrashReproducer(
-            outputDir, driverActualPath, apiActualPath, jarActualPath, expectedFinding);
+            outputDir, driverActualPath, apiActualPath, jarActualPath, expectedFindings);
       } catch (Exception e) {
         e.printStackTrace();
         System.exit(6);
@@ -155,16 +158,18 @@ public class FuzzTargetTestWrapper {
   }
 
   private static void verifyCrashReproducer(String outputDir, String driver, String api, String jar,
-      String expectedFinding) throws Exception {
+      Set<String> expectedFindings) throws Exception {
     File source =
         Files.list(Paths.get(outputDir))
             .filter(f -> f.toFile().getName().endsWith(".java"))
-            .findFirst()
+            // Verify the crash reproducer that was created last in order to reproduce the last
+            // crash when using --keep_going.
+            .max(Comparator.comparingLong(p -> p.toFile().lastModified()))
             .map(Path::toFile)
             .orElseThrow(
                 () -> new IllegalStateException("Could not find crash reproducer in " + outputDir));
     String crashReproducer = compile(source, driver, api, jar);
-    execute(crashReproducer, outputDir, expectedFinding);
+    execute(crashReproducer, outputDir, expectedFindings);
   }
 
   private static String compile(File source, String driver, String api, String jar)
@@ -185,7 +190,7 @@ public class FuzzTargetTestWrapper {
     }
   }
 
-  private static void execute(String classFile, String outputDir, String expectedFinding)
+  private static void execute(String classFile, String outputDir, Set<String> expectedFindings)
       throws IOException, ReflectiveOperationException {
     try {
       System.out.printf("Execute crash reproducer %s%n", classFile);
@@ -195,19 +200,21 @@ public class FuzzTargetTestWrapper {
       Method main = crashReproducerClass.getMethod("main", String[].class);
       System.setProperty("jazzer.is_reproducer", "true");
       main.invoke(null, new Object[] {new String[] {}});
-      if (!expectedFinding.equals("none")) {
-        throw new IllegalStateException("Crash not reproduced by " + classFile);
+      if (!expectedFindings.isEmpty()) {
+        throw new IllegalStateException("Expected crash with any of "
+            + String.join(", ", expectedFindings) + " not reproduced by " + classFile);
       }
     } catch (InvocationTargetException e) {
       // expect the invocation to fail with the prescribed finding
       Throwable finding = e.getCause();
-      if (expectedFinding.equals("none")) {
+      if (expectedFindings.isEmpty()) {
         throw new IllegalStateException("Did not expect " + classFile + " to crash", finding);
-      } else if (finding.getClass().getName().equals(expectedFinding)) {
+      } else if (expectedFindings.contains(finding.getClass().getName())) {
         System.out.printf("Reproduced exception \"%s\"%n", finding.getMessage());
       } else {
         throw new IllegalStateException(
-            classFile + " did not crash with " + expectedFinding, finding);
+            classFile + " did not crash with any of " + String.join(", ", expectedFindings),
+            finding);
       }
     }
   }
