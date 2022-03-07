@@ -29,7 +29,7 @@ def java_fuzz_target_test(
         verify_crash_input = True,
         verify_crash_reproducer = True,
         # Default is that the reproducer does not throw any exception.
-        expected_finding = "none",
+        expected_findings = [],
         **kwargs):
     target_name = name + "_target"
     deploy_manifest_lines = []
@@ -63,8 +63,6 @@ def java_fuzz_target_test(
     else:
         fail("Invalid sanitizer: " + sanitizer)
 
-    if type(expected_finding) == type(""):
-        expected_finding = [expected_finding]
     native.java_test(
         name = name,
         runtime_deps = [
@@ -85,7 +83,10 @@ def java_fuzz_target_test(
             "$(rootpath :%s_deploy.jar)" % target_name,
             str(verify_crash_input),
             str(verify_crash_reproducer),
-        ] + expected_finding + additional_args + fuzzer_args,
+            # args are shell tokenized and thus quotes are required in the case where
+            # expected_findings is empty.
+            "'" + ",".join(expected_findings) + "'",
+        ] + additional_args + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,
             "//agent:jazzer_agent_deploy.jar",
