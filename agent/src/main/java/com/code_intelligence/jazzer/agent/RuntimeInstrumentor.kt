@@ -69,13 +69,18 @@ internal class RuntimeInstrumentor(
         }.also { instrumentedByteCode ->
             // Only dump classes that were instrumented.
             if (instrumentedByteCode != null && dumpClassesDir != null) {
-                val relativePath = "$internalClassName.class"
-                val absolutePath = dumpClassesDir.resolve(relativePath)
-                val dumpFile = absolutePath.toFile()
-                dumpFile.parentFile.mkdirs()
-                dumpFile.writeBytes(instrumentedByteCode)
+                dumpToClassFile(internalClassName, instrumentedByteCode)
+                dumpToClassFile(internalClassName, classfileBuffer, basenameSuffix = ".original")
             }
         }
+    }
+
+    private fun dumpToClassFile(internalClassName: String, bytecode: ByteArray, basenameSuffix: String = "") {
+        val relativePath = "$internalClassName$basenameSuffix.class"
+        val absolutePath = dumpClassesDir!!.resolve(relativePath)
+        val dumpFile = absolutePath.toFile()
+        dumpFile.parentFile.mkdirs()
+        dumpFile.writeBytes(bytecode)
     }
 
     override fun transform(
