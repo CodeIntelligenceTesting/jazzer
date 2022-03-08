@@ -87,7 +87,7 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
     val manifestCustomHookNames =
         ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES).flatMap {
             it.split(':')
-        }
+        }.filter { it.isNotBlank() }
     val customHookNames = manifestCustomHookNames + (argumentMap["custom_hooks"] ?: emptyList())
     val classNameGlobber = ClassNameGlobber(
         argumentMap["instrumentation_includes"] ?: emptyList(),
