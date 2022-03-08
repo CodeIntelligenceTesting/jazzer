@@ -293,25 +293,36 @@ final public class TraceCmpHooks {
     Object upperBoundKey = null;
     if (map instanceof TreeMap) {
       final TreeMap treeMap = (TreeMap) map;
-      lowerBoundKey = treeMap.floorKey(currentKey);
-      upperBoundKey = treeMap.ceilingKey(currentKey);
+      try {
+        lowerBoundKey = treeMap.floorKey(currentKey);
+        upperBoundKey = treeMap.ceilingKey(currentKey);
+      } catch (ClassCastException ignored) {
+        // Can be thrown by floorKey and ceilingKey if currentKey is of a type that can't be
+        // compared to the maps keys.
+      }
     } else if (currentKey instanceof Comparable) {
-      final Comparable comparableKey = (Comparable) currentKey;
+      final Comparable comparableCurrentKey = (Comparable) currentKey;
       // Find two keys that bracket currentKey.
       // Note: This is not deterministic if map.size() > MAX_NUM_KEYS_TO_ENUMERATE.
       int enumeratedKeys = 0;
       for (Object validKey : map.keySet()) {
-        if (validKey == null)
+        if (!(validKey instanceof Comparable))
           continue;
+        final Comparable comparableValidKey = (Comparable) validKey;
         // If the key sorts lower than the non-existing key, but higher than the current lower
         // bound, update the lower bound and vice versa for the upper bound.
-        if (comparableKey.compareTo(validKey) > 0
-            && (lowerBoundKey == null || ((Comparable) validKey).compareTo(lowerBoundKey) > 0)) {
-          lowerBoundKey = validKey;
-        }
-        if (comparableKey.compareTo(validKey) < 0
-            && (upperBoundKey == null || ((Comparable) validKey).compareTo(upperBoundKey) < 0)) {
-          upperBoundKey = validKey;
+        try {
+          if (comparableValidKey.compareTo(comparableCurrentKey) < 0
+              && (lowerBoundKey == null || comparableValidKey.compareTo(lowerBoundKey) > 0)) {
+            lowerBoundKey = validKey;
+          }
+          if (comparableValidKey.compareTo(comparableCurrentKey) > 0
+              && (upperBoundKey == null || comparableValidKey.compareTo(upperBoundKey) < 0)) {
+            upperBoundKey = validKey;
+          }
+        } catch (ClassCastException ignored) {
+          // Can be thrown by floorKey and ceilingKey if currentKey is of a type that can't be
+          // compared to the maps keys.
         }
         if (enumeratedKeys++ > MAX_NUM_KEYS_TO_ENUMERATE)
           break;
