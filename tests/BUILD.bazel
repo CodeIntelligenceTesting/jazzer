@@ -32,6 +32,7 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "HookDependenciesFuzzer",
     srcs = ["src/test/java/com/example/HookDependenciesFuzzer.java"],
+    env = {"JAVA_OPTS": "-Xverify:all"},
     hook_classes = ["com.example.HookDependenciesFuzzer"],
     target_class = "com.example.HookDependenciesFuzzer",
 )
