@@ -112,13 +112,20 @@ class Hook private constructor(
                 }
             }
 
-            // AfterMethodHook only: Verify the type of the last parameter if known.
-            if (potentialHook.hookType == HookType.AFTER && potentialHook.targetReturnTypeDescriptor != null) {
-                require(
-                    parameterTypes[4] == java.lang.Object::class.java ||
-                        parameterTypes[4].descriptor == potentialHook.targetWrappedReturnTypeDescriptor
-                ) {
-                    "$potentialHook: fifth parameter must have type Object or match the descriptor ${potentialHook.targetWrappedReturnTypeDescriptor}"
+            // AfterMethodHook only: Verify the type of the last parameter if known. Even if not
+            // known, it must not be a primitive value.
+            if (potentialHook.hookType == HookType.AFTER) {
+                if (potentialHook.targetReturnTypeDescriptor != null) {
+                    require(
+                        parameterTypes[4] == java.lang.Object::class.java ||
+                            parameterTypes[4].descriptor == potentialHook.targetWrappedReturnTypeDescriptor
+                    ) {
+                        "$potentialHook: fifth parameter must have type Object or match the descriptor ${potentialHook.targetWrappedReturnTypeDescriptor}"
+                    }
+                } else {
+                    require(!parameterTypes[4].isPrimitive) {
+                        "$potentialHook: fifth parameter must not be a primitive type, use a boxed type instead"
+                    }
                 }
             }
         }

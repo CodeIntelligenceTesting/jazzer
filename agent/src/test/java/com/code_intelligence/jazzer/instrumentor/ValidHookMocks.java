@@ -27,10 +27,6 @@ class ValidHookMocks {
   public static void validAfterHook(MethodHandle method, String thisObject, Object[] arguments,
       int hookId, Boolean returnValue) {}
 
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.String", targetMethod = "equals")
-  public static void validAfterHook2(MethodHandle method, String thisObject, Object[] arguments,
-      int hookId, boolean returnValue) {}
-
   @MethodHook(type = HookType.REPLACE, targetClassName = "java.lang.String",
       targetMethod = "equals", targetMethodDescriptor = "(Ljava/lang/Object;)Z")
   public static Boolean
