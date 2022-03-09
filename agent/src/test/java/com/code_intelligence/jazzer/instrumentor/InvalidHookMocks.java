@@ -73,4 +73,8 @@ class InvalidHookMocks {
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) throws Throwable {
     return new Object();
   }
+
+  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.String", targetMethod = "equals")
+  public static void primitiveReturnType(MethodHandle method, String thisObject, Object[] arguments,
+      int hookId, boolean returnValue) {}
 }

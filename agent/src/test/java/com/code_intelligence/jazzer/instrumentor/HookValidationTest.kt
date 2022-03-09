@@ -23,7 +23,7 @@ class HookValidationTest {
     @Test
     fun testValidHooks() {
         val hooks = Hooks.loadHooks(setOf(ValidHookMocks::class.java.name)).first().hooks
-        assertEquals(6, hooks.size)
+        assertEquals(5, hooks.size)
     }
 
     @Test
