@@ -7,6 +7,7 @@ cc_library(
     linkstatic = True,
     visibility = [
         "//agent/src/jmh/native/com/code_intelligence/jazzer/runtime:__pkg__",
+        "//agent/src/main/native/com/code_intelligence/jazzer/runtime:__pkg__",
     ],
 )
 
@@ -68,13 +69,30 @@ cc_library(
     srcs = ["libfuzzer_callbacks.cpp"],
     linkstatic = True,
     deps = [
-        ":sanitizer_hooks_with_pc",
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
         "@com_google_absl//absl/strings",
         "@com_google_glog//:glog",
         "@fmeum_rules_jni//jni",
         "@jazzer_com_github_gflags_gflags//:gflags",
-    ],
+    ] + select({
+        # We statically link the fuzzer callbacks on Windows since linking a shared library against
+        # symbols exported by a binary is difficult: We would need a .def file to export the symbols
+        # and create an interface library from the binary that is then linked into the shared
+        # library. This creates a conceptual (and real) cyclic dependency between the binary and the
+        # shared library since the binary data-depends on the agent and thus on the shared library.
+        # Since we only have to link the fuzzer callbacks dynamically to work around a JDK bug in an
+        # obsoleted feature (critical JNI natives) that is only meant to improve performance, we
+        # don't worry about this too much.
+        "@platforms//os:windows": [
+            "//agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_fuzzer_callbacks_for_static_linking",
+        ],
+        # On other platforms, dynamic linking is easy, so we load the fuzzer callbacks from a shared
+        # library at runtime. This is needed to let the JVM's JavaCritical_* lookup succeed, which
+        # does not correctly load statically linked symbols.
+        # See //agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_fuzzer_callbacks
+        # for the place this is linked into the agent instead.
+        "//conditions:default": [],
+    }),
     # Symbols are only referenced dynamically via JNI.
     alwayslink = True,
 )

@@ -1,0 +1,24 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
+
+cc_jni_library(
+    name = "jazzer_fuzzer_callbacks",
+    # Not needed (and broken) on Windows.
+    tags = ["manual"],
+    visibility = ["//agent/src/main/java/com/code_intelligence/jazzer/runtime:__pkg__"],
+    deps = [
+        ":jazzer_fuzzer_callbacks_for_static_linking",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
+        "//driver:sanitizer_hooks_with_pc",
+    ],
+)
+
+cc_library(
+    name = "jazzer_fuzzer_callbacks_for_static_linking",
+    srcs = ["jazzer_fuzzer_callbacks.cpp"],
+    visibility = ["//driver:__pkg__"],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
+        "//driver:sanitizer_hooks_with_pc",
+    ],
+    alwayslink = True,
+)

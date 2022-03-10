@@ -1,4 +1,4 @@
-load("@fmeum_rules_jni//jni:defs.bzl", "jni_headers")
+load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library", "jni_headers")
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 java_library(
@@ -44,16 +44,26 @@ jni_headers(
     visibility = ["//driver:__pkg__"],
 )
 
-java_library(
+java_jni_library(
     name = "trace_data_flow_native_callbacks",
     srcs = ["TraceDataFlowNativeCallbacks.java"],
-    deps = ["//agent/src/main/java/com/code_intelligence/jazzer/utils"],
-)
-
-jni_headers(
-    name = "trace_data_flow_native_callbacks.hdrs",
-    lib = ":trace_data_flow_native_callbacks",
-    visibility = ["//driver:__pkg__"],
+    native_libs = select({
+        # On Windows, the fuzzer callbacks are statically linked into the driver instead (see
+        # //driver:jazzer_driver).
+        "@platforms//os:windows": [],
+        "//conditions:default": [
+            "//agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_fuzzer_callbacks",
+        ],
+    }),
+    visibility = [
+        # For libFuzzer callbacks.
+        "//agent/src/main/native/com/code_intelligence/jazzer/runtime:__pkg__",
+        # For handleLibraryLoad.
+        "//driver:__pkg__",
+    ],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/utils",
+    ],
 )
 
 java_library(
