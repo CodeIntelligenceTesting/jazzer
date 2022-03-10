@@ -232,13 +232,15 @@ cc_binary(
     deps = [":driver_lib"],
 )
 
+cc_library(
+    name = "sanitizer_symbols_for_tests",
+    srcs = ["sanitizer_symbols_for_tests.cpp"],
+)
+
 cc_test(
     name = "jvm_tooling_test",
     size = "small",
-    srcs = [
-        "jvm_tooling_test.cpp",
-        "sanitizer_symbols_for_tests.cpp",
-    ],
+    srcs = ["jvm_tooling_test.cpp"],
     args = [
         "--cp=jazzer/$(rootpath //driver/testdata:fuzz_target_mocks_deploy.jar)",
     ],
@@ -258,6 +260,7 @@ cc_test(
     deps = [
         ":coverage_tracker",
         ":jvm_tooling_lib",
+        ":sanitizer_symbols_for_tests",
         ":test_main",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
@@ -268,10 +271,7 @@ cc_test(
 cc_test(
     name = "fuzzed_data_provider_test",
     size = "medium",
-    srcs = [
-        "fuzzed_data_provider_test.cpp",
-        "sanitizer_symbols_for_tests.cpp",
-    ],
+    srcs = ["fuzzed_data_provider_test.cpp"],
     args = [
         "--cp=jazzer/$(rootpath //driver/testdata:fuzz_target_mocks_deploy.jar)",
     ],
@@ -282,6 +282,7 @@ cc_test(
     includes = ["."],
     deps = [
         ":jvm_tooling_lib",
+        ":sanitizer_symbols_for_tests",
         ":test_main",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
