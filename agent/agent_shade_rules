@@ -1,5 +1,6 @@
-rule kotlin.** com.code_intelligence.jazzer.third_party.kotlin.@1
+rule com.github.** com.code_intelligence.jazzer.third_party.com.github.@1
 rule io.** com.code_intelligence.jazzer.third_party.io.@1
-rule nonapi.** com.code_intelligence.jazzer.third_party.nonapi.@1
+rule kotlin.** com.code_intelligence.jazzer.third_party.kotlin.@1
 rule net.jodah.** com.code_intelligence.jazzer.third_party.net.jodah.@1
+rule nonapi.** com.code_intelligence.jazzer.third_party.nonapi.@1
 rule org.** com.code_intelligence.jazzer.third_party.org.@1
