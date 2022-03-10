@@ -257,6 +257,8 @@ JVM::JVM(std::string_view executable_path, std::string_view seed) {
       JavaVMOption{.optionString = (char *)"-XX:-OmitStackTraceInFastThrow"});
   // Optimize GC for high throughput rather than low latency.
   options.push_back(JavaVMOption{.optionString = (char *)"-XX:+UseParallelGC"});
+  options.push_back(
+      JavaVMOption{.optionString = (char *)"-XX:+CriticalJNINatives"});
   // Forward libFuzzer's random seed so that Jazzer hooks can base their
   // mutations on it.
   std::string seed_property = absl::StrFormat("-Djazzer.seed=%s", seed);
