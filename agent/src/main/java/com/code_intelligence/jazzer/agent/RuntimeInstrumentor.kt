@@ -168,7 +168,7 @@ internal class RuntimeInstrumentor(
                             internalClassName,
                             bytecode,
                             firstId,
-                            firstId + actualNumEdgeIds
+                            actualNumEdgeIds
                         )
                     }
                 }
