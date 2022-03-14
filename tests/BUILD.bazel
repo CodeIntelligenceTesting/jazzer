@@ -71,3 +71,19 @@ java_fuzz_target_test(
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
     target_compatible_with = SKIP_ON_MACOS,
 )
+
+java_fuzz_target_test(
+    name = "CoverageFuzzer",
+    srcs = [
+        "src/test/java/com/example/CoverageFuzzer.java",
+    ],
+    fuzzer_args = [
+        "-use_value_profile=1",
+        "--coverage_report=coverage.exec",
+    ],
+    target_class = "com.example.CoverageFuzzer",
+    verify_crash_input = False,
+    deps = [
+        "@jazzer_jacoco//:jacoco_internal",
+    ],
+)
