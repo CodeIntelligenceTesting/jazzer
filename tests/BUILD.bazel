@@ -77,12 +77,19 @@ java_fuzz_target_test(
     srcs = [
         "src/test/java/com/example/CoverageFuzzer.java",
     ],
+    env = {
+        "COVERAGE_REPORT_FILE": "coverage.txt",
+        "COVERAGE_DUMP_FILE": "coverage.exec",
+    },
     fuzzer_args = [
         "-use_value_profile=1",
-        "--coverage_report=coverage.exec",
+        "--coverage_report=coverage.txt",
+        "--coverage_dump=coverage.exec",
+        "--instrumentation_includes=com.example.**",
     ],
     target_class = "com.example.CoverageFuzzer",
     verify_crash_input = False,
+    verify_crash_reproducer = False,
     deps = [
         "@jazzer_jacoco//:jacoco_internal",
     ],

@@ -471,6 +471,33 @@ With the flag `--keep_going=N` Jazzer continues fuzzing until `N` unique stack t
 Particular stack traces can also be ignored based on their `DEDUP_TOKEN` by passing a comma-separated list of tokens
 via `--ignore=<token_1>,<token2>`.
 
+### Export coverage information
+
+The internally gathered JaCoCo coverage information can be exported in a human-readable and the JaCoCo dump format.
+These can help identify code areas that can not be reached through fuzzing and perhaps need changes to make them more
+accessible for the fuzzer.
+
+The human-readable report contains coverage information, like branch and line coverage, on file level. It's useful to 
+get a quick overview about the overall coverage. The flag `--coverage_report=<file>` can be used to generate the report. 
+
+Similar to the JaCoCo `dump` command the flag `--coverage_dump=<file>` specifies the coverage dump file, often called
+`coverage.exec`, that should be generated after the fuzzing run. It contains a binary representation of the gathered
+coverage data in the JaCoCo format.
+
+The JaCoCo `report` command can be used to generate reports based on the coverage dump. For example the
+following command generates an HTML report in the folder `./report/` containing all classes available in `classes.jar`
+and their coverage as captured in the export `coverage.exec`.
+```shell
+java -jar jacococli.jar report coverage.exec \
+  --classfiles classes.jar \
+  --sourcefiles some/path/to/sources \
+  --html ./report/ \
+  --name FuzzCoverageReport
+```
+
+More information about coverage report generation is available on the JaCoCo
+[CLI documentation](https://www.eclemma.org/jacoco/trunk/doc/cli.html) page.
+
 ## Advanced fuzz targets
 
 ### Fuzzing with Native Libraries

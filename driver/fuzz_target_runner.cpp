@@ -62,6 +62,9 @@ DEFINE_string(reproducer_path, ".",
 DEFINE_string(coverage_report, "",
               "Path at which a coverage report is stored when the fuzzer "
               "exits. If left empty, no report is generated (default)");
+DEFINE_string(coverage_dump, "",
+              "Path at which a coverage dump is stored when the fuzzer "
+              "exits. If left empty, no dump is generated (default)");
 
 DEFINE_string(autofuzz, "",
               "Fully qualified reference to a method on the classpath that "
@@ -262,20 +265,18 @@ FuzzTargetRunner::FuzzTargetRunner(
 
 FuzzTargetRunner::~FuzzTargetRunner() {
   if (FLAGS_hooks && !FLAGS_coverage_report.empty()) {
-    std::string report = CoverageTracker::ComputeCoverage(jvm_.GetEnv());
-    std::ofstream report_file(FLAGS_coverage_report);
-    if (report_file) {
-      report_file << report << std::flush;
-    } else {
-      LOG(ERROR) << "Failed to write coverage report to "
-                 << FLAGS_coverage_report;
-    }
+    CoverageTracker::ReportCoverage(jvm_.GetEnv(), FLAGS_coverage_report);
+  }
+  if (FLAGS_hooks && !FLAGS_coverage_dump.empty()) {
+    CoverageTracker::DumpCoverage(jvm_.GetEnv(), FLAGS_coverage_dump);
   }
   if (fuzzer_tear_down_ != nullptr) {
     std::cerr << "calling fuzzer teardown function" << std::endl;
     jvm_.GetEnv().CallStaticVoidMethod(jclass_, fuzzer_tear_down_);
-    if (jthrowable exception = jvm_.GetEnv().ExceptionOccurred())
+    if (jthrowable exception = jvm_.GetEnv().ExceptionOccurred()) {
       std::cerr << getStackTrace(exception) << std::endl;
+      _Exit(1);
+    }
   }
 }
 

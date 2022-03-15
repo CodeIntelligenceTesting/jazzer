@@ -44,6 +44,7 @@ class CoverageTracker {
 
   static void RecordInitialCoverage(JNIEnv &env);
   static void ReplayInitialCoverage(JNIEnv &env);
-  static std::string ComputeCoverage(JNIEnv &env);
+  static void ReportCoverage(JNIEnv &env, std::string);
+  static void DumpCoverage(JNIEnv &env, std::string);
 };
 }  // namespace jazzer
