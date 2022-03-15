@@ -18,16 +18,48 @@ package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.jacoco.core.data.ExecutionData;
+import org.jacoco.core.data.ExecutionDataReader;
+import org.jacoco.core.data.ExecutionDataStore;
+import org.jacoco.core.data.SessionInfoStore;
 
+/**
+ * Test of coverage report and dump.
+ *
+ * Internally, JaCoCo is used to gather coverage information to guide the fuzzer to cover new
+ * branches. This information can be dumped in the JaCoCo format and used to generate reports later
+ * on. The dump only contains classes with at least one coverage data point. A JaCoCo report will
+ * also include completely uncovered files based on the available classes in the stated jar files
+ * in the report command.
+ *
+ * A human-readable coverage report can be generated directly by Jazzer. It contains information
+ * on file level about all classes that should have been instrumented according to the
+ * instrumentation_includes and instrumentation_exclude filters.
+ */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public final class CoverageFuzzer {
+  // Not used during fuzz run, so not included in the dump
+  public static class ClassNotToCover {
+    private final int i;
+    public ClassNotToCover(int i) {
+      this.i = i;
+    }
+    public int getI() {
+      return i;
+    }
+  }
+
+  // Used in the fuzz run and included in the dump
   public static class ClassToCover {
     private final int i;
 
@@ -58,73 +90,111 @@ public final class CoverageFuzzer {
   }
 
   public static void fuzzerTearDown() throws IOException {
-    List<String> coverage = Files.readAllLines(Paths.get("./coverage.exec"));
-    assertEquals(871, coverage.size());
+    assertCoverageReport();
+    assertCoverageDump();
+  }
 
+  private static void assertCoverageReport() throws IOException {
+    List<String> coverage = Files.readAllLines(Paths.get(System.getenv("COVERAGE_REPORT_FILE")));
     List<List<String>> sections = new ArrayList<>(4);
     sections.add(new ArrayList<>());
     coverage.forEach(l -> {
       if (l.isEmpty()) {
         sections.add(new ArrayList<>());
+      } else {
+        sections.get(sections.size() - 1).add(l);
       }
-      sections.get(sections.size() - 1).add(l);
     });
 
     List<String> branchCoverage = sections.get(0);
-    assertEquals(217, branchCoverage.size());
+    assertEquals(2, branchCoverage.size());
     List<String> lineCoverage = sections.get(1);
-    assertEquals(218, lineCoverage.size());
+    assertEquals(2, lineCoverage.size());
     List<String> incompleteCoverage = sections.get(2);
-    assertEquals(218, incompleteCoverage.size());
+    assertEquals(2, incompleteCoverage.size());
     List<String> missedCoverage = sections.get(3);
-    assertEquals(218, missedCoverage.size());
+    assertEquals(2, missedCoverage.size());
 
-    String branch =
+    assertNotNull(
         branchCoverage.stream()
             .filter(l -> l.startsWith(CoverageFuzzer.class.getSimpleName()))
             .findFirst()
-            .orElseThrow(() -> new IllegalStateException("Could not find branch coverage"));
-    //    assertEquals("CoverageFuzzer.java: 11/16 (68.75%)", branch);
+            .orElseThrow(() -> new IllegalStateException("Could not find branch coverage")));
 
-    String line = lineCoverage.stream()
-                      .filter(l -> l.startsWith(CoverageFuzzer.class.getSimpleName()))
-                      .findFirst()
-                      .orElseThrow(() -> new IllegalStateException("Could not find line coverage"));
-    assertEquals("CoverageFuzzer.java: 15/61 (24.59%)", line);
+    assertNotNull(
+        lineCoverage.stream()
+            .filter(l -> l.startsWith(CoverageFuzzer.class.getSimpleName()))
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("Could not find line coverage")));
 
-    String incomplete =
+    assertNotNull(
         incompleteCoverage.stream()
             .filter(l -> l.startsWith(CoverageFuzzer.class.getSimpleName()))
             .findFirst()
-            .orElseThrow(() -> new IllegalStateException("Could not find incomplete coverage"));
-    assertEquals("CoverageFuzzer.java: []", incomplete);
+            .orElseThrow(() -> new IllegalStateException("Could not find incomplete coverage")));
 
     String missed =
         missedCoverage.stream()
             .filter(l -> l.startsWith(CoverageFuzzer.class.getSimpleName()))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("Could not find missed coverage"));
-    if (IntStream.rangeClosed(15, 44).anyMatch(i -> missed.contains(String.valueOf(i)))) {
-      throw new IllegalStateException("No coverage collected for ClassToCover");
+    List<String> missingLines = IntStream.rangeClosed(63, 79)
+                                    .mapToObj(i -> " " + i)
+                                    .filter(missed::contains)
+                                    .collect(Collectors.toList());
+    if (!missingLines.isEmpty()) {
+      throw new IllegalStateException(String.format(
+          "Missing coverage for ClassToCover on lines %s", String.join(", ", missingLines)));
+    }
+  }
+
+  private static void assertCoverageDump() throws IOException {
+    ExecutionDataStore executionDataStore = new ExecutionDataStore();
+    SessionInfoStore sessionInfoStore = new SessionInfoStore();
+    try (FileInputStream bais = new FileInputStream(System.getenv("COVERAGE_DUMP_FILE"))) {
+      ExecutionDataReader reader = new ExecutionDataReader(bais);
+      reader.setExecutionDataVisitor(executionDataStore);
+      reader.setSessionInfoVisitor(sessionInfoStore);
+      reader.read();
+    }
+    assertEquals(2, executionDataStore.getContents().size());
+
+    ExecutionData coverageFuzzerCoverage = new ExecutionData(0, "", 0);
+    ExecutionData classToCoverCoverage = new ExecutionData(0, "", 0);
+    for (ExecutionData content : executionDataStore.getContents()) {
+      if (content.getName().endsWith("ClassToCover")) {
+        classToCoverCoverage = content;
+      } else {
+        coverageFuzzerCoverage = content;
+      }
     }
 
-    // TODO switch to JaCoCo coverage report format
-    //    CoverageBuilder coverage = new CoverageBuilder();
-    //    ExecutionDataStore executionDataStore = new ExecutionDataStore();
-    //    SessionInfoStore sessionInfoStore = new SessionInfoStore();
-    //    try (FileInputStream bais = new FileInputStream("./coverage.exec")) {
-    //      ExecutionDataReader reader = new ExecutionDataReader(bais);
-    //      reader.setExecutionDataVisitor(executionDataStore);
-    //      reader.setSessionInfoVisitor(sessionInfoStore);
-    //      reader.read();
-    //    }
-    //    System.out.println(coverage.getClasses());
+    assertEquals("com/example/CoverageFuzzer", coverageFuzzerCoverage.getName());
+    assertEquals(6, countHits(coverageFuzzerCoverage.getProbes()));
+
+    assertEquals("com/example/CoverageFuzzer$ClassToCover", classToCoverCoverage.getName());
+    assertEquals(11, countHits(classToCoverCoverage.getProbes()));
+  }
+
+  private static int countHits(boolean[] probes) {
+    int count = 0;
+    for (boolean probe : probes) {
+      if (probe)
+        count++;
+    }
+    return count;
   }
 
   private static <T> void assertEquals(T expected, T actual) {
     if (!expected.equals(actual)) {
       throw new IllegalStateException(
           String.format("Expected \"%s\", got \"%s\"", expected, actual));
+    }
+  }
+
+  private static <T> void assertNotNull(T actual) {
+    if (actual == null) {
+      throw new IllegalStateException("Expected none null value, got null");
     }
   }
 }

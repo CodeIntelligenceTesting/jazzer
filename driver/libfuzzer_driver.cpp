@@ -45,6 +45,9 @@ DECLARE_string(id_sync_file);
 // Defined in fuzz_target_runner.cpp
 DECLARE_string(coverage_report);
 
+// Defined in fuzz_target_runner.cpp
+DECLARE_string(coverage_dump);
+
 // This symbol is defined by sanitizers if linked into Jazzer or in
 // sanitizer_symbols.cpp if no sanitizer is used.
 extern "C" void __sanitizer_set_death_callback(void (*)());
@@ -128,6 +131,11 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
       LOG(WARNING) << "WARN: --coverage_report does not support parallel "
                       "fuzzing and has been disabled";
       FLAGS_coverage_report = "";
+    }
+    if (!FLAGS_coverage_dump.empty()) {
+      LOG(WARNING) << "WARN: --coverage_dump does not support parallel "
+                      "fuzzing and has been disabled";
+      FLAGS_coverage_dump = "";
     }
     if (FLAGS_id_sync_file.empty()) {
       // Create an empty temporary file used for coverage ID synchronization and
