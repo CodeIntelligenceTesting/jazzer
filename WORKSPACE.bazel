@@ -1,6 +1,6 @@
 workspace(name = "jazzer")
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_jar")
 load("//:repositories.bzl", "jazzer_dependencies")
 
 jazzer_dependencies()
@@ -62,6 +62,12 @@ http_archive(
     sha256 = "6a965adb02ad898b2ae48214244618fe342baea79db97157fdc70d8844ac6f09",
     strip_prefix = "libjpeg-turbo-2.0.90",
     url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/2.0.90.tar.gz",
+)
+
+http_jar(
+    name = "org_kohsuke_args4j_args4j",
+    sha256 = "91ddeaba0b24adce72291c618c00bbdce1c884755f6c4dba9c5c46e871c69ed6",
+    url = "https://repo1.maven.org/maven2/args4j/args4j/2.33/args4j-2.33.jar",
 )
 
 load("@com_grail_bazel_toolchain//toolchain:deps.bzl", "bazel_toolchain_dependencies")
