@@ -1,3 +1,5 @@
 /bazel-*
+/compile_commands.json
 .ijwb
 .clwb
+

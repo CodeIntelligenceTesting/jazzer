@@ -116,3 +116,18 @@ maven_install(
 load("@maven//:defs.bzl", "pinned_maven_install")
 
 pinned_maven_install()
+
+# Hedron's Compile Commands Extractor for Bazel
+# https://github.com/hedronvision/bazel-compile-commands-extractor
+# Enables C++ support in many editors. To generate "compile_commands.json" execute:
+# bazel run @hedron_compile_commands//:refresh_all
+http_archive(
+    name = "hedron_compile_commands",
+    sha256 = "9fda864ddae428ad0e03f7669ff4451554afac116e913cd2cd619ac0f40db8d9",
+    strip_prefix = "bazel-compile-commands-extractor-1d21dc390e20ecb24d73e9dbb439e971e0d30337",
+    url = "https://github.com/hedronvision/bazel-compile-commands-extractor/archive/1d21dc390e20ecb24d73e9dbb439e971e0d30337.tar.gz",
+)
+
+load("@hedron_compile_commands//:workspace_setup.bzl", "hedron_compile_commands_setup")
+
+hedron_compile_commands_setup()
