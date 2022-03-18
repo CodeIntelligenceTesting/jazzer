@@ -178,12 +178,4 @@ internal class RuntimeInstrumentor(
             instrumentedBytecode
         }
     }
-
-    companion object {
-        init {
-            // Calls JNI_OnLoad_jazzer_initialize in the driver, which ensures that dynamically
-            // linked JNI methods are resolved against it.
-            System.loadLibrary("jazzer_initialize")
-        }
-    }
 }

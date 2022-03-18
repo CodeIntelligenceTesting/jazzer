@@ -35,7 +35,7 @@ import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
-val KNOWN_ARGUMENTS = listOf(
+private val KNOWN_ARGUMENTS = listOf(
     "instrumentation_includes",
     "instrumentation_excludes",
     "custom_hook_includes",
@@ -45,6 +45,19 @@ val KNOWN_ARGUMENTS = listOf(
     "id_sync_file",
     "dump_classes_dir",
 )
+
+// To be accessible by the agent classes the native library has to be loaded by the same class loader.
+// premain is executed in the context of the system class loader. At the beginning of premain the agent jar is added to
+// the bootstrap class loader and all subsequently required agent classes are loaded by it. Hence, it's not possible to
+// load the native library directly in premain by the system class loader, instead it's delegated to NativeLibraryLoader
+// loaded by the bootstrap class loader.
+internal object NativeLibraryLoader {
+    fun load() {
+        // Calls JNI_OnLoad_jazzer_initialize in the driver, which ensures that dynamically
+        // linked JNI methods are resolved against it.
+        System.loadLibrary("jazzer_initialize")
+    }
+}
 
 private object AgentJarFinder {
     val agentJarFile = jarUriForClass(AgentJarFinder::class.java)?.let { JarFile(File(it)) }
@@ -67,6 +80,8 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
     } else {
         println("WARN: Failed to add agent JAR to bootstrap class loader search path")
     }
+    NativeLibraryLoader.load()
+
     val argumentMap = (agentArgs ?: "")
         .split(',')
         .mapNotNull {
