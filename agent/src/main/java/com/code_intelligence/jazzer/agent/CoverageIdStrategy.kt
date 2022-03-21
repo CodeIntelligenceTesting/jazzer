@@ -25,7 +25,7 @@ import java.util.UUID
 /**
  * Indicates a fatal failure to generate synchronized coverage IDs.
  */
-internal class CoverageIdException(cause: Throwable? = null) :
+class CoverageIdException(cause: Throwable? = null) :
     RuntimeException("Failed to synchronize coverage IDs", cause)
 
 /**
@@ -54,7 +54,7 @@ interface CoverageIdStrategy {
  *
  * It only prevents races within one VM instance.
  */
-internal class MemSyncCoverageIdStrategy : CoverageIdStrategy {
+class MemSyncCoverageIdStrategy : CoverageIdStrategy {
     private var nextEdgeId = 0
 
     @Synchronized
@@ -69,7 +69,7 @@ internal class MemSyncCoverageIdStrategy : CoverageIdStrategy {
  * This class takes care of synchronizing the access to the file between multiple processes as long as the general
  * contract of [CoverageIdStrategy] is followed.
  */
-internal class FileSyncCoverageIdStrategy(private val idSyncFile: Path) : CoverageIdStrategy {
+class FileSyncCoverageIdStrategy(private val idSyncFile: Path) : CoverageIdStrategy {
     private val uuid: UUID = UUID.randomUUID()
     private var idFileLock: FileLock? = null
 
