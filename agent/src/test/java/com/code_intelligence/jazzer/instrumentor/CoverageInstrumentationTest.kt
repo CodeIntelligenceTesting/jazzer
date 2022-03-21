@@ -14,7 +14,7 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
-import org.jacoco.core.internal.flow.JavaNoThrowMethods
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.internal.flow.JavaNoThrowMethods
 import org.junit.Test
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes

@@ -12,3 +12,5 @@ config_setting(
     },
     visibility = ["//visibility:public"],
 )
+
+exports_files(["jacoco_internal.jarjar"])
