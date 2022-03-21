@@ -1,0 +1,8 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+
+java_jni_library(
+    name = "MockDriver",
+    srcs = ["MockDriver.java"],
+    native_libs = ["//driver:mock_driver"],
+    visibility = ["//agent/src/test/java/com/code_intelligence/jazzer:__subpackages__"],
+)

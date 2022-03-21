@@ -1,3 +1,4 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
 load("//bazel:cc.bzl", "cc_17_library")
 
 cc_library(
@@ -253,6 +254,19 @@ cc_binary(
 cc_library(
     name = "sanitizer_symbols_for_tests",
     srcs = ["sanitizer_symbols_for_tests.cpp"],
+    alwayslink = True,
+)
+
+# This JNI library can be loaded by Java-only tests to provide mock definitions
+# of the symbols exported by the real jazzer_driver.
+cc_jni_library(
+    name = "mock_driver",
+    srcs = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": ["rtld_global_hack.cpp"],
+    }),
+    visibility = ["//agent/src/test/java:__subpackages__"],
+    deps = [":sanitizer_symbols_for_tests"],
 )
 
 cc_test(
