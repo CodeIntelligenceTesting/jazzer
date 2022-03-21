@@ -163,4 +163,10 @@ fun dumpAllStackTraces() {
             }
         System.err.println()
     }
+    System.err.println("Garbage collector stats:")
+    System.err.println(
+        ManagementFactory.getGarbageCollectorMXBeans().joinToString("\n", "\n", "\n") {
+            "${it.name}: ${it.collectionCount} collections took ${it.collectionTime}ms"
+        }
+    )
 }
