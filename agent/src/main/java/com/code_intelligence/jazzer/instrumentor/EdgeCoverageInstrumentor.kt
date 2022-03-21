@@ -14,17 +14,17 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
-import org.jacoco.core.analysis.Analyzer
-import org.jacoco.core.analysis.ICoverageVisitor
-import org.jacoco.core.data.ExecutionDataStore
-import org.jacoco.core.internal.flow.ClassProbesAdapter
-import org.jacoco.core.internal.flow.ClassProbesVisitor
-import org.jacoco.core.internal.flow.IClassProbesAdapterFactory
-import org.jacoco.core.internal.instr.ClassInstrumenter
-import org.jacoco.core.internal.instr.IProbeArrayStrategy
-import org.jacoco.core.internal.instr.IProbeInserterFactory
-import org.jacoco.core.internal.instr.InstrSupport
-import org.jacoco.core.internal.instr.ProbeInserter
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.analysis.Analyzer
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.analysis.ICoverageVisitor
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.data.ExecutionDataStore
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.internal.flow.ClassProbesAdapter
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.internal.flow.ClassProbesVisitor
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.internal.flow.IClassProbesAdapterFactory
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.internal.instr.ClassInstrumenter
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.internal.instr.IProbeArrayStrategy
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.internal.instr.IProbeInserterFactory
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.internal.instr.InstrSupport
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.internal.instr.ProbeInserter
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter

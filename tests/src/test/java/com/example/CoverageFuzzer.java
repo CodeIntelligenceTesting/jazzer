@@ -18,20 +18,18 @@ package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.data.ExecutionData;
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.data.ExecutionDataReader;
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.data.ExecutionDataStore;
+import com.code_intelligence.jazzer.third_party.org.jacoco.core.data.SessionInfoStore;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import org.jacoco.core.data.ExecutionData;
-import org.jacoco.core.data.ExecutionDataReader;
-import org.jacoco.core.data.ExecutionDataStore;
-import org.jacoco.core.data.SessionInfoStore;
 
 /**
  * Test of coverage report and dump.
