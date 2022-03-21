@@ -313,6 +313,7 @@ cc_library(
     srcs = ["test_main.cpp"],
     linkstatic = True,
     deps = [
+        "@fmeum_rules_jni//jni:libjvm",
         "@googletest//:gtest",
         "@jazzer_com_github_gflags_gflags//:gflags",
     ],
