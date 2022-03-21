@@ -104,7 +104,7 @@ java_fuzz_target_test(
     fuzzer_args = [
         # Limit the number of runs to verify that the regex roadblocks are
         # cleared quickly.
-        "-runs=15000",
+        "-runs=22000",
     ],
     target_class = "com.example.RegexRoadblocks",
 )
