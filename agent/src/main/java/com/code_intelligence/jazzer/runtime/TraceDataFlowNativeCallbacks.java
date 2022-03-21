@@ -22,18 +22,9 @@ import java.nio.charset.Charset;
 @SuppressWarnings("unused")
 final public class TraceDataFlowNativeCallbacks {
   static {
-    try {
+    // On Windows, we instead statically link the fuzzer callbacks into the driver.
+    if (!System.getProperty("os.name").startsWith("Windows")) {
       RulesJni.loadLibrary("jazzer_fuzzer_callbacks", TraceDataFlowNativeCallbacks.class);
-    } catch (UnsatisfiedLinkError e) {
-      // On Windows, we link the fuzzer callbacks statically instead and thus expect this library
-      // load to fail.
-      if (!System.getProperty("os.name").startsWith("Windows")) {
-        // In some scenarios (e.g. Java unit tests that do not go through the driver), this native
-        // library load will expectedly fail due to missing symbols. We make this case non-fatal as
-        // every actual usage of native methods in this class would result in another
-        // UnsatisfiedLinkError.
-        e.printStackTrace();
-      }
     }
   }
 
