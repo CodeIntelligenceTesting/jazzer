@@ -27,7 +27,7 @@ import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 import kotlin.time.measureTimedValue
 
-internal class RuntimeInstrumentor(
+class RuntimeInstrumentor(
     private val instrumentation: Instrumentation,
     private val classesToFullyInstrument: ClassNameGlobber,
     private val classesToHookInstrument: ClassNameGlobber,
