@@ -29,8 +29,13 @@ RUN curl -L https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/baz
     bazelisk build --config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux \
       //agent:jazzer_agent_deploy //driver:jazzer_driver
 
-FROM gcr.io/distroless/java
+# :debug includes a busybox shell, which is needed for libFuzzer's use of system() for e.g. the
+# -fork and -minimize_crash commands.
+FROM gcr.io/distroless/java:debug
 
 COPY --from=builder /root/jazzer/bazel-bin/agent/jazzer_agent_deploy.jar /root/jazzer/bazel-bin/driver/jazzer_driver /app/
+# system() expects the shell at /bin/sh, but the image has it at /busybox/sh. We create a symlink,
+# but have to use the long form as a simple RUN <command> also requires /bin/sh.
+RUN ["/busybox/sh", "-c", "ln -s /busybox/sh /bin/sh"]
 WORKDIR /fuzzing
 ENTRYPOINT [ "/app/jazzer_driver" ]
