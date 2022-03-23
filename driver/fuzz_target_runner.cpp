@@ -181,7 +181,12 @@ FuzzTargetRunner::FuzzTargetRunner(
   }
   env.DeleteLocalRef(fuzz_target_class);
 
-  jclass_ = jvm.FindClass(FLAGS_target_class);
+  try {
+    jclass_ = jvm.FindClass(FLAGS_target_class);
+  } catch (const std::runtime_error &error) {
+    std::cerr << "ERROR: " << error.what() << std::endl;
+    exit(1);
+  }
   // one of the following functions is required:
   //    public static void fuzzerTestOneInput(byte[] input)
   //    public static void fuzzerTestOneInput(FuzzedDataProvider data)
