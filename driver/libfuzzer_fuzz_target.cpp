@@ -63,6 +63,14 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
   return 0;
 }
 
+#ifndef _WIN32
+__attribute__((weak))
+#endif
+extern "C" int
+__llvm_profile_write_file(void) {
+  return 0;
+}
+
 // Called by the fuzzer for every fuzzing input.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, const size_t size) {
   auto result = gLibfuzzerDriver->TestOneInput(data, size);
@@ -80,6 +88,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, const size_t size) {
     }
     // Exit directly without invoking libFuzzer's atexit hook.
     driver_cleanup();
+    // When running with LLVM coverage instrumentation, write out the profile as
+    // the exit hook that write it won't run.
+    __llvm_profile_write_file();
     _Exit(Driver::kErrorExitCode);
   }
   return 0;
