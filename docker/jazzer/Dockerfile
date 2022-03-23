@@ -33,4 +33,4 @@ FROM gcr.io/distroless/java
 
 COPY --from=builder /root/jazzer/bazel-bin/agent/jazzer_agent_deploy.jar /root/jazzer/bazel-bin/driver/jazzer_driver /app/
 WORKDIR /fuzzing
-ENTRYPOINT [ "/app/jazzer_driver", "-artifact_prefix=/fuzzing/", "--reproducer_path=/fuzzing" ]
+ENTRYPOINT [ "/app/jazzer_driver" ]
