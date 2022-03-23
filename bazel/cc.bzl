@@ -38,6 +38,10 @@ def _cc_17_library_impl(ctx):
             files = library[DefaultInfo].files,
         ),
         library[CcInfo],
+        coverage_common.instrumented_files_info(
+            ctx,
+            dependency_attributes = ["library"],
+        ),
     ]
 
 _cc_17_library = rule(
