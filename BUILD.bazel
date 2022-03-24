@@ -24,7 +24,7 @@ define_kt_toolchain(
 pkg_tar(
     name = "jazzer_release",
     srcs = [
-        "//agent:jazzer_agent_deploy.jar",
+        "//agent:jazzer_agent_deploy",
         "//agent:jazzer_api_deploy.jar",
         "//driver:jazzer_driver",
     ],

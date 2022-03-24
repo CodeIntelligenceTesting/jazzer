@@ -164,7 +164,7 @@ cc_binary(
         "sanitizer_symbols.cpp",
     ],
     data = [
-        "//agent:jazzer_agent_deploy.jar",
+        "//agent:jazzer_agent_deploy",
     ],
     linkopts = select({
         "@platforms//os:windows": [],
@@ -193,7 +193,7 @@ alias(
 cc_binary(
     name = "jazzer_driver_asan",
     data = [
-        "//agent:jazzer_agent_deploy.jar",
+        "//agent:jazzer_agent_deploy",
     ],
     linkopts = [
     ] + select({
@@ -225,7 +225,7 @@ cc_binary(
 cc_binary(
     name = "jazzer_driver_ubsan",
     data = [
-        "//agent:jazzer_agent_deploy.jar",
+        "//agent:jazzer_agent_deploy",
     ],
     linkopts = [
     ] + select({
@@ -277,7 +277,7 @@ cc_test(
         "--cp=jazzer/$(rootpath //driver/testdata:fuzz_target_mocks_deploy.jar)",
     ],
     data = [
-        "//agent:jazzer_agent_deploy.jar",
+        "//agent:jazzer_agent_deploy",
         "//driver/testdata:fuzz_target_mocks_deploy.jar",
     ],
     includes = ["."],
@@ -308,7 +308,7 @@ cc_test(
         "--cp=jazzer/$(rootpath //driver/testdata:fuzz_target_mocks_deploy.jar)",
     ],
     data = [
-        "//agent:jazzer_agent_deploy.jar",
+        "//agent:jazzer_agent_deploy",
         "//driver/testdata:fuzz_target_mocks_deploy.jar",
     ],
     includes = ["."],
