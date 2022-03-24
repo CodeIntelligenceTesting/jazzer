@@ -27,7 +27,7 @@ RUN curl -L https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/baz
     touch /usr/bin/ld.gold && \
     BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1 \
     bazelisk build --config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux \
-      //agent:jazzer_agent_deploy.jar //driver:jazzer_driver
+      //agent:jazzer_agent_deploy //driver:jazzer_driver
 
 FROM gcr.io/distroless/java
 

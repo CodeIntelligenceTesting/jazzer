@@ -1,5 +1,6 @@
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("//bazel:jar.bzl", "strip_jar")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
 java_binary(
@@ -16,15 +17,12 @@ java_binary(
     ],
 )
 
-genrule(
+strip_jar(
     name = "jazzer_agent_deploy",
-    srcs = [":jazzer_agent_shaded_deploy"],
-    outs = ["jazzer_agent_deploy.jar"],
-    cmd = """
-$(execpath //bazel/tools/java:JarStripper) $(execpath :jazzer_agent_shaded_deploy) $@ \
-module-info.class
-""",
-    exec_tools = ["//bazel/tools/java:JarStripper"],
+    jar = ":jazzer_agent_shaded_deploy",
+    paths_to_strip = [
+        "module-info.class",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -38,12 +36,10 @@ sh_test(
     name = "jazzer_agent_shading_test",
     srcs = ["verify_shading.sh"],
     args = [
-        "$(rootpath jazzer_agent_deploy.jar)",
+        "$(rootpath :jazzer_agent_deploy)",
     ],
     data = [
-        # sh_test does not correctly forward runfiles associated to targets (such as
-        # ":jazzer_agent_deploy"), so depend on a generated file instead.
-        "jazzer_agent_deploy.jar",
+        ":jazzer_agent_deploy",
         "@local_jdk//:bin/jar",
     ],
     target_compatible_with = SKIP_ON_WINDOWS,

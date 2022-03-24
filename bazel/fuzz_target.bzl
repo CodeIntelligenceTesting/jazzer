@@ -89,7 +89,7 @@ def java_fuzz_target_test(
         ] + additional_args + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,
-            "//agent:jazzer_agent_deploy.jar",
+            "//agent:jazzer_agent_deploy",
             "//agent:jazzer_api_deploy.jar",
             driver,
         ] + data,
