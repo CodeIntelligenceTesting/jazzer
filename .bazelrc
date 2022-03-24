@@ -48,4 +48,4 @@ build:ci --remote_timeout=3600
 build:maven --config=toolchain
 build:maven --stamp
 build:maven --define "maven_repo=https://oss.sonatype.org/service/local/staging/deploy/maven2"
-build:maven --java_runtime_version=localjdk_8
+build:maven --java_runtime_version=local_jdk_8
