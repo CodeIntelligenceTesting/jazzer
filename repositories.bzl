@@ -148,3 +148,16 @@ def jazzer_dependencies():
         sha256 = "630202d393114f828f350da57d42a6d4fa12ed614a578021d87ba8056dbec4c4",
         url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/releases/download/2022-02-26/jazzer-libfuzzer-2022-02-26.tar.gz",
     )
+
+    maybe(
+        http_archive,
+        name = "jacoco_jacoco",
+        build_file = Label("//third_party:jacoco_internal.BUILD"),
+        patches = [
+            Label("//third_party:jacoco-make-probe-adapter-subclassable.patch"),
+            Label("//third_party:jacoco-make-probe-inserter-subclassable.patch"),
+        ],
+        strip_prefix = "jacoco-0.8.7",
+        sha256 = "d764c2c02caf8836a12ac582263a109dcac9c1389d3ddee0548aed1322f6e01c",
+        url = "https://github.com/jacoco/jacoco/archive/refs/tags/v0.8.7.tar.gz",
+    )

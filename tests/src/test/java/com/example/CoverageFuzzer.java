@@ -168,7 +168,7 @@ public final class CoverageFuzzer {
     }
 
     assertEquals("com/example/CoverageFuzzer", coverageFuzzerCoverage.getName());
-    assertEquals(6, countHits(coverageFuzzerCoverage.getProbes()));
+    assertEquals(7, countHits(coverageFuzzerCoverage.getProbes()));
 
     assertEquals("com/example/CoverageFuzzer$ClassToCover", classToCoverCoverage.getName());
     assertEquals(11, countHits(classToCoverCoverage.getProbes()));
