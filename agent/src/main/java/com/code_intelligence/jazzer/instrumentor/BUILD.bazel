@@ -28,6 +28,7 @@ kt_jvm_library(
         "@com_github_classgraph_classgraph//:classgraph",
         "@com_github_jetbrains_kotlin//:kotlin-reflect",
         "@jacoco_jacoco//:jacoco_internal",
+        #        "@jazzer_jacoco//:jacoco_internal",
         "@org_ow2_asm_asm//jar",
         "@org_ow2_asm_asm_commons//jar",
     ],

@@ -1,3 +1,4 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library", "java_jni_library")
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("//agent/src/jmh/java/com/code_intelligence/jazzer:jmh.bzl", "JMH_TEST_ARGS")
 
@@ -62,5 +63,41 @@ kt_jvm_library(
         "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",
         "@jazzer_jacoco//:jacoco_internal",
         "@org_ow2_asm_asm//jar",
+    ],
+)
+
+java_binary(
+    name = "EdgeCoverageInstrumentationBenchmark",
+    main_class = "org.openjdk.jmh.Main",
+    runtime_deps = [
+        ":edge_coverage_instrumentation_benchmark",
+    ],
+)
+
+java_test(
+    name = "EdgeCoverageInstrumentationBenchmarkTest",
+    args = JMH_TEST_ARGS,
+    main_class = "org.openjdk.jmh.Main",
+    # Directly invoke JMH's main without using a testrunner.
+    use_testrunner = False,
+    runtime_deps = [
+        ":edge_coverage_instrumentation_benchmark",
+    ],
+)
+
+java_jni_library(
+    name = "edge_coverage_instrumentation_benchmark",
+    srcs = [
+        "EdgeCoverageInstrumentation.java",
+        "EdgeCoverageTarget.java",
+    ],
+    native_libs = ["//driver:coverage_tracker_jni"],
+    plugins = ["//agent/src/jmh/java/com/code_intelligence/jazzer:JmhGeneratorAnnotationProcessor"],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:coverage_map",
+        "//agent/src/test/java/com/code_intelligence/jazzer:MockDriver",
+        "//agent/src/test/java/com/code_intelligence/jazzer/instrumentor:patch_test_utils",
+        "@maven//:org_openjdk_jmh_jmh_core",
     ],
 )

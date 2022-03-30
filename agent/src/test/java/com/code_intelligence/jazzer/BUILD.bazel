@@ -4,5 +4,8 @@ java_jni_library(
     name = "MockDriver",
     srcs = ["MockDriver.java"],
     native_libs = ["//driver:mock_driver"],
-    visibility = ["//agent/src/test/java/com/code_intelligence/jazzer:__subpackages__"],
+    visibility = [
+        "//agent/src/jmh/java/com/code_intelligence/jazzer:__subpackages__",
+        "//agent/src/test/java/com/code_intelligence/jazzer:__subpackages__",
+    ],
 )
