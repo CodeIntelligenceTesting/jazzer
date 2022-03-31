@@ -13,7 +13,9 @@
 # limitations under the License.
 
 def _strip_jar(ctx):
-    out_jar = ctx.actions.declare_file(ctx.attr.name + ".jar")
+    out_jar = ctx.outputs.out
+    if out_jar == None:
+        out_jar = ctx.actions.declare_file(ctx.attr.name + ".jar")
 
     args = ctx.actions.args()
     args.add(ctx.file.jar)
@@ -42,6 +44,7 @@ def _strip_jar(ctx):
 strip_jar = rule(
     implementation = _strip_jar,
     attrs = {
+        "out": attr.output(),
         "jar": attr.label(
             mandatory = True,
             allow_single_file = [".jar"],

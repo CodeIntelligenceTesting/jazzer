@@ -19,6 +19,7 @@ java_binary(
 
 strip_jar(
     name = "jazzer_agent_deploy",
+    out = "jazzer_agent_deploy.jar",
     jar = ":jazzer_agent_shaded_deploy",
     paths_to_strip = [
         "module-info.class",
