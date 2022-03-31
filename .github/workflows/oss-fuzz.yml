@@ -1,0 +1,26 @@
+name: OSS-Fuzz build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+
+  oss_fuzz:
+    runs-on: ubuntu-20.04
+    container: gcr.io/oss-fuzz-base/base-builder-jvm
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build Jazzer
+        # Keep in sync with https://github.com/google/oss-fuzz/blob/221b39181a372ff16c0c813c5963a08aa58f19e2/infra/base-images/base-builder/install_java.sh#L33.
+        run: bazel build --java_runtime_version=local_jdk_15 -c opt --cxxopt="-stdlib=libc++" --linkopt=-lc++ //agent:jazzer_agent_deploy.jar //driver:jazzer_driver //driver:jazzer_driver_asan //driver:jazzer_driver_ubsan //agent:jazzer_api_deploy.jar
+
+      - name: Test Jazzer build
+        # Keep in sync with https://github.com/google/oss-fuzz/blob/221b39181a372ff16c0c813c5963a08aa58f19e2/infra/base-images/base-builder/install_java.sh#L35-L36.
+        run: "test -f bazel-bin/agent/jazzer_agent_deploy.jar && test -f bazel-bin/driver/jazzer_driver && test -f bazel-bin/driver/jazzer_driver_asan && test -f bazel-bin/driver/jazzer_driver_ubsan && test -f bazel-bin/agent/jazzer_api_deploy.jar"
