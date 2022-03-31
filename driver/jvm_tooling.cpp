@@ -240,8 +240,6 @@ JVM::JVM(std::string_view executable_path, std::string_view seed) {
   if (class_path_from_env) {
     class_path += absl::StrFormat(ARG_SEPARATOR "%s", class_path_from_env);
   }
-  class_path += absl::StrFormat(ARG_SEPARATOR "%s",
-                                getInstrumentorAgentPath(executable_path));
   LOG(INFO) << "got class path " << class_path;
 
   std::vector<JavaVMOption> options;
