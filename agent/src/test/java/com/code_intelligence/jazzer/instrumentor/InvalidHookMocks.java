@@ -46,6 +46,13 @@ class InvalidHookMocks {
     return true;
   }
 
+  @MethodHook(type = HookType.REPLACE, targetClassName = "java.lang.System", targetMethod = "gc",
+      targetMethodDescriptor = "()V")
+  public static Object
+  invalidReplaceVoidMethod(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    return null;
+  }
+
   @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.StringBuilder",
       targetMethod = "<init>", targetMethodDescriptor = "(Ljava/lang/String;)V")
   public static Object

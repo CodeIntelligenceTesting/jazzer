@@ -97,7 +97,7 @@ class Hook private constructor(
                     if (potentialHook.targetMethodName == "<init>") {
                         require(hookMethod.returnType.name == potentialHook.targetClassName) { "$potentialHook: return type must be ${potentialHook.targetClassName} to match target constructor" }
                     } else if (potentialHook.targetReturnTypeDescriptor == "V") {
-                        require(hookMethod.returnType.descriptor == "V") { "$potentialHook: return type must be void to match targetMethodDescriptor" }
+                        require(hookMethod.returnType.descriptor == "V") { "$potentialHook: return type must be void" }
                     } else {
                         require(
                             hookMethod.returnType.descriptor in listOf(
