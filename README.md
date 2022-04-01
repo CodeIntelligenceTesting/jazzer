@@ -106,6 +106,8 @@ After unpacking the archive, run Jazzer via
 If this leads to an error message saying that `libjvm.so` has not been found, the path to the local JRE needs to be
 specified in the `JAVA_HOME` environment variable.
 
+JDK distributions based on [OpenJDK](https://openjdk.java.net/) are supported. [OpenJ9](https://www.eclipse.org/openj9/) is not supported due to random crashes.
+
 ## Examples
 
 Multiple examples for instructive and real-world Jazzer fuzz targets can be found in the `examples/` directory.
