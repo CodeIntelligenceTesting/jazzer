@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
 def _add_cxxopt_std_17_impl(settings, attr):
     STD_CXX_17_CXXOPTS = ["/std:c++17" if attr.is_windows else "-std=c++17"]
     return {
@@ -80,5 +82,84 @@ def cc_17_library(name, visibility = None, **kwargs):
             "//conditions:default": False,
         }),
         library = library_name,
+        visibility = visibility,
+    )
+
+# A drop-in replacement for cc_binary that behaves identically on non-Windows platforms.
+# On Windows, the resulting executable will dynamically export the symbols specified in win_exports.
+# Furthermore, the following additional targets will be available:
+#
+# * <name>.if:  An interface library that dynamic libraries can be link against if they depend on
+#               symbols from the executable.
+# * <name>.def: The .def file generated for this executable. Specify this as the win_def_file of
+#               another cc_binary to export the same symbols.
+#
+# Based on an idea brought up in
+#   https://github.com/bazelbuild/bazel/issues/15107#issuecomment-1077414779.
+def cc_interface_binary(
+        name,
+        win_exports,
+        data = None,
+        tags = None,
+        visibility = None,
+        **kwargs):
+    dll_name = "_%s_dll" % name
+    win_def_name = "%s_def" % name
+    win_def_file_name = "%s.def" % name
+    interface_filegroup_name = "_%s.if" % name
+    interface_import_name = "%s.if" % name
+
+    def_library_name = name + ".exe"
+    write_file(
+        name = win_def_name,
+        out = win_def_file_name,
+        content = [
+            "LIBRARY   " + def_library_name,
+            "EXPORTS",
+        ] + [
+            "   {symbol}   @{id}".format(
+                id = id,
+                symbol = symbol,
+            )
+            for id, symbol in enumerate(win_exports, 1)
+        ],
+        tags = ["manual"],
+        visibility = visibility,
+    )
+
+    native.cc_binary(
+        name = name,
+        data = data,
+        tags = tags,
+        visibility = visibility,
+        win_def_file = ":" + win_def_name,
+        **kwargs
+    )
+
+    # Intentionally omits data so that the main binary target can data-depend on
+    # a shared library dynamically linked against it without creating a cyclic
+    # dependency.
+    native.cc_binary(
+        name = dll_name,
+        linkshared = True,
+        tags = ["manual"],
+        visibility = ["//visibility:private"],
+        win_def_file = ":" + win_def_name,
+        **kwargs
+    )
+
+    native.filegroup(
+        name = interface_filegroup_name,
+        srcs = [":" + dll_name],
+        output_group = "interface_library",
+        tags = ["manual"],
+        visibility = ["//visibility:private"],
+    )
+
+    native.cc_import(
+        name = interface_import_name,
+        interface_library = ":" + interface_filegroup_name,
+        system_provided = True,
+        tags = ["manual"],
         visibility = visibility,
     )
