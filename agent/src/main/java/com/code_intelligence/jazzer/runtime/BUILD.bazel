@@ -48,14 +48,9 @@ jni_headers(
 java_jni_library(
     name = "trace_data_flow_native_callbacks",
     srcs = ["TraceDataFlowNativeCallbacks.java"],
-    native_libs = select({
-        # On Windows, the fuzzer callbacks are statically linked into the driver instead (see
-        # //driver:jazzer_driver).
-        "@platforms//os:windows": [],
-        "//conditions:default": [
-            "//agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_fuzzer_callbacks",
-        ],
-    }),
+    native_libs = [
+        "//agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_fuzzer_callbacks",
+    ],
     visibility = [
         # For libFuzzer callbacks.
         "//agent/src/main/native/com/code_intelligence/jazzer/runtime:__pkg__",

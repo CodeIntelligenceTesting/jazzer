@@ -1,5 +1,6 @@
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
-load("//bazel:cc.bzl", "cc_17_library")
+load("//bazel:cc.bzl", "cc_17_library", "cc_interface_binary")
 
 cc_library(
     name = "sanitizer_hooks_with_pc",
@@ -84,25 +85,7 @@ cc_library(
         "@com_google_glog//:glog",
         "@fmeum_rules_jni//jni",
         "@jazzer_com_github_gflags_gflags//:gflags",
-    ] + select({
-        # We statically link the fuzzer callbacks on Windows since linking a shared library against
-        # symbols exported by a binary is difficult: We would need a .def file to export the symbols
-        # and create an interface library from the binary that is then linked into the shared
-        # library. This creates a conceptual (and real) cyclic dependency between the binary and the
-        # shared library since the binary data-depends on the agent and thus on the shared library.
-        # Since we only have to link the fuzzer callbacks dynamically to work around a JDK bug in an
-        # obsoleted feature (critical JNI natives) that is only meant to improve performance, we
-        # don't worry about this too much.
-        "@platforms//os:windows": [
-            "//agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_fuzzer_callbacks_for_static_linking",
-        ],
-        # On other platforms, dynamic linking is easy, so we load the fuzzer callbacks from a shared
-        # library at runtime. This is needed to let the JVM's JavaCritical_* lookup succeed, which
-        # does not correctly load statically linked symbols.
-        # See //agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_fuzzer_callbacks
-        # for the place this is linked into the agent instead.
-        "//conditions:default": [],
-    }),
+    ],
     # Symbols are only referenced dynamically via JNI.
     alwayslink = True,
 )
@@ -164,7 +147,7 @@ cc_17_library(
     alwayslink = True,
 )
 
-cc_binary(
+cc_interface_binary(
     name = "jazzer_driver",
     srcs = [
         # Defines symbols otherwise defined by sanitizers to prevent linker
@@ -186,6 +169,17 @@ cc_binary(
     }),
     linkstatic = True,
     visibility = ["//visibility:public"],
+    win_exports = [
+        "__sanitizer_cov_trace_cmp4",
+        "__sanitizer_cov_trace_cmp8",
+        "__sanitizer_cov_trace_div4",
+        "__sanitizer_cov_trace_div8",
+        "__sanitizer_cov_trace_gep",
+        "__sanitizer_cov_trace_pc_indir",
+        "__sanitizer_cov_trace_switch",
+        "__sanitizer_weak_hook_compare_bytes",
+        "__sanitizer_weak_hook_memmem",
+    ],
     deps = [":driver_lib"],
 )
 
@@ -223,6 +217,7 @@ cc_binary(
     }),
     linkstatic = True,
     visibility = ["//visibility:public"],
+    win_def_file = ":jazzer_driver.def",
     deps = [":driver_lib"] + select({
         # There is no static ASan runtime on macOS, so link to the dynamic
         # runtime library if on macOS and using the toolchain.
@@ -257,6 +252,7 @@ cc_binary(
     }),
     linkstatic = True,
     visibility = ["//visibility:public"],
+    win_def_file = ":jazzer_driver.def",
     deps = [":driver_lib"],
 )
 
@@ -266,16 +262,30 @@ cc_library(
     alwayslink = True,
 )
 
-# This JNI library can be loaded by Java-only tests to provide mock definitions
-# of the symbols exported by the real jazzer_driver.
-cc_jni_library(
-    name = "mock_driver",
+cc_binary(
+    name = "mock_driver_",
     srcs = select({
         "@platforms//os:windows": [],
         "//conditions:default": ["rtld_global_hack.cpp"],
     }),
+    linkshared = True,
+    linkstatic = True,
+    win_def_file = ":jazzer_driver.def",
+    deps = [
+        ":sanitizer_symbols_for_tests",
+        "@fmeum_rules_jni//jni",
+    ],
+)
+
+# This native library can be loaded by Java-only tests to provide mock definitions of the symbols
+# exported by the real jazzer_driver.
+copy_file(
+    name = "mock_driver",
+    src = ":mock_driver_",
+    # On Linux and macOS, the name does not matter. On Windows, where we don't have RTLD_GLOBAL, we
+    # have to ensure that the dynamic linker picks this up and thus use the name of the real driver.
+    out = "mock/jazzer_driver.exe",
     visibility = ["//agent/src/test/java:__subpackages__"],
-    deps = [":sanitizer_symbols_for_tests"],
 )
 
 cc_test(

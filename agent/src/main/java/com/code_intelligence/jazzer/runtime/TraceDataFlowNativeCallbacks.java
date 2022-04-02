@@ -22,10 +22,7 @@ import java.nio.charset.Charset;
 @SuppressWarnings("unused")
 final public class TraceDataFlowNativeCallbacks {
   static {
-    // On Windows, we instead statically link the fuzzer callbacks into the driver.
-    if (!System.getProperty("os.name").startsWith("Windows")) {
-      RulesJni.loadLibrary("jazzer_fuzzer_callbacks", TraceDataFlowNativeCallbacks.class);
-    }
+    RulesJni.loadLibrary("jazzer_fuzzer_callbacks", TraceDataFlowNativeCallbacks.class);
   }
 
   // Making this static final ensures that the JIT will eliminate the dead branch of a construct

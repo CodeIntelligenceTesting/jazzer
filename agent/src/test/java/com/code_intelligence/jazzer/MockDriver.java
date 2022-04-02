@@ -14,10 +14,15 @@
 
 package com.code_intelligence.jazzer;
 
-import com.github.fmeum.rules_jni.RulesJni;
+import com.google.devtools.build.runfiles.Runfiles;
+import java.io.IOException;
 
 public final class MockDriver {
   public static void load() {
-    RulesJni.loadLibrary("mock_driver", "/driver");
+    try {
+      System.load(Runfiles.create().rlocation("jazzer/driver/mock/jazzer_driver.exe"));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
