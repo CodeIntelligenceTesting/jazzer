@@ -84,19 +84,28 @@ public final class FuzzTarget {
       descriptor = null;
     }
 
-    Class<?> targetClass;
-    try {
-      // Explicitly invoking static initializers to trigger some coverage in the code.
-      targetClass = Class.forName(className, true, ClassLoader.getSystemClassLoader());
-    } catch (ClassNotFoundException e) {
-      System.err.printf(
-          "Failed to find class %s for autofuzz, please ensure it is contained in the classpath "
-              + "specified with --cp and specify the full package name%n",
-          className);
-      e.printStackTrace();
-      System.exit(1);
-      return;
-    }
+    Class<?> targetClass = null;
+    String targetClassName = className;
+    do {
+      try {
+        // Explicitly invoking static initializers to trigger some coverage in the code.
+        targetClass = Class.forName(targetClassName, true, ClassLoader.getSystemClassLoader());
+      } catch (ClassNotFoundException e) {
+        int classSeparatorIndex = targetClassName.lastIndexOf(".");
+        if (classSeparatorIndex == -1) {
+          System.err.printf(
+              "Failed to find class %s for autofuzz, please ensure it is contained in the classpath "
+                  + "specified with --cp and specify the full package name%n",
+              className);
+          e.printStackTrace();
+          System.exit(1);
+          return;
+        }
+        StringBuilder classNameBuilder = new StringBuilder(targetClassName);
+        classNameBuilder.setCharAt(classSeparatorIndex, '$');
+        targetClassName = classNameBuilder.toString();
+      }
+    } while (targetClass == null);
 
     boolean isConstructor = methodName.equals("new");
     if (isConstructor) {
