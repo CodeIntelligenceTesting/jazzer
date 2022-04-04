@@ -26,7 +26,6 @@ def _strip_jar(ctx):
         inputs = [ctx.file.jar],
         arguments = [args],
         executable = ctx.executable._jar_stripper,
-        tools = [ctx.attr._jar_stripper[DefaultInfo].files_to_run],
     )
 
     return [
