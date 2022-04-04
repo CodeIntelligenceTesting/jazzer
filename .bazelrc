@@ -10,7 +10,7 @@ build -c opt
 build:linux --cxxopt='-std=c++17'
 build:macos --cxxopt='-std=c++17'
 build:windows --cxxopt='/std:c++17'
-build --repo_env=CC=clang
+common --repo_env=CC=clang
 build --incompatible_enable_cc_toolchain_resolution
 # Requires a relatively modern clang.
 build:ci --features=layering_check
