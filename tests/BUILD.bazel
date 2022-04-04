@@ -94,3 +94,23 @@ java_fuzz_target_test(
         "@jazzer_jacoco//:jacoco_internal",
     ],
 )
+
+java_library(
+    name = "autofuzz_inner_class_target",
+    srcs = ["src/test/java/com/example/AutofuzzInnerClassTarget.java"],
+    deps = [
+        "//agent:jazzer_api_compile_only",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "AutofuzzInnerClassFuzzer",
+    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    fuzzer_args = [
+        "--autofuzz=com.example.AutofuzzInnerClassTarget.Middle.Inner::test",
+        "--keep_going=1",
+    ],
+    runtime_deps = [
+        ":autofuzz_inner_class_target",
+    ],
+)
