@@ -48,18 +48,6 @@ DECLARE_string(coverage_report);
 // Defined in fuzz_target_runner.cpp
 DECLARE_string(coverage_dump);
 
-// This symbol is defined by sanitizers if linked into Jazzer or in
-// sanitizer_symbols.cpp if no sanitizer is used.
-extern "C" void __sanitizer_set_death_callback(void (*)());
-
-// We apply a patch to libFuzzer to make it call this function instead of
-// __sanitizer_set_death_callback to pass us the death callback.
-extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
-    void (*callback)()) {
-  jazzer::AbstractLibfuzzerDriver::libfuzzer_print_crashing_input_ = callback;
-  __sanitizer_set_death_callback(callback);
-}
-
 namespace {
 std::vector<char *> modified_argv;
 

@@ -50,6 +50,29 @@ extern "C" void driver_cleanup() {
   gLibfuzzerDriver.reset(nullptr);
 }
 
+// This symbol is defined by sanitizers if linked into Jazzer or in
+// sanitizer_symbols.cpp if no sanitizer is used.
+extern "C" void __sanitizer_set_death_callback(void (*)());
+
+// We apply a patch to libFuzzer to make it call this function instead of
+// __sanitizer_set_death_callback to pass us the death callback.
+extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
+    void (*callback)()) {
+  jazzer::AbstractLibfuzzerDriver::libfuzzer_print_crashing_input_ = callback;
+  __sanitizer_set_death_callback([]() {
+    jazzer::DumpJvmStackTraces();
+    jazzer::AbstractLibfuzzerDriver::libfuzzer_print_crashing_input_();
+    // Ideally, we would be able to call driver_cleanup here to perform a
+    // graceful shutdown of the JVM. However, doing this directly results in a
+    // nested bug report by ASan or UBSan, likely because something about the
+    // stack/thread context in which they generate reports is incompatible with
+    // the JVM shutdown process. use_sigaltstack=0 does not help though, so this
+    // might be on us. The alternative of calling driver_cleanup in a new thread
+    // and joining on it results in an endless wait in DestroyJavaVM, even when
+    // the main thread is detached beforehand - it is not clear why.
+  });
+}
+
 // Entry point called by libfuzzer before any LLVMFuzzerTestOneInput(...)
 // invocations.
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
