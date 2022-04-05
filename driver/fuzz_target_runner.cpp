@@ -242,6 +242,7 @@ FuzzTargetRunner::FuzzTargetRunner(
   }
 
   if (jthrowable exception = env.ExceptionOccurred()) {
+    env.ExceptionClear();
     LOG(ERROR) << "== Java Exception in fuzzerInitialize: ";
     LOG(ERROR) << getStackTrace(exception);
     std::exit(1);
@@ -280,6 +281,7 @@ FuzzTargetRunner::~FuzzTargetRunner() {
     std::cerr << "calling fuzzer teardown function" << std::endl;
     env.CallStaticVoidMethod(jclass_, fuzzer_tear_down_);
     if (jthrowable exception = env.ExceptionOccurred()) {
+      env.ExceptionClear();
       std::cerr << getStackTrace(exception) << std::endl;
       _Exit(1);
     }
