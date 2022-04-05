@@ -44,13 +44,13 @@ jobs:
         run: cat $(bazel info execution_root)/external/local_jdk/BUILD.bazel | grep java_home
 
       - name: Upload replayer
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: replayer_${{ matrix.arch }}
           path: replayer.jar
 
       - name: Upload release tar
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: jazzer_releases
           path: release-${{ matrix.arch}}.tar.gz
@@ -61,19 +61,19 @@ jobs:
 
     steps:
       - name: Download macOS jar
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: replayer_darwin
           path: replayer_darwin
 
       - name: Download Linux jar
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: replayer_linux
           path: replayer_linux
 
       - name: Download Windows jar
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: replayer_windows
           path: replayer_windows
@@ -87,7 +87,7 @@ jobs:
           jar cvmf merged/META-INF/MANIFEST.MF replayer.jar -C merged .
 
       - name: Upload merged jar
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: replayer
           path: replayer.jar
