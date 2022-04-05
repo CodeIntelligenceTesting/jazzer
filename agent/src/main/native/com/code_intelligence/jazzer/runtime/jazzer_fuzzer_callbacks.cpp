@@ -47,9 +47,9 @@ inline __attribute__((always_inline)) void *idToPc(jint id) {
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceStrstr0(
     JNIEnv *env, jclass cls, jbyteArray needle, jint id) {
+  jint needle_length = env->GetArrayLength(needle);
   auto *needle_native =
       static_cast<jbyte *>(env->GetPrimitiveArrayCritical(needle, nullptr));
-  jint needle_length = env->GetArrayLength(needle);
   __sanitizer_weak_hook_memmem(idToPc(id), nullptr, 0, needle_native,
                                needle_length, nullptr);
   env->ReleasePrimitiveArrayCritical(needle, needle_native, JNI_ABORT);
@@ -66,12 +66,12 @@ JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceMemcmp(
     JNIEnv *env, jclass cls, jbyteArray b1, jbyteArray b2, jint result,
     jint id) {
+  jint b1_length = env->GetArrayLength(b1);
+  jint b2_length = env->GetArrayLength(b2);
   auto *b1_native =
       static_cast<jbyte *>(env->GetPrimitiveArrayCritical(b1, nullptr));
   auto *b2_native =
       static_cast<jbyte *>(env->GetPrimitiveArrayCritical(b2, nullptr));
-  jint b1_length = env->GetArrayLength(b1);
-  jint b2_length = env->GetArrayLength(b2);
   __sanitizer_weak_hook_compare_bytes(idToPc(id), b1_native, b2_native,
                                       b1_length, b2_length, result);
   env->ReleasePrimitiveArrayCritical(b1, b1_native, JNI_ABORT);
