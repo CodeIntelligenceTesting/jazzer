@@ -114,3 +114,19 @@ java_fuzz_target_test(
         ":autofuzz_inner_class_target",
     ],
 )
+
+JAZZER_API_TEST_CASES = {
+    "default": [],
+    "nohooks": ["--nohooks"],
+}
+
+[
+    java_fuzz_target_test(
+        name = "JazzerApiFuzzer_" + case,
+        srcs = ["src/test/java/com/example/JazzerApiFuzzer.java"],
+        expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+        fuzzer_args = args,
+        target_class = "com.example.JazzerApiFuzzer",
+    )
+    for case, args in JAZZER_API_TEST_CASES.items()
+]

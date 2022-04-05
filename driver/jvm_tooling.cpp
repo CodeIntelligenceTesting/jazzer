@@ -238,7 +238,14 @@ JVM::JVM(std::string_view executable_path, std::string_view seed) {
   std::string class_path = absl::StrFormat("-Djava.class.path=%s", FLAGS_cp);
   const auto class_path_from_env = std::getenv("JAVA_FUZZER_CLASSPATH");
   if (class_path_from_env) {
-    class_path += absl::StrFormat(ARG_SEPARATOR "%s", class_path_from_env);
+    class_path += absl::StrCat(ARG_SEPARATOR, class_path_from_env);
+  }
+  if (!FLAGS_hooks) {
+    // A Java agent is implicitly added to the system class loader's classpath,
+    // so there is no need to add the Jazzer agent here if we are running with
+    // the agent enabled.
+    class_path +=
+        absl::StrCat(ARG_SEPARATOR, getInstrumentorAgentPath(executable_path));
   }
   LOG(INFO) << "got class path " << class_path;
 
