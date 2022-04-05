@@ -83,6 +83,11 @@ public class FuzzTargetTestWrapper {
                 arguments)
             .collect(Collectors.toList());
     processBuilder.inheritIO();
+    if (JAZZER_CI) {
+      // Make JVM error reports available in test outputs.
+      processBuilder.environment().put(
+          "JAVA_TOOL_OPTIONS", String.format("-XX:ErrorFile=%s/hs_err_pid%%p.log", outputDir));
+    }
     processBuilder.command(command);
 
     try {
