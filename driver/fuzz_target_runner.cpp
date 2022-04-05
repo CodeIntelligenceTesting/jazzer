@@ -269,16 +269,17 @@ FuzzTargetRunner::FuzzTargetRunner(
 }
 
 FuzzTargetRunner::~FuzzTargetRunner() {
+  auto &env = jvm_.GetEnv();
   if (FLAGS_hooks && !FLAGS_coverage_report.empty()) {
-    CoverageTracker::ReportCoverage(jvm_.GetEnv(), FLAGS_coverage_report);
+    CoverageTracker::ReportCoverage(env, FLAGS_coverage_report);
   }
   if (FLAGS_hooks && !FLAGS_coverage_dump.empty()) {
-    CoverageTracker::DumpCoverage(jvm_.GetEnv(), FLAGS_coverage_dump);
+    CoverageTracker::DumpCoverage(env, FLAGS_coverage_dump);
   }
   if (fuzzer_tear_down_ != nullptr) {
     std::cerr << "calling fuzzer teardown function" << std::endl;
-    jvm_.GetEnv().CallStaticVoidMethod(jclass_, fuzzer_tear_down_);
-    if (jthrowable exception = jvm_.GetEnv().ExceptionOccurred()) {
+    env.CallStaticVoidMethod(jclass_, fuzzer_tear_down_);
+    if (jthrowable exception = env.ExceptionOccurred()) {
       std::cerr << getStackTrace(exception) << std::endl;
       _Exit(1);
     }
