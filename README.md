@@ -484,11 +484,9 @@ Similar to the JaCoCo `dump` command, the flag `--coverage_dump=<file>` specifie
 `jacoco.exec`, that is generated after the fuzzing run. It contains a binary representation of the gathered coverage 
 data in the JaCoCo format.
 
-The JaCoCo `report` command can be used to generate reports based on this coverage dump. **Note:** The version of the
-JaCoCo agent used by Jazzer internally differs slightly from the official one. As a result, a similarly modified version
-of the JaCoCo CLI tool has to be used to generate correct reports. The correct version is available at its
-[release page](https://github.com/CodeIntelligenceTesting/jacoco/releases) as `zip` file. The report tool is located in 
-the `lib` folder and can be used as described in the JaCoCo 
+The JaCoCo `report` command can be used to generate reports based on this coverage dump. The JaCoCo CLI tools are 
+available on their [GitHub release page](https://github.com/jacoco/jacoco/releases) as `zip` file. The report tool is 
+located in the `lib` folder and can be used as described in the JaCoCo 
 [CLI documentation](https://www.eclemma.org/jacoco/trunk/doc/cli.html). For example the following command generates an 
 HTML report in the folder `report` containing all classes available in `classes.jar` and their coverage as captured in 
 the export `coverage.exec`. Source code to include in the report is searched for in `some/path/to/sources`. 
@@ -498,17 +496,6 @@ java -jar path/to/jacococli.jar report coverage.exec \
   --classfiles classes.jar \
   --sourcefiles some/path/to/sources \
   --html report \
-  --name FuzzCoverageReport
-```
-
-Furthermore, it's also possible to directly use the CLI tools of the internal JaCoCo version via Bazel with the target
-`@jazzer_jacoco//:jacoco_cli`. The following command builds an HTML report similar to the one mentioned above:
-```shell
-bazel run @jazzer_jacoco//:jacoco_cli -- \
-  report /coverage.exec \
-  --classfiles /classes.jar \
-  --sourcefiles /some/path/to/sources \
-  --html /tmp/report/ \
   --name FuzzCoverageReport
 ```
 

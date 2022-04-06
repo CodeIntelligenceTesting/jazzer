@@ -52,6 +52,15 @@ cc_library(
     alwayslink = True,
 )
 
+cc_jni_library(
+    name = "coverage_tracker_jni",
+    visibility = ["//agent/src/jmh/java/com/code_intelligence/jazzer/instrumentor:__pkg__"],
+    deps = [
+        ":coverage_tracker",
+        ":sanitizer_symbols_for_tests",
+    ],
+)
+
 cc_library(
     name = "coverage_tracker",
     srcs = ["coverage_tracker.cpp"],

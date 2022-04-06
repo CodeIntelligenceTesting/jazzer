@@ -14,6 +14,8 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
+import com.code_intelligence.jazzer.instrumentor.PatchTestUtils.bytecodeToClass
+import com.code_intelligence.jazzer.instrumentor.PatchTestUtils.classToBytecode
 import org.junit.Test
 import java.io.File
 

@@ -19,6 +19,7 @@ java_library(
     name = "coverage_map",
     srcs = ["CoverageMap.java"],
     visibility = [
+        "//agent/src/jmh/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
         "//driver/testdata:__pkg__",
     ],
     deps = [

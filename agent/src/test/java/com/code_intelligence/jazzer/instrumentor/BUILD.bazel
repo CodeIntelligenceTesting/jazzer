@@ -7,6 +7,7 @@ kt_jvm_library(
         "DynamicTestContract.java",
         "PatchTestUtils.kt",
     ],
+    visibility = ["//visibility:public"],
 )
 
 wrapped_kt_jvm_test(
