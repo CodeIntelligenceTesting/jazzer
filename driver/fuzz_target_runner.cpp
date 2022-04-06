@@ -174,7 +174,7 @@ FuzzTargetRunner::FuzzTargetRunner(
   auto on_fuzz_target_ready = jvm.GetStaticMethodID(
       jazzer_, "onFuzzTargetReady", "(Ljava/lang/String;)V", true);
   jstring fuzz_target_class = env.NewStringUTF(FLAGS_target_class.c_str());
-  env.CallStaticObjectMethod(jazzer_, on_fuzz_target_ready, fuzz_target_class);
+  env.CallStaticVoidMethod(jazzer_, on_fuzz_target_ready, fuzz_target_class);
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     return;
@@ -233,8 +233,7 @@ FuzzTargetRunner::FuzzTargetRunner(
       jstring str = env.NewStringUTF(fuzz_target_args_tokens[i].c_str());
       env.SetObjectArrayElement(arg_array, i, str);
     }
-    env.CallStaticObjectMethod(jclass_, fuzzer_initialize_with_args_,
-                               arg_array);
+    env.CallStaticVoidMethod(jclass_, fuzzer_initialize_with_args_, arg_array);
   } else if (fuzzer_initialize_) {
     env.CallStaticVoidMethod(jclass_, fuzzer_initialize_);
   } else {
