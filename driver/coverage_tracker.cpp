@@ -132,9 +132,9 @@ void CoverageTracker::ReportCoverage(JNIEnv &env, std::string report_file) {
                         covered_edge_ids.data());
   AssertNoException(env);
   jstring report_file_str = env.NewStringUTF(report_file.c_str());
-  env.CallStaticObjectMethod(coverage_recorder,
-                             coverage_recorder_dump_coverage_report,
-                             covered_edge_ids_jni, report_file_str);
+  env.CallStaticVoidMethod(coverage_recorder,
+                           coverage_recorder_dump_coverage_report,
+                           covered_edge_ids_jni, report_file_str);
   AssertNoException(env);
 }
 
@@ -156,9 +156,9 @@ void CoverageTracker::DumpCoverage(JNIEnv &env, std::string dump_file) {
                         covered_edge_ids.data());
   AssertNoException(env);
   jstring dump_file_str = env.NewStringUTF(dump_file.c_str());
-  env.CallStaticObjectMethod(coverage_recorder,
-                             coverage_recorder_dump_jacoco_coverage,
-                             covered_edge_ids_jni, dump_file_str);
+  env.CallStaticVoidMethod(coverage_recorder,
+                           coverage_recorder_dump_jacoco_coverage,
+                           covered_edge_ids_jni, dump_file_str);
   AssertNoException(env);
 }
 }  // namespace jazzer
