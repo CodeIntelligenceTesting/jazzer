@@ -18,6 +18,7 @@ import com.code_intelligence.jazzer.api.HookType;
 import com.code_intelligence.jazzer.api.MethodHook;
 import java.lang.invoke.MethodHandle;
 import java.util.Arrays;
+import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -291,42 +292,47 @@ final public class TraceCmpHooks {
     // https://github.com/llvm/llvm-project/blob/318942de229beb3b2587df09e776a50327b5cef0/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp#L564
     Object lowerBoundKey = null;
     Object upperBoundKey = null;
-    if (map instanceof TreeMap) {
-      final TreeMap treeMap = (TreeMap) map;
-      try {
-        lowerBoundKey = treeMap.floorKey(currentKey);
-        upperBoundKey = treeMap.ceilingKey(currentKey);
-      } catch (ClassCastException ignored) {
-        // Can be thrown by floorKey and ceilingKey if currentKey is of a type that can't be
-        // compared to the maps keys.
-      }
-    } else if (currentKey instanceof Comparable) {
-      final Comparable comparableCurrentKey = (Comparable) currentKey;
-      // Find two keys that bracket currentKey.
-      // Note: This is not deterministic if map.size() > MAX_NUM_KEYS_TO_ENUMERATE.
-      int enumeratedKeys = 0;
-      for (Object validKey : map.keySet()) {
-        if (!(validKey instanceof Comparable))
-          continue;
-        final Comparable comparableValidKey = (Comparable) validKey;
-        // If the key sorts lower than the non-existing key, but higher than the current lower
-        // bound, update the lower bound and vice versa for the upper bound.
+    try {
+      if (map instanceof TreeMap) {
+        final TreeMap treeMap = (TreeMap) map;
         try {
-          if (comparableValidKey.compareTo(comparableCurrentKey) < 0
-              && (lowerBoundKey == null || comparableValidKey.compareTo(lowerBoundKey) > 0)) {
-            lowerBoundKey = validKey;
-          }
-          if (comparableValidKey.compareTo(comparableCurrentKey) > 0
-              && (upperBoundKey == null || comparableValidKey.compareTo(upperBoundKey) < 0)) {
-            upperBoundKey = validKey;
-          }
+          lowerBoundKey = treeMap.floorKey(currentKey);
+          upperBoundKey = treeMap.ceilingKey(currentKey);
         } catch (ClassCastException ignored) {
           // Can be thrown by floorKey and ceilingKey if currentKey is of a type that can't be
           // compared to the maps keys.
         }
-        if (enumeratedKeys++ > MAX_NUM_KEYS_TO_ENUMERATE)
-          break;
+      } else if (currentKey instanceof Comparable) {
+        final Comparable comparableCurrentKey = (Comparable) currentKey;
+        // Find two keys that bracket currentKey.
+        // Note: This is not deterministic if map.size() > MAX_NUM_KEYS_TO_ENUMERATE.
+        int enumeratedKeys = 0;
+        for (Object validKey : map.keySet()) {
+          if (!(validKey instanceof Comparable))
+            continue;
+          final Comparable comparableValidKey = (Comparable) validKey;
+          // If the key sorts lower than the non-existing key, but higher than the current lower
+          // bound, update the lower bound and vice versa for the upper bound.
+          try {
+            if (comparableValidKey.compareTo(comparableCurrentKey) < 0
+                && (lowerBoundKey == null || comparableValidKey.compareTo(lowerBoundKey) > 0)) {
+              lowerBoundKey = validKey;
+            }
+            if (comparableValidKey.compareTo(comparableCurrentKey) > 0
+                && (upperBoundKey == null || comparableValidKey.compareTo(upperBoundKey) < 0)) {
+              upperBoundKey = validKey;
+            }
+          } catch (ClassCastException ignored) {
+            // Can be thrown by floorKey and ceilingKey if currentKey is of a type that can't be
+            // compared to the maps keys.
+          }
+          if (enumeratedKeys++ > MAX_NUM_KEYS_TO_ENUMERATE)
+            break;
+        }
       }
+    } catch (ConcurrentModificationException ignored) {
+      // map was modified by another thread, skip this invocation
+      return;
     }
     // Modify the hook ID so that compares against distinct valid keys are traced separately.
     if (lowerBoundKey != null) {
