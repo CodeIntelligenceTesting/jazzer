@@ -1,3 +1,5 @@
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+
 java_test(
     name = "RecordingFuzzedDataProviderTest",
     srcs = [
@@ -7,6 +9,19 @@ java_test(
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime",
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:fuzzed_data_provider",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
+    name = "TraceCmpHooksTest",
+    srcs = [
+        "TraceCmpHooksTest.java",
+    ],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime",
+        "//agent/src/test/java/com/code_intelligence/jazzer:MockDriver",
         "@maven//:junit_junit",
     ],
 )
