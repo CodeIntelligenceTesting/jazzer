@@ -1,0 +1,10 @@
+# Run this target to generate and open an HTML coverage report.
+# Takes the same arguments as `bazel coverage`, but after a double dash (`--`).
+# The default is to run `bazel coverage //...`, which accumulates the coverage of all tests.
+sh_binary(
+    name = "coverage",
+    srcs = ["coverage.sh"],
+    data = [
+        "@genhtml//file:genhtml",
+    ],
+)
