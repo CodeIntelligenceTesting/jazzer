@@ -27,6 +27,7 @@ java_library(
     ]),
     javacopts = [
         "-Xep:EqualsHashCode:OFF",
+        "-Xep:ReturnValueIgnored:OFF",
     ],
     deps = [
         "@org_ow2_asm_asm//jar",
