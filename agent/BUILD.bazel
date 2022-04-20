@@ -43,6 +43,11 @@ sh_test(
         ":jazzer_agent_deploy",
         "@local_jdk//:bin/jar",
     ],
+    tags = [
+        # Coverage instrumentation necessarily adds files to the jar that we
+        # wouldn't want to release and thus causes this test to fail.
+        "no-coverage",
+    ],
     target_compatible_with = SKIP_ON_WINDOWS,
 )
 

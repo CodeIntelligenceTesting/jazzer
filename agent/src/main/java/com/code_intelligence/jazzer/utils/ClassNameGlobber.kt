@@ -14,10 +14,18 @@
 
 package com.code_intelligence.jazzer.utils
 
-import java.lang.IllegalArgumentException
-
 private val BASE_INCLUDED_CLASS_NAME_GLOBS = listOf(
     "**", // everything
+)
+
+// We use both a strong indicator for running as a Bazel test together with an indicator for a
+// Bazel coverage run to rule out false positives.
+private val IS_BAZEL_COVERAGE_RUN = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR") != null &&
+    System.getenv("COVERAGE_DIR") != null
+
+private val ADDITIONAL_EXCLUDED_NAME_GLOBS_FOR_BAZEL_COVERAGE = listOf(
+    "com.google.testing.coverage.**",
+    "org.jacoco.**",
 )
 
 private val BASE_EXCLUDED_CLASS_NAME_GLOBS = listOf(
@@ -36,7 +44,7 @@ private val BASE_EXCLUDED_CLASS_NAME_GLOBS = listOf(
     "com.code_intelligence.jazzer.**",
     "jaz.Ter", // safe companion of the honeypot class used by sanitizers
     "jaz.Zer", // honeypot class used by sanitizers
-)
+) + if (IS_BAZEL_COVERAGE_RUN) ADDITIONAL_EXCLUDED_NAME_GLOBS_FOR_BAZEL_COVERAGE else listOf()
 
 class ClassNameGlobber(includes: List<String>, excludes: List<String>) {
     // If no include globs are provided, start with all classes.

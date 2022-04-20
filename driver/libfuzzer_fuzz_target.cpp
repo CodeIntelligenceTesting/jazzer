@@ -112,7 +112,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, const size_t size) {
     // Exit directly without invoking libFuzzer's atexit hook.
     driver_cleanup();
     // When running with LLVM coverage instrumentation, write out the profile as
-    // the exit hook that write it won't run.
+    // the exit hook that writes it won't run.
+    // TODO: Remove once https://github.com/bazelbuild/bazel/pull/15166 has been
+    //  fixed and use continuous mode instead.
     __llvm_profile_write_file();
     _Exit(Driver::kErrorExitCode);
   }

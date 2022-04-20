@@ -1,6 +1,6 @@
 workspace(name = "jazzer")
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_jar")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file", "http_jar")
 load("//:repositories.bzl", "jazzer_dependencies")
 
 jazzer_dependencies()
@@ -116,3 +116,11 @@ maven_install(
 load("@maven//:defs.bzl", "pinned_maven_install")
 
 pinned_maven_install()
+
+http_file(
+    name = "genhtml",
+    downloaded_file_path = "genhtml",
+    executable = True,
+    sha256 = "4260f8d032743968d208afccfdb77fb6fda85b0ea4063a1f0b6a0c5602d22347",
+    urls = ["https://raw.githubusercontent.com/linux-test-project/lcov/master/bin/genhtml"],
+)
