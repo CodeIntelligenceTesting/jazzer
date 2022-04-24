@@ -49,6 +49,18 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "AutofuzzHookDependencies",
+    # The reproducer does not include the hook on OOM and thus throws a regular error.
+    expected_findings = ["java.lang.OutOfMemoryError"],
+    fuzzer_args = [
+        "--instrumentation_includes=java.util.regex.**",
+        "--autofuzz=java.util.regex.Pattern::compile",
+        "--autofuzz_ignore=java.lang.Exception",
+        "--keep_going=1",
+    ],
+)
+
+java_fuzz_target_test(
     name = "ForkModeFuzzer",
     size = "enormous",
     srcs = [
