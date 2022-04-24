@@ -74,6 +74,8 @@ def java_fuzz_target_test(
             # Use the same memory settings for reproducers as those suggested by Jazzer when
             # encountering an OutOfMemoryError.
             "-Xmx1620m",
+            # Ensure that reproducers can be compiled even if they contain UTF-8 characters.
+            "-Dfile.encoding=UTF-8",
         ],
         size = size or "enormous",
         timeout = timeout or "moderate",
