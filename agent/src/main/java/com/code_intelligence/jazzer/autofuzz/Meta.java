@@ -270,11 +270,11 @@ public class Meta {
         visitor.addCharLiteral(result);
       return result;
     }
-    // Return null for non-primitive and non-boxed types in ~5% of the cases.
+    // Sometimes, but rarely return null for non-primitive and non-boxed types.
     // TODO: We might want to return null for boxed types sometimes, but this is complicated by the
     //       fact that TypeUtils can't distinguish between a primitive type and its wrapper and may
     //       thus easily cause false-positive NullPointerExceptions.
-    if (!type.isPrimitive() && data.consumeByte((byte) 0, (byte) 19) == 0) {
+    if (!type.isPrimitive() && data.consumeByte() == 0) {
       if (visitor != null) {
         if (type == Object.class) {
           visitor.pushElement("null");
