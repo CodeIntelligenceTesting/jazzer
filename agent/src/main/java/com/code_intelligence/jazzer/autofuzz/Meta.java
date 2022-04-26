@@ -76,10 +76,10 @@ public class Meta {
       new WeakHashMap<>();
 
   public static Object autofuzz(FuzzedDataProvider data, Method method) {
-    return autofuzz(data, method, 0, 2, null);
+    return autofuzz(data, method, 2, null);
   }
 
-  static Object autofuzz(FuzzedDataProvider data, Method method, int currentBucket, int numBuckets,
+  static Object autofuzz(FuzzedDataProvider data, Method method, int remainingBuckets,
       AutofuzzCodegenVisitor visitor) {
     Object result;
     if (Modifier.isStatic(method.getModifiers())) {
@@ -89,7 +89,7 @@ public class Meta {
             String.format("%s.", method.getDeclaringClass().getCanonicalName()), "", "");
       }
       try {
-        result = autofuzz(data, method, null, currentBucket, numBuckets, visitor);
+        result = autofuzz(data, method, null, remainingBuckets, visitor);
       } finally {
         if (visitor != null) {
           visitor.popGroup();
@@ -103,15 +103,13 @@ public class Meta {
       }
       // Allocate equal parts of the remaining bytes of the current bucket to both the thisObject
       // and the remaining arguments.
-      currentBucket = Math.multiplyExact(currentBucket, 2);
-      numBuckets = Math.multiplyExact(numBuckets, 2);
-      Object thisObject =
-          consume(data, method.getDeclaringClass(), currentBucket++, numBuckets, visitor);
+      remainingBuckets = Math.multiplyExact(remainingBuckets, 2);
+      Object thisObject = consume(data, method.getDeclaringClass(), remainingBuckets--, visitor);
       if (thisObject == null) {
         throw new AutofuzzConstructionException();
       }
       try {
-        result = autofuzz(data, method, thisObject, currentBucket, numBuckets, visitor);
+        result = autofuzz(data, method, thisObject, remainingBuckets, visitor);
       } finally {
         if (visitor != null) {
           visitor.popGroup();
@@ -124,16 +122,16 @@ public class Meta {
   public static Object autofuzz(FuzzedDataProvider data, Method method, Object thisObject) {
     // Let arguments that do not consume a bounded number of bytes consume up to half of all
     // remaining bytes to support an arbitrary number of future calls to autofuzz.
-    return autofuzz(data, method, thisObject, 0, 2, null);
+    return autofuzz(data, method, thisObject, 2, null);
   }
 
   static Object autofuzz(FuzzedDataProvider data, Method method, Object thisObject,
-      int currentBucket, int numBucket, AutofuzzCodegenVisitor visitor) {
+      int remainingBuckets, AutofuzzCodegenVisitor visitor) {
     if (visitor != null) {
       visitor.pushGroup(String.format("%s(", method.getName()), ", ", ")");
     }
-    Object[] arguments = consumeArguments(
-        data, method.getGenericParameterTypes(), currentBucket, numBucket, visitor);
+    Object[] arguments =
+        consumeArguments(data, method.getGenericParameterTypes(), remainingBuckets, visitor);
     if (visitor != null) {
       visitor.popGroup();
     }
@@ -148,17 +146,18 @@ public class Meta {
   }
 
   public static <R> R autofuzz(FuzzedDataProvider data, Constructor<R> constructor) {
-    return autofuzz(data, constructor, 0, 2, null);
+    return autofuzz(data, constructor, 2, null);
   }
-  static <R> R autofuzz(FuzzedDataProvider data, Constructor<R> constructor, int currentBucket,
-      int numBuckets, AutofuzzCodegenVisitor visitor) {
+
+  static <R> R autofuzz(FuzzedDataProvider data, Constructor<R> constructor, int remainingBuckets,
+      AutofuzzCodegenVisitor visitor) {
     if (visitor != null) {
       // getCanonicalName is correct also for nested classes.
       visitor.pushGroup(
           String.format("new %s(", constructor.getDeclaringClass().getCanonicalName()), ", ", ")");
     }
-    Object[] arguments = consumeArguments(
-        data, constructor.getGenericParameterTypes(), currentBucket, numBuckets, visitor);
+    Object[] arguments =
+        consumeArguments(data, constructor.getGenericParameterTypes(), remainingBuckets, visitor);
     if (visitor != null) {
       visitor.popGroup();
     }
@@ -254,12 +253,11 @@ public class Meta {
   static Object consume(FuzzedDataProvider data, Type type, AutofuzzCodegenVisitor visitor) {
     // Let arguments that do not consume a bounded number of bytes consume up to half of all
     // remaining bytes to support an arbitrary number of future calls to consume.
-    return consume(data, type, 0, 2, visitor);
+    return consume(data, type, 2, visitor);
   }
 
   // Uses the FuzzedDataProvider to construct a concrete instance of genericType, using a fraction
-  // of the remaining fuzzer input bytes corresponding to the curentBucket-th out of numBuckets
-  // buckets.
+  // of the remaining fuzzer input bytes corresponding to one of the remainingBuckets buckets.
   //
   // Invariant: The Java source code representation of the returned object visited by visitor must
   // represent an object of the same type as genericType. For example, a null value returned for
@@ -268,8 +266,8 @@ public class Meta {
   // recursive argument constructions.
   //
   // Keep in sync with CONSUME_BOUNDED_NUM_BYTES_CLASSES.
-  static Object consume(FuzzedDataProvider data, Type genericType, int currentBucket,
-      int numBuckets, AutofuzzCodegenVisitor visitor) {
+  static Object consume(FuzzedDataProvider data, Type genericType, int remainingBuckets,
+      AutofuzzCodegenVisitor visitor) {
     Class<?> type = getRawType(genericType);
     if (type == byte.class || type == Byte.class) {
       byte result = data.consumeByte();
@@ -327,14 +325,13 @@ public class Meta {
       return null;
     }
     if (type == String.class || type == CharSequence.class) {
-      String result = data.consumeString(consumeArrayLength(data, 1, currentBucket, numBuckets));
+      String result = data.consumeString(consumeArrayLength(data, 1, remainingBuckets));
       if (visitor != null)
         visitor.addStringLiteral(result);
       return result;
     } else if (type.isArray()) {
       if (type == byte[].class) {
-        byte[] result =
-            data.consumeBytes(consumeArrayLength(data, Byte.BYTES, currentBucket, numBuckets));
+        byte[] result = data.consumeBytes(consumeArrayLength(data, Byte.BYTES, remainingBuckets));
         if (visitor != null) {
           visitor.pushElement(IntStream.range(0, result.length)
                                   .mapToObj(i -> "(byte) " + result[i])
@@ -342,8 +339,7 @@ public class Meta {
         }
         return result;
       } else if (type == int[].class) {
-        int[] result =
-            data.consumeInts(consumeArrayLength(data, Integer.BYTES, currentBucket, numBuckets));
+        int[] result = data.consumeInts(consumeArrayLength(data, Integer.BYTES, remainingBuckets));
         if (visitor != null) {
           visitor.pushElement(Arrays.stream(result)
                                   .mapToObj(String::valueOf)
@@ -352,7 +348,7 @@ public class Meta {
         return result;
       } else if (type == short[].class) {
         short[] result =
-            data.consumeShorts(consumeArrayLength(data, Short.BYTES, currentBucket, numBuckets));
+            data.consumeShorts(consumeArrayLength(data, Short.BYTES, remainingBuckets));
         if (visitor != null) {
           visitor.pushElement(IntStream.range(0, result.length)
                                   .mapToObj(i -> "(short) " + result[i])
@@ -360,8 +356,7 @@ public class Meta {
         }
         return result;
       } else if (type == long[].class) {
-        long[] result =
-            data.consumeLongs(consumeArrayLength(data, Long.BYTES, currentBucket, numBuckets));
+        long[] result = data.consumeLongs(consumeArrayLength(data, Long.BYTES, remainingBuckets));
         if (visitor != null) {
           visitor.pushElement(Arrays.stream(result)
                                   .mapToObj(e -> e + "L")
@@ -369,8 +364,7 @@ public class Meta {
         }
         return result;
       } else if (type == boolean[].class) {
-        boolean[] result =
-            data.consumeBooleans(consumeArrayLength(data, 1, currentBucket, numBuckets));
+        boolean[] result = data.consumeBooleans(consumeArrayLength(data, 1, remainingBuckets));
         if (visitor != null) {
           visitor.pushElement(
               Arrays.toString(result).replace(']', '}').replace("[", "new boolean[]{"));
@@ -387,16 +381,15 @@ public class Meta {
         int remainingBytesAfterFirstElementCreation = data.remainingBytes();
         int sizeOfElementEstimate =
             remainingBytesBeforeFirstElementCreation - remainingBytesAfterFirstElementCreation;
-        int length = consumeArrayLength(data, sizeOfElementEstimate, currentBucket, numBuckets);
+        int length = consumeArrayLength(data, sizeOfElementEstimate, remainingBuckets);
         Object array = Array.newInstance(type.getComponentType(), length);
-        currentBucket = Math.multiplyExact(currentBucket, length - 1);
-        numBuckets = Math.multiplyExact(numBuckets, length - 1);
+        remainingBuckets = Math.multiplyExact(remainingBuckets, length - 1);
         for (int i = 0; i < Array.getLength(array); i++) {
           if (i == 0) {
             Array.set(array, i, firstElement);
           } else {
-            Array.set(array, i,
-                consume(data, type.getComponentType(), currentBucket++, numBuckets, visitor));
+            Array.set(
+                array, i, consume(data, type.getComponentType(), remainingBuckets--, visitor));
           }
         }
         if (visitor != null) {
@@ -410,8 +403,7 @@ public class Meta {
         return array;
       }
     } else if (type == ByteArrayInputStream.class || type == InputStream.class) {
-      byte[] array =
-          data.consumeBytes(consumeArrayLength(data, Byte.BYTES, currentBucket, numBuckets));
+      byte[] array = data.consumeBytes(consumeArrayLength(data, Byte.BYTES, remainingBuckets));
       if (visitor != null) {
         visitor.pushElement(IntStream.range(0, array.length)
                                 .mapToObj(i -> "(byte) " + array[i])
@@ -450,9 +442,8 @@ public class Meta {
       int remainingBytesAfterFirstEntryCreation = data.remainingBytes();
       int sizeOfElementEstimate =
           remainingBytesBeforeFirstEntryCreation - remainingBytesAfterFirstEntryCreation;
-      int mapSize = consumeArrayLength(data, sizeOfElementEstimate, currentBucket, numBuckets);
-      currentBucket = Math.multiplyExact(currentBucket, mapSize - 1);
-      numBuckets = Math.multiplyExact(numBuckets, mapSize - 1);
+      int mapSize = consumeArrayLength(data, sizeOfElementEstimate, remainingBuckets);
+      remainingBuckets = Math.multiplyExact(remainingBuckets, mapSize - 1);
       Map<Object, Object> map = new HashMap<>(mapSize);
       for (int i = 0; i < mapSize; i++) {
         if (i == 0) {
@@ -461,8 +452,8 @@ public class Meta {
           if (visitor != null) {
             visitor.pushGroup("new java.util.AbstractMap.SimpleEntry<>(", ", ", ")");
           }
-          map.put(consume(data, keyType, currentBucket++, numBuckets, visitor),
-              consume(data, valueType, currentBucket++, numBuckets, visitor));
+          map.put(consume(data, keyType, remainingBuckets--, visitor),
+              consume(data, valueType, remainingBuckets--, visitor));
           if (visitor != null) {
             visitor.popGroup();
           }
@@ -526,8 +517,7 @@ public class Meta {
         // This group will always have a single element: The instance of the implementing class.
         visitor.pushGroup(String.format("(%s) ", type.getName()), "", "");
       }
-      Object result =
-          consume(data, data.pickValue(implementingClasses), currentBucket, numBuckets, visitor);
+      Object result = consume(data, data.pickValue(implementingClasses), remainingBuckets, visitor);
       if (visitor != null) {
         visitor.popGroup();
       }
@@ -545,7 +535,7 @@ public class Meta {
             String.format("; return %s;})).get()", uniqueVariableName));
       }
       if (!applySetters) {
-        return autofuzz(data, constructor, currentBucket, numBuckets, visitor);
+        return autofuzz(data, constructor, remainingBuckets, visitor);
       } else {
         List<Method> potentialSetters = getPotentialSetters(type);
         List<Method> pickedSetters;
@@ -556,12 +546,11 @@ public class Meta {
               data.pickValues(potentialSetters, data.consumeInt(0, potentialSetters.size()));
         }
         // Divide up the current bucket evenly between the constructor and each picked setter.
-        currentBucket = Math.multiplyExact(currentBucket, 1 + pickedSetters.size());
-        numBuckets = Math.multiplyExact(numBuckets, 1 + pickedSetters.size());
-        Object obj = autofuzz(data, constructor, currentBucket++, numBuckets, visitor);
+        remainingBuckets = Math.multiplyExact(remainingBuckets, 1 + pickedSetters.size());
+        Object obj = autofuzz(data, constructor, remainingBuckets--, visitor);
         if (!potentialSetters.isEmpty()) {
           for (Method setter : pickedSetters) {
-            autofuzz(data, setter, obj, currentBucket++, numBuckets, visitor);
+            autofuzz(data, setter, obj, remainingBuckets--, visitor);
           }
         }
         if (visitor != null) {
@@ -591,17 +580,16 @@ public class Meta {
       }
       // Divide up the current bucket evenly between the builder constructor and each of its
       // methods, including the build method.
-      currentBucket = Math.multiplyExact(currentBucket, 2 + pickedMethodsNumber);
-      numBuckets = Math.multiplyExact(numBuckets, 2 + pickedMethodsNumber);
+      remainingBuckets = Math.multiplyExact(remainingBuckets, 2 + pickedMethodsNumber);
       Object builderObj =
           autofuzz(data, data.pickValue(sortExecutables(pickedBuilder.getConstructors())),
-              currentBucket++, numBuckets, visitor);
+              remainingBuckets--, visitor);
       for (Method method : pickedMethods) {
-        builderObj = autofuzz(data, method, builderObj, currentBucket++, numBuckets, visitor);
+        builderObj = autofuzz(data, method, builderObj, remainingBuckets--, visitor);
       }
 
       try {
-        Object obj = autofuzz(data, builderMethod, builderObj, currentBucket, numBuckets, visitor);
+        Object obj = autofuzz(data, builderMethod, builderObj, remainingBuckets--, visitor);
         if (visitor != null) {
           visitor.popGroup();
         }
@@ -642,11 +630,11 @@ public class Meta {
   }
 
   private static int consumeArrayLength(
-      FuzzedDataProvider data, int sizeOfElement, int currentBucket, int numBuckets) {
+      FuzzedDataProvider data, int sizeOfElement, int remainingBuckets) {
     // Divide up the remaining bytes evenly between the remaining buckets, where each bucket
     // corresponds to a single call to autofuzz or to consume for a type that consumes an unbounded
     // number of bytes.
-    int bytesToSpend = data.remainingBytes() / (numBuckets - currentBucket);
+    int bytesToSpend = data.remainingBytes() / remainingBuckets;
     return bytesToSpend / Math.max(sizeOfElement, 1);
   }
 
@@ -726,7 +714,7 @@ public class Meta {
   }
 
   private static Object[] consumeArguments(FuzzedDataProvider data, Type[] parameters,
-      int currentBucket, int numBuckets, AutofuzzCodegenVisitor visitor) {
+      int remainingBuckets, AutofuzzCodegenVisitor visitor) {
     ArrayList<Integer> boundedArgsIndices = new ArrayList<>();
     ArrayList<Integer> unboundedArgsIndices = new ArrayList<>();
     for (int i = 0; i < parameters.length; i++) {
@@ -745,21 +733,20 @@ public class Meta {
       for (int i : boundedArgsIndices) {
         // Bucket information is not used when generating an argument that consumes a fixed number
         // of bytes.
-        args[i] = consume(data, parameters[i], 0, 0, visitor);
+        args[i] = consume(data, parameters[i], 0, visitor);
       }
       // Expand the current bucket into subbuckets corresponding to the arguments that consume an
-      // unbounded number of bytes. For example, if this function was called with currentBucket = 1
-      // and numBuckets = 3 and is calling a function that takes four strings as parameters, these
-      // would consume the buckets 4, 5, 6, and 7 out of a total of 12.
+      // unbounded number of bytes. For example, if this function was called with remainingBuckets =
+      // 3 and is calling a function that takes four strings as parameters, these would consume the
+      // buckets 1/12th of the remaining fuzzer bytes each.
       // A simpler approach would be to let every invocation consume half of the remaining bytes,
       // but that leaves many fuzzer bytes unused in case the argument construction doesn't go very
       // deep (e.g., for a foo(String, int) method only roughly half the fuzzer input bytes would
       // end up being used). Experiments show that this negatively affects fuzzing performance
       // compared to hand-rolled fuzz targets.
-      currentBucket = Math.multiplyExact(currentBucket, unboundedArgsIndices.size());
-      numBuckets = Math.multiplyExact(numBuckets, unboundedArgsIndices.size());
+      remainingBuckets = Math.multiplyExact(remainingBuckets, unboundedArgsIndices.size());
       for (int i : unboundedArgsIndices) {
-        args[i] = consume(data, parameters[i], currentBucket++, numBuckets, visitor);
+        args[i] = consume(data, parameters[i], remainingBuckets--, visitor);
       }
       if (visitor != null) {
         int[] orderedArgsIndices =

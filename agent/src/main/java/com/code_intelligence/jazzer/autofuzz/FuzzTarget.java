@@ -245,9 +245,9 @@ public final class FuzzTarget {
       // We know that we are calling autofuzz only ones per execution and can thus let the single
       // call consume all fuzzer input bytes, i.e., use a single bucket.
       if (targetExecutable instanceof Method) {
-        returnValue = Meta.autofuzz(data, (Method) targetExecutable, 0, 1, codegenVisitor);
+        returnValue = Meta.autofuzz(data, (Method) targetExecutable, 1, codegenVisitor);
       } else {
-        returnValue = Meta.autofuzz(data, (Constructor<?>) targetExecutable, 0, 1, codegenVisitor);
+        returnValue = Meta.autofuzz(data, (Constructor<?>) targetExecutable, 1, codegenVisitor);
       }
       executionsSinceLastInvocation = 0;
     } catch (AutofuzzConstructionException e) {

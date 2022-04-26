@@ -69,10 +69,9 @@ class TestHelpers {
     AutofuzzCodegenVisitor visitor = new AutofuzzCodegenVisitor();
     FuzzedDataProvider data = CannedFuzzedDataProvider.create(cannedData);
     if (func instanceof Method) {
-      assertGeneralEquals(expectedResult, Meta.autofuzz(data, (Method) func, 0, 2, visitor));
+      assertGeneralEquals(expectedResult, Meta.autofuzz(data, (Method) func, 2, visitor));
     } else {
-      assertGeneralEquals(
-          expectedResult, Meta.autofuzz(data, (Constructor<?>) func, 0, 2, visitor));
+      assertGeneralEquals(expectedResult, Meta.autofuzz(data, (Constructor<?>) func, 2, visitor));
     }
     assertEquals(expectedResultString, visitor.generate());
   }
