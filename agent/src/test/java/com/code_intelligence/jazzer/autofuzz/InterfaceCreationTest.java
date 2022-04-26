@@ -105,6 +105,7 @@ public class InterfaceCreationTest {
             0, // pick first constructor
             (byte) 1, // do not return null
             8, // remaining bytes
+            4, // string length
             "test" // arg for ClassB2 constructor
             ));
   }

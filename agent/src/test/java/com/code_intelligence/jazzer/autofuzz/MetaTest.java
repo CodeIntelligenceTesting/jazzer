@@ -50,60 +50,71 @@ public class MetaTest {
     // escaping again.
     consumeTestCase(testString, "\"foo\\\\n\\\\t\\\\\\\\\"bar\"",
         Arrays.asList((byte) 1, // do not return null
-            testString.length(), testString));
+            2 * testString.length(), // remaining bytes
+            testString.length(), // string length
+            testString));
 
     consumeTestCase(null, "null", Collections.singletonList((byte) 0));
 
     boolean[] testBooleans = new boolean[] {true, false, true};
     consumeTestCase(testBooleans, "new boolean[]{true, false, true}",
         Arrays.asList((byte) 1, // do not return null for the array
-            2 * 3, testBooleans));
+            2 * 3, // remaining bytes
+            3, // array length
+            testBooleans));
 
     char[] testChars = new char[] {'a', '\n', '\''};
     consumeTestCase(testChars, "new char[]{'a', '\\\\n', '\\\\''}",
         Arrays.asList((byte) 1, // do not return null for the array
-            2 * 3 * Character.BYTES + Character.BYTES, testChars[0], 2 * 3 * Character.BYTES,
-            2 * 3 * Character.BYTES, // remaining bytes, 2 times what is needed for 3 chars
-            testChars[1], testChars[2]));
+            2 * 3 * Character.BYTES, // remaining bytes
+            3, // array length
+            testChars[0], testChars[1], testChars[2]));
 
     char[] testNoChars = new char[] {};
     consumeTestCase(testNoChars, "new char[]{}",
         Arrays.asList((byte) 1, // do not return null for the array
-            0, 'a', 0, 0));
+            0, // remaining bytes
+            0, // array length
+            'a', 0, 0));
 
-    short[] testShorts = new short[] {(short) 1, (short) 2, (short) 3};
-    consumeTestCase(testShorts, "new short[]{(short) 1, (short) 2, (short) 3}",
+    short[] testShorts = new short[] {(short) 1, (short) 2};
+    consumeTestCase(testShorts, "new short[]{(short) 1, (short) 2}",
         Arrays.asList((byte) 1, // do not return null for the array
             2 * 3 * Short.BYTES, // remaining bytes
+            3, // array length
             testShorts));
 
     long[] testLongs = new long[] {1L, 2L, 3L};
     consumeTestCase(testLongs, "new long[]{1L, 2L, 3L}",
         Arrays.asList((byte) 1, // do not return null for the array
             2 * 3 * Long.BYTES, // remaining bytes
+            2, // array length
             testLongs));
 
     consumeTestCase(new String[] {"foo", "bar", "foo\nbar"},
         "new java.lang.String[]{\"foo\", \"bar\", \"foo\\\\nbar\"}",
         Arrays.asList((byte) 1, // do not return null for the array
             32, // remaining bytes
+            3, // array length
             (byte) 1, // do not return null for the string
-            31, // remaining bytes
+            2 * 3, // remaining bytes
+            3, // string length
             "foo",
-            28, // remaining bytes
-            28, // array length
             (byte) 1, // do not return null for the string
             27, // remaining bytes
+            3, // string length
             "bar",
             (byte) 1, // do not return null for the string
             23, // remaining bytes
+            7, // string length
             "foo\nbar"));
 
     byte[] testInputStreamBytes = new byte[] {(byte) 1, (byte) 2, (byte) 3};
     consumeTestCase(new ByteArrayInputStream(testInputStreamBytes),
         "new java.io.ByteArrayInputStream(new byte[]{(byte) 1, (byte) 2, (byte) 3})",
         Arrays.asList((byte) 1, // do not return null for the InputStream
-            2 * 3, // remaining bytes (twice the desired length)
+            2 * 3, // remaining bytes
+            3, // array length
             testInputStreamBytes));
 
     consumeTestCase(TestEnum.BAR,
@@ -129,22 +140,26 @@ public class MetaTest {
         "java.util.stream.Stream.<java.util.AbstractMap.SimpleEntry<java.lang.String, java.lang.String>>of(new java.util.AbstractMap.SimpleEntry<>(\"key0\", \"value0\"), new java.util.AbstractMap.SimpleEntry<>(\"key1\", \"value1\"), new java.util.AbstractMap.SimpleEntry<>(\"key2\", (java.lang.String) null)).collect(java.util.HashMap::new, (map, e) -> map.put(e.getKey(), e.getValue()), java.util.HashMap::putAll)",
         Arrays.asList((byte) 1, // do not return null for the map
             32, // remaining bytes
+            3, // map size
             (byte) 1, // do not return null for the string
             31, // remaining bytes
+            4, // string length
             "key0",
             (byte) 1, // do not return null for the string
             28, // remaining bytes
+            6, // string length
             "value0",
-            28, // remaining bytes
-            28, // consumeArrayLength
             (byte) 1, // do not return null for the string
             27, // remaining bytes
+            4, // string length
             "key1",
             (byte) 1, // do not return null for the string
             23, // remaining bytes
+            6, // string length
             "value1",
             (byte) 1, // do not return null for the string
             27, // remaining bytes
+            4, // string length
             "key2",
             (byte) 0 // *do* return null for the string
             ));
@@ -171,16 +186,17 @@ public class MetaTest {
         MetaTest.class.getMethod("intEquals", int.class, int.class), Arrays.asList(5, 4));
     autofuzzTestCase("foobar", "(\"foo\").concat(\"bar\")",
         String.class.getMethod("concat", String.class),
-        Arrays.asList((byte) 1, 6, "foo", (byte) 1, 6, "bar"));
+        Arrays.asList((byte) 1, 6, 3, "foo", (byte) 1, 6, 3, "bar"));
     autofuzzTestCase("jazzer", "new java.lang.String(\"jazzer\")",
-        String.class.getConstructor(String.class), Arrays.asList((byte) 1, 12, "jazzer"));
+        String.class.getConstructor(String.class), Arrays.asList((byte) 1, 12, 6, "jazzer"));
     autofuzzTestCase("\"jazzer\"", "com.google.json.JsonSanitizer.sanitize(\"jazzer\")",
         JsonSanitizer.class.getMethod("sanitize", String.class),
-        Arrays.asList((byte) 1, 12, "jazzer"));
+        Arrays.asList((byte) 1, 12, 6, "jazzer"));
 
     FuzzedDataProvider data =
         CannedFuzzedDataProvider.create(Arrays.asList((byte) 1, // do not return null
             8, // remainingBytes
+            4, // string length
             "buzz"));
     assertEquals("fizzbuzz", Meta.autofuzz(data, "fizz" ::concat));
   }

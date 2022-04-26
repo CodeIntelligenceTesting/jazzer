@@ -57,6 +57,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import net.jodah.typetools.TypeResolver;
 import net.jodah.typetools.TypeResolver.Unknown;
+import org.openjdk.jol.info.ClassLayout;
 
 public class Meta {
   // Keep in sync with consume.
@@ -74,6 +75,31 @@ public class Meta {
       new WeakHashMap<>();
   private static final WeakHashMap<Class<?>, List<Method>> cascadingBuilderMethodsCache =
       new WeakHashMap<>();
+  private static final HashMap<Class<?>, Integer> minBytesEstimate = new HashMap<>();
+
+  static {
+    // The JOL library does not return meaningful estimates for the number of bytes consumed by
+    // primitive or boxed types, as well as strings, so we prepopulate these common cases here.
+    minBytesEstimate.put(byte.class, Byte.BYTES);
+    minBytesEstimate.put(Byte.class, Byte.BYTES);
+    minBytesEstimate.put(short.class, Short.BYTES);
+    minBytesEstimate.put(Short.class, Short.BYTES);
+    minBytesEstimate.put(int.class, Integer.BYTES);
+    minBytesEstimate.put(Integer.class, Integer.BYTES);
+    minBytesEstimate.put(long.class, Long.BYTES);
+    minBytesEstimate.put(Long.class, Long.BYTES);
+    minBytesEstimate.put(float.class, Float.BYTES);
+    minBytesEstimate.put(Float.class, Float.BYTES);
+    minBytesEstimate.put(double.class, Double.BYTES);
+    minBytesEstimate.put(Double.class, Double.BYTES);
+    minBytesEstimate.put(char.class, Character.BYTES);
+    minBytesEstimate.put(Character.class, Character.BYTES);
+    minBytesEstimate.put(boolean.class, 1);
+    minBytesEstimate.put(Boolean.class, 1);
+    // 4 is essentially arbitrary here and is just meant to prevent consume from favoring very large
+    // String arrays with trivial contents.
+    minBytesEstimate.put(String.class, 4);
+  }
 
   public static Object autofuzz(FuzzedDataProvider data, Method method) {
     return autofuzz(data, method, 2, null);
@@ -325,13 +351,14 @@ public class Meta {
       return null;
     }
     if (type == String.class || type == CharSequence.class) {
-      String result = data.consumeString(consumeArrayLength(data, 1, remainingBuckets));
+      String result = data.consumeString(consumeVariableLength(data, 1, remainingBuckets));
       if (visitor != null)
         visitor.addStringLiteral(result);
       return result;
     } else if (type.isArray()) {
       if (type == byte[].class) {
-        byte[] result = data.consumeBytes(consumeArrayLength(data, Byte.BYTES, remainingBuckets));
+        byte[] result =
+            data.consumeBytes(consumeVariableLength(data, Byte.BYTES, remainingBuckets));
         if (visitor != null) {
           visitor.pushElement(IntStream.range(0, result.length)
                                   .mapToObj(i -> "(byte) " + result[i])
@@ -339,7 +366,8 @@ public class Meta {
         }
         return result;
       } else if (type == int[].class) {
-        int[] result = data.consumeInts(consumeArrayLength(data, Integer.BYTES, remainingBuckets));
+        int[] result =
+            data.consumeInts(consumeVariableLength(data, Integer.BYTES, remainingBuckets));
         if (visitor != null) {
           visitor.pushElement(Arrays.stream(result)
                                   .mapToObj(String::valueOf)
@@ -348,7 +376,7 @@ public class Meta {
         return result;
       } else if (type == short[].class) {
         short[] result =
-            data.consumeShorts(consumeArrayLength(data, Short.BYTES, remainingBuckets));
+            data.consumeShorts(consumeVariableLength(data, Short.BYTES, remainingBuckets));
         if (visitor != null) {
           visitor.pushElement(IntStream.range(0, result.length)
                                   .mapToObj(i -> "(short) " + result[i])
@@ -356,7 +384,8 @@ public class Meta {
         }
         return result;
       } else if (type == long[].class) {
-        long[] result = data.consumeLongs(consumeArrayLength(data, Long.BYTES, remainingBuckets));
+        long[] result =
+            data.consumeLongs(consumeVariableLength(data, Long.BYTES, remainingBuckets));
         if (visitor != null) {
           visitor.pushElement(Arrays.stream(result)
                                   .mapToObj(e -> e + "L")
@@ -364,7 +393,7 @@ public class Meta {
         }
         return result;
       } else if (type == boolean[].class) {
-        boolean[] result = data.consumeBooleans(consumeArrayLength(data, 1, remainingBuckets));
+        boolean[] result = data.consumeBooleans(consumeVariableLength(data, 1, remainingBuckets));
         if (visitor != null) {
           visitor.pushElement(
               Arrays.toString(result).replace(']', '}').replace("[", "new boolean[]{"));
@@ -375,35 +404,20 @@ public class Meta {
           visitor.pushGroup(
               String.format("new %s[]{", type.getComponentType().getName()), ", ", "}");
         }
-        int remainingBytesBeforeFirstElementCreation = data.remainingBytes();
-        // FIXME: Estimate buckets.
-        Object firstElement = consume(data, type.getComponentType(), visitor);
-        int remainingBytesAfterFirstElementCreation = data.remainingBytes();
-        int sizeOfElementEstimate =
-            remainingBytesBeforeFirstElementCreation - remainingBytesAfterFirstElementCreation;
-        int length = consumeArrayLength(data, sizeOfElementEstimate, remainingBuckets);
+        int length = consumeVariableLength(
+            data, estimateBytesConsumedPerInstance(type.getComponentType()), remainingBuckets);
         Object array = Array.newInstance(type.getComponentType(), length);
-        remainingBuckets = Math.multiplyExact(remainingBuckets, length - 1);
+        remainingBuckets = Math.multiplyExact(remainingBuckets, length);
         for (int i = 0; i < Array.getLength(array); i++) {
-          if (i == 0) {
-            Array.set(array, i, firstElement);
-          } else {
-            Array.set(
-                array, i, consume(data, type.getComponentType(), remainingBuckets--, visitor));
-          }
+          Array.set(array, i, consume(data, type.getComponentType(), remainingBuckets--, visitor));
         }
         if (visitor != null) {
-          if (Array.getLength(array) == 0) {
-            // We implicitly pushed the first element with the call to consume above, but it is not
-            // part of the array.
-            visitor.popElement();
-          }
           visitor.popGroup();
         }
         return array;
       }
     } else if (type == ByteArrayInputStream.class || type == InputStream.class) {
-      byte[] array = data.consumeBytes(consumeArrayLength(data, Byte.BYTES, remainingBuckets));
+      byte[] array = data.consumeBytes(consumeVariableLength(data, Byte.BYTES, remainingBuckets));
       if (visitor != null) {
         visitor.pushElement(IntStream.range(0, array.length)
                                 .mapToObj(i -> "(byte) " + array[i])
@@ -429,42 +443,23 @@ public class Meta {
             ", ",
             ").collect(java.util.HashMap::new, (map, e) -> map.put(e.getKey(), e.getValue()), java.util.HashMap::putAll)");
       }
-      int remainingBytesBeforeFirstEntryCreation = data.remainingBytes();
-      if (visitor != null) {
-        visitor.pushGroup("new java.util.AbstractMap.SimpleEntry<>(", ", ", ")");
-      }
-      // FIXME: Estimate buckets.
-      Object firstKey = consume(data, keyType, visitor);
-      Object firstValue = consume(data, valueType, visitor);
-      if (visitor != null) {
-        visitor.popGroup();
-      }
-      int remainingBytesAfterFirstEntryCreation = data.remainingBytes();
-      int sizeOfElementEstimate =
-          remainingBytesBeforeFirstEntryCreation - remainingBytesAfterFirstEntryCreation;
-      int mapSize = consumeArrayLength(data, sizeOfElementEstimate, remainingBuckets);
-      remainingBuckets = Math.multiplyExact(remainingBuckets, mapSize - 1);
+      int mapSize = consumeVariableLength(data,
+          estimateBytesConsumedPerInstance(getRawType(keyType))
+              + estimateBytesConsumedPerInstance(getRawType(valueType)),
+          remainingBuckets);
+      remainingBuckets = Math.multiplyExact(remainingBuckets, 2 * mapSize);
       Map<Object, Object> map = new HashMap<>(mapSize);
       for (int i = 0; i < mapSize; i++) {
-        if (i == 0) {
-          map.put(firstKey, firstValue);
-        } else {
-          if (visitor != null) {
-            visitor.pushGroup("new java.util.AbstractMap.SimpleEntry<>(", ", ", ")");
-          }
-          map.put(consume(data, keyType, remainingBuckets--, visitor),
-              consume(data, valueType, remainingBuckets--, visitor));
-          if (visitor != null) {
-            visitor.popGroup();
-          }
+        if (visitor != null) {
+          visitor.pushGroup("new java.util.AbstractMap.SimpleEntry<>(", ", ", ")");
+        }
+        map.put(consume(data, keyType, remainingBuckets--, visitor),
+            consume(data, valueType, remainingBuckets--, visitor));
+        if (visitor != null) {
+          visitor.popGroup();
         }
       }
       if (visitor != null) {
-        if (mapSize == 0) {
-          // We implicitly pushed the first entry with the call to consume above, but it is not
-          // part of the array.
-          visitor.popElement();
-        }
         visitor.popGroup();
       }
       return map;
@@ -629,13 +624,20 @@ public class Meta {
     return value != null && !value.isEmpty();
   }
 
-  private static int consumeArrayLength(
-      FuzzedDataProvider data, int sizeOfElement, int remainingBuckets) {
+  private static int consumeVariableLength(
+      FuzzedDataProvider data, int bytesPerElement, int remainingBuckets) {
     // Divide up the remaining bytes evenly between the remaining buckets, where each bucket
     // corresponds to a single call to autofuzz or to consume for a type that consumes an unbounded
     // number of bytes.
     int bytesToSpend = data.remainingBytes() / remainingBuckets;
-    return bytesToSpend / Math.max(sizeOfElement, 1);
+    return data.consumeInt(0, bytesToSpend / Math.max(bytesPerElement, 1));
+  }
+
+  private static int estimateBytesConsumedPerInstance(Class<?> clazz) {
+    return minBytesEstimate.computeIfAbsent(clazz,
+        (c)
+            -> Math.toIntExact(
+                Math.min(ClassLayout.parseClass(clazz).instanceSize(), Integer.MAX_VALUE)));
   }
 
   private static String getDebugSummary(

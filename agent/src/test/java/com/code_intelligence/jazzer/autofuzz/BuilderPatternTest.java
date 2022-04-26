@@ -90,13 +90,16 @@ public class BuilderPatternTest {
             0, // pick the first build method
             (byte) 1, // do not return null
             6, // remaining bytes
+            3, // string length
             "foo", // firstName
             (byte) 1, // do not return null
             6, // remaining bytes
+            3, // string length
             "bar", // lastName
             20, // age
             (byte) 1, // do not return null
             6, // remaining bytes
+            3, // string length
             "baz" // jobTitle
             ));
   }

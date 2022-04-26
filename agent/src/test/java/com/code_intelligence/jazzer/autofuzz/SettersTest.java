@@ -36,6 +36,7 @@ public class SettersTest {
             0, // pick first setter
             (byte) 1, // do not return null for String
             6, // remaining bytes
+            3, // string length
             "foo", // setFirstName
             26 // setAge
             ));

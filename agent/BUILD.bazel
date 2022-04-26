@@ -22,7 +22,9 @@ strip_jar(
     out = "jazzer_agent_deploy.jar",
     jar = ":jazzer_agent_shaded_deploy",
     paths_to_strip = [
+        "LICENSE",
         "module-info.class",
+        "THIRD-PARTY",
     ],
     visibility = ["//visibility:public"],
 )

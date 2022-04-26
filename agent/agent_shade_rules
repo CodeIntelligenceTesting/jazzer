@@ -4,3 +4,4 @@ rule kotlin.** com.code_intelligence.jazzer.third_party.@0
 rule net.jodah.** com.code_intelligence.jazzer.third_party.@0
 rule nonapi.** com.code_intelligence.jazzer.third_party.@0
 rule org.objectweb.** com.code_intelligence.jazzer.third_party.@0
+rule org.openjdk.** com.code_intelligence.jazzer.third_party.@0

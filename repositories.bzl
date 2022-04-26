@@ -118,6 +118,13 @@ def jazzer_dependencies():
     )
 
     maybe(
+        http_jar,
+        name = "org_openjdk_jol_jol_core",
+        sha256 = "7ba48c1dbcd8b6ce5ca722cabc4a59f5a3fac8e87bddc02e7a5cd9b63d52eb55",
+        url = "https://repo1.maven.org/maven2/org/openjdk/jol/jol-core/0.16/jol-core-0.16.jar",
+    )
+
+    maybe(
         http_archive,
         name = "jazzer_com_github_gflags_gflags",
         patches = [

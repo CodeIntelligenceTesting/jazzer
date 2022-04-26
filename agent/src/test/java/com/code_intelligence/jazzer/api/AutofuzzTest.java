@@ -91,17 +91,18 @@ public class AutofuzzTest {
 
   @Test
   public void testAutofuzzConsumer() {
-    FuzzedDataProvider data = CannedFuzzedDataProvider.create(
-        Arrays.asList((byte) 1 /* do not return null */, 6 /* string length */, "foobar", 42,
-            (byte) 5, (byte) 1 /* do not return null */, 0 /* first class on the classpath */,
+    FuzzedDataProvider data =
+        CannedFuzzedDataProvider.create(Arrays.asList((byte) 1 /* do not return null */,
+            12 /* remaining bytes */, 6 /* string length */, "foobar", 42, (byte) 5,
+            (byte) 1 /* do not return null */, 0 /* first class on the classpath */,
             (byte) 1 /* do not return null */, 0 /* first constructor */));
     Jazzer.autofuzz(data, AutofuzzTest::checkAllTheArguments);
   }
 
   @Test
   public void testAutofuzzConsumerThrowsException() {
-    FuzzedDataProvider data =
-        CannedFuzzedDataProvider.create(Arrays.asList((byte) 1 /* do not return null */,
+    FuzzedDataProvider data = CannedFuzzedDataProvider.create(
+        Arrays.asList((byte) 1 /* do not return null */, 12 /* remaining bytes */,
             6 /* string length */, "foobar", 42, (byte) 5, (byte) 0 /* *do* return null */));
     try {
       Jazzer.autofuzz(data, AutofuzzTest::checkAllTheArguments);
