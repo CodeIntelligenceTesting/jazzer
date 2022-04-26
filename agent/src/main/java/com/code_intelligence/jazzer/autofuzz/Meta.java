@@ -51,11 +51,14 @@ import net.jodah.typetools.TypeResolver;
 import net.jodah.typetools.TypeResolver.Unknown;
 
 public class Meta {
-  static WeakHashMap<Class<?>, List<Class<?>>> implementingClassesCache = new WeakHashMap<>();
-  static WeakHashMap<Class<?>, List<Class<?>>> nestedBuilderClassesCache = new WeakHashMap<>();
-  static WeakHashMap<Class<?>, List<Method>> originalObjectCreationMethodsCache =
+  private static final WeakHashMap<Class<?>, List<Class<?>>> implementingClassesCache =
       new WeakHashMap<>();
-  static WeakHashMap<Class<?>, List<Method>> cascadingBuilderMethodsCache = new WeakHashMap<>();
+  private static final WeakHashMap<Class<?>, List<Class<?>>> nestedBuilderClassesCache =
+      new WeakHashMap<>();
+  private static final WeakHashMap<Class<?>, List<Method>> originalObjectCreationMethodsCache =
+      new WeakHashMap<>();
+  private static final WeakHashMap<Class<?>, List<Method>> cascadingBuilderMethodsCache =
+      new WeakHashMap<>();
 
   public static Object autofuzz(FuzzedDataProvider data, Method method) {
     return autofuzz(data, method, null);
