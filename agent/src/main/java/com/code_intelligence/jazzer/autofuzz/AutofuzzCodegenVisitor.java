@@ -37,6 +37,23 @@ public class AutofuzzCodegenVisitor {
     groups.peek().push(element);
   }
 
+  // Reorders the elements of the top-most group according to the provided permutation.
+  // After the call, the element at position i will be the element that previously was at position
+  // permutation[i].
+  public void permuteGroup(int[] permutation) {
+    Stack<String> elements = groups.peek().elements;
+    if (elements.size() != permutation.length) {
+      throw new AutofuzzError("permuteGroup called with a permutation on " + permutation.length
+          + " elements, expected " + elements.size() + ": " + toDebugString());
+    }
+    Stack<String> newGroup = new Stack<>();
+    for (int i : permutation) {
+      newGroup.push(elements.get(i));
+    }
+    elements.clear();
+    elements.addAll(newGroup);
+  }
+
   public void popElement() {
     groups.peek().pop();
   }

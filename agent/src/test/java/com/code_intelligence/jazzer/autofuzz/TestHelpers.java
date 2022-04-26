@@ -16,7 +16,6 @@ package com.code_intelligence.jazzer.autofuzz;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.code_intelligence.jazzer.api.CannedFuzzedDataProvider;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
@@ -70,9 +69,10 @@ class TestHelpers {
     AutofuzzCodegenVisitor visitor = new AutofuzzCodegenVisitor();
     FuzzedDataProvider data = CannedFuzzedDataProvider.create(cannedData);
     if (func instanceof Method) {
-      assertGeneralEquals(expectedResult, Meta.autofuzz(data, (Method) func, visitor));
+      assertGeneralEquals(expectedResult, Meta.autofuzz(data, (Method) func, 0, 2, visitor));
     } else {
-      assertGeneralEquals(expectedResult, Meta.autofuzz(data, (Constructor<?>) func, visitor));
+      assertGeneralEquals(
+          expectedResult, Meta.autofuzz(data, (Constructor<?>) func, 0, 2, visitor));
     }
     assertEquals(expectedResultString, visitor.generate());
   }

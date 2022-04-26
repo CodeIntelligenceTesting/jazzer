@@ -61,6 +61,20 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "AutofuzzWithSingleString",
+    expected_findings = ["java.lang.IndexOutOfBoundsException"],
+    fuzzer_args = [
+        "--autofuzz=com.google.json.JsonSanitizer::sanitize",
+        "--autofuzz_ignore=java.lang.ArrayIndexOutOfBoundsException",
+        # Exit after the first finding for testing purposes.
+        "--keep_going=1",
+    ],
+    runtime_deps = [
+        "@maven//:com_mikesamuel_json_sanitizer",
+    ],
+)
+
+java_fuzz_target_test(
     name = "ForkModeFuzzer",
     size = "enormous",
     srcs = [
