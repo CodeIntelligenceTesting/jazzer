@@ -28,8 +28,8 @@ This release also includes smaller improvements and bugfixes.
 ## Version 0.10.0
 
 * **Breaking change**: Use OS-specific classpath separator to split jvm_args
-* Feature: Add support to `autofuzz` targets without the need to manually write fuzz targets 
-* Feature: Add macOS and windows support
+* Feature: Add support to "autofuzz" targets without the need to manually write fuzz targets 
+* Feature: Add macOS and Windows support
 * Feature: Add option to generate coverage report
 * Feature: Support multiple hook annotations per hook method
 * Feature: Support hooking internal classes
