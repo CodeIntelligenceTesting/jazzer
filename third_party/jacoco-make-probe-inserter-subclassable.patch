@@ -83,8 +83,8 @@ index 0f5b99ff..80965dfe 100644
 -	private final int variable;
 +	protected final int variable;
  
- 	/** Maximum stack usage of the code to access the probe array. */
- 	private int accessorStackSize;
+ 	/** Label for the new beginning of the method */
+ 	private final Label beginLabel;
 @@ -56,7 +56,7 @@ class ProbeInserter extends MethodVisitor implements IProbeInserter {
  	 *            callback to create the code that retrieves the reference to
  	 *            the probe array
@@ -104,7 +104,7 @@ index 0f5b99ff..80965dfe 100644
 +
  	@Override
  	public void visitCode() {
- 		accessorStackSize = arrayStrategy.storeInstance(mv, clinit, variable);
+ 		mv.visitLabel(beginLabel);
 @@ -118,6 +122,10 @@ class ProbeInserter extends MethodVisitor implements IProbeInserter {
  	public AnnotationVisitor visitLocalVariableAnnotation(final int typeRef,
  			final TypePath typePath, final Label[] start, final Label[] end,

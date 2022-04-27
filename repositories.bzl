@@ -136,9 +136,9 @@ def jazzer_dependencies():
             Label("//third_party:jacoco-make-probe-adapter-subclassable.patch"),
             Label("//third_party:jacoco-make-probe-inserter-subclassable.patch"),
         ],
-        sha256 = "d764c2c02caf8836a12ac582263a109dcac9c1389d3ddee0548aed1322f6e01c",
-        strip_prefix = "jacoco-0.8.7",
-        url = "https://github.com/jacoco/jacoco/archive/refs/tags/v0.8.7.tar.gz",
+        sha256 = "c603cfcc5f3d95ecda46fb369dc54c82a453bb6b640a605c3970607d10896725",
+        strip_prefix = "jacoco-0.8.8",
+        url = "https://github.com/jacoco/jacoco/archive/refs/tags/v0.8.8.tar.gz",
     )
 
     maybe(
