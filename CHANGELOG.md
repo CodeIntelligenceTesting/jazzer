@@ -2,7 +2,7 @@
 
 **Note:** Before version 1.0.0, every release may contain breaking changes.
 
-## Unreleased
+## Version 0.11.0
 
 * Feature: Add sanitizer for context lookups
 * Feature: Add sanitizer for OS command injection

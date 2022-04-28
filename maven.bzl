@@ -14,7 +14,7 @@
 
 load("@rules_jvm_external//:specs.bzl", "maven")
 
-JAZZER_API_VERSION = "0.10.0"
+JAZZER_API_VERSION = "0.11.0"
 JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_API_VERSION
 
 # **WARNING**: These Maven dependencies have known vulnerabilities and are only used to test that
