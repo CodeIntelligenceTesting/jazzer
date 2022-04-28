@@ -8,6 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        # Keep arch names in sync with replayer download and merge
         os: [ubuntu-latest, macos-10.15, windows-2019]
         include:
           - os: ubuntu-latest
@@ -58,8 +59,8 @@ jobs:
       - name: Download macOS jar
         uses: actions/download-artifact@v2
         with:
-          name: replayer_darwin
-          path: replayer_darwin
+          name: replayer_macos-x86_64
+          path: replayer_macos-x86_64
 
       - name: Download Linux jar
         uses: actions/download-artifact@v2
@@ -76,7 +77,7 @@ jobs:
       - name: Merge jars
         run: |
           mkdir merged
-          unzip -o replayer_darwin/replayer.jar -d merged
+          unzip -o replayer_macos-x86_64/replayer.jar -d merged
           unzip -o replayer_linux/replayer.jar -d merged
           unzip -o replayer_windows/replayer.jar -d merged
           jar cvmf merged/META-INF/MANIFEST.MF replayer.jar -C merged .
