@@ -38,10 +38,6 @@ jobs:
           cp -L bazel-bin/agent/src/main/java/com/code_intelligence/jazzer/replay/Replayer_deploy.jar replayer.jar
           cp -L bazel-bin/jazzer_release.tar.gz release-${{ matrix.arch }}.tar.gz
 
-      - name: Print JDK used
-        if: matrix.os != 'windows-2016'
-        run: cat $(bazel info execution_root)/external/local_jdk/BUILD.bazel | grep java_home
-
       - name: Upload replayer
         uses: actions/upload-artifact@v2
         with:

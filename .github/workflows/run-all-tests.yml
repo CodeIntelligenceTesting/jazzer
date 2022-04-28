@@ -53,10 +53,6 @@ jobs:
       - name: Test
         run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} //...
 
-      - name: Print JDK used
-        if: matrix.os != 'windows-latest'
-        run: cat $(bazel info execution_root)/external/local_jdk/BUILD.bazel | grep java_home
-
       - name: Upload test logs
         if: always()
         uses: actions/upload-artifact@v2
