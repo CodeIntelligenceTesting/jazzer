@@ -20,15 +20,40 @@
 #include "com_code_intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks.h"
 #include "driver/sanitizer_hooks_with_pc.h"
 
+#ifdef _WIN32
+#if defined(_M_IX86) || defined(__i386__)
+#define WIN_SYM_PREFIX "_"
+#else
+#define WIN_SYM_PREFIX
+#endif
+
+#define STRINGIFY_(A) #A
+#define STRINGIFY(A) STRINGIFY_(A)
+
+#define WIN_WEAK_ALIAS(Name, Default)                                  \
+  __pragma(comment(linker, "/alternatename:" WIN_SYM_PREFIX STRINGIFY( \
+                               Name) "=" WIN_SYM_PREFIX STRINGIFY(Default)))
+
+#define WEAK_EXPORT_NAME(Name) Name##__dll
+
+#define WIN_WEAK_IMPORT_DEF(Name) WIN_WEAK_ALIAS(Name, WEAK_EXPORT_NAME(Name))
+#else
+#define WIN_WEAK_IMPORT_DEF(Name)
+#endif
+
 namespace {
 
 extern "C" {
+WIN_WEAK_IMPORT_DEF(__sanitizer_weak_hook_compare_bytes)
 void __sanitizer_weak_hook_compare_bytes(void *caller_pc, const void *s1,
                                          const void *s2, std::size_t n1,
                                          std::size_t n2, int result);
+WIN_WEAK_IMPORT_DEF(__sanitizer_weak_hook_memmem)
 void __sanitizer_weak_hook_memmem(void *called_pc, const void *s1, size_t len1,
                                   const void *s2, size_t len2, void *result);
+WIN_WEAK_IMPORT_DEF(__sanitizer_weak_hook_cmp4)
 void __sanitizer_cov_trace_cmp4(uint32_t arg1, uint32_t arg2);
+WIN_WEAK_IMPORT_DEF(__sanitizer_weak_hook_cmp8)
 void __sanitizer_cov_trace_cmp8(uint64_t arg1, uint64_t arg2);
 
 void __sanitizer_cov_trace_switch(uint64_t val, uint64_t *cases);
