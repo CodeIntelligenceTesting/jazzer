@@ -260,6 +260,25 @@ cc_binary(
     deps = [":driver_lib"],
 )
 
+cc_binary(
+    name = "jazzer_driver_tsan",
+    data = [
+        "//agent:jazzer_agent_deploy",
+    ],
+    linkopts = [
+        "-fsanitize=thread",
+        "-static-libsan",
+        "-fsanitize-link-c++-runtime",
+        "-rdynamic",
+    ] + select({
+        "//:clang_on_linux": ["-fuse-ld=lld"],
+        "//conditions:default": [],
+    }),
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+    deps = [":driver_lib"],
+)
+
 cc_library(
     name = "sanitizer_symbols_for_tests",
     srcs = ["sanitizer_symbols_for_tests.cpp"],
