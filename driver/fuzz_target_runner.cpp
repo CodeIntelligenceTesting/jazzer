@@ -359,6 +359,7 @@ jthrowable FuzzTargetRunner::GetFinding() const {
       reported_finding != nullptr) {
     env.DeleteLocalRef(unprocessed_finding);
     unprocessed_finding = reported_finding;
+    env.SetStaticObjectField(jazzer_, last_finding_, nullptr);
   }
   jthrowable processed_finding = preprocessException(unprocessed_finding);
   // If preprocessException returns the same object that we passed to it, we
