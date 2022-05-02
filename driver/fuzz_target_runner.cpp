@@ -362,9 +362,11 @@ jthrowable FuzzTargetRunner::GetFinding() const {
     env.SetStaticObjectField(jazzer_, last_finding_, nullptr);
   }
   jthrowable processed_finding = preprocessException(unprocessed_finding);
-  // If preprocessException returns the same object that we passed to it, we
-  // must not delete the reference count.
-  if (!env.IsSameObject(processed_finding, unprocessed_finding)) {
+  // If preprocessException returns the same local reference that we passed to
+  // it, we must not decrease the reference count as the returned object will
+  // outlive this method. Otherwise, we have to delete it to prevent leaking the
+  // unprocessed exception.
+  if (processed_finding != unprocessed_finding) {
     env.DeleteLocalRef(unprocessed_finding);
   }
   return processed_finding;
