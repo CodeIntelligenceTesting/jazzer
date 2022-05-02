@@ -28,6 +28,7 @@ def java_fuzz_target_test(
         env = None,
         verify_crash_input = True,
         verify_crash_reproducer = True,
+        expect_crash = True,
         # Default is that the reproducer does not throw any exception.
         expected_findings = [],
         **kwargs):
@@ -85,6 +86,7 @@ def java_fuzz_target_test(
             "$(rootpath :%s_deploy.jar)" % target_name,
             str(verify_crash_input),
             str(verify_crash_reproducer),
+            str(expect_crash),
             # args are shell tokenized and thus quotes are required in the case where
             # expected_findings is empty.
             "'" + ",".join(expected_findings) + "'",

@@ -46,6 +46,7 @@ public class FuzzTargetTestWrapper {
     String jarActualPath;
     boolean verifyCrashInput;
     boolean verifyCrashReproducer;
+    boolean expectCrash;
     Set<String> expectedFindings;
     Stream<String> arguments;
     try {
@@ -55,10 +56,11 @@ public class FuzzTargetTestWrapper {
       jarActualPath = lookUpRunfile(runfiles, args[2]);
       verifyCrashInput = Boolean.parseBoolean(args[3]);
       verifyCrashReproducer = Boolean.parseBoolean(args[4]);
+      expectCrash = Boolean.parseBoolean(args[5]);
       expectedFindings =
-          Arrays.stream(args[5].split(",")).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
+          Arrays.stream(args[6].split(",")).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
       // Map all files/dirs to real location
-      arguments = Arrays.stream(args).skip(6).map(
+      arguments = Arrays.stream(args).skip(7).map(
           arg -> arg.startsWith("-") ? arg : lookUpRunfileWithFallback(runfiles, arg));
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
@@ -92,6 +94,14 @@ public class FuzzTargetTestWrapper {
 
     try {
       int exitCode = processBuilder.start().waitFor();
+      if (!expectCrash) {
+        if (exitCode != 0) {
+          System.err.printf(
+              "Did not expect a crash, but Jazzer exited with exit code %d%n", exitCode);
+          System.exit(1);
+        }
+        System.exit(0);
+      }
       // Assert that we either found a crash in Java (exit code 77) or a sanitizer crash (exit code
       // 76).
       if (exitCode != 76 && exitCode != 77) {
