@@ -31,6 +31,7 @@ run:windows --noincompatible_strict_action_env
 
 # Toolchain
 # Since the toolchain is conditional on OS and architecture, set it on the particular GitHub Action.
+build:toolchain --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 build:toolchain --//third_party:toolchain
 
 # Forward debug variables to tests
