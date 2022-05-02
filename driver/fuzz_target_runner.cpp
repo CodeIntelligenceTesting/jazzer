@@ -412,6 +412,7 @@ void FuzzTargetRunner::DumpReproducer(const uint8_t *data, std::size_t size) {
     if (finding == nullptr) {
       LOG(ERROR) << "Failed to reproduce crash when rerunning with recorder";
     }
+    env.DeleteLocalRef(finding);
     base64_data = SerializeRecordingFuzzedDataProvider(jvm_, recorder);
   } else {
     absl::string_view data_str(reinterpret_cast<const char *>(data), size);
