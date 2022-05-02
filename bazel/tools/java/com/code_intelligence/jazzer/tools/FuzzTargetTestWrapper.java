@@ -47,6 +47,7 @@ public class FuzzTargetTestWrapper {
     boolean verifyCrashInput;
     boolean verifyCrashReproducer;
     Set<String> expectedFindings;
+    Stream<String> arguments;
     try {
       runfiles = Runfiles.create();
       driverActualPath = lookUpRunfile(runfiles, args[0]);
@@ -56,6 +57,9 @@ public class FuzzTargetTestWrapper {
       verifyCrashReproducer = Boolean.parseBoolean(args[4]);
       expectedFindings =
           Arrays.stream(args[5].split(",")).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
+      // Map all files/dirs to real location
+      arguments = Arrays.stream(args).skip(6).map(
+          arg -> arg.startsWith("-") ? arg : lookUpRunfileWithFallback(runfiles, arg));
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
@@ -70,10 +74,6 @@ public class FuzzTargetTestWrapper {
     // Crashes will be available as test outputs. These are cleared on the next run,
     // so this is only useful for examples.
     String outputDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR");
-
-    // Map all files/dirs to real location
-    Stream<String> arguments = Arrays.stream(args).skip(6).map(
-        arg -> arg.startsWith("-") ? arg : lookUpRunfileWithFallback(runfiles, arg));
 
     List<String> command =
         Stream
@@ -95,27 +95,29 @@ public class FuzzTargetTestWrapper {
       // Assert that we either found a crash in Java (exit code 77) or a sanitizer crash (exit code
       // 76).
       if (exitCode != 76 && exitCode != 77) {
-        System.exit(3);
+        System.err.printf("Did expect a crash, but Jazzer exited with exit code %d%n", exitCode);
+        System.exit(1);
       }
       String[] outputFiles = new File(outputDir).list();
       if (outputFiles == null) {
-        System.exit(4);
+        System.err.printf("Jazzer did not write a crashing input into %s%n", outputDir);
+        System.exit(1);
       }
       // Verify that libFuzzer dumped a crashing input.
       if (JAZZER_CI && verifyCrashInput
           && Arrays.stream(outputFiles).noneMatch(name -> name.startsWith("crash-"))) {
-        System.out.printf("No crashing input found in %s%n", outputDir);
-        System.exit(5);
+        System.err.printf("No crashing input found in %s%n", outputDir);
+        System.exit(1);
       }
       // Verify that libFuzzer dumped a crash reproducer.
       if (JAZZER_CI && verifyCrashReproducer
           && Arrays.stream(outputFiles).noneMatch(name -> name.startsWith("Crash_"))) {
-        System.out.printf("No crash reproducer found in %s%n", outputDir);
-        System.exit(6);
+        System.err.printf("No crash reproducer found in %s%n", outputDir);
+        System.exit(1);
       }
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
-      System.exit(2);
+      System.exit(1);
     }
 
     if (JAZZER_CI && verifyCrashReproducer) {
@@ -124,7 +126,7 @@ public class FuzzTargetTestWrapper {
             outputDir, driverActualPath, apiActualPath, jarActualPath, expectedFindings);
       } catch (Exception e) {
         e.printStackTrace();
-        System.exit(6);
+        System.exit(1);
       }
     }
     System.exit(0);
