@@ -23,6 +23,7 @@ java_library(
         "Jazzer.java",
         "MethodHook.java",
         "MethodHooks.java",
+        "//agent/src/main/java/jaz",
     ],
     visibility = ["//visibility:public"],
 )

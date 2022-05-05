@@ -410,7 +410,6 @@ void FuzzTargetRunner::DumpReproducer(const uint8_t *data, std::size_t size) {
     const auto finding = GetFinding();
     if (finding == nullptr) {
       LOG(ERROR) << "Failed to reproduce crash when rerunning with recorder";
-      return;
     }
     base64_data = SerializeRecordingFuzzedDataProvider(jvm_, recorder);
   } else {

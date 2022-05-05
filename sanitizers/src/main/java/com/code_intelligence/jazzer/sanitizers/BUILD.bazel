@@ -28,6 +28,5 @@ kt_jvm_library(
     ],
     deps = [
         "//agent:jazzer_api_compile_only",
-        "//sanitizers/src/main/java/jaz",
     ],
 )

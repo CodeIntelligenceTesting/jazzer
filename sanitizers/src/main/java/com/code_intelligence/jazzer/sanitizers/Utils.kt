@@ -44,9 +44,20 @@ internal fun ByteArray.indexOf(needle: ByteArray): Int {
 }
 
 internal fun guideMarkableInputStreamTowardsEquality(stream: InputStream, target: ByteArray, id: Int) {
+    fun readBytes(stream: InputStream, size: Int): ByteArray {
+        val current = ByteArray(size)
+        var n = 0
+        while (n < size) {
+            val count = stream.read(current, n, size - n)
+            if (count < 0) break
+            n += count
+        }
+        return current
+    }
+
     check(stream.markSupported())
     stream.mark(target.size)
-    val current = stream.readNBytes(target.size)
+    val current = readBytes(stream, target.size)
     stream.reset()
     Jazzer.guideTowardsEquality(current, target, id)
 }

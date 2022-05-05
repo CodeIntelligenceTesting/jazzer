@@ -3,6 +3,5 @@ java_library(
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers",
-        "//sanitizers/src/main/java/jaz",
     ],
 )
