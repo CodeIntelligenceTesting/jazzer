@@ -593,10 +593,9 @@ final public class Jazzer {
     try {
       JAZZER_INTERNAL.getMethod("reportFindingFromHook", Throwable.class).invoke(null, finding);
     } catch (NullPointerException | IllegalAccessException | NoSuchMethodException e) {
-      // We can only reach this point if the runtime is not in the classpath, but it must be if
-      // hooks work and this function should only be called from them.
-      System.err.println("ERROR: Jazzer.reportFindingFromHook must be called from a method hook");
-      System.exit(1);
+      // We can only reach this point if the runtime is not on the classpath, e.g. in case of a
+      // reproducer. Just throw the finding.
+      rethrowUnchecked(finding);
     } catch (InvocationTargetException e) {
       // reportFindingFromHook throws a HardToCatchThrowable, which will bubble up wrapped in an
       // InvocationTargetException that should not be stopped here.

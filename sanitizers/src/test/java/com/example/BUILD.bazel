@@ -6,6 +6,7 @@ java_fuzz_target_test(
     srcs = [
         "ObjectInputStreamDeserialization.java",
     ],
+    expected_findings = ["java.lang.ExceptionInInitializerError"],
     target_class = "com.example.ObjectInputStreamDeserialization",
 )
 
@@ -14,6 +15,7 @@ java_fuzz_target_test(
     srcs = [
         "ReflectiveCall.java",
     ],
+    expected_findings = ["java.lang.ExceptionInInitializerError"],
     target_class = "com.example.ReflectiveCall",
 )
 
@@ -107,6 +109,7 @@ java_fuzz_target_test(
     srcs = [
         "ClassLoaderLoadClass.java",
     ],
+    expected_findings = ["java.lang.ExceptionInInitializerError"],
     target_class = "com.example.ClassLoaderLoadClass",
 )
 

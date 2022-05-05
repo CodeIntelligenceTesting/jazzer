@@ -209,6 +209,7 @@ public class FuzzTargetTestWrapper {
         throw new IllegalStateException("Expected crash with any of "
             + String.join(", ", expectedFindings) + " not reproduced by " + classFile);
       }
+      System.out.println("Reproducer finished successfully without finding");
     } catch (InvocationTargetException e) {
       // expect the invocation to fail with the prescribed finding
       Throwable finding = e.getCause();
