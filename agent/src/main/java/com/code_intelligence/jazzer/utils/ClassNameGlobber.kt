@@ -21,16 +21,21 @@ private val BASE_INCLUDED_CLASS_NAME_GLOBS = listOf(
 )
 
 private val BASE_EXCLUDED_CLASS_NAME_GLOBS = listOf(
+    // JDK internals
     "\\[**", // array types
-    "com.code_intelligence.jazzer.**",
-    "com.sun.**", // package for Proxy objects
     "java.**",
     "javax.**",
+    "jdk.**",
+    "sun.**",
+    "com.sun.**", // package for Proxy objects
+    // Azul JDK internals
+    "com.azul.tooling.**",
+    // Kotlin internals
+    "kotlin.**",
+    // Jazzer internals
+    "com.code_intelligence.jazzer.**",
     "jaz.Ter", // safe companion of the honeypot class used by sanitizers
     "jaz.Zer", // honeypot class used by sanitizers
-    "jdk.**",
-    "kotlin.**",
-    "sun.**",
 )
 
 class ClassNameGlobber(includes: List<String>, excludes: List<String>) {
