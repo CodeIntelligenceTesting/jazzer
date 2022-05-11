@@ -90,7 +90,7 @@ __attribute__((noinline)) void trampoline(uint64_t arg1, uint64_t arg2,
       // multiples of 4.
       "and %[fake_pc], %[fake_pc], #0xFFFFFFFFFFFFFFFC \n\t"
       // Add the offset of the fake_pc-th ret (rounded to 0 mod 4 above).
-      "add x30, x30, %[fake_pc], lsl 0 \n\t"
+      "add x30, x30, %[fake_pc] \n\t"
       // Call the function by jumping to it and reusing all registers except
       // for the modified return address register r30.
       "br %[func] \n\t"
