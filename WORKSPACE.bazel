@@ -121,6 +121,6 @@ http_file(
     name = "genhtml",
     downloaded_file_path = "genhtml",
     executable = True,
-    sha256 = "4260f8d032743968d208afccfdb77fb6fda85b0ea4063a1f0b6a0c5602d22347",
-    urls = ["https://raw.githubusercontent.com/linux-test-project/lcov/master/bin/genhtml"],
+    sha256 = "4120cc9186a0687db218520a2d0dc9bae75d15faf41d87448b6b6c5140c19156",
+    urls = ["https://raw.githubusercontent.com/linux-test-project/lcov/6da8399c7a7a3370de2c69b16b092e945442ffcd/bin/genhtml"],
 )
