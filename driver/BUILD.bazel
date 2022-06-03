@@ -125,10 +125,6 @@ cc_library(
         "jvm_tooling.h",
         "libfuzzer_driver.h",
     ],
-    linkopts = select({
-        "@platforms//os:windows": [],
-        "//conditions:default": ["-ldl"],
-    }),
     # Needs to be linked statically for JNI_OnLoad_jazzer_initialize to be found
     # by the JVM.
     linkstatic = True,
