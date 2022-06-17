@@ -25,6 +25,7 @@ MAVEN_ARTIFACTS = [
     "com.fasterxml.jackson.core:jackson-core:2.12.1",
     "com.fasterxml.jackson.core:jackson-databind:2.12.1",
     "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.12.1",
+    "com.github.jsqlparser:jsqlparser:4.4",  # for SQL validation
     "com.google.code.gson:gson:2.8.6",
     "com.mikesamuel:json-sanitizer:1.2.1",
     "com.unboundid:unboundid-ldapsdk:6.0.3",
@@ -39,4 +40,5 @@ MAVEN_ARTIFACTS = [
     "org.openjdk.jmh:jmh-generator-annprocess:1.34",
     maven.artifact("org.apache.logging.log4j", "log4j-api", "2.14.1", testonly = True),
     maven.artifact("org.apache.logging.log4j", "log4j-core", "2.14.1", testonly = True),
+    maven.artifact("com.h2database", "h2", "2.1.212", testonly = True),
 ]

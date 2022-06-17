@@ -20,6 +20,7 @@ kt_jvm_library(
         "OsCommandInjection.kt",
         "ReflectiveCall.kt",
         "RegexInjection.kt",
+        "SqlInjection.kt",
         "Utils.kt",
     ],
     visibility = ["//sanitizers:__pkg__"],
@@ -28,5 +29,6 @@ kt_jvm_library(
     ],
     deps = [
         "//agent:jazzer_api_compile_only",
+        "@maven//:com_github_jsqlparser_jsqlparser",
     ],
 )
