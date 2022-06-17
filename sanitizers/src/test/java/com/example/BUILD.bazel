@@ -123,3 +123,18 @@ java_fuzz_target_test(
     ],
     target_class = "com.example.RegexRoadblocks",
 )
+
+java_fuzz_target_test(
+    name = "SqlInjection",
+    srcs = [
+        "SqlInjection.java",
+    ],
+    expected_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
+        "org.h2.jdbc.JdbcSQLSyntaxErrorException",
+    ],
+    target_class = "com.example.SqlInjection",
+    deps = [
+        "@maven//:com_h2database_h2",
+    ],
+)
