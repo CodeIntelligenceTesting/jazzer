@@ -53,8 +53,6 @@ def java_fuzz_target_test(
         **kwargs
     )
 
-    additional_args = []
-
     if sanitizer == None:
         driver = "//driver:jazzer_driver"
     elif sanitizer == "address":
@@ -90,7 +88,7 @@ def java_fuzz_target_test(
             # args are shell tokenized and thus quotes are required in the case where
             # expected_findings is empty.
             "'" + ",".join(expected_findings) + "'",
-        ] + additional_args + fuzzer_args,
+        ] + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,
             "//agent:jazzer_agent_deploy",
