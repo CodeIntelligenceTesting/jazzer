@@ -110,7 +110,7 @@ index 0f5b99ff..80965dfe 100644
  			final TypePath typePath, final Label[] start, final Label[] end,
  			final int[] index, final String descriptor, final boolean visible) {
 +		if (getLocalVariableType() == null) {
-+			return visitLocalVariableAnnotation(typeRef, typePath, start, end, index, descriptor, visible);
++			return mv.visitLocalVariableAnnotation(typeRef, typePath, start, end, index, descriptor, visible);
 +		}
 +
  		final int[] newIndex = new int[index.length];
