@@ -59,65 +59,9 @@ object SqlInjection {
         MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.Statement", targetMethod = "execute"),
         MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.Statement", targetMethod = "executeBatch"),
         MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.Statement", targetMethod = "executeLargeBatch"),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "java.sql.Statement",
-            targetMethod = "executeLargeUpdate"
-        ),
+        MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.Statement", targetMethod = "executeLargeUpdate"),
         MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.Statement", targetMethod = "executeQuery"),
         MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.Statement", targetMethod = "executeUpdate"),
-        MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.PreparedStatement", targetMethod = "execute"),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "java.sql.PreparedStatement",
-            targetMethod = "executeBatch"
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "java.sql.PreparedStatement",
-            targetMethod = "executeLargeBatch"
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "java.sql.PreparedStatement",
-            targetMethod = "executeLargeUpdate"
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "java.sql.PreparedStatement",
-            targetMethod = "executeQuery"
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "java.sql.PreparedStatement",
-            targetMethod = "executeUpdate"
-        ),
-        MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.CallableStatement", targetMethod = "execute"),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "java.sql.CallableStatement",
-            targetMethod = "executeBatch"
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "java.sql.CallableStatement",
-            targetMethod = "executeLargeBatch"
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "java.sql.CallableStatement",
-            targetMethod = "executeLargeUpdate"
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "java.sql.CallableStatement",
-            targetMethod = "executeQuery"
-        ),
-        MethodHook(
-            type = HookType.REPLACE,
-            targetClassName = "java.sql.CallableStatement",
-            targetMethod = "executeUpdate"
-        ),
         MethodHook(
             type = HookType.REPLACE,
             targetClassName = "javax.persistence.EntityManager",
