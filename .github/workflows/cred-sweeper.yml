@@ -1,0 +1,28 @@
+name: Cred sweeper
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  check_formatting:
+    runs-on: ubuntu-20.04
+  
+  cred-sweeper:
+    runs-on: [ code-default ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: CredSweeper action
+        uses: Samsung/CredSweeper@main
+        with:
+          args: --path . --save-json cred-sweeper-report.json -l info
+      - name: Upload report as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: cred-sweeper-report.json
+          path: cred-sweeper-report.json
