@@ -37,6 +37,7 @@ public class TraceDataFlowInstrumentationTarget implements DynamicTestContract {
 
   volatile int switchValue = 1200;
 
+  @SuppressWarnings("ReturnValueIgnored")
   @Override
   public Map<String, Boolean> selfCheck() {
     Map<String, Boolean> results = new HashMap<>();
