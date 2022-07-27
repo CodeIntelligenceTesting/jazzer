@@ -60,8 +60,7 @@ class FuzzTargetRunner : public ExceptionPrinter {
 
  public:
   // Initializes the java fuzz target by calling `void fuzzerInitialize(...)`.
-  explicit FuzzTargetRunner(
-      JVM &jvm, const std::vector<std::string> &additional_target_args = {});
+  explicit FuzzTargetRunner(JVM &jvm);
 
   // Calls the fuzz target tear down function. This can be useful to join any
   // Threads so that the JVM shuts down correctly.
