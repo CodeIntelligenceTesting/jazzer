@@ -111,8 +111,7 @@ std::vector<std::string> splitOnSpace(const std::string &s) {
   return tokens;
 }
 
-FuzzTargetRunner::FuzzTargetRunner(
-    JVM &jvm, const std::vector<std::string> &additional_target_args)
+FuzzTargetRunner::FuzzTargetRunner(JVM &jvm)
     : ExceptionPrinter(jvm), jvm_(jvm), ignore_tokens_() {
   auto &env = jvm.GetEnv();
   if (!FLAGS_target_class.empty() && !FLAGS_autofuzz.empty()) {
@@ -220,9 +219,6 @@ FuzzTargetRunner::FuzzTargetRunner(
       jclass_, "fuzzerInitialize", "([Ljava/lang/String;)V", false);
 
   auto fuzz_target_args_tokens = splitOnSpace(FLAGS_target_args);
-  fuzz_target_args_tokens.insert(fuzz_target_args_tokens.end(),
-                                 additional_target_args.begin(),
-                                 additional_target_args.end());
 
   if (fuzzer_initialize_with_args_) {
     // fuzzerInitialize with arguments gets priority
