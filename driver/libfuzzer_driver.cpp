@@ -49,6 +49,13 @@ DECLARE_string(coverage_report);
 DECLARE_string(coverage_dump);
 
 namespace {
+constexpr auto kFuzzTargetRunnerClassName =
+    "com/code_intelligence/jazzer/driver/FuzzTargetRunner";
+
+bool gUseFuzzedDataProvider;
+jclass gRunner;
+jmethodID gRunOneId;
+
 std::vector<char *> modified_argv;
 
 std::string GetNewTempFilePath() {
@@ -196,9 +203,18 @@ void AbstractLibfuzzerDriver::initJvm(std::string_view executable_path,
 
 LibfuzzerDriver::LibfuzzerDriver(int *argc, char ***argv)
     : AbstractLibfuzzerDriver(argc, argv, getUsageString()) {
-  // the FuzzTargetRunner can only be initialized after the fuzzer callbacks
-  // have been registered otherwise link errors would occur
-  runner_ = std::make_unique<jazzer::FuzzTargetRunner>(*jvm_);
+  JNIEnv &env = jvm_->GetEnv();
+  jclass runner = env.FindClass(kFuzzTargetRunnerClassName);
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
+    _Exit(1);
+  }
+  gRunner = reinterpret_cast<jclass>(env.NewGlobalRef(runner));
+  gRunOneId = env.GetStaticMethodID(runner, "runOne", "([B)I");
+  jfieldID use_fuzzed_data_provider_id =
+      env.GetStaticFieldID(runner, "useFuzzedDataProvider", "Z");
+  gUseFuzzedDataProvider =
+      env.GetStaticBooleanField(runner, use_fuzzed_data_provider_id);
 }
 
 std::string LibfuzzerDriver::getUsageString() {
@@ -206,14 +222,24 @@ std::string LibfuzzerDriver::getUsageString() {
   jazzer --cp=<java_class_path> --target_class=<fuzz_target_class> <libfuzzer_arguments...>)";
 }
 
-RunResult LibfuzzerDriver::TestOneInput(const uint8_t *data,
-                                        const std::size_t size) {
-  // pass the fuzzer input to the java fuzz target
-  return runner_->Run(data, size);
-}
-
-void LibfuzzerDriver::DumpReproducer(const uint8_t *data, std::size_t size) {
-  return runner_->DumpReproducer(data, size);
+int LibfuzzerDriver::TestOneInput(const uint8_t *data, const std::size_t size) {
+  JNIEnv &env = jvm_->GetEnv();
+  jbyteArray input = nullptr;
+  jint jsize =
+      std::min(size, static_cast<size_t>(std::numeric_limits<jint>::max()));
+  if (gUseFuzzedDataProvider) {
+    ::jazzer::FeedFuzzedDataProvider(data, size);
+  } else {
+    input = env.NewByteArray(jsize);
+    env.SetByteArrayRegion(input, 0, jsize,
+                           reinterpret_cast<const jbyte *>(data));
+  }
+  int res = env.CallStaticIntMethod(gRunner, gRunOneId, input);
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
+    _Exit(1);
+  }
+  return res;
 }
 
 }  // namespace jazzer

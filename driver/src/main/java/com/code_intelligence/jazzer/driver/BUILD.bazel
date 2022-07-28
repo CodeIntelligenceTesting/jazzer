@@ -1,0 +1,34 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+
+java_jni_library(
+    name = "fuzz_target_runner",
+    srcs = ["FuzzTargetRunner.java"],
+    visibility = [
+        "//agent:__pkg__",
+        "//driver:__pkg__",
+        "//driver/src/test:__subpackages__",
+    ],
+    deps = [
+        ":opt",
+        ":reproducer_templates",
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+        "//agent/src/main/java/com/code_intelligence/jazzer/autofuzz",
+        "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:coverage_map",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:fuzzed_data_provider",
+    ],
+)
+
+java_library(
+    name = "reproducer_templates",
+    srcs = ["ReproducerTemplates.java"],
+    resources = ["Reproducer.java.tmpl"],
+    deps = [":opt"],
+)
+
+java_library(
+    name = "opt",
+    srcs = ["Opt.java"],
+    visibility = ["//driver/src/test/java/com/code_intelligence/jazzer/driver:__pkg__"],
+)

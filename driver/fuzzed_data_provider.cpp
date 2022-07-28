@@ -56,8 +56,13 @@
 
 namespace {
 
+// The current position in the fuzzer input.
 const uint8_t *gDataPtr = nullptr;
+// The remaining unconsumed bytes at the current position in the fuzzer input.
 std::size_t gRemainingBytes = 0;
+
+const uint8_t *gFuzzerInputStart = nullptr;
+std::size_t gFuzzerInputSize = 0;
 
 // Advance by `bytes` bytes in the buffer or stay at the end if it has been
 // consumed.
@@ -700,9 +705,18 @@ void Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_nativeIni
   env->RegisterNatives(clazz, kFuzzedDataMethods, kNumFuzzedDataMethods);
 }
 
+void Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_reset(
+    JNIEnv *env, jclass clazz) {
+  gDataPtr = gFuzzerInputStart;
+  gRemainingBytes = gFuzzerInputSize;
+}
+
 namespace jazzer {
 void FeedFuzzedDataProvider(const uint8_t *data, std::size_t size) {
   gDataPtr = data;
   gRemainingBytes = size;
+
+  gFuzzerInputStart = data;
+  gFuzzerInputSize = size;
 }
 }  // namespace jazzer

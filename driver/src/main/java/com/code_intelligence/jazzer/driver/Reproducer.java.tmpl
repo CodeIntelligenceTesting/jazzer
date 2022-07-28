@@ -1,0 +1,28 @@
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+public class Crash_%1$s {
+    static final String base64Bytes = String.join("", "%2$s");
+
+    public static void main(String[] args) throws Throwable {
+        ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
+        try {
+            Method fuzzerInitialize = %3$s.class.getMethod("fuzzerInitialize");
+            fuzzerInitialize.invoke(null);
+        } catch (NoSuchMethodException ignored) {
+            try {
+                Method fuzzerInitialize = %3$s.class.getMethod("fuzzerInitialize", String[].class);
+                fuzzerInitialize.invoke(null, (Object) args);
+            } catch (NoSuchMethodException ignored1) {
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        %4$s
+        %3$s.fuzzerTestOneInput(input);
+    }
+}

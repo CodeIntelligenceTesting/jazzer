@@ -18,15 +18,12 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Base64;
 
 // Wraps the native FuzzedDataProviderImpl and serializes all its return values
 // into a Base64-encoded string.
-final class RecordingFuzzedDataProvider implements FuzzedDataProvider {
+public final class RecordingFuzzedDataProvider implements FuzzedDataProvider {
   private final FuzzedDataProvider target;
   private final ArrayList<Object> recordedReplies = new ArrayList<>();
 
@@ -34,7 +31,6 @@ final class RecordingFuzzedDataProvider implements FuzzedDataProvider {
     this.target = target;
   }
 
-  // Called from native code.
   public static FuzzedDataProvider makeFuzzedDataProviderProxy() {
     return makeFuzzedDataProviderProxy(new FuzzedDataProviderImpl());
   }
@@ -43,7 +39,6 @@ final class RecordingFuzzedDataProvider implements FuzzedDataProvider {
     return new RecordingFuzzedDataProvider(target);
   }
 
-  // Called from native code.
   public static String serializeFuzzedDataProviderProxy(FuzzedDataProvider proxy)
       throws IOException {
     return ((RecordingFuzzedDataProvider) proxy).serialize();

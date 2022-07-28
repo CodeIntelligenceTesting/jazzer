@@ -175,3 +175,20 @@ Java_com_code_1intelligence_jazzer_runtime_CoverageMap_registerNewCounters(
   ::jazzer::CoverageTracker::RegisterNewCounters(*env, old_num_counters,
                                                  new_num_counters);
 }
+
+[[maybe_unused]] jintArray
+Java_com_code_1intelligence_jazzer_runtime_CoverageMap_getEverCoveredIds(
+    JNIEnv *env, jclass) {
+  uintptr_t *covered_pcs;
+  jint num_covered_pcs = __sanitizer_cov_get_observed_pcs(&covered_pcs);
+  std::vector<jint> covered_edge_ids(covered_pcs,
+                                     covered_pcs + num_covered_pcs);
+  delete[] covered_pcs;
+
+  jintArray covered_edge_ids_jni = env->NewIntArray(num_covered_pcs);
+  AssertNoException(*env);
+  env->SetIntArrayRegion(covered_edge_ids_jni, 0, num_covered_pcs,
+                         covered_edge_ids.data());
+  AssertNoException(*env);
+  return covered_edge_ids_jni;
+}
