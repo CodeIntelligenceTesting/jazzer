@@ -7,5 +7,6 @@ java_jni_library(
     visibility = [
         "//agent/src/jmh/java/com/code_intelligence/jazzer:__subpackages__",
         "//agent/src/test/java/com/code_intelligence/jazzer:__subpackages__",
+        "//driver/src/test:__subpackages__",
     ],
 )

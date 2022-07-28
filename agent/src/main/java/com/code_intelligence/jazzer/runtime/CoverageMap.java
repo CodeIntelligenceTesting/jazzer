@@ -114,6 +114,10 @@ final public class CoverageMap {
     }
   }
 
+  // Returns the IDs of all blocks that have been covered in at least one run (not just the current
+  // one).
+  public static native int[] getEverCoveredIds();
+
   private static native void initialize(long countersAddress);
 
   private static native void registerNewCounters(int oldNumCounters, int newNumCounters);

@@ -19,8 +19,7 @@ import java.util.ArrayList;
 final public class JazzerInternal {
   private static final ArrayList<Runnable> ON_FUZZ_TARGET_READY_CALLBACKS = new ArrayList<>();
 
-  // Accessed from native code.
-  private static Throwable lastFinding;
+  public static Throwable lastFinding;
 
   // Accessed from api.Jazzer via reflection.
   public static void reportFindingFromHook(Throwable finding) {
@@ -35,7 +34,6 @@ final public class JazzerInternal {
     ON_FUZZ_TARGET_READY_CALLBACKS.add(callback);
   }
 
-  // Accessed from native code.
   public static void onFuzzTargetReady(String fuzzTargetClass) {
     ON_FUZZ_TARGET_READY_CALLBACKS.forEach(Runnable::run);
     ON_FUZZ_TARGET_READY_CALLBACKS.clear();

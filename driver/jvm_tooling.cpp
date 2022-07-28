@@ -25,6 +25,7 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_replace.h"
 #include "absl/strings/str_split.h"
+#include "fuzz_target_runner.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "tools/cpp/runfiles/runfiles.h"
@@ -280,6 +281,13 @@ JVM::JVM(std::string_view executable_path, std::string_view seed) {
       "-Djazzer.fake_pcs=%s", FLAGS_fake_pcs ? "true" : "false");
   options.push_back(JavaVMOption{
       .optionString = const_cast<char *>(fake_pcs_property.c_str())});
+
+  std::vector<std::string> fuzz_target_runner_defines =
+      ::jazzer::fuzzTargetRunnerFlagsAsDefines();
+  for (const auto &define : fuzz_target_runner_defines) {
+    options.push_back(
+        JavaVMOption{.optionString = const_cast<char *>(define.c_str())});
+  }
 
   // Add additional JVM options set through JAVA_OPTS.
   std::vector<std::string> java_opts_args;

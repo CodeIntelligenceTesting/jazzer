@@ -20,7 +20,6 @@
 #include <string>
 
 #include "absl/strings/match.h"
-#include "fuzz_target_runner.h"
 #include "fuzzed_data_provider.h"
 #include "jvm_tooling.h"
 
@@ -33,7 +32,7 @@ class AbstractLibfuzzerDriver {
 
   virtual ~AbstractLibfuzzerDriver() = default;
 
-  virtual RunResult TestOneInput(const uint8_t *data, std::size_t size) = 0;
+  virtual int TestOneInput(const uint8_t *data, std::size_t size) = 0;
 
   // Default value of the libFuzzer -error_exitcode flag.
   static constexpr int kErrorExitCode = 77;
@@ -54,16 +53,13 @@ class LibfuzzerDriver : public AbstractLibfuzzerDriver {
  public:
   LibfuzzerDriver(int *argc, char ***argv);
 
-  RunResult TestOneInput(const uint8_t *data, std::size_t size) override;
+  int TestOneInput(const uint8_t *data, std::size_t size) override;
 
   ~LibfuzzerDriver() override = default;
 
   void DumpReproducer(const uint8_t *data, std::size_t size);
 
  private:
-  // initializes the fuzz target and invokes the TestOneInput function
-  std::unique_ptr<jazzer::FuzzTargetRunner> runner_;
-
   static std::string getUsageString();
 };
 

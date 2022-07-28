@@ -30,6 +30,10 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider {
     nativeInit();
   }
 
+  // Resets the FuzzedDataProvider state to read from the beginning to the end of the last fuzzer
+  // input.
+  public static native void reset();
+
   @Override public native boolean consumeBoolean();
 
   @Override public native boolean[] consumeBooleans(int maxLength);

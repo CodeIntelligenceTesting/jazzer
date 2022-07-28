@@ -9,6 +9,7 @@ cc_library(
     visibility = [
         "//agent/src/jmh/native/com/code_intelligence/jazzer/runtime:__pkg__",
         "//agent/src/main/native/com/code_intelligence/jazzer/runtime:__pkg__",
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
     ],
 )
 
@@ -33,18 +34,25 @@ cc_library(
     ],
     visibility = [
         "//agent/src/main/native/com/code_intelligence/jazzer/replay:__pkg__",
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
+        "//driver/src/test:__subpackages__",
     ],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:fuzzed_data_provider.hdrs",
         "@com_google_absl//absl/strings:str_format",
         "@fmeum_rules_jni//jni",
     ],
+    # Symbols may only be referenced dynamically via JNI.
+    alwayslink = True,
 )
 
 cc_library(
     name = "signal_handler",
     srcs = ["signal_handler.cpp"],
     linkstatic = True,
+    visibility = [
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:signal_handler.hdrs",
         "@fmeum_rules_jni//jni",
@@ -67,9 +75,12 @@ cc_library(
     srcs = ["coverage_tracker.cpp"],
     hdrs = ["coverage_tracker.h"],
     linkstatic = True,
+    visibility = [
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
+        "//driver/src/test:__subpackages__",
+    ],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:coverage_map.hdrs",
-        "@fmeum_rules_jni//jni",
     ],
     # Symbols are only referenced dynamically via JNI.
     alwayslink = True,
@@ -79,6 +90,9 @@ cc_library(
     name = "libfuzzer_callbacks",
     srcs = ["libfuzzer_callbacks.cpp"],
     linkstatic = True,
+    visibility = [
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
         "@com_google_absl//absl/strings",
@@ -156,6 +170,7 @@ cc_17_library(
     linkstatic = True,
     deps = [
         ":jvm_tooling_lib",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner.hdrs",
         "@jazzer_libfuzzer//:libFuzzer",
     ],
     alwayslink = True,
@@ -260,6 +275,7 @@ cc_binary(
 cc_library(
     name = "sanitizer_symbols_for_tests",
     srcs = ["sanitizer_symbols_for_tests.cpp"],
+    visibility = ["//driver/src/test:__subpackages__"],
     alwayslink = True,
 )
 
@@ -272,7 +288,11 @@ cc_jni_library(
         "//conditions:default": ["rtld_global_hack.cpp"],
     }),
     visibility = ["//agent/src/test/java:__subpackages__"],
-    deps = [":sanitizer_symbols_for_tests"],
+    deps = [
+        ":coverage_tracker",
+        ":fuzzed_data_provider",
+        ":sanitizer_symbols_for_tests",
+    ],
 )
 
 cc_test(

@@ -103,25 +103,6 @@ TEST_F(JvmToolingTest, JniProperties) {
   }
 }
 
-TEST_F(JvmToolingTest, SimpleFuzzTarget) {
-  // see testdata/test/SimpleFuzzTarget.java for the implementation of the fuzz
-  // target
-  FLAGS_target_class = "test.SimpleFuzzTarget";
-  FLAGS_target_args = "";
-  FuzzTargetRunner fuzz_target_runner(*jvm_);
-
-  // normal case: fuzzerTestOneInput returns false
-  std::string input("random");
-  ASSERT_EQ(RunResult::kOk, fuzz_target_runner.Run(
-                                (const uint8_t *)input.c_str(), input.size()));
-
-  // exception is thrown in fuzzerTestOneInput
-  input = "crash";
-  ASSERT_EQ(
-      RunResult::kException,
-      fuzz_target_runner.Run((const uint8_t *)input.c_str(), input.size()));
-}
-
 class ExceptionPrinterTest : public ExceptionPrinter {
  public:
   ExceptionPrinterTest(JVM &jvm) : ExceptionPrinter(jvm), jvm_(jvm) {}
@@ -144,51 +125,5 @@ TEST_F(JvmToolingTest, ExceptionPrinter) {
   // a.k.a std::string.startsWith(java.lang...)
   ASSERT_TRUE(exception_printer.TriggerJvmException().rfind(
                   "java.lang.IllegalArgumentException", 0) == 0);
-}
-
-TEST_F(JvmToolingTest, FuzzTargetWithInit) {
-  // see testdata/test/FuzzTargetWithInit.java for the implementation of the
-  // fuzz target. All string arguments provided in fuzzerInitialize(String[])
-  // will cause a crash if input in fuzzerTestOneInput(byte[]).
-  FLAGS_target_class = "test.FuzzTargetWithInit";
-  FLAGS_target_args = "crash_now crash_harder";
-  FuzzTargetRunner fuzz_target_runner(*jvm_);
-
-  // normal case: fuzzerTestOneInput returns false
-  std::string input("random");
-  ASSERT_EQ(RunResult::kOk, fuzz_target_runner.Run(
-                                (const uint8_t *)input.c_str(), input.size()));
-
-  input = "crash_now";
-  ASSERT_EQ(
-      RunResult::kException,
-      fuzz_target_runner.Run((const uint8_t *)input.c_str(), input.size()));
-
-  input = "this is harmless";
-  ASSERT_EQ(RunResult::kOk, fuzz_target_runner.Run(
-                                (const uint8_t *)input.c_str(), input.size()));
-
-  input = "crash_harder";
-  ASSERT_EQ(
-      RunResult::kException,
-      fuzz_target_runner.Run((const uint8_t *)input.c_str(), input.size()));
-}
-
-TEST_F(JvmToolingTest, TestCoverageMap) {
-  auto coverage_counters_array = CoverageTracker::GetCoverageCounters();
-  ASSERT_EQ(0, coverage_counters_array[0]);
-
-  FLAGS_target_class = "test.FuzzTargetWithCoverage";
-  FLAGS_target_args = "";
-  FuzzTargetRunner fuzz_target_runner(*jvm_);
-  // run a fuzz target input which will cause the first coverage counter to
-  // increase
-  fuzz_target_runner.Run(nullptr, 0);
-  ASSERT_EQ(1, coverage_counters_array[0]);
-
-  // calling the fuzz target twice more
-  fuzz_target_runner.Run(nullptr, 0);
-  fuzz_target_runner.Run(nullptr, 0);
-  ASSERT_EQ(3, coverage_counters_array[0]);
 }
 }  // namespace jazzer

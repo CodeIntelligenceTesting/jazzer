@@ -14,6 +14,7 @@
 
 #include <iostream>
 
+#include "com_code_intelligence_jazzer_driver_FuzzTargetRunner.h"
 #include "libfuzzer_driver.h"
 
 namespace {
@@ -73,6 +74,16 @@ extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
   });
 }
 
+void Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_printCrashingInput(
+    JNIEnv *, jclass) {
+  jazzer::AbstractLibfuzzerDriver::libfuzzer_print_crashing_input_();
+}
+
+void Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner__1Exit(
+    JNIEnv *, jclass, jint exit_code) {
+  _Exit(exit_code);
+}
+
 // Entry point called by libfuzzer before any LLVMFuzzerTestOneInput(...)
 // invocations.
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
@@ -86,37 +97,7 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
   return 0;
 }
 
-#ifndef _WIN32
-__attribute__((weak))
-#endif
-extern "C" int
-__llvm_profile_write_file(void) {
-  return 0;
-}
-
 // Called by the fuzzer for every fuzzing input.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, const size_t size) {
-  auto result = gLibfuzzerDriver->TestOneInput(data, size);
-  if (result != jazzer::RunResult::kOk) {
-    // Fuzzer triggered an exception or assertion in Java code. Skip the
-    // uninformative libFuzzer stack trace.
-    std::cerr << "== libFuzzer crashing input ==\n";
-    Driver::libfuzzer_print_crashing_input_();
-    // DumpReproducer needs to be called after libFuzzer printed its final
-    // stats as otherwise it would report incorrect coverage.
-    gLibfuzzerDriver->DumpReproducer(data, size);
-    if (result == jazzer::RunResult::kDumpAndContinue) {
-      // Continue fuzzing after printing the crashing input.
-      return 0;
-    }
-    // Exit directly without invoking libFuzzer's atexit hook.
-    driver_cleanup();
-    // When running with LLVM coverage instrumentation, write out the profile as
-    // the exit hook that writes it won't run.
-    // TODO: Remove once https://github.com/bazelbuild/bazel/pull/15166 has been
-    //  fixed and use continuous mode instead.
-    __llvm_profile_write_file();
-    _Exit(Driver::kErrorExitCode);
-  }
-  return 0;
+  return gLibfuzzerDriver->TestOneInput(data, size);
 }
