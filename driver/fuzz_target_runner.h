@@ -72,4 +72,5 @@ class FuzzTargetRunner : public ExceptionPrinter {
   void DumpReproducer(const uint8_t *data, std::size_t size);
 };
 
+std::vector<std::string> fuzzTargetRunnerFlagsAsDefines();
 }  // namespace jazzer

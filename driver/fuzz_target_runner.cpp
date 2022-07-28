@@ -90,6 +90,22 @@ constexpr auto kAutofuzzFuzzTargetClass =
 constexpr auto dataChunkMaxLength = std::numeric_limits<uint16_t>::max() - 1;
 
 namespace jazzer {
+std::vector<std::string> fuzzTargetRunnerFlagsAsDefines() {
+  return {
+      absl::StrFormat("-Djazzer.target_class=%s", FLAGS_target_class),
+      absl::StrFormat("-Djazzer.target_args=%s", FLAGS_target_args),
+      absl::StrFormat("-Djazzer.keep_going=%d", FLAGS_keep_going),
+      absl::StrFormat("-Djazzer.dedup=%s", FLAGS_dedup ? "true" : "false"),
+      absl::StrFormat("-Djazzer.ignore=%s", FLAGS_ignore),
+      absl::StrFormat("-Djazzer.reproducer_path=%s", FLAGS_reproducer_path),
+      absl::StrFormat("-Djazzer.coverage_report=%s", FLAGS_coverage_report),
+      absl::StrFormat("-Djazzer.coverage_dump=%s", FLAGS_coverage_dump),
+      absl::StrFormat("-Djazzer.autofuzz=%s", FLAGS_autofuzz),
+      absl::StrFormat("-Djazzer.autofuzz_ignore=%s", FLAGS_autofuzz_ignore),
+      absl::StrFormat("-Djazzer.hooks=%s", FLAGS_hooks ? "true" : "false"),
+  };
+}
+
 // split a string on unescaped spaces
 std::vector<std::string> splitOnSpace(const std::string &s) {
   if (s.empty()) {

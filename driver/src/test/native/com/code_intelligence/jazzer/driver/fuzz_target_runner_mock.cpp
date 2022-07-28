@@ -1,4 +1,4 @@
-// Copyright 2021 Code Intelligence GmbH
+// Copyright 2022 Code Intelligence GmbH
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test;
+#include <cstdlib>
 
-class SimpleFuzzTarget {
-  public static void fuzzerTestOneInput(byte[] input) {
-    String inputString = new String(input);
-    System.err.println("got input " + inputString);
-    if (inputString.startsWith("crash")) {
-      throw new RuntimeException("exception triggered in fuzz target");
-    }
-  }
+#include "com_code_intelligence_jazzer_driver_FuzzTargetRunner.h"
+
+void Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_printCrashingInput(
+    JNIEnv *, jclass) {}
+
+void Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner__1Exit(
+    JNIEnv *, jclass, jint exit_code) {
+  _Exit(exit_code);
 }
