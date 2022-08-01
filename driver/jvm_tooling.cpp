@@ -51,20 +51,26 @@ DEFINE_string(agent_path, "", "location of the fuzzing instrumentation agent");
 // combined during the initialization of the JVM.
 DEFINE_string(instrumentation_includes, "",
               "list of glob patterns for classes that will be instrumented for "
-              "fuzzing. Separated by colon \":\"");
-DEFINE_string(instrumentation_excludes, "",
-              "list of glob patterns for classes that will not be instrumented "
-              "for fuzzing. Separated by colon \":\"");
+              "fuzzing (separator is ':' on Linux/macOS and ';' on Windows)");
+DEFINE_string(
+    instrumentation_excludes, "",
+    "list of glob patterns for classes that will not be instrumented "
+    "for fuzzing (separator is ':' on Linux/macOS and ';' on Windows)");
 
 DEFINE_string(custom_hook_includes, "",
               "list of glob patterns for classes that will only be "
-              "instrumented using custom hooks. Separated by colon \":\"");
-DEFINE_string(custom_hook_excludes, "",
-              "list of glob patterns for classes that will not be instrumented "
-              "using custom hooks. Separated by colon \":\"");
+              "instrumented using custom hooks (separator is ':' on "
+              "Linux/macOS and ';' on Windows)");
+DEFINE_string(
+    custom_hook_excludes, "",
+    "list of glob patterns for classes that will not be instrumented "
+    "using custom hooks (separator is ':' on Linux/macOS and ';' on Windows)");
 DEFINE_string(custom_hooks, "",
-              "list of classes containing custom instrumentation hooks. "
-              "Separated by colon \":\"");
+              "list of classes containing custom instrumentation hooks "
+              "(separator is ':' on Linux/macOS and ';' on Windows)");
+DEFINE_string(disabled_hooks, "",
+              "list of hook classes (custom or built-in) that should not be "
+              "loaded (separator is ':' on Linux/macOS and ';' on Windows)");
 DEFINE_string(
     trace, "",
     "list of instrumentation to perform separated by colon \":\". "
@@ -191,6 +197,7 @@ std::string agentArgsFromFlags() {
            {"instrumentation_includes", FLAGS_instrumentation_includes},
            {"instrumentation_excludes", FLAGS_instrumentation_excludes},
            {"custom_hooks", FLAGS_custom_hooks},
+           {"disabled_hooks", FLAGS_disabled_hooks},
            {"custom_hook_includes", FLAGS_custom_hook_includes},
            {"custom_hook_excludes", FLAGS_custom_hook_excludes},
            {"trace", FLAGS_trace},

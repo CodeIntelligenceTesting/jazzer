@@ -42,6 +42,7 @@ private val KNOWN_ARGUMENTS = listOf(
     "custom_hook_excludes",
     "trace",
     "custom_hooks",
+    "disabled_hooks",
     "id_sync_file",
     "dump_classes_dir",
 )
@@ -103,7 +104,14 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
         ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES).flatMap {
             it.split(':')
         }.filter { it.isNotBlank() }
-    val customHookNames = manifestCustomHookNames + (argumentMap["custom_hooks"] ?: emptyList())
+    val allCustomHookNames = manifestCustomHookNames + (argumentMap["custom_hooks"] ?: emptySet())
+    val disabledCustomHookNames = argumentMap["disabled_hooks"]?.toSet() ?: emptySet()
+    val customHookNames = allCustomHookNames - disabledCustomHookNames
+    val disabledCustomHooksToPrint = allCustomHookNames - customHookNames.toSet()
+    if (disabledCustomHooksToPrint.isNotEmpty()) {
+        println("INFO: Not using the following disabled hooks: ${disabledCustomHooksToPrint.joinToString(", ")}")
+    }
+
     val classNameGlobber = ClassNameGlobber(
         argumentMap["instrumentation_includes"] ?: emptyList(),
         (argumentMap["instrumentation_excludes"] ?: emptyList()) + customHookNames
