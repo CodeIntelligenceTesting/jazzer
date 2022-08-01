@@ -162,3 +162,18 @@ JAZZER_API_TEST_CASES = {
     )
     for case, args in JAZZER_API_TEST_CASES.items()
 ]
+
+java_fuzz_target_test(
+    name = "DisabledHooksFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/DisabledHooksFuzzer.java"],
+    expect_crash = False,
+    fuzzer_args = [
+        "-runs=0",
+        "--custom_hooks=com.example.DisabledHook",
+    ] + select({
+        "@platforms//os:windows": ["--disabled_hooks=com.example.DisabledHook;com.code_intelligence.jazzer.sanitizers.RegexInjection"],
+        "//conditions:default": ["--disabled_hooks=com.example.DisabledHook:com.code_intelligence.jazzer.sanitizers.RegexInjection"],
+    }),
+    target_class = "com.example.DisabledHooksFuzzer",
+)
