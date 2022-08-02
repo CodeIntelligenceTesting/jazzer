@@ -35,6 +35,7 @@ cc_library(
         "//agent/src/main/native/com/code_intelligence/jazzer/replay:__pkg__",
     ],
     deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:fuzzed_data_provider.hdrs",
         "@com_google_absl//absl/strings:str_format",
         "@fmeum_rules_jni//jni",
     ],
@@ -317,6 +318,15 @@ cc_test(
         "//driver/testdata:fuzz_target_mocks_deploy.jar",
     ],
     includes = ["."],
+    linkopts = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": [
+            # Needs to export symbols dynamically for JNI_OnLoad_jazzer_initialize
+            # to be found by the JVM.
+            "-rdynamic",
+        ],
+    }),
+    linkstatic = True,
     deps = [
         ":jvm_tooling_lib",
         ":sanitizer_symbols_for_tests",

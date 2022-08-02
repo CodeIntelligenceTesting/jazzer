@@ -52,6 +52,7 @@
 #include <vector>
 
 #include "absl/strings/str_format.h"
+#include "com_code_intelligence_jazzer_runtime_FuzzedDataProviderImpl.h"
 
 namespace {
 
@@ -694,24 +695,12 @@ const jint kNumFuzzedDataMethods =
     sizeof(kFuzzedDataMethods) / sizeof(kFuzzedDataMethods[0]);
 }  // namespace
 
-namespace jazzer {
-
-void SetUpFuzzedDataProvider(JNIEnv &env) {
-  jclass fuzzed_data_provider_class =
-      env.FindClass(kFuzzedDataProviderImplClass);
-  if (env.ExceptionCheck()) {
-    env.ExceptionDescribe();
-    throw std::runtime_error("failed to find FuzzedDataProviderImpl class");
-  }
-  env.RegisterNatives(fuzzed_data_provider_class, kFuzzedDataMethods,
-                      kNumFuzzedDataMethods);
-  if (env.ExceptionCheck()) {
-    env.ExceptionDescribe();
-    throw std::runtime_error(
-        "could not register native callbacks for FuzzedDataProvider");
-  }
+void Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_nativeInit(
+    JNIEnv *env, jclass clazz) {
+  env->RegisterNatives(clazz, kFuzzedDataMethods, kNumFuzzedDataMethods);
 }
 
+namespace jazzer {
 void FeedFuzzedDataProvider(const uint8_t *data, std::size_t size) {
   gDataPtr = data;
   gRemainingBytes = size;

@@ -24,9 +24,7 @@ uint8_t *data = nullptr;
 
 void Java_com_code_1intelligence_jazzer_replay_Replayer_feedFuzzedDataProvider(
     JNIEnv *env, jclass, jbyteArray input) {
-  if (data == nullptr) {
-    jazzer::SetUpFuzzedDataProvider(*env);
-  } else {
+  if (data != nullptr) {
     delete[] data;
   }
 

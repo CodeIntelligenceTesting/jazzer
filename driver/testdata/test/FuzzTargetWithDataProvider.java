@@ -20,6 +20,10 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 class FuzzTargetWithDataProvider {
+  static {
+    System.loadLibrary("jazzer_initialize");
+  }
+
   public static <T extends Comparable<T>> void assertEqual(T a, T b) {
     if (a.compareTo(b) != 0) {
       throw new IllegalArgumentException("Expected: " + a + ", got: " + b);
