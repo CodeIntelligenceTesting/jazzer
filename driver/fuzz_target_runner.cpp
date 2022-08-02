@@ -246,7 +246,6 @@ FuzzTargetRunner::FuzzTargetRunner(JVM &jvm)
   if (FLAGS_hooks) {
     CoverageTracker::RecordInitialCoverage(env);
   }
-  SetUpFuzzedDataProvider(jvm_.GetEnv());
 
   // Parse a comma-separated list of hex dedup tokens.
   std::vector<std::string> str_ignore_tokens =

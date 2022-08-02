@@ -35,9 +35,6 @@ namespace jazzer {
 constexpr char kFuzzedDataProviderImplClass[] =
     "com/code_intelligence/jazzer/runtime/FuzzedDataProviderImpl";
 
-// Registers the native methods in FuzzedDataProvider.
-void SetUpFuzzedDataProvider(JNIEnv &env);
-
 // Feed the FuzzedDataProvider with a new data buffer. The buffer is accessed
 // by native code and not copied into the JVM, so this is cheap to call.
 void FeedFuzzedDataProvider(const uint8_t *data, std::size_t size);

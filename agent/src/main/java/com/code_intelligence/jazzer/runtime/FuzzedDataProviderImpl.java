@@ -19,6 +19,17 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 public class FuzzedDataProviderImpl implements FuzzedDataProvider {
   public FuzzedDataProviderImpl() {}
 
+  private static native void nativeInit();
+
+  static {
+    try {
+      System.loadLibrary("jazzer_initialize");
+    } catch (UnsatisfiedLinkError ignored) {
+      // Reached when loaded from the replayer.
+    }
+    nativeInit();
+  }
+
   @Override public native boolean consumeBoolean();
 
   @Override public native boolean[] consumeBooleans(int maxLength);

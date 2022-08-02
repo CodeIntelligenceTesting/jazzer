@@ -55,7 +55,7 @@ public class RecordingFuzzedDataProviderTest {
     return result.toString();
   }
 
-  private static final class MockFuzzedDataProvider extends FuzzedDataProviderImpl {
+  private static final class MockFuzzedDataProvider implements FuzzedDataProvider {
     @Override
     public boolean consumeBoolean() {
       return true;
