@@ -29,7 +29,7 @@ _add_cxxopt_std_17 = transition(
 )
 
 def _cc_17_library_impl(ctx):
-    library = ctx.attr.library[0]
+    library = ctx.attr.exports[0]
     return [
         # Workaround for https://github.com/bazelbuild/bazel/issues/9442.
         DefaultInfo(
@@ -48,7 +48,7 @@ _cc_17_library = rule(
     implementation = _cc_17_library_impl,
     attrs = {
         "is_windows": attr.bool(),
-        "library": attr.label(
+        "exports": attr.label(
             cfg = _add_cxxopt_std_17,
             mandatory = True,
             providers = [CcInfo],
@@ -79,6 +79,6 @@ def cc_17_library(name, visibility = None, **kwargs):
             "@platforms//os:windows": True,
             "//conditions:default": False,
         }),
-        library = library_name,
+        exports = library_name,
         visibility = visibility,
     )
