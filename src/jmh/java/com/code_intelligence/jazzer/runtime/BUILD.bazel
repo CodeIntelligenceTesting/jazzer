@@ -18,6 +18,7 @@ java_test(
     # CriticalJNINatives have been removed in Java 18.
     tags = [
         "exclusive-if-local",
+        "no-coverage",
         "no-linux-jdk19",
     ],
     # Directly invoke JMH's main without using a testrunner.

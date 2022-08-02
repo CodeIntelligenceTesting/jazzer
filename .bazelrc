@@ -92,6 +92,9 @@ coverage --experimental_generate_llvm_lcov
 coverage --repo_env=CC=clang
 coverage --repo_env=BAZEL_USE_LLVM_NATIVE_COVERAGE=1
 coverage --repo_env=GCOV=llvm-profdata
+# Enable LLVM's %c mode to measure coverage even when exiting abnormally.
+coverage --test_env=LLVM_PROFILE_CONTINUOUS_MODE=1
+coverage --copt=-mllvm --copt=-runtime-counter-relocation
 
 # Instrument all source files of non-test targets matching at least one of these regexes.
 coverage --instrumentation_filter=^//src/main[:/],^//sanitizers/src/main[:/]
