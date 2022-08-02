@@ -18,6 +18,7 @@ import sun.misc.Signal;
 
 public final class SignalHandler {
   static {
+    System.loadLibrary("jazzer_initialize");
     Signal.handle(new Signal("INT"), sig -> handleInterrupt());
   }
 
