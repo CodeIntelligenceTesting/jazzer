@@ -148,7 +148,7 @@ java_fuzz_target_test(
     ],
     expected_findings = ["java.lang.NegativeArraySizeException"],
     fuzzer_args = [
-        "-fork=3",
+        "-fork=2",
     ],
     target_class = "com.example.JpegImageParserFuzzer",
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
