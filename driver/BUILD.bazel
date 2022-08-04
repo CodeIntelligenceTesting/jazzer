@@ -125,17 +125,13 @@ cc_library(
     name = "jvm_tooling_lib",
     srcs = [
         "fuzz_target_runner.cpp",
-        "java_reproducer.cpp",
-        "java_reproducer.h",
-        "java_reproducer_templates.h",
+        "fuzz_target_runner.h",
         "jvm_tooling.cpp",
         "libfuzzer_driver.cpp",
         "utils.cpp",
         "utils.h",
     ],
     hdrs = [
-        "fuzz_target_runner.h",
-        "fuzzed_data_provider.h",
         "jvm_tooling.h",
         "libfuzzer_driver.h",
     ],
@@ -146,12 +142,9 @@ cc_library(
         # Should be built through the cc_17_library driver_lib.
         "manual",
     ],
-    visibility = ["//visibility:public"],
     deps = [
-        ":coverage_tracker",
         ":fuzzed_data_provider",
         ":libfuzzer_callbacks",
-        ":signal_handler",
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -168,7 +161,9 @@ cc_17_library(
     ],
     linkstatic = True,
     deps = [
+        ":coverage_tracker",
         ":jvm_tooling_lib",
+        ":libfuzzer_callbacks",
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner.hdrs",
         "@jazzer_libfuzzer//:libFuzzer",
     ],
@@ -306,18 +301,8 @@ cc_test(
         "//driver/testdata:fuzz_target_mocks_deploy.jar",
     ],
     includes = ["."],
-    linkopts = select({
-        "@platforms//os:windows": [],
-        "//conditions:default": [
-            # Needs to export symbols dynamically for JNI_OnLoad_jazzer_initialize
-            # to be found by the JVM.
-            "-rdynamic",
-        ],
-    }),
     deps = [
-        ":coverage_tracker",
         ":jvm_tooling_lib",
-        ":sanitizer_symbols_for_tests",
         ":test_main",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
@@ -338,6 +323,7 @@ cc_test(
     ],
     includes = ["."],
     deps = [
+        ":fuzzed_data_provider",
         ":jvm_tooling_lib",
         ":test_main",
         "@bazel_tools//tools/cpp/runfiles",
