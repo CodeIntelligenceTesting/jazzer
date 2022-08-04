@@ -122,18 +122,31 @@ cc_library(
 )
 
 cc_library(
+    name = "libfuzzer_driver",
+    srcs = [":libfuzzer_driver.cpp"],
+    hdrs = [":libfuzzer_driver.h"],
+    deps = [
+        ":fuzzed_data_provider",
+        ":jvm_tooling_lib",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_glog//:glog",
+        "@fmeum_rules_jni//jni:libjvm",
+        "@jazzer_com_github_gflags_gflags//:gflags",
+    ],
+)
+
+cc_library(
     name = "jvm_tooling_lib",
     srcs = [
         "fuzz_target_runner.cpp",
         "fuzz_target_runner.h",
         "jvm_tooling.cpp",
-        "libfuzzer_driver.cpp",
         "utils.cpp",
         "utils.h",
     ],
     hdrs = [
         "jvm_tooling.h",
-        "libfuzzer_driver.h",
     ],
     # Needs to be linked statically for JNI_OnLoad_jazzer_initialize to be found
     # by the JVM.
@@ -143,12 +156,11 @@ cc_library(
         "manual",
     ],
     deps = [
-        ":fuzzed_data_provider",
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_glog//:glog",
-        "@fmeum_rules_jni//jni:libjvm",
+        "@fmeum_rules_jni//jni",
         "@jazzer_com_github_gflags_gflags//:gflags",
     ],
 )
@@ -161,8 +173,8 @@ cc_17_library(
     linkstatic = True,
     deps = [
         ":coverage_tracker",
-        ":jvm_tooling_lib",
         ":libfuzzer_callbacks",
+        ":libfuzzer_driver",
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner.hdrs",
         "@jazzer_libfuzzer//:libFuzzer",
     ],
