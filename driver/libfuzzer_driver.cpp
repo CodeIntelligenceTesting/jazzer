@@ -26,7 +26,7 @@
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/strip.h"
-#include "fuzz_target_runner.h"
+#include "fuzzed_data_provider.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "jvm_tooling.h"

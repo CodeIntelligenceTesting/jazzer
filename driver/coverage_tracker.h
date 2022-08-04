@@ -38,13 +38,5 @@ class CoverageTracker {
   static void Initialize(JNIEnv &env, jlong counters);
   static void RegisterNewCounters(JNIEnv &env, jint old_num_counters,
                                   jint new_num_counters);
-
-  // Returns the address of the coverage counters array.
-  static uint8_t *GetCoverageCounters();
-
-  static void RecordInitialCoverage(JNIEnv &env);
-  static void ReplayInitialCoverage(JNIEnv &env);
-  static void ReportCoverage(JNIEnv &env, std::string);
-  static void DumpCoverage(JNIEnv &env, std::string);
 };
 }  // namespace jazzer

@@ -42,46 +42,5 @@ class JVM {
 
   // Get the JNI environment for interaction with the running JVM instance.
   JNIEnv &GetEnv() const;
-
-  jclass FindClass(std::string class_name) const;
-  jmethodID GetStaticMethodID(jclass class_id, const std::string &method_name,
-                              const std::string &signature,
-                              bool is_required = true) const;
-  jmethodID GetMethodID(jclass class_id, const std::string &method_name,
-                        const std::string &signature) const;
-  jfieldID GetStaticFieldID(jclass jclass, const std::string &field_name,
-                            const std::string &type) const;
 };
-
-// Adds convenience methods to convert a jvm exception to std::string
-// using StringWriter and PrintWriter. The stack trace can be subjected to
-// further processing, such as deduplication token computation and severity
-// annotation.
-class ExceptionPrinter {
- private:
-  const JVM &jvm_;
-
-  jclass string_writer_class_;
-  jmethodID string_writer_constructor_;
-  jmethodID string_writer_to_string_method_;
-
-  jclass print_writer_class_;
-  jmethodID print_writer_constructor_;
-  jmethodID print_stack_trace_method_;
-
-  jclass exception_utils_;
-  jmethodID compute_dedup_token_method_;
-  jmethodID preprocess_throwable_method_;
-
- protected:
-  explicit ExceptionPrinter(JVM &jvm);
-
-  // returns the current JVM exception stack trace as a string
-  std::string getStackTrace(jthrowable exception) const;
-  // augments the throwable with additional information such as severity markers
-  jthrowable preprocessException(jthrowable exception) const;
-  // returns a hash of the exception stack trace for deduplication purposes
-  jlong computeDedupToken(jthrowable exception) const;
-};
-
 } /* namespace jazzer */

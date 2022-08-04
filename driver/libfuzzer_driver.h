@@ -19,8 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "absl/strings/match.h"
-#include "fuzzed_data_provider.h"
 #include "jvm_tooling.h"
 
 namespace jazzer {
@@ -33,9 +31,6 @@ class AbstractLibfuzzerDriver {
   virtual ~AbstractLibfuzzerDriver() = default;
 
   virtual int TestOneInput(const uint8_t *data, std::size_t size) = 0;
-
-  // Default value of the libFuzzer -error_exitcode flag.
-  static constexpr int kErrorExitCode = 77;
 
   // A libFuzzer-registered callback that outputs the crashing input, but does
   // not include a stack trace.
@@ -56,8 +51,6 @@ class LibfuzzerDriver : public AbstractLibfuzzerDriver {
   int TestOneInput(const uint8_t *data, std::size_t size) override;
 
   ~LibfuzzerDriver() override = default;
-
-  void DumpReproducer(const uint8_t *data, std::size_t size);
 
  private:
   static std::string getUsageString();
