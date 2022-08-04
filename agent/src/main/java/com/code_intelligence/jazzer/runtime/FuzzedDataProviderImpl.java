@@ -34,6 +34,11 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider {
   // input.
   public static native void reset();
 
+  // Feeds new raw fuzzer input into the provider.
+  // Note: Clients *must not* use this method if they also use the native FeedFuzzedDataProvider
+  // method.
+  public static native void feed(byte[] input);
+
   @Override public native boolean consumeBoolean();
 
   @Override public native boolean[] consumeBooleans(int maxLength);

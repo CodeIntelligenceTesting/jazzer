@@ -711,6 +711,29 @@ void Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_reset(
   gRemainingBytes = gFuzzerInputSize;
 }
 
+void Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_feed(
+    JNIEnv *env, jclass, jbyteArray input) {
+  // This line is why this function must not be used if FeedFuzzedDataProvider
+  // is also called from native code.
+  delete[] gFuzzerInputStart;
+
+  std::size_t size = env->GetArrayLength(input);
+  if (env->ExceptionCheck()) {
+    env->ExceptionDescribe();
+    env->FatalError("Failed to get length of input");
+  }
+  auto *data = static_cast<uint8_t *>(operator new(size));
+  if (data == nullptr) {
+    env->FatalError("Failed to allocate memory for a copy of the input");
+  }
+  env->GetByteArrayRegion(input, 0, size, reinterpret_cast<jbyte *>(data));
+  if (env->ExceptionCheck()) {
+    env->ExceptionDescribe();
+    env->FatalError("Failed to copy input");
+  }
+  jazzer::FeedFuzzedDataProvider(data, size);
+}
+
 namespace jazzer {
 void FeedFuzzedDataProvider(const uint8_t *data, std::size_t size) {
   gDataPtr = data;

@@ -33,7 +33,6 @@ cc_library(
         "fuzzed_data_provider.h",
     ],
     visibility = [
-        "//agent/src/main/native/com/code_intelligence/jazzer/replay:__pkg__",
         "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
         "//driver/src/test:__subpackages__",
     ],
@@ -338,18 +337,8 @@ cc_test(
         "//driver/testdata:fuzz_target_mocks_deploy.jar",
     ],
     includes = ["."],
-    linkopts = select({
-        "@platforms//os:windows": [],
-        "//conditions:default": [
-            # Needs to export symbols dynamically for JNI_OnLoad_jazzer_initialize
-            # to be found by the JVM.
-            "-rdynamic",
-        ],
-    }),
-    linkstatic = True,
     deps = [
         ":jvm_tooling_lib",
-        ":sanitizer_symbols_for_tests",
         ":test_main",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
