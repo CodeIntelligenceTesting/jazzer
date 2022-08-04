@@ -17,13 +17,13 @@ extern "C" void __sanitizer_set_death_callback(void (*)()) {}
 
 // Suppress libFuzzer warnings about missing sanitizer methods in non-sanitizer
 // builds.
-extern "C" int __sanitizer_acquire_crash_state() { return 1; }
+extern "C" [[maybe_unused]] int __sanitizer_acquire_crash_state() { return 1; }
 
 namespace jazzer {
 void DumpJvmStackTraces();
 }
 
 // Dump a JVM stack trace on timeouts.
-extern "C" void __sanitizer_print_stack_trace() {
+extern "C" [[maybe_unused]] void __sanitizer_print_stack_trace() {
   jazzer::DumpJvmStackTraces();
 }
