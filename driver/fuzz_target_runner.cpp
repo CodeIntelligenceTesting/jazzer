@@ -57,6 +57,11 @@ DEFINE_string(autofuzz, "",
 DEFINE_string(autofuzz_ignore, "",
               "Fully qualified class names of exceptions to ignore during "
               "autofuzz. Separated by comma.");
+DEFINE_bool(
+    fake_pcs, false,
+    "Supply synthetic Java program counters to libFuzzer trace hooks to "
+    "make value profiling more effective. Enabled by default if "
+    "-use_value_profile=1 is specified.");
 
 DECLARE_bool(hooks);
 
@@ -74,6 +79,8 @@ std::vector<std::string> fuzzTargetRunnerFlagsAsDefines() {
       absl::StrFormat("-Djazzer.autofuzz=%s", FLAGS_autofuzz),
       absl::StrFormat("-Djazzer.autofuzz_ignore=%s", FLAGS_autofuzz_ignore),
       absl::StrFormat("-Djazzer.hooks=%s", FLAGS_hooks ? "true" : "false"),
+      absl::StrFormat("-Djazzer.fake_pcs=%s",
+                      FLAGS_fake_pcs ? "true" : "false"),
   };
 }
 }  // namespace jazzer

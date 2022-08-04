@@ -93,8 +93,6 @@ DEFINE_bool(hooks, true,
             "coverage information will be processed. This can be useful for "
             "running a regression test on non-instrumented bytecode.");
 
-DECLARE_bool(fake_pcs);
-
 #ifdef _WIN32
 #define ARG_SEPARATOR ";"
 #else
@@ -277,10 +275,6 @@ JVM::JVM(std::string_view executable_path, std::string_view seed) {
   std::string seed_property = absl::StrFormat("-Djazzer.seed=%s", seed);
   options.push_back(
       JavaVMOption{.optionString = const_cast<char *>(seed_property.c_str())});
-  std::string fake_pcs_property = absl::StrFormat(
-      "-Djazzer.fake_pcs=%s", FLAGS_fake_pcs ? "true" : "false");
-  options.push_back(JavaVMOption{
-      .optionString = const_cast<char *>(fake_pcs_property.c_str())});
 
   std::vector<std::string> fuzz_target_runner_defines =
       ::jazzer::fuzzTargetRunnerFlagsAsDefines();

@@ -26,12 +26,6 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
-DEFINE_bool(
-    fake_pcs, false,
-    "Supply synthetic Java program counters to libFuzzer trace hooks to "
-    "make value profiling more effective. Enabled by default if "
-    "-use_value_profile=1 is specified.");
-
 namespace {
 bool is_using_native_libraries = false;
 std::once_flag ignore_list_flag;
