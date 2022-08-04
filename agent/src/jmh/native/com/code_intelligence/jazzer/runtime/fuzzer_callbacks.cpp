@@ -43,7 +43,10 @@ void __sanitizer_cov_trace_div8(uint64_t val);
 void __sanitizer_cov_trace_gep(uintptr_t idx);
 
 // Not called but required to link against libFuzzer.
-int LLVMFuzzerTestOneInput(const uint8_t *data, std::size_t size) { return 0; }
+[[maybe_unused]] int LLVMFuzzerTestOneInput(const uint8_t *data,
+                                            std::size_t size) {
+  return 0;
+}
 }
 
 inline __attribute__((always_inline)) void *idToPc(jint id) {

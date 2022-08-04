@@ -22,7 +22,7 @@ bool is_asan_active = false;
 }
 
 extern "C" {
-const char *__asan_default_options() {
+[[maybe_unused]] const char *__asan_default_options() {
   is_asan_active = true;
   // LeakSanitizer is not yet supported as it reports too many false positives
   // due to how the JVM GC works.
@@ -32,7 +32,7 @@ const char *__asan_default_options() {
   return "abort_on_error=0,detect_leaks=0,exitcode=76";
 }
 
-const char *__ubsan_default_options() {
+[[maybe_unused]] const char *__ubsan_default_options() {
   // We use a distinguished exit code to recognize UBSan crashes in tests.
   // Also specify abort_on_error=0 explicitly since UBSan aborts rather than
   // exits on macOS by default, which would cause our exit code to be ignored.
@@ -74,19 +74,21 @@ extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
   });
 }
 
-void Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_printCrashingInput(
+[[maybe_unused]] void
+Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_printCrashingInput(
     JNIEnv *, jclass) {
   jazzer::AbstractLibfuzzerDriver::libfuzzer_print_crashing_input_();
 }
 
-void Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner__1Exit(
+[[maybe_unused]] void
+Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner__1Exit(
     JNIEnv *, jclass, jint exit_code) {
   _Exit(exit_code);
 }
 
 // Entry point called by libfuzzer before any LLVMFuzzerTestOneInput(...)
 // invocations.
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
+extern "C" [[maybe_unused]] int LLVMFuzzerInitialize(int *argc, char ***argv) {
   if (is_asan_active) {
     std::cerr << "WARN: Jazzer is not compatible with LeakSanitizer yet. Leaks "
                  "are not reported."
@@ -98,6 +100,7 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
 }
 
 // Called by the fuzzer for every fuzzing input.
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, const size_t size) {
+extern "C" [[maybe_unused]] int LLVMFuzzerTestOneInput(const uint8_t *data,
+                                                       const size_t size) {
   return gLibfuzzerDriver->TestOneInput(data, size);
 }

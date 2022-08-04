@@ -700,18 +700,21 @@ const jint kNumFuzzedDataMethods =
     sizeof(kFuzzedDataMethods) / sizeof(kFuzzedDataMethods[0]);
 }  // namespace
 
-void Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_nativeInit(
+[[maybe_unused]] void
+Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_nativeInit(
     JNIEnv *env, jclass clazz) {
   env->RegisterNatives(clazz, kFuzzedDataMethods, kNumFuzzedDataMethods);
 }
 
-void Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_reset(
+[[maybe_unused]] void
+Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_reset(
     JNIEnv *env, jclass clazz) {
   gDataPtr = gFuzzerInputStart;
   gRemainingBytes = gFuzzerInputSize;
 }
 
-void Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_feed(
+[[maybe_unused]] void
+Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_feed(
     JNIEnv *env, jclass, jbyteArray input) {
   // This line is why this function must not be used if FeedFuzzedDataProvider
   // is also called from native code.
