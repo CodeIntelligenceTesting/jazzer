@@ -144,7 +144,6 @@ cc_library(
     ],
     deps = [
         ":fuzzed_data_provider",
-        ":libfuzzer_callbacks",
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
