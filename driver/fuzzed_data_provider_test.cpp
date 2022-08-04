@@ -26,11 +26,7 @@
 #include "tools/cpp/runfiles/runfiles.h"
 
 DECLARE_string(cp);
-DECLARE_string(jvm_args);
 DECLARE_bool(hooks);
-
-DECLARE_string(target_class);
-DECLARE_string(target_args);
 
 namespace jazzer {
 
@@ -134,12 +130,12 @@ constexpr std::size_t kValidModifiedUtf8NumBytes = 100000;
 constexpr uint32_t kValidModifiedUtf8Seed = 0x12345678;
 
 TEST_F(FuzzedDataProviderTest, InvalidModifiedUtf8AfterFixup) {
-  auto modified_utf8_validator = jvm_->FindClass("test.ModifiedUtf8Encoder");
+  auto& env = jvm_->GetEnv();
+  auto modified_utf8_validator = env.FindClass("test/ModifiedUtf8Encoder");
   ASSERT_NE(nullptr, modified_utf8_validator);
-  auto string_to_modified_utf_bytes = jvm_->GetStaticMethodID(
+  auto string_to_modified_utf_bytes = env.GetStaticMethodID(
       modified_utf8_validator, "encode", "(Ljava/lang/String;)[B");
   ASSERT_NE(nullptr, string_to_modified_utf_bytes);
-  auto& env = jvm_->GetEnv();
   auto random_bytes = std::vector<uint8_t>(kValidModifiedUtf8NumBytes);
   auto random = std::mt19937(kValidModifiedUtf8Seed);
   for (bool ascii_only : {false, true}) {
