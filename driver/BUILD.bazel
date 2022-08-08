@@ -151,14 +151,8 @@ cc_library(
 
 cc_library(
     name = "jvm_tooling_lib",
-    srcs = [
-        "jvm_tooling.cpp",
-        "utils.cpp",
-        "utils.h",
-    ],
-    hdrs = [
-        "jvm_tooling.h",
-    ],
+    srcs = ["jvm_tooling.cpp"],
+    hdrs = ["jvm_tooling.h"],
     # Needs to be linked statically for JNI_OnLoad_jazzer_initialize to be found
     # by the JVM.
     linkstatic = True,

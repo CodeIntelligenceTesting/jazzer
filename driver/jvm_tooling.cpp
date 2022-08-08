@@ -29,7 +29,6 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "tools/cpp/runfiles/runfiles.h"
-#include "utils.h"
 
 DEFINE_string(cp, ".",
               "the classpath to use for fuzzing. Behaves analogously to java's "
@@ -93,10 +92,12 @@ DEFINE_bool(hooks, true,
             "coverage information will be processed. This can be useful for "
             "running a regression test on non-instrumented bytecode.");
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 #define ARG_SEPARATOR ";"
+constexpr auto kPathSeparator = '\\';
 #else
 #define ARG_SEPARATOR ":"
+constexpr auto kPathSeparator = '/';
 #endif
 
 extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
