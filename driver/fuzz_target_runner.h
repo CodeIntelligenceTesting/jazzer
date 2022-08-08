@@ -22,8 +22,6 @@
 #include <vector>
 
 namespace jazzer {
-std::vector<std::string> fuzzTargetRunnerFlagsAsDefines();
-
 /*
  * Starts libFuzzer with the provided command-line arguments and runs the
  * FuzzTargetRunner Java class in the provided JVM.

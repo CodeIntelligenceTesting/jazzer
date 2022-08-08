@@ -142,10 +142,7 @@ cc_library(
     deps = [
         ":fuzzed_data_provider",
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner.hdrs",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
         "@fmeum_rules_jni//jni",
-        "@jazzer_com_github_gflags_gflags//:gflags",
     ],
 )
 
@@ -161,7 +158,6 @@ cc_library(
         "manual",
     ],
     deps = [
-        ":fuzz_target_runner",
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",

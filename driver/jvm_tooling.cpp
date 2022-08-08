@@ -25,7 +25,6 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_replace.h"
 #include "absl/strings/str_split.h"
-#include "fuzz_target_runner.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "tools/cpp/runfiles/runfiles.h"
@@ -92,6 +91,49 @@ DEFINE_bool(hooks, true,
             "coverage information will be processed. This can be useful for "
             "running a regression test on non-instrumented bytecode.");
 
+DEFINE_string(
+    target_class, "",
+    "The Java class that contains the static fuzzerTestOneInput function");
+DEFINE_string(target_args, "",
+              "Arguments passed to fuzzerInitialize as a String array. "
+              "Separated by space.");
+
+DEFINE_uint32(keep_going, 0,
+              "Continue fuzzing until N distinct exception stack traces have"
+              "been encountered. Defaults to exit after the first finding "
+              "unless --autofuzz is specified.");
+DEFINE_bool(dedup, true,
+            "Emit a dedup token for every finding. Defaults to true and is "
+            "required for --keep_going and --ignore.");
+DEFINE_string(
+    ignore, "",
+    "Comma-separated list of crash dedup tokens to ignore. This is useful to "
+    "continue fuzzing before a crash is fixed.");
+
+DEFINE_string(reproducer_path, ".",
+              "Path at which fuzzing reproducers are stored. Defaults to the "
+              "current directory.");
+DEFINE_string(coverage_report, "",
+              "Path at which a coverage report is stored when the fuzzer "
+              "exits. If left empty, no report is generated (default)");
+DEFINE_string(coverage_dump, "",
+              "Path at which a coverage dump is stored when the fuzzer "
+              "exits. If left empty, no dump is generated (default)");
+
+DEFINE_string(autofuzz, "",
+              "Fully qualified reference to a method on the classpath that "
+              "should be fuzzed automatically (example: System.out::println). "
+              "Fuzzing will continue even after a finding; specify "
+              "--keep_going=N to stop after N findings.");
+DEFINE_string(autofuzz_ignore, "",
+              "Fully qualified class names of exceptions to ignore during "
+              "autofuzz. Separated by comma.");
+DEFINE_bool(
+    fake_pcs, false,
+    "Supply synthetic Java program counters to libFuzzer trace hooks to "
+    "make value profiling more effective. Enabled by default if "
+    "-use_value_profile=1 is specified.");
+
 #if defined(_WIN32) || defined(_WIN64)
 #define ARG_SEPARATOR ";"
 constexpr auto kPathSeparator = '\\';
@@ -108,9 +150,6 @@ JNI_OnLoad_jazzer_initialize(JavaVM *vm, void *) {
 namespace {
 constexpr auto kAgentBazelRunfilesPath = "jazzer/agent/jazzer_agent_deploy.jar";
 constexpr auto kAgentFileName = "jazzer_agent_deploy.jar";
-}  // namespace
-
-namespace jazzer {
 
 std::string_view dirFromFullPath(std::string_view path) {
   const auto pos = path.rfind(kPathSeparator);
@@ -178,6 +217,24 @@ std::string agentArgsFromFlags() {
   return absl::StrJoin(args, ",");
 }
 
+std::vector<std::string> fuzzTargetRunnerFlagsAsDefines() {
+  return {
+      absl::StrFormat("-Djazzer.target_class=%s", FLAGS_target_class),
+      absl::StrFormat("-Djazzer.target_args=%s", FLAGS_target_args),
+      absl::StrFormat("-Djazzer.keep_going=%d", FLAGS_keep_going),
+      absl::StrFormat("-Djazzer.dedup=%s", FLAGS_dedup ? "true" : "false"),
+      absl::StrFormat("-Djazzer.ignore=%s", FLAGS_ignore),
+      absl::StrFormat("-Djazzer.reproducer_path=%s", FLAGS_reproducer_path),
+      absl::StrFormat("-Djazzer.coverage_report=%s", FLAGS_coverage_report),
+      absl::StrFormat("-Djazzer.coverage_dump=%s", FLAGS_coverage_dump),
+      absl::StrFormat("-Djazzer.autofuzz=%s", FLAGS_autofuzz),
+      absl::StrFormat("-Djazzer.autofuzz_ignore=%s", FLAGS_autofuzz_ignore),
+      absl::StrFormat("-Djazzer.hooks=%s", FLAGS_hooks ? "true" : "false"),
+      absl::StrFormat("-Djazzer.fake_pcs=%s",
+                      FLAGS_fake_pcs ? "true" : "false"),
+  };
+}
+
 // Splits a string at the ARG_SEPARATOR unless it is escaped with a backslash.
 // Backslash itself can be escaped with another backslash.
 std::vector<std::string> splitEscaped(const std::string &str) {
@@ -205,6 +262,9 @@ std::vector<std::string> splitEscaped(const std::string &str) {
 
   return parts;
 }
+}  // namespace
+
+namespace jazzer {
 
 JVM::JVM(std::string_view executable_path, std::string_view seed) {
   // combine class path from command line flags and JAVA_FUZZER_CLASSPATH env
@@ -245,7 +305,7 @@ JVM::JVM(std::string_view executable_path, std::string_view seed) {
       JavaVMOption{.optionString = const_cast<char *>(seed_property.c_str())});
 
   std::vector<std::string> fuzz_target_runner_defines =
-      ::jazzer::fuzzTargetRunnerFlagsAsDefines();
+      fuzzTargetRunnerFlagsAsDefines();
   for (const auto &define : fuzz_target_runner_defines) {
     options.push_back(
         JavaVMOption{.optionString = const_cast<char *>(define.c_str())});
