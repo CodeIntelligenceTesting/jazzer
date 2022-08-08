@@ -73,7 +73,7 @@ java_fuzz_target_test(
     },
     expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = [
-        "-fork=3",
+        "-fork=2",
         "--additional_jvm_args=-Dbaz=baz",
     ] + select({
         # \\\\ becomes \\ when evaluated as a Starlark string literal, then \ in
@@ -81,6 +81,8 @@ java_fuzz_target_test(
         "@platforms//os:windows": ["--jvm_args=-Dfoo=foo;-Dbar=b\\\\;ar"],
         "//conditions:default": ["--jvm_args=-Dfoo=foo:-Dbar=b\\\\:ar"],
     }),
+    # Consumes more resources than can be expressed via the size attribute.
+    tags = ["exclusive-if-local"],
     target_class = "com.example.ForkModeFuzzer",
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
     target_compatible_with = SKIP_ON_MACOS,
