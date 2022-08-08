@@ -23,8 +23,6 @@
 #include "absl/strings/match.h"
 #include "absl/strings/str_split.h"
 #include "com_code_intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks.h"
-#include "gflags/gflags.h"
-#include "glog/logging.h"
 
 namespace {
 bool is_using_native_libraries = false;
@@ -37,7 +35,6 @@ std::vector<std::pair<uintptr_t, uintptr_t>> ignore_for_interception_ranges;
  * ...).
  */
 void ignoreLibraryForInterception(const std::string &lib_name) {
-  const auto num_address_ranges = ignore_for_interception_ranges.size();
   std::ifstream loaded_libs("/proc/self/maps");
   if (!loaded_libs) {
     // This early exit is taken e.g. on macOS, where /proc does not exist.
@@ -84,11 +81,6 @@ void ignoreLibraryForInterception(const std::string &lib_name) {
     }
     ignore_for_interception_ranges.emplace_back(start, end);
   }
-  const auto num_code_segments =
-      ignore_for_interception_ranges.size() - num_address_ranges;
-  LOG(INFO) << "added " << num_code_segments
-            << " code segment of native library " << lib_name
-            << " to interceptor ignorelist";
 }
 
 const std::vector<std::string> kLibrariesToIgnoreForInterception = {
@@ -124,9 +116,9 @@ extern "C" [[maybe_unused]] bool __sanitizer_weak_is_relevant_pc(
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_handleLibraryLoad(
     JNIEnv *env, jclass cls) {
   std::call_once(ignore_list_flag, [] {
-    LOG(INFO)
-        << "detected a native library load, enabling interception for libc "
-           "functions";
+    std::cout << "INFO: detected a native library load, enabling interception "
+                 "for libc functions"
+              << std::endl;
     for (const auto &lib_name : kLibrariesToIgnoreForInterception)
       ignoreLibraryForInterception(lib_name);
     // Enable the ignore list after it has been populated since vector is not
