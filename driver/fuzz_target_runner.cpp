@@ -32,9 +32,6 @@ extern "C" int LLVMFuzzerRunDriver(int *argc, char ***argv,
                                                  size_t Size));
 
 namespace {
-constexpr auto kFuzzTargetRunnerClassName =
-    "com/code_intelligence/jazzer/driver/FuzzTargetRunner";
-
 bool gUseFuzzedDataProvider;
 jclass gRunner;
 jmethodID gRunOneId;
@@ -66,23 +63,6 @@ int testOneInput(const uint8_t *data, const std::size_t size) {
 }  // namespace
 
 namespace jazzer {
-int StartFuzzer(JNIEnv *env, int argc, char **argv) {
-  gEnv = env;
-  jclass runner = env->FindClass(kFuzzTargetRunnerClassName);
-  if (env->ExceptionCheck()) {
-    env->ExceptionDescribe();
-    _Exit(1);
-  }
-  gRunner = reinterpret_cast<jclass>(env->NewGlobalRef(runner));
-  gRunOneId = env->GetStaticMethodID(runner, "runOne", "([B)I");
-  jfieldID use_fuzzed_data_provider_id =
-      env->GetStaticFieldID(runner, "useFuzzedDataProvider", "Z");
-  gUseFuzzedDataProvider =
-      env->GetStaticBooleanField(runner, use_fuzzed_data_provider_id);
-
-  return LLVMFuzzerRunDriver(&argc, &argv, testOneInput);
-}
-
 void DumpJvmStackTraces() {
   JavaVM *vm;
   jsize num_vms;
@@ -109,6 +89,70 @@ void DumpJvmStackTraces() {
   // Do not detach as we may be the main thread (but the JVM exits anyway).
 }
 }  // namespace jazzer
+
+[[maybe_unused]] jint
+Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_startLibFuzzer(
+    JNIEnv *env, jclass runner, jobjectArray args) {
+  gEnv = env;
+  gRunner = reinterpret_cast<jclass>(env->NewGlobalRef(runner));
+  gRunOneId = env->GetStaticMethodID(runner, "runOne", "([B)I");
+  if (gRunOneId == nullptr) {
+    env->ExceptionDescribe();
+    _Exit(1);
+  }
+  jfieldID use_fuzzed_data_provider_id =
+      env->GetStaticFieldID(runner, "useFuzzedDataProvider", "Z");
+  if (use_fuzzed_data_provider_id == nullptr) {
+    env->ExceptionDescribe();
+    _Exit(1);
+  }
+  gUseFuzzedDataProvider =
+      env->GetStaticBooleanField(runner, use_fuzzed_data_provider_id);
+  if (env->ExceptionCheck()) {
+    env->ExceptionDescribe();
+    _Exit(1);
+  }
+
+  int argc = env->GetArrayLength(args);
+  if (env->ExceptionCheck()) {
+    env->ExceptionDescribe();
+    _Exit(1);
+  }
+  std::vector<std::string> argv_strings;
+  std::vector<const char *> argv_c;
+  for (jsize i = 0; i < argc; i++) {
+    auto arg_jni =
+        reinterpret_cast<jbyteArray>(env->GetObjectArrayElement(args, i));
+    if (arg_jni == nullptr) {
+      env->ExceptionDescribe();
+      _Exit(1);
+    }
+    jbyte *arg_c = env->GetByteArrayElements(arg_jni, nullptr);
+    if (arg_c == nullptr) {
+      env->ExceptionDescribe();
+      _Exit(1);
+    }
+    std::size_t arg_size = env->GetArrayLength(arg_jni);
+    if (env->ExceptionCheck()) {
+      env->ExceptionDescribe();
+      _Exit(1);
+    }
+    argv_strings.emplace_back(reinterpret_cast<const char *>(arg_c), arg_size);
+    env->ReleaseByteArrayElements(arg_jni, arg_c, JNI_ABORT);
+    if (env->ExceptionCheck()) {
+      env->ExceptionDescribe();
+      _Exit(1);
+    }
+  }
+  for (jsize i = 0; i < argc; i++) {
+    argv_c.emplace_back(argv_strings[i].c_str());
+  }
+  // Null-terminate argv.
+  argv_c.emplace_back(nullptr);
+
+  const char **argv = argv_c.data();
+  return LLVMFuzzerRunDriver(&argc, const_cast<char ***>(&argv), testOneInput);
+}
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_printCrashingInput(

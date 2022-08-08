@@ -33,7 +33,6 @@
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/strip.h"
-#include "driver/fuzz_target_runner.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "jvm_tooling.h"
@@ -82,8 +81,8 @@ namespace {
 const std::string kUsageMessage =
     R"(Test java fuzz targets using libFuzzer. Usage:
   jazzer --cp=<java_class_path> --target_class=<fuzz_target_class> <libfuzzer_arguments...>)";
-
-std::unique_ptr<::jazzer::JVM> gJvm;
+const std::string kFuzzTargetRunnerClassName =
+    "com/code_intelligence/jazzer/driver/FuzzTargetRunner";
 
 std::string GetNewTempFilePath() {
   auto temp_dir = std::filesystem::temp_directory_path();
@@ -99,6 +98,60 @@ std::string GetNewTempFilePath() {
     throw std::runtime_error("Random temp file path exists: " +
                              temp_path.string());
   return temp_path.string();
+}
+
+int StartLibFuzzer(std::unique_ptr<jazzer::JVM> jvm,
+                   std::vector<std::string> argv) {
+  JNIEnv &env = jvm->GetEnv();
+  jclass runner = env.FindClass(kFuzzTargetRunnerClassName.c_str());
+  if (runner == nullptr) {
+    env.ExceptionDescribe();
+    return 1;
+  }
+  jmethodID startFuzzer =
+      env.GetStaticMethodID(runner, "startLibFuzzer", "([[B)I");
+  if (startFuzzer == nullptr) {
+    env.ExceptionDescribe();
+    return 1;
+  }
+  jclass byteArrayClass = env.FindClass("[B");
+  if (byteArrayClass == nullptr) {
+    env.ExceptionDescribe();
+    return 1;
+  }
+  jobjectArray args = env.NewObjectArray(argv.size(), byteArrayClass, nullptr);
+  if (args == nullptr) {
+    env.ExceptionDescribe();
+    return 1;
+  }
+  for (jsize i = 0; i < argv.size(); ++i) {
+    jint len = argv[i].size();
+    jbyteArray arg = env.NewByteArray(len);
+    if (arg == nullptr) {
+      env.ExceptionDescribe();
+      return 1;
+    }
+    // startFuzzer expects UTF-8 encoded strings that are not null-terminated.
+    env.SetByteArrayRegion(arg, 0, len,
+                           reinterpret_cast<const jbyte *>(argv[i].data()));
+    if (env.ExceptionCheck()) {
+      env.ExceptionDescribe();
+      return 1;
+    }
+    env.SetObjectArrayElement(args, i, arg);
+    if (env.ExceptionCheck()) {
+      env.ExceptionDescribe();
+      return 1;
+    }
+    env.DeleteLocalRef(arg);
+  }
+  int res = env.CallStaticIntMethod(runner, startFuzzer, args);
+  if (env.ExceptionCheck()) {
+    env.ExceptionDescribe();
+    return 1;
+  }
+  env.DeleteLocalRef(args);
+  return res;
 }
 }  // namespace
 
@@ -117,22 +170,26 @@ int main(int argc, char **argv) {
     FLAGS_fake_pcs = true;
   }
 
-  // All libFuzzer flags start with a single dash, our arguments all start with
-  // a double dash. We can thus filter out the arguments meant for gflags by
-  // taking only those with a leading double dash.
-  std::vector<char *> our_args = {*argv};
-  std::copy_if(
-      argv, argv_end, std::back_inserter(our_args),
-      [](const auto arg) { return absl::StartsWith(std::string(arg), "--"); });
-  int our_argc = our_args.size();
-  char **our_argv = our_args.data();
-  // Let gflags consume its flags, but keep them in the argument list in case
-  // libFuzzer forwards the command line (e.g. with -jobs or -minimize_crash).
-  gflags::ParseCommandLineFlags(&our_argc, &our_argv, false);
+  {
+    // All libFuzzer flags start with a single dash, our arguments all start
+    // with a double dash. We can thus filter out the arguments meant for gflags
+    // by taking only those with a leading double dash.
+    std::vector<char *> our_args = {*argv};
+    std::copy_if(argv, argv_end, std::back_inserter(our_args),
+                 [](const auto arg) {
+                   return absl::StartsWith(std::string(arg), "--");
+                 });
+    int our_argc = our_args.size();
+    char **our_argv = our_args.data();
+    // Let gflags consume its flags, but keep them in the argument list in case
+    // libFuzzer forwards the command line (e.g. with -jobs or -minimize_crash).
+    gflags::ParseCommandLineFlags(&our_argc, &our_argv, false);
+  }
 
   // The potentially modified command line arguments passed to libFuzzer at the
   // end of this function.
-  std::vector<char *> modified_argv = std::vector<char *>(argv, argv_end);
+  std::vector<std::string> modified_argv =
+      std::vector<std::string>(argv, argv_end);
 
   bool spawns_subprocesses = false;
   if (std::any_of(argv, argv_end, [](std::string_view arg) {
@@ -157,11 +214,8 @@ int main(int argc, char **argv) {
       // the argument to argv for it to be picked up by libFuzzer, which then
       // forwards it to child processes.
       FLAGS_id_sync_file = GetNewTempFilePath();
-      std::string new_arg =
-          absl::StrFormat("--id_sync_file=%s", FLAGS_id_sync_file);
-      // This argument can be accessed by libFuzzer at any (later) time and thus
-      // cannot be safely freed by us.
-      modified_argv.push_back(strdup(new_arg.c_str()));
+      modified_argv.emplace_back(
+          absl::StrFormat("--id_sync_file=%s", FLAGS_id_sync_file));
     }
     // Creates the file, truncating it if it exists.
     std::ofstream touch_file(FLAGS_id_sync_file, std::ios_base::trunc);
@@ -197,15 +251,9 @@ int main(int argc, char **argv) {
     // that spawns subprocesses. These would inherit the same seed, which might
     // make them less effective.
     if (!spawns_subprocesses) {
-      std::string seed_arg = "-seed=" + seed;
-      // This argument can be accessed by libFuzzer at any (later) time and thus
-      // cannot be safely freed by us.
-      modified_argv.push_back(strdup(seed_arg.c_str()));
+      modified_argv.emplace_back("-seed=" + seed);
     }
   }
-  // Terminate modified_argv.
-  int modified_argc = modified_argv.size();
-  modified_argv.push_back(nullptr);
 
   if (is_asan_active) {
     std::cerr << "WARN: Jazzer is not compatible with LeakSanitizer yet. Leaks "
@@ -213,7 +261,6 @@ int main(int argc, char **argv) {
               << std::endl;
   }
 
-  gJvm = std::make_unique<jazzer::JVM>(argv[0], seed);
-  return jazzer::StartFuzzer(&gJvm->GetEnv(), modified_argc,
-                             modified_argv.data());
+  return StartLibFuzzer(std::make_unique<jazzer::JVM>(argv[0], seed),
+                        modified_argv);
 }

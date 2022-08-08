@@ -123,7 +123,6 @@ cc_library(
     name = "jazzer_main",
     srcs = [":jazzer_main.cpp"],
     deps = [
-        ":fuzz_target_runner",
         ":jvm_tooling_lib",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -142,6 +141,8 @@ cc_library(
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner.hdrs",
         "@fmeum_rules_jni//jni",
     ],
+    # With sanitizers, symbols are only referenced dynamically via JNI.
+    alwayslink = True,
 )
 
 cc_library(

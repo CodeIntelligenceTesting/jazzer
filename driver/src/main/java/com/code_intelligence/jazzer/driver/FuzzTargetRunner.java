@@ -36,8 +36,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
@@ -135,6 +137,17 @@ public final class FuzzTargetRunner {
     }
 
     Runtime.getRuntime().addShutdownHook(new Thread(FuzzTargetRunner::shutdown));
+  }
+
+  /*
+   * Starts libFuzzer via LLVMFuzzerRunDriver.
+   */
+  public static int startLibFuzzer(String[] args) {
+    // Convert the arguments to UTF8 before passing them on to JNI as there are no JNI functions to
+    // get (unmodified) UTF-8 out of a jstring.
+    return startLibFuzzer(Arrays.stream(args)
+                              .map(str -> str.getBytes(StandardCharsets.UTF_8))
+                              .toArray(byte[][] ::new));
   }
 
   /**
@@ -336,6 +349,14 @@ public final class FuzzTargetRunner {
     int numLeadingZeroes = 2 * bytes.length - unpadded.length();
     return String.join("", Collections.nCopies(numLeadingZeroes, "0")) + unpadded;
   }
+
+  /**
+   * Starts libFuzzer via LLVMFuzzerRunDriver.
+   *
+   * @param args command-line arguments encoded in UTF-8 (not null-terminated)
+   * @return the return value of LLVMFuzzerRunDriver
+   */
+  private static native int startLibFuzzer(byte[][] args);
 
   /**
    * Causes libFuzzer to write the current input to disk as a crashing input and emit some
