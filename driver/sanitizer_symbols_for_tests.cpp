@@ -16,7 +16,7 @@
 #include <cstdint>
 
 // Symbols exported by libFuzzer that are required by libfuzzer_callbacks and
-// CoverageTracker.
+// coverage_tracker and fuzz_target_runner.
 extern "C" {
 void __sanitizer_cov_8bit_counters_init(uint8_t *start, uint8_t *end) {}
 void __sanitizer_cov_pcs_init(const uintptr_t *pcs_beg,
@@ -38,4 +38,8 @@ void __sanitizer_cov_trace_div8(uint64_t val) {}
 void __sanitizer_cov_trace_gep(uintptr_t idx) {}
 void __sanitizer_cov_trace_pc_indir(uintptr_t callee) {}
 void __sanitizer_set_death_callback(void (*callback)()) {}
+int LLVMFuzzerRunDriver(int *argc, char ***argv,
+                        int (*UserCb)(const uint8_t *Data, size_t Size)) {
+  return 0;
+}
 }
