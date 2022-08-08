@@ -122,11 +122,10 @@ cc_library(
 )
 
 cc_library(
-    name = "libfuzzer_driver",
-    srcs = [":libfuzzer_driver.cpp"],
-    hdrs = [":libfuzzer_driver.h"],
+    name = "jazzer_main",
+    srcs = [":jazzer_main.cpp"],
     deps = [
-        ":fuzzed_data_provider",
+        ":fuzz_target_runner",
         ":jvm_tooling_lib",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -137,10 +136,22 @@ cc_library(
 )
 
 cc_library(
+    name = "fuzz_target_runner",
+    srcs = ["fuzz_target_runner.cpp"],
+    hdrs = ["fuzz_target_runner.h"],
+    deps = [
+        ":fuzzed_data_provider",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner.hdrs",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@fmeum_rules_jni//jni",
+        "@jazzer_com_github_gflags_gflags//:gflags",
+    ],
+)
+
+cc_library(
     name = "jvm_tooling_lib",
     srcs = [
-        "fuzz_target_runner.cpp",
-        "fuzz_target_runner.h",
         "jvm_tooling.cpp",
         "utils.cpp",
         "utils.h",
@@ -156,6 +167,7 @@ cc_library(
         "manual",
     ],
     deps = [
+        ":fuzz_target_runner",
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
@@ -167,16 +179,17 @@ cc_library(
 
 cc_17_library(
     name = "driver_lib",
-    srcs = [
-        "libfuzzer_fuzz_target.cpp",
-    ],
     linkstatic = True,
     deps = [
+        # This includes an explicit list of all cc_library targets providing
+        # symbols for JNI dynamic linking.
         ":coverage_tracker",
+        ":fuzz_target_runner",
+        ":fuzzed_data_provider",
+        ":jazzer_main",
         ":libfuzzer_callbacks",
-        ":libfuzzer_driver",
-        "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner.hdrs",
-        "@jazzer_libfuzzer//:libFuzzer",
+        ":signal_handler",
+        "@jazzer_libfuzzer//:libfuzzer_no_main",
     ],
     alwayslink = True,
 )
@@ -314,6 +327,7 @@ cc_test(
     includes = ["."],
     deps = [
         ":jvm_tooling_lib",
+        ":sanitizer_symbols_for_tests",
         ":test_main",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
@@ -336,6 +350,7 @@ cc_test(
     deps = [
         ":fuzzed_data_provider",
         ":jvm_tooling_lib",
+        ":sanitizer_symbols_for_tests",
         ":test_main",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",

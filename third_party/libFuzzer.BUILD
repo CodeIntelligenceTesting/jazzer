@@ -1,8 +1,8 @@
 cc_library(
-    name = "libFuzzer",
+    name = "libfuzzer_no_main",
     srcs = glob([
         "*.cpp",
-    ]),
+    ], exclude = ["FuzzerMain.cpp"]),
     hdrs = glob([
         "*.h",
         "*.def",

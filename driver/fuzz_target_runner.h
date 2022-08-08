@@ -16,9 +16,24 @@
 
 #pragma once
 
+#include <jni.h>
+
 #include <string>
 #include <vector>
 
 namespace jazzer {
 std::vector<std::string> fuzzTargetRunnerFlagsAsDefines();
+
+/*
+ * Starts libFuzzer with the provided command-line arguments and runs the
+ * FuzzTargetRunner Java class in the provided JVM.
+ */
+int StartFuzzer(JNIEnv *env, int argc, char **argv);
+
+/*
+ * Print the stack traces of all active JVM threads.
+ *
+ * This function can be called from any thread.
+ */
+void DumpJvmStackTraces();
 }  // namespace jazzer

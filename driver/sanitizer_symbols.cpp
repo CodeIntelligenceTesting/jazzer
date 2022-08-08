@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Called in libfuzzer_driver.cpp.
+// Called in fuzz_target_runner.cpp.
 extern "C" void __sanitizer_set_death_callback(void (*)()) {}
 
 // Suppress libFuzzer warnings about missing sanitizer methods in non-sanitizer

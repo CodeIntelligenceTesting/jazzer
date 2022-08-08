@@ -107,42 +107,9 @@ JNI_OnLoad_jazzer_initialize(JavaVM *vm, void *) {
 namespace {
 constexpr auto kAgentBazelRunfilesPath = "jazzer/agent/jazzer_agent_deploy.jar";
 constexpr auto kAgentFileName = "jazzer_agent_deploy.jar";
-constexpr const char kExceptionUtilsClassName[] =
-    "com/code_intelligence/jazzer/runtime/ExceptionUtils";
 }  // namespace
 
 namespace jazzer {
-
-void DumpJvmStackTraces() {
-  JavaVM *vm;
-  jsize num_vms;
-  JNI_GetCreatedJavaVMs(&vm, 1, &num_vms);
-  if (num_vms != 1) {
-    return;
-  }
-  JNIEnv *env = nullptr;
-  if (vm->AttachCurrentThread(reinterpret_cast<void **>(&env), nullptr) !=
-      JNI_OK) {
-    return;
-  }
-  jclass exceptionUtils = env->FindClass(kExceptionUtilsClassName);
-  if (env->ExceptionCheck()) {
-    env->ExceptionDescribe();
-    return;
-  }
-  jmethodID dumpStack =
-      env->GetStaticMethodID(exceptionUtils, "dumpAllStackTraces", "()V");
-  if (env->ExceptionCheck()) {
-    env->ExceptionDescribe();
-    return;
-  }
-  env->CallStaticVoidMethod(exceptionUtils, dumpStack);
-  if (env->ExceptionCheck()) {
-    env->ExceptionDescribe();
-    return;
-  }
-  // Do not detach as we may be the main thread (but the JVM exits anyway).
-}
 
 std::string_view dirFromFullPath(std::string_view path) {
   const auto pos = path.rfind(kPathSeparator);
