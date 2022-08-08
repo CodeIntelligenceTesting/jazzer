@@ -7,6 +7,6 @@ cc_jni_library(
     deps = [
         "//agent/src/jmh/java/com/code_intelligence/jazzer/runtime:fuzzer_callbacks.hdrs",
         "//driver:sanitizer_hooks_with_pc",
-        "@jazzer_libfuzzer//:libFuzzer",
+        "@jazzer_libfuzzer//:libfuzzer_no_main",
     ],
 )

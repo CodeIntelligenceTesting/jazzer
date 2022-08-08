@@ -211,6 +211,10 @@ public final class FuzzTargetRunner {
     return 0;
   }
 
+  public static void dumpAllStackTraces() {
+    ExceptionUtils.dumpAllStackTraces();
+  }
+
   private static void shutdown() {
     if (!Opt.coverageDump.isEmpty() || !Opt.coverageReport.isEmpty()) {
       int[] everCoveredIds = CoverageMap.getEverCoveredIds();

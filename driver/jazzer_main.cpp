@@ -12,13 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "libfuzzer_driver.h"
+/*
+ * Jazzer's native main function, which:
+ * 1. defines default settings for ASan and UBSan;
+ * 2. preprocesses the command-line arguments passed to libFuzzer;
+ * 3. starts a JVM;
+ * 4. passes control to the fuzz target runner.
+ */
 
 #include <rules_jni.h>
 
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <random>
 #include <string>
 #include <vector>
@@ -26,7 +33,7 @@
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/strip.h"
-#include "fuzzed_data_provider.h"
+#include "driver/fuzz_target_runner.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "jvm_tooling.h"
@@ -49,14 +56,34 @@ DECLARE_string(coverage_report);
 DECLARE_string(coverage_dump);
 
 namespace {
-constexpr auto kFuzzTargetRunnerClassName =
-    "com/code_intelligence/jazzer/driver/FuzzTargetRunner";
+bool is_asan_active = false;
+}
 
-bool gUseFuzzedDataProvider;
-jclass gRunner;
-jmethodID gRunOneId;
+extern "C" {
+[[maybe_unused]] const char *__asan_default_options() {
+  is_asan_active = true;
+  // LeakSanitizer is not yet supported as it reports too many false positives
+  // due to how the JVM GC works.
+  // We use a distinguished exit code to recognize ASan crashes in tests.
+  // Also specify abort_on_error=0 explicitly since ASan aborts rather than
+  // exits on macOS by default, which would cause our exit code to be ignored.
+  return "abort_on_error=0,detect_leaks=0,exitcode=76";
+}
 
-std::vector<char *> modified_argv;
+[[maybe_unused]] const char *__ubsan_default_options() {
+  // We use a distinguished exit code to recognize UBSan crashes in tests.
+  // Also specify abort_on_error=0 explicitly since UBSan aborts rather than
+  // exits on macOS by default, which would cause our exit code to be ignored.
+  return "abort_on_error=0,exitcode=76";
+}
+}
+
+namespace {
+const std::string kUsageMessage =
+    R"(Test java fuzz targets using libFuzzer. Usage:
+  jazzer --cp=<java_class_path> --target_class=<fuzz_target_class> <libfuzzer_arguments...>)";
+
+std::unique_ptr<::jazzer::JVM> gJvm;
 
 std::string GetNewTempFilePath() {
   auto temp_dir = std::filesystem::temp_directory_path();
@@ -75,34 +102,27 @@ std::string GetNewTempFilePath() {
 }
 }  // namespace
 
-namespace jazzer {
-// A libFuzzer-registered callback that outputs the crashing input, but does
-// not include a stack trace.
-void (*AbstractLibfuzzerDriver::libfuzzer_print_crashing_input_)() = nullptr;
-
-AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
-    int *argc, char ***argv, const std::string &usage_string) {
-  gflags::SetUsageMessage(usage_string);
+int main(int argc, char **argv) {
+  gflags::SetUsageMessage(kUsageMessage);
   // Disable glog log prefixes to mimic libFuzzer output.
   FLAGS_log_prefix = false;
-  google::InitGoogleLogging((*argv)[0]);
-  rules_jni_init((*argv)[0]);
+  google::InitGoogleLogging(argv[0]);
+  rules_jni_init(argv[0]);
 
-  const auto argv_start = *argv;
-  const auto argv_end = *argv + *argc;
+  const auto argv_end = argv + argc;
 
   // Parse libFuzzer flags to determine Jazzer flag defaults before letting
   // gflags parse the command line.
-  if (std::find(argv_start, argv_end, "-use_value_profile=1"s) != argv_end) {
+  if (std::find(argv, argv_end, "-use_value_profile=1"s) != argv_end) {
     FLAGS_fake_pcs = true;
   }
 
   // All libFuzzer flags start with a single dash, our arguments all start with
   // a double dash. We can thus filter out the arguments meant for gflags by
   // taking only those with a leading double dash.
-  std::vector<char *> our_args = {*argv_start};
+  std::vector<char *> our_args = {*argv};
   std::copy_if(
-      argv_start, argv_end, std::back_inserter(our_args),
+      argv, argv_end, std::back_inserter(our_args),
       [](const auto arg) { return absl::StartsWith(std::string(arg), "--"); });
   int our_argc = our_args.size();
   char **our_argv = our_args.data();
@@ -110,13 +130,12 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
   // libFuzzer forwards the command line (e.g. with -jobs or -minimize_crash).
   gflags::ParseCommandLineFlags(&our_argc, &our_argv, false);
 
-  // Perform modifications of the command line arguments passed to libFuzzer if
-  // necessary by modifying this copy, which will be made the regular argv at
-  // the end of this function.
-  modified_argv = std::vector<char *>(argv_start, argv_end);
+  // The potentially modified command line arguments passed to libFuzzer at the
+  // end of this function.
+  std::vector<char *> modified_argv = std::vector<char *>(argv, argv_end);
 
   bool spawns_subprocesses = false;
-  if (std::any_of(argv_start, argv_end, [](std::string_view arg) {
+  if (std::any_of(argv, argv_end, [](std::string_view arg) {
         return absl::StartsWith(arg, "-fork=") ||
                absl::StartsWith(arg, "-jobs=") ||
                absl::StartsWith(arg, "-merge=");
@@ -143,7 +162,6 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
       // This argument can be accessed by libFuzzer at any (later) time and thus
       // cannot be safely freed by us.
       modified_argv.push_back(strdup(new_arg.c_str()));
-      *argc += 1;
     }
     // Creates the file, truncating it if it exists.
     std::ofstream touch_file(FLAGS_id_sync_file, std::ios_base::trunc);
@@ -162,9 +180,9 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
   // Search for the last occurence of a "-seed" argument as that is the one that
   // is used by libFuzzer.
   auto seed_pos = std::find_if(
-      std::reverse_iterator(argv_end), std::reverse_iterator(argv_start),
+      std::reverse_iterator(argv_end), std::reverse_iterator(argv),
       [](std::string_view arg) { return absl::StartsWith(arg, "-seed="); });
-  if (seed_pos != std::reverse_iterator(argv_start)) {
+  if (seed_pos != std::reverse_iterator(argv)) {
     // An explicit seed has been provided on the command-line, record its value
     // so that it can be forwarded to the agent.
     seed = absl::StripPrefix(*seed_pos, "-seed=");
@@ -183,63 +201,19 @@ AbstractLibfuzzerDriver::AbstractLibfuzzerDriver(
       // This argument can be accessed by libFuzzer at any (later) time and thus
       // cannot be safely freed by us.
       modified_argv.push_back(strdup(seed_arg.c_str()));
-      *argc += 1;
     }
   }
-
   // Terminate modified_argv.
+  int modified_argc = modified_argv.size();
   modified_argv.push_back(nullptr);
-  // Modify argv and argc for libFuzzer. modified_argv must not be changed
-  // after this point.
-  *argv = modified_argv.data();
 
-  initJvm(**argv, seed);
-}
-
-void AbstractLibfuzzerDriver::initJvm(std::string_view executable_path,
-                                      std::string_view seed) {
-  jvm_ = std::make_unique<jazzer::JVM>(executable_path, seed);
-}
-
-LibfuzzerDriver::LibfuzzerDriver(int *argc, char ***argv)
-    : AbstractLibfuzzerDriver(argc, argv, getUsageString()) {
-  JNIEnv &env = jvm_->GetEnv();
-  jclass runner = env.FindClass(kFuzzTargetRunnerClassName);
-  if (env.ExceptionCheck()) {
-    env.ExceptionDescribe();
-    _Exit(1);
+  if (is_asan_active) {
+    std::cerr << "WARN: Jazzer is not compatible with LeakSanitizer yet. Leaks "
+                 "are not reported."
+              << std::endl;
   }
-  gRunner = reinterpret_cast<jclass>(env.NewGlobalRef(runner));
-  gRunOneId = env.GetStaticMethodID(runner, "runOne", "([B)I");
-  jfieldID use_fuzzed_data_provider_id =
-      env.GetStaticFieldID(runner, "useFuzzedDataProvider", "Z");
-  gUseFuzzedDataProvider =
-      env.GetStaticBooleanField(runner, use_fuzzed_data_provider_id);
-}
 
-std::string LibfuzzerDriver::getUsageString() {
-  return R"(Test java fuzz targets using libFuzzer. Usage:
-  jazzer --cp=<java_class_path> --target_class=<fuzz_target_class> <libfuzzer_arguments...>)";
+  gJvm = std::make_unique<jazzer::JVM>(argv[0], seed);
+  return jazzer::StartFuzzer(&gJvm->GetEnv(), modified_argc,
+                             modified_argv.data());
 }
-
-int LibfuzzerDriver::TestOneInput(const uint8_t *data, const std::size_t size) {
-  JNIEnv &env = jvm_->GetEnv();
-  jbyteArray input = nullptr;
-  jint jsize =
-      std::min(size, static_cast<size_t>(std::numeric_limits<jint>::max()));
-  if (gUseFuzzedDataProvider) {
-    ::jazzer::FeedFuzzedDataProvider(data, size);
-  } else {
-    input = env.NewByteArray(jsize);
-    env.SetByteArrayRegion(input, 0, jsize,
-                           reinterpret_cast<const jbyte *>(data));
-  }
-  int res = env.CallStaticIntMethod(gRunner, gRunOneId, input);
-  if (env.ExceptionCheck()) {
-    env.ExceptionDescribe();
-    _Exit(1);
-  }
-  return res;
-}
-
-}  // namespace jazzer
