@@ -95,9 +95,7 @@ cc_library(
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
         "@com_google_absl//absl/strings",
-        "@com_google_glog//:glog",
         "@fmeum_rules_jni//jni",
-        "@jazzer_com_github_gflags_gflags//:gflags",
     ] + select({
         # We statically link the fuzzer callbacks on Windows since linking a shared library against
         # symbols exported by a binary is difficult: We would need a .def file to export the symbols
