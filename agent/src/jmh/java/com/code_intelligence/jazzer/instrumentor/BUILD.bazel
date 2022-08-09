@@ -91,12 +91,11 @@ java_jni_library(
         "EdgeCoverageInstrumentation.java",
         "EdgeCoverageTarget.java",
     ],
-    native_libs = ["//driver:coverage_tracker_jni"],
+    native_libs = ["//driver/src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver"],
     plugins = ["//agent/src/jmh/java/com/code_intelligence/jazzer:JmhGeneratorAnnotationProcessor"],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:coverage_map",
-        "//agent/src/test/java/com/code_intelligence/jazzer:MockDriver",
         "//agent/src/test/java/com/code_intelligence/jazzer/instrumentor:patch_test_utils",
         "@maven//:org_openjdk_jmh_jmh_core",
     ],

@@ -29,6 +29,7 @@ public class Replayer {
   public static final int STATUS_OTHER_ERROR = 1;
 
   static {
+    System.setProperty("jazzer.is_replayer", "true");
     try {
       RulesJni.loadLibrary(
           "fuzzed_data_provider_standalone", "/com/code_intelligence/jazzer/driver");

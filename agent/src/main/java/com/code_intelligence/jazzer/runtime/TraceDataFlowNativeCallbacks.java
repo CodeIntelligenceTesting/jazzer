@@ -22,10 +22,7 @@ import java.nio.charset.Charset;
 @SuppressWarnings("unused")
 final public class TraceDataFlowNativeCallbacks {
   static {
-    // On Windows, we instead statically link the fuzzer callbacks into the driver.
-    if (!System.getProperty("os.name").startsWith("Windows")) {
-      RulesJni.loadLibrary("jazzer_fuzzer_callbacks", TraceDataFlowNativeCallbacks.class);
-    }
+    RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
   }
 
   // Note that we are not encoding as modified UTF-8 here: The FuzzedDataProvider transparently

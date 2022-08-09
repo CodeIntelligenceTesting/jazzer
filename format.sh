@@ -1,5 +1,5 @@
 # C++ & Java
-find -name '*.cpp' -o -name '*.h' -o -name '*.java' | xargs clang-format-13 -i
+find -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.java' | xargs clang-format-13 -i
 
 # Kotlin
 # curl -sSLO https://github.com/pinterest/ktlint/releases/download/0.42.1/ktlint && chmod a+x ktlint

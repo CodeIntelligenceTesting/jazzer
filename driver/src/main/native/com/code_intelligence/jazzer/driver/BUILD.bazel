@@ -1,12 +1,127 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+
+cc_jni_library(
+    name = "jazzer_driver",
+    visibility = [
+        "//agent/src/jmh:__subpackages__",
+        "//agent/src/test:__subpackages__",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
+        "//driver/src/test:__subpackages__",
+    ],
+    deps = [
+        ":jazzer_driver_lib",
+        "@jazzer_libfuzzer//:libfuzzer_no_main",
+    ] + select({
+        # Windows doesn't have a concept analogous to RTLD_GLOBAL.
+        "@platforms//os:windows": [],
+        "//conditions:default": [":trigger_driver_hooks_load"],
+    }),
+)
+
+cc_library(
+    name = "jazzer_driver_lib",
+    visibility = ["//driver/src/test/native/com/code_intelligence/jazzer/driver/mocks:__pkg__"],
+    deps = [
+        ":coverage_tracker",
+        ":fuzz_target_runner",
+        ":fuzzed_data_provider",
+        ":jazzer_fuzzer_callbacks",
+        ":libfuzzer_callbacks",
+    ],
+)
+
+cc_library(
+    name = "coverage_tracker",
+    srcs = ["coverage_tracker.cpp"],
+    hdrs = ["coverage_tracker.h"],
+    deps = ["//agent/src/main/java/com/code_intelligence/jazzer/runtime:coverage_map.hdrs"],
+    # Symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
+    name = "fuzz_target_runner",
+    srcs = ["fuzz_target_runner.cpp"],
+    hdrs = ["fuzz_target_runner.h"],
+    linkopts = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": ["-ldl"],
+    }),
+    deps = [
+        ":fuzzed_data_provider",
+        ":sanitizer_symbols",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner.hdrs",
+    ],
+    # With sanitizers, symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
+    name = "fuzzed_data_provider",
+    srcs = ["fuzzed_data_provider.cpp"],
+    hdrs = ["fuzzed_data_provider.h"],
+    visibility = [
+        "//driver:__pkg__",
+    ],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:fuzzed_data_provider.hdrs",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+    # Symbols may only be referenced dynamically via JNI.
+    alwayslink = True,
+)
 
 cc_jni_library(
     name = "fuzzed_data_provider_standalone",
-    visibility = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/replay:__pkg__",
-        "//agent/src/test/java/com/code_intelligence/jazzer/runtime:__pkg__",
-    ],
+    visibility = ["//agent/src/main/java/com/code_intelligence/jazzer/replay:__pkg__"],
+    deps = [":fuzzed_data_provider"],
+)
+
+cc_library(
+    name = "jazzer_fuzzer_callbacks",
+    srcs = ["jazzer_fuzzer_callbacks.cpp"],
     deps = [
-        "//driver:fuzzed_data_provider",
+        ":sanitizer_hooks_with_pc",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
     ],
+    alwayslink = True,
+)
+
+cc_library(
+    name = "libfuzzer_callbacks",
+    srcs = ["libfuzzer_callbacks.cpp"],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
+        "@com_google_absl//absl/strings",
+    ],
+    # Symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
+    name = "trigger_driver_hooks_load",
+    srcs = ["trigger_driver_hooks_load.cpp"],
+    linkopts = ["-ldl"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    deps = ["@fmeum_rules_jni//jni"],
+    # Symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sanitizer_hooks_with_pc",
+    hdrs = ["sanitizer_hooks_with_pc.h"],
+    visibility = [
+        "//agent/src/jmh/native:__subpackages__",
+        "//driver:__pkg__",
+        "//driver/src/test/native/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
+)
+
+cc_library(
+    name = "sanitizer_symbols",
+    srcs = ["sanitizer_symbols.cpp"],
+    # Symbols are referenced dynamically by libFuzzer.
+    alwayslink = True,
 )

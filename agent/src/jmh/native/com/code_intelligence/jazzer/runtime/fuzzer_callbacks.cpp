@@ -21,7 +21,7 @@
 #include "com_code_intelligence_jazzer_runtime_FuzzerCallbacksOptimizedCritical.h"
 #include "com_code_intelligence_jazzer_runtime_FuzzerCallbacksOptimizedNonCritical.h"
 #include "com_code_intelligence_jazzer_runtime_FuzzerCallbacksWithPc.h"
-#include "driver/sanitizer_hooks_with_pc.h"
+#include "driver/src/main/native/com/code_intelligence/jazzer/driver/sanitizer_hooks_with_pc.h"
 
 extern "C" {
 void __sanitizer_weak_hook_compare_bytes(void *caller_pc, const void *s1,
@@ -41,12 +41,6 @@ void __sanitizer_cov_trace_div4(uint32_t val);
 void __sanitizer_cov_trace_div8(uint64_t val);
 
 void __sanitizer_cov_trace_gep(uintptr_t idx);
-
-// Not called but required to link against libFuzzer.
-[[maybe_unused]] int LLVMFuzzerTestOneInput(const uint8_t *data,
-                                            std::size_t size) {
-  return 0;
-}
 }
 
 inline __attribute__((always_inline)) void *idToPc(jint id) {

@@ -6,7 +6,7 @@ cc_jni_library(
     visibility = ["//agent/src/jmh/java/com/code_intelligence/jazzer/runtime:__pkg__"],
     deps = [
         "//agent/src/jmh/java/com/code_intelligence/jazzer/runtime:fuzzer_callbacks.hdrs",
-        "//driver:sanitizer_hooks_with_pc",
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:sanitizer_hooks_with_pc",
         "@jazzer_libfuzzer//:libfuzzer_no_main",
     ],
 )

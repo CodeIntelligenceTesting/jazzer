@@ -19,6 +19,9 @@
 
 #include "fuzz_target_runner.h"
 
+#ifndef _WIN32
+#include <dlfcn.h>
+#endif
 #include <jni.h>
 
 #include <iostream>
@@ -26,7 +29,7 @@
 #include <string>
 
 #include "com_code_intelligence_jazzer_driver_FuzzTargetRunner.h"
-#include "driver/fuzzed_data_provider.h"
+#include "fuzzed_data_provider.h"
 
 extern "C" int LLVMFuzzerRunDriver(int *argc, char ***argv,
                                    int (*UserCb)(const uint8_t *Data,
@@ -36,6 +39,7 @@ namespace {
 bool gUseFuzzedDataProvider;
 jclass gRunner;
 jmethodID gRunOneId;
+JavaVM *gJavaVm;
 JNIEnv *gEnv;
 
 // A libFuzzer-registered callback that outputs the crashing input, but does
@@ -67,14 +71,8 @@ int testOneInput(const uint8_t *data, const std::size_t size) {
 
 namespace jazzer {
 void DumpJvmStackTraces() {
-  JavaVM *vm;
-  jsize num_vms;
-  JNI_GetCreatedJavaVMs(&vm, 1, &num_vms);
-  if (num_vms != 1) {
-    return;
-  }
   JNIEnv *env = nullptr;
-  if (vm->AttachCurrentThread(reinterpret_cast<void **>(&env), nullptr) !=
+  if (gJavaVm->AttachCurrentThread(reinterpret_cast<void **>(&env), nullptr) !=
       JNI_OK) {
     std::cerr << "WARN: AttachCurrentThread failed in DumpJvmStackTraces"
               << std::endl;
@@ -99,6 +97,7 @@ void DumpJvmStackTraces() {
 Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_startLibFuzzer(
     JNIEnv *env, jclass runner, jobjectArray args) {
   gEnv = env;
+  env->GetJavaVM(&gJavaVm);
   gRunner = reinterpret_cast<jclass>(env->NewGlobalRef(runner));
   gRunOneId = env->GetStaticMethodID(runner, "runOne", "([B)I");
   if (gRunOneId == nullptr) {
@@ -162,7 +161,11 @@ Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_startLibFuzzer(
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_printCrashingInput(
     JNIEnv *, jclass) {
-  gLibfuzzerPrintCrashingInput();
+  if (gLibfuzzerPrintCrashingInput == nullptr) {
+    std::cerr << "<not available>" << std::endl;
+  } else {
+    gLibfuzzerPrintCrashingInput();
+  }
 }
 
 [[maybe_unused]] void
@@ -171,25 +174,26 @@ Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner__1Exit(
   _Exit(exit_code);
 }
 
-// This symbol is defined by sanitizers if linked into Jazzer or in
-// sanitizer_symbols.cpp if no sanitizer is used.
-extern "C" void __sanitizer_set_death_callback(void (*)());
-
 // We apply a patch to libFuzzer to make it call this function instead of
 // __sanitizer_set_death_callback to pass us the death callback.
 extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
     void (*callback)()) {
   gLibfuzzerPrintCrashingInput = callback;
-  __sanitizer_set_death_callback([]() {
-    ::jazzer::DumpJvmStackTraces();
-    gLibfuzzerPrintCrashingInput();
-    // Ideally, we would be able to call driver_cleanup here to perform a
-    // graceful shutdown of the JVM. However, doing this directly results in a
-    // nested bug report by ASan or UBSan, likely because something about the
-    // stack/thread context in which they generate reports is incompatible with
-    // the JVM shutdown process. use_sigaltstack=0 does not help though, so this
-    // might be on us. The alternative of calling driver_cleanup in a new thread
-    // and joining on it results in an endless wait in DestroyJavaVM, even when
-    // the main thread is detached beforehand - it is not clear why.
-  });
+#ifndef _WIN32
+  void *sanitizer_set_death_callback =
+      dlsym(RTLD_DEFAULT, "__sanitizer_set_death_callback");
+  if (sanitizer_set_death_callback != nullptr) {
+    (reinterpret_cast<void (*)(void (*)())>(sanitizer_set_death_callback))(
+        []() {
+          ::jazzer::DumpJvmStackTraces();
+          gLibfuzzerPrintCrashingInput();
+          // Ideally, we would be able to perform a graceful shutdown of the
+          // JVM. However, doing this directly results in a nested bug report by
+          // ASan or UBSan, likely because something about the stack/thread
+          // context in which they generate reports is incompatible with the JVM
+          // shutdown process. use_sigaltstack=0 does not help though, so this
+          // might be on us.
+        });
+  }
+#endif
 }
