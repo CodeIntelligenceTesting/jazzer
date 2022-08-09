@@ -19,13 +19,13 @@ package com.code_intelligence.jazzer.agent
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hooks
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
-import com.code_intelligence.jazzer.runtime.ManifestUtils
 import com.code_intelligence.jazzer.runtime.NativeLibHooks
 import com.code_intelligence.jazzer.runtime.SignalHandler
 import com.code_intelligence.jazzer.runtime.TraceCmpHooks
 import com.code_intelligence.jazzer.runtime.TraceDivHooks
 import com.code_intelligence.jazzer.runtime.TraceIndirHooks
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
+import com.code_intelligence.jazzer.utils.ManifestUtils
 import java.io.File
 import java.lang.instrument.Instrumentation
 import java.net.URI

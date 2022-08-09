@@ -14,7 +14,7 @@
 
 @file:JvmName("ExceptionUtils")
 
-package com.code_intelligence.jazzer.runtime
+package com.code_intelligence.jazzer.utils
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow
 import java.lang.management.ManagementFactory
