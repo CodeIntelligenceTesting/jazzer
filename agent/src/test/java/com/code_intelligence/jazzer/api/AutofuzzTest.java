@@ -19,7 +19,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-import com.code_intelligence.jazzer.MockDriver;
 import java.util.Arrays;
 import java.util.Collections;
 import org.junit.BeforeClass;
@@ -44,11 +43,6 @@ public class AutofuzzTest {
     if (!arg1.equals("foobar") || arg2 != 42 || arg3 != 5 || arg4 == null) {
       throw new IllegalArgumentException();
     }
-  }
-
-  @BeforeClass
-  public static void loadMockDriver() {
-    MockDriver.load();
   }
 
   @Test

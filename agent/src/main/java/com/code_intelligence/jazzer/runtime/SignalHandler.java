@@ -14,11 +14,12 @@
 
 package com.code_intelligence.jazzer.runtime;
 
+import com.github.fmeum.rules_jni.RulesJni;
 import sun.misc.Signal;
 
 public final class SignalHandler {
   static {
-    System.loadLibrary("jazzer_initialize");
+    RulesJni.loadLibrary("jazzer_signal_handler", SignalHandler.class);
     Signal.handle(new Signal("INT"), sig -> handleInterrupt());
   }
 

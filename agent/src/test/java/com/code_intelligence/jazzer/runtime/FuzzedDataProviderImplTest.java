@@ -15,21 +15,10 @@
 package com.code_intelligence.jazzer.runtime;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.github.fmeum.rules_jni.RulesJni;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class FuzzedDataProviderImplTest {
-  static {
-    try {
-      RulesJni.loadLibrary(
-          "fuzzed_data_provider_standalone", "/com/code_intelligence/jazzer/driver");
-    } catch (Throwable t) {
-      t.printStackTrace();
-      System.exit(1);
-    }
-  }
-
   public static void main(String[] args) {
     FuzzedDataProviderImpl fuzzedDataProvider = new FuzzedDataProviderImpl();
     FuzzedDataProviderImpl.feed(INPUT_BYTES);

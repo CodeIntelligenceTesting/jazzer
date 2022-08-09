@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "fuzzed_data_provider.h"
+#include "driver/src/main/native/com/code_intelligence/jazzer/driver/fuzzed_data_provider.h"
 
 #include <cstddef>
 #include <cstdint>

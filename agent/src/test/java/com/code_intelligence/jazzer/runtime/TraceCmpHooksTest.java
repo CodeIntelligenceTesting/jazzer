@@ -16,7 +16,6 @@
 
 package com.code_intelligence.jazzer.runtime;
 
-import com.code_intelligence.jazzer.MockDriver;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -28,11 +27,6 @@ import org.junit.Test;
 
 public class TraceCmpHooksTest {
   private static final ExecutorService ES = Executors.newFixedThreadPool(5);
-
-  @BeforeClass
-  public static void setup() {
-    MockDriver.load();
-  }
 
   @Test
   public void cmpHookShouldHandleConcurrentModifications() throws InterruptedException {

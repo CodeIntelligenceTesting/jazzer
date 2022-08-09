@@ -18,10 +18,7 @@ import static com.code_intelligence.jazzer.instrumentor.PatchTestUtils.*;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.lang.invoke.MethodType.methodType;
 
-import com.code_intelligence.jazzer.MockDriver;
 import com.code_intelligence.jazzer.runtime.CoverageMap;
-import com.github.fmeum.rules_jni.RulesJni;
-import java.io.*;
 import java.lang.invoke.*;
 import java.nio.file.Files;
 import java.util.List;
@@ -37,11 +34,6 @@ import org.openjdk.jmh.annotations.*;
 @SuppressWarnings("unused")
 public class EdgeCoverageInstrumentation {
   private MethodHandle exampleMethod;
-
-  static {
-    MockDriver.load();
-    RulesJni.loadLibrary("coverage_tracker_jni", "/driver");
-  }
 
   @Setup
   public void setupInstrumentation() throws Throwable {

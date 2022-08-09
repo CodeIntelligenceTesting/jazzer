@@ -18,8 +18,12 @@ java_library(
 java_jni_library(
     name = "fuzz_target_runner",
     srcs = ["FuzzTargetRunner.java"],
+    native_libs = [
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
+    ],
     visibility = [
-        "//driver:__pkg__",
+        "//agent:__pkg__",
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
         "//driver/src/test:__subpackages__",
     ],
     deps = [

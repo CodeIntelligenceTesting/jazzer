@@ -1,4 +1,4 @@
-// Copyright 2022 Code Intelligence GmbH
+// Copyright 2021 Code Intelligence GmbH
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.code_intelligence.jazzer;
+// Suppress libFuzzer warnings about missing sanitizer methods in non-sanitizer
+// builds.
+extern "C" [[maybe_unused]] int __sanitizer_acquire_crash_state() { return 1; }
 
-import com.github.fmeum.rules_jni.RulesJni;
+namespace jazzer {
+void DumpJvmStackTraces();
+}
 
-public final class MockDriver {
-  public static void load() {
-    RulesJni.loadLibrary("mock_driver", "/driver");
-  }
+// Dump a JVM stack trace on timeouts.
+extern "C" [[maybe_unused]] void __sanitizer_print_stack_trace() {
+  jazzer::DumpJvmStackTraces();
 }

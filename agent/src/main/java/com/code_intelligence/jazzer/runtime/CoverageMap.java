@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.runtime;
 
+import com.github.fmeum.rules_jni.RulesJni;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,6 +25,10 @@ import sun.misc.Unsafe;
  * the counters are shared directly with native code.
  */
 final public class CoverageMap {
+  static {
+    RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
+  }
+
   private static final String ENV_MAX_NUM_COUNTERS = "JAZZER_MAX_NUM_COUNTERS";
 
   private static final int MAX_NUM_COUNTERS = System.getenv(ENV_MAX_NUM_COUNTERS) != null

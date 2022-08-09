@@ -18,7 +18,7 @@
 #include <cstdint>
 
 #include "com_code_intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks.h"
-#include "driver/sanitizer_hooks_with_pc.h"
+#include "sanitizer_hooks_with_pc.h"
 
 namespace {
 

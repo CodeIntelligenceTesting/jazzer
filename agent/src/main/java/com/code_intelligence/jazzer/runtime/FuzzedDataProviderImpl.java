@@ -15,20 +15,20 @@
 package com.code_intelligence.jazzer.runtime;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.github.fmeum.rules_jni.RulesJni;
 
 public class FuzzedDataProviderImpl implements FuzzedDataProvider {
-  public FuzzedDataProviderImpl() {}
-
-  private static native void nativeInit();
-
   static {
-    try {
-      System.loadLibrary("jazzer_initialize");
-    } catch (UnsatisfiedLinkError ignored) {
-      // Reached when loaded from the replayer.
+    // The replayer loads a standalone version of the FuzzedDataProvider.
+    if (System.getProperty("jazzer.is_replayer") == null) {
+      RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
     }
     nativeInit();
   }
+
+  public FuzzedDataProviderImpl() {}
+
+  private static native void nativeInit();
 
   // Resets the FuzzedDataProvider state to read from the beginning to the end of the last fuzzer
   // input.

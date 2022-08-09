@@ -27,7 +27,9 @@
 // associates it with particular coverage locations.
 //
 // Note: Only the lower 9 bits of the caller_pc argument are used by libFuzzer.
+#ifdef __cplusplus
 extern "C" {
+#endif
 void __sanitizer_cov_trace_cmp4_with_pc(void *caller_pc, uint32_t arg1,
                                         uint32_t arg2);
 void __sanitizer_cov_trace_cmp8_with_pc(void *caller_pc, uint64_t arg1,
@@ -42,4 +44,6 @@ void __sanitizer_cov_trace_div8_with_pc(void *caller_pc, uint64_t val);
 void __sanitizer_cov_trace_gep_with_pc(void *caller_pc, uintptr_t idx);
 
 void __sanitizer_cov_trace_pc_indir_with_pc(void *caller_pc, uintptr_t callee);
+#ifdef __cplusplus
 }
+#endif
