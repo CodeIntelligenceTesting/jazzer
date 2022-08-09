@@ -16,11 +16,9 @@
 
 package com.code_intelligence.jazzer.driver;
 
-import com.code_intelligence.jazzer.MockDriver;
 import com.code_intelligence.jazzer.api.Jazzer;
 import com.code_intelligence.jazzer.runtime.CoverageMap;
 import com.code_intelligence.jazzer.runtime.UnsafeProvider;
-import com.github.fmeum.rules_jni.RulesJni;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -31,11 +29,6 @@ import java.util.stream.Stream;
 import sun.misc.Unsafe;
 
 public class FuzzTargetRunnerTest {
-  static {
-    MockDriver.load();
-    RulesJni.loadLibrary("fuzz_target_runner_mock", FuzzTargetRunnerTest.class);
-  }
-
   private static final Pattern DEDUP_TOKEN_PATTERN =
       Pattern.compile("(?m)^DEDUP_TOKEN: ([0-9a-f]{16})$");
   private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();

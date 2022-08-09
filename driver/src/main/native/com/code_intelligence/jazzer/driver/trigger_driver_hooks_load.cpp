@@ -17,10 +17,12 @@
 
 #include <cstdlib>
 
-// Upgrades the current shared library to RTLD_GLOBAL so that its exported
-// symbols are used to resolve unresolved symbols in shared libraries loaded
-// afterwards.
-jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+// The native driver binary, if used, forwards all calls to native libFuzzer
+// hooks such as __sanitizer_cov_trace_cmp8 to the Jazzer JNI library. In order
+// to load the hook symbols when the library is ready, it needs to be passed a
+// handle - the JVM loads libraries with RTLD_LOCAL and thus their symbols
+// wouldn't be found as part of the global lookup procedure.
+jint JNI_OnLoad(JavaVM *, void *) {
   Dl_info info;
 
   if (!dladdr(reinterpret_cast<const void *>(&JNI_OnLoad), &info) ||
@@ -29,11 +31,19 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     abort();
   }
 
-  void *handle = dlopen(info.dli_fname, RTLD_NOLOAD | RTLD_GLOBAL | RTLD_NOW);
+  void *handle = dlopen(info.dli_fname, RTLD_NOLOAD | RTLD_LAZY);
   if (handle == nullptr) {
-    fprintf(stderr, "Failed to upgrade self to RTLD_GLOBAL: %s", dlerror());
+    fprintf(stderr, "Failed to dlopen self: %s\n", dlerror());
     abort();
   }
+
+  void *register_hooks = dlsym(RTLD_DEFAULT, "jazzer_initialize_native_hooks");
+  // We may be running without the native driver, so not finding this method is
+  // an expected error.
+  if (register_hooks) {
+    reinterpret_cast<void (*)(void *)>(register_hooks)(handle);
+  }
+
   dlclose(handle);
 
   return JNI_VERSION_1_8;

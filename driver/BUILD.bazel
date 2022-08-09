@@ -1,114 +1,10 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
 load("//bazel:cc.bzl", "cc_17_library")
-
-cc_library(
-    name = "sanitizer_hooks_with_pc",
-    hdrs = ["sanitizer_hooks_with_pc.h"],
-    visibility = [
-        "//agent/src/jmh/native/com/code_intelligence/jazzer/runtime:__pkg__",
-        "//agent/src/main/native/com/code_intelligence/jazzer/runtime:__pkg__",
-        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
-    ],
-)
-
-cc_library(
-    name = "fuzzed_data_provider",
-    srcs = [
-        "fuzzed_data_provider.cpp",
-    ],
-    hdrs = [
-        "fuzzed_data_provider.h",
-    ],
-    visibility = [
-        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
-        "//driver/src/test:__subpackages__",
-    ],
-    deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:fuzzed_data_provider.hdrs",
-        "@com_google_absl//absl/strings:str_format",
-        "@fmeum_rules_jni//jni",
-    ],
-    # Symbols may only be referenced dynamically via JNI.
-    alwayslink = True,
-)
-
-cc_library(
-    name = "signal_handler",
-    srcs = ["signal_handler.cpp"],
-    linkstatic = True,
-    visibility = [
-        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
-    ],
-    deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:signal_handler.hdrs",
-        "@fmeum_rules_jni//jni",
-    ],
-    # Symbols are only referenced dynamically via JNI.
-    alwayslink = True,
-)
-
-cc_jni_library(
-    name = "coverage_tracker_jni",
-    visibility = ["//agent/src/jmh/java/com/code_intelligence/jazzer/instrumentor:__pkg__"],
-    deps = [
-        ":coverage_tracker",
-        ":sanitizer_symbols_for_tests",
-    ],
-)
-
-cc_library(
-    name = "coverage_tracker",
-    srcs = ["coverage_tracker.cpp"],
-    hdrs = ["coverage_tracker.h"],
-    linkstatic = True,
-    visibility = [
-        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
-        "//driver/src/test:__subpackages__",
-    ],
-    deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:coverage_map.hdrs",
-    ],
-    # Symbols are only referenced dynamically via JNI.
-    alwayslink = True,
-)
-
-cc_library(
-    name = "libfuzzer_callbacks",
-    srcs = ["libfuzzer_callbacks.cpp"],
-    linkstatic = True,
-    visibility = [
-        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
-    ],
-    deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
-        "@com_google_absl//absl/strings",
-        "@fmeum_rules_jni//jni",
-    ] + select({
-        # We statically link the fuzzer callbacks on Windows since linking a shared library against
-        # symbols exported by a binary is difficult: We would need a .def file to export the symbols
-        # and create an interface library from the binary that is then linked into the shared
-        # library. This creates a conceptual (and real) cyclic dependency between the binary and the
-        # shared library since the binary data-depends on the agent and thus on the shared library.
-        # Since we only have to link the fuzzer callbacks dynamically to work around a JDK bug in an
-        # obsoleted feature (critical JNI natives) that is only meant to improve performance, we
-        # don't worry about this too much.
-        "@platforms//os:windows": [
-            "//agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_fuzzer_callbacks_for_static_linking",
-        ],
-        # On other platforms, dynamic linking is easy, so we load the fuzzer callbacks from a shared
-        # library at runtime. This is needed to let the JVM's JavaCritical_* lookup succeed, which
-        # does not correctly load statically linked symbols.
-        # See //agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_fuzzer_callbacks
-        # for the place this is linked into the agent instead.
-        "//conditions:default": [],
-    }),
-    # Symbols are only referenced dynamically via JNI.
-    alwayslink = True,
-)
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 
 cc_library(
     name = "jazzer_main",
-    srcs = [":jazzer_main.cpp"],
+    srcs = ["jazzer_main.cpp"],
     deps = [
         ":jvm_tooling_lib",
         "@com_google_absl//absl/strings",
@@ -119,25 +15,9 @@ cc_library(
 )
 
 cc_library(
-    name = "fuzz_target_runner",
-    srcs = ["fuzz_target_runner.cpp"],
-    hdrs = ["fuzz_target_runner.h"],
-    deps = [
-        ":fuzzed_data_provider",
-        "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner.hdrs",
-        "@fmeum_rules_jni//jni",
-    ],
-    # With sanitizers, symbols are only referenced dynamically via JNI.
-    alwayslink = True,
-)
-
-cc_library(
     name = "jvm_tooling_lib",
     srcs = ["jvm_tooling.cpp"],
     hdrs = ["jvm_tooling.h"],
-    # Needs to be linked statically for JNI_OnLoad_jazzer_initialize to be found
-    # by the JVM.
-    linkstatic = True,
     tags = [
         # Should be built through the cc_17_library driver_lib.
         "manual",
@@ -152,46 +32,81 @@ cc_library(
     ],
 )
 
+DYNAMIC_SYMBOLS_TO_EXPORT = [
+    "__sanitizer_cov_8bit_counters_init",
+    "__sanitizer_cov_pcs_init",
+    "__sanitizer_cov_trace_cmp1",
+    "__sanitizer_cov_trace_cmp4",
+    "__sanitizer_cov_trace_cmp4",
+    "__sanitizer_cov_trace_cmp8",
+    "__sanitizer_cov_trace_const_cmp1",
+    "__sanitizer_cov_trace_const_cmp4",
+    "__sanitizer_cov_trace_const_cmp4",
+    "__sanitizer_cov_trace_const_cmp8",
+    "__sanitizer_cov_trace_div4",
+    "__sanitizer_cov_trace_div8",
+    "__sanitizer_cov_trace_gep",
+    "__sanitizer_cov_trace_pc_indir",
+    "__sanitizer_cov_trace_switch",
+    "__sanitizer_weak_hook_memcmp",
+    "__sanitizer_weak_hook_memmem",
+    "__sanitizer_weak_hook_strcasecmp",
+    "__sanitizer_weak_hook_strcasestr",
+    "__sanitizer_weak_hook_strcmp",
+    "__sanitizer_weak_hook_strncasecmp",
+    "__sanitizer_weak_hook_strncmp",
+    "__sanitizer_weak_hook_strstr",
+    "bcmp",
+    "jazzer_initialize_native_hooks",
+    "memcmp",
+    "memmem",
+    "strcasecmp",
+    "strcasestr",
+    "strcmp",
+    "strncasecmp",
+    "strncmp",
+    "strstr",
+]
+
+cc_library(
+    name = "native_fuzzer_hooks",
+    srcs = ["native_fuzzer_hooks.c"],
+    linkopts = select({
+        "@platforms//os:linux": [
+            "-Wl,--export-dynamic-symbol=" + symbol
+            for symbol in DYNAMIC_SYMBOLS_TO_EXPORT
+        ] + [
+            "-ldl",
+        ],
+        "@platforms//os:macos": [
+            "-rdynamic",
+            "-ldl",
+        ],
+        "//conditions:default": [],
+    }),
+    target_compatible_with = SKIP_ON_WINDOWS,
+    deps = ["//driver/src/main/native/com/code_intelligence/jazzer/driver:sanitizer_hooks_with_pc"],
+    alwayslink = True,
+)
+
 cc_17_library(
-    name = "driver_lib",
-    linkstatic = True,
-    deps = [
-        # This includes an explicit list of all cc_library targets providing
-        # symbols for JNI dynamic linking.
-        ":coverage_tracker",
-        ":fuzz_target_runner",
-        ":fuzzed_data_provider",
-        ":jazzer_main",
-        ":libfuzzer_callbacks",
-        ":signal_handler",
-        "@jazzer_libfuzzer//:libfuzzer_no_main",
-    ],
+    name = "jazzer_main_lib",
+    deps = [":jazzer_main"],
     alwayslink = True,
 )
 
 cc_binary(
     name = "jazzer_driver",
-    srcs = [
-        # Defines symbols otherwise defined by sanitizers to prevent linker
-        # errors and print JVM stack traces.
-        # Windows-compatible replacement for __attribute__((weak)).
-        "sanitizer_symbols.cpp",
-    ],
     data = [
         "//agent:jazzer_agent_deploy",
     ],
     linkopts = select({
-        "@platforms//os:windows": [],
-        "//conditions:default": [
-            "-rdynamic",
-        ],
-    }) + select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "//conditions:default": [],
     }),
     linkstatic = True,
     visibility = ["//visibility:public"],
-    deps = [":driver_lib"],
+    deps = [":jazzer_main_lib"],
 )
 
 alias(
@@ -209,8 +124,7 @@ cc_binary(
     data = [
         "//agent:jazzer_agent_deploy",
     ],
-    linkopts = [
-    ] + select({
+    linkopts = select({
         "@platforms//os:windows": [
             # Sanitizer runtimes have to be linked manually on Windows:
             # https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/
@@ -220,7 +134,6 @@ cc_binary(
         "//conditions:default": [
             "-fsanitize=address",
             "-static-libsan",
-            "-rdynamic",
         ],
     }) + select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
@@ -228,11 +141,14 @@ cc_binary(
     }),
     linkstatic = True,
     visibility = ["//visibility:public"],
-    deps = [":driver_lib"] + select({
+    deps = [":jazzer_main_lib"] + select({
         # There is no static ASan runtime on macOS, so link to the dynamic
         # runtime library if on macOS and using the toolchain.
         ":using_toolchain_on_osx": ["@llvm_toolchain_llvm//:macos_asan_dynamic"],
         "//conditions:default": [],
+    }) + select({
+        "@platforms//os:windows": [],
+        "//conditions:default": [":native_fuzzer_hooks"],
     }),
 )
 
@@ -241,8 +157,7 @@ cc_binary(
     data = [
         "//agent:jazzer_agent_deploy",
     ],
-    linkopts = [
-    ] + select({
+    linkopts = select({
         "@platforms//os:windows": [
             # Sanitizer runtimes have to be linked manually on Windows:
             # https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/
@@ -254,7 +169,6 @@ cc_binary(
             # Link UBSan statically, even on macOS.
             "-static-libsan",
             "-fsanitize-link-c++-runtime",
-            "-rdynamic",
         ],
     }) + select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
@@ -262,30 +176,12 @@ cc_binary(
     }),
     linkstatic = True,
     visibility = ["//visibility:public"],
-    deps = [":driver_lib"],
-)
-
-cc_library(
-    name = "sanitizer_symbols_for_tests",
-    srcs = ["sanitizer_symbols_for_tests.cpp"],
-    visibility = ["//driver/src/test:__subpackages__"],
-    alwayslink = True,
-)
-
-# This JNI library can be loaded by Java-only tests to provide mock definitions
-# of the symbols exported by the real jazzer_driver.
-cc_jni_library(
-    name = "mock_driver",
-    srcs = select({
-        "@platforms//os:windows": [],
-        "//conditions:default": ["rtld_global_hack.cpp"],
-    }),
-    visibility = ["//agent/src/test/java:__subpackages__"],
     deps = [
-        ":coverage_tracker",
-        ":fuzzed_data_provider",
-        ":sanitizer_symbols_for_tests",
-    ],
+        ":jazzer_main_lib",
+    ] + select({
+        "@platforms//os:windows": [],
+        "//conditions:default": [":native_fuzzer_hooks"],
+    }),
 )
 
 cc_test(
@@ -302,7 +198,6 @@ cc_test(
     includes = ["."],
     deps = [
         ":jvm_tooling_lib",
-        ":sanitizer_symbols_for_tests",
         ":test_main",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
@@ -323,10 +218,9 @@ cc_test(
     ],
     includes = ["."],
     deps = [
-        ":fuzzed_data_provider",
         ":jvm_tooling_lib",
-        ":sanitizer_symbols_for_tests",
         ":test_main",
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:fuzzed_data_provider",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
         "@jazzer_com_github_gflags_gflags//:gflags",

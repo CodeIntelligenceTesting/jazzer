@@ -30,6 +30,7 @@ import com.code_intelligence.jazzer.runtime.RecordingFuzzedDataProvider;
 import com.code_intelligence.jazzer.runtime.SignalHandler;
 import com.code_intelligence.jazzer.utils.ExceptionUtils;
 import com.code_intelligence.jazzer.utils.ManifestUtils;
+import com.github.fmeum.rules_jni.RulesJni;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -54,6 +55,10 @@ import java.util.Set;
  * concurrently.
  */
 public final class FuzzTargetRunner {
+  static {
+    RulesJni.loadLibrary("jazzer_driver", FuzzTargetRunner.class);
+  }
+
   // Default value of the libFuzzer -error_exitcode flag.
   private static final int LIBFUZZER_ERROR_EXIT_CODE = 77;
   private static final String AUTOFUZZ_FUZZ_TARGET =

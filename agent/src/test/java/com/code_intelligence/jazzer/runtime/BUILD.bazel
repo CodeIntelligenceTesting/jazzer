@@ -7,8 +7,7 @@ java_test(
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:fuzzed_data_provider",
-        "//driver/src/main/native/com/code_intelligence/jazzer/driver:fuzzed_data_provider_standalone",
-        "@fmeum_rules_jni//jni/tools/native_loader",
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
     ],
 )
 
@@ -33,7 +32,7 @@ java_test(
     target_compatible_with = SKIP_ON_WINDOWS,
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime",
-        "//agent/src/test/java/com/code_intelligence/jazzer:MockDriver",
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
         "@maven//:junit_junit",
     ],
 )

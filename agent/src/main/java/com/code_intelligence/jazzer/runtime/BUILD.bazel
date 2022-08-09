@@ -1,6 +1,6 @@
-load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library", "jni_headers")
+load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
 
-java_library(
+java_jni_library(
     name = "fuzzed_data_provider",
     srcs = [
         "FuzzedDataProviderImpl.java",
@@ -9,66 +9,43 @@ java_library(
         "//agent/src/main/java/com/code_intelligence/jazzer/replay:__pkg__",
         "//agent/src/test/java/com/code_intelligence/jazzer/runtime:__pkg__",
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
     ],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
     ],
 )
 
-jni_headers(
-    name = "fuzzed_data_provider.hdrs",
-    lib = ":fuzzed_data_provider",
-    visibility = ["//driver:__pkg__"],
-)
-
-java_library(
+java_jni_library(
     name = "coverage_map",
     srcs = ["CoverageMap.java"],
     visibility = [
         "//agent/src/jmh/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
+        "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
         "//driver/src/test:__subpackages__",
-        "//driver/testdata:__pkg__",
     ],
     deps = [
         ":unsafe_provider",
     ],
 )
 
-jni_headers(
-    name = "coverage_map.hdrs",
-    lib = ":coverage_map",
-    visibility = ["//driver:__pkg__"],
-)
-
-java_library(
+java_jni_library(
     name = "signal_handler",
     srcs = ["SignalHandler.java"],
-    visibility = ["//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__"],
-)
-
-jni_headers(
-    name = "signal_handler.hdrs",
-    lib = ":signal_handler",
-    visibility = ["//driver:__pkg__"],
+    native_libs = ["//agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_signal_handler"],
+    visibility = [
+        "//agent/src/main/native/com/code_intelligence/jazzer/runtime:__pkg__",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
 )
 
 java_jni_library(
     name = "trace_data_flow_native_callbacks",
     srcs = ["TraceDataFlowNativeCallbacks.java"],
-    native_libs = select({
-        # On Windows, the fuzzer callbacks are statically linked into the driver instead (see
-        # //driver:jazzer_driver).
-        "@platforms//os:windows": [],
-        "//conditions:default": [
-            "//agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_fuzzer_callbacks",
-        ],
-    }),
     visibility = [
-        # For libFuzzer callbacks.
-        "//agent/src/main/native/com/code_intelligence/jazzer/runtime:__pkg__",
-        # For handleLibraryLoad.
-        "//driver:__pkg__",
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
     ],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/utils",

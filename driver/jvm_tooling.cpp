@@ -140,11 +140,6 @@ constexpr auto kPathSeparator = '\\';
 constexpr auto kPathSeparator = '/';
 #endif
 
-extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
-JNI_OnLoad_jazzer_initialize(JavaVM *vm, void *) {
-  return JNI_VERSION_1_8;
-}
-
 namespace {
 constexpr auto kAgentBazelRunfilesPath = "jazzer/agent/jazzer_agent_deploy.jar";
 constexpr auto kAgentFileName = "jazzer_agent_deploy.jar";
