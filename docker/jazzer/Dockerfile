@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:20.04 AS builder
+FROM gradle:7.4.2-jdk17-alpine AS builder
 
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y curl git python3 python-is-python3 openjdk-11-jdk-headless
+RUN apt-get update && apt-get install -y curl git python3 python-is-python3
 
 WORKDIR /root
 RUN curl -L https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/bazelisk-linux-amd64 -o /usr/bin/bazelisk && \

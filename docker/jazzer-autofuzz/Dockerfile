@@ -14,10 +14,9 @@
 
 FROM cifuzz/jazzer as jazzer
 
-FROM ubuntu:20.04
+FROM gradle:7.4.2-jdk17-alpine
 
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y curl openjdk-11-jdk-headless
+RUN apt-get update && apt-get install -y curl
 
 WORKDIR /app
 RUN curl -L 'https://github.com/coursier/coursier/releases/download/v2.0.16/coursier.jar' -o coursier.jar && \
