@@ -38,7 +38,6 @@ import java.lang.reflect.Modifier;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
@@ -59,16 +58,13 @@ public final class FuzzTargetRunner {
   private static final String FUZZER_TEST_ONE_INPUT = "fuzzerTestOneInput";
   private static final String FUZZER_INITIALIZE = "fuzzerInitialize";
   private static final String FUZZER_TEARDOWN = "fuzzerTearDown";
-  // A constant pool CONSTANT_Utf8_info entry should be able to hold data of size
-  // uint16, but somehow this does not seem to be the case and leads to invalid
-  // code crash reproducer code. Reducing the size by one resolves the problem.
-  private static final int DATA_CHUNK_MAX_LENGTH = Short.MAX_VALUE - 1;
 
   private static final Set<Long> ignoredTokens = new HashSet<>(Opt.ignore);
   private static final FuzzedDataProvider fuzzedDataProvider = new FuzzedDataProviderImpl();
   private static final Class<?> fuzzTargetClass;
   private static final MethodHandle fuzzTarget;
   public static final boolean useFuzzedDataProvider;
+  private static final ReproducerTemplate reproducerTemplate;
   private static long runCount = 0;
 
   static {
@@ -118,6 +114,7 @@ public final class FuzzTargetRunner {
     } catch (IllegalAccessException e) {
       throw new RuntimeException(e);
     }
+    reproducerTemplate = new ReproducerTemplate(fuzzTargetClass.getName(), useFuzzedDataProvider);
 
     Method initializeNoArgs = targetPublicStaticMethodOrNull(FUZZER_INITIALIZE);
     Method initializeWithArgs = targetPublicStaticMethodOrNull(FUZZER_INITIALIZE, String[].class);
@@ -307,17 +304,7 @@ public final class FuzzTargetRunner {
       base64Data = Base64.getEncoder().encodeToString(data);
     }
 
-    // The serialization of recorded FuzzedDataProvider invocations can get too long to be emitted
-    // into the template as a single String literal. This is mitigated by chunking the data and
-    // concatenating it again in the generated code.
-    ArrayList<String> chunks = new ArrayList<>();
-    for (int i = 0; i <= base64Data.length() / DATA_CHUNK_MAX_LENGTH; i++) {
-      chunks.add(base64Data.substring(i * DATA_CHUNK_MAX_LENGTH,
-          Math.min((i + 1) * DATA_CHUNK_MAX_LENGTH, base64Data.length())));
-    }
-    String chunkedBase64Data = String.join("\", \"", chunks);
-    ReproducerTemplates.dumpReproducer(
-        chunkedBase64Data, dataSha1, fuzzTargetClass.getName(), useFuzzedDataProvider);
+    reproducerTemplate.dumpReproducer(base64Data, dataSha1);
   }
 
   private static Method targetPublicStaticMethodOrNull(String name, Class<?>... parameterTypes) {
