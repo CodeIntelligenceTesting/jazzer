@@ -21,6 +21,7 @@
 
 #include <jni.h>
 
+#include <iostream>
 #include <limits>
 #include <string>
 
@@ -73,6 +74,8 @@ void DumpJvmStackTraces() {
   JNIEnv *env = nullptr;
   if (vm->AttachCurrentThread(reinterpret_cast<void **>(&env), nullptr) !=
       JNI_OK) {
+    std::cerr << "WARN: AttachCurrentThread failed in DumpJvmStackTraces"
+              << std::endl;
     return;
   }
   jmethodID dumpStack =
