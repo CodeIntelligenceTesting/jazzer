@@ -197,3 +197,15 @@ java_fuzz_target_test(
     ],
     target_class = "com.example.BytesMemoryLeakFuzzer",
 )
+
+java_fuzz_target_test(
+    name = "SeedFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/SeedFuzzer.java"],
+    expect_crash = False,
+    fuzzer_args = [
+        "-runs=0",
+        "-seed=1234567",
+    ],
+    target_class = "com.example.SeedFuzzer",
+)
