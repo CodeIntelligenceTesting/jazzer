@@ -43,6 +43,7 @@ public final class Opt {
   // Default to false if hooks is false to mimic the original behavior of the native fuzz target
   // runner, but still support hooks = false && dedup = true.
   public static boolean dedup = boolSetting("dedup", hooks);
+  public static final String idSyncFile = stringSetting("id_sync_file", null);
   public static final Set<Long> ignore =
       Collections.unmodifiableSet(stringListSetting("ignore", ',')
                                       .stream()

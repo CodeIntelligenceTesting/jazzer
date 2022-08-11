@@ -35,7 +35,7 @@ class JVM {
  public:
   // Creates a JVM instance with default options + options that were provided as
   // command line flags.
-  explicit JVM(std::string_view executable_path, std::string_view seed);
+  explicit JVM(std::string_view executable_path);
 
   // Destroy the running JVM instance.
   ~JVM();
