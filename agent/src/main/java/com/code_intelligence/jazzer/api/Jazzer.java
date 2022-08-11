@@ -29,7 +29,7 @@ final public class Jazzer {
    * between multiple possible mutations they could guide the fuzzer towards.
    * Hooks <b>must not</b> base the decision whether or not to report a finding
    * on this number as this will make findings non-reproducible.
-   *
+   * <p>
    * This is the same number that libFuzzer uses as a seed internally, which
    * makes it possible to deterministically reproduce a previous fuzzing run by
    * supplying the seed value printed by libFuzzer as the value of the
@@ -160,7 +160,7 @@ final public class Jazzer {
   /**
    * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
    * using only public methods available on the classpath.
-   *
+   * <p>
    * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
    * meaningful ways for a number of reasons.
    *
@@ -190,7 +190,7 @@ final public class Jazzer {
   /**
    * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
    * using only public methods available on the classpath.
-   *
+   * <p>
    * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
    * meaningful ways for a number of reasons.
    *
@@ -220,7 +220,7 @@ final public class Jazzer {
   /**
    * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
    * using only public methods available on the classpath.
-   *
+   * <p>
    * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
    * meaningful ways for a number of reasons.
    *
@@ -250,7 +250,7 @@ final public class Jazzer {
   /**
    * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
    * using only public methods available on the classpath.
-   *
+   * <p>
    * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
    * meaningful ways for a number of reasons.
    *
@@ -281,7 +281,7 @@ final public class Jazzer {
   /**
    * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
    * using only public methods available on the classpath.
-   *
+   * <p>
    * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
    * meaningful ways for a number of reasons.
    *
@@ -312,7 +312,7 @@ final public class Jazzer {
   /**
    * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
    * using only public methods available on the classpath.
-   *
+   * <p>
    * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
    * meaningful ways for a number of reasons.
    *
@@ -337,7 +337,7 @@ final public class Jazzer {
   /**
    * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
    * using only public methods available on the classpath.
-   *
+   * <p>
    * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
    * meaningful ways for a number of reasons.
    *
@@ -362,7 +362,7 @@ final public class Jazzer {
   /**
    * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
    * using only public methods available on the classpath.
-   *
+   * <p>
    * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
    * meaningful ways for a number of reasons.
    *
@@ -387,7 +387,7 @@ final public class Jazzer {
   /**
    * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
    * using only public methods available on the classpath.
-   *
+   * <p>
    * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
    * meaningful ways for a number of reasons.
    *
@@ -413,7 +413,7 @@ final public class Jazzer {
   /**
    * Attempts to invoke {@code func} with arguments created automatically from the fuzzer input
    * using only public methods available on the classpath.
-   *
+   * <p>
    * <b>Note:</b> This function is inherently heuristic and may fail to execute {@code func} in
    * meaningful ways for a number of reasons.
    *
@@ -439,7 +439,7 @@ final public class Jazzer {
   /**
    * Attempts to construct an instance of {@code type} from the fuzzer input using only public
    * methods available on the classpath.
-   *
+   * <p>
    * <b>Note:</b> This function is inherently heuristic and may fail to return meaningful values for
    * a variety of reasons.
    *
@@ -464,7 +464,7 @@ final public class Jazzer {
   /**
    * Instructs the fuzzer to guide its mutations towards making {@code current} equal to {@code
    * target}.
-   *
+   * <p>
    * If the relation between the raw fuzzer input and the value of {@code current} is relatively
    * complex, running the fuzzer with the argument {@code -use_value_profile=1} may be necessary to
    * achieve equality.
@@ -487,7 +487,7 @@ final public class Jazzer {
   /**
    * Instructs the fuzzer to guide its mutations towards making {@code current} equal to {@code
    * target}.
-   *
+   * <p>
    * If the relation between the raw fuzzer input and the value of {@code current} is relatively
    * complex, running the fuzzer with the argument {@code -use_value_profile=1} may be necessary to
    * achieve equality.
@@ -510,7 +510,7 @@ final public class Jazzer {
   /**
    * Instructs the fuzzer to guide its mutations towards making {@code haystack} contain {@code
    * needle} as a substring.
-   *
+   * <p>
    * If the relation between the raw fuzzer input and the value of {@code haystack} is relatively
    * complex, running the fuzzer with the argument {@code -use_value_profile=1} may be necessary to
    * satisfy the substring check.
@@ -534,12 +534,12 @@ final public class Jazzer {
   /**
    * Instructs the fuzzer to attain as many possible values for the absolute value of {@code state}
    * as possible.
-   *
+   * <p>
    * Call this function from a fuzz target or a hook to help the fuzzer track partial progress
    * (e.g. by passing the length of a common prefix of two lists that should become equal) or
    * explore different values of state that is not directly related to code coverage (see the
    * MazeFuzzer example).
-   *
+   * <p>
    * <b>Note:</b> This hint only takes effect if the fuzzer is run with the argument
    * {@code -use_value_profile=1}.
    *
@@ -584,7 +584,7 @@ final public class Jazzer {
 
   /**
    * Make Jazzer report the provided {@link Throwable} as a finding.
-   *
+   * <p>
    * <b>Note:</b> This method must only be called from a method hook. In a
    * fuzz target, simply throw an exception to trigger a finding.
    * @param finding the finding that Jazzer should report
@@ -609,7 +609,7 @@ final public class Jazzer {
 
   /**
    * Register a callback to be executed right before the fuzz target is executed for the first time.
-   *
+   * <p>
    * This can be used to disable hooks until after Jazzer has been fully initializing, e.g. to
    * prevent Jazzer internals from triggering hooks on Java standard library classes.
    *

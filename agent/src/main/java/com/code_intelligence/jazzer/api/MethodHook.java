@@ -88,7 +88,7 @@ import java.lang.invoke.MethodType;
  * <p>
  * Return value: the value that should take the role of the value the target
  * method would have returned
- *
+ * <p>
  * <dt><span class="strong">{@link HookType#AFTER}</span>
  * <dd>
  * <pre>{@code
