@@ -36,13 +36,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -209,12 +208,8 @@ public final class FuzzTargetRunner {
   /*
    * Starts libFuzzer via LLVMFuzzerRunDriver.
    */
-  static int startLibFuzzer(String[] args) {
-    // Convert the arguments to UTF8 before passing them on to JNI as there are no JNI functions to
-    // get (unmodified) UTF-8 out of a jstring.
-    return startLibFuzzer(Arrays.stream(args)
-        .map(str -> str.getBytes(StandardCharsets.UTF_8))
-        .toArray(byte[][] ::new));
+  static int startLibFuzzer(List<String> args) {
+    return startLibFuzzer(Utils.toNativeArgs(args));
   }
 
   private static void shutdown() {

@@ -17,7 +17,7 @@
  * 1. defines default settings for ASan and UBSan;
  * 2. preprocesses the command-line arguments passed to libFuzzer;
  * 3. starts a JVM;
- * 4. passes control to the fuzz target runner.
+ * 4. passes control to the Java-part of the driver.
  */
 
 #include <rules_jni.h>
@@ -78,8 +78,8 @@ namespace {
 const std::string kUsageMessage =
     R"(Test java fuzz targets using libFuzzer. Usage:
   jazzer --cp=<java_class_path> --target_class=<fuzz_target_class> <libfuzzer_arguments...>)";
-const std::string kFuzzTargetRunnerClassName =
-    "com/code_intelligence/jazzer/driver/FuzzTargetRunner";
+const std::string kDriverClassName =
+    "com/code_intelligence/jazzer/driver/Driver";
 
 std::string GetNewTempFilePath() {
   auto temp_dir = std::filesystem::temp_directory_path();
@@ -100,14 +100,13 @@ std::string GetNewTempFilePath() {
 int StartLibFuzzer(std::unique_ptr<jazzer::JVM> jvm,
                    std::vector<std::string> argv) {
   JNIEnv &env = jvm->GetEnv();
-  jclass runner = env.FindClass(kFuzzTargetRunnerClassName.c_str());
+  jclass runner = env.FindClass(kDriverClassName.c_str());
   if (runner == nullptr) {
     env.ExceptionDescribe();
     return 1;
   }
-  jmethodID startFuzzer =
-      env.GetStaticMethodID(runner, "startLibFuzzer", "([[B)I");
-  if (startFuzzer == nullptr) {
+  jmethodID startDriver = env.GetStaticMethodID(runner, "start", "([[B)I");
+  if (startDriver == nullptr) {
     env.ExceptionDescribe();
     return 1;
   }
@@ -128,7 +127,7 @@ int StartLibFuzzer(std::unique_ptr<jazzer::JVM> jvm,
       env.ExceptionDescribe();
       return 1;
     }
-    // startFuzzer expects UTF-8 encoded strings that are not null-terminated.
+    // startDriver expects UTF-8 encoded strings that are not null-terminated.
     env.SetByteArrayRegion(arg, 0, len,
                            reinterpret_cast<const jbyte *>(argv[i].data()));
     if (env.ExceptionCheck()) {
@@ -142,7 +141,7 @@ int StartLibFuzzer(std::unique_ptr<jazzer::JVM> jvm,
     }
     env.DeleteLocalRef(arg);
   }
-  int res = env.CallStaticIntMethod(runner, startFuzzer, args);
+  int res = env.CallStaticIntMethod(runner, startDriver, args);
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     return 1;
