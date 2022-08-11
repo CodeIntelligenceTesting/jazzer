@@ -81,6 +81,7 @@ public final class FuzzTargetRunner {
       if (notBootstrapLoader == null) {
         notBootstrapLoader = ClassLoader.getSystemClassLoader();
       }
+      notBootstrapLoader.setDefaultAssertionStatus(true);
       fuzzTargetClass = Class.forName(targetClassName, false, notBootstrapLoader);
     } catch (ClassNotFoundException e) {
       err.print("ERROR: ");
