@@ -23,4 +23,6 @@
     -e '^com/code_intelligence/$' \
     -e '^com/code_intelligence/jazzer/' \
     -e '^jaz/' \
+    -e '^win32-x86/' \
+    -e '^win32-x86-64/' \
     -e '^META-INF/'

@@ -214,8 +214,11 @@ public final class FuzzTargetRunner {
 
   /*
    * Starts libFuzzer via LLVMFuzzerRunDriver.
+   *
+   * Note: Must be public rather than package-private as it is loaded in a different class loader
+   * than Driver.
    */
-  static int startLibFuzzer(List<String> args) {
+  public static int startLibFuzzer(List<String> args) {
     return startLibFuzzer(Utils.toNativeArgs(args));
   }
 

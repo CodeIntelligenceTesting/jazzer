@@ -34,6 +34,7 @@ import java.util.stream.Stream;
  * <p>Every public field should be deeply immutable.
  */
 public final class Opt {
+  public static final String agentArgs = stringSetting("agent_args", "");
   public static final String autofuzz = stringSetting("autofuzz", "");
   public static final List<String> autofuzzIgnore = stringListSetting("autofuzz_ignore", ',');
   public static final String coverageDump = stringSetting("coverage_dump", "");
