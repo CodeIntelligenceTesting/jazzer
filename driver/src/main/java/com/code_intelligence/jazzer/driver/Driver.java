@@ -33,6 +33,9 @@ public class Driver {
   private static int start(byte[][] nativeArgs) throws IOException {
     List<String> args = Utils.fromNativeArgs(nativeArgs);
 
+    System.setProperty(
+        "jazzer.use_value_profile", Boolean.toString(args.contains("-use_value_profile=1")));
+
     final boolean spawnsSubprocesses = args.stream().anyMatch(
         arg -> arg.startsWith("-fork=") || arg.startsWith("-jobs=") || arg.startsWith("-merge="));
     if (spawnsSubprocesses) {

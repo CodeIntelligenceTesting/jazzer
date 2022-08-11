@@ -46,7 +46,6 @@ public final class Opt {
   public static final List<String> customHooks = stringListSetting("custom_hooks");
   public static final List<String> disabledHooks = stringListSetting("disabled_hooks");
   public static final String dumpClassesDir = stringSetting("dump_classes_dir", "");
-  public static final boolean fakePcs = boolSetting("fake_pcs", false);
   public static final boolean hooks = boolSetting("hooks", true);
   public static final String idSyncFile = stringSetting("id_sync_file", null);
   public static final List<String> instrumentationIncludes =
@@ -61,6 +60,7 @@ public final class Opt {
   public static final String reproducerPath = stringSetting("reproducer_path", ".");
   public static final String targetClass = stringSetting("target_class", "");
   public static final List<String> trace = stringListSetting("trace");
+  public static final boolean useValueProfile = boolSetting("use_value_profile", false);
 
   // The values of these settings depend on autofuzz.
   public static final List<String> targetArgs = autofuzz.isEmpty()
@@ -73,6 +73,9 @@ public final class Opt {
   // Default to false if hooks is false to mimic the original behavior of the native fuzz target
   // runner, but still support hooks = false && dedup = true.
   public static final boolean dedup = boolSetting("dedup", hooks);
+
+  // Default to the value of libFuzzers -use_value_profile flag.
+  public static final boolean fakePcs = boolSetting("fake_pcs", useValueProfile);
 
   static {
     if (!targetClass.isEmpty() && !autofuzz.isEmpty()) {

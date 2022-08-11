@@ -197,7 +197,7 @@ std::string getInstrumentorAgentPath(std::string_view executable_path) {
 }
 
 std::vector<std::string> optsAsDefines() {
-  return {
+  std::vector<std::string> defines{
       absl::StrFormat("-Djazzer.target_class=%s", FLAGS_target_class),
       absl::StrFormat("-Djazzer.target_args=%s", FLAGS_target_args),
       absl::StrFormat("-Djazzer.keep_going=%d", FLAGS_keep_going),
@@ -209,8 +209,6 @@ std::vector<std::string> optsAsDefines() {
       absl::StrFormat("-Djazzer.autofuzz=%s", FLAGS_autofuzz),
       absl::StrFormat("-Djazzer.autofuzz_ignore=%s", FLAGS_autofuzz_ignore),
       absl::StrFormat("-Djazzer.hooks=%s", FLAGS_hooks ? "true" : "false"),
-      absl::StrFormat("-Djazzer.fake_pcs=%s",
-                      FLAGS_fake_pcs ? "true" : "false"),
       absl::StrFormat("-Djazzer.id_sync_file=%s", FLAGS_id_sync_file),
       absl::StrFormat("-Djazzer.instrumentation_includes=%s",
                       FLAGS_instrumentation_includes),
@@ -225,6 +223,11 @@ std::vector<std::string> optsAsDefines() {
       absl::StrFormat("-Djazzer.trace=%s", FLAGS_trace),
       absl::StrFormat("-Djazzer.dump_classes_dir=%s", FLAGS_dump_classes_dir),
   };
+  if (!gflags::GetCommandLineFlagInfoOrDie("fake_pcs").is_default) {
+    defines.emplace_back(absl::StrFormat("-Djazzer.fake_pcs=%s",
+                                         FLAGS_fake_pcs ? "true" : "false"));
+  }
+  return defines;
 }
 
 // Splits a string at the ARG_SEPARATOR unless it is escaped with a backslash.

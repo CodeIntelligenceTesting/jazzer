@@ -15,9 +15,8 @@
 /*
  * Jazzer's native main function, which:
  * 1. defines default settings for ASan and UBSan;
- * 2. preprocesses the command-line arguments passed to libFuzzer;
- * 3. starts a JVM;
- * 4. passes control to the Java-part of the driver.
+ * 2. starts a JVM;
+ * 3. passes control to the Java-part of the driver.
  */
 
 #include <rules_jni.h>
@@ -37,9 +36,6 @@ using namespace std::string_literals;
 
 // Defined by glog
 DECLARE_bool(log_prefix);
-
-// Defined in libfuzzer_callbacks.cpp
-DECLARE_bool(fake_pcs);
 
 namespace {
 bool is_asan_active = false;
@@ -134,27 +130,18 @@ int main(int argc, char **argv) {
 
   const auto argv_end = argv + argc;
 
-  // Parse libFuzzer flags to determine Jazzer flag defaults before letting
-  // gflags parse the command line.
-  if (std::find(argv, argv_end, "-use_value_profile=1"s) != argv_end) {
-    FLAGS_fake_pcs = true;
-  }
-
-  {
-    // All libFuzzer flags start with a single dash, our arguments all start
-    // with a double dash. We can thus filter out the arguments meant for gflags
-    // by taking only those with a leading double dash.
-    std::vector<char *> our_args = {*argv};
-    std::copy_if(argv, argv_end, std::back_inserter(our_args),
-                 [](const auto arg) {
-                   return absl::StartsWith(std::string(arg), "--");
-                 });
-    int our_argc = our_args.size();
-    char **our_argv = our_args.data();
-    // Let gflags consume its flags, but keep them in the argument list in case
-    // libFuzzer forwards the command line (e.g. with -jobs or -minimize_crash).
-    gflags::ParseCommandLineFlags(&our_argc, &our_argv, false);
-  }
+  // All libFuzzer flags start with a single dash, our arguments all start
+  // with a double dash. We can thus filter out the arguments meant for gflags
+  // by taking only those with a leading double dash.
+  std::vector<char *> our_args = {*argv};
+  std::copy_if(
+      argv, argv_end, std::back_inserter(our_args),
+      [](const auto arg) { return absl::StartsWith(std::string(arg), "--"); });
+  int our_argc = our_args.size();
+  char **our_argv = our_args.data();
+  // Let gflags consume its flags, but keep them in the argument list in case
+  // libFuzzer forwards the command line (e.g. with -jobs or -minimize_crash).
+  gflags::ParseCommandLineFlags(&our_argc, &our_argv, false);
 
   if (is_asan_active) {
     std::cerr << "WARN: Jazzer is not compatible with LeakSanitizer yet. Leaks "
