@@ -43,7 +43,10 @@ java_library(
 java_library(
     name = "opt",
     srcs = ["Opt.java"],
-    visibility = ["//driver/src/test/java/com/code_intelligence/jazzer/driver:__pkg__"],
+    visibility = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:__pkg__",
+        "//driver/src/test/java/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
 )
 
 java_library(

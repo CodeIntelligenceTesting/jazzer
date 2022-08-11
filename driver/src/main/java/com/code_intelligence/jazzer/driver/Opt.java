@@ -33,11 +33,12 @@ import java.util.stream.Stream;
  *
  * <p>Every public field should be deeply immutable.
  */
-final class Opt {
+public final class Opt {
   public static final String autofuzz = stringSetting("autofuzz", "");
   public static final List<String> autofuzzIgnore = stringListSetting("autofuzz_ignore", ',');
   public static final String coverageDump = stringSetting("coverage_dump", "");
   public static final String coverageReport = stringSetting("coverage_report", "");
+  public static final boolean fakePcs = boolSetting("fake_pcs", false);
   public static final boolean hooks = boolSetting("hooks", true);
   // Default to false if hooks is false to mimic the original behavior of the native fuzz target
   // runner, but still support hooks = false && dedup = true.

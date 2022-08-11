@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.runtime;
 
+import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.utils.Utils;
 import com.github.fmeum.rules_jni.RulesJni;
 import java.lang.reflect.Executable;
@@ -28,10 +29,6 @@ final public class TraceDataFlowNativeCallbacks {
     }
   }
 
-  // Making this static final ensures that the JIT will eliminate the dead branch of a construct
-  // such as:
-  // if (USE_FAKE_PCS) ... else ...
-  private static final boolean USE_FAKE_PCS = useFakePcs();
   // Note that we are not encoding as modified UTF-8 here: The FuzzedDataProvider transparently
   // converts CESU8 into modified UTF-8 by coding null bytes on two bytes. Since the fuzzer is more
   // likely to insert literal null bytes, having both the fuzzer input and the reported string
@@ -41,7 +38,7 @@ final public class TraceDataFlowNativeCallbacks {
 
   /* trace-cmp */
   public static void traceCmpInt(int arg1, int arg2, int pc) {
-    if (USE_FAKE_PCS) {
+    if (Opt.fakePcs) {
       traceCmpIntWithPc(arg1, arg2, pc);
     } else {
       traceCmpInt(arg1, arg2);
@@ -49,7 +46,7 @@ final public class TraceDataFlowNativeCallbacks {
   }
 
   public static void traceConstCmpInt(int arg1, int arg2, int pc) {
-    if (USE_FAKE_PCS) {
+    if (Opt.fakePcs) {
       traceConstCmpIntWithPc(arg1, arg2, pc);
     } else {
       traceConstCmpInt(arg1, arg2);
@@ -57,7 +54,7 @@ final public class TraceDataFlowNativeCallbacks {
   }
 
   public static void traceCmpLong(long arg1, long arg2, int pc) {
-    if (USE_FAKE_PCS) {
+    if (Opt.fakePcs) {
       traceCmpLongWithPc(arg1, arg2, pc);
     } else {
       traceCmpLong(arg1, arg2);
@@ -65,7 +62,7 @@ final public class TraceDataFlowNativeCallbacks {
   }
 
   public static void traceSwitch(long val, long[] cases, int pc) {
-    if (USE_FAKE_PCS) {
+    if (Opt.fakePcs) {
       traceSwitchWithPc(val, cases, pc);
     } else {
       traceSwitch(val, cases);
@@ -84,7 +81,7 @@ final public class TraceDataFlowNativeCallbacks {
 
   /* trace-div */
   public static void traceDivInt(int val, int pc) {
-    if (USE_FAKE_PCS) {
+    if (Opt.fakePcs) {
       traceDivIntWithPc(val, pc);
     } else {
       traceDivInt(val);
@@ -92,7 +89,7 @@ final public class TraceDataFlowNativeCallbacks {
   }
 
   public static void traceDivLong(long val, int pc) {
-    if (USE_FAKE_PCS) {
+    if (Opt.fakePcs) {
       traceDivLongWithPc(val, pc);
     } else {
       traceDivLong(val);
@@ -101,7 +98,7 @@ final public class TraceDataFlowNativeCallbacks {
 
   /* trace-gep */
   public static void traceGep(long val, int pc) {
-    if (USE_FAKE_PCS) {
+    if (Opt.fakePcs) {
       traceGepWithPc(val, pc);
     } else {
       traceGep(val);
@@ -110,7 +107,7 @@ final public class TraceDataFlowNativeCallbacks {
 
   /* indirect-calls */
   public static void tracePcIndir(int callee, int caller) {
-    if (!USE_FAKE_PCS) {
+    if (!Opt.fakePcs) {
       // Without fake PCs, tracePcIndir will not record the relation between callee and pc, which
       // makes it useless.
       return;
@@ -119,7 +116,7 @@ final public class TraceDataFlowNativeCallbacks {
   }
 
   public static void traceReflectiveCall(Executable callee, int pc) {
-    if (!USE_FAKE_PCS) {
+    if (!Opt.fakePcs) {
       // Without fake PCs, tracePcIndir will not record the relation between callee and pc, which
       // makes it useless.
       return;
@@ -164,14 +161,6 @@ final public class TraceDataFlowNativeCallbacks {
     // libFuzzer string hooks only ever consume the first 64 bytes, so we can definitely cut the
     // string off after 64 characters.
     return str.substring(0, Math.min(str.length(), 64)).getBytes(FUZZED_DATA_CHARSET);
-  }
-
-  private static boolean useFakePcs() {
-    String rawFakePcs = System.getProperty("jazzer.fake_pcs");
-    if (rawFakePcs == null) {
-      return false;
-    }
-    return Boolean.parseBoolean(rawFakePcs);
   }
 
   private static native void traceStrstr0(byte[] needle, int pc);
