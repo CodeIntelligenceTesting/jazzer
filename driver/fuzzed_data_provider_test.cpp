@@ -115,7 +115,7 @@ class FuzzedDataProviderTest : public ::testing::Test {
     Runfiles* runfiles = Runfiles::CreateForTest();
     FLAGS_cp = runfiles->Rlocation(FLAGS_cp);
 
-    jvm_ = std::make_unique<JVM>("test_executable", "1234");
+    jvm_ = std::make_unique<JVM>("test_executable");
   }
 
   static void TearDownTestCase() { jvm_.reset(nullptr); }
