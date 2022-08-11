@@ -11,7 +11,6 @@ kt_jvm_library(
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime",
-        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:signal_handler",
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:opt",
     ],
 )

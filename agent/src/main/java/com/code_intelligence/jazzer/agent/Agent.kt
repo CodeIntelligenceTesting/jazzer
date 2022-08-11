@@ -21,7 +21,6 @@ import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hooks
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.runtime.NativeLibHooks
-import com.code_intelligence.jazzer.runtime.SignalHandler
 import com.code_intelligence.jazzer.runtime.TraceCmpHooks
 import com.code_intelligence.jazzer.runtime.TraceDivHooks
 import com.code_intelligence.jazzer.runtime.TraceIndirHooks
@@ -183,6 +182,4 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             println("WARN: ${classesToRetransform.joinToString()}")
         }
     }
-
-    SignalHandler.initialize()
 }
