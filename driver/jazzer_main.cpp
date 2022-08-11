@@ -24,15 +24,11 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
-#include <random>
 #include <string>
 #include <vector>
 
 #include "absl/strings/match.h"
-#include "absl/strings/str_format.h"
-#include "absl/strings/strip.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "jvm_tooling.h"
@@ -41,15 +37,6 @@ using namespace std::string_literals;
 
 // Defined by glog
 DECLARE_bool(log_prefix);
-
-// Defined in jvm_tooling.cpp
-DECLARE_string(id_sync_file);
-
-// Defined in fuzz_target_runner.cpp
-DECLARE_string(coverage_report);
-
-// Defined in fuzz_target_runner.cpp
-DECLARE_string(coverage_dump);
 
 namespace {
 bool is_asan_active = false;
@@ -80,22 +67,6 @@ const std::string kUsageMessage =
   jazzer --cp=<java_class_path> --target_class=<fuzz_target_class> <libfuzzer_arguments...>)";
 const std::string kDriverClassName =
     "com/code_intelligence/jazzer/driver/Driver";
-
-std::string GetNewTempFilePath() {
-  auto temp_dir = std::filesystem::temp_directory_path();
-
-  std::string temp_filename_suffix(32, '\0');
-  std::random_device rng;
-  std::uniform_int_distribution<short> dist(0, 'z' - 'a');
-  std::generate_n(temp_filename_suffix.begin(), temp_filename_suffix.length(),
-                  [&rng, &dist] { return static_cast<char>('a' + dist(rng)); });
-
-  auto temp_path = temp_dir / ("jazzer-" + temp_filename_suffix);
-  if (std::filesystem::exists(temp_path))
-    throw std::runtime_error("Random temp file path exists: " +
-                             temp_path.string());
-  return temp_path.string();
-}
 
 int StartLibFuzzer(std::unique_ptr<jazzer::JVM> jvm,
                    std::vector<std::string> argv) {
@@ -176,81 +147,12 @@ int main(int argc, char **argv) {
     gflags::ParseCommandLineFlags(&our_argc, &our_argv, false);
   }
 
-  // The potentially modified command line arguments passed to libFuzzer at the
-  // end of this function.
-  std::vector<std::string> modified_argv =
-      std::vector<std::string>(argv, argv_end);
-
-  bool spawns_subprocesses = false;
-  if (std::any_of(argv, argv_end, [](std::string_view arg) {
-        return absl::StartsWith(arg, "-fork=") ||
-               absl::StartsWith(arg, "-jobs=") ||
-               absl::StartsWith(arg, "-merge=");
-      })) {
-    spawns_subprocesses = true;
-    if (!FLAGS_coverage_report.empty()) {
-      LOG(WARNING) << "WARN: --coverage_report does not support parallel "
-                      "fuzzing and has been disabled";
-      FLAGS_coverage_report = "";
-    }
-    if (!FLAGS_coverage_dump.empty()) {
-      LOG(WARNING) << "WARN: --coverage_dump does not support parallel "
-                      "fuzzing and has been disabled";
-      FLAGS_coverage_dump = "";
-    }
-    if (FLAGS_id_sync_file.empty()) {
-      // Create an empty temporary file used for coverage ID synchronization and
-      // pass its path to the agent in every child process. This requires adding
-      // the argument to argv for it to be picked up by libFuzzer, which then
-      // forwards it to child processes.
-      FLAGS_id_sync_file = GetNewTempFilePath();
-      modified_argv.emplace_back(
-          absl::StrFormat("--id_sync_file=%s", FLAGS_id_sync_file));
-    }
-    // Creates the file, truncating it if it exists.
-    std::ofstream touch_file(FLAGS_id_sync_file, std::ios_base::trunc);
-
-    auto cleanup_fn = [] {
-      try {
-        std::filesystem::remove(std::filesystem::path(FLAGS_id_sync_file));
-      } catch (...) {
-        // We should not throw exceptions during shutdown.
-      }
-    };
-    std::atexit(cleanup_fn);
-  }
-
-  std::string seed;
-  // Search for the last occurence of a "-seed" argument as that is the one that
-  // is used by libFuzzer.
-  auto seed_pos = std::find_if(
-      std::reverse_iterator(argv_end), std::reverse_iterator(argv),
-      [](std::string_view arg) { return absl::StartsWith(arg, "-seed="); });
-  if (seed_pos != std::reverse_iterator(argv)) {
-    // An explicit seed has been provided on the command-line, record its value
-    // so that it can be forwarded to the agent.
-    seed = absl::StripPrefix(*seed_pos, "-seed=");
-  } else {
-    // No explicit seed has been set. Since Jazzer hooks might still want to use
-    // a seed and we have to ensure that a fuzzing run can be reproduced by
-    // setting the seed printed by libFuzzer, we generate a seed for it here so
-    // that the two stay in sync.
-    unsigned int random_seed = std::random_device()();
-    seed = std::to_string(random_seed);
-    // Only add the -seed argument to the command line if not running in a mode
-    // that spawns subprocesses. These would inherit the same seed, which might
-    // make them less effective.
-    if (!spawns_subprocesses) {
-      modified_argv.emplace_back("-seed=" + seed);
-    }
-  }
-
   if (is_asan_active) {
     std::cerr << "WARN: Jazzer is not compatible with LeakSanitizer yet. Leaks "
                  "are not reported."
               << std::endl;
   }
 
-  return StartLibFuzzer(std::make_unique<jazzer::JVM>(argv[0], seed),
-                        modified_argv);
+  return StartLibFuzzer(std::make_unique<jazzer::JVM>(argv[0]),
+                        std::vector<std::string>(argv, argv_end));
 }

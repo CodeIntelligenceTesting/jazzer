@@ -204,7 +204,6 @@ std::string agentArgsFromFlags() {
            {"custom_hook_includes", FLAGS_custom_hook_includes},
            {"custom_hook_excludes", FLAGS_custom_hook_excludes},
            {"trace", FLAGS_trace},
-           {"id_sync_file", FLAGS_id_sync_file},
            {"dump_classes_dir", FLAGS_dump_classes_dir},
        }) {
     if (!flag_pair.second.empty()) {
@@ -214,7 +213,7 @@ std::string agentArgsFromFlags() {
   return absl::StrJoin(args, ",");
 }
 
-std::vector<std::string> fuzzTargetRunnerFlagsAsDefines() {
+std::vector<std::string> optsAsDefines() {
   return {
       absl::StrFormat("-Djazzer.target_class=%s", FLAGS_target_class),
       absl::StrFormat("-Djazzer.target_args=%s", FLAGS_target_args),
@@ -228,6 +227,7 @@ std::vector<std::string> fuzzTargetRunnerFlagsAsDefines() {
       absl::StrFormat("-Djazzer.autofuzz_ignore=%s", FLAGS_autofuzz_ignore),
       absl::StrFormat("-Djazzer.hooks=%s", FLAGS_hooks ? "true" : "false"),
       absl::StrFormat("-Djazzer.agent_args=%s", agentArgsFromFlags()),
+      absl::StrFormat("-Djazzer.id_sync_file=%s", FLAGS_id_sync_file),
   };
 }
 
@@ -262,7 +262,7 @@ std::vector<std::string> splitEscaped(const std::string &str) {
 
 namespace jazzer {
 
-JVM::JVM(std::string_view executable_path, std::string_view seed) {
+JVM::JVM(std::string_view executable_path) {
   // combine class path from command line flags and JAVA_FUZZER_CLASSPATH env
   // variable
   std::string class_path = absl::StrFormat("-Djava.class.path=%s", FLAGS_cp);
@@ -289,15 +289,9 @@ JVM::JVM(std::string_view executable_path, std::string_view seed) {
   options.push_back(JavaVMOption{.optionString = (char *)"-XX:+UseParallelGC"});
   options.push_back(
       JavaVMOption{.optionString = (char *)"-XX:+CriticalJNINatives"});
-  // Forward libFuzzer's random seed so that Jazzer hooks can base their
-  // mutations on it.
-  std::string seed_property = absl::StrFormat("-Djazzer.seed=%s", seed);
-  options.push_back(
-      JavaVMOption{.optionString = const_cast<char *>(seed_property.c_str())});
 
-  std::vector<std::string> fuzz_target_runner_defines =
-      fuzzTargetRunnerFlagsAsDefines();
-  for (const auto &define : fuzz_target_runner_defines) {
+  std::vector<std::string> opt_defines = optsAsDefines();
+  for (const auto &define : opt_defines) {
     options.push_back(
         JavaVMOption{.optionString = const_cast<char *>(define.c_str())});
   }

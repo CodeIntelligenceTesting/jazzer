@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.agent
 
+import com.code_intelligence.jazzer.driver.Opt
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hooks
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
@@ -43,7 +44,6 @@ private val KNOWN_ARGUMENTS = listOf(
     "trace",
     "custom_hooks",
     "disabled_hooks",
-    "id_sync_file",
     "dump_classes_dir",
 )
 
@@ -140,8 +140,8 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             }
         }
     }.toSet()
-    val idSyncFile = argumentMap["id_sync_file"]?.let {
-        Paths.get(it.single()).also { path ->
+    val idSyncFile = Opt.idSyncFile.takeUnless { it.isEmpty() }?.let {
+        Paths.get(it).also { path ->
             println("INFO: Synchronizing coverage IDs in ${path.toAbsolutePath()}")
         }
     }
