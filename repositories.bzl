@@ -98,6 +98,13 @@ def jazzer_dependencies():
 
     maybe(
         http_jar,
+        name = "net_bytebuddy_byte_buddy_agent",
+        sha256 = "25eed4301bbde3724a4bac0e7fe4a0b371c64b5fb40160b29480de3afd04efd5",
+        url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.12.13/byte-buddy-agent-1.12.13.jar",
+    )
+
+    maybe(
+        http_jar,
         name = "org_ow2_asm_asm",
         sha256 = "1263369b59e29c943918de11d6d6152e2ec6085ce63e5710516f8c67d368e4bc",
         url = "https://repo1.maven.org/maven2/org/ow2/asm/asm/9.3/asm-9.3.jar",

@@ -16,10 +16,25 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import static java.lang.System.err;
+
+import com.code_intelligence.jazzer.agent.Agent;
+import java.util.List;
+import net.bytebuddy.agent.ByteBuddyAgent;
+
 public class Driver {
   // Accessed from jazzer_main.cpp.
   @SuppressWarnings("unused")
   private static int start(byte[][] nativeArgs) {
-    return FuzzTargetRunner.startLibFuzzer(Utils.fromNativeArgs(nativeArgs));
+    List<String> args = Utils.fromNativeArgs(nativeArgs);
+
+    // Do *not* modify system properties beyond this point - initializing Opt parses them as a side
+    // effect.
+
+    if (Opt.hooks) {
+      Agent.premain(Opt.agentArgs, ByteBuddyAgent.install());
+    }
+
+    return FuzzTargetRunner.startLibFuzzer(args);
   }
 }

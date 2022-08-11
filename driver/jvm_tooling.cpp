@@ -227,6 +227,7 @@ std::vector<std::string> fuzzTargetRunnerFlagsAsDefines() {
       absl::StrFormat("-Djazzer.autofuzz=%s", FLAGS_autofuzz),
       absl::StrFormat("-Djazzer.autofuzz_ignore=%s", FLAGS_autofuzz_ignore),
       absl::StrFormat("-Djazzer.hooks=%s", FLAGS_hooks ? "true" : "false"),
+      absl::StrFormat("-Djazzer.agent_args=%s", agentArgsFromFlags()),
   };
 }
 
@@ -269,13 +270,8 @@ JVM::JVM(std::string_view executable_path, std::string_view seed) {
   if (class_path_from_env) {
     class_path += absl::StrCat(ARG_SEPARATOR, class_path_from_env);
   }
-  if (!FLAGS_hooks) {
-    // A Java agent is implicitly added to the system class loader's classpath,
-    // so there is no need to add the Jazzer agent here if we are running with
-    // the agent enabled.
-    class_path +=
-        absl::StrCat(ARG_SEPARATOR, getInstrumentorAgentPath(executable_path));
-  }
+  class_path +=
+      absl::StrCat(ARG_SEPARATOR, getInstrumentorAgentPath(executable_path));
   LOG(INFO) << "got class path " << class_path;
 
   std::vector<JavaVMOption> options;
@@ -335,15 +331,6 @@ JVM::JVM(std::string_view executable_path, std::string_view seed) {
   for (const auto &arg : additional_jvm_args) {
     options.push_back(
         JavaVMOption{.optionString = const_cast<char *>(arg.c_str())});
-  }
-
-  std::string agent_jvm_arg;
-  if (FLAGS_hooks) {
-    agent_jvm_arg = absl::StrFormat("-javaagent:%s=%s",
-                                    getInstrumentorAgentPath(executable_path),
-                                    agentArgsFromFlags());
-    options.push_back(JavaVMOption{
-        .optionString = const_cast<char *>(agent_jvm_arg.c_str())});
   }
 
   JavaVMInitArgs jvm_init_args = {.version = JNI_VERSION_1_8,
