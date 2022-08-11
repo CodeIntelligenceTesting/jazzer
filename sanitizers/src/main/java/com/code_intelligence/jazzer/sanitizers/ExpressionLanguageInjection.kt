@@ -44,6 +44,16 @@ object ExpressionLanguageInjection {
             targetClassName = "javax.el.ExpressionFactory",
             targetMethod = "createMethodExpression",
         ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "jakarta.el.ExpressionFactory",
+            targetMethod = "createValueExpression",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "jakarta.el.ExpressionFactory",
+            targetMethod = "createMethodExpression",
+        ),
     )
     @JvmStatic
     fun hookElExpressionFactory(
