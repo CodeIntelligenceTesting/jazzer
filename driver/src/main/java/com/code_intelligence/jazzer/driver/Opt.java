@@ -72,7 +72,7 @@ public final class Opt {
 
   // Default to false if hooks is false to mimic the original behavior of the native fuzz target
   // runner, but still support hooks = false && dedup = true.
-  public static boolean dedup = boolSetting("dedup", hooks);
+  public static final boolean dedup = boolSetting("dedup", hooks);
 
   static {
     if (!targetClass.isEmpty() && !autofuzz.isEmpty()) {
