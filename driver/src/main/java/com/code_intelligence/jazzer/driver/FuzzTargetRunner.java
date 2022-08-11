@@ -27,6 +27,7 @@ import com.code_intelligence.jazzer.runtime.CoverageMap;
 import com.code_intelligence.jazzer.runtime.FuzzedDataProviderImpl;
 import com.code_intelligence.jazzer.runtime.JazzerInternal;
 import com.code_intelligence.jazzer.runtime.RecordingFuzzedDataProvider;
+import com.code_intelligence.jazzer.runtime.SignalHandler;
 import com.code_intelligence.jazzer.utils.ExceptionUtils;
 import com.code_intelligence.jazzer.utils.ManifestUtils;
 import java.io.IOException;
@@ -212,6 +213,7 @@ public final class FuzzTargetRunner {
    * than Driver.
    */
   public static int startLibFuzzer(List<String> args) {
+    SignalHandler.initialize();
     return startLibFuzzer(Utils.toNativeArgs(args));
   }
 
