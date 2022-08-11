@@ -18,7 +18,7 @@ import java.util.jar.Manifest
 
 object ManifestUtils {
 
-    const val FUZZ_TARGET_CLASS = "Jazzer-Fuzz-Target-Class"
+    private const val FUZZ_TARGET_CLASS = "Jazzer-Fuzz-Target-Class"
     const val HOOK_CLASSES = "Jazzer-Hook-Classes"
 
     fun combineManifestValues(attribute: String): List<String> {

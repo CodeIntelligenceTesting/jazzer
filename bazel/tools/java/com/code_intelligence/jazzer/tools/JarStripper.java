@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class JarStripper {
   private static final Map<String, String> ZIP_FS_PROPERTIES = new HashMap<>();
@@ -77,11 +78,12 @@ public class JarStripper {
     try (FileSystem zipFs = FileSystems.newFileSystem(outUri, ZIP_FS_PROPERTIES)) {
       for (String pathToDelete : pathsToDelete) {
         // Visit files before the directory they are contained in by sorting in reverse order.
-        Iterable<Path> subpaths = Files.walk(zipFs.getPath(pathToDelete))
-                                      .sorted(Comparator.reverseOrder())
-                                      .collect(Collectors.toList());
-        for (Path subpath : subpaths) {
-          Files.delete(subpath);
+        try (Stream<Path> walk = Files.walk(zipFs.getPath(pathToDelete))) {
+          Iterable<Path> subpaths =
+              walk.sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+          for (Path subpath : subpaths) {
+            Files.delete(subpath);
+          }
         }
       }
     } catch (IOException e) {
