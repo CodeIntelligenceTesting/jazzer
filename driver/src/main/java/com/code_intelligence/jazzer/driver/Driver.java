@@ -90,7 +90,7 @@ public class Driver {
     // effect.
 
     if (Opt.hooks) {
-      Agent.premain(Opt.agentArgs, ByteBuddyAgent.install());
+      Agent.premain(null, ByteBuddyAgent.install());
     }
 
     return FuzzTargetRunner.startLibFuzzer(args);

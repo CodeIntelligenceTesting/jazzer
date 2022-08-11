@@ -72,7 +72,8 @@ DEFINE_string(disabled_hooks, "",
               "loaded (separator is ':' on Linux/macOS and ';' on Windows)");
 DEFINE_string(
     trace, "",
-    "list of instrumentation to perform separated by colon \":\". "
+    "list of instrumentation to perform separated by colon ':' on Linux/macOS "
+    "and ';' on Windows. "
     "Available options are cov, cmp, div, gep, all. These options "
     "correspond to the \"-fsanitize-coverage=trace-*\" flags in clang.");
 DEFINE_string(
@@ -192,27 +193,6 @@ std::string getInstrumentorAgentPath(std::string_view executable_path) {
   exit(1);
 }
 
-std::string agentArgsFromFlags() {
-  std::vector<std::string> args;
-  for (const auto &flag_pair :
-       std::vector<std::pair<std::string, const std::string &>>{
-           // {<agent option>, <ref to glog flag> }
-           {"instrumentation_includes", FLAGS_instrumentation_includes},
-           {"instrumentation_excludes", FLAGS_instrumentation_excludes},
-           {"custom_hooks", FLAGS_custom_hooks},
-           {"disabled_hooks", FLAGS_disabled_hooks},
-           {"custom_hook_includes", FLAGS_custom_hook_includes},
-           {"custom_hook_excludes", FLAGS_custom_hook_excludes},
-           {"trace", FLAGS_trace},
-           {"dump_classes_dir", FLAGS_dump_classes_dir},
-       }) {
-    if (!flag_pair.second.empty()) {
-      args.push_back(flag_pair.first + "=" + flag_pair.second);
-    }
-  }
-  return absl::StrJoin(args, ",");
-}
-
 std::vector<std::string> optsAsDefines() {
   return {
       absl::StrFormat("-Djazzer.target_class=%s", FLAGS_target_class),
@@ -226,8 +206,19 @@ std::vector<std::string> optsAsDefines() {
       absl::StrFormat("-Djazzer.autofuzz=%s", FLAGS_autofuzz),
       absl::StrFormat("-Djazzer.autofuzz_ignore=%s", FLAGS_autofuzz_ignore),
       absl::StrFormat("-Djazzer.hooks=%s", FLAGS_hooks ? "true" : "false"),
-      absl::StrFormat("-Djazzer.agent_args=%s", agentArgsFromFlags()),
       absl::StrFormat("-Djazzer.id_sync_file=%s", FLAGS_id_sync_file),
+      absl::StrFormat("-Djazzer.instrumentation_includes=%s",
+                      FLAGS_instrumentation_includes),
+      absl::StrFormat("-Djazzer.instrumentation_excludes=%s",
+                      FLAGS_instrumentation_excludes),
+      absl::StrFormat("-Djazzer.custom_hooks=%s", FLAGS_custom_hooks),
+      absl::StrFormat("-Djazzer.disabled_hooks=%s", FLAGS_disabled_hooks),
+      absl::StrFormat("-Djazzer.custom_hook_includes=%s",
+                      FLAGS_custom_hook_includes),
+      absl::StrFormat("-Djazzer.custom_hook_excludes=%s",
+                      FLAGS_custom_hook_excludes),
+      absl::StrFormat("-Djazzer.trace=%s", FLAGS_trace),
+      absl::StrFormat("-Djazzer.dump_classes_dir=%s", FLAGS_dump_classes_dir),
   };
 }
 
