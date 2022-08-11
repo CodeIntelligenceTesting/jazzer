@@ -141,17 +141,6 @@ public final class FuzzTargetRunner {
     Runtime.getRuntime().addShutdownHook(new Thread(FuzzTargetRunner::shutdown));
   }
 
-  /*
-   * Starts libFuzzer via LLVMFuzzerRunDriver.
-   */
-  public static int startLibFuzzer(String[] args) {
-    // Convert the arguments to UTF8 before passing them on to JNI as there are no JNI functions to
-    // get (unmodified) UTF-8 out of a jstring.
-    return startLibFuzzer(Arrays.stream(args)
-                              .map(str -> str.getBytes(StandardCharsets.UTF_8))
-                              .toArray(byte[][] ::new));
-  }
-
   /**
    * Executes the user-provided fuzz target once.
    *
@@ -160,7 +149,7 @@ public final class FuzzTargetRunner {
    * @return the value that the native LLVMFuzzerTestOneInput function should return. Currently,
    *         this is always 0. The function may exit the process instead of returning.
    */
-  public static int runOne(byte[] data) {
+  static int runOne(byte[] data) {
     Throwable finding = null;
     try {
       if (useFuzzedDataProvider) {
@@ -217,8 +206,15 @@ public final class FuzzTargetRunner {
     return 0;
   }
 
-  public static void dumpAllStackTraces() {
-    ExceptionUtils.dumpAllStackTraces();
+  /*
+   * Starts libFuzzer via LLVMFuzzerRunDriver.
+   */
+  static int startLibFuzzer(String[] args) {
+    // Convert the arguments to UTF8 before passing them on to JNI as there are no JNI functions to
+    // get (unmodified) UTF-8 out of a jstring.
+    return startLibFuzzer(Arrays.stream(args)
+        .map(str -> str.getBytes(StandardCharsets.UTF_8))
+        .toArray(byte[][] ::new));
   }
 
   private static void shutdown() {
@@ -341,6 +337,12 @@ public final class FuzzTargetRunner {
     String unpadded = new BigInteger(1, bytes).toString(16);
     int numLeadingZeroes = 2 * bytes.length - unpadded.length();
     return String.join("", Collections.nCopies(numLeadingZeroes, "0")) + unpadded;
+  }
+
+  // Accessed by fuzz_target_runner.cpp.
+  @SuppressWarnings("unused")
+  private static void dumpAllStackTraces() {
+    ExceptionUtils.dumpAllStackTraces();
   }
 
   /**
