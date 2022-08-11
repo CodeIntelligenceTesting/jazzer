@@ -34,23 +34,32 @@ import java.util.stream.Stream;
  * <p>Every public field should be deeply immutable.
  */
 public final class Opt {
-  public static final String agentArgs = stringSetting("agent_args", "");
+  private static final char SYSTEM_DELIMITER =
+      System.getProperty("os.name").startsWith("Windows") ? ';' : ':';
+
   public static final String autofuzz = stringSetting("autofuzz", "");
   public static final List<String> autofuzzIgnore = stringListSetting("autofuzz_ignore", ',');
   public static final String coverageDump = stringSetting("coverage_dump", "");
   public static final String coverageReport = stringSetting("coverage_report", "");
+  public static final List<String> customHookIncludes = stringListSetting("custom_hook_includes");
+  public static final List<String> customHookExcludes = stringListSetting("custom_hook_excludes");
+  public static final List<String> customHooks = stringListSetting("custom_hooks");
+  public static final List<String> disabledHooks = stringListSetting("disabled_hooks");
+  public static final String dumpClassesDir = stringSetting("dump_classes_dir", "");
   public static final boolean hooks = boolSetting("hooks", true);
-  // Default to false if hooks is false to mimic the original behavior of the native fuzz target
-  // runner, but still support hooks = false && dedup = true.
-  public static boolean dedup = boolSetting("dedup", hooks);
   public static final String idSyncFile = stringSetting("id_sync_file", null);
+  public static final List<String> instrumentationIncludes =
+      stringListSetting("instrumentation_includes");
+  public static final List<String> instrumentationExcludes =
+      stringListSetting("instrumentation_excludes");
   public static final Set<Long> ignore =
       Collections.unmodifiableSet(stringListSetting("ignore", ',')
                                       .stream()
                                       .map(Long::parseUnsignedLong)
                                       .collect(Collectors.toSet()));
-  public static final String targetClass = stringSetting("target_class", "");
   public static final String reproducerPath = stringSetting("reproducer_path", ".");
+  public static final String targetClass = stringSetting("target_class", "");
+  public static final List<String> trace = stringListSetting("trace");
 
   // The values of these settings depend on autofuzz.
   public static final List<String> targetArgs = autofuzz.isEmpty()
@@ -59,6 +68,10 @@ public final class Opt {
           Stream.concat(Stream.of(autofuzz), autofuzzIgnore.stream()).collect(Collectors.toList()));
   public static final long keepGoing =
       uint32Setting("keep_going", autofuzz.isEmpty() ? 1 : Integer.MIN_VALUE);
+
+  // Default to false if hooks is false to mimic the original behavior of the native fuzz target
+  // runner, but still support hooks = false && dedup = true.
+  public static boolean dedup = boolSetting("dedup", hooks);
 
   static {
     if (!targetClass.isEmpty() && !autofuzz.isEmpty()) {
@@ -84,6 +97,10 @@ public final class Opt {
 
   private static String stringSetting(String name, String defaultValue) {
     return System.getProperty(optionsPrefix + name, defaultValue);
+  }
+
+  private static List<String> stringListSetting(String name) {
+    return stringListSetting(name, SYSTEM_DELIMITER);
   }
 
   private static List<String> stringListSetting(String name, char separator) {

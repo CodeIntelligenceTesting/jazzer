@@ -36,17 +36,6 @@ import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
-private val KNOWN_ARGUMENTS = listOf(
-    "instrumentation_includes",
-    "instrumentation_excludes",
-    "custom_hook_includes",
-    "custom_hook_excludes",
-    "trace",
-    "custom_hooks",
-    "disabled_hooks",
-    "dump_classes_dir",
-)
-
 // To be accessible by the agent classes the native library has to be loaded by the same class loader.
 // premain is executed in the context of the system class loader. At the beginning of premain the agent jar is added to
 // the bootstrap class loader and all subsequently required agent classes are loaded by it. Hence, it's not possible to
@@ -68,10 +57,8 @@ fun jarUriForClass(clazz: Class<*>): URI? {
     return clazz.protectionDomain?.codeSource?.location?.toURI()
 }
 
-private val argumentDelimiter =
-    if (System.getProperty("os.name").startsWith("Windows")) ";" else ":"
-
 @OptIn(ExperimentalPathApi::class)
+@Suppress("UNUSED_PARAMETER")
 fun premain(agentArgs: String?, instrumentation: Instrumentation) {
     // Add the agent jar (i.e., the jar out of which we are currently executing) to the search path of the bootstrap
     // class loader to ensure that instrumented classes can find the CoverageMap class regardless of which ClassLoader
@@ -83,45 +70,24 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
     }
     NativeLibraryLoader.load()
 
-    val argumentMap = (agentArgs ?: "")
-        .split(',')
-        .mapNotNull {
-            val splitArg = it.split('=', limit = 2)
-            when {
-                splitArg.size != 2 -> {
-                    if (splitArg[0].isNotEmpty())
-                        println("WARN: Ignoring argument ${splitArg[0]} without value")
-                    null
-                }
-                splitArg[0] !in KNOWN_ARGUMENTS -> {
-                    println("WARN: Ignoring unknown argument ${splitArg[0]}")
-                    null
-                }
-                else -> splitArg[0] to splitArg[1].split(argumentDelimiter)
-            }
-        }.toMap()
     val manifestCustomHookNames =
         ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES).flatMap {
             it.split(':')
         }.filter { it.isNotBlank() }
-    val allCustomHookNames = manifestCustomHookNames + (argumentMap["custom_hooks"] ?: emptySet())
-    val disabledCustomHookNames = argumentMap["disabled_hooks"]?.toSet() ?: emptySet()
+    val allCustomHookNames = (manifestCustomHookNames + Opt.customHooks).toSet()
+    val disabledCustomHookNames = Opt.disabledHooks.toSet()
     val customHookNames = allCustomHookNames - disabledCustomHookNames
     val disabledCustomHooksToPrint = allCustomHookNames - customHookNames.toSet()
     if (disabledCustomHooksToPrint.isNotEmpty()) {
         println("INFO: Not using the following disabled hooks: ${disabledCustomHooksToPrint.joinToString(", ")}")
     }
 
-    val classNameGlobber = ClassNameGlobber(
-        argumentMap["instrumentation_includes"] ?: emptyList(),
-        (argumentMap["instrumentation_excludes"] ?: emptyList()) + customHookNames
-    )
+    val classNameGlobber = ClassNameGlobber(Opt.instrumentationIncludes, Opt.instrumentationExcludes + customHookNames)
     CoverageRecorder.classNameGlobber = classNameGlobber
-    val customHookClassNameGlobber = ClassNameGlobber(
-        argumentMap["custom_hook_includes"] ?: emptyList(),
-        (argumentMap["custom_hook_excludes"] ?: emptyList()) + customHookNames
-    )
-    val instrumentationTypes = (argumentMap["trace"] ?: listOf("all")).flatMap {
+    val customHookClassNameGlobber = ClassNameGlobber(Opt.customHookIncludes, Opt.customHookExcludes + customHookNames)
+    // FIXME: Setting trace to the empty string explicitly results in all rather than no trace types
+    //  being applied - this is unintuitive.
+    val instrumentationTypes = (Opt.trace.takeIf { it.isNotEmpty() } ?: listOf("all")).flatMap {
         when (it) {
             "cmp" -> setOf(InstrumentationType.CMP)
             "cov" -> setOf(InstrumentationType.COV)
@@ -145,8 +111,8 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             println("INFO: Synchronizing coverage IDs in ${path.toAbsolutePath()}")
         }
     }
-    val dumpClassesDir = argumentMap["dump_classes_dir"]?.let {
-        Paths.get(it.single()).toAbsolutePath().also { path ->
+    val dumpClassesDir = Opt.dumpClassesDir.takeUnless { it.isEmpty() }?.let {
+        Paths.get(it).toAbsolutePath().also { path ->
             if (path.exists() && path.isDirectory()) {
                 println("INFO: Dumping instrumented classes into $path")
             } else {

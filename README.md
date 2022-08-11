@@ -429,7 +429,7 @@ The particular instrumentation types to apply can be specified using the `--trac
 * `indir`: call through `Method#invoke`
 * `all`: shorthand to apply all available instrumentations (except `gep`)
 
-Multiple instrumentation types can be combined with a colon.
+Multiple instrumentation types can be combined with a colon (Linux, macOS) or a semicolon (Windows).
 
 ### Value Profile
 
