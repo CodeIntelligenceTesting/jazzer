@@ -1,16 +1,28 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
 
+java_library(
+    name = "driver",
+    srcs = [":Driver.java"],
+    visibility = [
+        "//agent:__pkg__",
+    ],
+    deps = [
+        ":fuzz_target_runner",
+        ":utils",
+    ],
+)
+
 java_jni_library(
     name = "fuzz_target_runner",
     srcs = ["FuzzTargetRunner.java"],
     visibility = [
-        "//agent:__pkg__",
         "//driver:__pkg__",
         "//driver/src/test:__subpackages__",
     ],
     deps = [
         ":opt",
         ":reproducer_template",
+        ":utils",
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "//agent/src/main/java/com/code_intelligence/jazzer/autofuzz",
         "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",
@@ -32,4 +44,9 @@ java_library(
     name = "opt",
     srcs = ["Opt.java"],
     visibility = ["//driver/src/test/java/com/code_intelligence/jazzer/driver:__pkg__"],
+)
+
+java_library(
+    name = "utils",
+    srcs = ["Utils.java"],
 )
