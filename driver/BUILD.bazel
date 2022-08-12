@@ -3,24 +3,11 @@ load("//bazel:cc.bzl", "cc_17_library")
 
 cc_library(
     name = "sanitizer_hooks_with_pc",
-    srcs = ["sanitizer_hooks_with_pc.cpp"],
     hdrs = ["sanitizer_hooks_with_pc.h"],
-    linkstatic = True,
     visibility = [
         "//agent/src/jmh/native/com/code_intelligence/jazzer/runtime:__pkg__",
         "//agent/src/main/native/com/code_intelligence/jazzer/runtime:__pkg__",
         "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
-    ],
-)
-
-cc_test(
-    name = "sanitizer_hooks_with_pc_test",
-    size = "small",
-    srcs = ["sanitizer_hooks_with_pc_test.cpp"],
-    deps = [
-        ":sanitizer_hooks_with_pc",
-        "@googletest//:gtest",
-        "@googletest//:gtest_main",
     ],
 )
 

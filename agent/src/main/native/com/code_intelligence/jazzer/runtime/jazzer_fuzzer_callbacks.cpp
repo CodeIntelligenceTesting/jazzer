@@ -88,97 +88,42 @@ JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceCmpLong(
-    JNIEnv *env, jclass cls, jlong value1, jlong value2) {
-  __sanitizer_cov_trace_cmp8(value1, value2);
-}
-
-extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceCmpLong(
-    jlong value1, jlong value2) {
-  __sanitizer_cov_trace_cmp8(value1, value2);
-}
-
-[[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceCmpLongWithPc(
     JNIEnv *env, jclass cls, jlong value1, jlong value2, jint id) {
   __sanitizer_cov_trace_cmp8_with_pc(idToPc(id), value1, value2);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceCmpLongWithPc(
+JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceCmpLong(
     jlong value1, jlong value2, jint id) {
   __sanitizer_cov_trace_cmp8_with_pc(idToPc(id), value1, value2);
 }
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceCmpInt(
-    JNIEnv *env, jclass cls, jint value1, jint value2) {
-  __sanitizer_cov_trace_cmp4(value1, value2);
-}
-
-extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceCmpInt(
-    jint value1, jint value2) {
-  __sanitizer_cov_trace_cmp4(value1, value2);
-}
-
-[[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceCmpIntWithPc(
     JNIEnv *env, jclass cls, jint value1, jint value2, jint id) {
   __sanitizer_cov_trace_cmp4_with_pc(idToPc(id), value1, value2);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceCmpIntWithPc(
+JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceCmpInt(
     jint value1, jint value2, jint id) {
   __sanitizer_cov_trace_cmp4_with_pc(idToPc(id), value1, value2);
 }
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceConstCmpInt(
-    JNIEnv *env, jclass cls, jint value1, jint value2) {
-  __sanitizer_cov_trace_cmp4(value1, value2);
-}
-
-extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceConstCmpInt(
-    jint value1, jint value2) {
-  __sanitizer_cov_trace_cmp4(value1, value2);
-}
-
-[[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceConstCmpIntWithPc(
     JNIEnv *env, jclass cls, jint value1, jint value2, jint id) {
   __sanitizer_cov_trace_cmp4_with_pc(idToPc(id), value1, value2);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceConstCmpIntWithPc(
+JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceConstCmpInt(
     jint value1, jint value2, jint id) {
   __sanitizer_cov_trace_cmp4_with_pc(idToPc(id), value1, value2);
 }
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceSwitch(
-    JNIEnv *env, jclass cls, jlong switch_value,
-    jlongArray libfuzzer_case_values) {
-  auto *case_values = static_cast<jlong *>(
-      env->GetPrimitiveArrayCritical(libfuzzer_case_values, nullptr));
-  __sanitizer_cov_trace_switch(switch_value,
-                               reinterpret_cast<uint64_t *>(case_values));
-  env->ReleasePrimitiveArrayCritical(libfuzzer_case_values, case_values,
-                                     JNI_ABORT);
-}
-
-extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceSwitch(
-    jlong switch_value, jint libfuzzer_case_values_length, jlong *case_values) {
-  __sanitizer_cov_trace_switch(switch_value,
-                               reinterpret_cast<uint64_t *>(case_values));
-}
-
-[[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceSwitchWithPc(
     JNIEnv *env, jclass cls, jlong switch_value,
     jlongArray libfuzzer_case_values, jint id) {
   auto *case_values = static_cast<jlong *>(
@@ -190,7 +135,7 @@ Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceSwi
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceSwitchWithPc(
+JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceSwitch(
     jlong switch_value, jint libfuzzer_case_values_length, jlong *case_values,
     jint id) {
   __sanitizer_cov_trace_switch_with_pc(
@@ -199,85 +144,49 @@ JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceDivLong(
-    JNIEnv *env, jclass cls, jlong value) {
-  __sanitizer_cov_trace_div8(value);
-}
-
-extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceDivLong(
-    jlong value) {
-  __sanitizer_cov_trace_div8(value);
-}
-
-[[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceDivLongWithPc(
     JNIEnv *env, jclass cls, jlong value, jint id) {
   __sanitizer_cov_trace_div8_with_pc(idToPc(id), value);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceDivLongWithPc(
+JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceDivLong(
     jlong value, jint id) {
   __sanitizer_cov_trace_div8_with_pc(idToPc(id), value);
 }
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceDivInt(
-    JNIEnv *env, jclass cls, jint value) {
-  __sanitizer_cov_trace_div4(value);
-}
-
-extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceDivInt(
-    jint value) {
-  __sanitizer_cov_trace_div4(value);
-}
-
-[[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceDivIntWithPc(
     JNIEnv *env, jclass cls, jint value, jint id) {
   __sanitizer_cov_trace_div4_with_pc(idToPc(id), value);
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceDivIntWithPc(
+JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceDivInt(
     jint value, jint id) {
   __sanitizer_cov_trace_div4_with_pc(idToPc(id), value);
 }
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceGep(
-    JNIEnv *env, jclass cls, jlong idx) {
-  __sanitizer_cov_trace_gep(static_cast<uintptr_t>(idx));
-}
-
-extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceGep(
-    jlong idx) {
-  __sanitizer_cov_trace_gep(static_cast<uintptr_t>(idx));
-}
-
-[[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceGepWithPc(
     JNIEnv *env, jclass cls, jlong idx, jint id) {
   __sanitizer_cov_trace_gep_with_pc(idToPc(id), static_cast<uintptr_t>(idx));
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceGepWithPc(
+JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_traceGep(
     jlong idx, jint id) {
   __sanitizer_cov_trace_gep_with_pc(idToPc(id), static_cast<uintptr_t>(idx));
 }
 
 [[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_tracePcIndir0(
+Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_tracePcIndir(
     JNIEnv *env, jclass cls, jint caller_id, jint callee_id) {
   __sanitizer_cov_trace_pc_indir_with_pc(idToPc(caller_id),
                                          static_cast<uintptr_t>(callee_id));
 }
 
 extern "C" [[maybe_unused]] JNIEXPORT void JNICALL
-JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_tracePcIndir0(
+JavaCritical_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_tracePcIndir(
     jint caller_id, jint callee_id) {
   __sanitizer_cov_trace_pc_indir_with_pc(idToPc(caller_id),
                                          static_cast<uintptr_t>(callee_id));
