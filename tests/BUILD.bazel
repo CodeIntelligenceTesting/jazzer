@@ -181,3 +181,19 @@ java_fuzz_target_test(
     }),
     target_class = "com.example.DisabledHooksFuzzer",
 )
+
+java_fuzz_target_test(
+    name = "BytesMemoryLeakFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/BytesMemoryLeakFuzzer.java"],
+    env = {
+        "JAVA_OPTS": "-Xmx200m",
+    },
+    expect_crash = False,
+    fuzzer_args = [
+        # Before the bug was fixed, either the GC overhead limit or the overall heap limit was
+        # reached by this target in this number of runs.
+        "-runs=10000000",
+    ],
+    target_class = "com.example.BytesMemoryLeakFuzzer",
+)

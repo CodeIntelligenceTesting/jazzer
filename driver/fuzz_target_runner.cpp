@@ -44,17 +44,19 @@ void (*gLibfuzzerPrintCrashingInput)() = nullptr;
 
 int testOneInput(const uint8_t *data, const std::size_t size) {
   JNIEnv &env = *gEnv;
-  jbyteArray input = nullptr;
   jint jsize =
       std::min(size, static_cast<size_t>(std::numeric_limits<jint>::max()));
+  int res;
   if (gUseFuzzedDataProvider) {
     ::jazzer::FeedFuzzedDataProvider(data, size);
+    res = env.CallStaticIntMethod(gRunner, gRunOneId, nullptr);
   } else {
-    input = env.NewByteArray(jsize);
+    jbyteArray input = env.NewByteArray(jsize);
     env.SetByteArrayRegion(input, 0, jsize,
                            reinterpret_cast<const jbyte *>(data));
+    res = env.CallStaticIntMethod(gRunner, gRunOneId, input);
+    env.DeleteLocalRef(input);
   }
-  int res = env.CallStaticIntMethod(gRunner, gRunOneId, input);
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     _Exit(1);
