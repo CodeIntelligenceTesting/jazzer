@@ -67,7 +67,6 @@ public final class FuzzTargetRunner {
   private static final MethodHandle fuzzTarget;
   public static final boolean useFuzzedDataProvider;
   private static final ReproducerTemplate reproducerTemplate;
-  private static long runCount = 0;
 
   static {
     String targetClassName = determineFuzzTargetClassName();
@@ -133,6 +132,9 @@ public final class FuzzTargetRunner {
     }
 
     if (Opt.hooks) {
+      // libFuzzer will clear the coverage map after this method returns and keeps no record of the
+      // coverage accumulated so far (e.g. by static initializers). We record it here to keep it
+      // around for JaCoCo coverage reports.
       CoverageRecorder.updateCoveredIdsWithCoverageMap();
     }
 
@@ -159,15 +161,6 @@ public final class FuzzTargetRunner {
    *         this is always 0. The function may exit the process instead of returning.
    */
   public static int runOne(byte[] data) {
-    if (Opt.hooks && runCount < 2) {
-      runCount++;
-      // For the first two runs only, replay the coverage recorded from static initializers.
-      // libFuzzer cleared the coverage map after they ran and could fail to see any coverage,
-      // triggering an early exit, if we don't replay it here.
-      // https://github.com/llvm/llvm-project/blob/957a5e987444d3193575d6ad8afe6c75da00d794/compiler-rt/lib/fuzzer/FuzzerLoop.cpp#L804-L809
-      CoverageRecorder.replayCoveredIds();
-    }
-
     Throwable finding = null;
     try {
       if (useFuzzedDataProvider) {
