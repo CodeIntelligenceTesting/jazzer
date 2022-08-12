@@ -28,49 +28,12 @@ final public class TraceDataFlowNativeCallbacks {
     }
   }
 
-  // Making this static final ensures that the JIT will eliminate the dead branch of a construct
-  // such as:
-  // if (USE_FAKE_PCS) ... else ...
-  private static final boolean USE_FAKE_PCS = useFakePcs();
   // Note that we are not encoding as modified UTF-8 here: The FuzzedDataProvider transparently
   // converts CESU8 into modified UTF-8 by coding null bytes on two bytes. Since the fuzzer is more
   // likely to insert literal null bytes, having both the fuzzer input and the reported string
   // comparisons be CESU8 should perform even better than the current implementation using modified
   // UTF-8.
   private static final Charset FUZZED_DATA_CHARSET = Charset.forName("CESU8");
-
-  /* trace-cmp */
-  public static void traceCmpInt(int arg1, int arg2, int pc) {
-    if (USE_FAKE_PCS) {
-      traceCmpIntWithPc(arg1, arg2, pc);
-    } else {
-      traceCmpInt(arg1, arg2);
-    }
-  }
-
-  public static void traceConstCmpInt(int arg1, int arg2, int pc) {
-    if (USE_FAKE_PCS) {
-      traceConstCmpIntWithPc(arg1, arg2, pc);
-    } else {
-      traceConstCmpInt(arg1, arg2);
-    }
-  }
-
-  public static void traceCmpLong(long arg1, long arg2, int pc) {
-    if (USE_FAKE_PCS) {
-      traceCmpLongWithPc(arg1, arg2, pc);
-    } else {
-      traceCmpLong(arg1, arg2);
-    }
-  }
-
-  public static void traceSwitch(long val, long[] cases, int pc) {
-    if (USE_FAKE_PCS) {
-      traceSwitchWithPc(val, cases, pc);
-    } else {
-      traceSwitch(val, cases);
-    }
-  }
 
   public static native void traceMemcmp(byte[] b1, byte[] b2, int result, int pc);
 
@@ -82,48 +45,7 @@ final public class TraceDataFlowNativeCallbacks {
     traceStrstr0(encodeForLibFuzzer(s2), pc);
   }
 
-  /* trace-div */
-  public static void traceDivInt(int val, int pc) {
-    if (USE_FAKE_PCS) {
-      traceDivIntWithPc(val, pc);
-    } else {
-      traceDivInt(val);
-    }
-  }
-
-  public static void traceDivLong(long val, int pc) {
-    if (USE_FAKE_PCS) {
-      traceDivLongWithPc(val, pc);
-    } else {
-      traceDivLong(val);
-    }
-  }
-
-  /* trace-gep */
-  public static void traceGep(long val, int pc) {
-    if (USE_FAKE_PCS) {
-      traceGepWithPc(val, pc);
-    } else {
-      traceGep(val);
-    }
-  }
-
-  /* indirect-calls */
-  public static void tracePcIndir(int callee, int caller) {
-    if (!USE_FAKE_PCS) {
-      // Without fake PCs, tracePcIndir will not record the relation between callee and pc, which
-      // makes it useless.
-      return;
-    }
-    tracePcIndir0(callee, caller);
-  }
-
   public static void traceReflectiveCall(Executable callee, int pc) {
-    if (!USE_FAKE_PCS) {
-      // Without fake PCs, tracePcIndir will not record the relation between callee and pc, which
-      // makes it useless.
-      return;
-    }
     String className = callee.getDeclaringClass().getCanonicalName();
     String executableName = callee.getName();
     String descriptor = Utils.getDescriptor(callee);
@@ -158,6 +80,19 @@ final public class TraceDataFlowNativeCallbacks {
     }
   }
 
+  /* trace-cmp */
+  public static native void traceCmpInt(int arg1, int arg2, int pc);
+  public static native void traceConstCmpInt(int arg1, int arg2, int pc);
+  public static native void traceCmpLong(long arg1, long arg2, int pc);
+  public static native void traceSwitch(long val, long[] cases, int pc);
+  /* trace-div */
+  public static native void traceDivInt(int val, int pc);
+  public static native void traceDivLong(long val, int pc);
+  /* trace-gep */
+  public static native void traceGep(long val, int pc);
+  /* indirect-calls */
+  public static native void tracePcIndir(int callee, int caller);
+
   public static native void handleLibraryLoad();
 
   private static byte[] encodeForLibFuzzer(String str) {
@@ -166,29 +101,5 @@ final public class TraceDataFlowNativeCallbacks {
     return str.substring(0, Math.min(str.length(), 64)).getBytes(FUZZED_DATA_CHARSET);
   }
 
-  private static boolean useFakePcs() {
-    String rawFakePcs = System.getProperty("jazzer.fake_pcs");
-    if (rawFakePcs == null) {
-      return false;
-    }
-    return Boolean.parseBoolean(rawFakePcs);
-  }
-
   private static native void traceStrstr0(byte[] needle, int pc);
-
-  private static native void traceCmpInt(int arg1, int arg2);
-  private static native void traceCmpIntWithPc(int arg1, int arg2, int pc);
-  private static native void traceConstCmpInt(int arg1, int arg2);
-  private static native void traceConstCmpIntWithPc(int arg1, int arg2, int pc);
-  private static native void traceCmpLong(long arg1, long arg2);
-  private static native void traceCmpLongWithPc(long arg1, long arg2, int pc);
-  private static native void traceSwitch(long val, long[] cases);
-  private static native void traceSwitchWithPc(long val, long[] cases, int pc);
-  private static native void traceDivInt(int val);
-  private static native void traceDivIntWithPc(int val, int pc);
-  private static native void traceDivLong(long val);
-  private static native void traceDivLongWithPc(long val, int pc);
-  private static native void traceGep(long val);
-  private static native void traceGepWithPc(long val, int pc);
-  private static native void tracePcIndir0(int callee, int caller);
 }

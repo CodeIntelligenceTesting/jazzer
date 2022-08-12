@@ -42,9 +42,6 @@ using namespace std::string_literals;
 // Defined by glog
 DECLARE_bool(log_prefix);
 
-// Defined in libfuzzer_callbacks.cpp
-DECLARE_bool(fake_pcs);
-
 // Defined in jvm_tooling.cpp
 DECLARE_string(id_sync_file);
 
@@ -163,12 +160,6 @@ int main(int argc, char **argv) {
   rules_jni_init(argv[0]);
 
   const auto argv_end = argv + argc;
-
-  // Parse libFuzzer flags to determine Jazzer flag defaults before letting
-  // gflags parse the command line.
-  if (std::find(argv, argv_end, "-use_value_profile=1"s) != argv_end) {
-    FLAGS_fake_pcs = true;
-  }
 
   {
     // All libFuzzer flags start with a single dash, our arguments all start

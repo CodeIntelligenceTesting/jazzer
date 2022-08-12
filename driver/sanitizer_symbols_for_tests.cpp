@@ -31,13 +31,19 @@ void __sanitizer_weak_hook_compare_bytes(void *caller_pc, const void *s1,
 void __sanitizer_weak_hook_memmem(void *called_pc, const void *s1, size_t len1,
                                   const void *s2, size_t len2, void *result) {}
 void __sanitizer_cov_trace_cmp4(uint32_t arg1, uint32_t arg2) {}
-void __sanitizer_cov_trace_cmp8(uint64_t arg1, uint64_t arg2) {}
 void __sanitizer_cov_trace_switch(uint64_t val, uint64_t *cases) {}
-void __sanitizer_cov_trace_div4(uint32_t val) {}
-void __sanitizer_cov_trace_div8(uint64_t val) {}
-void __sanitizer_cov_trace_gep(uintptr_t idx) {}
-void __sanitizer_cov_trace_pc_indir(uintptr_t callee) {}
 void __sanitizer_set_death_callback(void (*callback)()) {}
+void __sanitizer_cov_trace_cmp4_with_pc(void *caller_pc, uint32_t arg1,
+                                        uint32_t arg2) {}
+void __sanitizer_cov_trace_cmp8_with_pc(void *caller_pc, uint64_t arg1,
+                                        uint64_t arg2) {}
+void __sanitizer_cov_trace_switch_with_pc(void *caller_pc, uint64_t val,
+                                          uint64_t *cases) {}
+void __sanitizer_cov_trace_div4_with_pc(void *caller_pc, uint32_t val) {}
+void __sanitizer_cov_trace_div8_with_pc(void *caller_pc, uint64_t val) {}
+void __sanitizer_cov_trace_gep_with_pc(void *caller_pc, uintptr_t idx) {}
+void __sanitizer_cov_trace_pc_indir_with_pc(void *caller_pc, uintptr_t callee) {
+}
 int LLVMFuzzerRunDriver(int *argc, char ***argv,
                         int (*UserCb)(const uint8_t *Data, size_t Size)) {
   return 0;
