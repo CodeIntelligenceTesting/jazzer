@@ -197,3 +197,17 @@ java_fuzz_target_test(
     ],
     target_class = "com.example.BytesMemoryLeakFuzzer",
 )
+
+# Verifies that Jazzer continues fuzzing when the first two executions did not result in any
+# coverage feedback.
+java_fuzz_target_test(
+    name = "NoCoverageFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/NoCoverageFuzzer.java"],
+    expect_crash = False,
+    fuzzer_args = [
+        "-runs=10",
+        "--instrumentation_excludes=**",
+    ],
+    target_class = "com.example.NoCoverageFuzzer",
+)

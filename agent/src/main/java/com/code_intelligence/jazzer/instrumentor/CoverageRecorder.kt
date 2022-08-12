@@ -59,11 +59,6 @@ object CoverageRecorder {
         additionalCoverage.addAll(CoverageMap.getCoveredIds())
     }
 
-    @JvmStatic
-    fun replayCoveredIds() {
-        CoverageMap.replayCoveredIds(additionalCoverage)
-    }
-
     /**
      * [dumpCoverageReport] dumps a human-readable coverage report of files using any [coveredIds] to [dumpFileName].
      */
