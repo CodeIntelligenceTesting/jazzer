@@ -32,6 +32,7 @@ kt_jvm_library(
         "ReflectiveCall.kt",
         "RegexInjection.kt",
         "Utils.kt",
+        "XPathInjection.kt",
     ],
     visibility = ["//sanitizers:__pkg__"],
     runtime_deps = [

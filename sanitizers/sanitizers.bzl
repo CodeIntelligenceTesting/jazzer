@@ -24,6 +24,7 @@ _sanitizer_class_names = [
     "RegexInjection",
     "RegexRoadblocks",
     "SqlInjection",
+    "XPathInjection",
 ]
 
 SANITIZER_CLASSES = [_sanitizer_package_prefix + class_name for class_name in _sanitizer_class_names]
