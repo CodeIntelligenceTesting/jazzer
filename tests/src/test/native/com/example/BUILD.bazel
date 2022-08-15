@@ -1,0 +1,15 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
+
+cc_jni_library(
+    name = "native_value_profile_fuzzer",
+    srcs = ["native_value_profile_fuzzer.cpp"],
+    copts = [
+        "-fsanitize=fuzzer-no-link",
+    ],
+    linkopts = select({
+        "//:clang_on_linux": ["-fuse-ld=lld"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//tests:__pkg__"],
+    deps = ["//tests:native_value_profile_fuzzer.hdrs"],
+)
