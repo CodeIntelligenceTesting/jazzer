@@ -197,3 +197,16 @@ java_test(
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
     ],
 )
+
+java_fuzz_target_test(
+    name = "XPathInjection",
+    srcs = [
+        "XPathInjection.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
+    ],
+    target_class = "com.example.XPathInjection",
+    # Fuzz target catches the syntax exception triggered by the reproducer without the sanitizer.
+    verify_crash_reproducer = False,
+)
