@@ -86,6 +86,10 @@ public class Driver {
             });
     System.setProperty("jazzer.seed", seed);
 
+    if (args.stream().noneMatch(arg -> arg.startsWith("-rss_limit_mb="))) {
+      args.add(getDefaultRssLimitMbArg());
+    }
+
     // Do *not* modify system properties beyond this point - initializing Opt parses them as a side
     // effect.
 
@@ -94,5 +98,16 @@ public class Driver {
     }
 
     return FuzzTargetRunner.startLibFuzzer(args);
+  }
+
+  private static String getDefaultRssLimitMbArg() {
+    // Java OutOfMemoryErrors are strictly more informative than libFuzzer's out of memory crashes.
+    // We thus want to scale the default libFuzzer memory limit, which includes all memory used by
+    // the process including Jazzer's native and non-native memory footprint, such that:
+    // 1. we never reach it purely by allocating memory on the Java heap;
+    // 2. it is still reached if the fuzz target allocates excessively on the native heap.
+    // As a heuristic, we set the overall memory limit to 2 * the maximum size of the Java heap.
+    long maxHeapInBytes = Runtime.getRuntime().maxMemory();
+    return "-rss_limit_mb=" + (2 * maxHeapInBytes / (1024 * 1024));
   }
 }
