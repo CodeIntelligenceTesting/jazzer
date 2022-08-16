@@ -47,15 +47,6 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
-        name = "com_google_glog",
-        repo_mapping = {"@com_github_gflags_gflags": "@jazzer_com_github_gflags_gflags"},
-        sha256 = "8a83bf982f37bb70825df71a9709fa90ea9f4447fb3c099e1d720a439d88bad6",
-        strip_prefix = "glog-0.6.0",
-        url = "https://github.com/google/glog/archive/refs/tags/v0.6.0.tar.gz",
-    )
-
-    maybe(
-        http_archive,
         name = "com_google_absl",
         sha256 = "4208129b49006089ba1d6710845a45e31c59b0ab6bff9e5788a87f55c5abd602",
         strip_prefix = "abseil-cpp-20220623.0",

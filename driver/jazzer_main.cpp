@@ -29,7 +29,6 @@
 
 #include "absl/strings/match.h"
 #include "gflags/gflags.h"
-#include "glog/logging.h"
 #include "jvm_tooling.h"
 
 // Defined by glog
@@ -121,9 +120,6 @@ int StartLibFuzzer(std::unique_ptr<jazzer::JVM> jvm,
 
 int main(int argc, char **argv) {
   gflags::SetUsageMessage(kUsageMessage);
-  // Disable glog log prefixes to mimic libFuzzer output.
-  FLAGS_log_prefix = false;
-  google::InitGoogleLogging(argv[0]);
   rules_jni_init(argv[0]);
 
   const auto argv_end = argv + argc;

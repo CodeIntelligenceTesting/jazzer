@@ -26,7 +26,6 @@
 #include "absl/strings/str_replace.h"
 #include "absl/strings/str_split.h"
 #include "gflags/gflags.h"
-#include "glog/logging.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
 DEFINE_string(cp, ".",
@@ -158,8 +157,8 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
   // User provided agent location takes precedence.
   if (!FLAGS_agent_path.empty()) {
     if (std::ifstream(FLAGS_agent_path).good()) return FLAGS_agent_path;
-    LOG(ERROR) << "Could not find " << kAgentFileName << " at \""
-               << FLAGS_agent_path << "\"";
+    std::cerr << "ERROR: Could not find " << kAgentFileName << " at \""
+              << FLAGS_agent_path << "\"" << std::endl;
     exit(1);
   }
   // First check if we are running inside the Bazel tree and use the agent
@@ -182,9 +181,9 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
   auto agent_path =
       absl::StrFormat("%s%c%s", dir, kPathSeparator, kAgentFileName);
   if (std::ifstream(agent_path).good()) return agent_path;
-  LOG(ERROR) << "Could not find " << kAgentFileName
-             << ". Please provide "
-                "the pathname via the --agent_path flag.";
+  std::cerr << "ERROR: Could not find " << kAgentFileName
+            << ". Please provide the pathname via the --agent_path flag."
+            << std::endl;
   exit(1);
 }
 
@@ -262,7 +261,6 @@ JVM::JVM(const std::string &executable_path) {
   }
   class_path +=
       absl::StrCat(ARG_SEPARATOR, getInstrumentorAgentPath(executable_path));
-  LOG(INFO) << "got class path " << class_path;
 
   std::vector<JavaVMOption> options;
   options.push_back(
