@@ -53,7 +53,6 @@
 #include <type_traits>
 #include <vector>
 
-#include "absl/strings/str_format.h"
 #include "com_code_intelligence_jazzer_runtime_FuzzedDataProviderImpl.h"
 
 namespace {
@@ -130,14 +129,6 @@ jbyteArray JNICALL ConsumeRemainingAsArray(JNIEnv &env, jobject self) {
 
 template <typename T>
 T JNICALL ConsumeIntegralInRange(JNIEnv &env, jobject self, T min, T max) {
-  if (min > max) {
-    ThrowIllegalArgumentException(
-        env, absl::StrFormat(
-                 "Consume*InRange: min must be <= max (got min: %d, max: %d)",
-                 min, max));
-    return 0;
-  }
-
   uint64_t range = static_cast<uint64_t>(max) - min;
   uint64_t result = 0;
   std::size_t offset = 0;
@@ -205,14 +196,6 @@ T JNICALL ConsumeProbability(JNIEnv &env, jobject self) {
 
 template <typename T>
 T JNICALL ConsumeFloatInRange(JNIEnv &env, jobject self, T min, T max) {
-  if (min > max) {
-    ThrowIllegalArgumentException(
-        env, absl::StrFormat(
-                 "Consume*InRange: min must be <= max (got min: %f, max: %f)",
-                 min, max));
-    return 0.0;
-  }
-
   T range;
   T result = min;
 
@@ -646,33 +629,33 @@ std::size_t RemainingBytes(JNIEnv &env, jobject self) {
 const JNINativeMethod kFuzzedDataMethods[]{
     {(char *)"consumeBoolean", (char *)"()Z", (void *)&ConsumeBool},
     {(char *)"consumeByte", (char *)"()B", (void *)&ConsumeIntegral<jbyte>},
-    {(char *)"consumeByte", (char *)"(BB)B",
+    {(char *)"consumeByteUnchecked", (char *)"(BB)B",
      (void *)&ConsumeIntegralInRange<jbyte>},
     {(char *)"consumeShort", (char *)"()S", (void *)&ConsumeIntegral<jshort>},
-    {(char *)"consumeShort", (char *)"(SS)S",
+    {(char *)"consumeShortUnchecked", (char *)"(SS)S",
      (void *)&ConsumeIntegralInRange<jshort>},
     {(char *)"consumeInt", (char *)"()I", (void *)&ConsumeIntegral<jint>},
-    {(char *)"consumeInt", (char *)"(II)I",
+    {(char *)"consumeIntUnchecked", (char *)"(II)I",
      (void *)&ConsumeIntegralInRange<jint>},
     {(char *)"consumeLong", (char *)"()J", (void *)&ConsumeIntegral<jlong>},
-    {(char *)"consumeLong", (char *)"(JJ)J",
+    {(char *)"consumeLongUnchecked", (char *)"(JJ)J",
      (void *)&ConsumeIntegralInRange<jlong>},
     {(char *)"consumeFloat", (char *)"()F", (void *)&ConsumeFloat<jfloat>},
     {(char *)"consumeRegularFloat", (char *)"()F",
      (void *)&ConsumeRegularFloat<jfloat>},
-    {(char *)"consumeRegularFloat", (char *)"(FF)F",
+    {(char *)"consumeRegularFloatUnchecked", (char *)"(FF)F",
      (void *)&ConsumeFloatInRange<jfloat>},
     {(char *)"consumeProbabilityFloat", (char *)"()F",
      (void *)&ConsumeProbability<jfloat>},
     {(char *)"consumeDouble", (char *)"()D", (void *)&ConsumeFloat<jdouble>},
     {(char *)"consumeRegularDouble", (char *)"()D",
      (void *)&ConsumeRegularFloat<jdouble>},
-    {(char *)"consumeRegularDouble", (char *)"(DD)D",
+    {(char *)"consumeRegularDoubleUnchecked", (char *)"(DD)D",
      (void *)&ConsumeFloatInRange<jdouble>},
     {(char *)"consumeProbabilityDouble", (char *)"()D",
      (void *)&ConsumeProbability<jdouble>},
     {(char *)"consumeChar", (char *)"()C", (void *)&ConsumeChar},
-    {(char *)"consumeChar", (char *)"(CC)C",
+    {(char *)"consumeCharUnchecked", (char *)"(CC)C",
      (void *)&ConsumeIntegralInRange<jchar>},
     {(char *)"consumeCharNoSurrogates", (char *)"()C",
      (void *)&ConsumeCharNoSurrogates},
