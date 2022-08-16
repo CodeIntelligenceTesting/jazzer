@@ -32,6 +32,12 @@ import java.util.stream.Stream;
  * <p>Each option corresponds to a command-line argument of the driver of the same name.
  *
  * <p>Every public field should be deeply immutable.
+ *
+ * <p>This class is loaded twice: As it is used in {@link FuzzTargetRunner}, it is loaded in the
+ * class loader that loads {@link Driver}. It is also used in
+ * {@link com.code_intelligence.jazzer.agent.Agent} after the agent JAR has been added to the
+ * bootstrap classpath and thus is loaded again in the bootstrap loader. This is not a problem since
+ * it only provides immutable fields and has no non-fatal side effects.
  */
 public final class Opt {
   private static final char SYSTEM_DELIMITER =
