@@ -39,6 +39,7 @@ import java.lang.reflect.Modifier;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
@@ -70,18 +71,58 @@ public final class FuzzTargetRunner {
 
   static {
     String targetClassName = determineFuzzTargetClassName();
+
+    // FuzzTargetRunner is loaded by the bootstrap class loader since Driver installs the agent
+    // before invoking FuzzTargetRunner.startLibFuzzer. We can't load the fuzz target with that
+    // class loader - we have to use the class loader that loaded Driver. This would be
+    // straightforward to do in Java 9+, but requires the use of reflection to maintain
+    // compatibility with Java 8, which doesn't have StackWalker.
+    //
+    // Note that we can't just move the agent initialization so that FuzzTargetRunner is loaded by
+    // Driver's class loader: The agent and FuzzTargetRunner have to share the native library that
+    // contains libFuzzer and that library needs to be available in the bootstrap class loader
+    // since instrumentation applied to Java standard library classes still needs to be able to call
+    // libFuzzer hooks. A fundamental JNI restriction is that a native library can't be shared
+    // between two different class loaders, so FuzzTargetRunner is thus forced to be loaded in the
+    // bootstrap class loader, which makes this ugly code block necessary.
+    // We also can't use the system class loader since Driver may be loaded by a custom class loader
+    // if not invoked from the native driver.
+    Class<?> driverClass;
     try {
-      // When running with the agent, the JAR containing the agent and the driver has been added to
-      // the bootstrap class loader path at the time the native driver can use FindClass to load the
-      // Java fuzz target runner. As a result, FuzzTargetRunner's class loader will be the bootstrap
-      // class loader, which doesn't have the fuzz target on its classpath. We thus have to
-      // explicitly use the system class loader in this case.
-      ClassLoader notBootstrapLoader = FuzzTargetRunner.class.getClassLoader();
-      if (notBootstrapLoader == null) {
-        notBootstrapLoader = ClassLoader.getSystemClassLoader();
+      Class<?> reflectionClass = Class.forName("sun.reflect.Reflection");
+      try {
+        driverClass =
+            (Class<?>) reflectionClass.getMethod("getCallerClass", int.class).invoke(null, 2);
+      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        throw new IllegalStateException(e);
       }
-      notBootstrapLoader.setDefaultAssertionStatus(true);
-      fuzzTargetClass = Class.forName(targetClassName, false, notBootstrapLoader);
+    } catch (ClassNotFoundException e) {
+      // sun.reflect.Reflection is no longer available after Java 8, use StackWalker.
+      try {
+        Class<?> stackWalker = Class.forName("java.lang.StackWalker");
+        Class<? extends Enum<?>> stackWalkerOption =
+            (Class<? extends Enum<?>>) Class.forName("java.lang.StackWalker$Option");
+        Enum<?> retainClassReferences =
+            Arrays.stream(stackWalkerOption.getEnumConstants())
+                .filter(v -> v.name().equals("RETAIN_CLASS_REFERENCE"))
+                .findFirst()
+                .orElseThrow(()
+                                 -> new IllegalStateException(
+                                     "No RETAIN_CLASS_REFERENCE in java.lang.StackWalker$Option"));
+        Object stackWalkerInstance = stackWalker.getMethod("getInstance", stackWalkerOption)
+                                         .invoke(null, retainClassReferences);
+        Method stackWalkerGetCallerClass = stackWalker.getMethod("getCallerClass");
+        driverClass = (Class<?>) stackWalkerGetCallerClass.invoke(stackWalkerInstance);
+      } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException
+          | InvocationTargetException ex) {
+        throw new IllegalStateException(ex);
+      }
+    }
+
+    try {
+      ClassLoader driverClassLoader = driverClass.getClassLoader();
+      driverClassLoader.setDefaultAssertionStatus(true);
+      fuzzTargetClass = Class.forName(targetClassName, false, driverClassLoader);
     } catch (ClassNotFoundException e) {
       err.print("ERROR: ");
       e.printStackTrace(err);
