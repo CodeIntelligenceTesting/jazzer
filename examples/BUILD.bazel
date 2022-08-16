@@ -47,6 +47,7 @@ java_fuzz_target_test(
     fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_asan"],
     sanitizer = "address",
     target_class = "com.example.ExampleFuzzerWithNative",
+    target_compatible_with = SKIP_ON_WINDOWS,
     verify_crash_reproducer = False,
     runtime_deps = [
         ":example_fuzzer_with_native_lib",
