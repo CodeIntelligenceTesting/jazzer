@@ -7,7 +7,6 @@ cc_library(
     deps = [
         ":jvm_tooling_lib",
         "@com_google_absl//absl/strings",
-        "@com_google_glog//:glog",
         "@fmeum_rules_jni//jni:libjvm",
         "@jazzer_com_github_gflags_gflags//:gflags",
     ],
@@ -25,7 +24,6 @@ cc_library(
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
-        "@com_google_glog//:glog",
         "@fmeum_rules_jni//jni",
         "@jazzer_com_github_gflags_gflags//:gflags",
     ],
