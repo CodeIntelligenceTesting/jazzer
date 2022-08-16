@@ -28,15 +28,6 @@ void __sanitizer_weak_hook_compare_bytes(void *caller_pc, const void *s1,
                                          std::size_t n2, int result);
 void __sanitizer_weak_hook_memmem(void *called_pc, const void *s1, size_t len1,
                                   const void *s2, size_t len2, void *result);
-void __sanitizer_cov_trace_cmp4(uint32_t arg1, uint32_t arg2);
-void __sanitizer_cov_trace_cmp8(uint64_t arg1, uint64_t arg2);
-
-void __sanitizer_cov_trace_switch(uint64_t val, uint64_t *cases);
-
-void __sanitizer_cov_trace_div4(uint32_t val);
-void __sanitizer_cov_trace_div8(uint64_t val);
-
-void __sanitizer_cov_trace_gep(uintptr_t idx);
 }
 
 inline __attribute__((always_inline)) void *idToPc(jint id) {
