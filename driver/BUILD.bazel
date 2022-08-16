@@ -1,5 +1,4 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
-load("//bazel:cc.bzl", "cc_17_library")
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 
 cc_library(
@@ -89,12 +88,6 @@ cc_library(
     alwayslink = True,
 )
 
-cc_17_library(
-    name = "jazzer_main_lib",
-    deps = [":jazzer_main"],
-    alwayslink = True,
-)
-
 cc_binary(
     name = "jazzer_driver",
     data = [
@@ -106,7 +99,7 @@ cc_binary(
     }),
     linkstatic = True,
     visibility = ["//visibility:public"],
-    deps = [":jazzer_main_lib"],
+    deps = [":jazzer_main"],
 )
 
 alias(
@@ -141,7 +134,7 @@ cc_binary(
     }),
     linkstatic = True,
     visibility = ["//visibility:public"],
-    deps = [":jazzer_main_lib"] + select({
+    deps = [":jazzer_main"] + select({
         # There is no static ASan runtime on macOS, so link to the dynamic
         # runtime library if on macOS and using the toolchain.
         ":using_toolchain_on_osx": ["@llvm_toolchain_llvm//:macos_asan_dynamic"],
@@ -177,7 +170,7 @@ cc_binary(
     linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
-        ":jazzer_main_lib",
+        ":jazzer_main",
     ] + select({
         "@platforms//os:windows": [],
         "//conditions:default": [":native_fuzzer_hooks"],
@@ -212,6 +205,10 @@ cc_test(
     args = [
         "--cp=jazzer/$(rootpath //driver/testdata:fuzz_target_mocks_deploy.jar)",
     ],
+    copts = select({
+        "@platforms//os:windows": ["/std:c++17"],
+        "//conditions:default": ["-std=c++17"],
+    }),
     data = [
         "//agent:jazzer_agent_deploy",
         "//driver/testdata:fuzz_target_mocks_deploy.jar",

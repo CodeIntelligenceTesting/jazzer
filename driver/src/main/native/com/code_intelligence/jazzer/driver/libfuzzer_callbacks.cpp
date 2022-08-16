@@ -14,13 +14,13 @@
 
 #include <jni.h>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <mutex>
 #include <utility>
 #include <vector>
 
-#include "absl/strings/match.h"
 #include "absl/strings/str_split.h"
 #include "com_code_intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks.h"
 
@@ -47,7 +47,7 @@ void ignoreLibraryForInterception(const std::string &lib_name) {
     // A typical line looks as follows:
     // 7f15356c9000-7f1536367000 r-xp 0020d000 fd:01 19275673         /usr/lib/jvm/java-15-openjdk-amd64/lib/server/libjvm.so
     // clang-format on
-    std::vector<std::string_view> parts =
+    std::vector<std::string> parts =
         absl::StrSplit(line, ' ', absl::SkipEmpty());
     if (parts.size() != 6) {
       std::cout << "ERROR: Invalid format for /proc/self/maps\n"
@@ -56,7 +56,7 @@ void ignoreLibraryForInterception(const std::string &lib_name) {
     }
     // Skip non-executable address rang"s.
     if (!absl::StrContains(parts[1], "x")) continue;
-    std::string_view range_str = parts[0];
+    std::string range_str = parts[0];
     std::vector<std::string> range = absl::StrSplit(range_str, "-");
     if (range.size() != 2) {
       std::cout
@@ -101,20 +101,21 @@ extern "C" [[maybe_unused]] bool __sanitizer_weak_is_relevant_pc(
   // If the fuzz target is using native libraries, intercept calls only if they
   // don't originate from those address ranges that are known to belong to the
   // JDK.
-  return std::none_of(ignore_for_interception_ranges.cbegin(),
-                      ignore_for_interception_ranges.cend(),
-                      [caller_pc](const auto &range) {
-                        uintptr_t start;
-                        uintptr_t end;
-                        std::tie(start, end) = range;
-                        auto address = reinterpret_cast<uintptr_t>(caller_pc);
-                        return start <= address && address <= end;
-                      });
+  return std::none_of(
+      ignore_for_interception_ranges.cbegin(),
+      ignore_for_interception_ranges.cend(),
+      [caller_pc](const std::pair<uintptr_t, uintptr_t> &range) {
+        uintptr_t start;
+        uintptr_t end;
+        std::tie(start, end) = range;
+        auto address = reinterpret_cast<uintptr_t>(caller_pc);
+        return start <= address && address <= end;
+      });
 }
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_handleLibraryLoad(
-    JNIEnv *env, jclass cls) {
+    JNIEnv *, jclass) {
   std::call_once(ignore_list_flag, [] {
     std::cout << "INFO: detected a native library load, enabling interception "
                  "for libc functions"
