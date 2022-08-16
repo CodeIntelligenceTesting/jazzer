@@ -253,6 +253,7 @@ java_fuzz_target_test(
     fuzzer_args = ["-use_value_profile=1"],
     sanitizer = "address",
     target_class = "com.example.NativeValueProfileFuzzer",
+    target_compatible_with = SKIP_ON_WINDOWS,
     verify_crash_reproducer = False,
     runtime_deps = [":native_value_profile_fuzzer"],
 )
