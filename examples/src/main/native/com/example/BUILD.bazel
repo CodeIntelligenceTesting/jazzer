@@ -9,6 +9,13 @@ cc_jni_library(
         "-fsanitize=fuzzer-no-link,address",
         "-fno-sanitize-blacklist",
     ],
+    defines = [
+        # Workaround for Windows build failures with VS 2022:
+        # "lld-link: error: /INFERASANLIBS is not allowed in .drectve"
+        # https://github.com/llvm/llvm-project/issues/56300#issuecomment-1214313292
+        "_DISABLE_STRING_ANNOTATION=1",
+        "_DISABLE_VECTOR_ANNOTATION=1",
+    ],
     linkopts = select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
         "@platforms//os:windows": [
