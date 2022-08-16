@@ -66,7 +66,6 @@ cc_library(
     ],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:fuzzed_data_provider.hdrs",
-        "@com_google_absl//absl/strings:str_format",
     ],
     # Symbols may only be referenced dynamically via JNI.
     alwayslink = True,

@@ -45,23 +45,51 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider {
 
   @Override public native byte consumeByte();
 
-  @Override public native byte consumeByte(byte min, byte max);
+  @Override
+  public byte consumeByte(byte min, byte max) {
+    if (min > max) {
+      throw new IllegalArgumentException(
+          String.format("min must be <= max (got min: %d, max: %d)", min, max));
+    }
+    return consumeByteUnchecked(min, max);
+  }
 
   @Override public native short consumeShort();
 
-  @Override public native short consumeShort(short min, short max);
+  @Override
+  public short consumeShort(short min, short max) {
+    if (min > max) {
+      throw new IllegalArgumentException(
+          String.format("min must be <= max (got min: %d, max: %d)", min, max));
+    }
+    return consumeShortUnchecked(min, max);
+  }
 
   @Override public native short[] consumeShorts(int maxLength);
 
   @Override public native int consumeInt();
 
-  @Override public native int consumeInt(int min, int max);
+  @Override
+  public int consumeInt(int min, int max) {
+    if (min > max) {
+      throw new IllegalArgumentException(
+          String.format("min must be <= max (got min: %d, max: %d)", min, max));
+    }
+    return consumeIntUnchecked(min, max);
+  }
 
   @Override public native int[] consumeInts(int maxLength);
 
   @Override public native long consumeLong();
 
-  @Override public native long consumeLong(long min, long max);
+  @Override
+  public long consumeLong(long min, long max) {
+    if (min > max) {
+      throw new IllegalArgumentException(
+          String.format("min must be <= max (got min: %d, max: %d)", min, max));
+    }
+    return consumeLongUnchecked(min, max);
+  }
 
   @Override public native long[] consumeLongs(int maxLength);
 
@@ -69,13 +97,27 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider {
 
   @Override public native float consumeRegularFloat();
 
-  @Override public native float consumeRegularFloat(float min, float max);
+  @Override
+  public float consumeRegularFloat(float min, float max) {
+    if (min > max) {
+      throw new IllegalArgumentException(
+          String.format("min must be <= max (got min: %f, max: %f)", min, max));
+    }
+    return consumeRegularFloatUnchecked(min, max);
+  }
 
   @Override public native float consumeProbabilityFloat();
 
   @Override public native double consumeDouble();
 
-  @Override public native double consumeRegularDouble(double min, double max);
+  @Override
+  public double consumeRegularDouble(double min, double max) {
+    if (min > max) {
+      throw new IllegalArgumentException(
+          String.format("min must be <= max (got min: %f, max: %f)", min, max));
+    }
+    return consumeRegularDoubleUnchecked(min, max);
+  }
 
   @Override public native double consumeRegularDouble();
 
@@ -83,7 +125,14 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider {
 
   @Override public native char consumeChar();
 
-  @Override public native char consumeChar(char min, char max);
+  @Override
+  public char consumeChar(char min, char max) {
+    if (min > max) {
+      throw new IllegalArgumentException(
+          String.format("min must be <= max (got min: %c, max: %c)", min, max));
+    }
+    return consumeCharUnchecked(min, max);
+  }
 
   @Override public native char consumeCharNoSurrogates();
 
@@ -100,4 +149,12 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider {
   @Override public native byte[] consumeRemainingAsBytes();
 
   @Override public native int remainingBytes();
+
+  private native byte consumeByteUnchecked(byte min, byte max);
+  private native short consumeShortUnchecked(short min, short max);
+  private native char consumeCharUnchecked(char min, char max);
+  private native int consumeIntUnchecked(int min, int max);
+  private native long consumeLongUnchecked(long min, long max);
+  private native float consumeRegularFloatUnchecked(float min, float max);
+  private native double consumeRegularDoubleUnchecked(double min, double max);
 }
