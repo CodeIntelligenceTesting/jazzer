@@ -144,9 +144,9 @@ namespace {
 constexpr auto kAgentBazelRunfilesPath = "jazzer/agent/jazzer_agent_deploy.jar";
 constexpr auto kAgentFileName = "jazzer_agent_deploy.jar";
 
-std::string_view dirFromFullPath(std::string_view path) {
+std::string dirFromFullPath(const std::string &path) {
   const auto pos = path.rfind(kPathSeparator);
-  if (pos != std::string_view::npos) {
+  if (pos != std::string::npos) {
     return path.substr(0, pos);
   }
   return "";
@@ -154,7 +154,7 @@ std::string_view dirFromFullPath(std::string_view path) {
 
 // getInstrumentorAgentPath searches for the fuzzing instrumentation agent and
 // returns the location if it is found. Otherwise it calls exit(0).
-std::string getInstrumentorAgentPath(std::string_view executable_path) {
+std::string getInstrumentorAgentPath(const std::string &executable_path) {
   // User provided agent location takes precedence.
   if (!FLAGS_agent_path.empty()) {
     if (std::ifstream(FLAGS_agent_path).good()) return FLAGS_agent_path;
@@ -252,7 +252,7 @@ std::vector<std::string> splitEscaped(const std::string &str) {
 
 namespace jazzer {
 
-JVM::JVM(std::string_view executable_path) {
+JVM::JVM(const std::string &executable_path) {
   // combine class path from command line flags and JAVA_FUZZER_CLASSPATH env
   // variable
   std::string class_path = absl::StrFormat("-Djava.class.path=%s", FLAGS_cp);

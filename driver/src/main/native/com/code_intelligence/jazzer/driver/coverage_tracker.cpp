@@ -16,8 +16,6 @@
 
 #include <jni.h>
 
-#include <algorithm>
-#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -87,13 +85,13 @@ void CoverageTracker::RegisterNewCounters(JNIEnv &env, jint old_num_counters,
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_CoverageMap_initialize(
-    JNIEnv *env, jclass cls, jlong counters) {
+    JNIEnv *env, jclass, jlong counters) {
   ::jazzer::CoverageTracker::Initialize(*env, counters);
 }
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_CoverageMap_registerNewCounters(
-    JNIEnv *env, jclass cls, jint old_num_counters, jint new_num_counters) {
+    JNIEnv *env, jclass, jint old_num_counters, jint new_num_counters) {
   ::jazzer::CoverageTracker::RegisterNewCounters(*env, old_num_counters,
                                                  new_num_counters);
 }

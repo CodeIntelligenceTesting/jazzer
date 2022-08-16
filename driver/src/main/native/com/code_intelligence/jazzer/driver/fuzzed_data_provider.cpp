@@ -47,7 +47,9 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 

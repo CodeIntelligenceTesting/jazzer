@@ -23,17 +23,14 @@
 #include <rules_jni.h>
 
 #include <algorithm>
-#include <filesystem>
 #include <iostream>
-#include <string>
+#include <memory>
 #include <vector>
 
 #include "absl/strings/match.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "jvm_tooling.h"
-
-using namespace std::string_literals;
 
 // Defined by glog
 DECLARE_bool(log_prefix);
@@ -137,7 +134,7 @@ int main(int argc, char **argv) {
     // by taking only those with a leading double dash.
     std::vector<char *> our_args = {*argv};
     std::copy_if(argv, argv_end, std::back_inserter(our_args),
-                 [](const auto arg) {
+                 [](const std::string &arg) {
                    return absl::StartsWith(std::string(arg), "--");
                  });
     int our_argc = our_args.size();
@@ -153,6 +150,6 @@ int main(int argc, char **argv) {
               << std::endl;
   }
 
-  return StartLibFuzzer(std::make_unique<jazzer::JVM>(argv[0]),
+  return StartLibFuzzer(std::unique_ptr<jazzer::JVM>(new jazzer::JVM(argv[0])),
                         std::vector<std::string>(argv, argv_end));
 }

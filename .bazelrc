@@ -4,12 +4,6 @@ build --enable_platform_specific_config
 build -c opt
 
 # C/C++
-# Only relevant for tests and their dependencies. Everything that external
-# repositories can reference must build without this, e.g., by using a
-# transition.
-build:linux --cxxopt='-std=c++17'
-build:macos --cxxopt='-std=c++17'
-build:windows --cxxopt='/std:c++17'
 common --repo_env=CC=clang
 build --incompatible_enable_cc_toolchain_resolution
 # Requires a relatively modern clang.

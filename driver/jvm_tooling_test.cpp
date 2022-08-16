@@ -14,6 +14,8 @@
 
 #include "jvm_tooling.h"
 
+#include <memory>
+
 #include "gflags/gflags.h"
 #include "gtest/gtest.h"
 #include "tools/cpp/runfiles/runfiles.h"
@@ -43,7 +45,7 @@ class JvmToolingTest : public ::testing::Test {
     Runfiles *runfiles = Runfiles::CreateForTest();
     FLAGS_cp = runfiles->Rlocation(FLAGS_cp);
 
-    jvm_ = std::make_unique<JVM>("test_executable");
+    jvm_ = std::unique_ptr<JVM>(new JVM("test_executable"));
   }
 
   static void TearDownTestCase() { jvm_.reset(nullptr); }
