@@ -79,7 +79,7 @@ public class Driver {
               // Only add the -seed argument to the command line if not running in a mode
               // that spawns subprocesses. These would inherit the same seed, which might
               // make them less effective.
-              if (spawnsSubprocesses) {
+              if (!spawnsSubprocesses) {
                 args.add("-seed=" + newSeed);
               }
               return newSeed;
