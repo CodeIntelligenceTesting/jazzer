@@ -348,3 +348,15 @@ java_binary(
         ":JsonSanitizerDenylistFuzzer_target_deploy.jar",
     ],
 )
+
+java_fuzz_target_test(
+    name = "ExpressionLanguageInjection",
+    srcs = [
+        "src/main/java/com/example/ExpressionLanguageInjection.java",
+    ],
+    target_class = "com.example.ExpressionLanguageInjection",
+    deps = [
+        "@maven//:jakarta_el_jakarta_el_api",
+        "@maven//:org_apache_tomcat_tomcat_jasper",
+    ],
+)

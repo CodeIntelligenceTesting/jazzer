@@ -32,6 +32,8 @@ MAVEN_ARTIFACTS = [
     "javax.el:javax.el-api:3.0.1-b06",
     "javax.validation:validation-api:2.0.1.Final",
     "javax.xml.bind:jaxb-api:2.3.1",
+    "jakarta.el:jakarta.el-api:5.0.1",
+    "org.apache.tomcat:tomcat-jasper:10.1.0-M17",
     "junit:junit:4.12",
     "org.apache.commons:commons-imaging:1.0-alpha2",
     "org.glassfish:javax.el:3.0.1-b06",
