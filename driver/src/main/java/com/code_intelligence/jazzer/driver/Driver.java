@@ -103,8 +103,9 @@ public class Driver {
     // the process including Jazzer's native and non-native memory footprint, such that:
     // 1. we never reach it purely by allocating memory on the Java heap;
     // 2. it is still reached if the fuzz target allocates excessively on the native heap.
-    // As a heuristic, we set the overall memory limit to 2 * the maximum size of the Java heap.
+    // As a heuristic, we set the overall memory limit to 2 * the maximum size of the Java heap and
+    // add a fixed 1 GiB on top for the fuzzer's own memory usage.
     long maxHeapInBytes = Runtime.getRuntime().maxMemory();
-    return "-rss_limit_mb=" + (2 * maxHeapInBytes / (1024 * 1024));
+    return "-rss_limit_mb=" + ((2 * maxHeapInBytes / (1024 * 1024)) + 1024);
   }
 }
