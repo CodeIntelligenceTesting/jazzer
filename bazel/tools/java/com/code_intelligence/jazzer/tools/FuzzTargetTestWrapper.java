@@ -23,13 +23,13 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
@@ -48,7 +48,7 @@ public class FuzzTargetTestWrapper {
     boolean verifyCrashReproducer;
     boolean expectCrash;
     Set<String> expectedFindings;
-    Stream<String> arguments;
+    List<String> arguments;
     try {
       runfiles = Runfiles.create();
       driverActualPath = lookUpRunfile(runfiles, args[0]);
@@ -60,8 +60,11 @@ public class FuzzTargetTestWrapper {
       expectedFindings =
           Arrays.stream(args[6].split(",")).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
       // Map all files/dirs to real location
-      arguments = Arrays.stream(args).skip(7).map(
-          arg -> arg.startsWith("-") ? arg : lookUpRunfileWithFallback(runfiles, arg));
+      arguments =
+          Arrays.stream(args)
+              .skip(7)
+              .map(arg -> arg.startsWith("-") ? arg : lookUpRunfileWithFallback(runfiles, arg))
+              .collect(Collectors.toList());
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
@@ -77,13 +80,16 @@ public class FuzzTargetTestWrapper {
     // so this is only useful for examples.
     String outputDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR");
 
-    List<String> command =
-        Stream
-            .concat(Stream.of(driverActualPath, String.format("-artifact_prefix=%s/", outputDir),
-                        String.format("--reproducer_path=%s", outputDir), "-seed=2735196724",
-                        String.format("--cp=%s", jarActualPath)),
-                arguments)
-            .collect(Collectors.toList());
+    List<String> command = new ArrayList<>();
+    command.add(driverActualPath);
+    command.add(String.format("-artifact_prefix=%s/", outputDir));
+    command.add(String.format("--reproducer_path=%s", outputDir));
+    command.add(String.format("--cp=%s", jarActualPath));
+    if (System.getenv("JAZZER_NO_EXPLICIT_SEED") == null) {
+      command.add("-seed=2735196724");
+    }
+    command.addAll(arguments);
+
     processBuilder.inheritIO();
     if (JAZZER_CI) {
       // Make JVM error reports available in test outputs.
