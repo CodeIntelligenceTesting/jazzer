@@ -223,3 +223,17 @@ java_fuzz_target_test(
     ],
     target_class = "com.example.SeedFuzzer",
 )
+
+java_fuzz_target_test(
+    name = "NoSeedFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/NoSeedFuzzer.java"],
+    env = {
+        "JAZZER_NO_EXPLICIT_SEED": "1",
+    },
+    expect_crash = False,
+    fuzzer_args = [
+        "-runs=0",
+    ],
+    target_class = "com.example.NoSeedFuzzer",
+)

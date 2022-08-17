@@ -70,20 +70,17 @@ public class Driver {
     // occurrence of a "-seed" argument as that is the one that is used by libFuzzer. If none is
     // set, generate one and pass it to libFuzzer so that a fuzzing run can be reproduced simply by
     // setting the seed printed by libFuzzer.
-    String seed =
-        args.stream()
-            .reduce(
-                (prev, cur) -> cur.startsWith("-seed=") ? cur.substring("-seed=".length()) : prev)
-            .orElseGet(() -> {
-              String newSeed = Integer.toUnsignedString(new SecureRandom().nextInt());
-              // Only add the -seed argument to the command line if not running in a mode
-              // that spawns subprocesses. These would inherit the same seed, which might
-              // make them less effective.
-              if (!spawnsSubprocesses) {
-                args.add("-seed=" + newSeed);
-              }
-              return newSeed;
-            });
+    String seed = args.stream().reduce(
+        null, (prev, cur) -> cur.startsWith("-seed=") ? cur.substring("-seed=".length()) : prev);
+    if (seed == null) {
+      seed = Integer.toUnsignedString(new SecureRandom().nextInt());
+      // Only add the -seed argument to the command line if not running in a mode
+      // that spawns subprocesses. These would inherit the same seed, which might
+      // make them less effective.
+      if (!spawnsSubprocesses) {
+        args.add("-seed=" + seed);
+      }
+    }
     System.setProperty("jazzer.seed", seed);
 
     if (args.stream().noneMatch(arg -> arg.startsWith("-rss_limit_mb="))) {
