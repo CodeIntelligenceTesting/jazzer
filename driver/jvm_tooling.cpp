@@ -194,10 +194,9 @@ std::string getInstrumentorAgentPath(std::string_view executable_path) {
 }
 
 std::vector<std::string> optsAsDefines() {
-  return {
+  std::vector<std::string> defines{
       absl::StrFormat("-Djazzer.target_class=%s", FLAGS_target_class),
       absl::StrFormat("-Djazzer.target_args=%s", FLAGS_target_args),
-      absl::StrFormat("-Djazzer.keep_going=%d", FLAGS_keep_going),
       absl::StrFormat("-Djazzer.dedup=%s", FLAGS_dedup ? "true" : "false"),
       absl::StrFormat("-Djazzer.ignore=%s", FLAGS_ignore),
       absl::StrFormat("-Djazzer.reproducer_path=%s", FLAGS_reproducer_path),
@@ -220,6 +219,11 @@ std::vector<std::string> optsAsDefines() {
       absl::StrFormat("-Djazzer.trace=%s", FLAGS_trace),
       absl::StrFormat("-Djazzer.dump_classes_dir=%s", FLAGS_dump_classes_dir),
   };
+  if (!gflags::GetCommandLineFlagInfoOrDie("keep_going").is_default) {
+    defines.emplace_back(
+        absl::StrFormat("-Djazzer.keep_going=%d", FLAGS_keep_going));
+  }
+  return defines;
 }
 
 // Splits a string at the ARG_SEPARATOR unless it is escaped with a backslash.

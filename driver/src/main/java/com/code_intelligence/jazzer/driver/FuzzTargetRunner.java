@@ -197,7 +197,7 @@ public final class FuzzTargetRunner {
     // target.
     dumpReproducer(data);
 
-    if (Opt.keepGoing == 1 || ignoredTokens.size() >= Opt.keepGoing) {
+    if (Opt.keepGoing == 1 || Long.compareUnsigned(ignoredTokens.size(), Opt.keepGoing) >= 0) {
       // Reached the maximum amount of findings to keep going for, crash after shutdown. We use
       // _Exit rather than System.exit to not trigger libFuzzer's exit handlers.
       shutdown();
