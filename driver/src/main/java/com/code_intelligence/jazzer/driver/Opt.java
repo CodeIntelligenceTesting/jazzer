@@ -67,7 +67,7 @@ public final class Opt {
       : Collections.unmodifiableList(
           Stream.concat(Stream.of(autofuzz), autofuzzIgnore.stream()).collect(Collectors.toList()));
   public static final long keepGoing =
-      uint32Setting("keep_going", autofuzz.isEmpty() ? 1 : Integer.MIN_VALUE);
+      uint64Setting("keep_going", autofuzz.isEmpty() ? 1 : Long.MAX_VALUE);
 
   // Default to false if hooks is false to mimic the original behavior of the native fuzz target
   // runner, but still support hooks = false && dedup = true.
@@ -119,12 +119,12 @@ public final class Opt {
     return Boolean.parseBoolean(value);
   }
 
-  private static long uint32Setting(String name, int defaultValue) {
+  private static long uint64Setting(String name, long defaultValue) {
     String value = System.getProperty(optionsPrefix + name);
     if (value == null) {
       return defaultValue;
     }
-    return Integer.parseUnsignedInt(value, 10);
+    return Long.parseUnsignedLong(value, 10);
   }
 
   /**
