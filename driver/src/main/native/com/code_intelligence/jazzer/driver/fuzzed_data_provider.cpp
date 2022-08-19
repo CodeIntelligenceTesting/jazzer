@@ -43,38 +43,19 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 
-#include "fuzzed_data_provider.h"
-
 #include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <vector>
 
 #include "com_code_intelligence_jazzer_runtime_FuzzedDataProviderImpl.h"
 
 namespace {
 
-// The current position in the fuzzer input.
-const uint8_t *gDataPtr = nullptr;
-// The remaining unconsumed bytes at the current position in the fuzzer input.
-std::size_t gRemainingBytes = 0;
-
-const uint8_t *gFuzzerInputStart = nullptr;
-std::size_t gFuzzerInputSize = 0;
-
-// Advance by `bytes` bytes in the buffer or stay at the end if it has been
-// consumed.
-void Advance(const std::size_t bytes) {
-  if (bytes > gRemainingBytes) {
-    gRemainingBytes = 0;
-  } else {
-    gDataPtr += bytes;
-    gRemainingBytes -= bytes;
-  }
-}
+jfieldID gDataPtrField = nullptr;
+jfieldID gRemainingBytesField = nullptr;
 
 void ThrowIllegalArgumentException(JNIEnv &env, const std::string &message) {
   jclass illegal_argument_exception =
@@ -112,13 +93,22 @@ ConsumeIntegralArray(JNIEnv &env, jobject self, jint max_length) {
   }
   // Arrays of integral types are considered data and thus consumed from the
   // beginning of the buffer.
-  std::size_t max_num_bytes = std::min(sizeof(T) * max_length, gRemainingBytes);
+  const auto *dataPtr =
+      reinterpret_cast<const uint8_t *>(env.GetLongField(self, gDataPtrField));
+  jint remainingBytes = env.GetIntField(self, gRemainingBytesField);
+
+  jint max_num_bytes =
+      std::min(static_cast<jint>(sizeof(T)) * max_length, remainingBytes);
   jsize actual_length = max_num_bytes / sizeof(T);
-  std::size_t actual_num_bytes = sizeof(T) * actual_length;
+  jint actual_num_bytes = sizeof(T) * actual_length;
   auto array = (env.*(JniArrayType<T>::kNewArrayFunc))(actual_length);
   (env.*(JniArrayType<T>::kSetArrayRegionFunc))(
-      array, 0, actual_length, reinterpret_cast<const T *>(gDataPtr));
-  Advance(actual_num_bytes);
+      array, 0, actual_length, reinterpret_cast<const T *>(dataPtr));
+
+  env.SetLongField(self, gDataPtrField, (jlong)(dataPtr + actual_num_bytes));
+  env.SetIntField(self, gRemainingBytesField,
+                  remainingBytes - actual_num_bytes);
+
   return array;
 }
 
@@ -131,14 +121,21 @@ template <typename T>
 T JNICALL ConsumeIntegralInRange(JNIEnv &env, jobject self, T min, T max) {
   uint64_t range = static_cast<uint64_t>(max) - min;
   uint64_t result = 0;
-  std::size_t offset = 0;
+  jint offset = 0;
+
+  const auto *dataPtr =
+      reinterpret_cast<const uint8_t *>(env.GetLongField(self, gDataPtrField));
+  jint remainingBytes = env.GetIntField(self, gRemainingBytesField);
 
   while (offset < 8 * sizeof(T) && (range >> offset) > 0 &&
-         gRemainingBytes != 0) {
-    --gRemainingBytes;
-    result = (result << 8u) | gDataPtr[gRemainingBytes];
+         remainingBytes != 0) {
+    --remainingBytes;
+    result = (result << 8u) | dataPtr[remainingBytes];
     offset += 8;
   }
+
+  env.SetIntField(self, gRemainingBytesField, remainingBytes);
+  // dataPtr hasn't been modified, so we don't need to update gDataPtrField.
 
   if (range != std::numeric_limits<T>::max())
     // We accept modulo bias in favor of reading a dynamic number of bytes as
@@ -221,7 +218,7 @@ T JNICALL ConsumeRegularFloat(JNIEnv &env, jobject self) {
 
 template <typename T>
 T JNICALL ConsumeFloat(JNIEnv &env, jobject self) {
-  if (!gRemainingBytes) return 0.0;
+  if (env.GetIntField(self, gRemainingBytesField) == 0) return 0.0;
 
   auto type_val = ConsumeIntegral<uint8_t>(env, self);
 
@@ -323,27 +320,25 @@ enum class Utf8GenerationState {
 // See Algorithm 1 of https://arxiv.org/pdf/2010.03090.pdf for more details on
 // the individual cases involved in determining the validity of a UTF-8 string.
 template <bool ascii_only, bool stop_on_backslash>
-std::pair<std::string, std::size_t> FixUpModifiedUtf8(const uint8_t *data,
-                                                      std::size_t max_bytes,
-                                                      jint max_length) {
+std::pair<std::string, jint> FixUpModifiedUtf8(const uint8_t *data,
+                                               jint max_bytes,
+                                               jint max_length) {
   std::string str;
   // Every character in modified UTF-8 is coded on at most six bytes. Every
   // consumed byte is transformed into at most one code unit, except for the
   // case of a zero byte which requires two bytes.
-  if (max_bytes > std::numeric_limits<std::size_t>::max() / 2)
-    max_bytes = std::numeric_limits<std::size_t>::max() / 2;
   if (ascii_only) {
-    str.reserve(
-        std::min(2 * static_cast<std::size_t>(max_length), 2 * max_bytes));
+    str.reserve(std::min(2 * static_cast<std::size_t>(max_length),
+                         2 * static_cast<std::size_t>(max_bytes)));
   } else {
-    str.reserve(
-        std::min(6 * static_cast<std::size_t>(max_length), 2 * max_bytes));
+    str.reserve(std::min(6 * static_cast<std::size_t>(max_length),
+                         2 * static_cast<std::size_t>(max_bytes)));
   }
 
   Utf8GenerationState state = Utf8GenerationState::LeadingByte_Generic;
   const uint8_t *pos = data;
   const auto data_end = data + max_bytes;
-  for (std::size_t length = 0; length < max_length && pos != data_end; ++pos) {
+  for (jint length = 0; length < max_length && pos != data_end; ++pos) {
     uint8_t c = *pos;
     if (ascii_only) {
       // Clamp to 7-bit ASCII range.
@@ -559,11 +554,10 @@ done:
 
 namespace jazzer {
 // Exposed for testing only.
-std::pair<std::string, std::size_t> FixUpModifiedUtf8(const uint8_t *data,
-                                                      std::size_t max_bytes,
-                                                      jint max_length,
-                                                      bool ascii_only,
-                                                      bool stop_on_backslash) {
+std::pair<std::string, jint> FixUpModifiedUtf8(const uint8_t *data,
+                                               jint max_bytes, jint max_length,
+                                               bool ascii_only,
+                                               bool stop_on_backslash) {
   if (ascii_only) {
     if (stop_on_backslash) {
       return ::FixUpModifiedUtf8<true, true>(data, max_bytes, max_length);
@@ -581,49 +575,53 @@ std::pair<std::string, std::size_t> FixUpModifiedUtf8(const uint8_t *data,
 }  // namespace jazzer
 
 namespace {
-jstring ConsumeStringInternal(JNIEnv &env, jint max_length, bool ascii_only,
-                              bool stop_on_backslash) {
+jstring ConsumeStringInternal(JNIEnv &env, jobject self, jint max_length,
+                              bool ascii_only, bool stop_on_backslash) {
   if (max_length < 0) {
     ThrowIllegalArgumentException(env, "maxLength must not be negative");
     return nullptr;
   }
 
-  if (max_length == 0 || gRemainingBytes == 0) return env.NewStringUTF("");
+  const auto *dataPtr =
+      reinterpret_cast<const uint8_t *>(env.GetLongField(self, gDataPtrField));
+  jint remainingBytes = env.GetIntField(self, gRemainingBytesField);
 
-  if (gRemainingBytes == 1) {
-    Advance(1);
+  if (max_length == 0 || remainingBytes == 0) return env.NewStringUTF("");
+
+  if (remainingBytes == 1) {
+    env.SetIntField(self, gRemainingBytesField, 0);
     return env.NewStringUTF("");
   }
 
-  std::size_t max_bytes = gRemainingBytes;
   std::string str;
-  std::size_t consumed_bytes;
+  jint consumed_bytes;
   std::tie(str, consumed_bytes) = jazzer::FixUpModifiedUtf8(
-      gDataPtr, max_bytes, max_length, ascii_only, stop_on_backslash);
-  Advance(consumed_bytes);
+      dataPtr, remainingBytes, max_length, ascii_only, stop_on_backslash);
+  env.SetLongField(self, gDataPtrField, (jlong)(dataPtr + consumed_bytes));
+  env.SetIntField(self, gRemainingBytesField, remainingBytes - consumed_bytes);
   return env.NewStringUTF(str.c_str());
 }
 
 jstring JNICALL ConsumeAsciiString(JNIEnv &env, jobject self, jint max_length) {
-  return ConsumeStringInternal(env, max_length, true, true);
+  return ConsumeStringInternal(env, self, max_length, true, true);
 }
 
 jstring JNICALL ConsumeString(JNIEnv &env, jobject self, jint max_length) {
-  return ConsumeStringInternal(env, max_length, false, true);
+  return ConsumeStringInternal(env, self, max_length, false, true);
 }
 
 jstring JNICALL ConsumeRemainingAsAsciiString(JNIEnv &env, jobject self) {
-  return ConsumeStringInternal(env, std::numeric_limits<jint>::max(), true,
-                               false);
+  return ConsumeStringInternal(env, self, std::numeric_limits<jint>::max(),
+                               true, false);
 }
 
 jstring JNICALL ConsumeRemainingAsString(JNIEnv &env, jobject self) {
-  return ConsumeStringInternal(env, std::numeric_limits<jint>::max(), false,
-                               false);
+  return ConsumeStringInternal(env, self, std::numeric_limits<jint>::max(),
+                               false, false);
 }
 
 std::size_t RemainingBytes(JNIEnv &env, jobject self) {
-  return gRemainingBytes;
+  return env.GetIntField(self, gRemainingBytesField);
 }
 
 const JNINativeMethod kFuzzedDataMethods[]{
@@ -689,45 +687,6 @@ const jint kNumFuzzedDataMethods =
 Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_nativeInit(
     JNIEnv *env, jclass clazz) {
   env->RegisterNatives(clazz, kFuzzedDataMethods, kNumFuzzedDataMethods);
+  gDataPtrField = env->GetFieldID(clazz, "dataPtr", "J");
+  gRemainingBytesField = env->GetFieldID(clazz, "remainingBytes", "I");
 }
-
-[[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_reset(
-    JNIEnv *env, jclass clazz) {
-  gDataPtr = gFuzzerInputStart;
-  gRemainingBytes = gFuzzerInputSize;
-}
-
-[[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_feed(
-    JNIEnv *env, jclass, jbyteArray input) {
-  // This line is why this function must not be used if FeedFuzzedDataProvider
-  // is also called from native code.
-  delete[] gFuzzerInputStart;
-
-  std::size_t size = env->GetArrayLength(input);
-  if (env->ExceptionCheck()) {
-    env->ExceptionDescribe();
-    env->FatalError("Failed to get length of input");
-  }
-  auto *data = static_cast<uint8_t *>(operator new(size));
-  if (data == nullptr) {
-    env->FatalError("Failed to allocate memory for a copy of the input");
-  }
-  env->GetByteArrayRegion(input, 0, size, reinterpret_cast<jbyte *>(data));
-  if (env->ExceptionCheck()) {
-    env->ExceptionDescribe();
-    env->FatalError("Failed to copy input");
-  }
-  jazzer::FeedFuzzedDataProvider(data, size);
-}
-
-namespace jazzer {
-void FeedFuzzedDataProvider(const uint8_t *data, std::size_t size) {
-  gDataPtr = data;
-  gRemainingBytes = size;
-
-  gFuzzerInputStart = data;
-  gFuzzerInputSize = size;
-}
-}  // namespace jazzer

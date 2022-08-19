@@ -31,11 +31,7 @@ public final class RecordingFuzzedDataProvider implements FuzzedDataProvider {
     this.target = target;
   }
 
-  public static FuzzedDataProvider makeFuzzedDataProviderProxy() {
-    return makeFuzzedDataProviderProxy(new FuzzedDataProviderImpl());
-  }
-
-  static FuzzedDataProvider makeFuzzedDataProviderProxy(FuzzedDataProvider target) {
+  public static FuzzedDataProvider makeFuzzedDataProviderProxy(FuzzedDataProvider target) {
     return new RecordingFuzzedDataProvider(target);
   }
 

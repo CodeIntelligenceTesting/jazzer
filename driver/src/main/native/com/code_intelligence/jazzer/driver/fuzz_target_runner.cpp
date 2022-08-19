@@ -27,16 +27,15 @@
 #include <iostream>
 #include <limits>
 #include <string>
+#include <vector>
 
 #include "com_code_intelligence_jazzer_driver_FuzzTargetRunner.h"
-#include "fuzzed_data_provider.h"
 
 extern "C" int LLVMFuzzerRunDriver(int *argc, char ***argv,
                                    int (*UserCb)(const uint8_t *Data,
                                                  size_t Size));
 
 namespace {
-bool gUseFuzzedDataProvider;
 jclass gRunner;
 jmethodID gRunOneId;
 JavaVM *gJavaVm;
@@ -50,17 +49,7 @@ int testOneInput(const uint8_t *data, const std::size_t size) {
   JNIEnv &env = *gEnv;
   jint jsize =
       std::min(size, static_cast<size_t>(std::numeric_limits<jint>::max()));
-  int res;
-  if (gUseFuzzedDataProvider) {
-    ::jazzer::FeedFuzzedDataProvider(data, size);
-    res = env.CallStaticIntMethod(gRunner, gRunOneId, nullptr);
-  } else {
-    jbyteArray input = env.NewByteArray(jsize);
-    env.SetByteArrayRegion(input, 0, jsize,
-                           reinterpret_cast<const jbyte *>(data));
-    res = env.CallStaticIntMethod(gRunner, gRunOneId, input);
-    env.DeleteLocalRef(input);
-  }
+  int res = env.CallStaticIntMethod(gRunner, gRunOneId, data, jsize);
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     _Exit(1);
@@ -99,20 +88,8 @@ Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_startLibFuzzer(
   gEnv = env;
   env->GetJavaVM(&gJavaVm);
   gRunner = reinterpret_cast<jclass>(env->NewGlobalRef(runner));
-  gRunOneId = env->GetStaticMethodID(runner, "runOne", "([B)I");
+  gRunOneId = env->GetStaticMethodID(runner, "runOne", "(JI)I");
   if (gRunOneId == nullptr) {
-    env->ExceptionDescribe();
-    _Exit(1);
-  }
-  jfieldID use_fuzzed_data_provider_id =
-      env->GetStaticFieldID(runner, "useFuzzedDataProvider", "Z");
-  if (use_fuzzed_data_provider_id == nullptr) {
-    env->ExceptionDescribe();
-    _Exit(1);
-  }
-  gUseFuzzedDataProvider =
-      env->GetStaticBooleanField(runner, use_fuzzed_data_provider_id);
-  if (env->ExceptionCheck()) {
     env->ExceptionDescribe();
     _Exit(1);
   }
