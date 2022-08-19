@@ -106,7 +106,9 @@ public class Replayer {
     try {
       Method fuzzerTestOneInput =
           fuzzTarget.getMethod("fuzzerTestOneInput", FuzzedDataProvider.class);
-      fuzzerTestOneInput.invoke(null, makeFuzzedDataProvider(input));
+      try (FuzzedDataProviderImpl fuzzedDataProvider = FuzzedDataProviderImpl.withJavaData(input)) {
+        fuzzerTestOneInput.invoke(null, fuzzedDataProvider);
+      }
       return;
     } catch (Exception e) {
       handleInvokeException(e, fuzzTarget);
@@ -150,10 +152,5 @@ public class Replayer {
         break;
       }
     }
-  }
-
-  private static FuzzedDataProvider makeFuzzedDataProvider(byte[] input) {
-    FuzzedDataProviderImpl.feed(input);
-    return new FuzzedDataProviderImpl();
   }
 }

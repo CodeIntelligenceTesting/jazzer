@@ -28,6 +28,7 @@ import com.code_intelligence.jazzer.runtime.FuzzedDataProviderImpl;
 import com.code_intelligence.jazzer.runtime.JazzerInternal;
 import com.code_intelligence.jazzer.runtime.RecordingFuzzedDataProvider;
 import com.code_intelligence.jazzer.runtime.SignalHandler;
+import com.code_intelligence.jazzer.runtime.UnsafeProvider;
 import com.code_intelligence.jazzer.utils.ExceptionUtils;
 import com.code_intelligence.jazzer.utils.ManifestUtils;
 import com.github.fmeum.rules_jni.RulesJni;
@@ -47,6 +48,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import sun.misc.Unsafe;
 
 /**
  * Executes a fuzz target and reports findings.
@@ -59,6 +61,9 @@ public final class FuzzTargetRunner {
     RulesJni.loadLibrary("jazzer_driver", FuzzTargetRunner.class);
   }
 
+  private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
+  private static final long BYTE_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
+
   // Default value of the libFuzzer -error_exitcode flag.
   private static final int LIBFUZZER_ERROR_EXIT_CODE = 77;
   private static final String AUTOFUZZ_FUZZ_TARGET =
@@ -68,7 +73,8 @@ public final class FuzzTargetRunner {
   private static final String FUZZER_TEARDOWN = "fuzzerTearDown";
 
   private static final Set<Long> ignoredTokens = new HashSet<>(Opt.ignore);
-  private static final FuzzedDataProvider fuzzedDataProvider = new FuzzedDataProviderImpl();
+  private static final FuzzedDataProviderImpl fuzzedDataProvider =
+      FuzzedDataProviderImpl.withNativeData();
   private static final Class<?> fuzzTargetClass;
   private static final MethodHandle fuzzTarget;
   public static final boolean useFuzzedDataProvider;
@@ -189,21 +195,36 @@ public final class FuzzTargetRunner {
   }
 
   /**
+   * A test-only convenience wrapper around {@link #runOne(long, int)}.
+   */
+  static int runOne(byte[] data) {
+    long dataPtr = UNSAFE.allocateMemory(data.length);
+    UNSAFE.copyMemory(data, BYTE_ARRAY_OFFSET, null, dataPtr, data.length);
+    try {
+      return runOne(dataPtr, data.length);
+    } finally {
+      UNSAFE.freeMemory(dataPtr);
+    }
+  }
+
+  /**
    * Executes the user-provided fuzz target once.
    *
-   * @param data the raw fuzzer input if using a {@code byte[]}-based fuzz target and {@code null}
-   *             when using a {@link FuzzedDataProvider}-based fuzz target.
+   * @param dataPtr a native pointer to beginning of the input provided by the fuzzer for this
+   *     execution
+   * @param dataLength length of the fuzzer input
    * @return the value that the native LLVMFuzzerTestOneInput function should return. Currently,
    *         this is always 0. The function may exit the process instead of returning.
    */
-  static int runOne(byte[] data) {
+  private static int runOne(long dataPtr, int dataLength) {
     Throwable finding = null;
+    byte[] data = null;
     try {
       if (useFuzzedDataProvider) {
-        // The FuzzedDataProvider has already been fed with the fuzzer input in
-        // LLVMFuzzerTestOneInput.
-        fuzzTarget.invokeExact(fuzzedDataProvider);
+        fuzzedDataProvider.setNativeData(dataPtr, dataLength);
+        fuzzTarget.invokeExact((FuzzedDataProvider) fuzzedDataProvider);
       } else {
+        data = copyToArray(dataPtr, dataLength);
         fuzzTarget.invokeExact(data);
       }
     } catch (Throwable uncaughtFinding) {
@@ -313,7 +334,7 @@ public final class FuzzTargetRunner {
   private static void dumpReproducer(byte[] data) {
     if (data == null) {
       assert useFuzzedDataProvider;
-      FuzzedDataProviderImpl.reset();
+      fuzzedDataProvider.reset();
       data = fuzzedDataProvider.consumeRemainingAsBytes();
     }
     MessageDigest digest;
@@ -325,16 +346,16 @@ public final class FuzzTargetRunner {
     String dataSha1 = toHexString(digest.digest(data));
 
     if (!Opt.autofuzz.isEmpty()) {
-      FuzzedDataProviderImpl.reset();
+      fuzzedDataProvider.reset();
       FuzzTarget.dumpReproducer(fuzzedDataProvider, Opt.reproducerPath, dataSha1);
       return;
     }
 
     String base64Data;
     if (useFuzzedDataProvider) {
-      FuzzedDataProviderImpl.reset();
+      fuzzedDataProvider.reset();
       FuzzedDataProvider recordingFuzzedDataProvider =
-          RecordingFuzzedDataProvider.makeFuzzedDataProviderProxy();
+          RecordingFuzzedDataProvider.makeFuzzedDataProviderProxy(fuzzedDataProvider);
       try {
         fuzzTarget.invokeExact(recordingFuzzedDataProvider);
         if (JazzerInternal.lastFinding == null) {
@@ -390,6 +411,13 @@ public final class FuzzTargetRunner {
   @SuppressWarnings("unused")
   private static void dumpAllStackTraces() {
     ExceptionUtils.dumpAllStackTraces();
+  }
+
+  private static byte[] copyToArray(long ptr, int length) {
+    // TODO: Use Unsafe.allocateUninitializedArray instead once Java 9 is the base.
+    byte[] array = new byte[length];
+    UNSAFE.copyMemory(null, ptr, array, BYTE_ARRAY_OFFSET, length);
+    return array;
   }
 
   /**

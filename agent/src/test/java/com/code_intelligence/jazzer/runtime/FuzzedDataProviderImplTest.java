@@ -20,9 +20,10 @@ import java.util.stream.Collectors;
 
 public class FuzzedDataProviderImplTest {
   public static void main(String[] args) {
-    FuzzedDataProviderImpl fuzzedDataProvider = new FuzzedDataProviderImpl();
-    FuzzedDataProviderImpl.feed(INPUT_BYTES);
-    verifyFuzzedDataProvider(fuzzedDataProvider);
+    try (FuzzedDataProviderImpl fuzzedDataProvider =
+             FuzzedDataProviderImpl.withJavaData(INPUT_BYTES)) {
+      verifyFuzzedDataProvider(fuzzedDataProvider);
+    }
   }
 
   private strictfp static void verifyFuzzedDataProvider(FuzzedDataProvider data) {
