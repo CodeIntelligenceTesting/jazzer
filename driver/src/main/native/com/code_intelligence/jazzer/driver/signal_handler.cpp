@@ -17,7 +17,7 @@
 #include <atomic>
 #include <csignal>
 
-#include "com_code_intelligence_jazzer_runtime_SignalHandler.h"
+#include "com_code_intelligence_jazzer_driver_SignalHandler.h"
 
 #ifdef _WIN32
 // Windows does not have SIGUSR1, which triggers a graceful exit of libFuzzer.

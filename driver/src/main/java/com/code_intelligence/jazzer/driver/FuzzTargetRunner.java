@@ -27,7 +27,6 @@ import com.code_intelligence.jazzer.runtime.CoverageMap;
 import com.code_intelligence.jazzer.runtime.FuzzedDataProviderImpl;
 import com.code_intelligence.jazzer.runtime.JazzerInternal;
 import com.code_intelligence.jazzer.runtime.RecordingFuzzedDataProvider;
-import com.code_intelligence.jazzer.runtime.SignalHandler;
 import com.code_intelligence.jazzer.runtime.UnsafeProvider;
 import com.code_intelligence.jazzer.utils.ExceptionUtils;
 import com.code_intelligence.jazzer.utils.ManifestUtils;

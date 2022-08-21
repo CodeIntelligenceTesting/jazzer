@@ -85,6 +85,13 @@ cc_library(
     alwayslink = True,
 )
 
+cc_jni_library(
+    name = "jazzer_signal_handler",
+    srcs = ["signal_handler.cpp"],
+    visibility = ["//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__"],
+    deps = ["//driver/src/main/java/com/code_intelligence/jazzer/driver:signal_handler.hdrs"],
+)
+
 cc_library(
     name = "libfuzzer_callbacks",
     srcs = ["libfuzzer_callbacks.cpp"],
