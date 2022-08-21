@@ -14,7 +14,6 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
-import com.code_intelligence.jazzer.runtime.TraceDataFlowNativeCallbacks
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
@@ -29,9 +28,11 @@ import org.objectweb.asm.tree.MethodInsnNode
 import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.tree.TableSwitchInsnNode
 
-internal class TraceDataFlowInstrumentor(private val types: Set<InstrumentationType>, callbackClass: Class<*> = TraceDataFlowNativeCallbacks::class.java) : Instrumentor {
+internal class TraceDataFlowInstrumentor(
+    private val types: Set<InstrumentationType>,
+    private val callbackInternalClassName: String = "com/code_intelligence/jazzer/runtime/TraceDataFlowNativeCallbacks"
+) : Instrumentor {
 
-    private val callbackInternalClassName = callbackClass.name.replace('.', '/')
     private lateinit var random: DeterministicRandom
 
     override fun instrument(bytecode: ByteArray): ByteArray {
