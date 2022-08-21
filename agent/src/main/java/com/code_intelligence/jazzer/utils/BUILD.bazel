@@ -32,3 +32,11 @@ kt_jvm_library(
         "//driver/src/main/java/com/code_intelligence/jazzer/autofuzz:__pkg__",
     ],
 )
+
+java_library(
+    name = "unsafe_provider",
+    srcs = ["UnsafeProvider.java"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+)

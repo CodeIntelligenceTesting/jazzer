@@ -18,7 +18,7 @@ package com.code_intelligence.jazzer.driver;
 
 import com.code_intelligence.jazzer.api.Jazzer;
 import com.code_intelligence.jazzer.runtime.CoverageMap;
-import com.code_intelligence.jazzer.runtime.UnsafeProvider;
+import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
