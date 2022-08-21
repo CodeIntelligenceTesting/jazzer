@@ -15,7 +15,7 @@
 package com.code_intelligence.jazzer.driver;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.code_intelligence.jazzer.runtime.UnsafeProvider;
+import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import com.github.fmeum.rules_jni.RulesJni;
 import sun.misc.Unsafe;
 

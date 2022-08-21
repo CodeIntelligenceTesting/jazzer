@@ -22,7 +22,7 @@ import static com.code_intelligence.jazzer.sanitizers.utils.ReflectionUtils.offs
 import com.code_intelligence.jazzer.api.HookType;
 import com.code_intelligence.jazzer.api.Jazzer;
 import com.code_intelligence.jazzer.api.MethodHook;
-import com.code_intelligence.jazzer.runtime.UnsafeProvider;
+import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import java.lang.invoke.MethodHandle;
 import java.util.WeakHashMap;
 import java.util.regex.Matcher;
