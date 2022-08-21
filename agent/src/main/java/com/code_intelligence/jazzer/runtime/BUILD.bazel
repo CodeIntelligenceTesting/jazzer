@@ -47,6 +47,6 @@ java_library(
     deps = [
         ":coverage_map",
         ":trace_data_flow_native_callbacks",
-        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+        "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
     ],
 )
