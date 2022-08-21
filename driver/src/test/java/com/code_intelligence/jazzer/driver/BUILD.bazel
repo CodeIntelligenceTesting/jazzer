@@ -12,10 +12,33 @@ java_test(
 )
 
 java_test(
+    name = "FuzzedDataProviderImplTest",
+    srcs = ["FuzzedDataProviderImplTest.java"],
+    use_testrunner = False,
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
+    ],
+)
+
+java_test(
     name = "OptTest",
     srcs = ["OptTest.java"],
     deps = [
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
+    name = "RecordingFuzzedDataProviderTest",
+    srcs = [
+        "RecordingFuzzedDataProviderTest.java",
+    ],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:recording_fuzzed_data_provider",
         "@maven//:junit_junit",
     ],
 )

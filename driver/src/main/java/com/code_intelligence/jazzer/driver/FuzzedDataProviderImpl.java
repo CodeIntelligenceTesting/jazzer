@@ -12,18 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.code_intelligence.jazzer.runtime;
+package com.code_intelligence.jazzer.driver;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.runtime.UnsafeProvider;
 import com.github.fmeum.rules_jni.RulesJni;
 import sun.misc.Unsafe;
 
 public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable {
   static {
-    // The replayer loads a standalone version of the FuzzedDataProvider.
-    if (System.getProperty("jazzer.is_replayer") == null) {
-      RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
-    }
+    RulesJni.loadLibrary("jazzer_fuzzed_data_provider", "/com/code_intelligence/jazzer/driver");
     nativeInit();
   }
 

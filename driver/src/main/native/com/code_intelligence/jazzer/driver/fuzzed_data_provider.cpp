@@ -50,7 +50,7 @@
 #include <tuple>
 #include <type_traits>
 
-#include "com_code_intelligence_jazzer_runtime_FuzzedDataProviderImpl.h"
+#include "com_code_intelligence_jazzer_driver_FuzzedDataProviderImpl.h"
 
 namespace {
 
@@ -683,7 +683,7 @@ const jint kNumFuzzedDataMethods =
 }  // namespace
 
 [[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_FuzzedDataProviderImpl_nativeInit(
+Java_com_code_1intelligence_jazzer_driver_FuzzedDataProviderImpl_nativeInit(
     JNIEnv *env, jclass clazz) {
   env->RegisterNatives(clazz, kFuzzedDataMethods, kNumFuzzedDataMethods);
   gDataPtrField = env->GetFieldID(clazz, "dataPtr", "J");
