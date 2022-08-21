@@ -23,7 +23,6 @@ import static java.lang.System.out;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.autofuzz.FuzzTarget;
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder;
-import com.code_intelligence.jazzer.runtime.CoverageMap;
 import com.code_intelligence.jazzer.runtime.JazzerInternal;
 import com.code_intelligence.jazzer.utils.ExceptionUtils;
 import com.code_intelligence.jazzer.utils.ManifestUtils;
@@ -284,12 +283,11 @@ public final class FuzzTargetRunner {
 
   private static void shutdown() {
     if (!Opt.coverageDump.isEmpty() || !Opt.coverageReport.isEmpty()) {
-      int[] everCoveredIds = CoverageMap.getEverCoveredIds();
       if (!Opt.coverageDump.isEmpty()) {
-        CoverageRecorder.dumpJacocoCoverage(everCoveredIds, Opt.coverageDump);
+        CoverageRecorder.dumpJacocoCoverage(Opt.coverageDump);
       }
       if (!Opt.coverageReport.isEmpty()) {
-        CoverageRecorder.dumpCoverageReport(everCoveredIds, Opt.coverageReport);
+        CoverageRecorder.dumpCoverageReport(Opt.coverageReport);
       }
     }
 
