@@ -2,14 +2,33 @@ load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 kt_jvm_library(
     name = "utils",
-    srcs = [
-        "ClassNameGlobber.kt",
-        "ExceptionUtils.kt",
-        "ManifestUtils.kt",
-        "Utils.kt",
-    ],
+    srcs = ["Utils.kt"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+)
+
+kt_jvm_library(
+    name = "class_name_globber",
+    srcs = ["ClassNameGlobber.kt"],
+    visibility = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+        "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
+    ],
+    deps = [":simple_glob_matcher"],
+)
+
+kt_jvm_library(
+    name = "manifest_utils",
+    srcs = ["ManifestUtils.kt"],
+    visibility = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
+)
+
+kt_jvm_library(
+    name = "simple_glob_matcher",
+    srcs = ["SimpleGlobMatcher.kt"],
+    visibility = [
+        "//driver/src/main/java/com/code_intelligence/jazzer/autofuzz:__pkg__",
     ],
 )
