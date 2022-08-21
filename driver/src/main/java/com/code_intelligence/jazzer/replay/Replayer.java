@@ -15,8 +15,7 @@
 package com.code_intelligence.jazzer.replay;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.code_intelligence.jazzer.runtime.FuzzedDataProviderImpl;
-import com.github.fmeum.rules_jni.RulesJni;
+import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,17 +26,6 @@ import java.util.Arrays;
 public class Replayer {
   public static final int STATUS_FINDING = 77;
   public static final int STATUS_OTHER_ERROR = 1;
-
-  static {
-    System.setProperty("jazzer.is_replayer", "true");
-    try {
-      RulesJni.loadLibrary(
-          "fuzzed_data_provider_standalone", "/com/code_intelligence/jazzer/driver");
-    } catch (Throwable t) {
-      t.printStackTrace();
-      System.exit(STATUS_OTHER_ERROR);
-    }
-  }
 
   public static void main(String[] args) {
     if (args.length < 2) {

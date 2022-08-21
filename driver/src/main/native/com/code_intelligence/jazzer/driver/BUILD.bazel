@@ -25,7 +25,6 @@ cc_library(
     deps = [
         ":coverage_tracker",
         ":fuzz_target_runner",
-        ":fuzzed_data_provider",
         ":jazzer_fuzzer_callbacks",
         ":libfuzzer_callbacks",
     ],
@@ -63,15 +62,15 @@ cc_library(
         "//driver:__pkg__",
     ],
     deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:fuzzed_data_provider.hdrs",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl.hdrs",
     ],
     # Symbols may only be referenced dynamically via JNI.
     alwayslink = True,
 )
 
 cc_jni_library(
-    name = "fuzzed_data_provider_standalone",
-    visibility = ["//agent/src/main/java/com/code_intelligence/jazzer/replay:__pkg__"],
+    name = "jazzer_fuzzed_data_provider",
+    visibility = ["//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__"],
     deps = [":fuzzed_data_provider"],
 )
 

@@ -1,23 +1,6 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
 
 java_jni_library(
-    name = "fuzzed_data_provider",
-    srcs = [
-        "FuzzedDataProviderImpl.java",
-    ],
-    visibility = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/replay:__pkg__",
-        "//agent/src/test/java/com/code_intelligence/jazzer/runtime:__pkg__",
-        "//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
-        "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
-    ],
-    deps = [
-        ":unsafe_provider",
-        "//agent/src/main/java/com/code_intelligence/jazzer/api",
-    ],
-)
-
-java_jni_library(
     name = "coverage_map",
     srcs = ["CoverageMap.java"],
     visibility = [
@@ -58,7 +41,6 @@ java_library(
         "HardToCatchError.java",
         "JazzerInternal.java",
         "NativeLibHooks.java",
-        "RecordingFuzzedDataProvider.java",
         "TraceCmpHooks.java",
         "TraceDivHooks.java",
         "TraceIndirHooks.java",
@@ -69,7 +51,6 @@ java_library(
     ],
     deps = [
         ":coverage_map",
-        ":fuzzed_data_provider",
         ":trace_data_flow_native_callbacks",
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "//agent/src/main/java/com/code_intelligence/jazzer/utils",
