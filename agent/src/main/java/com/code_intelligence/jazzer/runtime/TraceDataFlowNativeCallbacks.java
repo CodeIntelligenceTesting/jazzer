@@ -18,6 +18,7 @@ import com.code_intelligence.jazzer.utils.Utils;
 import com.github.fmeum.rules_jni.RulesJni;
 import java.lang.reflect.Executable;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 @SuppressWarnings("unused")
 final public class TraceDataFlowNativeCallbacks {
@@ -46,7 +47,7 @@ final public class TraceDataFlowNativeCallbacks {
     String className = callee.getDeclaringClass().getCanonicalName();
     String executableName = callee.getName();
     String descriptor = Utils.getDescriptor(callee);
-    tracePcIndir(Utils.simpleFastHash(className, executableName, descriptor), pc);
+    tracePcIndir(Arrays.hashCode(new String[] {className, executableName, descriptor}), pc);
   }
 
   public static int traceCmpLongWrapper(long arg1, long arg2, int pc) {
