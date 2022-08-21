@@ -33,16 +33,6 @@ java_jni_library(
 )
 
 java_jni_library(
-    name = "signal_handler",
-    srcs = ["SignalHandler.java"],
-    native_libs = ["//agent/src/main/native/com/code_intelligence/jazzer/runtime:jazzer_signal_handler"],
-    visibility = [
-        "//agent/src/main/native/com/code_intelligence/jazzer/runtime:__pkg__",
-        "//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
-    ],
-)
-
-java_jni_library(
     name = "trace_data_flow_native_callbacks",
     srcs = ["TraceDataFlowNativeCallbacks.java"],
     visibility = [
@@ -75,7 +65,6 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
-        ":signal_handler",
         "//agent/src/main/java/com/code_intelligence/jazzer/autofuzz",
     ],
     deps = [
