@@ -73,16 +73,6 @@ val Executable.readableDescriptor: String
         parameterType.readableDescriptor
     }
 
-fun simpleFastHash(vararg strings: String): Int {
-    var hash = 0
-    for (string in strings) {
-        for (c in string) {
-            hash = hash * 11 + c.code
-        }
-    }
-    return hash
-}
-
 /**
  * Reads the [FileChannel] to the end as a UTF-8 string.
  */
