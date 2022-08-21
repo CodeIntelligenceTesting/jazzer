@@ -11,7 +11,7 @@ java_jni_library(
         "//driver/src/test:__subpackages__",
     ],
     deps = [
-        ":unsafe_provider",
+        "//agent/src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
 )
 
@@ -22,15 +22,6 @@ java_jni_library(
         "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
     ],
     deps = ["//agent/src/main/java/com/code_intelligence/jazzer/utils"],
-)
-
-java_library(
-    name = "unsafe_provider",
-    srcs = ["UnsafeProvider.java"],
-    visibility = [
-        "//driver/src:__subpackages__",
-        "//sanitizers/src/main/java:__subpackages__",
-    ],
 )
 
 java_library(

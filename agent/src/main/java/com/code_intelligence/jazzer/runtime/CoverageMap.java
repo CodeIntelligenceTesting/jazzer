@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.runtime;
 
+import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import com.github.fmeum.rules_jni.RulesJni;
 import java.util.Collections;
 import java.util.HashSet;
