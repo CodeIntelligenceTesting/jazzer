@@ -26,7 +26,7 @@ private fun applyInstrumentation(bytecode: ByteArray): ByteArray {
             InstrumentationType.DIV,
             InstrumentationType.GEP
         ),
-        MockTraceDataFlowCallbacks::class.java
+        MockTraceDataFlowCallbacks::class.java.name.replace('.', '/')
     ).instrument(bytecode)
 }
 

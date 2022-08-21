@@ -20,10 +20,6 @@ import com.code_intelligence.jazzer.driver.Opt
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hooks
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
-import com.code_intelligence.jazzer.runtime.NativeLibHooks
-import com.code_intelligence.jazzer.runtime.TraceCmpHooks
-import com.code_intelligence.jazzer.runtime.TraceDivHooks
-import com.code_intelligence.jazzer.runtime.TraceIndirHooks
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import com.code_intelligence.jazzer.utils.ManifestUtils
 import java.io.File
@@ -108,10 +104,10 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
     val includedHookNames = instrumentationTypes
         .mapNotNull { type ->
             when (type) {
-                InstrumentationType.CMP -> TraceCmpHooks::class.java.name
-                InstrumentationType.DIV -> TraceDivHooks::class.java.name
-                InstrumentationType.INDIR -> TraceIndirHooks::class.java.name
-                InstrumentationType.NATIVE -> NativeLibHooks::class.java.name
+                InstrumentationType.CMP -> "com.code_intelligence.jazzer.runtime.TraceCmpHooks"
+                InstrumentationType.DIV -> "com.code_intelligence.jazzer.runtime.TraceDivHooks"
+                InstrumentationType.INDIR -> "com.code_intelligence.jazzer.runtime.TraceIndirHooks"
+                InstrumentationType.NATIVE -> "com.code_intelligence.jazzer.runtime.NativeLibHooks"
                 else -> null
             }
         }
