@@ -8,7 +8,7 @@ java_test(
     deps = [
         ":test_helpers",
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
-        "//agent/src/main/java/com/code_intelligence/jazzer/autofuzz",
+        "//driver/src/main/java/com/code_intelligence/jazzer/autofuzz",
         "@maven//:com_mikesamuel_json_sanitizer",
         "@maven//:junit_junit",
     ],
@@ -53,7 +53,7 @@ java_test(
     test_class = "com.code_intelligence.jazzer.autofuzz.SettersTest",
     deps = [
         ":test_helpers",
-        "//agent/src/test/java/com/code_intelligence/jazzer/autofuzz/testdata:test_data",
+        "//driver/src/test/java/com/code_intelligence/jazzer/autofuzz/testdata:test_data",
         "@maven//:junit_junit",
     ],
 )
@@ -63,7 +63,7 @@ java_library(
     srcs = ["TestHelpers.java"],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
-        "//agent/src/main/java/com/code_intelligence/jazzer/autofuzz",
+        "//driver/src/main/java/com/code_intelligence/jazzer/autofuzz",
         "@maven//:junit_junit",
     ],
 )
