@@ -24,6 +24,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class ExamplePathTraversalFuzzerHooks {
+  private static final String publicFilesRootPath = "/app/upload/";
+
   @MethodHook(type = HookType.BEFORE, targetClassName = "java.io.File", targetMethod = "<init>",
       targetMethodDescriptor = "(Ljava/lang/String;)V")
   public static void
@@ -36,7 +38,7 @@ public class ExamplePathTraversalFuzzerHooks {
       // Invalid paths are correctly rejected by the application.
       return;
     }
-    if (!normalizedPath.startsWith(ExamplePathTraversalFuzzer.publicFilesRootPath)) {
+    if (!normalizedPath.startsWith(publicFilesRootPath)) {
       // Simply throwing an exception from here would not work as the calling code catches and
       // ignores all Throwables. Instead, use the Jazzer API to report a finding from a hook.
       Jazzer.reportFindingFromHook(new FuzzerSecurityIssueHigh(
