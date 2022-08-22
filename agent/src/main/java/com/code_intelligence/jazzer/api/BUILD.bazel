@@ -1,6 +1,7 @@
 java_library(
     name = "api",
     srcs = [
+        "Autofuzz.java",
         "AutofuzzConstructionException.java",
         "AutofuzzInvocationException.java",
         "CannedFuzzedDataProvider.java",
