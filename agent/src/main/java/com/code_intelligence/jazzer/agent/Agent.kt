@@ -116,17 +116,13 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
     else
         MemSyncCoverageIdStrategy()
 
-    val (includedHooks, customHooks) = Hooks.loadHooks(includedHookNames.toSet(), customHookNames.toSet())
     // If we don't append the JARs containing the custom hooks to the bootstrap class loader,
     // third-party hooks not contained in the agent JAR will not be able to instrument Java standard
     // library classes. These classes are loaded by the bootstrap / system class loader and would
     // not be considered when resolving references to hook methods, leading to NoClassDefFoundError
     // being thrown.
-    customHooks.hookClasses
-        .mapNotNull { jarUriForClass(it) }
-        .toSet()
-        .map { JarFile(File(it)) }
-        .forEach { instrumentation.appendToBootstrapClassLoaderSearch(it) }
+    Hooks.appendHooksToBootstrapClassLoaderSearch(instrumentation, customHookNames.toSet())
+    val (includedHooks, customHooks) = Hooks.loadHooks(includedHookNames.toSet(), customHookNames.toSet())
 
     val runtimeInstrumentor = RuntimeInstrumentor(
         instrumentation,
