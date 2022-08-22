@@ -21,7 +21,6 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collections;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class AutofuzzTest {
@@ -50,7 +49,7 @@ public class AutofuzzTest {
     FuzzedDataProvider data = CannedFuzzedDataProvider.create(
         Arrays.asList((byte) 1 /* do not return null */, 0 /* first class on the classpath */,
             (byte) 1 /* do not return null */, 0 /* first constructor */));
-    ImplementedInterface result = Jazzer.consume(data, ImplementedInterface.class);
+    ImplementedInterface result = Autofuzz.consume(data, ImplementedInterface.class);
     assertNotNull(result);
   }
 
@@ -58,7 +57,7 @@ public class AutofuzzTest {
   public void testConsumeFailsWithoutException() {
     FuzzedDataProvider data = CannedFuzzedDataProvider.create(Collections.singletonList(
         (byte) 1 /* do not return null without searching for implementing classes */));
-    assertNull(Jazzer.consume(data, UnimplementedInterface.class));
+    assertNull(Autofuzz.consume(data, UnimplementedInterface.class));
   }
 
   @Test
@@ -67,7 +66,7 @@ public class AutofuzzTest {
         Arrays.asList((byte) 1 /* do not return null */, 0 /* first class on the classpath */,
             (byte) 1 /* do not return null */, 0 /* first constructor */));
     assertEquals(Boolean.TRUE,
-        Jazzer.autofuzz(data, (Function1<ImplementedInterface, ?>) AutofuzzTest::implIsNotNull));
+        Autofuzz.autofuzz(data, (Function1<ImplementedInterface, ?>) AutofuzzTest::implIsNotNull));
   }
 
   @Test
@@ -75,7 +74,7 @@ public class AutofuzzTest {
     FuzzedDataProvider data = CannedFuzzedDataProvider.create(
         Collections.singletonList((byte) 1 /* do not return null */));
     try {
-      Jazzer.autofuzz(data, (Function1<UnimplementedInterface, ?>) AutofuzzTest::implIsNotNull);
+      Autofuzz.autofuzz(data, (Function1<UnimplementedInterface, ?>) AutofuzzTest::implIsNotNull);
     } catch (AutofuzzConstructionException e) {
       // Pass.
       return;
@@ -89,7 +88,7 @@ public class AutofuzzTest {
         Arrays.asList((byte) 1 /* do not return null */, 6 /* string length */, "foobar", 42,
             (byte) 5, (byte) 1 /* do not return null */, 0 /* first class on the classpath */,
             (byte) 1 /* do not return null */, 0 /* first constructor */));
-    Jazzer.autofuzz(data, AutofuzzTest::checkAllTheArguments);
+    Autofuzz.autofuzz(data, AutofuzzTest::checkAllTheArguments);
   }
 
   @Test
@@ -98,7 +97,7 @@ public class AutofuzzTest {
         CannedFuzzedDataProvider.create(Arrays.asList((byte) 1 /* do not return null */,
             6 /* string length */, "foobar", 42, (byte) 5, (byte) 0 /* *do* return null */));
     try {
-      Jazzer.autofuzz(data, AutofuzzTest::checkAllTheArguments);
+      Autofuzz.autofuzz(data, AutofuzzTest::checkAllTheArguments);
     } catch (IllegalArgumentException e) {
       // Pass.
       return;
