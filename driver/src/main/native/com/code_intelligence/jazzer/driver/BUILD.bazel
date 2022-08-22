@@ -49,7 +49,7 @@ cc_library(
     }),
     deps = [
         ":sanitizer_symbols",
-        "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner.hdrs",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:fuzz_target_runner_natives.hdrs",
     ],
     # With sanitizers, symbols are only referenced dynamically via JNI.
     alwayslink = True,

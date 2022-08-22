@@ -83,6 +83,9 @@ public class FuzzTargetRunnerTest {
     PrintStream recordingOut = new TeeOutputStream(new PrintStream(recordedOut, true), System.out);
     System.setOut(recordingOut);
 
+    // Do not instrument any classes.
+    System.setProperty("jazzer.instrumentation_excludes", "**");
+    System.setProperty("jazzer.custom_hook_excludes", "**");
     System.setProperty("jazzer.target_class", FuzzTargetRunnerTest.class.getName());
     // Keep going past all "no crash", "first finding" and "second finding" runs, then crash.
     System.setProperty("jazzer.keep_going", "3");
@@ -91,6 +94,11 @@ public class FuzzTargetRunnerTest {
     // works as advertised.
     for (int i = 1; i < 3; i++) {
       int result = FuzzTargetRunner.runOne("no crash".getBytes(StandardCharsets.UTF_8));
+      if (i == 1) {
+        // Initializing FuzzTargetRunner, which happens implicitly on the first call to runOne,
+        // starts the Jazzer agent, which prints out some info messages to stdout. Ignore them.
+        recordedOut.reset();
+      }
 
       assert result == 0;
       assert !FuzzTargetRunner.useFuzzedDataProvider;
