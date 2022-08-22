@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+[ -f "$1" ] || exit 1
 # List all files in the jar and exclude an allowed list of files.
 # Since grep fails if there is no match, ! ... | grep ... fails if there is a
 # match.
