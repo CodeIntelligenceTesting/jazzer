@@ -116,7 +116,7 @@ java_fuzz_target_test(
     verify_crash_input = False,
     verify_crash_reproducer = False,
     deps = [
-        "@jazzer_jacoco//:jacoco_internal",
+        "@maven//:org_jacoco_org_jacoco_core",
     ],
 )
 
