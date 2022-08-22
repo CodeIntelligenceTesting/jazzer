@@ -34,5 +34,6 @@ kt_jvm_library(
         "@jazzer_jacoco//:jacoco_internal",
         "@org_ow2_asm_asm//jar",
         "@org_ow2_asm_asm_commons//jar",
+        "@org_ow2_asm_asm_tree//jar",
     ],
 )
