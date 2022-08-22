@@ -44,6 +44,7 @@ public class FuzzTargetTestWrapper {
     String driverActualPath;
     String apiActualPath;
     String jarActualPath;
+    String hookJarActualPath;
     boolean verifyCrashInput;
     boolean verifyCrashReproducer;
     boolean expectCrash;
@@ -54,15 +55,16 @@ public class FuzzTargetTestWrapper {
       driverActualPath = lookUpRunfile(runfiles, args[0]);
       apiActualPath = lookUpRunfile(runfiles, args[1]);
       jarActualPath = lookUpRunfile(runfiles, args[2]);
-      verifyCrashInput = Boolean.parseBoolean(args[3]);
-      verifyCrashReproducer = Boolean.parseBoolean(args[4]);
-      expectCrash = Boolean.parseBoolean(args[5]);
+      hookJarActualPath = args[3].isEmpty() ? null : lookUpRunfile(runfiles, args[3]);
+      verifyCrashInput = Boolean.parseBoolean(args[4]);
+      verifyCrashReproducer = Boolean.parseBoolean(args[5]);
+      expectCrash = Boolean.parseBoolean(args[6]);
       expectedFindings =
-          Arrays.stream(args[6].split(",")).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
+          Arrays.stream(args[7].split(",")).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
       // Map all files/dirs to real location
       arguments =
           Arrays.stream(args)
-              .skip(7)
+              .skip(8)
               .map(arg -> arg.startsWith("-") ? arg : lookUpRunfileWithFallback(runfiles, arg))
               .collect(Collectors.toList());
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
@@ -84,7 +86,10 @@ public class FuzzTargetTestWrapper {
     command.add(driverActualPath);
     command.add(String.format("-artifact_prefix=%s/", outputDir));
     command.add(String.format("--reproducer_path=%s", outputDir));
-    command.add(String.format("--cp=%s", jarActualPath));
+    command.add(String.format("--cp=%s",
+        hookJarActualPath == null
+            ? jarActualPath
+            : String.join(System.getProperty("path.separator"), jarActualPath, hookJarActualPath)));
     if (System.getenv("JAZZER_NO_EXPLICIT_SEED") == null) {
       command.add("-seed=2735196724");
     }
