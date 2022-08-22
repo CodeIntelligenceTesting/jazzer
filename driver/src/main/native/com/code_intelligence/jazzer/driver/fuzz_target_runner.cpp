@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-#include "com_code_intelligence_jazzer_driver_FuzzTargetRunner.h"
+#include "com_code_intelligence_jazzer_runtime_FuzzTargetRunnerNatives.h"
 
 extern "C" int LLVMFuzzerRunDriver(int *argc, char ***argv,
                                    int (*UserCb)(const uint8_t *Data,
@@ -83,8 +83,8 @@ void DumpJvmStackTraces() {
 }  // namespace jazzer
 
 [[maybe_unused]] jint
-Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_startLibFuzzer(
-    JNIEnv *env, jclass runner, jobjectArray args) {
+Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_startLibFuzzer(
+    JNIEnv *env, jclass, jobjectArray args, jclass runner) {
   gEnv = env;
   env->GetJavaVM(&gJavaVm);
   gRunner = reinterpret_cast<jclass>(env->NewGlobalRef(runner));
@@ -136,7 +136,7 @@ Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_startLibFuzzer(
 }
 
 [[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_printCrashingInput(
+Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_printCrashingInput(
     JNIEnv *, jclass) {
   if (gLibfuzzerPrintCrashingInput == nullptr) {
     std::cerr << "<not available>" << std::endl;
@@ -146,7 +146,7 @@ Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner_printCrashingInput(
 }
 
 [[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_driver_FuzzTargetRunner__1Exit(
+Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives__1Exit(
     JNIEnv *, jclass, jint exit_code) {
   _Exit(exit_code);
 }

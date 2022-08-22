@@ -20,9 +20,11 @@ import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
 
+import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.autofuzz.FuzzTarget;
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder;
+import com.code_intelligence.jazzer.runtime.FuzzTargetRunnerNatives;
 import com.code_intelligence.jazzer.runtime.JazzerInternal;
 import com.code_intelligence.jazzer.utils.ExceptionUtils;
 import com.code_intelligence.jazzer.utils.ManifestUtils;
@@ -37,7 +39,6 @@ import java.lang.reflect.Modifier;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
@@ -54,7 +55,7 @@ import sun.misc.Unsafe;
  */
 public final class FuzzTargetRunner {
   static {
-    RulesJni.loadLibrary("jazzer_driver", FuzzTargetRunner.class);
+    AgentInstaller.install(Opt.hooks);
   }
 
   private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
@@ -79,57 +80,10 @@ public final class FuzzTargetRunner {
   static {
     String targetClassName = determineFuzzTargetClassName();
 
-    // FuzzTargetRunner is loaded by the bootstrap class loader since Driver installs the agent
-    // before invoking FuzzTargetRunner.startLibFuzzer. We can't load the fuzz target with that
-    // class loader - we have to use the class loader that loaded Driver. This would be
-    // straightforward to do in Java 9+, but requires the use of reflection to maintain
-    // compatibility with Java 8, which doesn't have StackWalker.
-    //
-    // Note that we can't just move the agent initialization so that FuzzTargetRunner is loaded by
-    // Driver's class loader: The agent and FuzzTargetRunner have to share the native library that
-    // contains libFuzzer and that library needs to be available in the bootstrap class loader
-    // since instrumentation applied to Java standard library classes still needs to be able to call
-    // libFuzzer hooks. A fundamental JNI restriction is that a native library can't be shared
-    // between two different class loaders, so FuzzTargetRunner is thus forced to be loaded in the
-    // bootstrap class loader, which makes this ugly code block necessary.
-    // We also can't use the system class loader since Driver may be loaded by a custom class loader
-    // if not invoked from the native driver.
-    Class<?> driverClass;
     try {
-      Class<?> reflectionClass = Class.forName("sun.reflect.Reflection");
-      try {
-        driverClass =
-            (Class<?>) reflectionClass.getMethod("getCallerClass", int.class).invoke(null, 2);
-      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-        throw new IllegalStateException(e);
-      }
-    } catch (ClassNotFoundException e) {
-      // sun.reflect.Reflection is no longer available after Java 8, use StackWalker.
-      try {
-        Class<?> stackWalker = Class.forName("java.lang.StackWalker");
-        Class<? extends Enum<?>> stackWalkerOption =
-            (Class<? extends Enum<?>>) Class.forName("java.lang.StackWalker$Option");
-        Enum<?> retainClassReferences =
-            Arrays.stream(stackWalkerOption.getEnumConstants())
-                .filter(v -> v.name().equals("RETAIN_CLASS_REFERENCE"))
-                .findFirst()
-                .orElseThrow(()
-                                 -> new IllegalStateException(
-                                     "No RETAIN_CLASS_REFERENCE in java.lang.StackWalker$Option"));
-        Object stackWalkerInstance = stackWalker.getMethod("getInstance", stackWalkerOption)
-                                         .invoke(null, retainClassReferences);
-        Method stackWalkerGetCallerClass = stackWalker.getMethod("getCallerClass");
-        driverClass = (Class<?>) stackWalkerGetCallerClass.invoke(stackWalkerInstance);
-      } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException
-          | InvocationTargetException ex) {
-        throw new IllegalStateException(ex);
-      }
-    }
-
-    try {
-      ClassLoader driverClassLoader = driverClass.getClassLoader();
-      driverClassLoader.setDefaultAssertionStatus(true);
-      fuzzTargetClass = Class.forName(targetClassName, false, driverClassLoader);
+      FuzzTargetRunner.class.getClassLoader().setDefaultAssertionStatus(true);
+      fuzzTargetClass =
+          Class.forName(targetClassName, false, FuzzTargetRunner.class.getClassLoader());
     } catch (ClassNotFoundException e) {
       err.print("ERROR: ");
       e.printStackTrace(err);
@@ -264,6 +218,9 @@ public final class FuzzTargetRunner {
       // Reached the maximum amount of findings to keep going for, crash after shutdown. We use
       // _Exit rather than System.exit to not trigger libFuzzer's exit handlers.
       shutdown();
+      if (Opt.hooks) {
+        AgentInstaller.deleteTemporaryFiles();
+      }
       _Exit(LIBFUZZER_ERROR_EXIT_CODE);
       throw new IllegalStateException("Not reached");
     }
@@ -421,13 +378,17 @@ public final class FuzzTargetRunner {
    * @param args command-line arguments encoded in UTF-8 (not null-terminated)
    * @return the return value of LLVMFuzzerRunDriver
    */
-  private static native int startLibFuzzer(byte[][] args);
+  private static int startLibFuzzer(byte[][] args) {
+    return FuzzTargetRunnerNatives.startLibFuzzer(args, FuzzTargetRunner.class);
+  }
 
   /**
    * Causes libFuzzer to write the current input to disk as a crashing input and emit some
    * information about it to stderr.
    */
-  private static native void printCrashingInput();
+  private static void printCrashingInput() {
+    FuzzTargetRunnerNatives.printCrashingInput();
+  }
 
   /**
    * Immediately terminates the process without performing any cleanup.
@@ -441,5 +402,7 @@ public final class FuzzTargetRunner {
    *
    * @param exitCode the exit code
    */
-  private static native void _Exit(int exitCode);
+  private static void _Exit(int exitCode) {
+    FuzzTargetRunnerNatives._Exit(exitCode);
+  }
 }

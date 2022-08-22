@@ -22,18 +22,12 @@ import com.code_intelligence.jazzer.instrumentor.Hooks
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import com.code_intelligence.jazzer.utils.ManifestUtils
-import java.io.File
 import java.lang.instrument.Instrumentation
 import java.net.URI
 import java.nio.file.Paths
-import java.util.jar.JarFile
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
-
-private object AgentJarFinder {
-    val agentJarFile = jarUriForClass(AgentJarFinder::class.java)?.let { JarFile(File(it)) }
-}
 
 fun jarUriForClass(clazz: Class<*>): URI? {
     return clazz.protectionDomain?.codeSource?.location?.toURI()
@@ -42,15 +36,6 @@ fun jarUriForClass(clazz: Class<*>): URI? {
 @OptIn(ExperimentalPathApi::class)
 @Suppress("UNUSED_PARAMETER")
 fun premain(agentArgs: String?, instrumentation: Instrumentation) {
-    // Add the agent jar (i.e., the jar out of which we are currently executing) to the search path of the bootstrap
-    // class loader to ensure that instrumented classes can find the CoverageMap class regardless of which ClassLoader
-    // they are using.
-    if (AgentJarFinder.agentJarFile != null) {
-        instrumentation.appendToBootstrapClassLoaderSearch(AgentJarFinder.agentJarFile)
-    } else {
-        println("WARN: Failed to add agent JAR to bootstrap class loader search path")
-    }
-
     val manifestCustomHookNames =
         ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES).flatMap {
             it.split(':')

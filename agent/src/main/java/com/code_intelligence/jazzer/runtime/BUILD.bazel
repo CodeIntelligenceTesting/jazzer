@@ -1,11 +1,73 @@
+load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+
+# The transitive dependencies of this target will be appended to the search path
+# of the bootstrap class loader. They will be visible to all classes - care must
+# be taken to shade everything and generally keep this target as small as
+# possible.
+java_binary(
+    name = "jazzer_bootstrap_unshaded",
+    create_executable = False,
+    runtime_deps = [
+        ":runtime",
+        "//sanitizers",
+    ],
+)
+
+jar_jar(
+    name = "jazzer_bootstrap",
+    input_jar = ":jazzer_bootstrap_unshaded_deploy.jar",
+    rules = "bootstrap_shade_rules",
+    visibility = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+    ],
+)
+
+sh_test(
+    name = "jazzer_bootstrap_shading_test",
+    srcs = ["verify_shading.sh"],
+    args = [
+        "$(rootpath jazzer_bootstrap.jar)",
+    ],
+    data = [
+        "jazzer_bootstrap.jar",
+        "@local_jdk//:bin/jar",
+    ],
+    tags = [
+        # Coverage instrumentation necessarily adds files to the jar that we
+        # wouldn't want to release and thus causes this test to fail.
+        "no-coverage",
+    ],
+    target_compatible_with = SKIP_ON_WINDOWS,
+)
+
+# At runtime, the AgentInstaller appends jazzer_bootstrap.jar to the bootstrap
+# class loader's search path - these classes must not be available on the
+# regular classpath. Since dependents should not have to resort to reflection to
+# access these classes they know will be there at runtime, this compile-time
+# only dependency can be used as a replacement.
+java_library(
+    name = "jazzer_bootstrap_compile_only",
+    neverlink = True,
+    visibility = [
+        "//agent:__subpackages__",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
+    exports = [
+        ":fuzz_target_runner_natives",
+        ":runtime",
+    ],
+)
+
+# The following targets must only be referenced directly by tests or native implementations.
 
 java_jni_library(
     name = "coverage_map",
     srcs = ["CoverageMap.java"],
     visibility = [
         "//agent/src/jmh/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
-        "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
+        "//agent/src/test:__subpackages__",
         "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
         "//driver/src/test:__subpackages__",
     ],
@@ -23,6 +85,12 @@ java_jni_library(
     deps = ["//agent/src/main/java/com/code_intelligence/jazzer/utils"],
 )
 
+java_jni_library(
+    name = "fuzz_target_runner_natives",
+    srcs = ["FuzzTargetRunnerNatives.java"],
+    visibility = ["//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__"],
+)
+
 java_library(
     name = "runtime",
     srcs = [
@@ -34,10 +102,11 @@ java_library(
         "TraceIndirHooks.java",
     ],
     visibility = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
         "//agent/src/test:__subpackages__",
-        "//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
         "//driver/src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
+    runtime_deps = [
+        ":fuzz_target_runner_natives",
     ],
     deps = [
         ":coverage_map",
