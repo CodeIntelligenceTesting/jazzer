@@ -44,6 +44,7 @@ wrapped_kt_jvm_test(
     test_class = "com.code_intelligence.jazzer.instrumentor.CoverageInstrumentationTest",
     deps = [
         ":patch_test_utils",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:coverage_map",
         "@com_github_jetbrains_kotlin//:kotlin-test",
         "@maven//:junit_junit",
     ],
