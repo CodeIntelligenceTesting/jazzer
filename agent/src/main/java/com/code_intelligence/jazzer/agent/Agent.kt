@@ -87,7 +87,7 @@ fun premain(agentArgs: String?, instrumentation: Instrumentation) {
             }
         }
     }.toSet()
-    val idSyncFile = Opt.idSyncFile.takeUnless { it.isEmpty() }?.let {
+    val idSyncFile = Opt.idSyncFile?.takeUnless { it.isEmpty() }?.let {
         Paths.get(it).also { path ->
             println("INFO: Synchronizing coverage IDs in ${path.toAbsolutePath()}")
         }
