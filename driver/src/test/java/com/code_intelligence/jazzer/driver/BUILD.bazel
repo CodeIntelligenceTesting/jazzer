@@ -5,6 +5,7 @@ java_test(
     use_testrunner = False,
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
+        "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:coverage_map",
         "//agent/src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner",
