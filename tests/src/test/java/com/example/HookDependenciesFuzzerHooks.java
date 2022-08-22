@@ -21,25 +21,27 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.util.regex.Pattern;
 
-// This fuzzer verifies that:
-// 1. a class referenced in a static initializer of a hook is still instrumented with the hook;
-// 2. hooks that are not shipped in the Jazzer agent JAR can still instrument Java standard library
-//    classes.
-public class HookDependenciesFuzzer {
-  public static void fuzzerTestOneInput(byte[] data) {
+public class HookDependenciesFuzzerHooks {
+  private static final Field PATTERN_ROOT;
+
+  static {
+    Field root;
     try {
-      Pattern.matches("foobar", "foobar");
-    } catch (Throwable t) {
-      if (t instanceof FuzzerSecurityIssueLow) {
-        throw t;
-      } else {
-        // Unexpected exception, exit without producing a finding to let the test fail due to the
-        // missing Java reproducer.
-        // FIXME(fabian): This is hacky and will result in false positives as soon as we implement
-        //  Java reproducers for fuzz target exits. Replace this with a more reliable signal.
-        t.printStackTrace();
-        System.exit(1);
-      }
+      root = Pattern.class.getDeclaredField("root");
+    } catch (NoSuchFieldException e) {
+      root = null;
+    }
+    PATTERN_ROOT = root;
+  }
+
+  @MethodHook(type = HookType.AFTER, targetClassName = "java.util.regex.Matcher",
+      targetMethod = "matches", targetMethodDescriptor = "()Z",
+      additionalClassesToHook = {"java.util.regex.Pattern"})
+  public static void
+  matcherMatchesHook(MethodHandle method, Object alwaysNull, Object[] alwaysEmpty, int hookId,
+      Boolean returnValue) {
+    if (PATTERN_ROOT != null) {
+      throw new FuzzerSecurityIssueLow("Hook applied even though it depends on the class to hook");
     }
   }
 }
