@@ -16,12 +16,6 @@ java_library(
         "Function4.java",
         "Function5.java",
         "FuzzedDataProvider.java",
-        "FuzzerSecurityIssueCritical.java",
-        "FuzzerSecurityIssueHigh.java",
-        "FuzzerSecurityIssueLow.java",
-        "FuzzerSecurityIssueMedium.java",
-        "Jazzer.java",
-        "//agent/src/main/java/jaz",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
@@ -32,12 +26,15 @@ java_library(
 java_library(
     name = "hooks",
     srcs = [
+        "FuzzerSecurityIssueCritical.java",
+        "FuzzerSecurityIssueHigh.java",
+        "FuzzerSecurityIssueLow.java",
+        "FuzzerSecurityIssueMedium.java",
         "HookType.java",
+        "Jazzer.java",
         "MethodHook.java",
         "MethodHooks.java",
+        "//agent/src/main/java/jaz",
     ],
-    visibility = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
-        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:__pkg__",
-    ],
+    visibility = ["//visibility:public"],
 )
