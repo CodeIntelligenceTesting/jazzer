@@ -36,6 +36,7 @@ MAVEN_ARTIFACTS = [
     "org.apache.commons:commons-imaging:1.0-alpha2",
     "org.glassfish:javax.el:3.0.1-b06",
     "org.hibernate:hibernate-validator:5.2.4.Final",
+    "org.jacoco:org.jacoco.core:0.8.8",
     "org.openjdk.jmh:jmh-core:1.34",
     "org.openjdk.jmh:jmh-generator-annprocess:1.34",
     maven.artifact("org.apache.logging.log4j", "log4j-api", "2.14.1", testonly = True),
