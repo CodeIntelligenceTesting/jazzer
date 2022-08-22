@@ -164,7 +164,7 @@ class EdgeCoverageInstrumentor(
             cpv.visitTotalProbeCount(numEdges)
             // Avoid calling super.visitEnd() as that invokes cpv.visitTotalProbeCount with an
             // incorrect value of `count`.
-            cv.visitEnd()
+            cpv.visitEnd()
         }
     }
 
