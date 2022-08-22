@@ -64,6 +64,7 @@ class RuntimeInstrumentor(
             // Throwables raised from transform are silently dropped, making it extremely hard to detect instrumentation
             // failures. The docs advise to use a top-level try-catch.
             // https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/ClassFileTransformer.html
+            System.err.println("ERROR: Failed to instrument $internalClassName:")
             t.printStackTrace()
             throw t
         }.also { instrumentedByteCode ->
