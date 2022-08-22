@@ -1,0 +1,3 @@
+rule com.github.fmeum.rules_jni.** com.code_intelligence.jazzer.bootstrap.@0
+rule kotlin.** com.code_intelligence.jazzer.bootstrap.@0
+rule net.sf.jsqlparser.** com.code_intelligence.jazzer.bootstrap.@0

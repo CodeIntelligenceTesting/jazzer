@@ -1,15 +1,24 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
+java_library(
+    name = "agent_installer",
+    srcs = ["AgentInstaller.java"],
+    resources = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":agent_lib",
+        "@net_bytebuddy_byte_buddy_agent//jar",
+    ],
+)
+
 kt_jvm_library(
     name = "agent_lib",
     srcs = [
         "Agent.kt",
         "CoverageIdStrategy.kt",
         "RuntimeInstrumentor.kt",
-    ],
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/runtime",
     ],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",

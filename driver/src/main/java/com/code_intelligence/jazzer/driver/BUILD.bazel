@@ -9,10 +9,8 @@ java_library(
     ],
     deps = [
         ":fuzz_target_runner",
-        ":opt",
         ":utils",
-        "//agent/src/main/java/com/code_intelligence/jazzer/agent:agent_lib",
-        "@net_bytebuddy_byte_buddy_agent//jar",
+        "//agent/src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
     ],
 )
 
@@ -25,6 +23,9 @@ kt_jvm_library(
 java_jni_library(
     name = "fuzz_target_runner",
     srcs = ["FuzzTargetRunner.java"],
+    # This library is loaded by the classes in the agent runtime package as it needs to be available
+    # in the bootstrap class loader. It is packaged here rather than in jazzer_boostrap.jar to make
+    # multi-OS builds easier by not having the shared libraries packaged into a nested JAR.
     native_libs = [
         "//driver/src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
     ],
@@ -41,9 +42,10 @@ java_jni_library(
         ":reproducer_template",
         ":signal_handler",
         ":utils",
+        "//agent/src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor",
-        "//agent/src/main/java/com/code_intelligence/jazzer/runtime",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap_compile_only",
         "//agent/src/main/java/com/code_intelligence/jazzer/utils:manifest_utils",
         "//agent/src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
         "//driver/src/main/java/com/code_intelligence/jazzer/autofuzz",
