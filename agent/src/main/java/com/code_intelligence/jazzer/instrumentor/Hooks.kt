@@ -90,7 +90,8 @@ data class Hooks(
                         it to hookClass
                     }
                 } catch (e: ClassNotFoundException) {
-                    println("WARN: Failed to load hooks from $hookClassName: ${e.printStackTrace()}")
+                    println("WARN: Failed to load hooks from $hookClassName:")
+                    e.printStackTrace()
                     emptyList()
                 }
             }
