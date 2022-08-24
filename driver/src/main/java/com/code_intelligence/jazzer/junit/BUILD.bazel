@@ -1,0 +1,53 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
+
+java_binary(
+    name = "junit",
+    create_executable = False,
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        ":fuzz_test",
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+    ],
+)
+
+java_library(
+    name = "agent_configurator",
+    srcs = [
+        "AgentConfigurator.java",
+    ],
+    deps = [
+        "//sanitizers:sanitizer_constants",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+java_jni_library(
+    name = "fuzz_test",
+    srcs = [
+        "FuzzTest.java",
+        "RegressionTestArgumentProvider.java",
+        "RegressionTestLifecycleCallbacks.java",
+    ],
+    native_libs = [
+        "//driver/src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
+    ],
+    visibility = [
+        "//examples/junit/src/test/java/com/example:__pkg__",
+    ],
+    deps = [
+        ":agent_configurator",
+        ":utils",
+        "//agent/src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+        "@maven//:org_junit_platform_junit_platform_commons",
+    ],
+)
+
+java_library(
+    name = "utils",
+    srcs = ["Utils.java"],
+)

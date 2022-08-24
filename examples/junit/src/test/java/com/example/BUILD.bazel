@@ -1,0 +1,17 @@
+load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
+
+java_binary(
+    name = "ExampleFuzzTests",
+    srcs = glob(["*.java"]),
+    create_executable = False,
+    visibility = [
+        "//driver/src/test/java/com/code_intelligence/jazzer/junit:__pkg__",
+    ],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
+        "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//driver/src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "//examples/junit/src/test/resources:example_seed_corpora",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
