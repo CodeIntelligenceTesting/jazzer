@@ -7,6 +7,7 @@ cc_jni_library(
         "//agent/src/jmh:__subpackages__",
         "//agent/src/test:__subpackages__",
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
+        "//driver/src/main/java/com/code_intelligence/jazzer/junit:__pkg__",
         "//driver/src/test:__subpackages__",
     ],
     deps = [
