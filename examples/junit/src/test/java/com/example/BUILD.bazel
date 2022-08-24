@@ -15,3 +15,29 @@ java_binary(
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 )
+
+java_fuzz_target_test(
+    name = "DataFuzzTest",
+    srcs = ["DataFuzzTest.java"],
+    args = ["-runs=0"],
+    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
+    target_class = "com.example.DataFuzzTest",
+    verify_crash_reproducer = False,
+    deps = [
+        "//driver/src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "ByteFuzzTest",
+    srcs = ["ByteFuzzTest.java"],
+    args = ["-runs=0"],
+    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
+    target_class = "com.example.ByteFuzzTest",
+    verify_crash_reproducer = False,
+    deps = [
+        "//driver/src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)

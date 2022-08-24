@@ -101,7 +101,6 @@ public class FuzzTargetRunnerTest {
       }
 
       assert result == 0;
-      assert !FuzzTargetRunner.useFuzzedDataProvider;
       assert fuzzerInitializeRan;
       assert CoverageMap.getCoveredIds().equals(Stream.of(0).collect(Collectors.toSet()));
       assert UNSAFE.getByte(CoverageMap.countersAddress) == i;

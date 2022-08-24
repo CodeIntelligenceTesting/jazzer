@@ -26,14 +26,12 @@ import com.code_intelligence.jazzer.autofuzz.FuzzTarget;
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder;
 import com.code_intelligence.jazzer.runtime.FuzzTargetRunnerNatives;
 import com.code_intelligence.jazzer.runtime.JazzerInternal;
-import com.code_intelligence.jazzer.utils.ManifestUtils;
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -61,22 +59,25 @@ public final class FuzzTargetRunner {
 
   // Default value of the libFuzzer -error_exitcode flag.
   private static final int LIBFUZZER_ERROR_EXIT_CODE = 77;
-  private static final String AUTOFUZZ_FUZZ_TARGET =
-      "com.code_intelligence.jazzer.autofuzz.FuzzTarget";
-  private static final String FUZZER_TEST_ONE_INPUT = "fuzzerTestOneInput";
-  private static final String FUZZER_INITIALIZE = "fuzzerInitialize";
-  private static final String FUZZER_TEARDOWN = "fuzzerTearDown";
 
   private static final Set<Long> ignoredTokens = new HashSet<>(Opt.ignore);
   private static final FuzzedDataProviderImpl fuzzedDataProvider =
       FuzzedDataProviderImpl.withNativeData();
   private static final Class<?> fuzzTargetClass;
-  private static final MethodHandle fuzzTarget;
-  public static final boolean useFuzzedDataProvider;
+  private static final MethodHandle fuzzTargetMethod;
+  private static final boolean useFuzzedDataProvider;
+  // Reused in every iteration analogous to JUnit's PER_CLASS lifecycle.
+  private static final Object fuzzTargetInstance;
+  private static final Method fuzzerTearDown;
   private static final ReproducerTemplate reproducerTemplate;
 
   static {
-    String targetClassName = determineFuzzTargetClassName();
+    String targetClassName = FuzzTargetFinder.findFuzzTargetClassName();
+    if (targetClassName == null) {
+      err.println("Missing argument --target_class=<fuzz_target_class>");
+      exit(1);
+      throw new IllegalStateException("Not reached");
+    }
 
     try {
       FuzzTargetRunner.class.getClassLoader().setDefaultAssertionStatus(true);
@@ -93,43 +94,32 @@ public final class FuzzTargetRunner {
     // static initializer.
     JazzerInternal.onFuzzTargetReady(targetClassName);
 
-    Method bytesFuzzTarget = targetPublicStaticMethodOrNull(FUZZER_TEST_ONE_INPUT, byte[].class);
-    Method dataFuzzTarget =
-        targetPublicStaticMethodOrNull(FUZZER_TEST_ONE_INPUT, FuzzedDataProvider.class);
-    if ((bytesFuzzTarget != null) == (dataFuzzTarget != null)) {
-      err.printf(
-          "ERROR: %s must define exactly one of the following two functions:%n", targetClassName);
-      err.println("public static void fuzzerTestOneInput(byte[] ...)");
-      err.println("public static void fuzzerTestOneInput(FuzzedDataProvider ...)");
-      err.println(
-          "Note: Fuzz targets returning boolean are no longer supported; exceptions should be thrown instead of returning true.");
-      exit(1);
-    }
+    FuzzTargetFinder.FuzzTarget fuzzTarget;
     try {
-      if (bytesFuzzTarget != null) {
-        useFuzzedDataProvider = false;
-        fuzzTarget = MethodHandles.publicLookup().unreflect(bytesFuzzTarget);
-      } else {
-        useFuzzedDataProvider = true;
-        fuzzTarget = MethodHandles.publicLookup().unreflect(dataFuzzTarget);
-      }
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
+      fuzzTarget = FuzzTargetFinder.findFuzzTarget(fuzzTargetClass);
+    } catch (IllegalArgumentException e) {
+      err.printf("ERROR: %s%n", e.getMessage());
+      exit(1);
+      throw new IllegalStateException("Not reached");
     }
+
+    try {
+      fuzzTargetMethod = MethodHandles.lookup().unreflect(fuzzTarget.method);
+    } catch (IllegalAccessException e) {
+      // Should have been made accessible in FuzzTargetFinder.
+      throw new IllegalStateException(e);
+    }
+    useFuzzedDataProvider = fuzzTarget.useFuzzedDataProvider;
+    fuzzerTearDown = fuzzTarget.tearDown.orElse(null);
     reproducerTemplate = new ReproducerTemplate(fuzzTargetClass.getName(), useFuzzedDataProvider);
 
-    Method initializeNoArgs = targetPublicStaticMethodOrNull(FUZZER_INITIALIZE);
-    Method initializeWithArgs = targetPublicStaticMethodOrNull(FUZZER_INITIALIZE, String[].class);
     try {
-      if (initializeWithArgs != null) {
-        initializeWithArgs.invoke(null, (Object) Opt.targetArgs.toArray(new String[] {}));
-      } else if (initializeNoArgs != null) {
-        initializeNoArgs.invoke(null);
-      }
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      err.print("== Java Exception in fuzzerInitialize: ");
+      fuzzTargetInstance = fuzzTarget.newInstance.call();
+    } catch (Throwable e) {
+      err.print("== Java Exception during initialization: ");
       e.printStackTrace(err);
       exit(1);
+      throw new IllegalStateException("Not reached");
     }
 
     if (Opt.hooks) {
@@ -166,14 +156,21 @@ public final class FuzzTargetRunner {
    */
   private static int runOne(long dataPtr, int dataLength) {
     Throwable finding = null;
-    byte[] data = null;
+    byte[] data;
+    Object argument;
+    if (useFuzzedDataProvider) {
+      fuzzedDataProvider.setNativeData(dataPtr, dataLength);
+      data = null;
+      argument = fuzzedDataProvider;
+    } else {
+      data = copyToArray(dataPtr, dataLength);
+      argument = data;
+    }
     try {
-      if (useFuzzedDataProvider) {
-        fuzzedDataProvider.setNativeData(dataPtr, dataLength);
-        fuzzTarget.invokeExact((FuzzedDataProvider) fuzzedDataProvider);
+      if (fuzzTargetInstance == null) {
+        fuzzTargetMethod.invoke(argument);
       } else {
-        data = copyToArray(dataPtr, dataLength);
-        fuzzTarget.invokeExact(data);
+        fuzzTargetMethod.invoke(fuzzTargetInstance, argument);
       }
     } catch (Throwable uncaughtFinding) {
       finding = uncaughtFinding;
@@ -210,7 +207,11 @@ public final class FuzzTargetRunner {
     // dumpReproducer needs to be called after libFuzzer printed its final stats as otherwise it
     // would report incorrect coverage - the reproducer generation involved rerunning the fuzz
     // target.
-    dumpReproducer(data);
+    // It doesn't support @FuzzTest fuzz targets, but these come with an integrated regression test
+    // that satisfies the same purpose.
+    if (fuzzTargetInstance == null) {
+      dumpReproducer(data);
+    }
 
     if (Opt.keepGoing == 1 || Long.compareUnsigned(ignoredTokens.size(), Opt.keepGoing) >= 0) {
       // Reached the maximum amount of findings to keep going for, crash after shutdown. We use
@@ -246,13 +247,12 @@ public final class FuzzTargetRunner {
       }
     }
 
-    Method teardown = targetPublicStaticMethodOrNull(FUZZER_TEARDOWN);
-    if (teardown == null) {
+    if (fuzzerTearDown == null) {
       return;
     }
     err.println("calling fuzzerTearDown function");
     try {
-      teardown.invoke(null);
+      fuzzerTearDown.invoke(null);
     } catch (InvocationTargetException e) {
       // An exception in fuzzerTearDown is a regular finding.
       err.print("== Java Exception in fuzzerTearDown: ");
@@ -263,22 +263,6 @@ public final class FuzzTargetRunner {
       t.printStackTrace(err);
       _Exit(1);
     }
-  }
-
-  private static String determineFuzzTargetClassName() {
-    if (!Opt.autofuzz.isEmpty()) {
-      return AUTOFUZZ_FUZZ_TARGET;
-    }
-    if (!Opt.targetClass.isEmpty()) {
-      return Opt.targetClass;
-    }
-    String manifestTargetClass = ManifestUtils.detectFuzzTargetClass();
-    if (manifestTargetClass != null) {
-      return manifestTargetClass;
-    }
-    err.println("Missing argument --target_class=<fuzz_target_class>");
-    exit(1);
-    throw new IllegalStateException("Not reached");
   }
 
   private static void dumpReproducer(byte[] data) {
@@ -307,7 +291,7 @@ public final class FuzzTargetRunner {
       FuzzedDataProvider recordingFuzzedDataProvider =
           RecordingFuzzedDataProvider.makeFuzzedDataProviderProxy(fuzzedDataProvider);
       try {
-        fuzzTarget.invokeExact(recordingFuzzedDataProvider);
+        fuzzTargetMethod.invokeExact(recordingFuzzedDataProvider);
         if (JazzerInternal.lastFinding == null) {
           err.println("Failed to reproduce crash when rerunning with recorder");
         }
@@ -329,18 +313,6 @@ public final class FuzzTargetRunner {
     }
 
     reproducerTemplate.dumpReproducer(base64Data, dataSha1);
-  }
-
-  private static Method targetPublicStaticMethodOrNull(String name, Class<?>... parameterTypes) {
-    try {
-      Method method = fuzzTargetClass.getMethod(name, parameterTypes);
-      if (!Modifier.isStatic(method.getModifiers()) || !Modifier.isPublic(method.getModifiers())) {
-        return null;
-      }
-      return method;
-    } catch (NoSuchMethodException e) {
-      return null;
-    }
   }
 
   /**
