@@ -24,8 +24,8 @@ java_jni_library(
     name = "fuzz_target_runner",
     srcs = ["FuzzTargetRunner.java"],
     # This library is loaded by the classes in the agent runtime package as it needs to be available
-    # in the bootstrap class loader. It is packaged here rather than in jazzer_boostrap.jar to make
-    # multi-OS builds easier by not having the shared libraries packaged into a nested JAR.
+    # in the bootstrap class loader. It is packaged here rather than in jazzer_boostrap.jar since
+    # the bootstrap class loader doesn't support resources.
     native_libs = [
         "//driver/src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
     ],
