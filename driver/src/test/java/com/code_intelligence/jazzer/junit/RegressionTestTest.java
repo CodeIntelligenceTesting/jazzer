@@ -62,8 +62,7 @@ public class RegressionTestTest {
             finishedWithFailure(instanceOf(FuzzerSecurityIssueCritical.class))),
         event(test("dataFuzz", "sanitizer_user_class"),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueLow.class))),
-        event(test("byteFuzz", "<empty input>"),
-            finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))),
+        event(test("byteFuzz", "<empty input>"), finishedSuccessfully()),
         event(test("byteFuzz", "succeeds"), finishedSuccessfully()),
         event(test("byteFuzz", "fails"),
             finishedWithFailure(instanceOf(AssertionFailedError.class))));

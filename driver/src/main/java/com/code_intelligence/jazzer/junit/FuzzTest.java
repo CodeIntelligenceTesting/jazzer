@@ -67,4 +67,12 @@ public @interface FuzzTest {
    * @return a custom seed corpus resource path (absolute or relative to the current class)
    */
   String seedCorpus() default "";
+
+  /**
+   * A duration string such as "1h 2m 30s" indicating for how long the fuzz test should be executed
+   * when fuzzing.
+   *
+   * <p>Defaults to 1 minute.
+   */
+  String maxDuration() default "1m";
 }

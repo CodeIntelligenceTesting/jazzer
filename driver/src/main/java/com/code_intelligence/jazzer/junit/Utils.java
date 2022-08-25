@@ -14,8 +14,31 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 class Utils {
   static String defaultSeedCorpusPath(Class<?> testClass) {
     return testClass.getSimpleName() + "SeedCorpus";
+  }
+
+  static String defaultInstrumentationFilter(Class<?> testClass) {
+    // This is an extremely rough "implementation" of the public suffix list algorithm
+    // (https://publicsuffix.org/): It tries to guess the shortest prefix of the package name that
+    // isn't public. It doesn't use the actual list, but instead assumes that every root segment as
+    // well as "com.github" are public. Examples:
+    // - com.example.Test --> com.example.**
+    // - com.example.foobar.Test --> com.example.**
+    // - com.github.someones.repo.Test --> com.github.someones.**
+    String packageName = testClass.getPackage().getName();
+    String[] packageSegments = packageName.split("\\.");
+    int numSegments = 2;
+    if (packageSegments.length > 2 && packageSegments[0].equals("com")
+        && packageSegments[1].equals("github")) {
+      numSegments = 3;
+    }
+    return Stream.concat(Arrays.stream(packageSegments).limit(numSegments), Stream.of("**"))
+        .collect(Collectors.joining("."));
   }
 }
