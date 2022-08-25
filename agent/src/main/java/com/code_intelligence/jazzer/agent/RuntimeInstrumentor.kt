@@ -124,10 +124,13 @@ class RuntimeInstrumentor(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun transformInternal(internalClassName: String, classfileBuffer: ByteArray): ByteArray? {
-        val fullInstrumentation = when {
-            classesToFullyInstrument.includes(internalClassName) -> true
-            classesToHookInstrument.includes(internalClassName) -> false
-            additionalClassesToHookInstrument.includes(internalClassName) -> false
+        val (fullInstrumentation, printInfo) = when {
+            classesToFullyInstrument.includes(internalClassName) -> Pair(true, true)
+            classesToHookInstrument.includes(internalClassName) -> Pair(false, true)
+            // The classes to hook specified by hooks are more of an implementation detail of the hook. The list is
+            // always the same unless the set of hooks changes and doesn't help the user judge whether their classes are
+            // being instrumented, so we don't print info for them.
+            additionalClassesToHookInstrument.includes(internalClassName) -> Pair(false, false)
             else -> return null
         }
         val prettyClassName = internalClassName.replace('/', '.')
@@ -146,10 +149,12 @@ class RuntimeInstrumentor(
         }
         val durationInMs = duration.inWholeMilliseconds
         val sizeIncrease = ((100.0 * (instrumentedBytecode.size - classfileBuffer.size)) / classfileBuffer.size).roundToInt()
-        if (fullInstrumentation) {
-            println("INFO: Instrumented $prettyClassName (took $durationInMs ms, size +$sizeIncrease%)")
-        } else {
-            println("INFO: Instrumented $prettyClassName with custom hooks only (took $durationInMs ms, size +$sizeIncrease%)")
+        if (printInfo) {
+            if (fullInstrumentation) {
+                println("INFO: Instrumented $prettyClassName (took $durationInMs ms, size +$sizeIncrease%)")
+            } else {
+                println("INFO: Instrumented $prettyClassName with custom hooks only (took $durationInMs ms, size +$sizeIncrease%)")
+            }
         }
         return instrumentedBytecode
     }
