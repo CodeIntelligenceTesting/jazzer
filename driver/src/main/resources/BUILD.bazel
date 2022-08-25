@@ -1,0 +1,5 @@
+filegroup(
+    name = "jazzer_test_engine_service",
+    srcs = ["META-INF/services/org.junit.platform.engine.TestEngine"],
+    visibility = ["//visibility:public"],
+)

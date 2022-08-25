@@ -7,6 +7,7 @@ java_binary(
     visibility = ["//visibility:public"],
     runtime_deps = [
         ":fuzz_test",
+        ":jazzer_test_engine",
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
     ],
 )
@@ -17,8 +18,10 @@ java_library(
         "AgentConfigurator.java",
     ],
     deps = [
+        ":utils",
         "//sanitizers:sanitizer_constants",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_platform_junit_platform_engine",
     ],
 )
 
@@ -44,6 +47,27 @@ java_jni_library(
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
         "@maven//:org_junit_platform_junit_platform_commons",
+    ],
+)
+
+java_library(
+    name = "jazzer_test_engine",
+    srcs = [
+        "JazzerFuzzTestExecutor.java",
+        "JazzerTestEngine.java",
+    ],
+    resources = [
+        "//driver/src/main/resources:jazzer_test_engine_service",
+    ],
+    deps = [
+        ":agent_configurator",
+        ":fuzz_test",
+        ":utils",
+        "//agent/src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
+        "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_platform_junit_platform_commons",
+        "@maven//:org_junit_platform_junit_platform_engine",
     ],
 )
 

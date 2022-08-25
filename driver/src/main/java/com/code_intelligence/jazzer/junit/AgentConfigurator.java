@@ -19,22 +19,44 @@ import static com.code_intelligence.jazzer.sanitizers.Constants.SANITIZER_HOOK_N
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.platform.engine.ExecutionRequest;
 
 class AgentConfigurator {
   private static final AtomicBoolean hasBeenConfigured = new AtomicBoolean();
 
-  static void configure(ExtensionContext extensionContext) {
+  static void forRegressionTest(ExtensionContext extensionContext) {
     if (!hasBeenConfigured.compareAndSet(false, true)) {
       return;
     }
 
+    applyCommonConfiguration();
+
     // Apply all hooks, but no coverage or compare instrumentation.
     System.setProperty("jazzer.instrumentation_excludes", "**");
-    System.setProperty("jazzer.custom_hooks", SANITIZER_HOOK_NAMES);
     extensionContext.getConfigurationParameter("jazzer.instrument")
         .ifPresent(s
             -> System.setProperty(
                 "jazzer.custom_hook_includes", String.join(File.pathSeparator, s.split(","))));
+  }
+
+  static void forFuzzing(ExecutionRequest executionRequest, Class<?> fuzzTestClass) {
+    if (!hasBeenConfigured.compareAndSet(false, true)) {
+      return;
+    }
+
+    applyCommonConfiguration();
+
+    String instrumentationFilter =
+        executionRequest.getConfigurationParameters()
+            .get("jazzer.instrument")
+            .orElseGet(() -> Utils.defaultInstrumentationFilter(fuzzTestClass));
+    String filter = String.join(File.pathSeparator, instrumentationFilter.split(","));
+    System.setProperty("jazzer.custom_hook_includes", filter);
+    System.setProperty("jazzer.instrumentation_includes", filter);
+  }
+
+  private static void applyCommonConfiguration() {
+    System.setProperty("jazzer.custom_hooks", SANITIZER_HOOK_NAMES);
     // Do not hook common IDE and JUnit classes and their dependencies.
     System.setProperty("jazzer.custom_hook_excludes",
         String.join(File.pathSeparator, "com.google.testing.junit.**", "com.intellij.**",

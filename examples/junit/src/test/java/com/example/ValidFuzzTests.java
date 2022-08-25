@@ -57,10 +57,20 @@ class ValidFuzzTests {
   @FuzzTest(seedCorpus = "CustomSeedCorpus")
   void byteFuzz(byte[] data) {
     if (data.length < 1) {
-      throw new FuzzerSecurityIssueMedium();
+      return;
     }
     if (data[0] % 2 == 0) {
       Assertions.fail();
+    }
+  }
+
+  @FuzzTest(maxDuration = "10s")
+  void noCrashFuzz(byte[] data) {
+    if (data.length < 10) {
+      return;
+    }
+    if (data[4] == 'c' && new String(data).startsWith("aaaaaa")) {
+      throw new IllegalStateException("Not reached");
     }
   }
 }

@@ -30,7 +30,7 @@ class RegressionTestExtensions
   @Override
   public void beforeEach(ExtensionContext extensionContext) {
     // These methods are idempotent, so there is no need to synchronize.
-    AgentConfigurator.configure(extensionContext);
+    AgentConfigurator.forRegressionTest(extensionContext);
     AgentInstaller.install(true);
   }
 
