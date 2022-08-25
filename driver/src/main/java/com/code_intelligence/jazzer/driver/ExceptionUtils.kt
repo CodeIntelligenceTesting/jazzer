@@ -14,7 +14,7 @@
 
 @file:JvmName("ExceptionUtils")
 
-package com.code_intelligence.jazzer.utils
+package com.code_intelligence.jazzer.driver
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow
 import java.lang.management.ManagementFactory
@@ -153,7 +153,7 @@ fun dumpAllStackTraces() {
             .asReversed()
             .takeWhile {
                 !(
-                    it.className == "com.code_intelligence.jazzer.runtime.ExceptionUtils" &&
+                    it.className == "com.code_intelligence.jazzer.driver.ExceptionUtils" &&
                         it.methodName == "dumpAllStackTraces"
                     )
             }

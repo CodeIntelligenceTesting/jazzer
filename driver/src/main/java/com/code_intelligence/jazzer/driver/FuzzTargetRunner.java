@@ -26,7 +26,6 @@ import com.code_intelligence.jazzer.autofuzz.FuzzTarget;
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder;
 import com.code_intelligence.jazzer.runtime.FuzzTargetRunnerNatives;
 import com.code_intelligence.jazzer.runtime.JazzerInternal;
-import com.code_intelligence.jazzer.utils.ExceptionUtils;
 import com.code_intelligence.jazzer.utils.ManifestUtils;
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import java.io.IOException;
