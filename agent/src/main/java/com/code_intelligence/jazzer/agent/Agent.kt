@@ -23,19 +23,11 @@ import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import com.code_intelligence.jazzer.utils.ManifestUtils
 import java.lang.instrument.Instrumentation
-import java.net.URI
 import java.nio.file.Paths
-import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
-fun jarUriForClass(clazz: Class<*>): URI? {
-    return clazz.protectionDomain?.codeSource?.location?.toURI()
-}
-
-@OptIn(ExperimentalPathApi::class)
-@Suppress("UNUSED_PARAMETER")
-fun premain(agentArgs: String?, instrumentation: Instrumentation) {
+fun install(instrumentation: Instrumentation) {
     val manifestCustomHookNames =
         ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES).flatMap {
             it.split(':')

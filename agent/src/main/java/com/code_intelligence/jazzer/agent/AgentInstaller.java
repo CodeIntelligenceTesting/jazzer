@@ -55,11 +55,11 @@ public class AgentInstaller {
     }
     try {
       Class<?> agent = Class.forName("com.code_intelligence.jazzer.agent.Agent");
-      Method premain = agent.getMethod("premain", String.class, Instrumentation.class);
-      premain.invoke(null, null, instrumentation);
+      Method install = agent.getMethod("install", Instrumentation.class);
+      install.invoke(null, instrumentation);
     } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException
         | IllegalAccessException e) {
-      throw new IllegalStateException("Failed to run Agent.premain", e);
+      throw new IllegalStateException("Failed to run Agent.install", e);
     }
   }
 
