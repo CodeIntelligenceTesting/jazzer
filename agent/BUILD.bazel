@@ -3,9 +3,32 @@ load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 load("//bazel:jar.bzl", "strip_jar")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
+# These classes are contained in jazzer_boostrap.jar and will thus be
+# available on the bootstrap class path.
+java_binary(
+    name = "jazzer_agent_deploy_env",
+    create_executable = False,
+    runtime_deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//agent/src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
+        # We should strive to exclude this class as well, but adding it here would also exclude the
+        # Kotlin stdlib, which the agent and the bootstrap code need their own copy of.
+        # TODO(fmeum): Get rid of Kotlin in utils.
+        # "//agent/src/main/java/com/code_intelligence/jazzer/utils",
+    ],
+)
+
 java_binary(
     name = "jazzer_agent_unshaded",
     create_executable = False,
+    # Note: We can't add
+    # //agent/src/main/java/com/code_intelligence/jazzer/runtime:java_bootstrap_unshaded itself as
+    # the agent should have its own copy of its (few) external dependencies. For example,
+    # FuzzedDataProviderImpl may load its native library using RulesJni before the agent has been
+    # added to the bootstrap classpath.
+    deploy_env = [
+        ":jazzer_agent_deploy_env",
+    ],
     deploy_manifest_lines = [
         "Jazzer-Hook-Classes: ",
     ] + [" {}:".format(c) for c in SANITIZER_CLASSES],
