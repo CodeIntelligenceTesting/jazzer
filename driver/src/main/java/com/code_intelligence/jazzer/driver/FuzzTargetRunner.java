@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.Predicate;
 import sun.misc.Unsafe;
 
 /**
@@ -60,6 +61,10 @@ public final class FuzzTargetRunner {
   // Default value of the libFuzzer -error_exitcode flag.
   private static final int LIBFUZZER_ERROR_EXIT_CODE = 77;
 
+  // Possible return values for the libFuzzer callback runOne.
+  private static final int LIBFUZZER_CONTINUE = 0;
+  private static final int LIBFUZZER_RETURN_FROM_DRIVER = -2;
+
   private static final Set<Long> ignoredTokens = new HashSet<>(Opt.ignore);
   private static final FuzzedDataProviderImpl fuzzedDataProvider =
       FuzzedDataProviderImpl.withNativeData();
@@ -70,6 +75,7 @@ public final class FuzzTargetRunner {
   private static final Object fuzzTargetInstance;
   private static final Method fuzzerTearDown;
   private static final ReproducerTemplate reproducerTemplate;
+  private static Predicate<Throwable> findingHandler;
 
   static {
     String targetClassName = FuzzTargetFinder.findFuzzTargetClassName();
@@ -181,7 +187,7 @@ public final class FuzzTargetRunner {
       JazzerInternal.lastFinding = null;
     }
     if (finding == null) {
-      return 0;
+      return LIBFUZZER_CONTINUE;
     }
     if (Opt.hooks) {
       finding = ExceptionUtils.preprocessThrowable(finding);
@@ -190,7 +196,18 @@ public final class FuzzTargetRunner {
     long dedupToken = Opt.dedup ? ExceptionUtils.computeDedupToken(finding) : 0;
     // Opt.keepGoing implies Opt.dedup.
     if (Opt.keepGoing > 1 && !ignoredTokens.add(dedupToken)) {
-      return 0;
+      return LIBFUZZER_CONTINUE;
+    }
+
+    if (findingHandler != null) {
+      // We still print the libFuzzer crashing input information, which also dumps the crashing
+      // input as a side effect.
+      printCrashingInput();
+      if (findingHandler.test(finding)) {
+        return LIBFUZZER_CONTINUE;
+      } else {
+        return LIBFUZZER_RETURN_FROM_DRIVER;
+      }
     }
 
     err.println();
@@ -223,7 +240,7 @@ public final class FuzzTargetRunner {
       _Exit(LIBFUZZER_ERROR_EXIT_CODE);
       throw new IllegalStateException("Not reached");
     }
-    return 0;
+    return LIBFUZZER_CONTINUE;
   }
 
   /*
@@ -235,6 +252,17 @@ public final class FuzzTargetRunner {
   public static int startLibFuzzer(List<String> args) {
     SignalHandler.initialize();
     return startLibFuzzer(Utils.toNativeArgs(args));
+  }
+
+  /**
+   * Registers a custom handler for findings.
+   *
+   * @param findingHandler a consumer for the finding that returns true if the fuzzer should
+   *     continue fuzzing and false
+   *                       if it should return from {@link FuzzTargetRunner#startLibFuzzer(List)}.
+   */
+  public static void registerFindingHandler(Predicate<Throwable> findingHandler) {
+    FuzzTargetRunner.findingHandler = findingHandler;
   }
 
   private static void shutdown() {
