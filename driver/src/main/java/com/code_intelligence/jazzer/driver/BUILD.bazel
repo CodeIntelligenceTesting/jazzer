@@ -3,7 +3,7 @@ load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 java_library(
     name = "driver",
-    srcs = [":Driver.java"],
+    srcs = ["Driver.java"],
     visibility = [
         "//agent:__pkg__",
     ],
