@@ -19,7 +19,6 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -29,16 +28,11 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
@@ -46,7 +40,9 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.support.AnnotationConsumer;
 
 class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationConsumer<FuzzTest> {
-  FuzzTest annotation;
+  private static final String INCORRECT_PARAMETERS_MESSAGE =
+      "Methods annotated with @FuzzTest must take a single byte[] or FuzzedDataProvider parameter";
+  private FuzzTest annotation;
 
   @Override
   public void accept(FuzzTest annotation) {
@@ -65,7 +61,7 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
   private Stream<? extends Arguments> adaptSeedsForFuzzTest(
       Method fuzzTestMethod, Stream<Map.Entry<String, byte[]>> rawSeeds) {
     if (fuzzTestMethod.getParameterCount() != 1) {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(INCORRECT_PARAMETERS_MESSAGE);
     }
     if (fuzzTestMethod.getParameterTypes()[0] == byte[].class) {
       return rawSeeds.map(e -> arguments(named(e.getKey(), e.getValue())));
@@ -73,8 +69,7 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
       return rawSeeds.map(
           e -> arguments(named(e.getKey(), FuzzedDataProviderImpl.withJavaData(e.getValue()))));
     } else {
-      throw new IllegalArgumentException(
-          "Methods annotated with @FuzzTest must take a single byte[] or FuzzedDataProvider parameter");
+      throw new IllegalArgumentException(INCORRECT_PARAMETERS_MESSAGE);
     }
   }
 
@@ -84,7 +79,7 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
         seedCorpusArg.isEmpty() ? Utils.defaultSeedCorpusPath(testClass) : seedCorpusArg;
     URL seedCorpusUrl = testClass.getResource(seedCorpusPath);
     if (seedCorpusUrl == null) {
-      return Stream.of();
+      return Stream.empty();
     }
     URI seedCorpusUri;
     try {

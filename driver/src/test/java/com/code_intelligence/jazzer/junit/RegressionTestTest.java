@@ -14,6 +14,8 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectPackage;
 import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.event;
@@ -34,27 +36,19 @@ import org.junit.platform.testkit.engine.EngineTestKit;
 import org.opentest4j.AssertionFailedError;
 
 public class RegressionTestTest {
-  @Test
-  public void regressionTest() {
-    EngineExecutionResults results =
-        EngineTestKit.engine("junit-jupiter")
-            .selectors(selectPackage("com.example"))
-            .configurationParameter("jazzer.instrument",
-                "com.other.package.**,com.example.**,com.yet.another.package.*")
-            .execute();
+  private static EngineExecutionResults executeTests() {
+    return EngineTestKit.engine("junit-jupiter")
+        .selectors(selectPackage("com.example"))
+        .configurationParameter(
+            "jazzer.instrument", "com.other.package.**,com.example.**,com.yet.another.package.*")
+        .execute();
+  }
 
-    if (!System.getenv("JAZZER_FUZZ").isEmpty()) {
-      // When fuzzing is requested, all regression tests are disabled.
-      results.testEvents().debug().assertEventsMatchExactly();
-      results.containerEvents().debug().assertEventsMatchLoosely(
-          event(container("dataFuzz"),
-              skippedWithReason(r -> r.contains("Regression tests are disabled"))),
-          event(container("byteFuzz"),
-              skippedWithReason(r -> r.contains("Regression tests are disabled"))),
-          event(container("invalidFuzz"),
-              skippedWithReason(r -> r.contains("Regression tests are disabled"))));
-      return;
-    }
+  @Test
+  public void regressionTestEnabled() {
+    assumeTrue(System.getenv("JAZZER_FUZZ").isEmpty());
+
+    EngineExecutionResults results = executeTests();
 
     results.testEvents().debug().assertEventsMatchLoosely(
         event(test("dataFuzz", "<empty input>"),
@@ -73,9 +67,33 @@ public class RegressionTestTest {
         event(test("byteFuzz", "succeeds"), finishedSuccessfully()),
         event(test("byteFuzz", "fails"),
             finishedWithFailure(instanceOf(AssertionFailedError.class))));
-    results.containerEvents().debug().assertEventsMatchLoosely(event(container("invalidFuzz"),
-        finishedWithFailure(instanceOf(IllegalArgumentException.class),
-            message(
-                "Methods annotated with @FuzzTest must take a single byte[] or FuzzedDataProvider parameter"))));
+    results.containerEvents().debug().assertEventsMatchLoosely(
+        event(container("invalidParameterCountFuzz"),
+            finishedWithFailure(instanceOf(IllegalArgumentException.class),
+                message(
+                    "Methods annotated with @FuzzTest must take a single byte[] or FuzzedDataProvider parameter"))),
+        event(container("invalidParameterTypeFuzz"),
+            finishedWithFailure(instanceOf(IllegalArgumentException.class),
+                message(
+                    "Methods annotated with @FuzzTest must take a single byte[] or FuzzedDataProvider parameter"))));
+  }
+
+  @Test
+  public void regressionTestDisabled() {
+    assumeFalse(System.getenv("JAZZER_FUZZ").isEmpty());
+
+    EngineExecutionResults results = executeTests();
+
+    // When fuzzing is requested, all regression tests are disabled.
+    results.testEvents().debug().assertEventsMatchExactly();
+    results.containerEvents().debug().assertEventsMatchLoosely(
+        event(container("dataFuzz"),
+            skippedWithReason(r -> r.contains("Regression tests are disabled"))),
+        event(container("byteFuzz"),
+            skippedWithReason(r -> r.contains("Regression tests are disabled"))),
+        event(container("invalidParameterCountFuzz"),
+            skippedWithReason(r -> r.contains("Regression tests are disabled"))),
+        event(container("invalidParameterTypeFuzz"),
+            skippedWithReason(r -> r.contains("Regression tests are disabled"))));
   }
 }

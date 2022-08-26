@@ -67,6 +67,9 @@ class RegressionTestExtensions
   }
 
   private static Field getLastFindingField() throws Throwable {
+    // We have to get lastFinding lazily rather than e.g. moving this block into a static
+    // initializer since JazzerInternal is contained in jazzer_bootstrap.jar, which is only
+    // available on the classpath after the agent has been installed in beforeEach.
     if (lastFindingField == null) {
       Class<?> jazzerInternal =
           Class.forName("com.code_intelligence.jazzer.runtime.JazzerInternal");

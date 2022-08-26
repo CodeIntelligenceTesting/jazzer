@@ -14,9 +14,10 @@
 
 package com.example;
 
+import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 
-class InvalidFuzzTest {
+class InvalidParameterCountFuzzTest {
   @FuzzTest
-  void invalidFuzz(Boolean invalidParameter) {}
+  void invalidParameterCountFuzz(FuzzedDataProvider data1, FuzzedDataProvider data2) {}
 }
