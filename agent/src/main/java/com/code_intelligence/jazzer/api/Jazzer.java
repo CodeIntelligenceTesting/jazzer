@@ -23,7 +23,7 @@ import java.security.SecureRandom;
 /**
  * Static helper methods that hooks can use to provide feedback to the fuzzer.
  */
-public class Jazzer {
+public final class Jazzer {
   private static final Class<?> JAZZER_INTERNAL;
 
   private static final MethodHandle ON_FUZZ_TARGET_READY;
