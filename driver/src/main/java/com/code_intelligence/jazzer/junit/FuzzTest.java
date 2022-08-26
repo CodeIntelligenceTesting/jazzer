@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.ResourceAccessMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
@@ -41,7 +43,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @ArgumentsSource(RegressionTestArgumentProvider.class)
-@ExtendWith(RegressionTestLifecycleCallbacks.class)
+@ExtendWith(RegressionTestExtensions.class)
 // {0} is expanded to the basename of the seed by the ArgumentProvider.
 @ParameterizedTest(name = "{0}")
 @Tag("jazzer")
@@ -50,6 +52,10 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 @DisabledIfEnvironmentVariable(named = "JAZZER_FUZZ", matches = ".+",
     disabledReason =
         "Regression tests are disabled while fuzzing is enabled with a non-empty value for the JAZZER_FUZZ environment variable")
+// JazzerInternal keeps global state about the last finding. Compared to the cost of starting up the
+// agent, running individual regression test cases should be very fast, so we wouldn't gain much
+// from parallelization.
+@ResourceLock(value = "jazzer", mode = ResourceAccessMode.READ_WRITE)
 public @interface FuzzTest {
   /**
    * A directory with inputs that are always executed first in both fuzzing runs and regression

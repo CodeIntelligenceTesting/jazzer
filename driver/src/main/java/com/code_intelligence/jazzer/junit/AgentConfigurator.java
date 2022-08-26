@@ -28,7 +28,6 @@ class AgentConfigurator {
       return;
     }
 
-    System.setProperty("jazzer.regression", "true");
     // Apply all hooks, but no coverage or compare instrumentation.
     System.setProperty("jazzer.instrumentation_excludes", "**");
     System.setProperty("jazzer.custom_hooks", SANITIZER_HOOK_NAMES);

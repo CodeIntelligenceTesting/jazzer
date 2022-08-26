@@ -32,8 +32,6 @@ public final class Jazzer {
   private static final MethodHandle TRACE_STRSTR;
   private static final MethodHandle TRACE_MEMCMP;
   private static final MethodHandle TRACE_PC_INDIR;
-  private static final boolean IS_REGRESSION_TEST =
-      Boolean.parseBoolean(System.getProperty("jazzer.regression", "false"));
 
   static {
     Class<?> jazzerInternal = null;
@@ -229,13 +227,7 @@ public final class Jazzer {
    */
   public static void reportFindingFromHook(Throwable finding) {
     try {
-      if (IS_REGRESSION_TEST) {
-        // In a regression test, which is also used to debug findings, we don't use global "magic"
-        // to report findings, but just throw ordinary exceptions.
-        rethrowUnchecked(finding);
-      } else {
-        JAZZER_INTERNAL.getMethod("reportFindingFromHook", Throwable.class).invoke(null, finding);
-      }
+      JAZZER_INTERNAL.getMethod("reportFindingFromHook", Throwable.class).invoke(null, finding);
     } catch (NullPointerException | IllegalAccessException | NoSuchMethodException e) {
       // We can only reach this point if the runtime is not on the classpath, e.g. in case of a
       // reproducer. Just throw the finding.
