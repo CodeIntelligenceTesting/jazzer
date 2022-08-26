@@ -1,15 +1,70 @@
+load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("//bazel:jar.bzl", "strip_jar")
+load("//:maven.bzl", "JAZZER_JUNIT_MAVEN_DEPS")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
-java_binary(
+# The Jazzer JUnit integration without its dependencies declared in the pom.xml.
+jar_jar(
     name = "junit",
-    create_executable = False,
+    input_jar = "junit_stripped.jar",
+    rules = "junit_shade_rules",
     visibility = ["//visibility:public"],
+)
+
+# :junit together with all its Maven dependencies.
+java_import(
+    name = "junit_for_testing",
+    testonly = True,
+    jars = [
+        "junit.jar",
+        "junit_maven_deps_deploy.jar",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+strip_jar(
+    name = "junit_stripped",
+    out = "junit_stripped.jar",
+    jar = "junit_unshaded_deploy.jar",
+    paths_to_strip = [
+        "module-info.class",
+    ],
+)
+
+java_binary(
+    name = "junit_unshaded",
+    create_executable = False,
+    deploy_env = [":junit_maven_deps"],
     runtime_deps = [
         ":fuzz_test",
         ":jazzer_test_engine",
-        "//agent/src/main/java/com/code_intelligence/jazzer/api",
     ],
+)
+
+java_binary(
+    name = "junit_maven_deps",
+    create_executable = False,
+    runtime_deps = JAZZER_JUNIT_MAVEN_DEPS,
+)
+
+sh_test(
+    name = "junit_shading_test",
+    srcs = ["verify_shading.sh"],
+    args = [
+        "$(rootpath junit.jar)",
+    ],
+    data = [
+        "junit.jar",
+        "@local_jdk//:bin/jar",
+    ],
+    tags = [
+        # Coverage instrumentation necessarily adds files to the jar that we
+        # wouldn't want to release and thus causes this test to fail.
+        "no-coverage",
+    ],
+    target_compatible_with = SKIP_ON_WINDOWS,
 )
 
 java_library(
@@ -64,6 +119,7 @@ java_library(
         ":fuzz_test",
         ":utils",
         "//agent/src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
+        "//driver/src/main/java/com/code_intelligence/jazzer:constants",
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_platform_junit_platform_commons",

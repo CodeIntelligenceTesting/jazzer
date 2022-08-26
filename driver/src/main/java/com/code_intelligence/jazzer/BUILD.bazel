@@ -1,0 +1,20 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//:maven.bzl", "JAZZER_VERSION")
+
+write_file(
+    name = "constants_java",
+    out = "Constants.java",
+    content = [
+        "package com.code_intelligence.jazzer;",
+        "public final class Constants {",
+        "  public static final String JAZZER_VERSION = \"%s\";" % JAZZER_VERSION,
+        "}",
+    ],
+)
+
+java_library(
+    name = "constants",
+    srcs = [":constants_java"],
+    neverlink = True,
+    visibility = ["//visibility:public"],
+)

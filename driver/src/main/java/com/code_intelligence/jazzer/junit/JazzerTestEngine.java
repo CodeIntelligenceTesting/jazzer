@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import com.code_intelligence.jazzer.Constants;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -187,7 +188,7 @@ public class JazzerTestEngine implements TestEngine {
 
   @Override
   public Optional<String> getVersion() {
-    return Optional.of("0.1");
+    return Optional.of(Constants.JAZZER_VERSION);
   }
 
   private static String makeDisplayName(Method method) {
