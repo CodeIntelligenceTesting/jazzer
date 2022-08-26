@@ -7,7 +7,7 @@ load("//:maven.bzl", "JAZZER_API_COORDINATES")
 java_export(
     name = "api",
     maven_coordinates = JAZZER_API_COORDINATES,
-    pom_template = "//:jazzer-api.pom",
+    pom_template = "jazzer-api.pom",
     visibility = ["//visibility:public"],
     runtime_deps = ["//agent/src/main/java/com/code_intelligence/jazzer/api"],
 )
