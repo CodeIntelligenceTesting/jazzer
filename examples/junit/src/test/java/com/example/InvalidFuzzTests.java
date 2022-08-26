@@ -14,18 +14,13 @@
 
 package com.example;
 
-import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
+import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
-import org.junit.jupiter.api.Assertions;
 
-class ByteFuzzTest {
-  @FuzzTest(seedCorpus = "CustomSeedCorpus")
-  void byteFuzz(byte[] data) {
-    if (data.length < 1) {
-      throw new FuzzerSecurityIssueMedium();
-    }
-    if (data[0] % 2 == 0) {
-      Assertions.fail();
-    }
-  }
+class InvalidFuzzTests {
+  @FuzzTest
+  void invalidParameterCountFuzz(FuzzedDataProvider data1, FuzzedDataProvider data2) {}
+
+  @FuzzTest
+  void invalidParameterTypeFuzz(Boolean invalidParameter) {}
 }
