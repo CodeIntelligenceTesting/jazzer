@@ -39,7 +39,7 @@
             <artifactId>jazzer-junit</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/../../bazel-bin/driver/src/main/java/com/code_intelligence/jazzer/junit/junit_deploy.jar</systemPath>
+            <systemPath>${project.basedir}/../../bazel-bin/driver/src/main/java/com/code_intelligence/jazzer/junit/junit.jar</systemPath>
         </dependency>
     </dependencies>
 
