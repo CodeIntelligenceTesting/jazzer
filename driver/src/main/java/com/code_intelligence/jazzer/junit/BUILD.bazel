@@ -27,7 +27,7 @@ java_jni_library(
     srcs = [
         "FuzzTest.java",
         "RegressionTestArgumentProvider.java",
-        "RegressionTestLifecycleCallbacks.java",
+        "RegressionTestExtensions.java",
     ],
     native_libs = [
         "//driver/src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",

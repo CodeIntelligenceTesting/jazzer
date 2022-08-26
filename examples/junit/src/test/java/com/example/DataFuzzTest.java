@@ -19,7 +19,6 @@ import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import java.io.IOException;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 import org.junit.jupiter.api.Assertions;
 
 class DataFuzzTest {
@@ -45,8 +44,9 @@ class DataFuzzTest {
       case "sanitizer_user_class":
         try {
           Pattern.compile("[");
-        } catch (PatternSyntaxException ignored) {
-          // Ignored, bu the sanitizer should still throw an exception.
+        } catch (Throwable ignored) {
+          // Ignored, but the JUnit test should report an error even though all throwables are
+          // caught - just like Jazzer would.
         }
       case "":
       default:

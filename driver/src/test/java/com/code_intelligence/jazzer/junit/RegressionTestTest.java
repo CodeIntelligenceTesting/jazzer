@@ -21,7 +21,6 @@ import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessf
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
 import static org.junit.platform.testkit.engine.EventConditions.skippedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.test;
-import static org.junit.platform.testkit.engine.TestExecutionResultConditions.cause;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
@@ -64,8 +63,7 @@ public class RegressionTestTest {
         event(test("dataFuzz", "assert"),
             finishedWithFailure(instanceOf(AssertionFailedError.class))),
         event(test("dataFuzz", "honeypot"),
-            finishedWithFailure(instanceOf(ExceptionInInitializerError.class),
-                cause(instanceOf(FuzzerSecurityIssueHigh.class)))),
+            finishedWithFailure(instanceOf(FuzzerSecurityIssueHigh.class))),
         event(test("dataFuzz", "sanitizer_internal_class"),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueCritical.class))),
         event(test("dataFuzz", "sanitizer_user_class"),
