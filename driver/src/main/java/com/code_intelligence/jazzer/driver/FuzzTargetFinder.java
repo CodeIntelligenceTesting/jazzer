@@ -136,8 +136,10 @@ class FuzzTargetFinder {
     method.setAccessible(true);
     constructor.setAccessible(true);
 
-    return Optional.of(new FuzzTarget(parameter == FuzzedDataProvider.class, method,
-        constructor::newInstance, targetPublicStaticMethod(clazz, FUZZER_TEAR_DOWN)));
+    // TODO: If it should become necessary, implement support for @AfterAll/@AfterEach as
+    //  JUnit-idiomatic replacements for fuzzerTearDown.
+    return Optional.of(new FuzzTarget(
+        parameter == FuzzedDataProvider.class, method, constructor::newInstance, Optional.empty()));
   }
 
   // Finds the traditional static fuzzerTestOneInput fuzz target method.
@@ -166,12 +168,11 @@ class FuzzTargetFinder {
                     .map(init -> (Callable<Object>) () -> {
                       init.invoke(null);
                       return null;
-                    }),
-                Optional.of((Callable<Object>) () -> null))
+                    }))
             .filter(Optional::isPresent)
+            .map(Optional::get)
             .findFirst()
-            .get()
-            .get();
+            .orElse(() -> null);
 
     return new FuzzTarget(dataFuzzTarget.isPresent(),
         dataFuzzTarget.orElseGet(bytesFuzzTarget::get), initialize,

@@ -73,6 +73,11 @@ public final class FuzzTargetRunner {
 
   static {
     String targetClassName = FuzzTargetFinder.findFuzzTargetClassName();
+    if (targetClassName == null) {
+      err.println("Missing argument --target_class=<fuzz_target_class>");
+      exit(1);
+      throw new IllegalStateException("Not reached");
+    }
 
     try {
       FuzzTargetRunner.class.getClassLoader().setDefaultAssertionStatus(true);
