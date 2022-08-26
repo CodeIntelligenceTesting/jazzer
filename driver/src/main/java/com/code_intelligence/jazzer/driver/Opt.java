@@ -65,6 +65,8 @@ public final class Opt {
                                       .collect(Collectors.toSet()));
   public static final String reproducerPath = stringSetting("reproducer_path", ".");
   public static final String targetClass = stringSetting("target_class", "");
+  // Used to disambiguate between multiple methods annotated with @FuzzTest in the target class.
+  public static final String targetMethod = stringSetting("target_method", "");
   public static final List<String> trace = stringListSetting("trace");
 
   // The values of these settings depend on autofuzz.

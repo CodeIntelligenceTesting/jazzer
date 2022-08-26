@@ -85,16 +85,34 @@ class FuzzTargetFinder {
       return Optional.empty();
     }
 
+    Method method;
     if (annotatedMethods.size() > 1) {
-      throw new IllegalArgumentException(String.format(
-          "Each class may only contain a single method annotated with @FuzzTest, got multiple in %s",
-          clazz.getName()));
+      if (Opt.targetMethod.isEmpty()) {
+        throw new IllegalArgumentException(String.format(
+            "%s contains multiple methods annotated with @FuzzTest, but --target_method hasn't been specified",
+            clazz.getName()));
+      }
+      List<Method> targetMethods = annotatedMethods.stream()
+                                       .filter(m -> Opt.targetMethod.equals(m.getName()))
+                                       .collect(Collectors.toList());
+      if (targetMethods.isEmpty()) {
+        throw new IllegalArgumentException(
+            String.format("%s contains no method called '%s' that is annotated with @FuzzTest",
+                clazz.getName(), Opt.targetMethod));
+      }
+      if (targetMethods.size() > 1) {
+        throw new IllegalArgumentException(String.format(
+            "%s contains multiple methods called '%s' that are annotated with @FuzzTest - this is currently not supported",
+            clazz.getName(), Opt.targetMethod));
+      }
+      method = targetMethods.get(0);
+    } else {
+      method = annotatedMethods.get(0);
     }
 
     // The following checks ensure compatibility with the JUnit concept of a test class and test
     // method.
     // https://junit.org/junit5/docs/5.9.0/user-guide/#writing-tests-definitions
-    Method method = annotatedMethods.get(0);
     if (Modifier.isPrivate(method.getModifiers())) {
       throw new IllegalArgumentException(
           String.format("Methods annotated with @FuzzTest must not be private, got %s in %s",

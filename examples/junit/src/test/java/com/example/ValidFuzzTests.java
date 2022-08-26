@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Assertions;
 
-class DataFuzzTest {
+class ValidFuzzTests {
   @FuzzTest
   void dataFuzz(FuzzedDataProvider data) {
     switch (data.consumeRemainingAsString()) {
@@ -51,6 +51,16 @@ class DataFuzzTest {
       case "":
       default:
         throw new FuzzerSecurityIssueMedium();
+    }
+  }
+
+  @FuzzTest(seedCorpus = "CustomSeedCorpus")
+  void byteFuzz(byte[] data) {
+    if (data.length < 1) {
+      throw new FuzzerSecurityIssueMedium();
+    }
+    if (data[0] % 2 == 0) {
+      Assertions.fail();
     }
   }
 }

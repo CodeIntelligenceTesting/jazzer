@@ -91,9 +91,13 @@ DEFINE_bool(hooks, true,
             "coverage information will be processed. This can be useful for "
             "running a regression test on non-instrumented bytecode.");
 
-DEFINE_string(
-    target_class, "",
-    "The Java class that contains the static fuzzerTestOneInput function");
+DEFINE_string(target_class, "",
+              "The Java class that contains the static fuzzerTestOneInput "
+              "function or a function annotated with @FuzzTest");
+DEFINE_string(target_method, "",
+              "The name of the method in the class specified by --target_class "
+              "that should be fuzzed. Only required if the class contains "
+              "multiple methods annotated with @FuzzTest.");
 DEFINE_string(target_args, "",
               "Arguments passed to fuzzerInitialize as a String array. "
               "Separated by space.");
@@ -190,6 +194,7 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
 std::vector<std::string> optsAsDefines() {
   std::vector<std::string> defines{
       absl::StrFormat("-Djazzer.target_class=%s", FLAGS_target_class),
+      absl::StrFormat("-Djazzer.target_method=%s", FLAGS_target_method),
       absl::StrFormat("-Djazzer.target_args=%s", FLAGS_target_args),
       absl::StrFormat("-Djazzer.dedup=%s", FLAGS_dedup ? "true" : "false"),
       absl::StrFormat("-Djazzer.ignore=%s", FLAGS_ignore),

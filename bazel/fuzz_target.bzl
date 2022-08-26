@@ -15,6 +15,7 @@
 def java_fuzz_target_test(
         name,
         target_class = None,
+        target_method = None,
         deps = [],
         hook_jar = None,
         data = [],
@@ -36,6 +37,8 @@ def java_fuzz_target_test(
     deploy_manifest_lines = []
     if target_class:
         deploy_manifest_lines.append("Jazzer-Fuzz-Target-Class: %s" % target_class)
+    if target_method:
+        fuzzer_args = list(fuzzer_args) + ["--target_method=" + target_method]
 
     # Deps can only be specified on java_binary targets with sources, which
     # excludes e.g. Kotlin libraries wrapped into java_binary via runtime_deps.

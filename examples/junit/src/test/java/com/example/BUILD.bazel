@@ -18,10 +18,11 @@ java_binary(
 
 java_fuzz_target_test(
     name = "DataFuzzTest",
-    srcs = ["DataFuzzTest.java"],
+    srcs = ["ValidFuzzTests.java"],
     args = ["-runs=0"],
     expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
-    target_class = "com.example.DataFuzzTest",
+    target_class = "com.example.ValidFuzzTests",
+    target_method = "dataFuzz",
     verify_crash_reproducer = False,
     deps = [
         "//driver/src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
@@ -31,10 +32,11 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "ByteFuzzTest",
-    srcs = ["ByteFuzzTest.java"],
+    srcs = ["ValidFuzzTests.java"],
     args = ["-runs=0"],
     expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
-    target_class = "com.example.ByteFuzzTest",
+    target_class = "com.example.ValidFuzzTests",
+    target_method = "byteFuzz",
     verify_crash_reproducer = False,
     deps = [
         "//driver/src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
