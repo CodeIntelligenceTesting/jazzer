@@ -223,7 +223,7 @@ public final class FuzzTarget {
     String javaSource = String.format(AUTOFUZZ_REPRODUCER_TEMPLATE, sha, codegenVisitor.generate());
     Path javaPath = Paths.get(reproducerPath, String.format("Crash_%s.java", sha));
     try {
-      Files.write(javaPath, javaSource.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+      Files.write(javaPath, javaSource.getBytes(StandardCharsets.UTF_8));
     } catch (IOException e) {
       System.err.printf("ERROR: Failed to write Java reproducer to %s%n", javaPath);
       e.printStackTrace();
