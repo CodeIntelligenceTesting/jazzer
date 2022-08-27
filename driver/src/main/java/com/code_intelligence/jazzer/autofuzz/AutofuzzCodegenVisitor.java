@@ -77,7 +77,6 @@ public class AutofuzzCodegenVisitor {
         .replace("\n", "\\n")
         .replace("\r", "\\r")
         .replace("\f", "\\f")
-        .replace("\f", "\\f")
         .replace("\"", "\\\"")
         .replace("'", "\\'")
         .replace("\\", "\\\\");
