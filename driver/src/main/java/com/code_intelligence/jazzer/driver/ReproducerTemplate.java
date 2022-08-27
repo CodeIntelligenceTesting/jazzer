@@ -23,7 +23,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -62,7 +61,7 @@ final class ReproducerTemplate {
     String javaSource = String.format(template, sha, chunkedData, targetClass, targetArg);
     Path javaPath = Paths.get(Opt.reproducerPath, String.format("Crash_%s.java", sha));
     try {
-      Files.write(javaPath, javaSource.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+      Files.write(javaPath, javaSource.getBytes(StandardCharsets.UTF_8));
     } catch (IOException e) {
       System.err.printf("ERROR: Failed to write Java reproducer to %s%n", javaPath);
       e.printStackTrace();
