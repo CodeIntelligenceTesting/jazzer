@@ -69,17 +69,17 @@ public class AutofuzzCodegenVisitor {
     return String.format("autofuzzVariable%s", variableCounter++);
   }
 
-  private String escapeForLiteral(String string) {
+  static String escapeForLiteral(String string) {
     // The list of escape sequences is taken from:
     // https://docs.oracle.com/javase/tutorial/java/data/characters.html
-    return string.replace("\t", "\\t")
+    return string.replace("\\", "\\\\")
+        .replace("\t", "\\t")
         .replace("\b", "\\b")
         .replace("\n", "\\n")
         .replace("\r", "\\r")
         .replace("\f", "\\f")
         .replace("\"", "\\\"")
-        .replace("'", "\\'")
-        .replace("\\", "\\\\");
+        .replace("'", "\\'");
   }
 
   private String toDebugString() {

@@ -41,14 +41,13 @@ public class MetaTest {
     consumeTestCase((short) 5, "(short) 5", Collections.singletonList((short) 5));
     consumeTestCase(5L, "5L", Collections.singletonList(5L));
     consumeTestCase(5.0F, "5.0F", Collections.singletonList(5.0F));
-    consumeTestCase('\n', "'\\\\n'", Collections.singletonList('\n'));
-    consumeTestCase('\'', "'\\\\''", Collections.singletonList('\''));
+    consumeTestCase('\n', "'\\n'", Collections.singletonList('\n'));
+    consumeTestCase('\'', "'\\''", Collections.singletonList('\''));
     consumeTestCase('\\', "'\\\\'", Collections.singletonList('\\'));
 
     String testString = "foo\n\t\\\"bar";
-    // The expected string is obtained from testString by escaping, wrapping into quotes and
-    // escaping again.
-    consumeTestCase(testString, "\"foo\\\\n\\\\t\\\\\\\\\"bar\"",
+    // The expected string is obtained from testString by escaping and wrapping into escaped quotes.
+    consumeTestCase(testString, "\"foo\\n\\t\\\\\\\"bar\"",
         Arrays.asList((byte) 1, // do not return null
             testString.length(), testString));
 
@@ -60,7 +59,7 @@ public class MetaTest {
             2 * 3, testBooleans));
 
     char[] testChars = new char[] {'a', '\n', '\''};
-    consumeTestCase(testChars, "new char[]{'a', '\\\\n', '\\\\''}",
+    consumeTestCase(testChars, "new char[]{'a', '\\n', '\\''}",
         Arrays.asList((byte) 1, // do not return null for the array
             2 * 3 * Character.BYTES + Character.BYTES, testChars[0], 2 * 3 * Character.BYTES,
             2 * 3 * Character.BYTES, // remaining bytes, 2 times what is needed for 3 chars
@@ -84,7 +83,7 @@ public class MetaTest {
             testLongs));
 
     consumeTestCase(new String[] {"foo", "bar", "foo\nbar"},
-        "new java.lang.String[]{\"foo\", \"bar\", \"foo\\\\nbar\"}",
+        "new java.lang.String[]{\"foo\", \"bar\", \"foo\\nbar\"}",
         Arrays.asList((byte) 1, // do not return null for the array
             32, // remaining bytes
             (byte) 1, // do not return null for the string
