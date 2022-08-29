@@ -41,7 +41,7 @@ class AgentConfigurator {
 
   static void forFuzzing(ExecutionRequest executionRequest, Class<?> fuzzTestClass) {
     if (!hasBeenConfigured.compareAndSet(false, true)) {
-      return;
+      throw new IllegalStateException("Only a single fuzz test should be executed per fuzzing run");
     }
 
     applyCommonConfiguration();
