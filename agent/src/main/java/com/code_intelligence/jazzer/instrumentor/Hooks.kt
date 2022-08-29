@@ -16,7 +16,6 @@ package com.code_intelligence.jazzer.instrumentor
 
 import com.code_intelligence.jazzer.api.MethodHook
 import com.code_intelligence.jazzer.api.MethodHooks
-import com.code_intelligence.jazzer.driver.Opt
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import com.code_intelligence.jazzer.utils.descriptor
 import io.github.classgraph.ClassGraph
@@ -70,7 +69,7 @@ data class Hooks(
                 val hookClasses = hooksWithHookClasses.map { it.second }.toSet()
                 val additionalHookClassNameGlobber = ClassNameGlobber(
                     hooks.flatMap(Hook::additionalClassesToHook),
-                    Opt.customHookExcludes + hookClassNames,
+                    emptyList()
                 )
                 return Hooks(hooks, hookClasses, additionalHookClassNameGlobber)
             }
