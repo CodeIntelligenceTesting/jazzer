@@ -265,3 +265,12 @@ java_fuzz_target_test(
     verify_crash_reproducer = False,
     runtime_deps = [":native_value_profile_fuzzer"],
 )
+
+java_fuzz_target_test(
+    name = "JUnitAssertFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/JUnitAssertFuzzer.java"],
+    expected_findings = ["org.opentest4j.AssertionFailedError"],
+    target_class = "com.example.JUnitAssertFuzzer",
+    deps = ["@maven//:org_junit_jupiter_junit_jupiter_api"],
+)

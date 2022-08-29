@@ -344,4 +344,21 @@ final public class TraceCmpHooks {
           currentKey, upperBoundKey, hookId + upperBoundKey.hashCode());
     }
   }
+
+  @MethodHook(type = HookType.AFTER, targetClassName = "org.junit.jupiter.api.Assertions",
+      targetMethod = "assertNotEquals",
+      targetMethodDescriptor = "(Ljava/lang/Object;Ljava/lang/Object;)V")
+  @MethodHook(type = HookType.AFTER, targetClassName = "org.junit.jupiter.api.Assertions",
+      targetMethod = "assertNotEquals",
+      targetMethodDescriptor = "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;)V")
+  @MethodHook(type = HookType.AFTER, targetClassName = "org.junit.jupiter.api.Assertions",
+      targetMethod = "assertNotEquals",
+      targetMethodDescriptor =
+          "(Ljava/lang/Object;Ljava/lang/Object;Ljava/util/function/Supplier;)V")
+  public static void
+  assertEquals(MethodHandle method, Object node, Object[] args, int hookId, Object alwaysNull) {
+    if (args[0] != null && args[1] != null && args[0].getClass() == args[1].getClass()) {
+      TraceDataFlowNativeCallbacks.traceGenericCmp(args[0], args[1], hookId);
+    }
+  }
 }
