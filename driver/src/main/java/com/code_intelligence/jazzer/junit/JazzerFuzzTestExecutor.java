@@ -120,6 +120,9 @@ public class JazzerFuzzTestExecutor {
     // which we don't support without our native driver, and leads to false positives where it picks
     // up IntelliJ's memory usage.
     libFuzzerArgs.add("-rss_limit_mb=0");
+    if (request.getConfigurationParameters().getBoolean("jazzer.valueprofile").orElse(false)) {
+      libFuzzerArgs.add("-use_value_profile=1");
+    }
 
     System.setProperty("jazzer.target_class", fuzzTestClass.getName());
     System.setProperty("jazzer.target_method", fuzzTestMethod.getName());
