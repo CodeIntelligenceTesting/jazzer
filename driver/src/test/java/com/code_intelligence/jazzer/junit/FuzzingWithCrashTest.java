@@ -86,6 +86,10 @@ public class FuzzingWithCrashTest {
         event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
         event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
 
+    // The checks below currently fail on Windows, probably because Bazel doesn't use sandboxing
+    // there and we write into the runfiles tree.
+    assumeFalse(System.getProperty("os.name").startsWith("Windows"));
+
     // Jazzer first tries the empty input, which doesn't crash the ByteFuzzTest. The second input is
     // the seed we planted, which is crashing, so verify that a crash file with the same content is
     // created in our fake seed corpus, but not in the current working directory.
