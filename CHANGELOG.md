@@ -2,6 +2,22 @@
 
 **Note:** Before version 1.0.0, every release may contain breaking changes.
 
+## Version 0.12.0
+
+* **Breaking change**: Autofuzz API methods (`consume` and `autofuzz`) have moved from the
+  `Jazzer` class to the dedicated `Autofuzz` class
+* **Major feature**: Added JUnit 5 integration for fuzzing and regression tests using the
+  `@FuzzTest` annotation (available as `com.code-intelligence:jazzer-junit`)
+* Feature: Added sanitizer for SQL injections
+* Feature: Hooks can be selectively disabled by specifying their full class name using the new
+  `--disabled_hooks` flag
+* Fix: Remove memory leaks in native code
+* Fix: Don't instrument internal Azul JDK classes
+* Fix: Classes with local variable annotations are now instrumented without errors
+
+This release also includes smaller improvements and bugfixes, as well as a major refactoring and
+Java rewrite of native components.
+
 ## Version 0.11.0
 
 * Feature: Add sanitizer for context lookups
