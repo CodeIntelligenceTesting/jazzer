@@ -12,6 +12,7 @@ java_binary(
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
         "//driver/src/main/java/com/code_intelligence/jazzer/junit:junit_for_testing",
+        "//examples/junit/src/main/java/com/example:parser",
         "//examples/junit/src/test/resources:example_seed_corpora",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
@@ -27,6 +28,7 @@ java_fuzz_target_test(
     verify_crash_reproducer = False,
     deps = [
         "//driver/src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "//examples/junit/src/main/java/com/example:parser",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 )
@@ -41,6 +43,7 @@ java_fuzz_target_test(
     verify_crash_reproducer = False,
     deps = [
         "//driver/src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "//examples/junit/src/main/java/com/example:parser",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 )

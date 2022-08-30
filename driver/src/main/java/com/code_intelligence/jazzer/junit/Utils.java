@@ -14,13 +14,21 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import java.lang.management.ManagementFactory;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class Utils {
   static String defaultSeedCorpusPath(Class<?> testClass) {
     return testClass.getSimpleName() + "SeedCorpus";
+  }
+
+  static Path generatedCorpusPath(Class<?> testClass) {
+    return Paths.get(".cifuzz-corpus", testClass.getName());
   }
 
   static String defaultInstrumentationFilter(Class<?> testClass) {
@@ -40,5 +48,12 @@ class Utils {
     }
     return Stream.concat(Arrays.stream(packageSegments).limit(numSegments), Stream.of("**"))
         .collect(Collectors.joining("."));
+  }
+
+  private static final Pattern COVERAGE_AGENT_ARG =
+      Pattern.compile("-javaagent:.*(?:intellij-coverage-agent|jacoco).*");
+  static boolean isCoverageAgentPresent() {
+    return ManagementFactory.getRuntimeMXBean().getInputArguments().stream().anyMatch(
+        s -> COVERAGE_AGENT_ARG.matcher(s).matches());
   }
 }

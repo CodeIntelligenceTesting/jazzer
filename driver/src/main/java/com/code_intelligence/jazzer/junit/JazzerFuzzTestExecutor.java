@@ -62,7 +62,7 @@ public class JazzerFuzzTestExecutor {
     // https://github.com/CodeIntelligenceTesting/cifuzz/blob/bf410dcfbafbae2a73cf6c5fbed031cdfe234f2f/internal/cmd/run/run.go#L381
     // The path is specified relative to the current working directory, which with JUnit is the
     // project directory.
-    Path generatedCorpusDir = Paths.get(".cifuzz-corpus", fuzzTestClass.getName());
+    Path generatedCorpusDir = Utils.generatedCorpusPath(fuzzTestClass);
     Files.createDirectories(generatedCorpusDir);
     libFuzzerArgs.add(generatedCorpusDir.toAbsolutePath().toString());
 
