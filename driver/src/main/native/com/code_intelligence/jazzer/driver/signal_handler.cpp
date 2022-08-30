@@ -27,7 +27,7 @@
 
 // Handles SIGINT raised while running Java code.
 [[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_SignalHandler_handleInterrupt(
+Java_com_code_1intelligence_jazzer_driver_SignalHandler_handleInterrupt(
     JNIEnv *, jclass) {
   static std::atomic<bool> already_exiting{false};
   if (!already_exiting.exchange(true)) {
