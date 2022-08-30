@@ -105,15 +105,15 @@ jobs:
           unzip -o replayer_macos-x86_64/replayer.jar -d replayer_merged
           unzip -o replayer_linux/replayer.jar -d replayer_merged
           unzip -o replayer_windows/replayer.jar -d replayer_merged
-          jar cvmf merged/META-INF/MANIFEST.MF replayer.jar -C replayer_merged .
+          jar cvmf replayer_merged/META-INF/MANIFEST.MF replayer.jar -C replayer_merged .
 
-      - name: Merge replayer jars
+      - name: Merge JUnit jars
         run: |
           mkdir junit_merged
           unzip -o junit_macos-x86_64/junit.jar -d junit_merged
           unzip -o junit_linux/junit.jar -d junit_merged
           unzip -o junit_windows/junit.jar -d junit_merged
-          jar cvmf merged/META-INF/MANIFEST.MF junit.jar -C junit_merged .
+          jar cvmf junit_merged/META-INF/MANIFEST.MF junit.jar -C junit_merged .
 
       - name: Upload merged replayer jar
         uses: actions/upload-artifact@v2
