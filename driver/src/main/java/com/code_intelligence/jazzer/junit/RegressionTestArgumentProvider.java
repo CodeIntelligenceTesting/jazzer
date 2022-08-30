@@ -52,9 +52,12 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
   @Override
   public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext)
       throws IOException {
-    Stream<Map.Entry<String, byte[]>> rawSeeds =
-        Stream.concat(Stream.of(new SimpleEntry<>("<empty input>", new byte[] {})),
-            walkSeedCorpus(extensionContext.getRequiredTestClass()));
+    Class<?> testClass = extensionContext.getRequiredTestClass();
+    Stream<Map.Entry<String, byte[]>> rawSeeds = Stream.concat(
+        Stream.of(new SimpleEntry<>("<empty input>", new byte[] {})), walkSeedCorpus(testClass));
+    if (Utils.isCoverageAgentPresent() && Files.isDirectory(Utils.generatedCorpusPath(testClass))) {
+      rawSeeds = Stream.concat(rawSeeds, walkSeedsInPath(Utils.generatedCorpusPath(testClass)));
+    }
     return adaptSeedsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds);
   }
 

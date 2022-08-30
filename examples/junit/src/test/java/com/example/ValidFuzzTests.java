@@ -69,8 +69,6 @@ class ValidFuzzTests {
     if (data.length < 10) {
       return;
     }
-    if (data[4] == 'c' && new String(data).startsWith("aaaaaa")) {
-      throw new IllegalStateException("Not reached");
-    }
+    Parser.parse(data);
   }
 }
