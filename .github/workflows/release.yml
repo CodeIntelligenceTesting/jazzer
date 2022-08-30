@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # Keep arch names in sync with replayer download and merge
+        # Keep arch names in sync with replayer and junit download and merge
         os: [ubuntu-latest, macos-10.15, windows-2019]
         include:
           - os: ubuntu-latest
@@ -35,9 +35,10 @@ jobs:
 
       - name: Build
         run: |
-          bazelisk build ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_8 ${{ matrix.bazel_args }} //agent/src/main/java/com/code_intelligence/jazzer/replay:Replayer_deploy.jar //:jazzer_release
-          cp -L bazel-bin/agent/src/main/java/com/code_intelligence/jazzer/replay/Replayer_deploy.jar replayer.jar
-          cp -L bazel-bin/jazzer_release.tar.gz release-${{ matrix.arch }}.tar.gz
+          bazelisk build ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_8 ${{ matrix.bazel_args }} //driver/src/main/java/com/code_intelligence/jazzer/replay:Replayer_deploy.jar //deploy:junit //:jazzer_release
+          cp -L $(bazel cquery --output=files //driver/src/main/java/com/code_intelligence/jazzer/replay:Replayer_deploy.jar) replayer.jar
+          cp -L $(bazel cquery --output=files //deploy:junit) junit.jar
+          cp -L $(bazel cquery --output=files //:jazzer_release) release-${{ matrix.arch }}.tar.gz
 
       - name: Upload replayer
         uses: actions/upload-artifact@v2
@@ -45,45 +46,83 @@ jobs:
           name: replayer_${{ matrix.arch }}
           path: replayer.jar
 
+      - name: Upload JUnit integration
+        uses: actions/upload-artifact@v2
+        with:
+          name: junit_${{ matrix.arch }}
+          path: junit.jar
+
       - name: Upload release tar
         uses: actions/upload-artifact@v2
         with:
           name: jazzer_releases
           path: release-${{ matrix.arch}}.tar.gz
 
-  merge_replayer_jars:
+  merge_jars:
     runs-on: ubuntu-latest
     needs: build_release
 
     steps:
-      - name: Download macOS jar
+      - name: Download macOS x86_64 replayer jar
         uses: actions/download-artifact@v2
         with:
           name: replayer_macos-x86_64
           path: replayer_macos-x86_64
 
-      - name: Download Linux jar
+      - name: Download macOS x86_64 JUnit jar
+        uses: actions/download-artifact@v2
+        with:
+          name: junit_macos-x86_64
+          path: junit_macos-x86_64
+
+      - name: Download Linux replayer jar
         uses: actions/download-artifact@v2
         with:
           name: replayer_linux
           path: replayer_linux
 
-      - name: Download Windows jar
+      - name: Download Linux JUnit jar
+        uses: actions/download-artifact@v2
+        with:
+          name: junit_linux
+          path: junit_linux
+
+      - name: Download Windows replayer jar
         uses: actions/download-artifact@v2
         with:
           name: replayer_windows
           path: replayer_windows
 
-      - name: Merge jars
-        run: |
-          mkdir merged
-          unzip -o replayer_macos-x86_64/replayer.jar -d merged
-          unzip -o replayer_linux/replayer.jar -d merged
-          unzip -o replayer_windows/replayer.jar -d merged
-          jar cvmf merged/META-INF/MANIFEST.MF replayer.jar -C merged .
+      - name: Download Windows JUnit jar
+        uses: actions/download-artifact@v2
+        with:
+          name: junit_windows
+          path: junit_windows
 
-      - name: Upload merged jar
+      - name: Merge replayer jars
+        run: |
+          mkdir replayer_merged
+          unzip -o replayer_macos-x86_64/replayer.jar -d replayer_merged
+          unzip -o replayer_linux/replayer.jar -d replayer_merged
+          unzip -o replayer_windows/replayer.jar -d replayer_merged
+          jar cvmf merged/META-INF/MANIFEST.MF replayer.jar -C replayer_merged .
+
+      - name: Merge replayer jars
+        run: |
+          mkdir junit_merged
+          unzip -o junit_macos-x86_64/junit.jar -d junit_merged
+          unzip -o junit_linux/junit.jar -d junit_merged
+          unzip -o junit_windows/junit.jar -d junit_merged
+          jar cvmf merged/META-INF/MANIFEST.MF junit.jar -C junit_merged .
+
+      - name: Upload merged replayer jar
         uses: actions/upload-artifact@v2
         with:
           name: replayer
           path: replayer.jar
+
+      - name: Upload merged JUnit jar
+        uses: actions/upload-artifact@v2
+        with:
+          name: junit
+          path: junit.jar
