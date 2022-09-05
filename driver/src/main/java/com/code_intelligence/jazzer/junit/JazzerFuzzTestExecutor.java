@@ -20,9 +20,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -47,7 +49,7 @@ public class JazzerFuzzTestExecutor {
     this.baseDir = baseDir;
   }
 
-  public TestExecutionResult execute() throws IOException {
+  public TestExecutionResult execute() throws IOException, URISyntaxException {
     if (!hasExecutedOnce.compareAndSet(false, true)) {
       throw new IllegalStateException(
           "Only a single fuzz test can be executed by JazzerFuzzTestExecutor per test run");
@@ -94,8 +96,8 @@ public class JazzerFuzzTestExecutor {
       }
     } else if ("file".equals(seedCorpusUrl.getProtocol())) {
       // From the second positional argument on, files and directories are used as seeds but not
-      // modified.
-      libFuzzerArgs.add(seedCorpusUrl.getFile());
+      // modified. Using seedCorpusUrl.getFile() fails on Windows.
+      libFuzzerArgs.add(Paths.get(seedCorpusUrl.toURI()).toString());
       // We try to find the source tree representation of the seed corpus directory and emit
       // findings into it.
       findSeedCorpusDirectoryInSourceTree().ifPresent(
