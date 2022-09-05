@@ -4,7 +4,10 @@
   <artifactId>{artifactId}</artifactId>
   <version>{version}</version>
   <packaging>jar</packaging>
-  {dependencies}
+
+  <dependencies>
+{dependencies}
+  </dependencies>
 
   <name>Jazzer API</name>
   <description>Helper functions and annotations for Jazzer fuzz targets</description>
