@@ -5,7 +5,9 @@
   <version>{version}</version>
   <packaging>{type}</packaging>
 
+  <dependencies>
 {dependencies}
+  </dependencies>
 
   <name>Jazzer JUnit</name>
   <description>JUnit 5 support for Jazzer fuzz tests</description>
