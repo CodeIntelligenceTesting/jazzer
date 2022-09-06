@@ -233,6 +233,10 @@ public class Meta {
   // the genericType Class<java.lang.String> should lead to the generated code
   // "(java.lang.String) null", not just "null". This makes it possible to safely use consume in
   // recursive argument constructions.
+  // Exception: Some Java libraries offer public methods that take private interfaces or abstract
+  // classes as parameters. In this case, a cast to the parent type would cause an
+  // IllegalAccessError. Since this case should be rare and there is no good alternative to
+  // disambiguate overloads, we omit the cast in this case.
   static Object consume(FuzzedDataProvider data, Type genericType, AutofuzzCodegenVisitor visitor) {
     Class<?> type = getRawType(genericType);
     if (type == byte.class || type == Byte.class) {
@@ -474,12 +478,17 @@ public class Meta {
         }
       }
       if (visitor != null) {
-        // This group will always have a single element: The instance of the implementing class.
-        visitor.pushGroup(String.format("(%s) ", type.getCanonicalName()), "", "");
+        // See the "Exception" note in the method comment.
+        if (Modifier.isPublic(type.getModifiers())) {
+          // This group will always have a single element: The instance of the implementing class.
+          visitor.pushGroup(String.format("(%s) ", type.getCanonicalName()), "", "");
+        }
       }
       Object result = consume(data, data.pickValue(implementingClasses), visitor);
       if (visitor != null) {
-        visitor.popGroup();
+        if (Modifier.isPublic(type.getModifiers())) {
+          visitor.popGroup();
+        }
       }
       return result;
     } else if (type.getConstructors().length > 0) {

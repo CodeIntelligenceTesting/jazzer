@@ -183,4 +183,25 @@ public class MetaTest {
             "buzz"));
     assertEquals("fizzbuzz", Meta.autofuzz(data, "fizz" ::concat));
   }
+
+  // Regression test for https://github.com/CodeIntelligenceTesting/jazzer/issues/465.
+  @Test
+  public void testPrivateInterface() {
+    autofuzzTestCase(null,
+        "com.code_intelligence.jazzer.autofuzz.OpinionatedClass.doStuffWithPrivateInterface(((java.util.function.Supplier<com.code_intelligence.jazzer.autofuzz.OpinionatedClass.PublicImplementation>) (() -> {com.code_intelligence.jazzer.autofuzz.OpinionatedClass.PublicImplementation autofuzzVariable0 = new com.code_intelligence.jazzer.autofuzz.OpinionatedClass.PublicImplementation(); return autofuzzVariable0;})).get())",
+        OpinionatedClass.class.getDeclaredMethods()[0],
+        Arrays.asList((byte) 1, // do not return null
+            0, // first (and only) class on the classpath
+            (byte) 1, // do not return null
+            0 /* first (and only) constructor*/));
+  }
+}
+
+class OpinionatedClass {
+  public static void doStuffWithPrivateInterface(
+      @SuppressWarnings("unused") PrivateInterface thing) {}
+
+  private interface PrivateInterface {}
+
+  public static class PublicImplementation implements PrivateInterface {}
 }
