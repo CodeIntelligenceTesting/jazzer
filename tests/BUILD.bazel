@@ -274,3 +274,22 @@ java_fuzz_target_test(
     target_class = "com.example.JUnitAssertFuzzer",
     deps = ["@maven//:org_junit_jupiter_junit_jupiter_api"],
 )
+
+java_library(
+    name = "autofuzz_ignore_target",
+    srcs = ["src/test/java/com/example/AutofuzzIgnoreTarget.java"],
+)
+
+java_fuzz_target_test(
+    name = "AutofuzzIgnoreFuzzer",
+    expected_findings = ["java.lang.RuntimeException"],
+    fuzzer_args = [
+        "--autofuzz=com.example.AutofuzzIgnoreTarget::doStuff",
+        "--autofuzz_ignore=java.lang.NullPointerException",
+        "--ignore=bdde2af8735993f3,0123456789ABCDEF",
+        "--keep_going=1",
+    ],
+    runtime_deps = [
+        ":autofuzz_ignore_target",
+    ],
+)
