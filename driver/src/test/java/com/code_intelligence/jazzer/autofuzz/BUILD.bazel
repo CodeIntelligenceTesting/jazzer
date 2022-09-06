@@ -4,6 +4,9 @@ java_test(
     srcs = [
         "MetaTest.java",
     ],
+    env = {
+        "JAZZER_AUTOFUZZ_DEBUG": "1",
+    },
     test_class = "com.code_intelligence.jazzer.autofuzz.MetaTest",
     deps = [
         ":test_helpers",
@@ -21,6 +24,7 @@ java_test(
         "InterfaceCreationTest.java",
     ],
     env = {
+        "JAZZER_AUTOFUZZ_DEBUG": "1",
         # Also consider implementing classes from com.code_intelligence.jazzer.*.
         "JAZZER_AUTOFUZZ_TESTING": "1",
     },
@@ -37,6 +41,9 @@ java_test(
     srcs = [
         "BuilderPatternTest.java",
     ],
+    env = {
+        "JAZZER_AUTOFUZZ_DEBUG": "1",
+    },
     test_class = "com.code_intelligence.jazzer.autofuzz.BuilderPatternTest",
     deps = [
         ":test_helpers",
@@ -50,6 +57,9 @@ java_test(
     srcs = [
         "SettersTest.java",
     ],
+    env = {
+        "JAZZER_AUTOFUZZ_DEBUG": "1",
+    },
     test_class = "com.code_intelligence.jazzer.autofuzz.SettersTest",
     deps = [
         ":test_helpers",
