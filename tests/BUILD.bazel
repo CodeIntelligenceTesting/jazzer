@@ -21,8 +21,6 @@ java_fuzz_target_test(
     expected_findings = ["java.lang.NegativeArraySizeException"],
     fuzzer_args = [
         "--autofuzz=org.apache.commons.imaging.formats.jpeg.JpegImageParser::getBufferedImage",
-        # Exit after the first finding for testing purposes.
-        "--keep_going=1",
         "--autofuzz_ignore=java.lang.NullPointerException",
     ],
     runtime_deps = [
@@ -53,7 +51,6 @@ java_fuzz_target_test(
         # Autofuzz a method that triggers no coverage instrumentation (the Java standard library is
         # excluded by default).
         "--autofuzz=java.util.regex.Pattern::compile",
-        "--keep_going=1",
     ],
 )
 
@@ -65,7 +62,6 @@ java_fuzz_target_test(
         "--instrumentation_includes=java.util.regex.**",
         "--autofuzz=java.util.regex.Pattern::compile",
         "--autofuzz_ignore=java.lang.Exception",
-        "--keep_going=1",
     ],
     # FIXME(fabian): Regularly times out on Windows with 0 exec/s for minutes.
     target_compatible_with = SKIP_ON_WINDOWS,
@@ -133,7 +129,6 @@ java_fuzz_target_test(
     expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = [
         "--autofuzz=com.example.AutofuzzInnerClassTarget.Middle.Inner::test",
-        "--keep_going=1",
     ],
     runtime_deps = [
         ":autofuzz_inner_class_target",
@@ -287,7 +282,6 @@ java_fuzz_target_test(
         "--autofuzz=com.example.AutofuzzIgnoreTarget::doStuff",
         "--autofuzz_ignore=java.lang.NullPointerException",
         "--ignore=bdde2af8735993f3,0123456789ABCDEF",
-        "--keep_going=1",
     ],
     runtime_deps = [
         ":autofuzz_ignore_target",

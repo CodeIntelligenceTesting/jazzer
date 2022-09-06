@@ -61,19 +61,18 @@ public final class Opt {
                                       .stream()
                                       .map(token -> Long.parseUnsignedLong(token, 16))
                                       .collect(Collectors.toSet()));
+  public static final long keepGoing = uint64Setting("keep_going", 1);
   public static final String reproducerPath = stringSetting("reproducer_path", ".");
   public static final String targetClass = stringSetting("target_class", "");
   // Used to disambiguate between multiple methods annotated with @FuzzTest in the target class.
   public static final String targetMethod = stringSetting("target_method", "");
   public static final List<String> trace = stringListSetting("trace");
 
-  // The values of these settings depend on autofuzz.
+  // The values of this setting depends on autofuzz.
   public static final List<String> targetArgs = autofuzz.isEmpty()
       ? stringListSetting("target_args", ' ')
       : Collections.unmodifiableList(
           Stream.concat(Stream.of(autofuzz), autofuzzIgnore.stream()).collect(Collectors.toList()));
-  public static final long keepGoing =
-      uint64Setting("keep_going", autofuzz.isEmpty() ? 1 : Long.MAX_VALUE);
 
   // Default to false if hooks is false to mimic the original behavior of the native fuzz target
   // runner, but still support hooks = false && dedup = true.
