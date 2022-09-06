@@ -55,13 +55,13 @@ public class FuzzTargetRunnerTest {
         throw new IllegalArgumentException("not reported");
       case "crash":
         CoverageMap.recordCoverage(3);
-        throw new IllegalArgumentException("crash");
+        throw new RuntimeException("crash");
     }
   }
 
   public static void fuzzerTearDown() {
     String errOutput = new String(recordedErr.toByteArray(), StandardCharsets.UTF_8);
-    assert errOutput.contains("== Java Exception: java.lang.IllegalArgumentException: crash");
+    assert errOutput.contains("== Java Exception: java.lang.RuntimeException: crash");
     String outOutput = new String(recordedOut.toByteArray(), StandardCharsets.UTF_8);
     assert DEDUP_TOKEN_PATTERN.matcher(outOutput).find();
 
