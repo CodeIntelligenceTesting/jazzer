@@ -194,8 +194,7 @@ public final class FuzzTargetRunner {
     }
 
     long dedupToken = Opt.dedup ? ExceptionUtils.computeDedupToken(finding) : 0;
-    // Opt.keepGoing implies Opt.dedup.
-    if (Opt.keepGoing > 1 && !ignoredTokens.add(dedupToken)) {
+    if (Opt.dedup && !ignoredTokens.add(dedupToken)) {
       return LIBFUZZER_CONTINUE;
     }
 
