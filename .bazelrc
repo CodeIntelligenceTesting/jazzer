@@ -38,6 +38,7 @@ build:ci --bes_results_url=https://app.buildbuddy.io/invocation/
 build:ci --bes_backend=grpcs://remote.buildbuddy.io
 build:ci --remote_cache=grpcs://remote.buildbuddy.io
 build:ci --remote_timeout=3600
+build:ci --build_metadata=ROLE=CI
 
 # Maven publishing (local only, requires GPG signature)
 build:maven --config=toolchain
