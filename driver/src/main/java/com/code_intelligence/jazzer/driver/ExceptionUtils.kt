@@ -34,6 +34,12 @@ private fun hash(throwable: Throwable, passToRootCause: Boolean): ByteArray =
         update(rootCause.javaClass.name.toByteArray())
         rootCause.stackTrace
             .takeWhile { !it.className.startsWith("com.code_intelligence.jazzer.") || it.className.startsWith("com.code_intelligence.jazzer.sanitizers.") }
+            .filterNot {
+                it.className.startsWith("jdk.internal.") ||
+                    it.className.startsWith("java.lang.reflect.") ||
+                    it.className.startsWith("sun.reflect.") ||
+                    it.className.startsWith("java.lang.invoke.")
+            }
             .forEach { update(it.toString().toByteArray()) }
         if (throwable.suppressed.isNotEmpty()) {
             update("suppressed".toByteArray())
