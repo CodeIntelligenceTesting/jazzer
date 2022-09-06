@@ -16,7 +16,6 @@ package com.code_intelligence.jazzer.junit;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.container;
@@ -83,10 +82,6 @@ public class ValueProfileTest {
         event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
         event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
 
-    // The checks below currently fail on Windows, probably because Bazel doesn't use sandboxing
-    // there and we write into the runfiles tree.
-    assumeFalse(System.getProperty("os.name").startsWith("Windows"));
-
     // Should crash on the exact input "Jazzer", with the crash emitted into the seed corpus.
     try (Stream<Path> crashFiles =
              Files.list(baseDir).filter(path -> path.getFileName().startsWith("crash-"))) {
@@ -124,10 +119,6 @@ public class ValueProfileTest {
     results.containerEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
         event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
-
-    // The checks below currently fail on Windows, probably because Bazel doesn't use sandboxing
-    // there and we write into the runfiles tree.
-    assumeFalse(System.getProperty("os.name").startsWith("Windows"));
 
     // No crash means no crashing input is emitted anywhere.
     try (Stream<Path> crashFiles =
