@@ -59,7 +59,7 @@ public final class Opt {
   public static final Set<Long> ignore =
       Collections.unmodifiableSet(stringListSetting("ignore", ',')
                                       .stream()
-                                      .map(Long::parseUnsignedLong)
+                                      .map(token -> Long.parseUnsignedLong(token, 16))
                                       .collect(Collectors.toSet()));
   public static final String reproducerPath = stringSetting("reproducer_path", ".");
   public static final String targetClass = stringSetting("target_class", "");
