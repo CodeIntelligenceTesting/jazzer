@@ -281,9 +281,6 @@ Jazzer addresses this issue by ignoring exceptions that the target method declar
 In addition to that, you can provide a list of exceptions to be ignored during fuzzing via the `--autofuzz_ignore` flag in the form of a comma-separated list.
 You can specify concrete exceptions (e.g., `java.lang.NullPointerException`), in which case also subclasses of these exception classes will be ignored, or glob patterns to ignore all exceptions in a specific package (e.g. `java.lang.*` or `com.company.**`).
 
-When fuzzing with `--autofuzz`, Jazzer automatically enables the `--keep_going` mode to keep fuzzing indefinitely after the first finding.
-Set `--keep_going=N` explicitly to stop after the `N`-th finding.
-
 #### Docker
 To facilitate using the Autofuzz mode, there is a docker image that you can use to fuzz libraries just by providing their Maven coordinates.
 The dependencies will then be downloaded and autofuzzed:
@@ -297,8 +294,7 @@ As an example, you can autofuzz the `json-sanitizer` library as follows:
 docker run -it cifuzz/jazzer-autofuzz \
    com.mikesamuel:json-sanitizer:1.2.0 \
    com.google.json.JsonSanitizer::sanitize \
-   --autofuzz_ignore=java.lang.ArrayIndexOutOfBoundsException \
-   --keep_going=1
+   --autofuzz_ignore=java.lang.ArrayIndexOutOfBoundsException
 ```
 
 ####

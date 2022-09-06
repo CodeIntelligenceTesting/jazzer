@@ -8,8 +8,6 @@ java_fuzz_target_test(
     expected_findings = ["java.lang.ArrayIndexOutOfBoundsException"],
     fuzzer_args = [
         "--autofuzz=com.google.json.JsonSanitizer::sanitize",
-        # Exit after the first finding for testing purposes.
-        "--keep_going=1",
     ],
     runtime_deps = [
         "@maven//:com_mikesamuel_json_sanitizer",

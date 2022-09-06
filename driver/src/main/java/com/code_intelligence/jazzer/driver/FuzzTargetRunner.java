@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.driver;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.lang.System.out;
+import static java.util.stream.Collectors.joining;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import sun.misc.Unsafe;
 
 /**
@@ -229,9 +231,20 @@ public final class FuzzTargetRunner {
       dumpReproducer(data);
     }
 
-    if (Opt.keepGoing == 1 || Long.compareUnsigned(ignoredTokens.size(), Opt.keepGoing) >= 0) {
+    if (Long.compareUnsigned(ignoredTokens.size(), Opt.keepGoing) >= 0) {
       // Reached the maximum amount of findings to keep going for, crash after shutdown. We use
       // _Exit rather than System.exit to not trigger libFuzzer's exit handlers.
+      if (!Opt.autofuzz.isEmpty() && Opt.dedup) {
+        System.err.printf(
+            "%nNote: To continue fuzzing past this particular finding, rerun with the following additional argument:"
+                + "%n%n    --ignore=%s%n%n"
+                + "To ignore all findings of this kind, rerun with the following additional argument:"
+                + "%n%n    --autofuzz_ignore=%s%n",
+            ignoredTokens.stream()
+                .map(token -> Long.toUnsignedString(token, 16))
+                .collect(joining(",")),
+            finding.getClass().getName());
+      }
       shutdown();
       if (Opt.hooks) {
         AgentInstaller.deleteTemporaryFiles();
