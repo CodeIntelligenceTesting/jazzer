@@ -32,9 +32,9 @@ private fun hash(throwable: Throwable, passToRootCause: Boolean): ByteArray =
             }
         }
         update(rootCause.javaClass.name.toByteArray())
-        for (element in rootCause.stackTrace) {
-            update(element.toString().toByteArray())
-        }
+        rootCause.stackTrace
+            .takeWhile { !it.className.startsWith("com.code_intelligence.jazzer.") || it.className.startsWith("com.code_intelligence.jazzer.sanitizers.") }
+            .forEach { update(it.toString().toByteArray()) }
         if (throwable.suppressed.isNotEmpty()) {
             update("suppressed".toByteArray())
             for (suppressed in throwable.suppressed) {
