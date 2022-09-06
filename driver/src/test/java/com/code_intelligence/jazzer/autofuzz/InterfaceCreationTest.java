@@ -89,7 +89,7 @@ public class InterfaceCreationTest {
   @Test
   public void testConsumeInterface() {
     consumeTestCase(InterfaceA.class, new ClassB1(5),
-        "(com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest$InterfaceA) new com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.ClassB1(5)",
+        "(com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.InterfaceA) new com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.ClassB1(5)",
         Arrays.asList((byte) 1, // do not return null
             0, // pick ClassB1
             (byte) 1, // do not return null
@@ -97,7 +97,7 @@ public class InterfaceCreationTest {
             5 // arg for ClassB1 constructor
             ));
     consumeTestCase(InterfaceA.class, new ClassB2("test"),
-        "(com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest$InterfaceA) new com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.ClassB2(\"test\")",
+        "(com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.InterfaceA) new com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.ClassB2(\"test\")",
         Arrays.asList((byte) 1, // do not return null
             1, // pick ClassB2
             (byte) 1, // do not return null
