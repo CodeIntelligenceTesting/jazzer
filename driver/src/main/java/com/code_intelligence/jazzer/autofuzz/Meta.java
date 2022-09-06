@@ -51,6 +51,9 @@ import net.jodah.typetools.TypeResolver;
 import net.jodah.typetools.TypeResolver.Unknown;
 
 public class Meta {
+  public static final boolean IS_DEBUG = isDebug();
+
+  private static final boolean IS_TEST = isTest();
   private static final WeakHashMap<Class<?>, List<Class<?>>> implementingClassesCache =
       new WeakHashMap<>();
   private static final WeakHashMap<Class<?>, List<Class<?>>> nestedBuilderClassesCache =
@@ -450,7 +453,7 @@ public class Meta {
         ClassGraph classGraph =
             new ClassGraph().enableClassInfo().enableInterClassDependencies().rejectPackages(
                 "jaz.*");
-        if (!isTest()) {
+        if (!IS_TEST) {
           classGraph.rejectPackages("com.code_intelligence.jazzer.*");
         }
         try (ScanResult result = classGraph.scan()) {
@@ -462,7 +465,7 @@ public class Meta {
         }
       }
       if (implementingClasses.isEmpty()) {
-        if (isDebug()) {
+        if (IS_DEBUG) {
           throw new AutofuzzConstructionException(String.format(
               "Could not find classes implementing %s on the classpath", type.getName()));
         } else {
@@ -544,9 +547,7 @@ public class Meta {
 
     // We ran out of ways to construct an instance of the requested type. If in debug mode, report
     // more detailed information.
-    if (!isDebug()) {
-      throw new AutofuzzConstructionException();
-    } else {
+    if (IS_DEBUG) {
       String summary = String.format(
           "Failed to generate instance of %s:%nAccessible constructors: %s%nNested subclasses: %s%n",
           type.getName(),
@@ -555,6 +556,8 @@ public class Meta {
               .collect(Collectors.joining(", ")),
           Arrays.stream(type.getClasses()).map(Class::getName).collect(Collectors.joining(", ")));
       throw new AutofuzzConstructionException(summary);
+    } else {
+      throw new AutofuzzConstructionException();
     }
   }
 
@@ -562,12 +565,12 @@ public class Meta {
     implementingClassesCache.clear();
   }
 
-  static boolean isTest() {
+  private static boolean isTest() {
     String value = System.getenv("JAZZER_AUTOFUZZ_TESTING");
     return value != null && !value.isEmpty();
   }
 
-  static boolean isDebug() {
+  private static boolean isDebug() {
     String value = System.getenv("JAZZER_AUTOFUZZ_DEBUG");
     return value != null && !value.isEmpty();
   }
