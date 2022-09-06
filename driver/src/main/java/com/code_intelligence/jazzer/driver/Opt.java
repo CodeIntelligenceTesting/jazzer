@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.driver;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,9 +41,6 @@ import java.util.stream.Stream;
  * it only provides immutable fields and has no non-fatal side effects.
  */
 public final class Opt {
-  private static final char SYSTEM_DELIMITER =
-      System.getProperty("os.name").startsWith("Windows") ? ';' : ':';
-
   public static final String autofuzz = stringSetting("autofuzz", "");
   public static final List<String> autofuzzIgnore = stringListSetting("autofuzz_ignore", ',');
   public static final String coverageDump = stringSetting("coverage_dump", "");
@@ -108,7 +106,7 @@ public final class Opt {
   }
 
   private static List<String> stringListSetting(String name) {
-    return stringListSetting(name, SYSTEM_DELIMITER);
+    return stringListSetting(name, File.pathSeparatorChar);
   }
 
   private static List<String> stringListSetting(String name, char separator) {
