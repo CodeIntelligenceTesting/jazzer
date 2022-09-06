@@ -31,14 +31,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
 import java.util.stream.Stream;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.junit.platform.testkit.engine.EventType;
+import org.junit.rules.TemporaryFolder;
 import org.opentest4j.AssertionFailedError;
 
 public class FuzzingWithCrashTest {
@@ -47,22 +47,27 @@ public class FuzzingWithCrashTest {
   private static final byte[] CRASHING_SEED_CONTENT = new byte[] {'b', 'a', 'c'};
   private static final String CRASHING_SEED_DIGEST = "5e4dec23c9afa48bd5bee3daa2a0ab66e147012b";
 
+  @Rule public TemporaryFolder temp = new TemporaryFolder();
+  Path baseDir;
   Path seedCorpus;
 
   @Before
   public void setup() throws IOException {
-    // Create a fake test resource directory structure with a seed corpus directory in the current
-    // working directory to verify that Jazzer uses it and emits a crash file into it.
-    seedCorpus = Paths.get("src", "test", "resources", "com", "example", "CustomSeedCorpus");
+    baseDir = temp.getRoot().toPath();
+    // Create a fake test resource directory structure with a seed corpus directory to verify that
+    // Jazzer uses it and emits a crash file into it.
+    seedCorpus = baseDir.resolve(
+        Paths.get("src", "test", "resources", "com", "example", "CustomSeedCorpus"));
     Files.createDirectories(seedCorpus);
     Files.write(seedCorpus.resolve(CRASHING_SEED_NAME), CRASHING_SEED_CONTENT);
   }
 
-  private static EngineExecutionResults executeTests() {
+  private EngineExecutionResults executeTests() {
     return EngineTestKit.engine("com.code_intelligence.jazzer")
         .selectors(selectClass("com.example.ValidFuzzTests"))
         .configurationParameter(
             "jazzer.instrument", "com.other.package.**,com.example.**,com.yet.another.package.*")
+        .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
         .execute();
   }
 
@@ -94,7 +99,7 @@ public class FuzzingWithCrashTest {
     // the seed we planted, which is crashing, so verify that a crash file with the same content is
     // created in our fake seed corpus, but not in the current working directory.
     try (Stream<Path> crashFiles =
-             Files.list(Paths.get("")).filter(path -> path.getFileName().startsWith("crash-"))) {
+             Files.list(baseDir).filter(path -> path.getFileName().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
     try (Stream<Path> seeds = Files.list(seedCorpus)) {
@@ -106,7 +111,8 @@ public class FuzzingWithCrashTest {
 
     // Verify that the engine created the generated corpus directory. As a seed produced the crash,
     // it should be empty.
-    Path generatedCorpus = Paths.get(".cifuzz-corpus", "com.example.ValidFuzzTests");
+    Path generatedCorpus =
+        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.ValidFuzzTests"));
     assertThat(Files.isDirectory(generatedCorpus)).isTrue();
     try (Stream<Path> entries = Files.list(generatedCorpus)) {
       assertThat(entries).isEmpty();
@@ -128,17 +134,6 @@ public class FuzzingWithCrashTest {
     // No fuzzing means no crashes means no new seeds.
     try (Stream<Path> seeds = Files.list(seedCorpus)) {
       assertThat(seeds).containsExactly(seedCorpus.resolve(CRASHING_SEED_NAME));
-    }
-  }
-
-  @After
-  public void teardown() throws IOException {
-    try (Stream<Path> walk = Files.walk(seedCorpus)) {
-      walk.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(file -> {
-        if (!file.delete()) {
-          throw new IllegalStateException("Failed to delete " + file);
-        }
-      });
     }
   }
 }
