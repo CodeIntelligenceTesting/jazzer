@@ -16,6 +16,8 @@ package com.code_intelligence.jazzer.junit;
 
 import com.code_intelligence.jazzer.Constants;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -137,6 +139,10 @@ public class JazzerTestEngine implements TestEngine {
     EngineExecutionListener listener = executionRequest.getEngineExecutionListener();
 
     AtomicBoolean hasFuzzTestBeenStarted = new AtomicBoolean();
+    // With JUnit, the current working directory is the project directory (or module directory in
+    // case of a multi-module project). We only override this path in tests.
+    Path baseDir = Paths.get(
+        executionRequest.getConfigurationParameters().get("jazzer.internal.basedir").orElse(""));
 
     executionRequest.getRootTestDescriptor().accept(testDescriptor -> {
       if (!testDescriptor.isTest()) {
@@ -160,7 +166,7 @@ public class JazzerTestEngine implements TestEngine {
       listener.executionStarted(testDescriptor);
       try {
         TestExecutionResult result =
-            new JazzerFuzzTestExecutor(executionRequest, fuzzTestDescriptor).execute();
+            new JazzerFuzzTestExecutor(executionRequest, fuzzTestDescriptor, baseDir).execute();
         listener.executionFinished(testDescriptor, result);
       } catch (Throwable e) {
         listener.executionFinished(

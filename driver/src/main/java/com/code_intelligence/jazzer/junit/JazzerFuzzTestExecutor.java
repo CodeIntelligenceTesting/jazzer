@@ -23,7 +23,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -39,11 +38,13 @@ public class JazzerFuzzTestExecutor {
 
   private final ExecutionRequest request;
   private final JazzerFuzzTestDescriptor fuzzTestDescriptor;
+  private final Path baseDir;
 
   public JazzerFuzzTestExecutor(
-      ExecutionRequest request, JazzerFuzzTestDescriptor fuzzTestDescriptor) {
+      ExecutionRequest request, JazzerFuzzTestDescriptor fuzzTestDescriptor, Path baseDir) {
     this.request = request;
     this.fuzzTestDescriptor = fuzzTestDescriptor;
+    this.baseDir = baseDir;
   }
 
   public TestExecutionResult execute() throws IOException {
@@ -62,7 +63,7 @@ public class JazzerFuzzTestExecutor {
     // https://github.com/CodeIntelligenceTesting/cifuzz/blob/bf410dcfbafbae2a73cf6c5fbed031cdfe234f2f/internal/cmd/run/run.go#L381
     // The path is specified relative to the current working directory, which with JUnit is the
     // project directory.
-    Path generatedCorpusDir = Utils.generatedCorpusPath(fuzzTestClass);
+    Path generatedCorpusDir = baseDir.resolve(Utils.generatedCorpusPath(fuzzTestClass));
     Files.createDirectories(generatedCorpusDir);
     libFuzzerArgs.add(generatedCorpusDir.toAbsolutePath().toString());
 
@@ -170,8 +171,8 @@ public class JazzerFuzzTestExecutor {
     // Following the Maven directory layout, we look up the seed corpus under src/test/resources.
     // This should be correct also for multi-module projects as JUnit is usually launched in the
     // current module's root directory.
-    Path sourceSeedCorpusPath =
-        Paths.get(("src/test/resources" + seedCorpusResourcePath).replace('/', File.separatorChar));
+    Path sourceSeedCorpusPath = baseDir.resolve(
+        ("src/test/resources" + seedCorpusResourcePath).replace('/', File.separatorChar));
     if (Files.isDirectory(sourceSeedCorpusPath)) {
       return Optional.of(sourceSeedCorpusPath);
     } else {
