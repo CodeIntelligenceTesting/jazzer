@@ -475,7 +475,7 @@ public class Meta {
       }
       if (visitor != null) {
         // This group will always have a single element: The instance of the implementing class.
-        visitor.pushGroup(String.format("(%s) ", type.getName()), "", "");
+        visitor.pushGroup(String.format("(%s) ", type.getCanonicalName()), "", "");
       }
       Object result = consume(data, data.pickValue(implementingClasses), visitor);
       if (visitor != null) {
