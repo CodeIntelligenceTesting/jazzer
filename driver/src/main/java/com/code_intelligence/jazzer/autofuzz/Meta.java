@@ -459,8 +459,9 @@ public class Meta {
         try (ScanResult result = classGraph.scan()) {
           ClassInfoList children =
               type.isInterface() ? result.getClassesImplementing(type) : result.getSubclasses(type);
-          implementingClasses =
-              children.getStandardClasses().filter(cls -> !cls.isAbstract()).loadClasses();
+          implementingClasses = children.getStandardClasses()
+                                    .filter(cls -> cls.isPublic() && !cls.isAbstract())
+                                    .loadClasses();
           implementingClassesCache.put(type, implementingClasses);
         }
       }
