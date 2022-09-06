@@ -205,7 +205,7 @@ public final class FuzzTarget {
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Throwable {
     AutofuzzCodegenVisitor codegenVisitor = null;
-    if (Meta.isDebug()) {
+    if (Meta.IS_DEBUG) {
       codegenVisitor = new AutofuzzCodegenVisitor();
     }
     fuzzerTestOneInput(data, codegenVisitor);
@@ -249,7 +249,7 @@ public final class FuzzTarget {
       }
       executionsSinceLastInvocation = 0;
     } catch (AutofuzzConstructionException e) {
-      if (Meta.isDebug()) {
+      if (Meta.IS_DEBUG) {
         e.printStackTrace();
       }
       // Ignore exceptions thrown while constructing the parameters for the target method. We can
