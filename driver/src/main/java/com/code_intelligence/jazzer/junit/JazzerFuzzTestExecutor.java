@@ -99,7 +99,9 @@ public class JazzerFuzzTestExecutor {
       // We try to find the source tree representation of the seed corpus directory and emit
       // findings into it.
       findSeedCorpusDirectoryInSourceTree().ifPresent(
-          (path) -> libFuzzerArgs.add(String.format("-artifact_prefix=%s/", path)));
+          (path)
+              -> libFuzzerArgs.add(
+                  String.format("-artifact_prefix=%s%c", path, File.separatorChar)));
     } else {
       // We can't directly use the seed corpus from resources as it's packaged into a JAR. Instead,
       // try to get the path to the seed corpus in the source tree.
@@ -108,7 +110,8 @@ public class JazzerFuzzTestExecutor {
         libFuzzerArgs.add(seedCorpusSourceDirectory.get().toString());
         // We try to find the source tree representation of the seed corpus directory and emit
         // findings into it.
-        libFuzzerArgs.add(String.format("-artifact_prefix=%s/", seedCorpusSourceDirectory.get()));
+        libFuzzerArgs.add(String.format(
+            "-artifact_prefix=%s%c", seedCorpusSourceDirectory.get(), File.separatorChar));
       } else {
         request.getEngineExecutionListener().reportingEntryPublished(fuzzTestDescriptor,
             ReportEntry.from("seed corpus",
