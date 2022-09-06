@@ -68,6 +68,8 @@
         ],
         deps = [
             "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
+            "@maven//:com_google_truth_extensions_truth_java8_extension",
+            "@maven//:com_google_truth_truth",
             "@maven//:junit_junit",
             "@maven//:org_junit_jupiter_junit_jupiter_api",
             "@maven//:org_junit_jupiter_junit_jupiter_engine",

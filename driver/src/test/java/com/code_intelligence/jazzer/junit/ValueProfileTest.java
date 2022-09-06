@@ -33,33 +33,37 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
 import java.util.stream.Stream;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.junit.platform.testkit.engine.EventType;
+import org.junit.rules.TemporaryFolder;
 
 public class ValueProfileTest {
+  @Rule public TemporaryFolder temp = new TemporaryFolder();
+  Path baseDir;
   Path seedCorpus;
 
   @Before
   public void setup() throws IOException {
-    // Create a fake test resource directory structure with a seed corpus directory in the current
-    // working directory to verify that Jazzer emits a crash file into it.
-    seedCorpus =
-        Paths.get("src", "test", "resources", "com", "example", "ValueProfileFuzzTestSeedCorpus");
+    baseDir = temp.getRoot().toPath();
+    // Create a fake test resource directory structure with a seed corpus directory to verify that
+    // Jazzer uses it and emits a crash file into it.
+    seedCorpus = baseDir.resolve(
+        Paths.get("src", "test", "resources", "com", "example", "ValueProfileFuzzTestSeedCorpus"));
     Files.createDirectories(seedCorpus);
   }
 
-  private static EngineExecutionResults executeTests() {
+  private EngineExecutionResults executeTests() {
     return EngineTestKit.engine("com.code_intelligence.jazzer")
         .selectors(selectClass("com.example.ValueProfileFuzzTest"))
         .configurationParameter(
             "jazzer.instrument", "com.other.package.**,com.example.**,com.yet.another.package.*")
         .configurationParameter("jazzer.valueprofile", System.getenv("JAZZER_VALUE_PROFILE"))
+        .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
         .execute();
   }
 
@@ -85,7 +89,7 @@ public class ValueProfileTest {
 
     // Should crash on the exact input "Jazzer", with the crash emitted into the seed corpus.
     try (Stream<Path> crashFiles =
-             Files.list(Paths.get("")).filter(path -> path.getFileName().startsWith("crash-"))) {
+             Files.list(baseDir).filter(path -> path.getFileName().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
     try (Stream<Path> seeds = Files.list(seedCorpus)) {
@@ -97,7 +101,8 @@ public class ValueProfileTest {
         .isEqualTo("Jazzer".getBytes(StandardCharsets.UTF_8));
 
     // Verify that the engine created the generated corpus directory and emitted inputs into it.
-    Path generatedCorpus = Paths.get(".cifuzz-corpus", "com.example.ValueProfileFuzzTest");
+    Path generatedCorpus =
+        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.ValueProfileFuzzTest"));
     assertThat(Files.isDirectory(generatedCorpus)).isTrue();
     try (Stream<Path> entries = Files.list(generatedCorpus)) {
       assertThat(entries).isNotEmpty();
@@ -126,7 +131,7 @@ public class ValueProfileTest {
 
     // No crash means no crashing input is emitted anywhere.
     try (Stream<Path> crashFiles =
-             Files.list(Paths.get("")).filter(path -> path.getFileName().startsWith("crash-"))) {
+             Files.list(baseDir).filter(path -> path.getFileName().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
     try (Stream<Path> seeds = Files.list(seedCorpus)) {
@@ -134,21 +139,11 @@ public class ValueProfileTest {
     }
 
     // Verify that the engine created the generated corpus directory and emitted inputs into it.
-    Path generatedCorpus = Paths.get(".cifuzz-corpus", "com.example.ValueProfileFuzzTest");
+    Path generatedCorpus =
+        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.ValueProfileFuzzTest"));
     assertThat(Files.isDirectory(generatedCorpus)).isTrue();
     try (Stream<Path> entries = Files.list(generatedCorpus)) {
       assertThat(entries).isNotEmpty();
-    }
-  }
-
-  @After
-  public void teardown() throws IOException {
-    try (Stream<Path> walk = Files.walk(seedCorpus)) {
-      walk.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(file -> {
-        if (!file.delete()) {
-          throw new IllegalStateException("Failed to delete " + file);
-        }
-      });
     }
   }
 }
