@@ -17,6 +17,7 @@ package com.example;
 import com.code_intelligence.jazzer.api.Consumer3;
 import com.code_intelligence.jazzer.api.Jazzer;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 // A fuzz target that shows how manually informing the fuzzer about important state can make a fuzz
@@ -60,25 +61,13 @@ public final class MazeFuzzer {
       // This is the key line that makes this fuzz target work: It instructs the fuzzer to track
       // every new combination of x and y as a new feature. Without it, the fuzzer would be
       // completely lost in the maze as guessing an escaping path by chance is close to impossible.
-      Jazzer.exploreState(hash(x, y), 0);
+      Jazzer.exploreState((byte) Objects.hash(x, y), 0);
       if (REACHED_FIELDS[y][x] == ' ') {
         // Fuzzer reached a new field in the maze, print its progress.
         REACHED_FIELDS[y][x] = '.';
         System.out.println(renderMaze(REACHED_FIELDS));
       }
     });
-  }
-
-  // Hash function with good mixing properties published by Thomas Mueller
-  // under the terms of CC BY-SA 4.0 at
-  // https://stackoverflow.com/a/12996028
-  // https://creativecommons.org/licenses/by-sa/4.0/
-  private static byte hash(byte x, byte y) {
-    int h = (x << 8) | y;
-    h = ((h >> 16) ^ h) * 0x45d9f3b;
-    h = ((h >> 16) ^ h) * 0x45d9f3b;
-    h = (h >> 16) ^ h;
-    return (byte) h;
   }
 
   private static class TreasureFoundException extends RuntimeException {
