@@ -14,6 +14,11 @@
 
 package com.code_intelligence.jazzer.autofuzz;
 
+import static com.code_intelligence.jazzer.autofuzz.Utils.getAccessibleClasses;
+import static com.code_intelligence.jazzer.autofuzz.Utils.getAccessibleConstructors;
+import static com.code_intelligence.jazzer.autofuzz.Utils.getAccessibleMethods;
+import static com.code_intelligence.jazzer.autofuzz.Utils.isAccessible;
+
 import com.code_intelligence.jazzer.api.AutofuzzConstructionException;
 import com.code_intelligence.jazzer.api.AutofuzzInvocationException;
 import com.code_intelligence.jazzer.api.Consumer1;
@@ -44,7 +49,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import net.jodah.typetools.TypeResolver;
@@ -445,18 +454,23 @@ public class Meta {
       if (visitor != null) {
         throw new AutofuzzError("codegen has not been implemented for Method.class");
       }
-      return data.pickValue(sortExecutables(YourAverageJavaClass.class.getMethods()));
+      return data.pickValue(getAccessibleMethods(YourAverageJavaClass.class));
     } else if (type == Constructor.class) {
       if (visitor != null) {
         throw new AutofuzzError("codegen has not been implemented for Constructor.class");
       }
-      return data.pickValue(sortExecutables(YourAverageJavaClass.class.getConstructors()));
+      return data.pickValue(getAccessibleMethods(YourAverageJavaClass.class));
     } else if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
       List<Class<?>> implementingClasses = implementingClassesCache.get(type);
       if (implementingClasses == null) {
-        ClassGraph classGraph =
-            new ClassGraph().enableClassInfo().enableInterClassDependencies().rejectPackages(
-                "jaz.*");
+        // TODO: We may be scanning multiple times. Instead, we should keep the ScanResult around
+        //  for as long as there is enough memory.
+        ClassGraph classGraph = new ClassGraph()
+                                    .enableClassInfo()
+                                    .ignoreClassVisibility()
+                                    .ignoreMethodVisibility()
+                                    .enableInterClassDependencies()
+                                    .rejectPackages("jaz.*");
         if (!IS_TEST) {
           classGraph.rejectPackages("com.code_intelligence.jazzer.*");
         }
@@ -464,7 +478,8 @@ public class Meta {
           ClassInfoList children =
               type.isInterface() ? result.getClassesImplementing(type) : result.getSubclasses(type);
           implementingClasses = children.getStandardClasses()
-                                    .filter(cls -> cls.isPublic() && !cls.isAbstract())
+                                    .filter(info -> !Modifier.isAbstract(info.getModifiers()))
+                                    .filter(info -> isAccessible(info, info.getModifiers()))
                                     .loadClasses();
           implementingClassesCache.put(type, implementingClasses);
         }
@@ -491,8 +506,10 @@ public class Meta {
         }
       }
       return result;
-    } else if (type.getConstructors().length > 0) {
-      Constructor<?> constructor = data.pickValue(sortExecutables(type.getConstructors()));
+    }
+    Constructor<?>[] constructors = getAccessibleConstructors(type);
+    if (constructors.length > 0) {
+      Constructor<?> constructor = data.pickValue(constructors);
       boolean applySetters = constructor.getParameterCount() == 0;
       if (visitor != null && applySetters) {
         // Embed the instance creation and setters into an immediately invoked lambda expression to
@@ -539,7 +556,7 @@ public class Meta {
         visitor.pushGroup("", ".", "");
       }
       Object builderObj =
-          autofuzz(data, data.pickValue(sortExecutables(pickedBuilder.getConstructors())), visitor);
+          autofuzz(data, data.pickValue(getAccessibleConstructors(pickedBuilder)), visitor);
       for (Method method : pickedMethods) {
         builderObj = autofuzz(data, method, builderObj, visitor);
       }
@@ -561,10 +578,12 @@ public class Meta {
       String summary = String.format(
           "Failed to generate instance of %s:%nAccessible constructors: %s%nNested subclasses: %s%n",
           type.getName(),
-          Arrays.stream(type.getConstructors())
+          Arrays.stream(getAccessibleConstructors(type))
               .map(Utils::getReadableDescriptor)
               .collect(Collectors.joining(", ")),
-          Arrays.stream(type.getClasses()).map(Class::getName).collect(Collectors.joining(", ")));
+          Arrays.stream(getAccessibleClasses(type))
+              .map(Class::getName)
+              .collect(Collectors.joining(", ")));
       throw new AutofuzzConstructionException(summary);
     } else {
       throw new AutofuzzConstructionException();
@@ -602,34 +621,13 @@ public class Meta {
             .collect(Collectors.joining(", ")));
   }
 
-  private static <T extends Executable> List<T> sortExecutables(T[] executables) {
-    List<T> list = Arrays.asList(executables);
-    sortExecutables(list);
-    return list;
-  }
-
-  private static void sortExecutables(List<? extends Executable> executables) {
-    executables.sort(Comparator.comparing(Executable::getName).thenComparing(executable -> {
-      if (executable instanceof Method) {
-        return org.objectweb.asm.Type.getMethodDescriptor((Method) executable);
-      } else {
-        return org.objectweb.asm.Type.getConstructorDescriptor((Constructor<?>) executable);
-      }
-    }));
-  }
-
-  private static void sortClasses(List<? extends Class<?>> classes) {
-    classes.sort(Comparator.comparing(Class::getName));
-  }
-
   private static List<Class<?>> getNestedBuilderClasses(Class<?> type) {
     List<Class<?>> nestedBuilderClasses = nestedBuilderClassesCache.get(type);
     if (nestedBuilderClasses == null) {
-      nestedBuilderClasses = Arrays.stream(type.getClasses())
+      nestedBuilderClasses = Arrays.stream(getAccessibleClasses(type))
                                  .filter(cls -> cls.getName().endsWith("Builder"))
                                  .filter(cls -> !getOriginalObjectCreationMethods(cls).isEmpty())
                                  .collect(Collectors.toList());
-      sortClasses(nestedBuilderClasses);
       nestedBuilderClassesCache.put(type, nestedBuilderClasses);
     }
     return nestedBuilderClasses;
@@ -639,10 +637,9 @@ public class Meta {
     List<Method> originalObjectCreationMethods = originalObjectCreationMethodsCache.get(builder);
     if (originalObjectCreationMethods == null) {
       originalObjectCreationMethods =
-          Arrays.stream(builder.getMethods())
+          Arrays.stream(getAccessibleMethods(builder))
               .filter(m -> m.getReturnType() == builder.getEnclosingClass())
               .collect(Collectors.toList());
-      sortExecutables(originalObjectCreationMethods);
       originalObjectCreationMethodsCache.put(builder, originalObjectCreationMethods);
     }
     return originalObjectCreationMethods;
@@ -651,26 +648,20 @@ public class Meta {
   private static List<Method> getCascadingBuilderMethods(Class<?> builder) {
     List<Method> cascadingBuilderMethods = cascadingBuilderMethodsCache.get(builder);
     if (cascadingBuilderMethods == null) {
-      cascadingBuilderMethods = Arrays.stream(builder.getMethods())
+      cascadingBuilderMethods = Arrays.stream(getAccessibleMethods(builder))
                                     .filter(m -> m.getReturnType() == builder)
                                     .collect(Collectors.toList());
-      sortExecutables(cascadingBuilderMethods);
       cascadingBuilderMethodsCache.put(builder, cascadingBuilderMethods);
     }
     return cascadingBuilderMethods;
   }
 
   private static List<Method> getPotentialSetters(Class<?> type) {
-    List<Method> potentialSetters = new ArrayList<>();
-    Method[] methods = type.getMethods();
-    for (Method method : methods) {
-      if (void.class.equals(method.getReturnType()) && method.getParameterCount() == 1
-          && method.getName().startsWith("set")) {
-        potentialSetters.add(method);
-      }
-    }
-    sortExecutables(potentialSetters);
-    return potentialSetters;
+    return Arrays.stream(getAccessibleMethods(type))
+        .filter(method -> void.class.equals(method.getReturnType()))
+        .filter(method -> method.getParameterCount() == 1)
+        .filter(method -> method.getName().startsWith("set"))
+        .collect(Collectors.toList());
   }
 
   private static Object[] consumeArguments(

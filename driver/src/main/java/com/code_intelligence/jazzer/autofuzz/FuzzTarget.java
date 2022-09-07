@@ -14,6 +14,10 @@
 
 package com.code_intelligence.jazzer.autofuzz;
 
+import static com.code_intelligence.jazzer.autofuzz.Utils.getAccessibleConstructors;
+import static com.code_intelligence.jazzer.autofuzz.Utils.getAccessibleMethods;
+import static com.code_intelligence.jazzer.autofuzz.Utils.setReferenceClass;
+
 import com.code_intelligence.jazzer.api.AutofuzzConstructionException;
 import com.code_intelligence.jazzer.api.AutofuzzInvocationException;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
@@ -31,7 +35,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -84,12 +87,12 @@ public final class FuzzTarget {
       descriptor = null;
     }
 
-    Class<?> targetClass = null;
+    Class<?> targetClassTemp = null;
     String targetClassName = className;
     do {
       try {
         // Explicitly invoking static initializers to trigger some coverage in the code.
-        targetClass = Class.forName(targetClassName, true, ClassLoader.getSystemClassLoader());
+        targetClassTemp = Class.forName(targetClassName, true, ClassLoader.getSystemClassLoader());
       } catch (ClassNotFoundException e) {
         int classSeparatorIndex = targetClassName.lastIndexOf(".");
         if (classSeparatorIndex == -1) {
@@ -105,41 +108,49 @@ public final class FuzzTarget {
         classNameBuilder.setCharAt(classSeparatorIndex, '$');
         targetClassName = classNameBuilder.toString();
       }
-    } while (targetClass == null);
+    } while (targetClassTemp == null);
+    final Class<?> targetClass = targetClassTemp;
+
+    // All calls to Utils#getAccessibleX from this point on will find objects visible from the
+    // target class.
+    setReferenceClass(targetClass);
 
     boolean isConstructor = methodName.equals("new");
+    // We filter out inherited methods, which can lead to unexpected results when autofuzzing a
+    // method by name without a descriptor. If desired, these can be autofuzzed explicitly by
+    // referencing the parent class. If a descriptor is provided, we also allow fuzzing non-public
+    // methods. This is necessary e.g. when using Autofuzz on a package-private JUnit @FuzzTest
+    // method.
     if (isConstructor) {
       targetExecutables =
-          Arrays.stream(targetClass.getConstructors())
+          Arrays.stream(getAccessibleConstructors(targetClass))
+              .filter(constructor -> constructor.getDeclaringClass().equals(targetClass))
               .filter(constructor
-                  -> descriptor == null
+                  -> (descriptor == null && Modifier.isPublic(constructor.getModifiers()))
                       || Utils.getReadableDescriptor(constructor).equals(descriptor))
               .toArray(Executable[] ::new);
     } else {
-      // We use getDeclaredMethods and filter for the public access modifier instead of using
-      // getMethods as we want to exclude methods inherited from superclasses or interfaces, which
-      // can lead to unexpected results when autofuzzing. If desired, these can be autofuzzed
-      // explicitly instead.
       targetExecutables =
-          Arrays.stream(targetClass.getDeclaredMethods())
-              .filter(method -> Modifier.isPublic(method.getModifiers()))
+          Arrays.stream(getAccessibleMethods(targetClass))
+              .filter(method -> method.getDeclaringClass().equals(targetClass))
               .filter(method
                   -> method.getName().equals(methodName)
-                      && (descriptor == null
+                      && ((descriptor == null && Modifier.isPublic(method.getModifiers()))
                           || Utils.getReadableDescriptor(method).equals(descriptor)))
               .toArray(Executable[] ::new);
     }
     if (targetExecutables.length == 0) {
       if (isConstructor) {
         if (descriptor == null) {
-          System.err.printf(
-              "Failed to find accessible constructors in class %s for autofuzz.%n", className);
+          System.err.printf("Failed to find constructors in class %s for autofuzz.%n", className);
         } else {
           System.err.printf(
-              "Failed to find accessible constructors with signature %s in class %s for autofuzz.%n"
-                  + "Accessible constructors:%n%s",
+              "Failed to find constructors with signature %s in class %s for autofuzz.%n"
+                  + "Public constructors declared by the class:%n%s",
               descriptor, className,
-              Arrays.stream(targetClass.getConstructors())
+              Arrays.stream(getAccessibleConstructors(targetClass))
+                  .filter(constructor -> Modifier.isPublic(constructor.getModifiers()))
+                  .filter(constructor -> constructor.getDeclaringClass().equals(targetClass))
                   .map(method
                       -> String.format("%s::new%s", method.getDeclaringClass().getName(),
                           Utils.getReadableDescriptor(method)))
@@ -148,10 +159,12 @@ public final class FuzzTarget {
         }
       } else {
         if (descriptor == null) {
-          System.err.printf("Failed to find accessible methods named %s in class %s for autofuzz.%n"
-                  + "Accessible methods:%n%s",
+          System.err.printf("Failed to find methods named %s in class %s for autofuzz.%n"
+                  + "Public methods declared by the class:%n%s",
               methodName, className,
-              Arrays.stream(targetClass.getMethods())
+              Arrays.stream(getAccessibleMethods(targetClass))
+                  .filter(method -> Modifier.isPublic(method.getModifiers()))
+                  .filter(method -> method.getDeclaringClass().equals(targetClass))
                   .map(method
                       -> String.format(
                           "%s::%s", method.getDeclaringClass().getName(), method.getName()))
@@ -159,10 +172,12 @@ public final class FuzzTarget {
                   .collect(Collectors.joining(System.lineSeparator())));
         } else {
           System.err.printf(
-              "Failed to find accessible methods named %s with signature %s in class %s for autofuzz.%n"
-                  + "Accessible methods with that name:%n%s",
+              "Failed to find public methods named %s with signature %s in class %s for autofuzz.%n"
+                  + "Public methods with that name:%n%s",
               methodName, descriptor, className,
-              Arrays.stream(targetClass.getMethods())
+              Arrays.stream(getAccessibleMethods(targetClass))
+                  .filter(method -> Modifier.isPublic(method.getModifiers()))
+                  .filter(method -> method.getDeclaringClass().equals(targetClass))
                   .filter(method -> method.getName().equals(methodName))
                   .map(method
                       -> String.format("%s::%s%s", method.getDeclaringClass().getName(),
@@ -172,6 +187,10 @@ public final class FuzzTarget {
         }
       }
       System.exit(1);
+    }
+
+    for (Executable executable : targetExecutables) {
+      executable.setAccessible(true);
     }
 
     ignoredExceptionMatchers = Arrays.stream(args)

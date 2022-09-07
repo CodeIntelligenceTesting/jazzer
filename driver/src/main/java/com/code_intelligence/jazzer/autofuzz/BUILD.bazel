@@ -5,6 +5,7 @@ java_library(
         "AutofuzzError.java",
         "FuzzTarget.java",
         "Meta.java",
+        "Utils.java",
         "YourAverageJavaClass.java",
     ],
     visibility = ["//visibility:public"],
