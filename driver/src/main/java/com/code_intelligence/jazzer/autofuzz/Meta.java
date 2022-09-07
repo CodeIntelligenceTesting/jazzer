@@ -88,11 +88,11 @@ public class Meta {
         // Since the this object can be a complex expression, wrap it in paranthesis.
         visitor.pushGroup("(", ").", "");
       }
-      Object thisObject = consume(data, method.getDeclaringClass(), visitor);
-      if (thisObject == null) {
-        throw new AutofuzzConstructionException();
-      }
       try {
+        Object thisObject = consume(data, method.getDeclaringClass(), visitor);
+        if (thisObject == null) {
+          throw new AutofuzzConstructionException();
+        }
         result = autofuzz(data, method, thisObject, visitor);
       } finally {
         if (visitor != null) {
