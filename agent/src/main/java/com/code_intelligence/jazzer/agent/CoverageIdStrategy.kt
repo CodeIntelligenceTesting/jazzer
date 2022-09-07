@@ -14,8 +14,7 @@
 
 package com.code_intelligence.jazzer.agent
 
-import com.code_intelligence.jazzer.utils.append
-import com.code_intelligence.jazzer.utils.readFully
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.channels.FileLock
 import java.nio.file.Path
@@ -197,4 +196,27 @@ class FileSyncCoverageIdStrategy(private val idSyncFile: Path) : CoverageIdStrat
             localIdFileLock?.channel()?.close()
         }
     }
+}
+
+/**
+ * Reads the [FileChannel] to the end as a UTF-8 string.
+ */
+fun FileChannel.readFully(): String {
+    check(size() <= Int.MAX_VALUE)
+    val buffer = ByteBuffer.allocate(size().toInt())
+    while (buffer.hasRemaining()) {
+        when (read(buffer)) {
+            0 -> throw IllegalStateException("No bytes read")
+            -1 -> break
+        }
+    }
+    return String(buffer.array())
+}
+
+/**
+ * Appends [string] to the end of the [FileChannel].
+ */
+fun FileChannel.append(string: String) {
+    position(size())
+    write(ByteBuffer.wrap(string.toByteArray()))
 }
