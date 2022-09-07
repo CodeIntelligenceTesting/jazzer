@@ -83,8 +83,8 @@ public class ValueProfileTest {
         event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
 
     // Should crash on the exact input "Jazzer", with the crash emitted into the seed corpus.
-    try (Stream<Path> crashFiles =
-             Files.list(baseDir).filter(path -> path.getFileName().startsWith("crash-"))) {
+    try (Stream<Path> crashFiles = Files.list(baseDir).filter(
+             path -> path.getFileName().toString().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
     try (Stream<Path> seeds = Files.list(seedCorpus)) {
@@ -121,8 +121,8 @@ public class ValueProfileTest {
         event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
 
     // No crash means no crashing input is emitted anywhere.
-    try (Stream<Path> crashFiles =
-             Files.list(baseDir).filter(path -> path.getFileName().startsWith("crash-"))) {
+    try (Stream<Path> crashFiles = Files.list(baseDir).filter(
+             path -> path.getFileName().toString().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
     try (Stream<Path> seeds = Files.list(seedCorpus)) {

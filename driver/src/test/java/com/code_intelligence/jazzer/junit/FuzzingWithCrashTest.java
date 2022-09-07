@@ -94,8 +94,8 @@ public class FuzzingWithCrashTest {
     // Jazzer first tries the empty input, which doesn't crash the ByteFuzzTest. The second input is
     // the seed we planted, which is crashing, so verify that a crash file with the same content is
     // created in our fake seed corpus, but not in the current working directory.
-    try (Stream<Path> crashFiles =
-             Files.list(baseDir).filter(path -> path.getFileName().startsWith("crash-"))) {
+    try (Stream<Path> crashFiles = Files.list(baseDir).filter(
+             path -> path.getFileName().toString().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
     try (Stream<Path> seeds = Files.list(seedCorpus)) {
