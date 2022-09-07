@@ -14,8 +14,12 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import static com.code_intelligence.jazzer.utils.Utils.getReadableDescriptor;
+
+import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import com.code_intelligence.jazzer.junit.JazzerTestEngine.JazzerFuzzTestDescriptor;
+import com.code_intelligence.jazzer.junit.JazzerTestEngine.JazzerSetupError;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -131,8 +135,20 @@ public class JazzerFuzzTestExecutor {
       libFuzzerArgs.add("-use_value_profile=1");
     }
 
-    System.setProperty("jazzer.target_class", fuzzTestClass.getName());
-    System.setProperty("jazzer.target_method", fuzzTestMethod.getName());
+    if (fuzzTestMethod.getParameterCount() == 0) {
+      return TestExecutionResult.failed(new JazzerSetupError(
+          "Methods annotated with @FuzzTest must take at least one parameter"));
+    }
+    if (fuzzTestMethod.getParameterCount() == 1
+        && (fuzzTestMethod.getParameterTypes()[0] == byte[].class
+            || fuzzTestMethod.getParameterTypes()[0] == FuzzedDataProvider.class)) {
+      System.setProperty("jazzer.target_class", fuzzTestClass.getName());
+      System.setProperty("jazzer.target_method", fuzzTestMethod.getName());
+    } else {
+      System.setProperty("jazzer.autofuzz",
+          String.format("%s::%s%s", fuzzTestClass.getName(), fuzzTestMethod.getName(),
+              getReadableDescriptor(fuzzTestMethod)));
+    }
     AgentConfigurator.forFuzzing(request, fuzzTestClass);
 
     AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
@@ -146,7 +162,7 @@ public class JazzerFuzzTestExecutor {
       return TestExecutionResult.failed(finding);
     } else if (exitCode != 0) {
       return TestExecutionResult.failed(
-          new JazzerTestEngine.JazzerSetupError("libFuzzer exited with exit code " + exitCode));
+          new JazzerSetupError("libFuzzer exited with exit code " + exitCode));
     } else {
       return TestExecutionResult.successful();
     }

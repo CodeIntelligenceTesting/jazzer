@@ -664,7 +664,7 @@ public class Meta {
         .collect(Collectors.toList());
   }
 
-  private static Object[] consumeArguments(
+  public static Object[] consumeArguments(
       FuzzedDataProvider data, Executable executable, AutofuzzCodegenVisitor visitor) {
     Object[] result;
     try {

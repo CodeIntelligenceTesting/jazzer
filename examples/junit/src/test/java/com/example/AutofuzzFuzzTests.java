@@ -14,10 +14,32 @@
 
 package com.example;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 
-class InvalidFuzzTests {
+class AutofuzzFuzzTests {
+  private static class IntHolder {
+    private final int i;
+
+    IntHolder(int i) {
+      this.i = i;
+    }
+
+    public int getI() {
+      return i;
+    }
+  }
+
   @FuzzTest
-  void invalidParameterCountFuzz() {}
+  void autofuzz(String str, IntHolder holder) {
+    if ("jazzer".equals(str) && holder.getI() == 1234) {
+      throw new RuntimeException();
+    }
+  }
+
+  @FuzzTest(seedCorpus = "AutofuzzSeedCorpus")
+  void autofuzzWithCorpus(String str, int i) {
+    if ("jazzer".equals(str) && i == 1234) {
+      throw new RuntimeException();
+    }
+  }
 }

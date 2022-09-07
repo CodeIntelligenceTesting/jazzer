@@ -14,10 +14,12 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import static com.code_intelligence.jazzer.autofuzz.Utils.setReferenceClass;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.autofuzz.Meta;
 import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -41,7 +43,7 @@ import org.junit.jupiter.params.support.AnnotationConsumer;
 
 class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationConsumer<FuzzTest> {
   private static final String INCORRECT_PARAMETERS_MESSAGE =
-      "Methods annotated with @FuzzTest must take a single byte[] or FuzzedDataProvider parameter";
+      "Methods annotated with @FuzzTest must take at least one parameter";
   private FuzzTest annotation;
 
   @Override
@@ -63,7 +65,7 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
 
   private Stream<? extends Arguments> adaptSeedsForFuzzTest(
       Method fuzzTestMethod, Stream<Map.Entry<String, byte[]>> rawSeeds) {
-    if (fuzzTestMethod.getParameterCount() != 1) {
+    if (fuzzTestMethod.getParameterCount() == 0) {
       throw new IllegalArgumentException(INCORRECT_PARAMETERS_MESSAGE);
     }
     if (fuzzTestMethod.getParameterTypes()[0] == byte[].class) {
@@ -72,7 +74,21 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
       return rawSeeds.map(
           e -> arguments(named(e.getKey(), FuzzedDataProviderImpl.withJavaData(e.getValue()))));
     } else {
-      throw new IllegalArgumentException(INCORRECT_PARAMETERS_MESSAGE);
+      // Use Autofuzz on the @FuzzTest method.
+      return rawSeeds.map(e -> {
+        try (FuzzedDataProviderImpl data = FuzzedDataProviderImpl.withJavaData(e.getValue())) {
+          // The Autofuzz FuzzTarget uses data to construct an instance of the test class before it
+          // constructs the fuzz test arguments. We don't need the instance here, but still generate
+          // it as that mutates the FuzzedDataProvider state.
+          setReferenceClass(fuzzTestMethod.getDeclaringClass());
+          Meta.consume(data, fuzzTestMethod.getDeclaringClass());
+          Object[] args = Meta.consumeArguments(data, fuzzTestMethod, null);
+          // In order to name the subtest, we name the first argument. All other arguments are
+          // passed in unchanged.
+          args[0] = named(e.getKey(), args[0]);
+          return arguments(args);
+        }
+      });
     }
   }
 
