@@ -94,6 +94,7 @@ public class JazzerFuzzTestExecutor {
             String.format("Failed to find seed corpus at '%s' relative to '%s'",
                 fuzzTest.seedCorpus(), fuzzTestClass));
       }
+      libFuzzerArgs.add(String.format("-artifact_prefix=%s%c", baseDir, File.separatorChar));
     } else if ("file".equals(seedCorpusUrl.getProtocol())) {
       // From the second positional argument on, files and directories are used as seeds but not
       // modified. Using seedCorpusUrl.getFile() fails on Windows.
