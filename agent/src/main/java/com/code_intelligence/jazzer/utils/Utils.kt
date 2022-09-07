@@ -17,8 +17,6 @@ package com.code_intelligence.jazzer.utils
 
 import java.lang.reflect.Executable
 import java.lang.reflect.Method
-import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
 
 val Class<*>.descriptor: String
     get() = when {
@@ -72,26 +70,3 @@ val Executable.readableDescriptor: String
     get() = parameterTypes.joinToString(separator = ",", prefix = "(", postfix = ")") { parameterType ->
         parameterType.readableDescriptor
     }
-
-/**
- * Reads the [FileChannel] to the end as a UTF-8 string.
- */
-fun FileChannel.readFully(): String {
-    check(size() <= Int.MAX_VALUE)
-    val buffer = ByteBuffer.allocate(size().toInt())
-    while (buffer.hasRemaining()) {
-        when (read(buffer)) {
-            0 -> throw IllegalStateException("No bytes read")
-            -1 -> break
-        }
-    }
-    return String(buffer.array())
-}
-
-/**
- * Appends [string] to the end of the [FileChannel].
- */
-fun FileChannel.append(string: String) {
-    position(size())
-    write(ByteBuffer.wrap(string.toByteArray()))
-}
