@@ -14,11 +14,13 @@
 
 package com.code_intelligence.jazzer.runtime;
 
-import com.code_intelligence.jazzer.utils.Utils;
 import com.github.fmeum.rules_jni.RulesJni;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import org.objectweb.asm.Type;
 
 @SuppressWarnings("unused")
 final public class TraceDataFlowNativeCallbacks {
@@ -46,7 +48,12 @@ final public class TraceDataFlowNativeCallbacks {
   public static void traceReflectiveCall(Executable callee, int pc) {
     String className = callee.getDeclaringClass().getCanonicalName();
     String executableName = callee.getName();
-    String descriptor = Utils.getDescriptor(callee);
+    String descriptor;
+    if (callee instanceof Method) {
+      descriptor = Type.getMethodDescriptor((Method) callee);
+    } else {
+      descriptor = Type.getConstructorDescriptor((Constructor<?>) callee);
+    }
     tracePcIndir(Arrays.hashCode(new String[] {className, executableName, descriptor}), pc);
   }
 

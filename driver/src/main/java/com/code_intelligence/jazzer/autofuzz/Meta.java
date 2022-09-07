@@ -609,7 +609,13 @@ public class Meta {
   }
 
   private static void sortExecutables(List<? extends Executable> executables) {
-    executables.sort(Comparator.comparing(Executable::getName).thenComparing(Utils::getDescriptor));
+    executables.sort(Comparator.comparing(Executable::getName).thenComparing(executable -> {
+      if (executable instanceof Method) {
+        return org.objectweb.asm.Type.getMethodDescriptor((Method) executable);
+      } else {
+        return org.objectweb.asm.Type.getConstructorDescriptor((Constructor<?>) executable);
+      }
+    }));
   }
 
   private static void sortClasses(List<? extends Class<?>> classes) {
