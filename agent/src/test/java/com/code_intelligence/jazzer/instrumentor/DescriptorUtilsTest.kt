@@ -14,7 +14,6 @@
 
 package com.code_intelligence.jazzer.instrumentor
 
-import com.code_intelligence.jazzer.utils.descriptor
 import org.junit.Test
 import kotlin.test.assertEquals
 

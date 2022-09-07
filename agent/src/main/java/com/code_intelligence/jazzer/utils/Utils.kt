@@ -16,28 +16,6 @@
 package com.code_intelligence.jazzer.utils
 
 import java.lang.reflect.Executable
-import java.lang.reflect.Method
-
-val Class<*>.descriptor: String
-    get() = when {
-        isPrimitive -> {
-            when (this) {
-                Boolean::class.javaPrimitiveType -> "Z"
-                Byte::class.javaPrimitiveType -> "B"
-                Char::class.javaPrimitiveType -> "C"
-                Short::class.javaPrimitiveType -> "S"
-                Int::class.javaPrimitiveType -> "I"
-                Long::class.javaPrimitiveType -> "J"
-                Float::class.javaPrimitiveType -> "F"
-                Double::class.javaPrimitiveType -> "D"
-                java.lang.Void::class.javaPrimitiveType -> "V"
-                else -> throw IllegalStateException("Unknown primitive type: $name")
-            }
-        }
-        isArray -> "[${componentType.descriptor}"
-        java.lang.Object::class.java.isAssignableFrom(this) -> "L${name.replace('.', '/')};"
-        else -> throw IllegalArgumentException("Unknown class type: $name")
-    }
 
 val Class<*>.readableDescriptor: String
     get() = when {
@@ -59,11 +37,6 @@ val Class<*>.readableDescriptor: String
         java.lang.Object::class.java.isAssignableFrom(this) -> name
         else -> throw IllegalArgumentException("Unknown class type: $name")
     }
-
-val Executable.descriptor: String
-    get() = parameterTypes.joinToString(separator = "", prefix = "(", postfix = ")") { parameterType ->
-        parameterType.descriptor
-    } + if (this is Method) returnType.descriptor else "V"
 
 // This does not include the return type as the parameter descriptors already uniquely identify the executable.
 val Executable.readableDescriptor: String

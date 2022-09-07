@@ -18,7 +18,6 @@ package com.code_intelligence.jazzer.instrumentor
 
 import com.code_intelligence.jazzer.api.HookType
 import com.code_intelligence.jazzer.api.MethodHook
-import com.code_intelligence.jazzer.utils.descriptor
 import java.lang.invoke.MethodHandle
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier

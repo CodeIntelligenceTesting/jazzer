@@ -17,7 +17,6 @@ package com.code_intelligence.jazzer.instrumentor
 import com.code_intelligence.jazzer.api.MethodHook
 import com.code_intelligence.jazzer.api.MethodHooks
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
-import com.code_intelligence.jazzer.utils.descriptor
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.ScanResult
 import java.lang.instrument.Instrumentation
