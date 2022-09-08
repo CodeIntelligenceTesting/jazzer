@@ -21,11 +21,13 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
@@ -49,7 +51,7 @@ public class JarStripper {
 
     Path inFile = Paths.get(args[0]);
     Path outFile = Paths.get(args[1]);
-    Iterable<String> pathsToDelete =
+    List<String> rawPathsToDelete =
         Collections.unmodifiableList(Arrays.stream(args).skip(2).collect(Collectors.toList()));
 
     try {
@@ -76,18 +78,34 @@ public class JarStripper {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
     try (FileSystem zipFs = FileSystems.newFileSystem(outUri, ZIP_FS_PROPERTIES)) {
-      for (String pathToDelete : pathsToDelete) {
-        // Visit files before the directory they are contained in by sorting in reverse order.
-        try (Stream<Path> walk = Files.walk(zipFs.getPath(pathToDelete))) {
-          Iterable<Path> subpaths =
-              walk.sorted(Comparator.reverseOrder()).collect(Collectors.toList());
-          for (Path subpath : subpaths) {
-            Files.delete(subpath);
+      String globPattern = String.format("glob:{%s}",
+          rawPathsToDelete.stream()
+              .flatMap(pattern -> {
+                if (pattern.endsWith("/**")) {
+                  // When removing all contents of a directory, also remove the directory itself.
+                  return Stream.of(
+                      pattern, pattern.substring(0, pattern.length() - "/**".length()));
+                } else {
+                  return Stream.of(pattern);
+                }
+              })
+              .collect(Collectors.joining(",")));
+      PathMatcher pathsToDelete = zipFs.getPathMatcher(globPattern);
+      try (Stream<Path> walk = Files.walk(zipFs.getPath(""))) {
+        walk.sorted(Comparator.reverseOrder()).filter(pathsToDelete::matches).forEach(path -> {
+          try {
+            Files.delete(path);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
           }
-        }
+        });
       }
-    } catch (IOException e) {
-      e.printStackTrace();
+    } catch (Throwable e) {
+      Throwable throwable = e;
+      if (throwable instanceof RuntimeException) {
+        throwable = throwable.getCause();
+      }
+      throwable.printStackTrace();
       System.exit(1);
     }
   }
