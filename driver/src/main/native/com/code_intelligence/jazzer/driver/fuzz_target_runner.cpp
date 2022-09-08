@@ -63,8 +63,6 @@ void DumpJvmStackTraces() {
   JNIEnv *env = nullptr;
   if (gJavaVm->AttachCurrentThread(reinterpret_cast<void **>(&env), nullptr) !=
       JNI_OK) {
-    std::cerr << "WARN: AttachCurrentThread failed in DumpJvmStackTraces"
-              << std::endl;
     return;
   }
   jmethodID dumpStack =
