@@ -6,6 +6,14 @@ load("//bazel:jar.bzl", "strip_jar")
 load("//:maven.bzl", "JAZZER_JUNIT_MAVEN_DEPS")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
+# The Jazzer JUnit integration without its dependencies declared in the pom.xml, together with the unshaded sources.
+java_import(
+    name = "junit",
+    jars = ["junit_shaded.jar"],
+    srcjar = "junit_unshaded_deploy-src.jar",
+    visibility = ["//visibility:public"],
+)
+
 javadoc(
     name = "junit-docs",
     visibility = ["//deploy:__pkg__"],
@@ -20,12 +28,8 @@ javadoc(
 
 jar_jar(
     name = "junit_shaded",
-# The Jazzer JUnit integration without its dependencies declared in the pom.xml.
-jar_jar(
-    name = "junit",
     input_jar = "junit_stripped.jar",
     rules = "junit_shade_rules",
-    visibility = ["//visibility:public"],
 )
 
 # :junit together with all its Maven dependencies.
@@ -33,7 +37,7 @@ java_import(
     name = "junit_for_testing",
     testonly = True,
     jars = [
-        "junit.jar",
+        "junit_shaded.jar",
         "junit_maven_deps_deploy.jar",
     ],
     visibility = ["//visibility:public"],
@@ -68,10 +72,10 @@ sh_test(
     name = "junit_shading_test",
     srcs = ["verify_shading.sh"],
     args = [
-        "$(rootpath junit.jar)",
+        "$(rootpath junit_shaded.jar)",
     ],
     data = [
-        "junit.jar",
+        "junit_shaded.jar",
         "@local_jdk//:bin/jar",
     ],
     tags = [
