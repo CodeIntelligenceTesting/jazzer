@@ -16,8 +16,16 @@ java_export(
     name = "junit",
     maven_coordinates = JAZZER_JUNIT_COORDINATES,
     pom_template = "jazzer-junit.pom",
+    # Do not generate an implicit javadocs target - the current target is based on the shaded deploy
+    # JAR including all dependencies, which breaks javadoc.
+    tags = ["no-javadocs"],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//driver/src/main/java/com/code_intelligence/jazzer/junit",
     ] + JAZZER_JUNIT_MAVEN_DEPS,
+)
+
+alias(
+    name = "junit-javadocs",
+    actual = "//driver/src/main/java/com/code_intelligence/jazzer/junit:junit-docs",
 )
