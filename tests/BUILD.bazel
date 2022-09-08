@@ -1,5 +1,5 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
-load("//bazel:compat.bzl", "SKIP_ON_MACOS", "SKIP_ON_WINDOWS")
+load("//bazel:compat.bzl", "LINUX_ONLY", "SKIP_ON_MACOS", "SKIP_ON_WINDOWS")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
 java_fuzz_target_test(
@@ -286,4 +286,24 @@ java_fuzz_target_test(
     runtime_deps = [
         ":autofuzz_ignore_target",
     ],
+)
+
+java_binary(
+    name = "CrashResistantCoverageTarget",
+    srcs = ["src/test/java/com/example/CrashResistantCoverageTarget.java"],
+)
+
+sh_test(
+    name = "crash_resistant_coverage_test",
+    srcs = ["src/test/shell/crash_resistant_coverage_test.sh"],
+    data = [
+        "src/test/data/crash_resistant_coverage_test/crashing_seeds",
+        "src/test/data/crash_resistant_coverage_test/new_coverage_seeds/new_coverage",
+        ":CrashResistantCoverageTarget_deploy.jar",
+        "//driver:jazzer_driver",
+        "@bazel_tools//tools/bash/runfiles",
+        "@jacocoagent//file:jacocoagent.jar",
+        "@jacococli//file:jacococli.jar",
+    ],
+    target_compatible_with = LINUX_ONLY,
 )

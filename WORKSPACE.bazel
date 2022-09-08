@@ -124,3 +124,17 @@ http_file(
     sha256 = "4120cc9186a0687db218520a2d0dc9bae75d15faf41d87448b6b6c5140c19156",
     urls = ["https://raw.githubusercontent.com/linux-test-project/lcov/6da8399c7a7a3370de2c69b16b092e945442ffcd/bin/genhtml"],
 )
+
+http_file(
+    name = "jacocoagent",
+    downloaded_file_path = "jacocoagent.jar",
+    sha256 = "d931125fc3f9c8e5ee36b94269134a03b3b88f94d93e775f2d57ac608b766145",
+    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/0.8.7/org.jacoco.agent-0.8.7-runtime.jar"],
+)
+
+http_file(
+    name = "jacococli",
+    downloaded_file_path = "jacococli.jar",
+    sha256 = "11b549a9ef14d8454534f914ca1051fb9bcacab7f501e9f1c018eacfc5e77e8d",
+    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.cli/0.8.7/org.jacoco.cli-0.8.7-nodeps.jar"],
+)
