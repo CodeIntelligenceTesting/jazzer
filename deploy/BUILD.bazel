@@ -1,5 +1,7 @@
 load("@rules_jvm_external//:defs.bzl", "java_export")
 load("//:maven.bzl", "JAZZER_API_COORDINATES", "JAZZER_JUNIT_COORDINATES", "JAZZER_JUNIT_MAVEN_DEPS")
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("//bazel:jar.bzl", "strip_jar")
 
 # To publish a new release of the Jazzer API to Maven, run:
 # bazel run --config=maven --define "maven_user=..." --define "maven_password=..." --define gpg_sign=true //deploy:api.publish
@@ -28,4 +30,46 @@ java_export(
 alias(
     name = "junit-javadocs",
     actual = "//driver/src/main/java/com/code_intelligence/jazzer/junit:junit-docs",
+)
+
+strip_jar(
+    name = "junit_sources",
+    out = "junit-sources.jar",
+    jar = ":junit-sources-unfiltered",
+    paths_to_strip = [
+        "META-INF/**",
+        "com/github/**",
+        "io/**",
+        "jaz/**",
+        "kotlin/**",
+        "net/**",
+        "nonapi/**",
+        "org/**",
+        "sanitizers/**",
+    ],
+)
+
+sh_test(
+    name = "junit_sources_shading_test",
+    srcs = ["verify_shading.sh"],
+    args = [
+        "$(rootpath junit-sources.jar)",
+    ],
+    data = [
+        "junit-sources.jar",
+        "@local_jdk//:bin/jar",
+    ],
+    tags = [
+        # Coverage instrumentation necessarily adds files to the jar that we
+        # wouldn't want to release and thus causes this test to fail.
+        "no-coverage",
+    ],
+    target_compatible_with = SKIP_ON_WINDOWS,
+)
+
+filegroup(
+    name = "junit-sources-unfiltered",
+    srcs = [":junit-project"],
+    # https://github.com/bazelbuild/rules_jvm_external/blob/3cf0d483d59e9d817c356e1c6873697507853dbe/private/rules/maven_project_jar.bzl#L79
+    output_group = "_source_jars",
 )
