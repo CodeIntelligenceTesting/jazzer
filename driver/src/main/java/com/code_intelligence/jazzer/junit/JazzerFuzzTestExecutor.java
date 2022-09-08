@@ -39,7 +39,7 @@ import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.reporting.ReportEntry;
 
-public class JazzerFuzzTestExecutor {
+class JazzerFuzzTestExecutor {
   private static final AtomicBoolean hasExecutedOnce = new AtomicBoolean();
 
   private final ExecutionRequest request;

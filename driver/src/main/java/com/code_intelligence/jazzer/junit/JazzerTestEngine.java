@@ -39,7 +39,7 @@ import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
 import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 
 public class JazzerTestEngine implements TestEngine {
-  public static class JazzerSetupError extends Error {
+  static class JazzerSetupError extends Error {
     public JazzerSetupError(Throwable e) {
       super("Jazzer fuzz test failed to execute", e);
     }
@@ -48,7 +48,7 @@ public class JazzerTestEngine implements TestEngine {
     }
   }
 
-  public static class JazzerFuzzTestDescriptor extends AbstractTestDescriptor {
+  static class JazzerFuzzTestDescriptor extends AbstractTestDescriptor {
     private final Method method;
 
     public JazzerFuzzTestDescriptor(UniqueId uniqueId, Method method) {

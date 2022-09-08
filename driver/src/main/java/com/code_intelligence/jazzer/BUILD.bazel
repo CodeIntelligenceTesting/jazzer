@@ -15,6 +15,5 @@ write_file(
 java_library(
     name = "constants",
     srcs = [":constants_java"],
-    neverlink = True,
     visibility = ["//visibility:public"],
 )
