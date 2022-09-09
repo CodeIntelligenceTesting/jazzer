@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import sun.misc.Unsafe;
 
 /**
@@ -211,6 +210,10 @@ public final class FuzzTargetRunner {
       }
     }
 
+    // The user-provided fuzz target method has returned. Any further exits are on us and should not
+    // result in a "fuzz target exited" warning being printed by libFuzzer.
+    temporarilyDisableLibfuzzerExitHook();
+
     err.println();
     err.print("== Java Exception: ");
     finding.printStackTrace(err);
@@ -245,11 +248,7 @@ public final class FuzzTargetRunner {
                 .collect(joining(",")),
             finding.getClass().getName());
       }
-      shutdown();
-      if (Opt.hooks) {
-        AgentInstaller.deleteTemporaryFiles();
-      }
-      _Exit(LIBFUZZER_ERROR_EXIT_CODE);
+      System.exit(LIBFUZZER_ERROR_EXIT_CODE);
       throw new IllegalStateException("Not reached");
     }
     return LIBFUZZER_CONTINUE;
@@ -297,11 +296,11 @@ public final class FuzzTargetRunner {
       // An exception in fuzzerTearDown is a regular finding.
       err.print("== Java Exception in fuzzerTearDown: ");
       e.getCause().printStackTrace(err);
-      _Exit(LIBFUZZER_ERROR_EXIT_CODE);
+      System.exit(LIBFUZZER_ERROR_EXIT_CODE);
     } catch (Throwable t) {
       // Any other exception is an error.
       t.printStackTrace(err);
-      _Exit(1);
+      System.exit(1);
     }
   }
 
@@ -345,7 +344,7 @@ public final class FuzzTargetRunner {
         err.print("ERROR: Failed to create reproducer: ");
         e.printStackTrace(err);
         // Don't let libFuzzer print a native stack trace.
-        _Exit(1);
+        System.exit(1);
         throw new IllegalStateException("Not reached");
       }
     } else {
@@ -401,18 +400,13 @@ public final class FuzzTargetRunner {
   }
 
   /**
-   * Immediately terminates the process without performing any cleanup.
+   * Disables libFuzzer's fuzz target exit detection until the next call to {@link #runOne}.
    *
-   * <p>Neither JVM shutdown hooks nor native exit handlers are called. This method does not return.
-   *
-   * <p>This method provides a way to exit Jazzer without triggering libFuzzer's exit hook that
-   * prints the "fuzz target exited" error message. It should thus be preferred over
-   * {@link System#exit} in any situation where Jazzer encounters an error after the fuzz target has
-   * started running.
-   *
-   * @param exitCode the exit code
+   * <p>Calling {@link System#exit} after having called this method will not trigger libFuzzer's
+   * exit hook that would otherwise print the "fuzz target exited" error message. This method should
+   * thus only be called after control has returned from the user-provided fuzz target.
    */
-  private static void _Exit(int exitCode) {
-    FuzzTargetRunnerNatives._Exit(exitCode);
+  private static void temporarilyDisableLibfuzzerExitHook() {
+    FuzzTargetRunnerNatives.temporarilyDisableLibfuzzerExitHook();
   }
 }

@@ -30,7 +30,6 @@ public class AgentInstaller {
   private static final String BOOTSTRAP_JAR =
       "/com/code_intelligence/jazzer/runtime/jazzer_bootstrap.jar";
   private static final AtomicBoolean hasBeenInstalled = new AtomicBoolean();
-  private static File bootstrapJar;
 
   /**
    * Appends the parts of Jazzer that have to be visible to all classes, including those in the Java
@@ -43,13 +42,7 @@ public class AgentInstaller {
       return;
     }
     Instrumentation instrumentation = ByteBuddyAgent.install();
-    bootstrapJar = extractBootstrapJar();
-    try {
-      instrumentation.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
-    } catch (IOException e) {
-      throw new IllegalStateException(
-          "Failed to append Jazzer agent bootstrap jar to bootstrap class loader search", e);
-    }
+    instrumentation.appendToBootstrapClassLoaderSearch(extractBootstrapJar());
     if (!enableAgent) {
       return;
     }
@@ -63,13 +56,7 @@ public class AgentInstaller {
     }
   }
 
-  public static void deleteTemporaryFiles() {
-    if (bootstrapJar != null) {
-      bootstrapJar.delete();
-    }
-  }
-
-  private static File extractBootstrapJar() {
+  private static JarFile extractBootstrapJar() {
     try (InputStream bootstrapJarStream = AgentInstaller.class.getResourceAsStream(BOOTSTRAP_JAR)) {
       if (bootstrapJarStream == null) {
         throw new IllegalStateException("Failed to find Jazzer agent boostrap jar in resources");
@@ -77,7 +64,7 @@ public class AgentInstaller {
       File bootstrapJar = Files.createTempFile("jazzer-agent-", ".jar").toFile();
       bootstrapJar.deleteOnExit();
       Files.copy(bootstrapJarStream, bootstrapJar.toPath(), StandardCopyOption.REPLACE_EXISTING);
-      return bootstrapJar;
+      return new JarFile(bootstrapJar);
     } catch (IOException e) {
       throw new IllegalStateException("Failed to extract Jazzer agent bootstrap jar", e);
     }

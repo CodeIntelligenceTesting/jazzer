@@ -143,10 +143,18 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_printCrashing
   }
 }
 
+namespace fuzzer {
+// Defined in:
+// https://github.com/llvm/llvm-project/blob/27cc31b64c0491725aa88a6822f0f2a2c18914d7/compiler-rt/lib/fuzzer/FuzzerLoop.cpp#L43
+// Used here:
+// https://github.com/llvm/llvm-project/blob/27cc31b64c0491725aa88a6822f0f2a2c18914d7/compiler-rt/lib/fuzzer/FuzzerLoop.cpp#L244
+extern bool RunningUserCallback;
+}  // namespace fuzzer
+
 [[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives__1Exit(
-    JNIEnv *, jclass, jint exit_code) {
-  _Exit(exit_code);
+Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_temporarilyDisableLibfuzzerExitHook(
+    JNIEnv *, jclass) {
+  ::fuzzer::RunningUserCallback = false;
 }
 
 // We apply a patch to libFuzzer to make it call this function instead of
