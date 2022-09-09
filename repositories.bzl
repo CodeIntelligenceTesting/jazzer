@@ -143,7 +143,7 @@ def jazzer_dependencies():
         http_archive,
         name = "jazzer_libfuzzer",
         build_file = Label("//third_party:libFuzzer.BUILD"),
-        sha256 = "903aa841544e1396be90cfb9c81a58af1d4e9d7d1cd962b1ec8f28bcb191b35f",
-        strip_prefix = "llvm-project-jazzer-2022-08-29/compiler-rt/lib/fuzzer",
-        url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/refs/tags/2022-08-29.tar.gz",
+        sha256 = "4dad21b6a07571c851b8b67cc8ad9172a3fee49ba10f7de03368796ae9494813",
+        strip_prefix = "llvm-project-jazzer-2022-09-09/compiler-rt/lib/fuzzer",
+        url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/refs/tags/2022-09-09.tar.gz",
     )
