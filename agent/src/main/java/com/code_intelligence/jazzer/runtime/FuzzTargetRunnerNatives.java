@@ -36,5 +36,5 @@ public class FuzzTargetRunnerNatives {
 
   public static native void printCrashingInput();
 
-  public static native void _Exit(int exitCode);
+  public static native void temporarilyDisableLibfuzzerExitHook();
 }
