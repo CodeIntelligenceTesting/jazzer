@@ -78,6 +78,8 @@ public final class Opt {
   // runner, but still support hooks = false && dedup = true.
   public static final boolean dedup = boolSetting("dedup", hooks);
 
+  static final boolean mergeInner = boolSetting("internal.merge_inner", false);
+
   static {
     if (!targetClass.isEmpty() && !autofuzz.isEmpty()) {
       err.println("--target_class and --autofuzz cannot be specified together");
