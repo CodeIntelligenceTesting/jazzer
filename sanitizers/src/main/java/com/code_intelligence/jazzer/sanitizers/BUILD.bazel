@@ -10,6 +10,15 @@ java_library(
     ],
 )
 
+java_library(
+    name = "sql_injection",
+    srcs = ["SqlInjection.java"],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "@maven//:com_github_jsqlparser_jsqlparser",
+    ],
+)
+
 kt_jvm_library(
     name = "sanitizers",
     srcs = [
@@ -20,15 +29,14 @@ kt_jvm_library(
         "OsCommandInjection.kt",
         "ReflectiveCall.kt",
         "RegexInjection.kt",
-        "SqlInjection.kt",
         "Utils.kt",
     ],
     visibility = ["//sanitizers:__pkg__"],
     runtime_deps = [
         ":regex_roadblocks",
+        ":sql_injection",
     ],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
-        "@maven//:com_github_jsqlparser_jsqlparser",
     ],
 )
