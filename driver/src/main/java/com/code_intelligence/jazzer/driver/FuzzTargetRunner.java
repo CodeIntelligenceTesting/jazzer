@@ -182,6 +182,18 @@ public final class FuzzTargetRunner {
     } catch (Throwable uncaughtFinding) {
       finding = uncaughtFinding;
     }
+
+    // When using libFuzzer's -merge flag, only the coverage of the current input is relevant, not
+    // whether it is crashing. Since every crash would cause a restart of the process and thus the
+    // JVM, we can optimize this case by not crashing.
+    //
+    // Incidentally, this makes the behavior of fuzz targets relying on global states more
+    // consistent: Rather than resetting the global state after every crashing input and thus
+    // dependent on the particular ordering of the inputs, we never reset it.
+    if (Opt.mergeInner) {
+      return LIBFUZZER_CONTINUE;
+    }
+
     // Explicitly reported findings take precedence over uncaught exceptions.
     if (JazzerInternal.lastFinding != null) {
       finding = JazzerInternal.lastFinding;

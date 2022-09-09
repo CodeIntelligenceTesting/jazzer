@@ -64,6 +64,10 @@ public class Driver {
       idSyncFile.toFile().deleteOnExit();
     }
 
+    if (args.stream().anyMatch("-merge_inner=1" ::equals)) {
+      System.setProperty("jazzer.internal.merge_inner", "true");
+    }
+
     // Jazzer's hooks use deterministic randomness and thus require a seed. Search for the last
     // occurrence of a "-seed" argument as that is the one that is used by libFuzzer. If none is
     // set, generate one and pass it to libFuzzer so that a fuzzing run can be reproduced simply by
