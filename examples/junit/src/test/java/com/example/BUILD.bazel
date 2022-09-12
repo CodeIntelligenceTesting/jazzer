@@ -37,7 +37,7 @@ java_fuzz_target_test(
     name = "ByteFuzzTest",
     srcs = ["ValidFuzzTests.java"],
     args = ["-runs=0"],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
+    expected_findings = ["org.opentest4j.AssertionFailedError"],
     target_class = "com.example.ValidFuzzTests",
     target_method = "byteFuzz",
     verify_crash_reproducer = False,

@@ -17,8 +17,11 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "ExampleFuzzer",
     srcs = ["src/main/java/com/example/ExampleFuzzer.java"],
+    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
     hook_jar = "ExampleFuzzerHooks_deploy.jar",
     target_class = "com.example.ExampleFuzzer",
+    # Does not crash due to not using the hook.
+    verify_crash_reproducer = False,
 )
 
 java_binary(
@@ -48,6 +51,7 @@ java_jni_library(
 
 java_fuzz_target_test(
     name = "ExampleFuzzerWithASan",
+    expected_findings = ["thread_dump"],
     fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_asan"],
     sanitizer = "address",
     target_class = "com.example.ExampleFuzzerWithNative",
@@ -60,6 +64,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "ExampleFuzzerWithUBSan",
+    expected_findings = ["thread_dump"],
     fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_ubsan"],
     sanitizer = "undefined",
     target_class = "com.example.ExampleFuzzerWithNative",
@@ -84,8 +89,10 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExamplePathTraversalFuzzer.java",
     ],
+    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
     hook_jar = "ExamplePathTraversalFuzzerHooks_deploy.jar",
     target_class = "com.example.ExamplePathTraversalFuzzer",
+    verify_crash_reproducer = False,
 )
 
 java_fuzz_target_test(
@@ -114,7 +121,10 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExampleOutOfMemoryFuzzer.java",
     ],
-    expected_findings = ["java.lang.OutOfMemoryError"],
+    expected_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+        "java.lang.OutOfMemoryError",
+    ],
     fuzzer_args = ["--jvm_args=-Xmx512m"],
     target_class = "com.example.ExampleOutOfMemoryFuzzer",
 )
@@ -124,7 +134,10 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExampleStackOverflowFuzzer.java",
     ],
-    expected_findings = ["java.lang.StackOverflowError"],
+    expected_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+        "java.lang.StackOverflowError",
+    ],
     target_class = "com.example.ExampleStackOverflowFuzzer",
     # Crashes with a segfault before any stack trace printing is reached.
     target_compatible_with = SKIP_ON_MACOS,
