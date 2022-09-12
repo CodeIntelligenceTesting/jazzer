@@ -31,7 +31,7 @@ class AutofuzzFuzzTests {
     }
   }
 
-  @FuzzTest
+  @FuzzTest(maxDuration = "5m")
   void autofuzz(String str, IntHolder holder) {
     assumeTrue(holder != null);
     if (holder.getI() == 1234 && "jazzer".equals(str)) {
