@@ -13,9 +13,15 @@
 // limitations under the License.
 package com.code_intelligence.jazzer.tools;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.devtools.build.runfiles.Runfiles;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.ProcessBuilder.Redirect;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -25,11 +31,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
@@ -38,6 +46,11 @@ import javax.tools.ToolProvider;
 
 public class FuzzTargetTestWrapper {
   private static final boolean JAZZER_CI = "1".equals(System.getenv("JAZZER_CI"));
+  private static final String EXCEPTION_PREFIX = "== Java Exception: ";
+  private static final String FRAME_PREFIX = "\tat ";
+  private static final String THREAD_DUMP_HEADER = "Stack traces of all JVM threads:";
+  private static final Set<String> PUBLIC_JAZZER_PACKAGES = Collections.unmodifiableSet(
+      Stream.of("api", "replay", "sanitizers").collect(Collectors.toSet()));
 
   public static void main(String[] args) {
     Runfiles runfiles;
@@ -66,7 +79,7 @@ public class FuzzTargetTestWrapper {
           Arrays.stream(args)
               .skip(8)
               .map(arg -> arg.startsWith("-") ? arg : lookUpRunfileWithFallback(runfiles, arg))
-              .collect(Collectors.toList());
+              .collect(toList());
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
@@ -95,16 +108,28 @@ public class FuzzTargetTestWrapper {
     }
     command.addAll(arguments);
 
-    processBuilder.inheritIO();
     if (JAZZER_CI) {
       // Make JVM error reports available in test outputs.
       processBuilder.environment().put(
           "JAVA_TOOL_OPTIONS", String.format("-XX:ErrorFile=%s/hs_err_pid%%p.log", outputDir));
+      processBuilder.redirectOutput(Redirect.INHERIT);
+      processBuilder.redirectInput(Redirect.INHERIT);
+    } else {
+      processBuilder.inheritIO();
     }
     processBuilder.command(command);
 
     try {
-      int exitCode = processBuilder.start().waitFor();
+      Process process = processBuilder.start();
+      if (JAZZER_CI) {
+        try {
+          verifyFuzzerOutput(
+              process.getErrorStream(), expectedFindings, arguments.contains("--nohooks"));
+        } finally {
+          process.getErrorStream().close();
+        }
+      }
+      int exitCode = process.waitFor();
       if (!expectCrash) {
         if (exitCode != 0) {
           System.err.printf(
@@ -182,6 +207,65 @@ public class FuzzTargetTestWrapper {
       return rootpath.substring("external/".length());
     } else {
       return "jazzer/" + rootpath;
+    }
+  }
+
+  private static void verifyFuzzerOutput(
+      InputStream fuzzerOutput, Set<String> expectedFindings, boolean noHooks) throws IOException {
+    List<String> stackTrace;
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(fuzzerOutput))) {
+      stackTrace = reader.lines()
+                       .filter(line
+                           -> line.startsWith(EXCEPTION_PREFIX) || line.startsWith(FRAME_PREFIX)
+                               || line.equals(THREAD_DUMP_HEADER))
+                       .collect(toList());
+    }
+    if (expectedFindings.isEmpty()) {
+      if (stackTrace.isEmpty()) {
+        return;
+      }
+      throw new IllegalStateException(String.format(
+          "Did not expect a finding, but got a stack trace:%n%s", String.join("\n", stackTrace)));
+    }
+    if (expectedFindings.contains("thread_dump")) {
+      // Expect THREAD_DUMP_PREFIX as well as at least one frame.
+      if (!stackTrace.contains(THREAD_DUMP_HEADER) || stackTrace.size() < 2) {
+        throw new IllegalStateException(
+            "Expected stack traces for all threads, but did not get any");
+      }
+      if (expectedFindings.size() == 1) {
+        return;
+      }
+    }
+    List<String> findings =
+        stackTrace.stream()
+            .filter(line -> line.startsWith(EXCEPTION_PREFIX))
+            .map(line -> line.substring(EXCEPTION_PREFIX.length()).split(":", 2)[0])
+            .collect(toList());
+    if (findings.isEmpty()) {
+      throw new IllegalStateException("Expected a crash, but did not get a stack trace");
+    }
+    for (String finding : findings) {
+      if (!expectedFindings.contains(finding)) {
+        throw new IllegalStateException(String.format("Got finding %s, but expected one of: %s",
+            findings.get(0), String.join(", ", expectedFindings)));
+      }
+    }
+    List<String> unexpectedFrames =
+        stackTrace.stream()
+            .filter(line -> line.startsWith(FRAME_PREFIX))
+            .map(line -> line.substring(FRAME_PREFIX.length()))
+            .filter(line -> line.startsWith("com.code_intelligence.jazzer."))
+            // With --nohooks, Jazzer does not filter out its own stack frames.
+            .filter(line
+                -> !noHooks
+                    && !PUBLIC_JAZZER_PACKAGES.contains(
+                        line.substring("com.code_intelligence.jazzer.".length()).split("\\.")[0]))
+            .collect(toList());
+    if (!unexpectedFrames.isEmpty()) {
+      throw new IllegalStateException(
+          String.format("Unexpected strack trace frames:%n%n%s%n%nin:%n%s",
+              String.join("\n", unexpectedFrames), String.join("\n", stackTrace)));
     }
   }
 

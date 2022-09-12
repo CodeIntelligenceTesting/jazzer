@@ -29,9 +29,9 @@ def java_fuzz_target_test(
         env = None,
         verify_crash_input = True,
         verify_crash_reproducer = True,
-        expect_crash = True,
-        # Default is that the reproducer does not throw any exception.
         expected_findings = [],
+        # By default, expect a crash iff expected_findings isn't empty.
+        expect_crash = None,
         **kwargs):
     target_name = name + "_target"
     deploy_manifest_lines = []
@@ -39,6 +39,8 @@ def java_fuzz_target_test(
         deploy_manifest_lines.append("Jazzer-Fuzz-Target-Class: %s" % target_class)
     if target_method:
         fuzzer_args = list(fuzzer_args) + ["--target_method=" + target_method]
+    if expect_crash == None:
+        expect_crash = len(expected_findings) != 0
 
     # Deps can only be specified on java_binary targets with sources, which
     # excludes e.g. Kotlin libraries wrapped into java_binary via runtime_deps.
