@@ -19,7 +19,12 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import javax.validation.*;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import javax.validation.Constraint;
+import javax.validation.Payload;
+import javax.validation.Validation;
+import javax.validation.Validator;
 
 class UserData {
   public UserData(String email) {
@@ -41,6 +46,10 @@ class UserData {
 public class ExpressionLanguageInjection {
   final private static Validator validator =
       Validation.buildDefaultValidatorFactory().getValidator();
+
+  public static void fuzzerInitialize() {
+    LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
+  }
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     UserData uncheckedUserData = new UserData(data.consumeRemainingAsString());
