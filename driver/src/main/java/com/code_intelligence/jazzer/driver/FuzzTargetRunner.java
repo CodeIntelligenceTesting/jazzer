@@ -56,6 +56,9 @@ public final class FuzzTargetRunner {
     AgentInstaller.install(Opt.hooks);
   }
 
+  private static final String OPENTEST4J_TEST_ABORTED_EXCEPTION =
+      "org.opentest4j.TestAbortedException";
+
   private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
   private static final long BYTE_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
 
@@ -200,7 +203,8 @@ public final class FuzzTargetRunner {
       finding = JazzerInternal.lastFinding;
       JazzerInternal.lastFinding = null;
     }
-    if (finding == null) {
+    // Allow skipping invalid inputs in fuzz tests by using e.g. JUnit's assumeTrue.
+    if (finding == null || finding.getClass().getName().equals(OPENTEST4J_TEST_ABORTED_EXCEPTION)) {
       return LIBFUZZER_CONTINUE;
     }
     if (Opt.hooks) {

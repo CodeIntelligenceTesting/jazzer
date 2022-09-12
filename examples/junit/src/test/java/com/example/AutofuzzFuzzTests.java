@@ -14,6 +14,8 @@
 
 package com.example;
 
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 import com.code_intelligence.jazzer.junit.FuzzTest;
 
 class AutofuzzFuzzTests {
@@ -31,7 +33,8 @@ class AutofuzzFuzzTests {
 
   @FuzzTest
   void autofuzz(String str, IntHolder holder) {
-    if ("jazzer".equals(str) && holder.getI() == 1234) {
+    assumeTrue(holder != null);
+    if (holder.getI() == 1234 && "jazzer".equals(str)) {
       throw new RuntimeException();
     }
   }
