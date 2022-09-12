@@ -74,6 +74,143 @@ public class Meta {
     lookup = new AccessibleObjectLookup(referenceClass);
   }
 
+  @SuppressWarnings("unchecked")
+  public static <T1> void autofuzz(FuzzedDataProvider data, Consumer1<T1> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer1.class, func.getClass());
+    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2> void autofuzz(FuzzedDataProvider data, Consumer2<T1, T2> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer2.class, func.getClass());
+    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3> void autofuzz(FuzzedDataProvider data, Consumer3<T1, T2, T3> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer3.class, func.getClass());
+    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3, T4> void autofuzz(
+      FuzzedDataProvider data, Consumer4<T1, T2, T3, T4> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer4.class, func.getClass());
+    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
+        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3, T4, T5> void autofuzz(
+      FuzzedDataProvider data, Consumer5<T1, T2, T3, T4, T5> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer5.class, func.getClass());
+    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
+        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3),
+        (T5) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 4));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, R> R autofuzz(FuzzedDataProvider data, Function1<T1, R> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Function1.class, func.getClass());
+    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, R> R autofuzz(FuzzedDataProvider data, Function2<T1, T2, R> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Function2.class, func.getClass());
+    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3, R> R autofuzz(FuzzedDataProvider data, Function3<T1, T2, T3, R> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Function3.class, func.getClass());
+    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3, T4, R> R autofuzz(
+      FuzzedDataProvider data, Function4<T1, T2, T3, T4, R> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Function4.class, func.getClass());
+    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
+        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T1, T2, T3, T4, T5, R> R autofuzz(
+      FuzzedDataProvider data, Function5<T1, T2, T3, T4, T5, R> func) {
+    Class<?>[] types = TypeResolver.resolveRawArguments(Function5.class, func.getClass());
+    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
+        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3),
+        (T5) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 4));
+  }
+
+  public static Object consume(FuzzedDataProvider data, Class<?> type) {
+    return PUBLIC_LOOKUP_INSTANCE.consume(data, type, null);
+  }
+
+  static void rescanClasspath() {
+    implementingClassesCache.clear();
+  }
+
+  private static boolean isTest() {
+    String value = System.getenv("JAZZER_AUTOFUZZ_TESTING");
+    return value != null && !value.isEmpty();
+  }
+
+  private static boolean isDebug() {
+    String value = System.getenv("JAZZER_AUTOFUZZ_DEBUG");
+    return value != null && !value.isEmpty();
+  }
+
+  private static int consumeArrayLength(FuzzedDataProvider data, int sizeOfElement) {
+    // Spend at most half of the fuzzer input bytes so that the remaining arguments that require
+    // construction still have non-trivial data to work with.
+    int bytesToSpend = data.remainingBytes() / 2;
+    return bytesToSpend / Math.max(sizeOfElement, 1);
+  }
+
+  private static String getDebugSummary(
+      Executable executable, Object thisObject, Object[] arguments) {
+    return String.format("%nMethod: %s::%s%s%nthis: %s%nArguments: %s",
+        executable.getDeclaringClass().getName(), executable.getName(),
+        Utils.getReadableDescriptor(executable), thisObject,
+        Arrays.stream(arguments)
+            .map(arg -> arg == null ? "null" : arg.toString())
+            .collect(Collectors.joining(", ")));
+  }
+
+  private static Class<?> getRawType(Type genericType) {
+    if (genericType instanceof Class<?>) {
+      return (Class<?>) genericType;
+    } else if (genericType instanceof ParameterizedType) {
+      return getRawType(((ParameterizedType) genericType).getRawType());
+    } else if (genericType instanceof WildcardType) {
+      // TODO: Improve this.
+      return Object.class;
+    } else if (genericType instanceof TypeVariable<?>) {
+      throw new AutofuzzError("Did not expect genericType to be a TypeVariable: " + genericType);
+    } else if (genericType instanceof GenericArrayType) {
+      // TODO: Improve this;
+      return Object[].class;
+    } else {
+      throw new AutofuzzError("Got unexpected class implementing Type: " + genericType);
+    }
+  }
+
   public Object autofuzz(FuzzedDataProvider data, Method method) {
     return autofuzz(data, method, null);
   }
@@ -167,94 +304,6 @@ public class Meta {
     } catch (InvocationTargetException e) {
       throw new AutofuzzInvocationException(e.getCause());
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T1> void autofuzz(FuzzedDataProvider data, Consumer1<T1> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer1.class, func.getClass());
-    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0));
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T1, T2> void autofuzz(FuzzedDataProvider data, Consumer2<T1, T2> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer2.class, func.getClass());
-    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
-        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1));
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T1, T2, T3> void autofuzz(FuzzedDataProvider data, Consumer3<T1, T2, T3> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer3.class, func.getClass());
-    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
-        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
-        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2));
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T1, T2, T3, T4> void autofuzz(
-      FuzzedDataProvider data, Consumer4<T1, T2, T3, T4> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer4.class, func.getClass());
-    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
-        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
-        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
-        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3));
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T1, T2, T3, T4, T5> void autofuzz(
-      FuzzedDataProvider data, Consumer5<T1, T2, T3, T4, T5> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Consumer5.class, func.getClass());
-    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
-        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
-        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
-        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3),
-        (T5) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 4));
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T1, R> R autofuzz(FuzzedDataProvider data, Function1<T1, R> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Function1.class, func.getClass());
-    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0));
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T1, T2, R> R autofuzz(FuzzedDataProvider data, Function2<T1, T2, R> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Function2.class, func.getClass());
-    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
-        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1));
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T1, T2, T3, R> R autofuzz(FuzzedDataProvider data, Function3<T1, T2, T3, R> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Function3.class, func.getClass());
-    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
-        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
-        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2));
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T1, T2, T3, T4, R> R autofuzz(
-      FuzzedDataProvider data, Function4<T1, T2, T3, T4, R> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Function4.class, func.getClass());
-    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
-        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
-        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
-        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3));
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T1, T2, T3, T4, T5, R> R autofuzz(
-      FuzzedDataProvider data, Function5<T1, T2, T3, T4, T5, R> func) {
-    Class<?>[] types = TypeResolver.resolveRawArguments(Function5.class, func.getClass());
-    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
-        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
-        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
-        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3),
-        (T5) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 4));
-  }
-
-  public static Object consume(FuzzedDataProvider data, Class<?> type) {
-    return PUBLIC_LOOKUP_INSTANCE.consume(data, type, null);
   }
 
   // Invariant: The Java source code representation of the returned object visited by visitor must
@@ -610,37 +659,6 @@ public class Meta {
     }
   }
 
-  static void rescanClasspath() {
-    implementingClassesCache.clear();
-  }
-
-  private static boolean isTest() {
-    String value = System.getenv("JAZZER_AUTOFUZZ_TESTING");
-    return value != null && !value.isEmpty();
-  }
-
-  private static boolean isDebug() {
-    String value = System.getenv("JAZZER_AUTOFUZZ_DEBUG");
-    return value != null && !value.isEmpty();
-  }
-
-  private static int consumeArrayLength(FuzzedDataProvider data, int sizeOfElement) {
-    // Spend at most half of the fuzzer input bytes so that the remaining arguments that require
-    // construction still have non-trivial data to work with.
-    int bytesToSpend = data.remainingBytes() / 2;
-    return bytesToSpend / Math.max(sizeOfElement, 1);
-  }
-
-  private static String getDebugSummary(
-      Executable executable, Object thisObject, Object[] arguments) {
-    return String.format("%nMethod: %s::%s%s%nthis: %s%nArguments: %s",
-        executable.getDeclaringClass().getName(), executable.getName(),
-        Utils.getReadableDescriptor(executable), thisObject,
-        Arrays.stream(arguments)
-            .map(arg -> arg == null ? "null" : arg.toString())
-            .collect(Collectors.joining(", ")));
-  }
-
   private List<Class<?>> getNestedBuilderClasses(Class<?> type) {
     List<Class<?>> nestedBuilderClasses = nestedBuilderClassesCache.get(type);
     if (nestedBuilderClasses == null) {
@@ -725,23 +743,5 @@ public class Meta {
       throw new AutofuzzError("consume returned " + result.getClass() + ", but need " + types[i]);
     }
     return result;
-  }
-
-  private static Class<?> getRawType(Type genericType) {
-    if (genericType instanceof Class<?>) {
-      return (Class<?>) genericType;
-    } else if (genericType instanceof ParameterizedType) {
-      return getRawType(((ParameterizedType) genericType).getRawType());
-    } else if (genericType instanceof WildcardType) {
-      // TODO: Improve this.
-      return Object.class;
-    } else if (genericType instanceof TypeVariable<?>) {
-      throw new AutofuzzError("Did not expect genericType to be a TypeVariable: " + genericType);
-    } else if (genericType instanceof GenericArrayType) {
-      // TODO: Improve this;
-      return Object[].class;
-    } else {
-      throw new AutofuzzError("Got unexpected class implementing Type: " + genericType);
-    }
   }
 }
