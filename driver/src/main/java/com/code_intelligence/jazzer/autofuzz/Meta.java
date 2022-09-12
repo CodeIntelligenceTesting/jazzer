@@ -14,11 +14,6 @@
 
 package com.code_intelligence.jazzer.autofuzz;
 
-import static com.code_intelligence.jazzer.autofuzz.Utils.getAccessibleClasses;
-import static com.code_intelligence.jazzer.autofuzz.Utils.getAccessibleConstructors;
-import static com.code_intelligence.jazzer.autofuzz.Utils.getAccessibleMethods;
-import static com.code_intelligence.jazzer.autofuzz.Utils.isAccessible;
-
 import com.code_intelligence.jazzer.api.AutofuzzConstructionException;
 import com.code_intelligence.jazzer.api.AutofuzzInvocationException;
 import com.code_intelligence.jazzer.api.Consumer1;
@@ -62,6 +57,7 @@ import net.jodah.typetools.TypeResolver.Unknown;
 public class Meta {
   public static final boolean IS_DEBUG = isDebug();
 
+  private static final Meta PUBLIC_LOOKUP_INSTANCE = new Meta(null);
   private static final boolean IS_TEST = isTest();
   private static final WeakHashMap<Class<?>, List<Class<?>>> implementingClassesCache =
       new WeakHashMap<>();
@@ -72,11 +68,23 @@ public class Meta {
   private static final WeakHashMap<Class<?>, List<Method>> cascadingBuilderMethodsCache =
       new WeakHashMap<>();
 
-  public static Object autofuzz(FuzzedDataProvider data, Method method) {
+  private final AccessibleObjectLookup lookup;
+
+  public Meta(Class<?> referenceClass) {
+    lookup = new AccessibleObjectLookup(referenceClass);
+  }
+
+  public Object autofuzz(FuzzedDataProvider data, Method method) {
     return autofuzz(data, method, null);
   }
 
-  static Object autofuzz(FuzzedDataProvider data, Method method, AutofuzzCodegenVisitor visitor) {
+  // Renamed so that it doesn't clash with the static method consume, which we don't want to rename
+  // as the api package depends on it by name.
+  public Object consumeNonStatic(FuzzedDataProvider data, Class<?> type) {
+    return consume(data, type, null);
+  }
+
+  Object autofuzz(FuzzedDataProvider data, Method method, AutofuzzCodegenVisitor visitor) {
     Object result;
     if (Modifier.isStatic(method.getModifiers())) {
       if (visitor != null) {
@@ -112,11 +120,11 @@ public class Meta {
     return result;
   }
 
-  public static Object autofuzz(FuzzedDataProvider data, Method method, Object thisObject) {
+  public Object autofuzz(FuzzedDataProvider data, Method method, Object thisObject) {
     return autofuzz(data, method, thisObject, null);
   }
 
-  static Object autofuzz(
+  Object autofuzz(
       FuzzedDataProvider data, Method method, Object thisObject, AutofuzzCodegenVisitor visitor) {
     if (visitor != null) {
       visitor.pushGroup(String.format("%s(", method.getName()), ", ", ")");
@@ -135,11 +143,11 @@ public class Meta {
     }
   }
 
-  public static <R> R autofuzz(FuzzedDataProvider data, Constructor<R> constructor) {
+  public <R> R autofuzz(FuzzedDataProvider data, Constructor<R> constructor) {
     return autofuzz(data, constructor, null);
   }
 
-  static <R> R autofuzz(
+  <R> R autofuzz(
       FuzzedDataProvider data, Constructor<R> constructor, AutofuzzCodegenVisitor visitor) {
     if (visitor != null) {
       // getCanonicalName is correct also for nested classes.
@@ -164,77 +172,89 @@ public class Meta {
   @SuppressWarnings("unchecked")
   public static <T1> void autofuzz(FuzzedDataProvider data, Consumer1<T1> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Consumer1.class, func.getClass());
-    func.accept((T1) consumeChecked(data, types, 0));
+    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0));
   }
 
   @SuppressWarnings("unchecked")
   public static <T1, T2> void autofuzz(FuzzedDataProvider data, Consumer2<T1, T2> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Consumer2.class, func.getClass());
-    func.accept((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1));
+    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1));
   }
 
   @SuppressWarnings("unchecked")
   public static <T1, T2, T3> void autofuzz(FuzzedDataProvider data, Consumer3<T1, T2, T3> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Consumer3.class, func.getClass());
-    func.accept((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
-        (T3) consumeChecked(data, types, 2));
+    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2));
   }
 
   @SuppressWarnings("unchecked")
   public static <T1, T2, T3, T4> void autofuzz(
       FuzzedDataProvider data, Consumer4<T1, T2, T3, T4> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Consumer4.class, func.getClass());
-    func.accept((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
-        (T3) consumeChecked(data, types, 2), (T4) consumeChecked(data, types, 3));
+    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
+        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3));
   }
 
   @SuppressWarnings("unchecked")
   public static <T1, T2, T3, T4, T5> void autofuzz(
       FuzzedDataProvider data, Consumer5<T1, T2, T3, T4, T5> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Consumer5.class, func.getClass());
-    func.accept((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
-        (T3) consumeChecked(data, types, 2), (T4) consumeChecked(data, types, 3),
-        (T5) consumeChecked(data, types, 4));
+    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
+        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3),
+        (T5) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 4));
   }
 
   @SuppressWarnings("unchecked")
   public static <T1, R> R autofuzz(FuzzedDataProvider data, Function1<T1, R> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Function1.class, func.getClass());
-    return func.apply((T1) consumeChecked(data, types, 0));
+    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0));
   }
 
   @SuppressWarnings("unchecked")
   public static <T1, T2, R> R autofuzz(FuzzedDataProvider data, Function2<T1, T2, R> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Function2.class, func.getClass());
-    return func.apply((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1));
+    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1));
   }
 
   @SuppressWarnings("unchecked")
   public static <T1, T2, T3, R> R autofuzz(FuzzedDataProvider data, Function3<T1, T2, T3, R> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Function3.class, func.getClass());
-    return func.apply((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
-        (T3) consumeChecked(data, types, 2));
+    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2));
   }
 
   @SuppressWarnings("unchecked")
   public static <T1, T2, T3, T4, R> R autofuzz(
       FuzzedDataProvider data, Function4<T1, T2, T3, T4, R> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Function4.class, func.getClass());
-    return func.apply((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
-        (T3) consumeChecked(data, types, 2), (T4) consumeChecked(data, types, 3));
+    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
+        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3));
   }
 
   @SuppressWarnings("unchecked")
   public static <T1, T2, T3, T4, T5, R> R autofuzz(
       FuzzedDataProvider data, Function5<T1, T2, T3, T4, T5, R> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Function5.class, func.getClass());
-    return func.apply((T1) consumeChecked(data, types, 0), (T2) consumeChecked(data, types, 1),
-        (T3) consumeChecked(data, types, 2), (T4) consumeChecked(data, types, 3),
-        (T5) consumeChecked(data, types, 4));
+    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+        (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
+        (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
+        (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3),
+        (T5) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 4));
   }
 
   public static Object consume(FuzzedDataProvider data, Class<?> type) {
-    return consume(data, type, null);
+    return PUBLIC_LOOKUP_INSTANCE.consume(data, type, null);
   }
 
   // Invariant: The Java source code representation of the returned object visited by visitor must
@@ -246,7 +266,7 @@ public class Meta {
   // classes as parameters. In this case, a cast to the parent type would cause an
   // IllegalAccessError. Since this case should be rare and there is no good alternative to
   // disambiguate overloads, we omit the cast in this case.
-  static Object consume(FuzzedDataProvider data, Type genericType, AutofuzzCodegenVisitor visitor) {
+  Object consume(FuzzedDataProvider data, Type genericType, AutofuzzCodegenVisitor visitor) {
     Class<?> type = getRawType(genericType);
     if (type == byte.class || type == Byte.class) {
       byte result = data.consumeByte();
@@ -454,12 +474,12 @@ public class Meta {
       if (visitor != null) {
         throw new AutofuzzError("codegen has not been implemented for Method.class");
       }
-      return data.pickValue(getAccessibleMethods(YourAverageJavaClass.class));
+      return data.pickValue(lookup.getAccessibleMethods(YourAverageJavaClass.class));
     } else if (type == Constructor.class) {
       if (visitor != null) {
         throw new AutofuzzError("codegen has not been implemented for Constructor.class");
       }
-      return data.pickValue(getAccessibleMethods(YourAverageJavaClass.class));
+      return data.pickValue(lookup.getAccessibleConstructors(YourAverageJavaClass.class));
     } else if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
       List<Class<?>> implementingClasses = implementingClassesCache.get(type);
       if (implementingClasses == null) {
@@ -479,7 +499,7 @@ public class Meta {
               type.isInterface() ? result.getClassesImplementing(type) : result.getSubclasses(type);
           implementingClasses = children.getStandardClasses()
                                     .filter(info -> !Modifier.isAbstract(info.getModifiers()))
-                                    .filter(info -> isAccessible(info, info.getModifiers()))
+                                    .filter(info -> lookup.isAccessible(info, info.getModifiers()))
                                     .loadClasses();
           implementingClassesCache.put(type, implementingClasses);
         }
@@ -507,7 +527,7 @@ public class Meta {
       }
       return result;
     }
-    Constructor<?>[] constructors = getAccessibleConstructors(type);
+    Constructor<?>[] constructors = lookup.getAccessibleConstructors(type);
     if (constructors.length > 0) {
       Constructor<?> constructor = data.pickValue(constructors);
       boolean applySetters = constructor.getParameterCount() == 0;
@@ -556,7 +576,7 @@ public class Meta {
         visitor.pushGroup("", ".", "");
       }
       Object builderObj =
-          autofuzz(data, data.pickValue(getAccessibleConstructors(pickedBuilder)), visitor);
+          autofuzz(data, data.pickValue(lookup.getAccessibleConstructors(pickedBuilder)), visitor);
       for (Method method : pickedMethods) {
         builderObj = autofuzz(data, method, builderObj, visitor);
       }
@@ -578,10 +598,10 @@ public class Meta {
       String summary = String.format(
           "Failed to generate instance of %s:%nAccessible constructors: %s%nNested subclasses: %s%n",
           type.getName(),
-          Arrays.stream(getAccessibleConstructors(type))
+          Arrays.stream(lookup.getAccessibleConstructors(type))
               .map(Utils::getReadableDescriptor)
               .collect(Collectors.joining(", ")),
-          Arrays.stream(getAccessibleClasses(type))
+          Arrays.stream(lookup.getAccessibleClasses(type))
               .map(Class::getName)
               .collect(Collectors.joining(", ")));
       throw new AutofuzzConstructionException(summary);
@@ -621,10 +641,10 @@ public class Meta {
             .collect(Collectors.joining(", ")));
   }
 
-  private static List<Class<?>> getNestedBuilderClasses(Class<?> type) {
+  private List<Class<?>> getNestedBuilderClasses(Class<?> type) {
     List<Class<?>> nestedBuilderClasses = nestedBuilderClassesCache.get(type);
     if (nestedBuilderClasses == null) {
-      nestedBuilderClasses = Arrays.stream(getAccessibleClasses(type))
+      nestedBuilderClasses = Arrays.stream(lookup.getAccessibleClasses(type))
                                  .filter(cls -> cls.getName().endsWith("Builder"))
                                  .filter(cls -> !getOriginalObjectCreationMethods(cls).isEmpty())
                                  .collect(Collectors.toList());
@@ -633,11 +653,11 @@ public class Meta {
     return nestedBuilderClasses;
   }
 
-  private static List<Method> getOriginalObjectCreationMethods(Class<?> builder) {
+  private List<Method> getOriginalObjectCreationMethods(Class<?> builder) {
     List<Method> originalObjectCreationMethods = originalObjectCreationMethodsCache.get(builder);
     if (originalObjectCreationMethods == null) {
       originalObjectCreationMethods =
-          Arrays.stream(getAccessibleMethods(builder))
+          Arrays.stream(lookup.getAccessibleMethods(builder))
               .filter(m -> m.getReturnType() == builder.getEnclosingClass())
               .collect(Collectors.toList());
       originalObjectCreationMethodsCache.put(builder, originalObjectCreationMethods);
@@ -645,10 +665,10 @@ public class Meta {
     return originalObjectCreationMethods;
   }
 
-  private static List<Method> getCascadingBuilderMethods(Class<?> builder) {
+  private List<Method> getCascadingBuilderMethods(Class<?> builder) {
     List<Method> cascadingBuilderMethods = cascadingBuilderMethodsCache.get(builder);
     if (cascadingBuilderMethods == null) {
-      cascadingBuilderMethods = Arrays.stream(getAccessibleMethods(builder))
+      cascadingBuilderMethods = Arrays.stream(lookup.getAccessibleMethods(builder))
                                     .filter(m -> m.getReturnType() == builder)
                                     .collect(Collectors.toList());
       cascadingBuilderMethodsCache.put(builder, cascadingBuilderMethods);
@@ -656,15 +676,15 @@ public class Meta {
     return cascadingBuilderMethods;
   }
 
-  private static List<Method> getPotentialSetters(Class<?> type) {
-    return Arrays.stream(getAccessibleMethods(type))
+  private List<Method> getPotentialSetters(Class<?> type) {
+    return Arrays.stream(lookup.getAccessibleMethods(type))
         .filter(method -> void.class.equals(method.getReturnType()))
         .filter(method -> method.getParameterCount() == 1)
         .filter(method -> method.getName().startsWith("set"))
         .collect(Collectors.toList());
   }
 
-  public static Object[] consumeArguments(
+  public Object[] consumeArguments(
       FuzzedDataProvider data, Executable executable, AutofuzzCodegenVisitor visitor) {
     Object[] result;
     try {
@@ -684,13 +704,13 @@ public class Meta {
     }
   }
 
-  private static Object consumeChecked(FuzzedDataProvider data, Class<?>[] types, int i) {
+  private Object consumeChecked(FuzzedDataProvider data, Class<?>[] types, int i) {
     if (types[i] == Unknown.class) {
       throw new AutofuzzError("Failed to determine type of argument " + (i + 1));
     }
     Object result;
     try {
-      result = consume(data, types[i]);
+      result = consumeNonStatic(data, types[i]);
     } catch (AutofuzzConstructionException e) {
       // Do not nest AutofuzzConstructionExceptions.
       throw e;

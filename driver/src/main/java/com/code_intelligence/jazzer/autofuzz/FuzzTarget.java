@@ -14,10 +14,6 @@
 
 package com.code_intelligence.jazzer.autofuzz;
 
-import static com.code_intelligence.jazzer.autofuzz.Utils.getAccessibleConstructors;
-import static com.code_intelligence.jazzer.autofuzz.Utils.getAccessibleMethods;
-import static com.code_intelligence.jazzer.autofuzz.Utils.setReferenceClass;
-
 import com.code_intelligence.jazzer.api.AutofuzzConstructionException;
 import com.code_intelligence.jazzer.api.AutofuzzInvocationException;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
@@ -50,6 +46,7 @@ public final class FuzzTarget {
       + "}";
   private static final long MAX_EXECUTIONS_WITHOUT_INVOCATION = 100;
 
+  private static Meta meta;
   private static String methodReference;
   private static Executable[] targetExecutables;
   private static Map<Executable, Class<?>[]> throwsDeclarations;
@@ -111,9 +108,8 @@ public final class FuzzTarget {
     } while (targetClassTemp == null);
     final Class<?> targetClass = targetClassTemp;
 
-    // All calls to Utils#getAccessibleX from this point on will find objects visible from the
-    // target class.
-    setReferenceClass(targetClass);
+    AccessibleObjectLookup lookup = new AccessibleObjectLookup(targetClass);
+    meta = new Meta(targetClass);
 
     boolean isConstructor = methodName.equals("new");
     // We filter out inherited methods, which can lead to unexpected results when autofuzzing a
@@ -123,7 +119,7 @@ public final class FuzzTarget {
     // method.
     if (isConstructor) {
       targetExecutables =
-          Arrays.stream(getAccessibleConstructors(targetClass))
+          Arrays.stream(lookup.getAccessibleConstructors(targetClass))
               .filter(constructor -> constructor.getDeclaringClass().equals(targetClass))
               .filter(constructor
                   -> (descriptor == null && Modifier.isPublic(constructor.getModifiers()))
@@ -131,7 +127,7 @@ public final class FuzzTarget {
               .toArray(Executable[] ::new);
     } else {
       targetExecutables =
-          Arrays.stream(getAccessibleMethods(targetClass))
+          Arrays.stream(lookup.getAccessibleMethods(targetClass))
               .filter(method -> method.getDeclaringClass().equals(targetClass))
               .filter(method
                   -> method.getName().equals(methodName)
@@ -148,7 +144,7 @@ public final class FuzzTarget {
               "Failed to find constructors with signature %s in class %s for autofuzz.%n"
                   + "Public constructors declared by the class:%n%s",
               descriptor, className,
-              Arrays.stream(getAccessibleConstructors(targetClass))
+              Arrays.stream(lookup.getAccessibleConstructors(targetClass))
                   .filter(constructor -> Modifier.isPublic(constructor.getModifiers()))
                   .filter(constructor -> constructor.getDeclaringClass().equals(targetClass))
                   .map(method
@@ -162,7 +158,7 @@ public final class FuzzTarget {
           System.err.printf("Failed to find methods named %s in class %s for autofuzz.%n"
                   + "Public methods declared by the class:%n%s",
               methodName, className,
-              Arrays.stream(getAccessibleMethods(targetClass))
+              Arrays.stream(lookup.getAccessibleMethods(targetClass))
                   .filter(method -> Modifier.isPublic(method.getModifiers()))
                   .filter(method -> method.getDeclaringClass().equals(targetClass))
                   .map(method
@@ -175,7 +171,7 @@ public final class FuzzTarget {
               "Failed to find public methods named %s with signature %s in class %s for autofuzz.%n"
                   + "Public methods with that name:%n%s",
               methodName, descriptor, className,
-              Arrays.stream(getAccessibleMethods(targetClass))
+              Arrays.stream(lookup.getAccessibleMethods(targetClass))
                   .filter(method -> Modifier.isPublic(method.getModifiers()))
                   .filter(method -> method.getDeclaringClass().equals(targetClass))
                   .filter(method -> method.getName().equals(methodName))
@@ -262,9 +258,9 @@ public final class FuzzTarget {
     Object returnValue = null;
     try {
       if (targetExecutable instanceof Method) {
-        returnValue = Meta.autofuzz(data, (Method) targetExecutable, codegenVisitor);
+        returnValue = meta.autofuzz(data, (Method) targetExecutable, codegenVisitor);
       } else {
-        returnValue = Meta.autofuzz(data, (Constructor<?>) targetExecutable, codegenVisitor);
+        returnValue = meta.autofuzz(data, (Constructor<?>) targetExecutable, codegenVisitor);
       }
       executionsSinceLastInvocation = 0;
     } catch (AutofuzzConstructionException e) {

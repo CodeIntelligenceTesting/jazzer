@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.Stream;
 
-public class Utils {
+class AccessibleObjectLookup {
   private static final Comparator<Class<?>> STABLE_CLASS_COMPARATOR =
       Comparator.comparing(Class::getName);
   private static final Comparator<Executable> STABLE_EXECUTABLE_COMPARATOR =
@@ -35,24 +35,21 @@ public class Utils {
         }
       });
 
-  static Class<?> referenceClass = null;
+  private final Class<?> referenceClass;
 
-  /**
-   * Sets the package to be used as the reference point for accessibility checks.
-   */
-  public static void setReferenceClass(Class<?> referenceClass) {
-    Utils.referenceClass = referenceClass;
+  public AccessibleObjectLookup(Class<?> referenceClass) {
+    this.referenceClass = referenceClass;
   }
 
-  static Class<?>[] getAccessibleClasses(Class<?> type) {
+  Class<?>[] getAccessibleClasses(Class<?> type) {
     return Stream.concat(Arrays.stream(type.getDeclaredClasses()), Arrays.stream(type.getClasses()))
         .distinct()
-        .filter(Utils::isAccessible)
+        .filter(this::isAccessible)
         .sorted(STABLE_CLASS_COMPARATOR)
         .toArray(Class<?>[] ::new);
   }
 
-  static Constructor<?>[] getAccessibleConstructors(Class<?> type) {
+  Constructor<?>[] getAccessibleConstructors(Class<?> type) {
     // Neither of getDeclaredConstructors and getConstructors is a superset of the other: While
     // getDeclaredConstructors returns constructors with all visibility modifiers, it does not
     // return the implicit default constructor.
@@ -60,7 +57,7 @@ public class Utils {
         .concat(
             Arrays.stream(type.getDeclaredConstructors()), Arrays.stream(type.getConstructors()))
         .distinct()
-        .filter(Utils::isAccessible)
+        .filter(this::isAccessible)
         .sorted(STABLE_EXECUTABLE_COMPARATOR)
         .filter(constructor -> {
           try {
@@ -75,10 +72,10 @@ public class Utils {
         .toArray(Constructor<?>[] ::new);
   }
 
-  static Method[] getAccessibleMethods(Class<?> type) {
+  Method[] getAccessibleMethods(Class<?> type) {
     return Stream.concat(Arrays.stream(type.getDeclaredMethods()), Arrays.stream(type.getMethods()))
         .distinct()
-        .filter(Utils::isAccessible)
+        .filter(this::isAccessible)
         .sorted(STABLE_EXECUTABLE_COMPARATOR)
         .filter(method -> {
           try {
@@ -93,7 +90,7 @@ public class Utils {
         .toArray(Method[] ::new);
   }
 
-  static boolean isAccessible(Class<?> clazz, int modifiers) {
+  boolean isAccessible(Class<?> clazz, int modifiers) {
     if (Modifier.isPublic(modifiers)) {
       return true;
     }
@@ -110,7 +107,7 @@ public class Utils {
     return clazz.getPackage().equals(referenceClass.getPackage());
   }
 
-  static boolean isAccessible(ClassInfo clazz, int modifiers) {
+  boolean isAccessible(ClassInfo clazz, int modifiers) {
     if (Modifier.isPublic(modifiers)) {
       return true;
     }
@@ -127,7 +124,7 @@ public class Utils {
     return clazz.getPackageName().equals(referenceClass.getPackage().getName());
   }
 
-  static boolean isAssignableFrom(ClassInfo clazz, Class<?> potentialSubclass) {
+  boolean isAssignableFrom(ClassInfo clazz, Class<?> potentialSubclass) {
     if (potentialSubclass.getName().equals(clazz.getName())) {
       return true;
     }
@@ -140,11 +137,11 @@ public class Utils {
     return isAssignableFrom(clazz, potentialSubclass.getSuperclass());
   }
 
-  private static boolean isAccessible(Executable executable) {
+  private boolean isAccessible(Executable executable) {
     return isAccessible(executable.getDeclaringClass(), executable.getModifiers());
   }
 
-  private static boolean isAccessible(Class<?> clazz) {
+  private boolean isAccessible(Class<?> clazz) {
     return isAccessible(clazz, clazz.getModifiers());
   }
 }
