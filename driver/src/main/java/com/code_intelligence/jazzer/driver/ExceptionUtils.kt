@@ -21,6 +21,18 @@ import java.lang.management.ManagementFactory
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 
+private val JAZZER_PACKAGE_PREFIX = "com.code_intelligence.jazzer."
+private val PUBLIC_JAZZER_PACKAGES = setOf("api", "replay", "sanitizers")
+
+private val StackTraceElement.isInternalFrame: Boolean
+    get() = if (!className.startsWith(JAZZER_PACKAGE_PREFIX)) {
+        false
+    } else {
+        val jazzerSubPackage =
+            className.substring(JAZZER_PACKAGE_PREFIX.length).split(".", limit = 2)[0]
+        jazzerSubPackage !in PUBLIC_JAZZER_PACKAGES
+    }
+
 private fun hash(throwable: Throwable, passToRootCause: Boolean): ByteArray =
     MessageDigest.getInstance("SHA-256").run {
         // It suffices to hash the stack trace of the deepest cause as the higher-level causes only
@@ -33,7 +45,7 @@ private fun hash(throwable: Throwable, passToRootCause: Boolean): ByteArray =
         }
         update(rootCause.javaClass.name.toByteArray())
         rootCause.stackTrace
-            .takeWhile { !it.className.startsWith("com.code_intelligence.jazzer.") || it.className.startsWith("com.code_intelligence.jazzer.sanitizers.") }
+            .takeWhile { !it.isInternalFrame }
             .filterNot {
                 it.className.startsWith("jdk.internal.") ||
                     it.className.startsWith("java.lang.reflect.") ||
@@ -94,6 +106,17 @@ fun preprocessThrowable(throwable: Throwable): Throwable = when (throwable) {
     )
     is VirtualMachineError -> stripOwnStackTrace(FuzzerSecurityIssueLow(throwable))
     else -> throwable
+}.also { dropInternalFrames(it) }
+
+/**
+ * Recursively strips all Jazzer-internal stack frames from the given [Throwable] and its causes.
+ */
+private fun dropInternalFrames(throwable: Throwable?) {
+    throwable?.run {
+        stackTrace = stackTrace.takeWhile { !it.isInternalFrame }.toTypedArray()
+        suppressed.forEach { it.stackTrace = stackTrace.takeWhile { !it.isInternalFrame }.toTypedArray() }
+        dropInternalFrames(throwable.cause)
+    }
 }
 
 /**
