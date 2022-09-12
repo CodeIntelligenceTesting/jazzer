@@ -181,7 +181,7 @@ public class MetaTest {
         CannedFuzzedDataProvider.create(Arrays.asList((byte) 1, // do not return null
             8, // remainingBytes
             "buzz"));
-    assertEquals("fizzbuzz", Meta.autofuzz(data, "fizz" ::concat));
+    assertEquals("fizzbuzz", new Meta(null).autofuzz(data, "fizz" ::concat));
   }
 
   // Regression test for https://github.com/CodeIntelligenceTesting/jazzer/issues/465.

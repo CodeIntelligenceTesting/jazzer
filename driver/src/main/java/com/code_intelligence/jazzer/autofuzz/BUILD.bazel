@@ -1,11 +1,11 @@
 java_library(
     name = "autofuzz",
     srcs = [
+        "AccessibleObjectLookup.java",
         "AutofuzzCodegenVisitor.java",
         "AutofuzzError.java",
         "FuzzTarget.java",
         "Meta.java",
-        "Utils.java",
         "YourAverageJavaClass.java",
     ],
     visibility = ["//visibility:public"],

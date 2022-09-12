@@ -14,7 +14,6 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import static com.code_intelligence.jazzer.autofuzz.Utils.setReferenceClass;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -80,9 +79,9 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
           // The Autofuzz FuzzTarget uses data to construct an instance of the test class before it
           // constructs the fuzz test arguments. We don't need the instance here, but still generate
           // it as that mutates the FuzzedDataProvider state.
-          setReferenceClass(fuzzTestMethod.getDeclaringClass());
-          Meta.consume(data, fuzzTestMethod.getDeclaringClass());
-          Object[] args = Meta.consumeArguments(data, fuzzTestMethod, null);
+          Meta meta = new Meta(fuzzTestMethod.getDeclaringClass());
+          meta.consumeNonStatic(data, fuzzTestMethod.getDeclaringClass());
+          Object[] args = meta.consumeArguments(data, fuzzTestMethod, null);
           // In order to name the subtest, we name the first argument. All other arguments are
           // passed in unchanged.
           args[0] = named(e.getKey(), args[0]);
