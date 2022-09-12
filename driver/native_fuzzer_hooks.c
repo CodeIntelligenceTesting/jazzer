@@ -525,3 +525,6 @@ __attribute__((visibility("default"))) void __sanitizer_weak_hook_memmem(
   memmem_hook_t hook = atomic_load_explicit(&memmem_hook, memory_order_relaxed);
   hook(called_pc, s1, len1, s2, len2, result);
 }
+
+__attribute__((
+    visibility("default"))) _Thread_local uintptr_t __sancov_lowest_stack = 0;
