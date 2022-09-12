@@ -91,8 +91,9 @@ public final class FuzzTargetRunner {
       fuzzTargetClass =
           Class.forName(targetClassName, false, FuzzTargetRunner.class.getClassLoader());
     } catch (ClassNotFoundException e) {
-      err.print("ERROR: ");
-      e.printStackTrace(err);
+      err.printf(
+          "ERROR: '%s' not found on classpath:%n%n%s%n%nAll required classes must be on the classpath specified via --cp.",
+          targetClassName, System.getProperty("java.class.path"));
       exit(1);
       throw new IllegalStateException("Not reached");
     }
