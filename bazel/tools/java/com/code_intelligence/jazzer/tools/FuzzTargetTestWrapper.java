@@ -61,7 +61,7 @@ public class FuzzTargetTestWrapper {
     boolean verifyCrashInput;
     boolean verifyCrashReproducer;
     boolean expectCrash;
-    Set<String> expectedFindings;
+    Set<String> allowedFindings;
     List<String> arguments;
     try {
       runfiles = Runfiles.create();
@@ -72,7 +72,7 @@ public class FuzzTargetTestWrapper {
       verifyCrashInput = Boolean.parseBoolean(args[4]);
       verifyCrashReproducer = Boolean.parseBoolean(args[5]);
       expectCrash = Boolean.parseBoolean(args[6]);
-      expectedFindings =
+      allowedFindings =
           Arrays.stream(args[7].split(",")).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
       // Map all files/dirs to real location
       arguments =
@@ -124,7 +124,7 @@ public class FuzzTargetTestWrapper {
       if (JAZZER_CI) {
         try {
           verifyFuzzerOutput(
-              process.getErrorStream(), expectedFindings, arguments.contains("--nohooks"));
+              process.getErrorStream(), allowedFindings, arguments.contains("--nohooks"));
         } finally {
           process.getErrorStream().close();
         }
@@ -169,7 +169,7 @@ public class FuzzTargetTestWrapper {
     if (JAZZER_CI && verifyCrashReproducer) {
       try {
         verifyCrashReproducer(
-            outputDir, driverActualPath, apiActualPath, jarActualPath, expectedFindings);
+            outputDir, driverActualPath, apiActualPath, jarActualPath, allowedFindings);
       } catch (Exception e) {
         e.printStackTrace();
         System.exit(1);

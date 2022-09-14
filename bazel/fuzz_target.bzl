@@ -29,8 +29,10 @@ def java_fuzz_target_test(
         env = None,
         verify_crash_input = True,
         verify_crash_reproducer = True,
-        expected_findings = [],
-        # By default, expect a crash iff expected_findings isn't empty.
+        # Superset of the findings the fuzzer is expected to find. Since fuzzing runs are not
+        # deterministic across OSes, pinpointing the exact set of findings is difficult.
+        allowed_findings = [],
+        # By default, expect a crash iff allowed_findings isn't empty.
         expect_crash = None,
         **kwargs):
     target_name = name + "_target"
@@ -40,7 +42,7 @@ def java_fuzz_target_test(
     if target_method:
         fuzzer_args = list(fuzzer_args) + ["--target_method=" + target_method]
     if expect_crash == None:
-        expect_crash = len(expected_findings) != 0
+        expect_crash = len(allowed_findings) != 0
 
     # Deps can only be specified on java_binary targets with sources, which
     # excludes e.g. Kotlin libraries wrapped into java_binary via runtime_deps.
@@ -91,7 +93,7 @@ def java_fuzz_target_test(
             str(verify_crash_input),
             str(verify_crash_reproducer),
             str(expect_crash),
-            "'" + ",".join(expected_findings) + "'",
+            "'" + ",".join(allowed_findings) + "'",
         ] + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,

@@ -6,7 +6,7 @@ java_fuzz_target_test(
     srcs = [
         "ObjectInputStreamDeserialization.java",
     ],
-    expected_findings = [
+    allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
         "java.lang.ExceptionInInitializerError",
     ],
@@ -18,7 +18,7 @@ java_fuzz_target_test(
     srcs = [
         "ReflectiveCall.java",
     ],
-    expected_findings = [
+    allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
         "java.lang.ExceptionInInitializerError",
     ],
@@ -30,7 +30,7 @@ java_fuzz_target_test(
     srcs = [
         "LibraryLoad.java",
     ],
-    expected_findings = [
+    allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
     ],
     target_class = "com.example.LibraryLoad",
@@ -48,7 +48,7 @@ java_fuzz_target_test(
         "ExpressionLanguageInjection.java",
         "InsecureEmailValidator.java",
     ],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
     target_class = "com.example.ExpressionLanguageInjection",
     # The reproducer can't find jaz.Zer and thus doesn't crash.
     verify_crash_reproducer = False,
@@ -66,7 +66,7 @@ java_fuzz_target_test(
     srcs = [
         "OsCommandInjectionProcessBuilder.java",
     ],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical"],
     target_class = "com.example.OsCommandInjectionProcessBuilder",
     verify_crash_reproducer = False,
 )
@@ -76,7 +76,7 @@ java_fuzz_target_test(
     srcs = [
         "OsCommandInjectionRuntimeExec.java",
     ],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical"],
     target_class = "com.example.OsCommandInjectionRuntimeExec",
     verify_crash_reproducer = False,
 )
@@ -88,7 +88,7 @@ java_fuzz_target_test(
         "ldap/MockInitialContextFactory.java",
         "ldap/MockLdapContext.java",
     ],
-    expected_findings = [
+    allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
         # The crashing input encoded by the replayer does not have valid syntax, but no hook.
         "javax.naming.directory.InvalidSearchFilterException",
@@ -106,7 +106,7 @@ java_fuzz_target_test(
         "ldap/MockInitialContextFactory.java",
         "ldap/MockLdapContext.java",
     ],
-    expected_findings = [
+    allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
         # The crashing input encoded by the reproducer does not have valid syntax, but no hook.
         "javax.naming.NamingException",
@@ -120,7 +120,7 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "RegexInsecureQuoteInjection",
     srcs = ["RegexInsecureQuoteInjection.java"],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     target_class = "com.example.RegexInsecureQuoteInjection",
     verify_crash_reproducer = False,
 )
@@ -130,7 +130,7 @@ java_fuzz_target_test(
     srcs = [
         "RegexCanonEqInjection.java",
     ],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     target_class = "com.example.RegexCanonEqInjection",
     verify_crash_reproducer = False,
 )
@@ -140,7 +140,7 @@ java_fuzz_target_test(
     srcs = [
         "ClassLoaderLoadClass.java",
     ],
-    expected_findings = [
+    allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
         # Reproducer does not find the honeypot library and doesn't have the hook.
         "java.lang.ExceptionInInitializerError",
@@ -151,7 +151,7 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "RegexRoadblocks",
     srcs = ["RegexRoadblocks.java"],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = [
         # Limit the number of runs to verify that the regex roadblocks are
         # cleared quickly.
@@ -166,7 +166,7 @@ java_fuzz_target_test(
     srcs = [
         "SqlInjection.java",
     ],
-    expected_findings = [
+    allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
         "org.h2.jdbc.JdbcSQLSyntaxErrorException",
     ],
