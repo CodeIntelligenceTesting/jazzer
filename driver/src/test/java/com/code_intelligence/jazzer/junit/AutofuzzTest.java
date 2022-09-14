@@ -76,7 +76,7 @@ public class AutofuzzTest {
         event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
         event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
 
-    // Should crash on an input that starts with "jazzer", with the crash emitted into the base
+    // Should crash on an input that contains "jazzer", with the crash emitted into the base
     // directory since there is no seed corpus.
     Path crashingInput;
     try (Stream<Path> crashFiles = Files.list(baseDir).filter(
@@ -86,7 +86,7 @@ public class AutofuzzTest {
       crashingInput = crashFilesList.get(0);
     }
     assertThat(new String(Files.readAllBytes(crashingInput), StandardCharsets.UTF_8))
-        .startsWith("jazzer");
+        .contains("jazzer");
 
     try (Stream<Path> seeds = Files.list(seedCorpus)) {
       assertThat(seeds).isEmpty();
