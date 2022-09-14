@@ -88,12 +88,17 @@ load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
 
 [
     java_test(
-        name = "ValueProfileTest_" + JAZZER_VALUE_PROFILE,
+        name = "ValueProfileTest_" + str(JAZZER_VALUE_PROFILE),
         srcs = ["ValueProfileTest.java"],
         env = {
             "JAZZER_FUZZ": "true",
-            "JAZZER_VALUE_PROFILE": JAZZER_VALUE_PROFILE,
+            "JAZZER_VALUE_PROFILE": str(JAZZER_VALUE_PROFILE),
         },
+        # The test is both CPU-intensive and sensitive to timing, which causes it to be flaky on
+        # slow runners (particularly macOS on GitHub Actions). Since we need to distinguish the two
+        # test variants by whether they find a finding, we can't just increase the timeout without
+        # the risk to make the other variant flaky.
+        tags = ["exclusive"] if JAZZER_VALUE_PROFILE else [],
         test_class = "com.code_intelligence.jazzer.junit.ValueProfileTest",
         runtime_deps = [
             "//examples/junit/src/test/java/com/example:ExampleFuzzTests_deploy.jar",
@@ -110,8 +115,8 @@ load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
         ],
     )
     for JAZZER_VALUE_PROFILE in [
-        "true",
-        "false",
+        True,
+        False,
     ]
 ]
 
