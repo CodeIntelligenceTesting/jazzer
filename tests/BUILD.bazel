@@ -7,8 +7,8 @@ java_fuzz_target_test(
     srcs = [
         "src/test/java/com/example/LongStringFuzzer.java",
     ],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     data = ["src/test/java/com/example/LongStringFuzzerInput"],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = [
         "$(rootpath src/test/java/com/example/LongStringFuzzerInput)",
     ],
@@ -18,7 +18,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "JpegImageParserAutofuzz",
-    expected_findings = ["java.lang.NegativeArraySizeException"],
+    allowed_findings = ["java.lang.NegativeArraySizeException"],
     fuzzer_args = [
         "--autofuzz=org.apache.commons.imaging.formats.jpeg.JpegImageParser::getBufferedImage",
         "--autofuzz_ignore=java.lang.NullPointerException",
@@ -39,10 +39,10 @@ java_binary(
 java_fuzz_target_test(
     name = "HookDependenciesFuzzer",
     srcs = ["src/test/java/com/example/HookDependenciesFuzzer.java"],
-    env = {"JAVA_OPTS": "-Xverify:all"},
-    expected_findings = [
+    allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
     ],
+    env = {"JAVA_OPTS": "-Xverify:all"},
     hook_jar = "HookDependenciesFuzzerHooks_deploy.jar",
     target_class = "com.example.HookDependenciesFuzzer",
     verify_crash_reproducer = False,
@@ -50,7 +50,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "AutofuzzWithoutCoverage",
-    expected_findings = ["java.lang.NullPointerException"],
+    allowed_findings = ["java.lang.NullPointerException"],
     fuzzer_args = [
         # Autofuzz a method that triggers no coverage instrumentation (the Java standard library is
         # excluded by default).
@@ -61,7 +61,7 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "AutofuzzHookDependencies",
     # The reproducer does not include the hook on OOM and thus throws a regular error.
-    expected_findings = [
+    allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
         "java.lang.OutOfMemoryError",
     ],
@@ -80,10 +80,10 @@ java_fuzz_target_test(
     srcs = [
         "src/test/java/com/example/ForkModeFuzzer.java",
     ],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     env = {
         "JAVA_OPTS": "-Dfoo=not_foo -Djava_opts=1",
     },
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = [
         "-fork=2",
         "--additional_jvm_args=-Dbaz=baz",
@@ -105,11 +105,11 @@ java_fuzz_target_test(
     srcs = [
         "src/test/java/com/example/CoverageFuzzer.java",
     ],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     env = {
         "COVERAGE_REPORT_FILE": "coverage.txt",
         "COVERAGE_DUMP_FILE": "coverage.exec",
     },
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = [
         "-use_value_profile=1",
         "--coverage_report=coverage.txt",
@@ -134,7 +134,7 @@ java_library(
 
 java_fuzz_target_test(
     name = "AutofuzzInnerClassFuzzer",
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = [
         "--autofuzz=com.example.AutofuzzInnerClassTarget.Middle.Inner::test",
     ],
@@ -148,12 +148,12 @@ java_fuzz_target_test(
     name = "MemoryLeakFuzzer",
     timeout = "short",
     srcs = ["src/test/java/com/example/MemoryLeakFuzzer.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     env = {
         "JAVA_OPTS": "-Xmx800m",
     },
     # --keep_going ignores the only finding.
     expect_crash = False,
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = [
         # Before the bug was fixed, either the GC overhead limit or the overall heap limit was
         # reached by this target in this number of runs.
@@ -174,7 +174,7 @@ JAZZER_API_TEST_CASES = {
     java_fuzz_target_test(
         name = "JazzerApiFuzzer_" + case,
         srcs = ["src/test/java/com/example/JazzerApiFuzzer.java"],
-        expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+        allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
         fuzzer_args = args,
         target_class = "com.example.JazzerApiFuzzer",
     )
@@ -257,7 +257,7 @@ java_jni_library(
 
 java_fuzz_target_test(
     name = "NativeValueProfileFuzzer",
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = ["-use_value_profile=1"],
     sanitizer = "address",
     target_class = "com.example.NativeValueProfileFuzzer",
@@ -270,7 +270,7 @@ java_fuzz_target_test(
     name = "JUnitAssertFuzzer",
     timeout = "short",
     srcs = ["src/test/java/com/example/JUnitAssertFuzzer.java"],
-    expected_findings = ["org.opentest4j.AssertionFailedError"],
+    allowed_findings = ["org.opentest4j.AssertionFailedError"],
     target_class = "com.example.JUnitAssertFuzzer",
     deps = ["@maven//:org_junit_jupiter_junit_jupiter_api"],
 )
@@ -282,7 +282,7 @@ java_library(
 
 java_fuzz_target_test(
     name = "AutofuzzIgnoreFuzzer",
-    expected_findings = ["java.lang.RuntimeException"],
+    allowed_findings = ["java.lang.RuntimeException"],
     fuzzer_args = [
         "--autofuzz=com.example.AutofuzzIgnoreTarget::doStuff",
         "--autofuzz_ignore=java.lang.NullPointerException",

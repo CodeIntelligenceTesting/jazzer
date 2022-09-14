@@ -5,7 +5,7 @@ load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
 java_fuzz_target_test(
     name = "Autofuzz",
-    expected_findings = ["java.lang.ArrayIndexOutOfBoundsException"],
+    allowed_findings = ["java.lang.ArrayIndexOutOfBoundsException"],
     fuzzer_args = [
         "--autofuzz=com.google.json.JsonSanitizer::sanitize",
     ],
@@ -17,7 +17,7 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "ExampleFuzzer",
     srcs = ["src/main/java/com/example/ExampleFuzzer.java"],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
     hook_jar = "ExampleFuzzerHooks_deploy.jar",
     target_class = "com.example.ExampleFuzzer",
     # Does not crash due to not using the hook.
@@ -51,7 +51,7 @@ java_jni_library(
 
 java_fuzz_target_test(
     name = "ExampleFuzzerWithASan",
-    expected_findings = ["thread_dump"],
+    allowed_findings = ["thread_dump"],
     fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_asan"],
     sanitizer = "address",
     target_class = "com.example.ExampleFuzzerWithNative",
@@ -64,7 +64,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "ExampleFuzzerWithUBSan",
-    expected_findings = ["thread_dump"],
+    allowed_findings = ["thread_dump"],
     fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_ubsan"],
     sanitizer = "undefined",
     target_class = "com.example.ExampleFuzzerWithNative",
@@ -89,7 +89,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExamplePathTraversalFuzzer.java",
     ],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
     hook_jar = "ExamplePathTraversalFuzzerHooks_deploy.jar",
     target_class = "com.example.ExamplePathTraversalFuzzer",
     verify_crash_reproducer = False,
@@ -100,7 +100,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExampleValueProfileFuzzer.java",
     ],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     # Comment out the next line to keep the fuzzer running indefinitely.
     fuzzer_args = ["-use_value_profile=1"],
     target_class = "com.example.ExampleValueProfileFuzzer",
@@ -111,7 +111,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/MazeFuzzer.java",
     ],
-    expected_findings = ["com.example.MazeFuzzer$$TreasureFoundException"],
+    allowed_findings = ["com.example.MazeFuzzer$$TreasureFoundException"],
     fuzzer_args = ["-use_value_profile=1"],
     target_class = "com.example.MazeFuzzer",
 )
@@ -121,7 +121,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExampleOutOfMemoryFuzzer.java",
     ],
-    expected_findings = [
+    allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
         "java.lang.OutOfMemoryError",
     ],
@@ -134,7 +134,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/ExampleStackOverflowFuzzer.java",
     ],
-    expected_findings = [
+    allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
         "java.lang.StackOverflowError",
     ],
@@ -171,7 +171,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/JpegImageParserFuzzer.java",
     ],
-    expected_findings = ["java.lang.NegativeArraySizeException"],
+    allowed_findings = ["java.lang.NegativeArraySizeException"],
     fuzzer_args = [
         "-fork=2",
     ],
@@ -188,7 +188,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/GifImageParserFuzzer.java",
     ],
-    expected_findings = [
+    allowed_findings = [
         "java.lang.ArrayIndexOutOfBoundsException",
         "java.lang.IllegalArgumentException",
         "java.lang.OutOfMemoryError",
@@ -216,7 +216,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/JsonSanitizerCrashFuzzer.java",
     ],
-    expected_findings = ["java.lang.IndexOutOfBoundsException"],
+    allowed_findings = ["java.lang.IndexOutOfBoundsException"],
     target_class = "com.example.JsonSanitizerCrashFuzzer",
     deps = [
         "@maven//:com_mikesamuel_json_sanitizer",
@@ -228,7 +228,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/JsonSanitizerDenylistFuzzer.java",
     ],
-    expected_findings = ["java.lang.AssertionError"],
+    allowed_findings = ["java.lang.AssertionError"],
     target_class = "com.example.JsonSanitizerDenylistFuzzer",
     deps = [
         "@maven//:com_mikesamuel_json_sanitizer",
@@ -269,7 +269,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/JsonSanitizerIdempotenceFuzzer.java",
     ],
-    expected_findings = ["java.lang.AssertionError"],
+    allowed_findings = ["java.lang.AssertionError"],
     target_class = "com.example.JsonSanitizerIdempotenceFuzzer",
     deps = [
         "@maven//:com_mikesamuel_json_sanitizer",
@@ -281,7 +281,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/JsonSanitizerValidJsonFuzzer.java",
     ],
-    expected_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     target_class = "com.example.JsonSanitizerValidJsonFuzzer",
     deps = [
         "@maven//:com_google_code_gson_gson",
@@ -294,7 +294,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/JacksonCborFuzzer.java",
     ],
-    expected_findings = ["java.lang.NullPointerException"],
+    allowed_findings = ["java.lang.NullPointerException"],
     target_class = "com.example.JacksonCborFuzzer",
     deps = [
         "@maven//:com_fasterxml_jackson_core_jackson_core",
@@ -308,7 +308,7 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/FastJsonFuzzer.java",
     ],
-    expected_findings = ["java.lang.NumberFormatException"],
+    allowed_findings = ["java.lang.NumberFormatException"],
     target_class = "com.example.FastJsonFuzzer",
     deps = [
         "@maven//:com_alibaba_fastjson",
@@ -328,7 +328,7 @@ kt_jvm_library(
 
 java_fuzz_target_test(
     name = "KlaxonFuzzer",
-    expected_findings = [
+    allowed_findings = [
         "java.lang.ClassCastException",
         "java.lang.IllegalStateException",
         "java.lang.NumberFormatException",
