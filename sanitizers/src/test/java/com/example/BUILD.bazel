@@ -161,6 +161,21 @@ java_fuzz_target_test(
     verify_crash_reproducer = False,
 )
 
+# Catching StackOverflowErrors doesn't work reliably across all systems and JDK versions.
+# It may lead to a native crash before we can handle the exception in Java, therefore the
+# test is set to manual execution.
+java_fuzz_target_test(
+    name = "StackOverflowRegexInjection",
+    srcs = ["StackOverflowRegexInjection.java"],
+    allowed_findings = ["java.util.regex.PatternSyntaxException"],
+    fuzzer_args = [
+        "-runs=1",
+    ],
+    tags = ["manual"],
+    target_class = "com.example.StackOverflowRegexInjection",
+    verify_crash_reproducer = False,
+)
+
 java_fuzz_target_test(
     name = "SqlInjection",
     srcs = [

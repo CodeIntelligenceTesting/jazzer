@@ -23,6 +23,9 @@ import java.lang.invoke.MethodHandle
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 
+// message introduced in JDK14 and ported back to previous versions
+private const val STACK_OVERFLOW_ERROR_MESSAGE = "Stack overflow during pattern compilation"
+
 @Suppress("unused_parameter", "unused")
 object RegexInjection {
     /**
@@ -143,7 +146,7 @@ memory allocations, even when wrapped with Pattern.quote(...)."""
                 }
             }
         } catch (e: Exception) {
-            if (e is PatternSyntaxException) {
+            if (e is PatternSyntaxException && !(e.message ?: "").startsWith(STACK_OVERFLOW_ERROR_MESSAGE)) {
                 Jazzer.reportFindingFromHook(
                     FuzzerSecurityIssueLow(
                         """Regular Expression Injection
