@@ -92,10 +92,7 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
   }
 
   private Stream<Map.Entry<String, byte[]>> walkSeedCorpus(Class<?> testClass) throws IOException {
-    String seedCorpusArg = annotation.seedCorpus();
-    String seedCorpusPath =
-        seedCorpusArg.isEmpty() ? Utils.defaultSeedCorpusPath(testClass) : seedCorpusArg;
-    URL seedCorpusUrl = testClass.getResource(seedCorpusPath);
+    URL seedCorpusUrl = testClass.getResource(Utils.seedCorpusResourcePath(testClass, annotation));
     if (seedCorpusUrl == null) {
       return Stream.empty();
     }

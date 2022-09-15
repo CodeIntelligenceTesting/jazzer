@@ -14,17 +14,51 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import java.io.File;
 import java.lang.management.ManagementFactory;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class Utils {
-  static String defaultSeedCorpusPath(Class<?> testClass) {
-    return testClass.getSimpleName() + "SeedCorpus";
+  /**
+   * Returns the resource path of the seed corpus directory, which is either absolute or relative to
+   * {@code testClass}.
+   */
+  static String seedCorpusResourcePath(Class<?> testClass, FuzzTest annotation) {
+    if (annotation.seedCorpus().isEmpty()) {
+      return testClass.getSimpleName() + "SeedCorpus";
+    }
+    return annotation.seedCorpus();
+  }
+
+  /**
+   * Returns the file system path of the seed corpus directory in the source tree, if it exists.
+   */
+  static Optional<Path> seedCorpusSourcePath(
+      Class<?> testClass, FuzzTest annotation, Path baseDir) {
+    String seedCorpusResourcePath = Utils.seedCorpusResourcePath(testClass, annotation);
+    // Make the seed corpus resource path absolute.
+    if (!seedCorpusResourcePath.startsWith("/")) {
+      String seedCorpusPackage = testClass.getPackage().getName().replace('.', '/');
+      seedCorpusResourcePath = "/" + seedCorpusPackage + "/" + seedCorpusResourcePath;
+    }
+
+    // Following the Maven directory layout, we look up the seed corpus under src/test/resources.
+    // This should be correct also for multi-module projects as JUnit is usually launched in the
+    // current module's root directory.
+    Path sourceSeedCorpusPath = baseDir.resolve(
+        ("src/test/resources" + seedCorpusResourcePath).replace('/', File.separatorChar));
+    if (Files.isDirectory(sourceSeedCorpusPath)) {
+      return Optional.of(sourceSeedCorpusPath);
+    } else {
+      return Optional.empty();
+    }
   }
 
   static Path generatedCorpusPath(Class<?> testClass) {
