@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import static com.code_intelligence.jazzer.junit.Utils.seedCorpusSourcePath;
 import static com.code_intelligence.jazzer.utils.Utils.getReadableDescriptor;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
@@ -78,9 +79,7 @@ class JazzerFuzzTestExecutor {
     // libFuzzer and also emit findings into it so that the regression test can be used to debug
     // them.
     FuzzTest fuzzTest = AnnotationSupport.findAnnotation(fuzzTestMethod, FuzzTest.class).get();
-    String seedCorpusResourcePath = fuzzTest.seedCorpus().isEmpty()
-        ? Utils.defaultSeedCorpusPath(fuzzTestClass)
-        : fuzzTest.seedCorpus();
+    String seedCorpusResourcePath = Utils.seedCorpusResourcePath(fuzzTestClass, fuzzTest);
     URL seedCorpusUrl = fuzzTestClass.getResource(seedCorpusResourcePath);
     if (seedCorpusUrl == null) {
       if (fuzzTest.seedCorpus().isEmpty()) {
@@ -105,20 +104,20 @@ class JazzerFuzzTestExecutor {
       libFuzzerArgs.add(Paths.get(seedCorpusUrl.toURI()).toString());
       // We try to find the source tree representation of the seed corpus directory and emit
       // findings into it.
-      findSeedCorpusDirectoryInSourceTree().ifPresent(
-          (path)
-              -> libFuzzerArgs.add(
-                  String.format("-artifact_prefix=%s%c", path, File.separatorChar)));
+      seedCorpusSourcePath(fuzzTestClass, fuzzTest, baseDir)
+          .ifPresent((path)
+                         -> libFuzzerArgs.add(
+                             String.format("-artifact_prefix=%s%c", path, File.separatorChar)));
     } else {
       // We can't directly use the seed corpus from resources as it's packaged into a JAR. Instead,
       // try to get the path to the seed corpus in the source tree.
-      Optional<Path> seedCorpusSourceDirectory = findSeedCorpusDirectoryInSourceTree();
-      if (seedCorpusSourceDirectory.isPresent()) {
-        libFuzzerArgs.add(seedCorpusSourceDirectory.get().toString());
+      Optional<Path> seedCorpus = seedCorpusSourcePath(fuzzTestClass, fuzzTest, baseDir);
+      if (seedCorpus.isPresent()) {
+        libFuzzerArgs.add(seedCorpus.get().toString());
         // We try to find the source tree representation of the seed corpus directory and emit
         // findings into it.
-        libFuzzerArgs.add(String.format(
-            "-artifact_prefix=%s%c", seedCorpusSourceDirectory.get(), File.separatorChar));
+        libFuzzerArgs.add(
+            String.format("-artifact_prefix=%s%c", seedCorpus.get(), File.separatorChar));
       } else {
         request.getEngineExecutionListener().reportingEntryPublished(fuzzTestDescriptor,
             ReportEntry.from("seed corpus",
@@ -174,31 +173,5 @@ class JazzerFuzzTestExecutor {
     // units longer than hours, so we can always prepend PT.
     String isoDuration = "PT" + duration.replace("min", "m").replace(" ", "");
     return Duration.parse(isoDuration).getSeconds();
-  }
-
-  private Optional<Path> findSeedCorpusDirectoryInSourceTree() {
-    FuzzTest fuzzTest =
-        AnnotationSupport.findAnnotation(fuzzTestDescriptor.getMethod(), FuzzTest.class).get();
-    String seedCorpusResourcePath = fuzzTest.seedCorpus().isEmpty()
-        ? Utils.defaultSeedCorpusPath(fuzzTestDescriptor.getMethod().getDeclaringClass())
-        : fuzzTest.seedCorpus();
-    // Make the seed corpus resource path absolute.
-    if (!seedCorpusResourcePath.startsWith("/")) {
-      String seedCorpusPackage =
-          fuzzTestDescriptor.getMethod().getDeclaringClass().getPackage().getName().replace(
-              '.', '/');
-      seedCorpusResourcePath = "/" + seedCorpusPackage + "/" + seedCorpusResourcePath;
-    }
-
-    // Following the Maven directory layout, we look up the seed corpus under src/test/resources.
-    // This should be correct also for multi-module projects as JUnit is usually launched in the
-    // current module's root directory.
-    Path sourceSeedCorpusPath = baseDir.resolve(
-        ("src/test/resources" + seedCorpusResourcePath).replace('/', File.separatorChar));
-    if (Files.isDirectory(sourceSeedCorpusPath)) {
-      return Optional.of(sourceSeedCorpusPath);
-    } else {
-      return Optional.empty();
-    }
   }
 }
