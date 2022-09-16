@@ -215,6 +215,7 @@ public class FuzzTargetTestWrapper {
     List<String> stackTrace;
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(fuzzerOutput))) {
       stackTrace = reader.lines()
+                       .peek(System.err::println)
                        .filter(line
                            -> line.startsWith(EXCEPTION_PREFIX) || line.startsWith(FRAME_PREFIX)
                                || line.equals(THREAD_DUMP_HEADER))
