@@ -16,7 +16,7 @@
 set -e
 
 CP="$(/app/coursier.jar fetch --classpath "$1")"
-/app/jazzer_driver \
+/app/jazzer \
   --cp="$CP" \
   --autofuzz="$2" \
   "${@:3}"

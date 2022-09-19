@@ -45,7 +45,7 @@ jacoco_args="destfile=$exec_file,classdumpdir=$class_dump_dir,excludes=$excludes
 
 corpus_dummy=$TEST_TMPDIR/corpus
 mkdir -p "$corpus_dummy"
-"$(rlocation jazzer/driver/jazzer_driver)" \
+"$(rlocation jazzer/launcher/jazzer)" \
   --cp="$(rlocation jazzer/tests/CrashResistantCoverageTarget_deploy.jar)" \
   --target_class=com.example.CrashResistantCoverageTarget \
   -merge=1 -timeout=100 --nohooks \
