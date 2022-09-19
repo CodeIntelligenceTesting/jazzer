@@ -26,31 +26,31 @@ pkg_tar(
     srcs = [
         "//agent:jazzer_agent_deploy",
         "//agent:jazzer_api_deploy.jar",
-        "//driver:jazzer_driver",
+        "//launcher:jazzer",
     ],
     extension = "tar.gz",
     mode = "0777",
     remap_paths = {
         "agent/jazzer_agent_deploy.jar": "jazzer_agent_deploy.jar",
         "agent/jazzer_api_deploy.jar": "jazzer_api_deploy.jar",
-        "driver/jazzer_driver": "jazzer",
+        "launcher/jazzer": "jazzer",
     },
     strip_prefix = "./",
 )
 
 alias(
     name = "jazzer",
-    actual = "//driver:jazzer_driver",
+    actual = "//launcher:jazzer",
 )
 
 alias(
     name = "jazzer_asan",
-    actual = "//driver:jazzer_driver_asan",
+    actual = "//launcher:jazzer_asan",
 )
 
 alias(
     name = "jazzer_ubsan",
-    actual = "//driver:jazzer_driver_ubsan",
+    actual = "//launcher:jazzer_ubsan",
 )
 
 exports_files([

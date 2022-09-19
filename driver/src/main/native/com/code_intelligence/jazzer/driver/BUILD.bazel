@@ -60,7 +60,7 @@ cc_library(
     name = "fuzzed_data_provider",
     srcs = ["fuzzed_data_provider.cpp"],
     visibility = [
-        "//driver:__pkg__",
+        "//launcher:__pkg__",
     ],
     deps = [
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl.hdrs",
@@ -118,8 +118,8 @@ cc_library(
     hdrs = ["sanitizer_hooks_with_pc.h"],
     visibility = [
         "//agent/src/jmh/native:__subpackages__",
-        "//driver:__pkg__",
         "//driver/src/test/native/com/code_intelligence/jazzer/driver:__pkg__",
+        "//launcher:__pkg__",
     ],
 )
 
@@ -128,4 +128,20 @@ cc_library(
     srcs = ["sanitizer_symbols.cpp"],
     # Symbols are referenced dynamically by libFuzzer.
     alwayslink = True,
+)
+
+cc_test(
+    name = "fuzzed_data_provider_test",
+    size = "small",
+    srcs = ["fuzzed_data_provider_test.cpp"],
+    copts = select({
+        "@platforms//os:windows": ["/std:c++17"],
+        "//conditions:default": ["-std=c++17"],
+    }),
+    deps = [
+        ":fuzzed_data_provider",
+        "@fmeum_rules_jni//jni",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )

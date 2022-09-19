@@ -16,10 +16,6 @@ cc_library(
     name = "jvm_tooling_lib",
     srcs = ["jvm_tooling.cpp"],
     hdrs = ["jvm_tooling.h"],
-    tags = [
-        # Should be built through the cc_17_library driver_lib.
-        "manual",
-    ],
     deps = [
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/strings",
@@ -88,7 +84,7 @@ cc_library(
 )
 
 cc_binary(
-    name = "jazzer_driver",
+    name = "jazzer",
     data = [
         "//agent:jazzer_agent_deploy",
     ],
@@ -112,7 +108,7 @@ alias(
 )
 
 cc_binary(
-    name = "jazzer_driver_asan",
+    name = "jazzer_asan",
     data = [
         "//agent:jazzer_agent_deploy",
     ],
@@ -145,7 +141,7 @@ cc_binary(
 )
 
 cc_binary(
-    name = "jazzer_driver_ubsan",
+    name = "jazzer_ubsan",
     data = [
         "//agent:jazzer_agent_deploy",
     ],
@@ -181,11 +177,11 @@ cc_test(
     size = "small",
     srcs = ["jvm_tooling_test.cpp"],
     args = [
-        "--cp=jazzer/$(rootpath //driver/testdata:fuzz_target_mocks_deploy.jar)",
+        "--cp=jazzer/$(rootpath //launcher/testdata:fuzz_target_mocks_deploy.jar)",
     ],
     data = [
         "//agent:jazzer_agent_deploy",
-        "//driver/testdata:fuzz_target_mocks_deploy.jar",
+        "//launcher/testdata:fuzz_target_mocks_deploy.jar",
     ],
     includes = ["."],
     deps = [
@@ -202,7 +198,7 @@ cc_test(
     size = "medium",
     srcs = ["fuzzed_data_provider_test.cpp"],
     args = [
-        "--cp=jazzer/$(rootpath //driver/testdata:fuzz_target_mocks_deploy.jar)",
+        "--cp=jazzer/$(rootpath //launcher/testdata:fuzz_target_mocks_deploy.jar)",
     ],
     copts = select({
         "@platforms//os:windows": ["/std:c++17"],
@@ -210,7 +206,7 @@ cc_test(
     }),
     data = [
         "//agent:jazzer_agent_deploy",
-        "//driver/testdata:fuzz_target_mocks_deploy.jar",
+        "//launcher/testdata:fuzz_target_mocks_deploy.jar",
     ],
     includes = ["."],
     deps = [

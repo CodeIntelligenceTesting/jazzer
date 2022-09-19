@@ -504,7 +504,7 @@ the native libraries. The required compilation flags for native libraries are as
  - *AddressSanitizer*: `-fsanitize=fuzzer-no-link,address`
  - *UndefinedBehaviorSanitizer*: `-fsanitize=fuzzer-no-link,undefined` (add `-fno-sanitize-recover=all` to crash on UBSan reports)
 
-Then, use the appropriate driver `//:jazzer_asan` or `//:jazzer_ubsan`.
+Then, use the appropriate launcher `//:jazzer_asan` or `//:jazzer_ubsan`.
 
 **Note:** Sanitizers other than AddressSanitizer and UndefinedBehaviorSanitizer are not yet supported.
 Furthermore, due to the nature of the JVM's GC, LeakSanitizer reports too many false positives to be useful and is thus disabled.

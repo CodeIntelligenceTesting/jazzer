@@ -59,11 +59,11 @@ def java_fuzz_target_test(
     )
 
     if sanitizer == None:
-        driver = "//driver:jazzer_driver"
+        driver = "//launcher:jazzer"
     elif sanitizer == "address":
-        driver = "//driver:jazzer_driver_asan"
+        driver = "//launcher:jazzer_asan"
     elif sanitizer == "undefined":
-        driver = "//driver:jazzer_driver_ubsan"
+        driver = "//launcher:jazzer_ubsan"
     else:
         fail("Invalid sanitizer: " + sanitizer)
 

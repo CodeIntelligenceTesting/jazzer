@@ -179,8 +179,7 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
     }
   }
 
-  // If the agent is not in the bazel path we look next to the jazzer_driver
-  // binary.
+  // If the agent is not in the bazel path we look next to the jazzer binary.
   const auto dir = dirFromFullPath(executable_path);
   auto agent_path =
       absl::StrFormat("%s%c%s", dir, kPathSeparator, kAgentFileName);
