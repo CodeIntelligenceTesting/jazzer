@@ -324,7 +324,7 @@ public class FuzzTargetTestWrapper {
       if (expectedFindings.isEmpty()) {
         throw new IllegalStateException("Did not expect " + classFile + " to crash", finding);
       } else if (expectedFindings.contains(finding.getClass().getName())) {
-        System.out.printf("Reproduced exception \"%s\"%n", finding.getMessage());
+        System.out.printf("Reproduced exception \"%s\"%n", finding);
       } else {
         throw new IllegalStateException(
             classFile + " did not crash with any of " + String.join(", ", expectedFindings),
