@@ -16,6 +16,7 @@ package com.code_intelligence.jazzer.junit;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.container;
@@ -42,6 +43,9 @@ import org.junit.platform.testkit.engine.EventType;
 import org.junit.rules.TemporaryFolder;
 
 public class ValueProfileTest {
+  private static final boolean VALUE_PROFILE_ENABLED =
+      "True".equals(System.getenv("JAZZER_VALUE_PROFILE"));
+
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   Path baseDir;
   Path seedCorpus;
@@ -68,7 +72,7 @@ public class ValueProfileTest {
 
   @Test
   public void valueProfileEnabled() throws IOException {
-    assumeTrue("true".equals(System.getenv("JAZZER_VALUE_PROFILE")));
+    assumeTrue(VALUE_PROFILE_ENABLED);
 
     EngineExecutionResults results = executeTests();
 
@@ -106,7 +110,7 @@ public class ValueProfileTest {
 
   @Test
   public void valueProfileDisabled() throws IOException {
-    assumeTrue("false".equals(System.getenv("JAZZER_VALUE_PROFILE")));
+    assumeFalse(VALUE_PROFILE_ENABLED);
 
     EngineExecutionResults results = executeTests();
 
