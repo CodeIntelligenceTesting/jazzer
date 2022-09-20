@@ -1,6 +1,13 @@
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//:maven.bzl", "JAZZER_VERSION")
 
+java_binary(
+    name = "Jazzer",
+    srcs = ["Jazzer.java"],
+    visibility = ["//visibility:public"],
+    deps = ["//driver/src/main/java/com/code_intelligence/jazzer/driver"],
+)
+
 write_file(
     name = "constants_java",
     out = "Constants.java",

@@ -19,7 +19,7 @@ def java_fuzz_target_test(
         deps = [],
         hook_jar = None,
         data = [],
-        sanitizer = None,
+        launcher_variant = None,
         visibility = None,
         tags = [],
         fuzzer_args = [],
@@ -58,14 +58,16 @@ def java_fuzz_target_test(
         **kwargs
     )
 
-    if sanitizer == None:
+    if launcher_variant == None:
         driver = "//launcher:jazzer"
-    elif sanitizer == "address":
+    elif launcher_variant == "address":
         driver = "//launcher:jazzer_asan"
-    elif sanitizer == "undefined":
+    elif launcher_variant == "undefined":
         driver = "//launcher:jazzer_ubsan"
+    elif launcher_variant == "java":
+        driver = "//driver/src/main/java/com/code_intelligence/jazzer:Jazzer"
     else:
-        fail("Invalid sanitizer: " + sanitizer)
+        fail("Invalid launcher variant: " + launcher_variant)
 
     native.java_test(
         name = name,
@@ -93,6 +95,7 @@ def java_fuzz_target_test(
             str(verify_crash_input),
             str(verify_crash_reproducer),
             str(expect_crash),
+            str(launcher_variant == "java"),
             "'" + ",".join(allowed_findings) + "'",
         ] + fuzzer_args,
         data = [

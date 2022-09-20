@@ -26,11 +26,7 @@ import java.security.SecureRandom;
 import java.util.List;
 
 public class Driver {
-  // Accessed from jazzer_main.cpp.
-  @SuppressWarnings("unused")
-  private static int start(byte[][] nativeArgs) throws IOException {
-    List<String> args = Utils.fromNativeArgs(nativeArgs);
-
+  public static int start(List<String> args) throws IOException {
     final boolean spawnsSubprocesses = args.stream().anyMatch(
         arg -> arg.startsWith("-fork=") || arg.startsWith("-jobs=") || arg.startsWith("-merge="));
     if (spawnsSubprocesses) {
@@ -90,6 +86,12 @@ public class Driver {
     }
 
     return FuzzTargetRunner.startLibFuzzer(args);
+  }
+
+  // Accessed from jazzer_main.cpp.
+  @SuppressWarnings("unused")
+  private static int start(byte[][] nativeArgs) throws IOException {
+    return start(Utils.fromNativeArgs(nativeArgs));
   }
 
   private static String getDefaultRssLimitMbArg() {
