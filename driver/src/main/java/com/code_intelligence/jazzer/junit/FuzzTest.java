@@ -19,7 +19,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -46,8 +45,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 // {0} is expanded to the basename of the seed by the ArgumentProvider.
 @ParameterizedTest(name = "{0}")
 @Tag("jazzer")
-// Jazzer uses a single fuzz test class instance for all invocations for performance reasons.
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 // JazzerInternal keeps global state about the last finding. Compared to the cost of starting up the
 // agent, running individual regression test cases should be very fast, so we wouldn't gain much
 // from parallelization.
