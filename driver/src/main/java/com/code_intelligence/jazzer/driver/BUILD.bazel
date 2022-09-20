@@ -6,6 +6,7 @@ java_library(
     srcs = ["Driver.java"],
     visibility = [
         "//agent:__pkg__",
+        "//driver/src/main/java/com/code_intelligence/jazzer:__pkg__",
     ],
     deps = [
         ":fuzz_target_runner",

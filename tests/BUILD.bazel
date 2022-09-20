@@ -259,7 +259,7 @@ java_fuzz_target_test(
     name = "NativeValueProfileFuzzer",
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     fuzzer_args = ["-use_value_profile=1"],
-    sanitizer = "address",
+    launcher_variant = "address",
     target_class = "com.example.NativeValueProfileFuzzer",
     target_compatible_with = SKIP_ON_WINDOWS,
     verify_crash_reproducer = False,
@@ -311,4 +311,25 @@ sh_test(
         "@jacococli//file:jacococli.jar",
     ],
     target_compatible_with = LINUX_ONLY,
+)
+
+java_fuzz_target_test(
+    name = "JavaDriver",
+    allowed_findings = ["java.lang.NullPointerException"],
+    fuzzer_args = [
+        "--wrapper_script_flag=--jvm_flag=-Djazzer.autofuzz=java.util.regex.Pattern::compile",
+    ],
+    launcher_variant = "java",
+)
+
+java_fuzz_target_test(
+    name = "JavaDriverWithFork",
+    allowed_findings = ["java.lang.NullPointerException"],
+    fuzzer_args = [
+        "--wrapper_script_flag=--jvm_flag=-Djazzer.autofuzz=java.util.regex.Pattern::compile",
+        "-fork=2",
+    ],
+    launcher_variant = "java",
+    # -fork is broken on macOS for unknown reasons.
+    target_compatible_with = SKIP_ON_MACOS,
 )
