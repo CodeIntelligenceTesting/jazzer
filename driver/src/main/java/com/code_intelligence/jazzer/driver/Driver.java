@@ -79,7 +79,7 @@ public class Driver {
         args.add("-seed=" + seed);
       }
     }
-    System.setProperty("jazzer.seed", seed);
+    System.setProperty("jazzer.internal.seed", seed);
 
     if (args.stream().noneMatch(arg -> arg.startsWith("-rss_limit_mb="))) {
       args.add(getDefaultRssLimitMbArg());

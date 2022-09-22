@@ -263,11 +263,11 @@ public final class Jazzer {
     // The Jazzer driver sets this property based on the value of libFuzzer's -seed command-line
     // option, which allows for fully reproducible fuzzing runs if set. If not running in the
     // context of the driver, fall back to a random number instead.
-    String rawSeed = System.getProperty("jazzer.seed");
+    String rawSeed = System.getProperty("jazzer.internal.seed");
     if (rawSeed == null) {
       return new SecureRandom().nextInt();
     }
-    // If jazzer.seed is set, we expect it to be a valid integer.
+    // If jazzer.internal.seed is set, we expect it to be a valid integer.
     return Integer.parseUnsignedInt(rawSeed);
   }
 
