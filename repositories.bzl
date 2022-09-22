@@ -117,17 +117,6 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
-        name = "jazzer_com_github_gflags_gflags",
-        patches = [
-            Label("//third_party:gflags-use-double-dash-args.patch"),
-        ],
-        sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
-        strip_prefix = "gflags-2.2.2",
-        url = "https://github.com/gflags/gflags/archive/refs/tags/v2.2.2.tar.gz",
-    )
-
-    maybe(
-        http_archive,
         name = "jazzer_jacoco",
         build_file = Label("//third_party:jacoco_internal.BUILD"),
         patches = [

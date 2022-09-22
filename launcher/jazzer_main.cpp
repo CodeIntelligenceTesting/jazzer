@@ -15,9 +15,8 @@
 /*
  * Jazzer's native main function, which:
  * 1. defines default settings for ASan and UBSan;
- * 2. preprocesses the command-line arguments passed to libFuzzer;
- * 3. starts a JVM;
- * 4. passes control to the Java-part of the driver.
+ * 2. starts a JVM;
+ * 3. passes control to the Java part of the driver.
  */
 
 #include <rules_jni.h>
@@ -27,12 +26,8 @@
 #include <memory>
 #include <vector>
 
-#include "absl/strings/match.h"
-#include "gflags/gflags.h"
+#include "absl/strings/str_split.h"
 #include "jvm_tooling.h"
-
-// Defined by glog
-DECLARE_bool(log_prefix);
 
 namespace {
 bool is_asan_active = false;
@@ -58,86 +53,80 @@ extern "C" {
 }
 
 namespace {
-const std::string kUsageMessage =
-    R"(Test java fuzz targets using libFuzzer. Usage:
-  jazzer --cp=<java_class_path> --target_class=<fuzz_target_class> <libfuzzer_arguments...>)";
-const std::string kDriverClassName =
-    "com/code_intelligence/jazzer/driver/Driver";
+const std::string kJazzerClassName = "com/code_intelligence/jazzer/Jazzer";
 
-int StartLibFuzzer(std::unique_ptr<jazzer::JVM> jvm,
-                   std::vector<std::string> argv) {
+void StartLibFuzzer(std::unique_ptr<jazzer::JVM> jvm,
+                    std::vector<std::string> argv) {
   JNIEnv &env = jvm->GetEnv();
-  jclass runner = env.FindClass(kDriverClassName.c_str());
+  jclass runner = env.FindClass(kJazzerClassName.c_str());
   if (runner == nullptr) {
     env.ExceptionDescribe();
-    return 1;
+    exit(1);
   }
-  jmethodID startDriver = env.GetStaticMethodID(runner, "start", "([[B)I");
+  jmethodID startDriver = env.GetStaticMethodID(runner, "main", "([[B)V");
   if (startDriver == nullptr) {
     env.ExceptionDescribe();
-    return 1;
+    exit(1);
   }
   jclass byteArrayClass = env.FindClass("[B");
   if (byteArrayClass == nullptr) {
     env.ExceptionDescribe();
-    return 1;
+    exit(1);
   }
   jobjectArray args = env.NewObjectArray(argv.size(), byteArrayClass, nullptr);
   if (args == nullptr) {
     env.ExceptionDescribe();
-    return 1;
+    exit(1);
   }
   for (jsize i = 0; i < argv.size(); ++i) {
     jint len = argv[i].size();
     jbyteArray arg = env.NewByteArray(len);
     if (arg == nullptr) {
       env.ExceptionDescribe();
-      return 1;
+      exit(1);
     }
     // startDriver expects UTF-8 encoded strings that are not null-terminated.
     env.SetByteArrayRegion(arg, 0, len,
                            reinterpret_cast<const jbyte *>(argv[i].data()));
     if (env.ExceptionCheck()) {
       env.ExceptionDescribe();
-      return 1;
+      exit(1);
     }
     env.SetObjectArrayElement(args, i, arg);
     if (env.ExceptionCheck()) {
       env.ExceptionDescribe();
-      return 1;
+      exit(1);
     }
     env.DeleteLocalRef(arg);
   }
-  int res = env.CallStaticIntMethod(runner, startDriver, args);
+  env.CallStaticVoidMethod(runner, startDriver, args);
+  // Should not return.
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
-    return 1;
   }
-  env.DeleteLocalRef(args);
-  return res;
+  exit(1);
 }
 }  // namespace
 
 int main(int argc, char **argv) {
-  gflags::SetUsageMessage(kUsageMessage);
   rules_jni_init(argv[0]);
 
-  const auto argv_end = argv + argc;
-
-  {
-    // All libFuzzer flags start with a single dash, our arguments all start
-    // with a double dash. We can thus filter out the arguments meant for gflags
-    // by taking only those with a leading double dash.
-    std::vector<char *> our_args = {*argv};
-    std::copy_if(argv, argv_end, std::back_inserter(our_args),
-                 [](const std::string &arg) {
-                   return absl::StartsWith(std::string(arg), "--");
-                 });
-    int our_argc = our_args.size();
-    char **our_argv = our_args.data();
-    // Let gflags consume its flags, but keep them in the argument list in case
-    // libFuzzer forwards the command line (e.g. with -jobs or -minimize_crash).
-    gflags::ParseCommandLineFlags(&our_argc, &our_argv, false);
+  for (int i = 1; i < argc; ++i) {
+    const std::string &arg = argv[i];
+    std::vector<std::string> split =
+        absl::StrSplit(arg, absl::MaxSplits('=', 1));
+    if (split.size() < 2) {
+      continue;
+    }
+    if (split[0] == "--cp") {
+      FLAGS_cp = split[1];
+    } else if (split[0] == "--jvm_args") {
+      FLAGS_jvm_args = split[1];
+    } else if (split[0] == "--additional_jvm_args") {
+      FLAGS_additional_jvm_args = split[1];
+    } else if (split[0] == "--agent_path") {
+      FLAGS_agent_path = split[1];
+    }
   }
 
   if (is_asan_active) {
@@ -146,6 +135,6 @@ int main(int argc, char **argv) {
               << std::endl;
   }
 
-  return StartLibFuzzer(std::unique_ptr<jazzer::JVM>(new jazzer::JVM(argv[0])),
-                        std::vector<std::string>(argv, argv_end));
+  StartLibFuzzer(std::unique_ptr<jazzer::JVM>(new jazzer::JVM(argv[0])),
+                 std::vector<std::string>(argv, argv + argc));
 }

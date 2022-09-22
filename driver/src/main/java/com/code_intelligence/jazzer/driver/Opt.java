@@ -16,15 +16,21 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import static com.code_intelligence.jazzer.driver.OptParser.boolSetting;
+import static com.code_intelligence.jazzer.driver.OptParser.ignoreSetting;
+import static com.code_intelligence.jazzer.driver.OptParser.stringListSetting;
+import static com.code_intelligence.jazzer.driver.OptParser.stringSetting;
+import static com.code_intelligence.jazzer.driver.OptParser.uint64Setting;
 import static java.lang.System.err;
 import static java.lang.System.exit;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Stream.concat;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -41,51 +47,95 @@ import java.util.stream.Stream;
  * it only provides immutable fields and has no non-fatal side effects.
  */
 public final class Opt {
-  public static final String autofuzz = stringSetting("autofuzz", "");
-  public static final List<String> autofuzzIgnore = stringListSetting("autofuzz_ignore", ',');
-  public static final String coverageDump = stringSetting("coverage_dump", "");
-  public static final String coverageReport = stringSetting("coverage_report", "");
-  public static final List<String> customHookIncludes = stringListSetting("custom_hook_includes");
-  public static final List<String> customHookExcludes = stringListSetting("custom_hook_excludes");
-  public static final List<String> customHooks = stringListSetting("custom_hooks");
-  public static final List<String> disabledHooks = stringListSetting("disabled_hooks");
-  public static final String dumpClassesDir = stringSetting("dump_classes_dir", "");
-  public static final boolean hooks = boolSetting("hooks", true);
-  public static final String idSyncFile = stringSetting("id_sync_file", null);
+  static {
+    // We additionally list system properties supported by the Jazzer JUnit engine that do not
+    // directly map to arguments. These are not shown in help texts.
+    ignoreSetting("instrument");
+    ignoreSetting("valueprofile");
+    // The following arguments are interpreted by the native launcher only. They do appear in the
+    // help text, but aren't read by the driver.
+    stringListSetting("cp", "The class path to use for fuzzing (native launcher only)");
+    stringListSetting("jvm_args",
+        "Arguments to pass to the JVM (separator can be escaped with '\\', native launcher only)");
+    stringListSetting("additional_jvm_args",
+        "Additional arguments to pass to the JVM (separator can be escaped with '\\', native launcher only)");
+    stringSetting(
+        "agent_path", null, "Custom path to jazzer_agent_deploy.jar (native launcher only)");
+  }
+
+  public static final String autofuzz = stringSetting("autofuzz", "",
+      "Fully qualified reference (optionally with a Javadoc-style signature) to a "
+          + "method on the class path to be fuzzed with automatically generated arguments "
+          + "(examples: java.lang.System.out::println, java.lang.String::new(byte[]))");
+  public static final List<String> autofuzzIgnore = stringListSetting("autofuzz_ignore", ',',
+      "Fully qualified names of exception classes to ignore during fuzzing");
+  public static final String coverageDump = stringSetting("coverage_dump", "",
+      "Path to write a JaCoCo .exec file to when the fuzzer exits (if non-empty)");
+  public static final String coverageReport = stringSetting("coverage_report", "",
+      "Path to write a human-readable coverage report to when the fuzzer exits (if non-empty)");
+  public static final List<String> customHookIncludes = stringListSetting("custom_hook_includes",
+      "Glob patterns matching names of classes to instrument with hooks (custom and built-in)");
+  public static final List<String> customHookExcludes = stringListSetting("custom_hook_excludes",
+      "Glob patterns matching names of classes that should not be instrumented with hooks (custom and built-in)");
+  public static final List<String> customHooks =
+      stringListSetting("custom_hooks", "Names of classes to load custom hooks from");
+  public static final List<String> disabledHooks = stringListSetting("disabled_hooks",
+      "Names of classes from which hooks (custom or built-in) should not be loaded from");
+  public static final String dumpClassesDir = stringSetting(
+      "dump_classes_dir", "", "Directory to dump instrumented .class files into (if non-empty)");
+  public static final boolean help =
+      boolSetting("help", false, "Show this list of all available arguments");
+  public static final boolean hooks = boolSetting(
+      "hooks", true, "Apply fuzzing instrumentation (use 'trace' for finer-grained control)");
+  public static final String idSyncFile = stringSetting("id_sync_file", null, null);
   public static final List<String> instrumentationIncludes =
-      stringListSetting("instrumentation_includes");
+      stringListSetting("instrumentation_includes",
+          "Glob patterns matching names of classes to instrument for fuzzing");
   public static final List<String> instrumentationExcludes =
-      stringListSetting("instrumentation_excludes");
+      stringListSetting("instrumentation_excludes",
+          "Glob patterns matching names of classes that should not be instrumented for fuzzing");
   public static final Set<Long> ignore =
-      Collections.unmodifiableSet(stringListSetting("ignore", ',')
-                                      .stream()
-                                      .map(token -> Long.parseUnsignedLong(token, 16))
-                                      .collect(Collectors.toSet()));
-  public static final long keepGoing = uint64Setting("keep_going", 1);
-  public static final String reproducerPath = stringSetting("reproducer_path", ".");
-  public static final String targetClass = stringSetting("target_class", "");
+      unmodifiableSet(stringListSetting("ignore", ',',
+          "Hex strings representing deduplication tokens of findings that should be ignored")
+                          .stream()
+                          .map(token -> Long.parseUnsignedLong(token, 16))
+                          .collect(toSet()));
+  public static final long keepGoing = uint64Setting(
+      "keep_going", 1, "Number of distinct findings after which the fuzzer should stop");
+  public static final String reproducerPath = stringSetting("reproducer_path", ".",
+      "Directory in which stand-alone Java reproducers are stored for each finding");
+  public static final String targetClass = stringSetting("target_class", "",
+      "Fully qualified name of the fuzz target class (required unless --autofuzz is specified)");
   // Used to disambiguate between multiple methods annotated with @FuzzTest in the target class.
-  public static final String targetMethod = stringSetting("target_method", "");
-  public static final List<String> trace = stringListSetting("trace");
+  public static final String targetMethod = stringSetting("target_method", "", null);
+  public static final List<String> trace = stringListSetting("trace",
+      "Types of instrumentation to apply: cmp, cov, div, gep (disabled by default), indir, native");
 
   // The values of this setting depends on autofuzz.
   public static final List<String> targetArgs = autofuzz.isEmpty()
-      ? stringListSetting("target_args", ' ')
-      : Collections.unmodifiableList(
-          Stream.concat(Stream.of(autofuzz), autofuzzIgnore.stream()).collect(Collectors.toList()));
+      ? stringListSetting(
+          "target_args", ' ', "Arguments to pass to the fuzz target's fuzzerInitialize method")
+      : unmodifiableList(concat(Stream.of(autofuzz), autofuzzIgnore.stream()).collect(toList()));
 
   // Default to false if hooks is false to mimic the original behavior of the native fuzz target
   // runner, but still support hooks = false && dedup = true.
-  public static final boolean dedup = boolSetting("dedup", hooks);
+  public static final boolean dedup =
+      boolSetting("dedup", hooks, "Compute and print a deduplication token for every finding");
 
-  static final boolean mergeInner = boolSetting("internal.merge_inner", false);
+  static final boolean mergeInner = boolSetting("internal.merge_inner", false, null);
 
   static {
+    OptParser.failOnUnknownArgument();
+
+    if (help) {
+      err.println(OptParser.getHelpText());
+      exit(0);
+    }
     if (!targetClass.isEmpty() && !autofuzz.isEmpty()) {
       err.println("--target_class and --autofuzz cannot be specified together");
       exit(1);
     }
-    if (!stringListSetting("target_args", ' ').isEmpty() && !autofuzz.isEmpty()) {
+    if (!stringListSetting("target_args", ' ', null).isEmpty() && !autofuzz.isEmpty()) {
       err.println("--target_args and --autofuzz cannot be specified together");
       exit(1);
     }
@@ -97,77 +147,5 @@ public final class Opt {
       err.println("--nodedup is not supported with --ignore or --keep_going");
       exit(1);
     }
-  }
-
-  private static final String optionsPrefix = "jazzer.";
-
-  private static String stringSetting(String name, String defaultValue) {
-    return System.getProperty(optionsPrefix + name, defaultValue);
-  }
-
-  private static List<String> stringListSetting(String name) {
-    return stringListSetting(name, File.pathSeparatorChar);
-  }
-
-  private static List<String> stringListSetting(String name, char separator) {
-    String value = System.getProperty(optionsPrefix + name);
-    if (value == null || value.isEmpty()) {
-      return Collections.emptyList();
-    }
-    return splitOnUnescapedSeparator(value, separator);
-  }
-
-  private static boolean boolSetting(String name, boolean defaultValue) {
-    String value = System.getProperty(optionsPrefix + name);
-    if (value == null) {
-      return defaultValue;
-    }
-    return Boolean.parseBoolean(value);
-  }
-
-  private static long uint64Setting(String name, long defaultValue) {
-    String value = System.getProperty(optionsPrefix + name);
-    if (value == null) {
-      return defaultValue;
-    }
-    return Long.parseUnsignedLong(value, 10);
-  }
-
-  /**
-   * Split value into non-empty takens separated by separator. Backslashes can be used to escape
-   * separators (or backslashes).
-   *
-   * @param value the string to split
-   * @param separator a single character to split on (backslash is not allowed)
-   * @return an immutable list of tokens obtained by splitting value on separator
-   */
-  static List<String> splitOnUnescapedSeparator(String value, char separator) {
-    if (separator == '\\') {
-      throw new IllegalArgumentException("separator '\\' is not supported");
-    }
-    ArrayList<String> tokens = new ArrayList<>();
-    StringBuilder currentToken = new StringBuilder();
-    boolean inEscapeState = false;
-    for (int pos = 0; pos < value.length(); pos++) {
-      char c = value.charAt(pos);
-      if (inEscapeState) {
-        currentToken.append(c);
-        inEscapeState = false;
-      } else if (c == '\\') {
-        inEscapeState = true;
-      } else if (c == separator) {
-        // Do not emit empty tokens between consecutive separators.
-        if (currentToken.length() > 0) {
-          tokens.add(currentToken.toString());
-        }
-        currentToken.setLength(0);
-      } else {
-        currentToken.append(c);
-      }
-    }
-    if (currentToken.length() > 0) {
-      tokens.add(currentToken.toString());
-    }
-    return Collections.unmodifiableList(tokens);
   }
 }

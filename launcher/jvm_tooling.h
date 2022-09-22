@@ -20,6 +20,11 @@
 
 #include <string>
 
+extern std::string FLAGS_cp;
+extern std::string FLAGS_jvm_args;
+extern std::string FLAGS_additional_jvm_args;
+extern std::string FLAGS_agent_path;
+
 namespace jazzer {
 
 void DumpJvmStackTraces();

@@ -29,7 +29,6 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -101,33 +100,15 @@ public class FuzzTargetTestWrapper {
     List<String> command = new ArrayList<>();
     command.add(driverActualPath);
     command.add(String.format("-artifact_prefix=%s/", outputDir));
-    if (System.getenv("JAZZER_NO_EXPLICIT_SEED") == null) {
-      command.add("-seed=2735196724");
-    }
-    if (usesJavaLauncher) {
-      System.setProperty("jazzer.reproducer_path", outputDir);
-      // Forward all jazzer.* properties to the JVM used by the Java driver via the java_binary's
-      // --wrapper_script_flag argument: Every java_binary is really a launcher script around the
-      // JARs. All arguments to the script that start with `--wrapper_script_flag=` are, with this
-      // prefix stripped, interpreted as arguments to the script rather than the particular
-      // java_binary. The `--jvm_flag` argument's value is then used by the launcher script when
-      // starting the JVM.
-      // https://github.com/bazelbuild/bazel/blob/2ed1f3be81dc3b7f5f2edd25494da2dfb16f673a/src/main/java/com/google/devtools/build/lib/bazel/rules/java/java_stub_template.txt#L19
-      command.addAll(System.getProperties()
-                         .entrySet()
-                         .stream()
-                         .map(e -> new SimpleEntry<>((String) e.getKey(), (String) e.getValue()))
-                         .filter(e -> e.getKey().startsWith("jazzer."))
-                         .map(e
-                             -> String.format("--wrapper_script_flag=--jvm_flag=-D%s=%s",
-                                 e.getKey(), e.getValue()))
-                         .collect(toList()));
-    } else {
-      command.add(String.format("--reproducer_path=%s", outputDir));
+    command.add(String.format("--reproducer_path=%s", outputDir));
+    if (!usesJavaLauncher) {
       command.add(String.format("--cp=%s",
           hookJarActualPath == null ? jarActualPath
                                     : String.join(System.getProperty("path.separator"),
                                         jarActualPath, hookJarActualPath)));
+    }
+    if (System.getenv("JAZZER_NO_EXPLICIT_SEED") == null) {
+      command.add("-seed=2735196724");
     }
     command.addAll(arguments);
 

@@ -18,122 +18,19 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <utility>
+#include <string>
 #include <vector>
 
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_replace.h"
 #include "absl/strings/str_split.h"
-#include "gflags/gflags.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
-DEFINE_string(cp, ".",
-              "the classpath to use for fuzzing. Behaves analogously to java's "
-              "-cp (separator is ':' on Linux/macOS and ';' on Windows, escape "
-              "it with '\\').");
-DEFINE_string(jvm_args, "",
-              "arguments passed to the JVM (separator is ':' on Linux/macOS "
-              "and ';' on Windows, escape it with '\\')");
-DEFINE_string(additional_jvm_args, "",
-              "additional arguments passed to the JVM (separator is ':' on "
-              "Linux/macOS and ';' on Windows). Use this option to set further "
-              "JVM args that should not "
-              "interfere with those provided via --jvm_args.");
-DEFINE_string(agent_path, "", "location of the fuzzing instrumentation agent");
-
-// Arguments that are passed to the instrumentation agent.
-// The instrumentation agent takes arguments in the form
-// <option_1>=<option_1_val>,<option_2>=<option_2_val>,... To not expose this
-// format to the user the available options are defined here as flags and
-// combined during the initialization of the JVM.
-DEFINE_string(instrumentation_includes, "",
-              "list of glob patterns for classes that will be instrumented for "
-              "fuzzing (separator is ':' on Linux/macOS and ';' on Windows)");
-DEFINE_string(
-    instrumentation_excludes, "",
-    "list of glob patterns for classes that will not be instrumented "
-    "for fuzzing (separator is ':' on Linux/macOS and ';' on Windows)");
-
-DEFINE_string(custom_hook_includes, "",
-              "list of glob patterns for classes that will only be "
-              "instrumented using custom hooks (separator is ':' on "
-              "Linux/macOS and ';' on Windows)");
-DEFINE_string(
-    custom_hook_excludes, "",
-    "list of glob patterns for classes that will not be instrumented "
-    "using custom hooks (separator is ':' on Linux/macOS and ';' on Windows)");
-DEFINE_string(custom_hooks, "",
-              "list of classes containing custom instrumentation hooks "
-              "(separator is ':' on Linux/macOS and ';' on Windows)");
-DEFINE_string(disabled_hooks, "",
-              "list of hook classes (custom or built-in) that should not be "
-              "loaded (separator is ':' on Linux/macOS and ';' on Windows)");
-DEFINE_string(
-    trace, "",
-    "list of instrumentation to perform separated by colon ':' on Linux/macOS "
-    "and ';' on Windows. "
-    "Available options are cov, cmp, div, gep, all. These options "
-    "correspond to the \"-fsanitize-coverage=trace-*\" flags in clang.");
-DEFINE_string(
-    id_sync_file, "",
-    "path to a file that should be used to synchronize coverage IDs "
-    "between parallel fuzzing processes. Defaults to a temporary file "
-    "created for this purpose if running in parallel.");
-DEFINE_string(
-    dump_classes_dir, "",
-    "path to a directory in which Jazzer should dump the instrumented classes");
-
-DEFINE_bool(hooks, true,
-            "Use JVM hooks to provide coverage information to the fuzzer. The "
-            "fuzzer uses the coverage information to perform smarter input "
-            "selection and mutation. If set to false no "
-            "coverage information will be processed. This can be useful for "
-            "running a regression test on non-instrumented bytecode.");
-
-DEFINE_string(target_class, "",
-              "The Java class that contains the static fuzzerTestOneInput "
-              "function or a function annotated with @FuzzTest");
-DEFINE_string(target_method, "",
-              "The name of the method in the class specified by --target_class "
-              "that should be fuzzed. Only required if the class contains "
-              "multiple methods annotated with @FuzzTest.");
-DEFINE_string(target_args, "",
-              "Arguments passed to fuzzerInitialize as a String array. "
-              "Separated by space.");
-
-DEFINE_uint32(keep_going, 0,
-              "Continue fuzzing until N distinct exception stack traces have"
-              "been encountered. Defaults to exit after the first finding "
-              "unless --autofuzz is specified.");
-DEFINE_bool(dedup, true,
-            "Emit a dedup token for every finding. Defaults to true and is "
-            "required for --keep_going and --ignore.");
-DEFINE_string(
-    ignore, "",
-    "Comma-separated list of crash dedup tokens to ignore. This is useful to "
-    "continue fuzzing before a crash is fixed.");
-
-DEFINE_string(reproducer_path, ".",
-              "Path at which fuzzing reproducers are stored. Defaults to the "
-              "current directory.");
-DEFINE_string(coverage_report, "",
-              "Path at which a coverage report is stored when the fuzzer "
-              "exits. If left empty, no report is generated (default)");
-DEFINE_string(coverage_dump, "",
-              "Path at which a coverage dump is stored when the fuzzer "
-              "exits. If left empty, no dump is generated (default)");
-
-DEFINE_string(autofuzz, "",
-              "Fully qualified reference to a method on the classpath that "
-              "should be fuzzed automatically (example: System.out::println). "
-              "Fuzzing will continue even after a finding; specify "
-              "--keep_going=N to stop after N findings.");
-DEFINE_string(autofuzz_ignore, "",
-              "Fully qualified class names of exceptions to ignore during "
-              "autofuzz. Separated by comma.");
-DEFINE_bool(fake_pcs, false,
-            "No-op flag that remains for backwards compatibility only.");
+std::string FLAGS_cp = ".";
+std::string FLAGS_jvm_args;
+std::string FLAGS_additional_jvm_args;
+std::string FLAGS_agent_path;
 
 #if defined(_WIN32) || defined(_WIN64)
 #define ARG_SEPARATOR ";"
@@ -188,40 +85,6 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
             << ". Please provide the pathname via the --agent_path flag."
             << std::endl;
   exit(1);
-}
-
-std::vector<std::string> optsAsDefines() {
-  std::vector<std::string> defines{
-      absl::StrFormat("-Djazzer.target_class=%s", FLAGS_target_class),
-      absl::StrFormat("-Djazzer.target_method=%s", FLAGS_target_method),
-      absl::StrFormat("-Djazzer.target_args=%s", FLAGS_target_args),
-      absl::StrFormat("-Djazzer.dedup=%s", FLAGS_dedup ? "true" : "false"),
-      absl::StrFormat("-Djazzer.ignore=%s", FLAGS_ignore),
-      absl::StrFormat("-Djazzer.reproducer_path=%s", FLAGS_reproducer_path),
-      absl::StrFormat("-Djazzer.coverage_report=%s", FLAGS_coverage_report),
-      absl::StrFormat("-Djazzer.coverage_dump=%s", FLAGS_coverage_dump),
-      absl::StrFormat("-Djazzer.autofuzz=%s", FLAGS_autofuzz),
-      absl::StrFormat("-Djazzer.autofuzz_ignore=%s", FLAGS_autofuzz_ignore),
-      absl::StrFormat("-Djazzer.hooks=%s", FLAGS_hooks ? "true" : "false"),
-      absl::StrFormat("-Djazzer.id_sync_file=%s", FLAGS_id_sync_file),
-      absl::StrFormat("-Djazzer.instrumentation_includes=%s",
-                      FLAGS_instrumentation_includes),
-      absl::StrFormat("-Djazzer.instrumentation_excludes=%s",
-                      FLAGS_instrumentation_excludes),
-      absl::StrFormat("-Djazzer.custom_hooks=%s", FLAGS_custom_hooks),
-      absl::StrFormat("-Djazzer.disabled_hooks=%s", FLAGS_disabled_hooks),
-      absl::StrFormat("-Djazzer.custom_hook_includes=%s",
-                      FLAGS_custom_hook_includes),
-      absl::StrFormat("-Djazzer.custom_hook_excludes=%s",
-                      FLAGS_custom_hook_excludes),
-      absl::StrFormat("-Djazzer.trace=%s", FLAGS_trace),
-      absl::StrFormat("-Djazzer.dump_classes_dir=%s", FLAGS_dump_classes_dir),
-  };
-  if (!gflags::GetCommandLineFlagInfoOrDie("keep_going").is_default) {
-    defines.emplace_back(
-        absl::StrFormat("-Djazzer.keep_going=%d", FLAGS_keep_going));
-  }
-  return defines;
 }
 
 // Splits a string at the ARG_SEPARATOR unless it is escaped with a backslash.
@@ -280,12 +143,6 @@ JVM::JVM(const std::string &executable_path) {
   options.push_back(JavaVMOption{.optionString = (char *)"-XX:+UseParallelGC"});
   options.push_back(
       JavaVMOption{.optionString = (char *)"-XX:+CriticalJNINatives"});
-
-  std::vector<std::string> opt_defines = optsAsDefines();
-  for (const auto &define : opt_defines) {
-    options.push_back(
-        JavaVMOption{.optionString = const_cast<char *>(define.c_str())});
-  }
 
   // Add additional JVM options set through JAVA_OPTS.
   std::vector<std::string> java_opts_args;
