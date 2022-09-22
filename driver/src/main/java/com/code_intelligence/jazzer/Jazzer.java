@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -37,17 +38,54 @@ import java.util.stream.Stream;
  * Entrypoint for Jazzer to run in a user-controlled JVM rather than the JVM started by the native
  * Jazzer launcher.
  *
- * <p>Arguments to Jazzer are passed as {@code jazzer.*} system properties. For example, setting
- * the property {@code jazzer.target_class} to {@code com.example.FuzzTest} is equivalent to passing
- * the argument {@code --target_class=com.example.FuzzTest} to the native launcher.
+ * <p>Arguments to Jazzer are passed as command-line arguments or {@code jazzer.*} system
+ * properties. For example, setting the property {@code jazzer.target_class} to
+ * {@code com.example.FuzzTest} is equivalent to passing the argument
+ * {@code --target_class=com.example.FuzzTest}.
  *
  * <p>Arguments to libFuzzer are passed as command-line arguments.
  */
 public class Jazzer {
   public static void main(String[] args) throws IOException {
-    List<String> libFuzzerArgs =
-        Stream.concat(Stream.of(prepareArgv0()), Arrays.stream(args)).collect(toList());
-    System.exit(Driver.start(libFuzzerArgs));
+    start(Stream.concat(Stream.of(prepareArgv0()), Arrays.stream(args)).collect(toList()));
+  }
+
+  // Accessed by jazzer_main.cpp.
+  @SuppressWarnings("unused")
+  private static void main(byte[][] nativeArgs) throws IOException {
+    start(Arrays.stream(nativeArgs)
+              .map(bytes -> new String(bytes, StandardCharsets.UTF_8))
+              .collect(toList()));
+  }
+
+  private static void start(List<String> args) throws IOException {
+    parseJazzerArgsToProperties(args);
+    System.exit(Driver.start(args));
+  }
+
+  private static void parseJazzerArgsToProperties(List<String> args) {
+    args.stream()
+        .filter(arg -> arg.startsWith("--"))
+        .map(arg -> arg.substring("--".length()))
+        // Filter out "--", which can be used to declare that all further arguments aren't libFuzzer
+        // arguments.
+        .filter(arg -> !arg.isEmpty())
+        .map(Jazzer::parseSingleArg)
+        .forEach(e -> System.setProperty("jazzer." + e.getKey(), e.getValue()));
+  }
+
+  private static SimpleEntry<String, String> parseSingleArg(String arg) {
+    String[] nameAndValue = arg.split("=", 2);
+    if (nameAndValue.length == 2) {
+      // Example: --keep_going=10 --> (keep_going, 10)
+      return new SimpleEntry<>(nameAndValue[0], nameAndValue[1]);
+    } else if (nameAndValue[0].startsWith("no")) {
+      // Example: --nohooks --> (hooks, "false")
+      return new SimpleEntry<>(nameAndValue[0].substring("no".length()), "false");
+    } else {
+      // Example: --dedup --> (dedup, "true")
+      return new SimpleEntry<>(nameAndValue[0], "true");
+    }
   }
 
   private static String prepareArgv0() throws IOException {

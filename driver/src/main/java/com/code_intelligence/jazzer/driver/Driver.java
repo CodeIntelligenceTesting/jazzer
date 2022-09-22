@@ -88,12 +88,6 @@ public class Driver {
     return FuzzTargetRunner.startLibFuzzer(args);
   }
 
-  // Accessed from jazzer_main.cpp.
-  @SuppressWarnings("unused")
-  private static int start(byte[][] nativeArgs) throws IOException {
-    return start(Utils.fromNativeArgs(nativeArgs));
-  }
-
   private static String getDefaultRssLimitMbArg() {
     // Java OutOfMemoryErrors are strictly more informative than libFuzzer's out of memory crashes.
     // We thus want to scale the default libFuzzer memory limit, which includes all memory used by

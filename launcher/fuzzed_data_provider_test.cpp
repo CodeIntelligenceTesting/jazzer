@@ -18,13 +18,9 @@
 #include <string>
 #include <vector>
 
-#include "gflags/gflags.h"
 #include "gtest/gtest.h"
 #include "launcher/jvm_tooling.h"
 #include "tools/cpp/runfiles/runfiles.h"
-
-DECLARE_string(cp);
-DECLARE_bool(hooks);
 
 namespace jazzer {
 
@@ -39,10 +35,9 @@ class FuzzedDataProviderTest : public ::testing::Test {
   // process, so we set up a single JVM instance for this test binary which gets
   // destroyed after all tests in this test suite have finished.
   static void SetUpTestCase() {
-    FLAGS_hooks = false;
     using ::bazel::tools::cpp::runfiles::Runfiles;
-    Runfiles* runfiles = Runfiles::CreateForTest();
-    FLAGS_cp = runfiles->Rlocation(FLAGS_cp);
+    FLAGS_cp = Runfiles::CreateForTest()->Rlocation(
+        "jazzer/launcher/testdata/fuzz_target_mocks_deploy.jar");
 
     jvm_ = std::make_unique<JVM>("test_executable");
   }

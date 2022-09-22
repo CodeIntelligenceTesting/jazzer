@@ -34,6 +34,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -273,13 +274,11 @@ public final class FuzzTargetRunner {
 
   /*
    * Starts libFuzzer via LLVMFuzzerRunDriver.
-   *
-   * Note: Must be public rather than package-private as it is loaded in a different class loader
-   * than Driver.
    */
   public static int startLibFuzzer(List<String> args) {
     SignalHandler.initialize();
-    return startLibFuzzer(Utils.toNativeArgs(args));
+    return startLibFuzzer(
+        args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][] ::new));
   }
 
   /**

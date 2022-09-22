@@ -39,6 +39,6 @@ public class OptTest {
 
   public void assertStringSplit(String str, char sep, String... tokens) {
     assertEquals(Arrays.stream(tokens).collect(Collectors.toList()),
-        Opt.splitOnUnescapedSeparator(str, sep));
+        OptParser.splitOnUnescapedSeparator(str, sep));
   }
 }

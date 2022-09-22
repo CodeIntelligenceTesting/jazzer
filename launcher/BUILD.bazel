@@ -8,7 +8,6 @@ cc_library(
         ":jvm_tooling_lib",
         "@com_google_absl//absl/strings",
         "@fmeum_rules_jni//jni:libjvm",
-        "@jazzer_com_github_gflags_gflags//:gflags",
     ],
 )
 
@@ -21,7 +20,6 @@ cc_library(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@fmeum_rules_jni//jni",
-        "@jazzer_com_github_gflags_gflags//:gflags",
     ],
 )
 
@@ -176,20 +174,19 @@ cc_test(
     name = "jvm_tooling_test",
     size = "small",
     srcs = ["jvm_tooling_test.cpp"],
-    args = [
-        "--cp=jazzer/$(rootpath //launcher/testdata:fuzz_target_mocks_deploy.jar)",
-    ],
     data = [
         "//agent:jazzer_agent_deploy",
         "//launcher/testdata:fuzz_target_mocks_deploy.jar",
     ],
+    env = {
+        "JAVA_OPTS": "-Djazzer.hooks=false",
+    },
     includes = ["."],
     deps = [
         ":jvm_tooling_lib",
         ":test_main",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
-        "@jazzer_com_github_gflags_gflags//:gflags",
     ],
 )
 
@@ -197,9 +194,6 @@ cc_test(
     name = "fuzzed_data_provider_test",
     size = "medium",
     srcs = ["fuzzed_data_provider_test.cpp"],
-    args = [
-        "--cp=jazzer/$(rootpath //launcher/testdata:fuzz_target_mocks_deploy.jar)",
-    ],
     copts = select({
         "@platforms//os:windows": ["/std:c++17"],
         "//conditions:default": ["-std=c++17"],
@@ -208,6 +202,9 @@ cc_test(
         "//agent:jazzer_agent_deploy",
         "//launcher/testdata:fuzz_target_mocks_deploy.jar",
     ],
+    env = {
+        "JAVA_OPTS": "-Djazzer.hooks=false",
+    },
     includes = ["."],
     deps = [
         ":jvm_tooling_lib",
@@ -215,7 +212,6 @@ cc_test(
         "//driver/src/main/native/com/code_intelligence/jazzer/driver:fuzzed_data_provider",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
-        "@jazzer_com_github_gflags_gflags//:gflags",
     ],
 )
 
@@ -226,6 +222,5 @@ cc_library(
     deps = [
         "@fmeum_rules_jni//jni:libjvm",
         "@googletest//:gtest",
-        "@jazzer_com_github_gflags_gflags//:gflags",
     ],
 )

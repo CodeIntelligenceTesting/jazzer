@@ -52,7 +52,7 @@ java_jni_library(
 java_fuzz_target_test(
     name = "ExampleFuzzerWithASan",
     allowed_findings = ["thread_dump"],
-    fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_asan"],
+    fuzzer_args = ["--jvm_args=-Djazzer.internal.native_lib=native_asan"],
     launcher_variant = "address",
     target_class = "com.example.ExampleFuzzerWithNative",
     target_compatible_with = SKIP_ON_WINDOWS,
@@ -65,7 +65,7 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "ExampleFuzzerWithUBSan",
     allowed_findings = ["thread_dump"],
-    fuzzer_args = ["--jvm_args=-Djazzer.native_lib=native_ubsan"],
+    fuzzer_args = ["--jvm_args=-Djazzer.internal.native_lib=native_ubsan"],
     launcher_variant = "undefined",
     target_class = "com.example.ExampleFuzzerWithNative",
     # Crashes at runtime without an error message.

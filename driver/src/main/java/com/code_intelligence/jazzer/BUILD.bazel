@@ -3,6 +3,12 @@ load("//:maven.bzl", "JAZZER_VERSION")
 
 java_binary(
     name = "Jazzer",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":jazzer_lib"],
+)
+
+java_library(
+    name = "jazzer_lib",
     srcs = ["Jazzer.java"],
     visibility = ["//visibility:public"],
     deps = ["//driver/src/main/java/com/code_intelligence/jazzer/driver"],

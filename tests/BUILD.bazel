@@ -301,7 +301,7 @@ java_fuzz_target_test(
     name = "JavaDriver",
     allowed_findings = ["java.lang.NullPointerException"],
     fuzzer_args = [
-        "--wrapper_script_flag=--jvm_flag=-Djazzer.autofuzz=java.util.regex.Pattern::compile",
+        "--autofuzz=java.util.regex.Pattern::compile",
     ],
     launcher_variant = "java",
 )
@@ -310,7 +310,7 @@ java_fuzz_target_test(
     name = "JavaDriverWithFork",
     allowed_findings = ["java.lang.NullPointerException"],
     fuzzer_args = [
-        "--wrapper_script_flag=--jvm_flag=-Djazzer.autofuzz=java.util.regex.Pattern::compile",
+        "--autofuzz=java.util.regex.Pattern::compile",
         "-fork=2",
     ],
     launcher_variant = "java",
