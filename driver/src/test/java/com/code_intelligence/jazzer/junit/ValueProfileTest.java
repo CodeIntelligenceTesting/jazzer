@@ -48,16 +48,16 @@ public class ValueProfileTest {
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   Path baseDir;
-  Path seedCorpus;
+  Path inputsDirectories;
 
   @Before
   public void setup() throws IOException {
     baseDir = temp.getRoot().toPath();
-    // Create a fake test resource directory structure with a seed corpus directory to verify that
+    // Create a fake test resource directory structure with an input directory to verify that
     // Jazzer uses it and emits a crash file into it.
-    seedCorpus = baseDir.resolve(
-        Paths.get("src", "test", "resources", "com", "example", "ValueProfileFuzzTestSeedCorpus"));
-    Files.createDirectories(seedCorpus);
+    inputsDirectories = baseDir.resolve(
+        Paths.get("src", "test", "resources", "com", "example", "ValueProfileFuzzTestInputs"));
+    Files.createDirectories(inputsDirectories);
   }
 
   private EngineExecutionResults executeTests() {
@@ -91,12 +91,12 @@ public class ValueProfileTest {
              path -> path.getFileName().toString().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
-    try (Stream<Path> seeds = Files.list(seedCorpus)) {
+    try (Stream<Path> seeds = Files.list(inputsDirectories)) {
       assertThat(seeds).containsExactly(
-          seedCorpus.resolve("crash-131db69c7fadc408fe5031079dad3a441df09aff"));
+          inputsDirectories.resolve("crash-131db69c7fadc408fe5031079dad3a441df09aff"));
     }
-    assertThat(
-        Files.readAllBytes(seedCorpus.resolve("crash-131db69c7fadc408fe5031079dad3a441df09aff")))
+    assertThat(Files.readAllBytes(
+                   inputsDirectories.resolve("crash-131db69c7fadc408fe5031079dad3a441df09aff")))
         .isEqualTo("Jazzer".getBytes(StandardCharsets.UTF_8));
 
     // Verify that the engine created the generated corpus directory and emitted inputs into it.
@@ -129,7 +129,7 @@ public class ValueProfileTest {
              path -> path.getFileName().toString().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
-    try (Stream<Path> seeds = Files.list(seedCorpus)) {
+    try (Stream<Path> seeds = Files.list(inputsDirectories)) {
       assertThat(seeds).isEmpty();
     }
 

@@ -51,11 +51,11 @@ public class AutofuzzTest {
     assumeFalse(System.getenv("JAZZER_FUZZ").isEmpty());
 
     Path baseDir = temp.getRoot().toPath();
-    // Create a fake test resource directory structure with a seed corpus directory to verify that
+    // Create a fake test resource directory structure with an inputs directory to verify that
     // Jazzer uses it and emits a crash file into it.
-    Path seedCorpus = baseDir.resolve(
-        Paths.get("src", "test", "resources", "com", "example", "AutofuzzFuzzTestSeedCorpus"));
-    Files.createDirectories(seedCorpus);
+    Path inputsDirectory = baseDir.resolve(
+        Paths.get("src", "test", "resources", "com", "example", "AutofuzzFuzzTestInputs"));
+    Files.createDirectories(inputsDirectory);
 
     EngineExecutionResults results =
         EngineTestKit.engine("com.code_intelligence.jazzer")
@@ -88,7 +88,7 @@ public class AutofuzzTest {
     assertThat(new String(Files.readAllBytes(crashingInput), StandardCharsets.UTF_8))
         .contains("jazzer");
 
-    try (Stream<Path> seeds = Files.list(seedCorpus)) {
+    try (Stream<Path> seeds = Files.list(inputsDirectory)) {
       assertThat(seeds).isEmpty();
     }
 

@@ -18,11 +18,11 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 
-public class DirectorySeedCorpusFuzzTest {
+public class DirectoryInputsFuzzTest {
   private static long runs = 0;
 
   @FuzzTest(maxDuration = "0s")
-  public void seedCorpusFuzz(FuzzedDataProvider data) {
+  public void inputsFuzz(FuzzedDataProvider data) {
     if (runs++ > 1) {
       // Only execute the fuzz test logic on the empty input and the only seed.
       return;

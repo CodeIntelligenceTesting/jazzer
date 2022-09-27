@@ -49,17 +49,17 @@ public class FuzzingWithCrashTest {
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   Path baseDir;
-  Path seedCorpus;
+  Path inputsDirectory;
 
   @Before
   public void setup() throws IOException {
     baseDir = temp.getRoot().toPath();
-    // Create a fake test resource directory structure with a seed corpus directory to verify that
+    // Create a fake test resource directory structure with an inputs directory to verify that
     // Jazzer uses it and emits a crash file into it.
-    seedCorpus = baseDir.resolve(
-        Paths.get("src", "test", "resources", "com", "example", "ValidFuzzTestsSeedCorpus"));
-    Files.createDirectories(seedCorpus);
-    Files.write(seedCorpus.resolve(CRASHING_SEED_NAME), CRASHING_SEED_CONTENT);
+    inputsDirectory = baseDir.resolve(
+        Paths.get("src", "test", "resources", "com", "example", "ValidFuzzTestsInputs"));
+    Files.createDirectories(inputsDirectory);
+    Files.write(inputsDirectory.resolve(CRASHING_SEED_NAME), CRASHING_SEED_CONTENT);
   }
 
   private EngineExecutionResults executeTests() {
@@ -98,11 +98,11 @@ public class FuzzingWithCrashTest {
              path -> path.getFileName().toString().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
-    try (Stream<Path> seeds = Files.list(seedCorpus)) {
-      assertThat(seeds).containsExactly(seedCorpus.resolve("crash-" + CRASHING_SEED_DIGEST),
-          seedCorpus.resolve(CRASHING_SEED_NAME));
+    try (Stream<Path> seeds = Files.list(inputsDirectory)) {
+      assertThat(seeds).containsExactly(inputsDirectory.resolve("crash-" + CRASHING_SEED_DIGEST),
+          inputsDirectory.resolve(CRASHING_SEED_NAME));
     }
-    assertThat(Files.readAllBytes(seedCorpus.resolve("crash-" + CRASHING_SEED_DIGEST)))
+    assertThat(Files.readAllBytes(inputsDirectory.resolve("crash-" + CRASHING_SEED_DIGEST)))
         .isEqualTo(CRASHING_SEED_CONTENT);
 
     // Verify that the engine created the generated corpus directory. As a seed produced the crash,
@@ -128,8 +128,8 @@ public class FuzzingWithCrashTest {
         event(type(EventType.FINISHED), container("com.code_intelligence.jazzer"),
             finishedSuccessfully()));
     // No fuzzing means no crashes means no new seeds.
-    try (Stream<Path> seeds = Files.list(seedCorpus)) {
-      assertThat(seeds).containsExactly(seedCorpus.resolve(CRASHING_SEED_NAME));
+    try (Stream<Path> seeds = Files.list(inputsDirectory)) {
+      assertThat(seeds).containsExactly(inputsDirectory.resolve(CRASHING_SEED_NAME));
     }
   }
 }

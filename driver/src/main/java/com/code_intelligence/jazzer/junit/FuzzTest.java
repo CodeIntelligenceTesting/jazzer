@@ -29,9 +29,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
  * A {@link ParameterizedTest} with input data generated dynamically by the Java fuzzer <a
  * href="https://github.com/CodeIntelligenceTesting/jazzer">Jazzer</a>.
  *
- * When executed as a JUnit Jupiter test, the fuzz test is executed on all files in the seed corpus
- * (see documentation for the {@code seedCorpus} parameter.
- *
  * <p>Methods annotated with {@link FuzzTest} must take a single parameter of type {@code byte[]} or
  * {@link com.code_intelligence.jazzer.api.FuzzedDataProvider}. The latter provides convenience
  * methods to generate common Java types from the raw fuzzer input.

@@ -55,14 +55,14 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
       throws IOException {
     Class<?> testClass = extensionContext.getRequiredTestClass();
     Stream<Map.Entry<String, byte[]>> rawSeeds = Stream.concat(
-        Stream.of(new SimpleEntry<>("<empty input>", new byte[] {})), walkSeedCorpus(testClass));
+        Stream.of(new SimpleEntry<>("<empty input>", new byte[] {})), walkInputs(testClass));
     if (Utils.isCoverageAgentPresent() && Files.isDirectory(Utils.generatedCorpusPath(testClass))) {
-      rawSeeds = Stream.concat(rawSeeds, walkSeedsInPath(Utils.generatedCorpusPath(testClass)));
+      rawSeeds = Stream.concat(rawSeeds, walkInputsInPath(Utils.generatedCorpusPath(testClass)));
     }
-    return adaptSeedsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds);
+    return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds);
   }
 
-  private Stream<? extends Arguments> adaptSeedsForFuzzTest(
+  private Stream<? extends Arguments> adaptInputsForFuzzTest(
       Method fuzzTestMethod, Stream<Map.Entry<String, byte[]>> rawSeeds) {
     if (fuzzTestMethod.getParameterCount() == 0) {
       throw new IllegalArgumentException(INCORRECT_PARAMETERS_MESSAGE);
@@ -91,27 +91,26 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
     }
   }
 
-  private Stream<Map.Entry<String, byte[]>> walkSeedCorpus(Class<?> testClass) throws IOException {
-    URL seedCorpusUrl = testClass.getResource(Utils.seedCorpusResourcePath(testClass));
-    if (seedCorpusUrl == null) {
+  private Stream<Map.Entry<String, byte[]>> walkInputs(Class<?> testClass) throws IOException {
+    URL inputsDirUrl = testClass.getResource(Utils.inputsDirectoryResourcePath(testClass));
+    if (inputsDirUrl == null) {
       return Stream.empty();
     }
-    URI seedCorpusUri;
+    URI inputsDirUri;
     try {
-      seedCorpusUri = seedCorpusUrl.toURI();
+      inputsDirUri = inputsDirUrl.toURI();
     } catch (URISyntaxException e) {
-      throw new IOException("Failed to open seed corpus resource directory: " + seedCorpusUrl, e);
+      throw new IOException("Failed to open inputs resource directory: " + inputsDirUrl, e);
     }
-    if (seedCorpusUri.getScheme().equals("file")) {
+    if (inputsDirUri.getScheme().equals("file")) {
       // The test is executed from class files, which usually happens when run from inside an IDE.
-      return walkSeedsInPath(Paths.get(seedCorpusUri));
-    } else if (seedCorpusUri.getScheme().equals("jar")) {
-      FileSystem jar = FileSystems.newFileSystem(seedCorpusUri, new HashMap<>());
-      // seedCorpusUrl looks like this:
-      // file:/tmp/testdata/ExampleFuzzTest_deploy.jar!/com/code_intelligence/jazzer/junit/testdata/ExampleFuzzTestSeedCorpus
-      String pathInJar =
-          seedCorpusUrl.getFile().substring(seedCorpusUrl.getFile().indexOf('!') + 1);
-      return walkSeedsInPath(jar.getPath(pathInJar)).onClose(() -> {
+      return walkInputsInPath(Paths.get(inputsDirUri));
+    } else if (inputsDirUri.getScheme().equals("jar")) {
+      FileSystem jar = FileSystems.newFileSystem(inputsDirUri, new HashMap<>());
+      // inputsDirUrl looks like this:
+      // file:/tmp/testdata/ExampleFuzzTest_deploy.jar!/com/code_intelligence/jazzer/junit/testdata/ExampleFuzzTestInputs
+      String pathInJar = inputsDirUrl.getFile().substring(inputsDirUrl.getFile().indexOf('!') + 1);
+      return walkInputsInPath(jar.getPath(pathInJar)).onClose(() -> {
         try {
           jar.close();
         } catch (IOException e) {
@@ -119,12 +118,11 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
         }
       });
     } else {
-      throw new IOException(
-          "Unsupported protocol for seed corpus resource directory: " + seedCorpusUrl);
+      throw new IOException("Unsupported protocol for inputs resource directory: " + inputsDirUrl);
     }
   }
 
-  private static Stream<Map.Entry<String, byte[]>> walkSeedsInPath(Path path) throws IOException {
+  private static Stream<Map.Entry<String, byte[]>> walkInputsInPath(Path path) throws IOException {
     // @ParameterTest automatically closes Streams and AutoCloseable instances.
     // noinspection resource
     return Files
