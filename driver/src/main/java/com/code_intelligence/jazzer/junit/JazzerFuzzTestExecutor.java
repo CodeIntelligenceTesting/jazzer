@@ -22,7 +22,6 @@ import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import com.code_intelligence.jazzer.junit.JazzerTestEngine.JazzerFuzzTestDescriptor;
 import com.code_intelligence.jazzer.junit.JazzerTestEngine.JazzerSetupError;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
@@ -79,24 +78,16 @@ class JazzerFuzzTestExecutor {
     // libFuzzer and also emit findings into it so that the regression test can be used to debug
     // them.
     FuzzTest fuzzTest = AnnotationSupport.findAnnotation(fuzzTestMethod, FuzzTest.class).get();
-    String seedCorpusResourcePath = Utils.seedCorpusResourcePath(fuzzTestClass, fuzzTest);
+    String seedCorpusResourcePath = Utils.seedCorpusResourcePath(fuzzTestClass);
     URL seedCorpusUrl = fuzzTestClass.getResource(seedCorpusResourcePath);
     if (seedCorpusUrl == null) {
-      if (fuzzTest.seedCorpus().isEmpty()) {
-        // Situation: The user may not be aware of the seed corpus feature.
-        String message = String.format(
-            "Collecting crashing inputs in the project root directory.\nIf you want to keep them organized by "
-                + "fuzz test and automatically run them as regression tests with JUnit Jupiter, create a "
-                + "test resource directory called '%s' in package '%s' and move the files there.",
-            seedCorpusResourcePath, fuzzTestClass.getPackage().getName());
-        request.getEngineExecutionListener().reportingEntryPublished(
-            fuzzTestDescriptor, ReportEntry.from("seed corpus", message));
-      } else {
-        // Situation: The user explicitly configured a seed corpus, but it couldn't be found.
-        throw new FileNotFoundException(
-            String.format("Failed to find seed corpus at '%s' relative to '%s'",
-                fuzzTest.seedCorpus(), fuzzTestClass));
-      }
+      String message = String.format(
+          "Collecting crashing inputs in the project root directory.\nIf you want to keep them organized by "
+              + "fuzz test and automatically run them as regression tests with JUnit Jupiter, create a "
+              + "test resource directory called '%s' in package '%s' and move the files there.",
+          seedCorpusResourcePath, fuzzTestClass.getPackage().getName());
+      request.getEngineExecutionListener().reportingEntryPublished(
+          fuzzTestDescriptor, ReportEntry.from("seed corpus", message));
       libFuzzerArgs.add(String.format("-artifact_prefix=%s%c", baseDir, File.separatorChar));
     } else if ("file".equals(seedCorpusUrl.getProtocol())) {
       // From the second positional argument on, files and directories are used as seeds but not
@@ -104,14 +95,14 @@ class JazzerFuzzTestExecutor {
       libFuzzerArgs.add(Paths.get(seedCorpusUrl.toURI()).toString());
       // We try to find the source tree representation of the seed corpus directory and emit
       // findings into it.
-      seedCorpusSourcePath(fuzzTestClass, fuzzTest, baseDir)
+      seedCorpusSourcePath(fuzzTestClass, baseDir)
           .ifPresent((path)
                          -> libFuzzerArgs.add(
                              String.format("-artifact_prefix=%s%c", path, File.separatorChar)));
     } else {
       // We can't directly use the seed corpus from resources as it's packaged into a JAR. Instead,
       // try to get the path to the seed corpus in the source tree.
-      Optional<Path> seedCorpus = seedCorpusSourcePath(fuzzTestClass, fuzzTest, baseDir);
+      Optional<Path> seedCorpus = seedCorpusSourcePath(fuzzTestClass, baseDir);
       if (seedCorpus.isPresent()) {
         libFuzzerArgs.add(seedCorpus.get().toString());
         // We try to find the source tree representation of the seed corpus directory and emit

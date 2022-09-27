@@ -35,10 +35,10 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "ByteFuzzTest",
-    srcs = ["ValidFuzzTests.java"],
+    srcs = ["ByteFuzzTest.java"],
     allowed_findings = ["org.opentest4j.AssertionFailedError"],
     args = ["-runs=0"],
-    target_class = "com.example.ValidFuzzTests",
+    target_class = "com.example.ByteFuzzTest",
     target_method = "byteFuzz",
     verify_crash_reproducer = False,
     deps = [

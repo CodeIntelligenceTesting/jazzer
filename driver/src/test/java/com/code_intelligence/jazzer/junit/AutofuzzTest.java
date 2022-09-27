@@ -54,23 +54,23 @@ public class AutofuzzTest {
     // Create a fake test resource directory structure with a seed corpus directory to verify that
     // Jazzer uses it and emits a crash file into it.
     Path seedCorpus = baseDir.resolve(
-        Paths.get("src", "test", "resources", "com", "example", "AutofuzzFuzzTestsSeedCorpus"));
+        Paths.get("src", "test", "resources", "com", "example", "AutofuzzFuzzTestSeedCorpus"));
     Files.createDirectories(seedCorpus);
 
     EngineExecutionResults results =
         EngineTestKit.engine("com.code_intelligence.jazzer")
             .selectors(selectMethod(
-                "com.example.AutofuzzFuzzTests#autofuzz(java.lang.String,com.example.AutofuzzFuzzTests$IntHolder)"))
+                "com.example.AutofuzzFuzzTest#autofuzz(java.lang.String,com.example.AutofuzzFuzzTest$IntHolder)"))
             .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
             .execute();
 
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED),
-            test("com.example.AutofuzzFuzzTests", "autofuzz(String, IntHolder) (Fuzzing)")),
+            test("com.example.AutofuzzFuzzTest", "autofuzz(String, IntHolder) (Fuzzing)")),
         // No seed corpus.
         event(type(EventType.REPORTING_ENTRY_PUBLISHED)),
         event(type(EventType.FINISHED),
-            test("com.example.AutofuzzFuzzTests", "autofuzz(String, IntHolder) (Fuzzing)"),
+            test("com.example.AutofuzzFuzzTest", "autofuzz(String, IntHolder) (Fuzzing)"),
             finishedWithFailure(instanceOf(RuntimeException.class))));
     results.containerEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
@@ -95,7 +95,7 @@ public class AutofuzzTest {
     // Verify that the engine created the generated corpus directory. Since the crash was not found
     // on a seed, it should not be empty.
     Path generatedCorpus =
-        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.AutofuzzFuzzTests"));
+        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.AutofuzzFuzzTest"));
     assertThat(Files.isDirectory(generatedCorpus)).isTrue();
     try (Stream<Path> entries = Files.list(generatedCorpus)) {
       assertThat(entries).isNotEmpty();
@@ -109,7 +109,7 @@ public class AutofuzzTest {
     EngineExecutionResults results =
         EngineTestKit.engine("junit-jupiter")
             .selectors(selectMethod(
-                "com.example.AutofuzzFuzzTests#autofuzzWithCorpus(java.lang.String,int)"))
+                "com.example.AutofuzzWithCorpusFuzzTest#autofuzzWithCorpus(java.lang.String,int)"))
             .execute();
 
     results.testEvents().debug().assertEventsMatchExactly(

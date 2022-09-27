@@ -51,8 +51,8 @@ public class DirectorySeedCorpusTest {
     Path baseDir = temp.getRoot().toPath();
     // Create a fake test resource directory structure with a seed corpus directory to verify that
     // Jazzer uses it and emits a crash file into it.
-    Path seedCorpus = baseDir.resolve(
-        Paths.get("src", "test", "resources", "com", "example", "DirectoryBasedSeedCorpus"));
+    Path seedCorpus = baseDir.resolve(Paths.get(
+        "src", "test", "resources", "com", "example", "DirectorySeedCorpusFuzzTestSeedCorpus"));
     Files.createDirectories(seedCorpus);
 
     EngineExecutionResults results =
