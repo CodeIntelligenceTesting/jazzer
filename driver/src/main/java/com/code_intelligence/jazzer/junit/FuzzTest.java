@@ -51,17 +51,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 @ResourceLock(value = "jazzer", mode = ResourceAccessMode.READ_WRITE)
 public @interface FuzzTest {
   /**
-   * A directory with inputs that are always executed first in both fuzzing runs and regression
-   * tests.
-   *
-   * <p>By default, the seed corpus for a fuzz test defined in a class {@code SomeClass} is expected
-   * to be located in the {@code <ClassName>SeedCorpus} resource directory in the same package.
-   *
-   * @return a custom seed corpus resource path (absolute or relative to the current class)
-   */
-  String seedCorpus() default "";
-
-  /**
    * A duration string such as "1h 2m 30s" indicating for how long the fuzz test should be executed
    * when fuzzing.
    *

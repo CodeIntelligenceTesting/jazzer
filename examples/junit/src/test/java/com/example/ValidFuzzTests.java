@@ -14,12 +14,13 @@
 
 package com.example;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import java.io.IOException;
 import java.util.regex.Pattern;
-import org.junit.jupiter.api.Assertions;
 
 class ValidFuzzTests {
   @FuzzTest
@@ -28,7 +29,7 @@ class ValidFuzzTests {
       case "no_crash":
         return;
       case "assert":
-        Assertions.fail("JUnit assert failed");
+        fail("JUnit assert failed");
       case "honeypot":
         try {
           Class.forName("jaz.Zer");
@@ -54,13 +55,13 @@ class ValidFuzzTests {
     }
   }
 
-  @FuzzTest(seedCorpus = "CustomSeedCorpus")
+  @FuzzTest
   void byteFuzz(byte[] data) {
     if (data.length < 1) {
       return;
     }
     if (data[0] % 2 == 0) {
-      Assertions.fail();
+      fail();
     }
   }
 

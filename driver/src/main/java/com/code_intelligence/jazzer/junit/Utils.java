@@ -30,19 +30,15 @@ class Utils {
    * Returns the resource path of the seed corpus directory, which is either absolute or relative to
    * {@code testClass}.
    */
-  static String seedCorpusResourcePath(Class<?> testClass, FuzzTest annotation) {
-    if (annotation.seedCorpus().isEmpty()) {
-      return testClass.getSimpleName() + "SeedCorpus";
-    }
-    return annotation.seedCorpus();
+  static String seedCorpusResourcePath(Class<?> testClass) {
+    return testClass.getSimpleName() + "SeedCorpus";
   }
 
   /**
    * Returns the file system path of the seed corpus directory in the source tree, if it exists.
    */
-  static Optional<Path> seedCorpusSourcePath(
-      Class<?> testClass, FuzzTest annotation, Path baseDir) {
-    String seedCorpusResourcePath = Utils.seedCorpusResourcePath(testClass, annotation);
+  static Optional<Path> seedCorpusSourcePath(Class<?> testClass, Path baseDir) {
+    String seedCorpusResourcePath = Utils.seedCorpusResourcePath(testClass);
     // Make the seed corpus resource path absolute.
     if (!seedCorpusResourcePath.startsWith("/")) {
       String seedCorpusPackage = testClass.getPackage().getName().replace('.', '/');

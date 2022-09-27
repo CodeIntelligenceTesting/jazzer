@@ -57,7 +57,7 @@ public class FuzzingWithCrashTest {
     // Create a fake test resource directory structure with a seed corpus directory to verify that
     // Jazzer uses it and emits a crash file into it.
     seedCorpus = baseDir.resolve(
-        Paths.get("src", "test", "resources", "com", "example", "CustomSeedCorpus"));
+        Paths.get("src", "test", "resources", "com", "example", "ValidFuzzTestsSeedCorpus"));
     Files.createDirectories(seedCorpus);
     Files.write(seedCorpus.resolve(CRASHING_SEED_NAME), CRASHING_SEED_CONTENT);
   }

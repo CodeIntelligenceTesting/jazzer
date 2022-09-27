@@ -14,21 +14,13 @@
 
 package com.example;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 
-public class DirectorySeedCorpusFuzzTest {
-  private static long runs = 0;
-
-  @FuzzTest(maxDuration = "0s")
-  public void seedCorpusFuzz(FuzzedDataProvider data) {
-    if (runs++ > 1) {
-      // Only execute the fuzz test logic on the empty input and the only seed.
-      return;
-    }
-    if (data.consumeRemainingAsString().equals("directory")) {
-      throw new FuzzerSecurityIssueMedium();
+class AutofuzzWithCorpusFuzzTest {
+  @FuzzTest
+  void autofuzzWithCorpus(String str, int i) {
+    if ("jazzer".equals(str) && i == 1234) {
+      throw new RuntimeException();
     }
   }
 }

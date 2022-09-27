@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
 
-class AutofuzzFuzzTests {
+class AutofuzzFuzzTest {
   private static class IntHolder {
     private final int i;
 
@@ -35,13 +35,6 @@ class AutofuzzFuzzTests {
   void autofuzz(String str, IntHolder holder) {
     assumeTrue(holder != null);
     if (holder.getI() == 1234 && str != null && str.contains("jazzer")) {
-      throw new RuntimeException();
-    }
-  }
-
-  @FuzzTest(seedCorpus = "AutofuzzSeedCorpus")
-  void autofuzzWithCorpus(String str, int i) {
-    if ("jazzer".equals(str) && i == 1234) {
       throw new RuntimeException();
     }
   }
