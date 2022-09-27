@@ -94,8 +94,7 @@ public final class Opt {
       exit(1);
     }
     if ((!ignore.isEmpty() || keepGoing > 1) && !dedup) {
-      // --autofuzz implicitly sets keepGoing to Integer.MAX_VALUE.
-      err.println("--nodedup is not supported with --ignore, --keep_going, or --autofuzz");
+      err.println("--nodedup is not supported with --ignore or --keep_going");
       exit(1);
     }
   }
