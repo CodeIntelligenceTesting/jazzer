@@ -129,15 +129,15 @@ copy_directory(
 
 [
     java_test(
-        name = "DirectorySeedCorpusTest" + JAZZER_FUZZ,
-        srcs = ["DirectorySeedCorpusTest.java"],
+        name = "DirectoryInputsTest" + JAZZER_FUZZ,
+        srcs = ["DirectoryInputsTest.java"],
         args = select({
             "@platforms//os:windows": [
                 # --main_advice_classpath isn't passed through Rlocation on Windows, which makes it
                 # impossible to resolve the resources root from runfiles. Instead, we abuse the fact
                 # that execution isn't sandboxed to resolve the regular exec path location relative
                 # to the runfiles root:
-                # .../jazzer/junit/DirectorySeedCorpusTest.runfiles/jazzer -->
+                # .../jazzer/junit/DirectoryInputsTest.runfiles/jazzer -->
                 # .../jazzer/junit/test_resources_root
                 # TODO: Get rid of this hack when https://github.com/bazelbuild/bazel/pull/16227 has
                 #  been merged.
@@ -157,7 +157,7 @@ copy_directory(
         env = {
             "JAZZER_FUZZ": JAZZER_FUZZ,
         },
-        test_class = "com.code_intelligence.jazzer.junit.DirectorySeedCorpusTest",
+        test_class = "com.code_intelligence.jazzer.junit.DirectoryInputsTest",
         runtime_deps = [
             "//examples/junit/src/test/java/com/example:ExampleFuzzTests_deploy.jar",
         ],

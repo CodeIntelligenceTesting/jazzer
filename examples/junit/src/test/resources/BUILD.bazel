@@ -1,5 +1,5 @@
 java_library(
     name = "example_seed_corpora",
-    resources = glob(["com/example/*SeedCorpus/**"]),
+    resources = glob(["com/example/*Inputs/**"]),
     visibility = ["//examples/junit/src/test/java/com/example:__pkg__"],
 )

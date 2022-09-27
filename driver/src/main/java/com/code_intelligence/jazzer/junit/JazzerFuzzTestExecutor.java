@@ -14,7 +14,7 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import static com.code_intelligence.jazzer.junit.Utils.seedCorpusSourcePath;
+import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
 import static com.code_intelligence.jazzer.utils.Utils.getReadableDescriptor;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
@@ -73,49 +73,49 @@ class JazzerFuzzTestExecutor {
     Files.createDirectories(generatedCorpusDir);
     libFuzzerArgs.add(generatedCorpusDir.toAbsolutePath().toString());
 
-    // If the default or configured seed corpus directory for the fuzz test exists as a regular
-    // directory on disk (i.e., the test is not run from a JAR), use it as a seeds directory for
-    // libFuzzer and also emit findings into it so that the regression test can be used to debug
-    // them.
-    FuzzTest fuzzTest = AnnotationSupport.findAnnotation(fuzzTestMethod, FuzzTest.class).get();
-    String seedCorpusResourcePath = Utils.seedCorpusResourcePath(fuzzTestClass);
-    URL seedCorpusUrl = fuzzTestClass.getResource(seedCorpusResourcePath);
-    if (seedCorpusUrl == null) {
+    // If the default or configured inputs directory for the fuzz test exists as a regular directory
+    // on disk (i.e., the test is not run from a JAR), use it as a seeds directory for libFuzzer and
+    // also emit findings into it so that the regression test can be used to debug them.
+    String inputsDirectoryResourcePath = Utils.inputsDirectoryResourcePath(fuzzTestClass);
+    URL inputsDirectoryUrl = fuzzTestClass.getResource(inputsDirectoryResourcePath);
+    if (inputsDirectoryUrl == null) {
       String message = String.format(
           "Collecting crashing inputs in the project root directory.\nIf you want to keep them organized by "
               + "fuzz test and automatically run them as regression tests with JUnit Jupiter, create a "
               + "test resource directory called '%s' in package '%s' and move the files there.",
-          seedCorpusResourcePath, fuzzTestClass.getPackage().getName());
+          inputsDirectoryResourcePath, fuzzTestClass.getPackage().getName());
       request.getEngineExecutionListener().reportingEntryPublished(
-          fuzzTestDescriptor, ReportEntry.from("seed corpus", message));
+          fuzzTestDescriptor, ReportEntry.from("missing inputs directory", message));
       libFuzzerArgs.add(String.format("-artifact_prefix=%s%c", baseDir, File.separatorChar));
-    } else if ("file".equals(seedCorpusUrl.getProtocol())) {
+    } else if ("file".equals(inputsDirectoryUrl.getProtocol())) {
       // From the second positional argument on, files and directories are used as seeds but not
-      // modified. Using seedCorpusUrl.getFile() fails on Windows.
-      libFuzzerArgs.add(Paths.get(seedCorpusUrl.toURI()).toString());
-      // We try to find the source tree representation of the seed corpus directory and emit
-      // findings into it.
-      seedCorpusSourcePath(fuzzTestClass, baseDir)
+      // modified. Using inputsDirectoryUrl.getFile() fails on Windows.
+      libFuzzerArgs.add(Paths.get(inputsDirectoryUrl.toURI()).toString());
+      // We try to find the source tree representation of the inputs directory and emit findings
+      // into it.
+      inputsDirectorySourcePath(fuzzTestClass, baseDir)
           .ifPresent((path)
                          -> libFuzzerArgs.add(
                              String.format("-artifact_prefix=%s%c", path, File.separatorChar)));
     } else {
-      // We can't directly use the seed corpus from resources as it's packaged into a JAR. Instead,
-      // try to get the path to the seed corpus in the source tree.
-      Optional<Path> seedCorpus = seedCorpusSourcePath(fuzzTestClass, baseDir);
-      if (seedCorpus.isPresent()) {
-        libFuzzerArgs.add(seedCorpus.get().toString());
-        // We try to find the source tree representation of the seed corpus directory and emit
-        // findings into it.
+      // We can't directly use the inputs directory from resources as it's packaged into a JAR.
+      // Instead, try to get its source tree path.
+      Optional<Path> inputsDirectory = inputsDirectorySourcePath(fuzzTestClass, baseDir);
+      if (inputsDirectory.isPresent()) {
+        libFuzzerArgs.add(inputsDirectory.get().toString());
+        // We try to find the source tree representation of the inputs directory and emit findings
+        // into it.
         libFuzzerArgs.add(
-            String.format("-artifact_prefix=%s%c", seedCorpus.get(), File.separatorChar));
+            String.format("-artifact_prefix=%s%c", inputsDirectory.get(), File.separatorChar));
       } else {
         request.getEngineExecutionListener().reportingEntryPublished(fuzzTestDescriptor,
-            ReportEntry.from("seed corpus",
-                "When running Jazzer fuzz tests from a JAR rather than class files, the seed corpus isn't used unless it is located under src/test/resources/..."));
+            ReportEntry.from("missing inputs directory",
+                "When running Jazzer fuzz tests from a JAR rather than class files, the inputs "
+                    + "directory isn't used unless it is located under src/test/resources/..."));
       }
     }
 
+    FuzzTest fuzzTest = AnnotationSupport.findAnnotation(fuzzTestMethod, FuzzTest.class).get();
     libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(fuzzTest.maxDuration()));
     // Disable libFuzzer's out of memory detection: It is only useful for native library fuzzing,
     // which we don't support without our native driver, and leads to false positives where it picks

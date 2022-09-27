@@ -41,7 +41,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
 import org.junit.platform.testkit.engine.EventType;
 import org.junit.rules.TemporaryFolder;
 
-public class DirectorySeedCorpusTest {
+public class DirectoryInputsTest {
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Test
@@ -49,25 +49,24 @@ public class DirectorySeedCorpusTest {
     assumeFalse(System.getenv("JAZZER_FUZZ").isEmpty());
 
     Path baseDir = temp.getRoot().toPath();
-    // Create a fake test resource directory structure with a seed corpus directory to verify that
+    // Create a fake test resource directory structure with an inputs directory to verify that
     // Jazzer uses it and emits a crash file into it.
-    Path seedCorpus = baseDir.resolve(Paths.get(
-        "src", "test", "resources", "com", "example", "DirectorySeedCorpusFuzzTestSeedCorpus"));
-    Files.createDirectories(seedCorpus);
+    Path inputsDirectory = baseDir.resolve(
+        Paths.get("src", "test", "resources", "com", "example", "DirectoryInputsFuzzTestInputs"));
+    Files.createDirectories(inputsDirectory);
 
     EngineExecutionResults results =
         EngineTestKit.engine("com.code_intelligence.jazzer")
-            .selectors(selectClass("com.example.DirectorySeedCorpusFuzzTest"))
+            .selectors(selectClass("com.example.DirectoryInputsFuzzTest"))
             .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
             .execute();
 
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED),
-            test("com.example.DirectorySeedCorpusFuzzTest",
-                "seedCorpusFuzz(FuzzedDataProvider) (Fuzzing)")),
+            test(
+                "com.example.DirectoryInputsFuzzTest", "inputsFuzz(FuzzedDataProvider) (Fuzzing)")),
         event(type(EventType.FINISHED),
-            test("com.example.DirectorySeedCorpusFuzzTest",
-                "seedCorpusFuzz(FuzzedDataProvider) (Fuzzing)"),
+            test("com.example.DirectoryInputsFuzzTest", "inputsFuzz(FuzzedDataProvider) (Fuzzing)"),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
     results.containerEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
@@ -79,18 +78,18 @@ public class DirectorySeedCorpusTest {
              path -> path.getFileName().toString().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
-    try (Stream<Path> seeds = Files.list(seedCorpus)) {
+    try (Stream<Path> seeds = Files.list(inputsDirectory)) {
       assertThat(seeds).containsExactly(
-          seedCorpus.resolve("crash-8d392f56d616a516ceabb82ed8906418bce4647d"));
+          inputsDirectory.resolve("crash-8d392f56d616a516ceabb82ed8906418bce4647d"));
     }
-    assertThat(
-        Files.readAllBytes(seedCorpus.resolve("crash-8d392f56d616a516ceabb82ed8906418bce4647d")))
+    assertThat(Files.readAllBytes(
+                   inputsDirectory.resolve("crash-8d392f56d616a516ceabb82ed8906418bce4647d")))
         .isEqualTo("directory".getBytes(StandardCharsets.UTF_8));
 
     // Verify that the engine created the generated corpus directory. Since the crash was found on a
     // seed, it should be empty.
     Path generatedCorpus =
-        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.DirectorySeedCorpusFuzzTest"));
+        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.DirectoryInputsFuzzTest"));
     assertThat(Files.isDirectory(generatedCorpus)).isTrue();
     try (Stream<Path> entries = Files.list(generatedCorpus)) {
       assertThat(entries).isEmpty();
@@ -103,17 +102,17 @@ public class DirectorySeedCorpusTest {
 
     EngineExecutionResults results =
         EngineTestKit.engine("junit-jupiter")
-            .selectors(selectClass("com.example.DirectorySeedCorpusFuzzTest"))
+            .selectors(selectClass("com.example.DirectoryInputsFuzzTest"))
             .execute();
 
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
         // "No fuzzing has been performed..."
         event(type(EventType.REPORTING_ENTRY_PUBLISHED)),
-        event(test("seedCorpusFuzz", "<empty input>"), finishedSuccessfully()),
+        event(test("inputsFuzz", "<empty input>"), finishedSuccessfully()),
         event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
         event(type(EventType.REPORTING_ENTRY_PUBLISHED)),
-        event(test("seedCorpusFuzz", "seed"),
+        event(test("inputsFuzz", "seed"),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
   }
 }

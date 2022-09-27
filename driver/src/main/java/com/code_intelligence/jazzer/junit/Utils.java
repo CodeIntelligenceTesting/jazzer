@@ -27,31 +27,31 @@ import java.util.stream.Stream;
 
 class Utils {
   /**
-   * Returns the resource path of the seed corpus directory, which is either absolute or relative to
+   * Returns the resource path of the inputs directory, which is either absolute or relative to
    * {@code testClass}.
    */
-  static String seedCorpusResourcePath(Class<?> testClass) {
-    return testClass.getSimpleName() + "SeedCorpus";
+  static String inputsDirectoryResourcePath(Class<?> testClass) {
+    return testClass.getSimpleName() + "Inputs";
   }
 
   /**
-   * Returns the file system path of the seed corpus directory in the source tree, if it exists.
+   * Returns the file system path of the inputs corpus directory in the source tree, if it exists.
    */
-  static Optional<Path> seedCorpusSourcePath(Class<?> testClass, Path baseDir) {
-    String seedCorpusResourcePath = Utils.seedCorpusResourcePath(testClass);
-    // Make the seed corpus resource path absolute.
-    if (!seedCorpusResourcePath.startsWith("/")) {
-      String seedCorpusPackage = testClass.getPackage().getName().replace('.', '/');
-      seedCorpusResourcePath = "/" + seedCorpusPackage + "/" + seedCorpusResourcePath;
+  static Optional<Path> inputsDirectorySourcePath(Class<?> testClass, Path baseDir) {
+    String inputsResourcePath = Utils.inputsDirectoryResourcePath(testClass);
+    // Make the inputs resource path absolute.
+    if (!inputsResourcePath.startsWith("/")) {
+      String inputsPackage = testClass.getPackage().getName().replace('.', '/');
+      inputsResourcePath = "/" + inputsPackage + "/" + inputsResourcePath;
     }
 
-    // Following the Maven directory layout, we look up the seed corpus under src/test/resources.
-    // This should be correct also for multi-module projects as JUnit is usually launched in the
-    // current module's root directory.
-    Path sourceSeedCorpusPath = baseDir.resolve(
-        ("src/test/resources" + seedCorpusResourcePath).replace('/', File.separatorChar));
-    if (Files.isDirectory(sourceSeedCorpusPath)) {
-      return Optional.of(sourceSeedCorpusPath);
+    // Following the Maven directory layout, we look up the inputs directory under
+    // src/test/resources. This should be correct also for multi-module projects as JUnit is usually
+    // launched in the current module's root directory.
+    Path sourceInputsDirectory = baseDir.resolve(
+        ("src/test/resources" + inputsResourcePath).replace('/', File.separatorChar));
+    if (Files.isDirectory(sourceInputsDirectory)) {
+      return Optional.of(sourceInputsDirectory);
     } else {
       return Optional.empty();
     }
