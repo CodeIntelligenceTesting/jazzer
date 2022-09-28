@@ -59,22 +59,6 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
-    name = "AutofuzzHookDependencies",
-    # The reproducer does not include the hook on OOM and thus throws a regular error.
-    allowed_findings = [
-        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
-        "java.lang.OutOfMemoryError",
-    ],
-    fuzzer_args = [
-        "--instrumentation_includes=java.util.regex.**",
-        "--autofuzz=java.util.regex.Pattern::compile",
-        "--autofuzz_ignore=java.lang.Exception",
-    ],
-    # FIXME(fabian): Regularly times out on Windows with 0 exec/s for minutes.
-    target_compatible_with = SKIP_ON_WINDOWS,
-)
-
-java_fuzz_target_test(
     name = "ForkModeFuzzer",
     size = "enormous",
     srcs = [
