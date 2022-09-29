@@ -243,8 +243,11 @@ java_jni_library(
 java_fuzz_target_test(
     name = "NativeValueProfileFuzzer",
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
-    fuzzer_args = ["-use_value_profile=1"],
-    launcher_variant = "address",
+    fuzzer_args = [
+        "-use_value_profile=1",
+        "--native",
+    ],
+    launcher_variant = "java",
     target_class = "com.example.NativeValueProfileFuzzer",
     target_compatible_with = SKIP_ON_WINDOWS,
     verify_crash_reproducer = False,

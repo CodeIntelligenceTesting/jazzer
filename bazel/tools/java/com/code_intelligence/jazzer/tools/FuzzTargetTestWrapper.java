@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -91,9 +90,12 @@ public class FuzzTargetTestWrapper {
     }
 
     ProcessBuilder processBuilder = new ProcessBuilder();
-    Map<String, String> environment = processBuilder.environment();
     // Ensure that Jazzer can find its runfiles.
-    environment.putAll(runfiles.getEnvVars());
+    processBuilder.environment().putAll(runfiles.getEnvVars());
+    // Ensure that sanitizers behave consistently across OSes and use a dedicated exit code to make
+    // them distinguishable from unexpected crashes.
+    processBuilder.environment().put("ASAN_OPTIONS", "abort_on_error=0:exitcode=76");
+    processBuilder.environment().put("UBSAN_OPTIONS", "abort_on_error=0:exitcode=76");
 
     // Crashes will be available as test outputs. These are cleared on the next run,
     // so this is only useful for examples.

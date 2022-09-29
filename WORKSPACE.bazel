@@ -24,12 +24,6 @@ filegroup(
 
 http_archive(
     name = "com_grail_bazel_toolchain",
-    patches = [
-        # There is no static runtime library for ASan on macOS, so when using
-        # the toolchain in the CI, we have to explicitly depend on the dylib and
-        # add it to the runfiles for clang/ld.
-        "//third_party:bazel-toolchain-export-dynamic-macos-asan.patch",
-    ],
     sha256 = "da607faed78c4cb5a5637ef74a36fdd2286f85ca5192222c4664efec2d529bb8",
     strip_prefix = "bazel-toolchain-0.6.3",
     urls = ["https://github.com/grailbio/bazel-toolchain/archive/refs/tags/0.6.3.tar.gz"],

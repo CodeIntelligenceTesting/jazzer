@@ -85,9 +85,11 @@ void ignoreLibraryForInterception(const std::string &lib_name) {
 
 const std::vector<std::string> kLibrariesToIgnoreForInterception = {
     // The launcher executable itself can be treated just like a library.
-    "jazzer",     "jazzer_asan",  "jazzer_ubsan", "libinstrument.so",
-    "libjava.so", "libjimage.so", "libjli.so",    "libjvm.so",
-    "libnet.so",  "libverify.so", "libzip.so",
+    "jazzer",           "libjazzer_preload.so",
+    "libinstrument.so", "libjava.so",
+    "libjimage.so",     "libjli.so",
+    "libjvm.so",        "libnet.so",
+    "libverify.so",     "libzip.so",
 };
 }  // namespace
 

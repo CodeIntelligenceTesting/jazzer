@@ -14,7 +14,7 @@ native libraries.
 
 Jazzer currently supports the following platforms:
 * Linux x86_64
-* macOS 10.15+ x86_64 (experimental support for arm64)
+* macOS 12+ x86_64 & arm64
 * Windows x86_64
 
 ## News: Jazzer available in OSS-Fuzz
@@ -504,9 +504,14 @@ the native libraries. The required compilation flags for native libraries are as
  - *AddressSanitizer*: `-fsanitize=fuzzer-no-link,address`
  - *UndefinedBehaviorSanitizer*: `-fsanitize=fuzzer-no-link,undefined` (add `-fno-sanitize-recover=all` to crash on UBSan reports)
 
-Then, use the appropriate launcher `//:jazzer_asan` or `//:jazzer_ubsan`.
+Then, start Jazzer with `--asan` and/or `--ubsan` to automatically preload the sanitizer runtimes.
+Jazzer defaults to using the runtimes associated with `clang` on the `PATH`.
+If you used a different compiler to compile the native libraries, specify it with `CC` to override this default.
 
-**Note:** Sanitizers other than AddressSanitizer and UndefinedBehaviorSanitizer are not yet supported.
+**Note:** On macOS, you may see Gatekeeper warnings when using `--asan` and/or `--ubsan` since these flags cause the
+native sanitizer libraries to be preloaded into the codesigned `java` executable via `DYLD_INSERT_LIBRARIES`.
+
+Sanitizers other than AddressSanitizer and UndefinedBehaviorSanitizer are not yet supported.
 Furthermore, due to the nature of the JVM's GC, LeakSanitizer reports too many false positives to be useful and is thus disabled.
 
 The fuzz targets `ExampleFuzzerWithNativeASan` and `ExampleFuzzerWithNativeUBSan` in the `examples/` directory contain
