@@ -19,7 +19,7 @@ import com.github.fmeum.rules_jni.RulesJni;
 
 public class ExampleFuzzerWithNative {
   static {
-    String native_lib = System.getProperty("jazzer.internal.native_lib");
+    String native_lib = System.getenv("EXAMPLE_NATIVE_LIB");
     RulesJni.loadLibrary(native_lib, ExampleFuzzerWithNative.class);
   }
 

@@ -1,28 +1,17 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 
 cc_jni_library(
     name = "native_value_profile_fuzzer",
     srcs = ["native_value_profile_fuzzer.cpp"],
     copts = [
-        "-fsanitize=fuzzer-no-link,address",
-        "-fno-sanitize-blacklist",
-    ],
-    defines = [
-        # Workaround for Windows build failures with VS 2022:
-        # "lld-link: error: /INFERASANLIBS is not allowed in .drectve"
-        # https://github.com/llvm/llvm-project/issues/56300#issuecomment-1214313292
-        "_DISABLE_STRING_ANNOTATION=1",
-        "_DISABLE_VECTOR_ANNOTATION=1",
+        "-fsanitize=fuzzer-no-link",
     ],
     linkopts = select({
         "//:clang_on_linux": ["-fuse-ld=lld"],
-        "@platforms//os:windows": [
-            # Windows requires all symbols that should be imported from the main
-            # executable to be defined by an import lib.
-            "/wholearchive:clang_rt.asan_dll_thunk-x86_64.lib",
-        ],
         "//conditions:default": [],
     }),
+    target_compatible_with = SKIP_ON_WINDOWS,
     visibility = ["//tests:__pkg__"],
     deps = ["//tests:native_value_profile_fuzzer.hdrs"],
 )

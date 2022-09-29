@@ -16,7 +16,7 @@ cc_jni_library(
     ] + select({
         # Windows doesn't have a concept analogous to RTLD_GLOBAL.
         "@platforms//os:windows": [],
-        "//conditions:default": [":trigger_driver_hooks_load"],
+        "//conditions:default": [":init_jazzer_preload"],
     }),
 )
 
@@ -104,8 +104,8 @@ cc_library(
 )
 
 cc_library(
-    name = "trigger_driver_hooks_load",
-    srcs = ["trigger_driver_hooks_load.cpp"],
+    name = "init_jazzer_preload",
+    srcs = ["init_jazzer_preload.cpp"],
     linkopts = ["-ldl"],
     target_compatible_with = SKIP_ON_WINDOWS,
     deps = ["@fmeum_rules_jni//jni"],
@@ -116,11 +116,7 @@ cc_library(
 cc_library(
     name = "sanitizer_hooks_with_pc",
     hdrs = ["sanitizer_hooks_with_pc.h"],
-    visibility = [
-        "//agent/src/jmh/native:__subpackages__",
-        "//driver/src/test/native/com/code_intelligence/jazzer/driver:__pkg__",
-        "//launcher:__pkg__",
-    ],
+    visibility = ["//:__subpackages__"],
 )
 
 cc_library(

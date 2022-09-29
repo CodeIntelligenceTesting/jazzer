@@ -27,6 +27,7 @@ def java_fuzz_target_test(
         size = None,
         timeout = None,
         env = None,
+        env_inherit = None,
         verify_crash_input = True,
         verify_crash_reproducer = True,
         # Superset of the findings the fuzzer is expected to find. Since fuzzing runs are not
@@ -61,10 +62,6 @@ def java_fuzz_target_test(
 
     if launcher_variant == "native":
         driver = "//launcher:jazzer"
-    elif launcher_variant == "address":
-        driver = "//launcher:jazzer_asan"
-    elif launcher_variant == "undefined":
-        driver = "//launcher:jazzer_ubsan"
     elif launcher_variant == "java":
         driver = target_name
     else:
@@ -106,6 +103,7 @@ def java_fuzz_target_test(
             driver,
         ] + data + ([hook_jar] if hook_jar else []),
         env = env,
+        env_inherit = env_inherit,
         main_class = "com.code_intelligence.jazzer.tools.FuzzTargetTestWrapper",
         use_testrunner = False,
         tags = tags,

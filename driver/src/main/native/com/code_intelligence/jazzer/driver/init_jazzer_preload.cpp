@@ -17,7 +17,7 @@
 
 #include <cstdlib>
 
-// The native driver binary, if used, forwards all calls to native libFuzzer
+// The jazzer_preload library, if used, forwards all calls to native libFuzzer
 // hooks such as __sanitizer_cov_trace_cmp8 to the Jazzer JNI library. In order
 // to load the hook symbols when the library is ready, it needs to be passed a
 // handle - the JVM loads libraries with RTLD_LOCAL and thus their symbols
@@ -37,11 +37,11 @@ jint JNI_OnLoad(JavaVM *, void *) {
     abort();
   }
 
-  void *register_hooks = dlsym(RTLD_DEFAULT, "jazzer_initialize_native_hooks");
-  // We may be running without the native driver, so not finding this method is
-  // an expected error.
-  if (register_hooks) {
-    reinterpret_cast<void (*)(void *)>(register_hooks)(handle);
+  void *preload_init = dlsym(RTLD_DEFAULT, "jazzer_preload_init");
+  // jazzer_preload is only preloaded when Jazzer is started with --native, so
+  // not finding this method is an expected error.
+  if (preload_init) {
+    reinterpret_cast<void (*)(void *)>(preload_init)(handle);
   }
 
   dlclose(handle);

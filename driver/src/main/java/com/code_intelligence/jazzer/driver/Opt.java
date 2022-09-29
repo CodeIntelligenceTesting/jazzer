@@ -62,6 +62,14 @@ public final class Opt {
         "Additional arguments to pass to the JVM (separator can be escaped with '\\', native launcher only)");
     stringSetting(
         "agent_path", null, "Custom path to jazzer_agent_deploy.jar (native launcher only)");
+    // The following arguments are interpreted by the Jazzer main class directly as they require
+    // starting Jazzer as a subprocess.
+    boolSetting(
+        "asan", false, "Allow fuzzing of native libraries compiled with '-fsanitize=address'");
+    boolSetting(
+        "ubsan", false, "Allow fuzzing of native libraries compiled with '-fsanitize=undefined'");
+    boolSetting("native", false,
+        "Allow fuzzing of native libraries compiled with '-fsanitize=fuzzer' (implied by --asan and --ubsan)");
   }
 
   public static final String autofuzz = stringSetting("autofuzz", "",

@@ -1,4 +1,5 @@
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
 load("//:maven.bzl", "JAZZER_VERSION")
 
 java_binary(
@@ -7,9 +8,13 @@ java_binary(
     runtime_deps = [":jazzer_lib"],
 )
 
-java_library(
+java_jni_library(
     name = "jazzer_lib",
     srcs = ["Jazzer.java"],
+    native_libs = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": ["//driver/src/main/native/com/code_intelligence/jazzer:jazzer_preload"],
+    }),
     visibility = ["//visibility:public"],
     deps = ["//driver/src/main/java/com/code_intelligence/jazzer/driver"],
 )

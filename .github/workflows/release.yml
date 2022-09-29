@@ -16,7 +16,7 @@ jobs:
             bazel_args: "--config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux"
           - os: macos-11
             arch: "macos-x86_64"
-            bazel_args: "--config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-darwin --xcode_version_config=//.github:host_xcodes"
+            bazel_args: "--config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-darwin"
           - os: windows-2019
             arch: "windows"
             bazel_args: ""

@@ -13,10 +13,8 @@
 // limitations under the License.
 
 /*
- * Jazzer's native main function, which:
- * 1. defines default settings for ASan and UBSan;
- * 2. starts a JVM;
- * 3. passes control to the Java part of the driver.
+ * Jazzer's native main function, which starts a JVM suitably configured for
+ * fuzzing and passes control to the Java part of the driver.
  */
 
 #include <rules_jni.h>
@@ -28,29 +26,6 @@
 
 #include "absl/strings/str_split.h"
 #include "jvm_tooling.h"
-
-namespace {
-bool is_asan_active = false;
-}
-
-extern "C" {
-[[maybe_unused]] const char *__asan_default_options() {
-  is_asan_active = true;
-  // LeakSanitizer is not yet supported as it reports too many false positives
-  // due to how the JVM GC works.
-  // We use a distinguished exit code to recognize ASan crashes in tests.
-  // Also specify abort_on_error=0 explicitly since ASan aborts rather than
-  // exits on macOS by default, which would cause our exit code to be ignored.
-  return "abort_on_error=0,detect_leaks=0,exitcode=76";
-}
-
-[[maybe_unused]] const char *__ubsan_default_options() {
-  // We use a distinguished exit code to recognize UBSan crashes in tests.
-  // Also specify abort_on_error=0 explicitly since UBSan aborts rather than
-  // exits on macOS by default, which would cause our exit code to be ignored.
-  return "abort_on_error=0,exitcode=76";
-}
-}
 
 namespace {
 const std::string kJazzerClassName = "com/code_intelligence/jazzer/Jazzer";
@@ -129,12 +104,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (is_asan_active) {
-    std::cerr << "WARN: Jazzer is not compatible with LeakSanitizer yet. Leaks "
-                 "are not reported."
-              << std::endl;
-  }
-
   StartLibFuzzer(std::unique_ptr<jazzer::JVM>(new jazzer::JVM(argv[0])),
-                 std::vector<std::string>(argv, argv + argc));
+                 std::vector<std::string>(argv + 1, argv + argc));
 }
