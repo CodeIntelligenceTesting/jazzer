@@ -17,7 +17,6 @@ cc_jni_library(
         "_DISABLE_VECTOR_ANNOTATION=1",
     ],
     linkopts = select({
-        "//:clang_on_linux": ["-fuse-ld=lld"],
         "@platforms//os:windows": [
             # Windows requires all symbols that should be imported from the main
             # executable to be defined by an import lib.
@@ -41,7 +40,6 @@ cc_jni_library(
         "-fno-sanitize-recover=all",
     ],
     linkopts = select({
-        "//:clang_on_linux": ["-fuse-ld=lld"],
         "@platforms//os:windows": [
             # Using the asan thunk is correct here as it contains symbols for
             # UBSan and SanCov as well.
