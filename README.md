@@ -43,7 +43,7 @@ Jazzer has the following dependencies when being built from source:
 
 * Bazel 4 or later
 * JDK 8 or later (e.g. [OpenJDK](https://openjdk.java.net/))
-* [Clang](https://clang.llvm.org/) and [LLD](https://lld.llvm.org/) 9.0 or later (using a recent version is strongly recommended)
+* [Clang](https://clang.llvm.org/) 9.0 or later (using a recent version is strongly recommended)
 
 It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) to automatically download and install Bazel.
 Simply download the release binary for your OS and architecture and ensure that it is available in the `PATH`.

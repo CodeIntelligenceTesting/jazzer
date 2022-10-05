@@ -25,10 +25,6 @@ cc_binary(
     data = [
         "//agent:jazzer_agent_deploy",
     ],
-    linkopts = select({
-        "//:clang_on_linux": ["-fuse-ld=lld"],
-        "//conditions:default": [],
-    }),
     linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [":jazzer_main"],
