@@ -96,6 +96,9 @@ java_library(
         "//agent/src/main/java/com/code_intelligence/jazzer:__subpackages__",
         "//driver/src/test/java/com/code_intelligence/jazzer/driver:__pkg__",
     ],
+    deps = [
+        "//driver/src/main/java/com/code_intelligence/jazzer:constants",
+    ],
 )
 
 java_library(

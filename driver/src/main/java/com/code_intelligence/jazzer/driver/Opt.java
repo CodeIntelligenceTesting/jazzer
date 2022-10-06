@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import static com.code_intelligence.jazzer.Constants.JAZZER_VERSION;
 import static com.code_intelligence.jazzer.driver.OptParser.boolSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.ignoreSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.stringListSetting;
@@ -83,8 +84,6 @@ public final class Opt {
       "Names of classes from which hooks (custom or built-in) should not be loaded from");
   public static final String dumpClassesDir = stringSetting(
       "dump_classes_dir", "", "Directory to dump instrumented .class files into (if non-empty)");
-  public static final boolean help =
-      boolSetting("help", false, "Show this list of all available arguments");
   public static final boolean hooks = boolSetting(
       "hooks", true, "Apply fuzzing instrumentation (use 'trace' for finer-grained control)");
   public static final String idSyncFile = stringSetting("id_sync_file", null, null);
@@ -124,11 +123,19 @@ public final class Opt {
 
   static final boolean mergeInner = boolSetting("internal.merge_inner", false, null);
 
+  private static final boolean help =
+      boolSetting("help", false, "Show this list of all available arguments");
+  private static final boolean version = boolSetting("version", false, "Print version information");
+
   static {
     OptParser.failOnUnknownArgument();
 
     if (help) {
       err.println(OptParser.getHelpText());
+      exit(0);
+    }
+    if (version) {
+      err.printf("Jazzer v%s", JAZZER_VERSION);
       exit(0);
     }
     if (!targetClass.isEmpty() && !autofuzz.isEmpty()) {
