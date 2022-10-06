@@ -9,12 +9,12 @@ jobs:
     strategy:
       matrix:
         # Keep arch names in sync with replayer and junit download and merge
-        os: [ubuntu-latest, macos-10.15, windows-2019]
+        os: [ubuntu-20.04, macos-11, windows-2019]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             arch: "linux"
             bazel_args: "--config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux"
-          - os: macos-10.15
+          - os: macos-11
             arch: "macos-x86_64"
             bazel_args: "--config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-darwin --xcode_version_config=//.github:host_xcodes"
           - os: windows-2019
@@ -59,7 +59,7 @@ jobs:
           path: release-${{ matrix.arch}}.tar.gz
 
   merge_jars:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: build_release
 
     steps:
