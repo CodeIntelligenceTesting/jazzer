@@ -13,7 +13,7 @@ build:ci --features=layering_check
 
 # Java
 build --java_language_version=8
-build --tool_java_language_version=9
+build --tool_java_language_version=8
 
 # Windows
 # Only compiles with clang on Windows.
@@ -24,6 +24,13 @@ build:windows --features=static_link_msvcrt
 # Java agent functionality depends on system-provided shared libraries.
 test:windows --noincompatible_strict_action_env
 run:windows --noincompatible_strict_action_env
+
+# macOS
+# Workaround for https://github.com/bazelbuild/bazel/issues/13944, which breaks external Java
+# dependencies on M1 Macs without Rosetta.
+build:macos --extra_toolchains=//:java_non_prebuilt_definition
+build:macos --java_runtime_version=11
+build:macos --tool_java_runtime_version=11
 
 # Toolchain
 # Since the toolchain is conditional on OS and architecture, set it on the particular GitHub Action.
