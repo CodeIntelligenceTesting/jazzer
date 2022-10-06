@@ -192,23 +192,18 @@ public final class Jazzer {
     // https://github.com/llvm/llvm-project/blob/c12d49c4e286fa108d4d69f1c6d2b8d691993ffd/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp#L390
     // This value should be large enough for most use cases (e.g. tracking the length of a prefix in
     // a comparison) while being small enough that the bitmap isn't filled up too quickly
-    // (65536 bits/ 128 bits per id = 512 ids).
+    // (65536 bits / 128 bits per id = 512 ids).
 
     // We use tracePcIndir as a way to set a bit in libFuzzer's value profile bitmap. In
     // TracePC::HandleCallerCallee, which is what this function ultimately calls through to, the
     // lower 12 bits of each argument are combined into a 24-bit index into the bitmap, which is
     // then reduced modulo a 16-bit prime. To keep the modulo bias small, we should fill as many
-    // of the relevant bits as possible. However, there are the following restrictions:
-    // 1. Since we use the return address trampoline to set the caller address indirectly, its
-    //    upper 3 bits are fixed, which leaves a total of 21 variable bits on x86_64.
-    // 2. On arm64 macOS, where every instruction is aligned to 4 bytes, the lower 2 bits of the
-    //    caller address will always be zero, further reducing the number of variable bits in the
-    //    caller parameter to 7.
-    // https://github.com/llvm/llvm-project/blob/c12d49c4e286fa108d4d69f1c6d2b8d691993ffd/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp#L121
-    // Even taking these restrictions into consideration, we pass state in the lowest bits of the
-    // caller address, which is used to form the lowest bits of the bitmap index. This should result
-    // in the best caching behavior as state is expected to change quickly in consecutive runs and
-    // in this way all its bitmap entries would be located close to each other in memory.
+    // of the relevant bits as possible.
+
+    // We pass state in the lowest bits of the caller address, which is used to form the lowest bits
+    // of the bitmap index. This should result in the best caching behavior as state is expected to
+    // change quickly in consecutive runs and in this way all its bitmap entries would be located
+    // close to each other in memory.
     int lowerBits = (state & 0x7f) | (id << 7);
     int upperBits = id >>> 5;
     try {
