@@ -28,7 +28,16 @@
 #include <string.h>
 #endif
 
+#if defined(__APPLE__) && defined(__arm64__)
+// arm64 has a fixed instruction length of 32 bits, which means that the lowest
+// two bits of the return address of a function are always zero. Since
+// libFuzzer's value profiling uses the lowest bits of the address to index into
+// a hash table, we increase their entropy by shifting away the constant bits.
+#define GET_CALLER_PC() \
+  ((void *)(((uintptr_t)__builtin_return_address(0)) >> 2))
+#else
 #define GET_CALLER_PC() __builtin_return_address(0)
+#endif
 #define LIKELY(x) __builtin_expect(!!(x), 1)
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
 
