@@ -16,7 +16,7 @@
 
 #include <jni.h>
 
-#include <stdexcept>
+#include <iostream>
 #include <vector>
 
 #include "com_code_intelligence_jazzer_runtime_CoverageMap.h"
@@ -31,8 +31,9 @@ namespace {
 void AssertNoException(JNIEnv &env) {
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
-    throw std::runtime_error(
-        "Java exception occurred in CoverageTracker JNI code");
+    std::cerr << "ERROR: Java exception occurred in CoverageTracker JNI code"
+              << std::endl;
+    _Exit(1);
   }
 }
 }  // namespace
@@ -44,8 +45,10 @@ PCTableEntry *CoverageTracker::pc_entries_ = nullptr;
 
 void CoverageTracker::Initialize(JNIEnv &env, jlong counters) {
   if (counters_ != nullptr) {
-    throw std::runtime_error(
-        "CoverageTracker::Initialize must not be called more than once");
+    std::cerr << "ERROR: CoverageTracker::Initialize must not be called more "
+                 "than once"
+              << std::endl;
+    _Exit(1);
   }
   counters_ = reinterpret_cast<uint8_t *>(static_cast<uintptr_t>(counters));
 }
@@ -53,12 +56,16 @@ void CoverageTracker::Initialize(JNIEnv &env, jlong counters) {
 void CoverageTracker::RegisterNewCounters(JNIEnv &env, jint old_num_counters,
                                           jint new_num_counters) {
   if (counters_ == nullptr) {
-    throw std::runtime_error(
-        "CoverageTracker::Initialize should have been called first");
+    std::cerr
+        << "ERROR: CoverageTracker::Initialize should have been called first"
+        << std::endl;
+    _Exit(1);
   }
   if (new_num_counters < old_num_counters) {
-    throw std::runtime_error(
-        "new_num_counters must not be smaller than old_num_counters");
+    std::cerr
+        << "ERROR: new_num_counters must not be smaller than old_num_counters"
+        << std::endl;
+    _Exit(1);
   }
   if (new_num_counters == old_num_counters) {
     return;
