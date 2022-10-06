@@ -21,10 +21,10 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "platforms",
-        sha256 = "379113459b0feaf6bfbb584a91874c065078aa673222846ac765f86661c27407",
+        sha256 = "5308fc1d8865406a49427ba24a9ab53087f17f5266a7aabbfc28823f3916e1ca",
         urls = [
-            "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.5/platforms-0.0.5.tar.gz",
-            "https://github.com/bazelbuild/platforms/releases/download/0.0.5/platforms-0.0.5.tar.gz",
+            "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.6/platforms-0.0.6.tar.gz",
+            "https://github.com/bazelbuild/platforms/releases/download/0.0.6/platforms-0.0.6.tar.gz",
         ],
     )
 
@@ -41,8 +41,8 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "io_bazel_rules_kotlin",
-        sha256 = "a57591404423a52bd6b18ebba7979e8cd2243534736c5c94d35c89718ea38f94",
-        url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.6.0/rules_kotlin_release.tgz",
+        sha256 = "f033fa36f51073eae224f18428d9493966e67c27387728b6be2ebbdae43f140e",
+        url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.7.0-RC-3/rules_kotlin_release.tgz",
     )
 
     maybe(
@@ -74,9 +74,9 @@ def jazzer_dependencies():
         http_archive,
         build_file = Label("//third_party:classgraph.BUILD"),
         name = "com_github_classgraph_classgraph",
-        sha256 = "535159d80c163d5b4d025c402b4562c92ed2d6d963db8c6c5255c0eb2c4e9f39",
-        strip_prefix = "classgraph-classgraph-4.8.128",
-        url = "https://github.com/classgraph/classgraph/archive/refs/tags/classgraph-4.8.128.tar.gz",
+        sha256 = "600f0f8f321dd0a3b55a51409c9e96f4274a92a2660f8a8abdb3da6ed83147f4",
+        strip_prefix = "classgraph-classgraph-4.8.149",
+        url = "https://github.com/classgraph/classgraph/archive/refs/tags/classgraph-4.8.149.tar.gz",
     )
 
     maybe(
@@ -90,29 +90,29 @@ def jazzer_dependencies():
     maybe(
         http_jar,
         name = "net_bytebuddy_byte_buddy_agent",
-        sha256 = "25eed4301bbde3724a4bac0e7fe4a0b371c64b5fb40160b29480de3afd04efd5",
-        url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.12.13/byte-buddy-agent-1.12.13.jar",
+        sha256 = "1bd4b7bc71001c3a4e1d6160e2f87784fba4f8c265e30b48a6beaeea1a2e29e1",
+        url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.12.17/byte-buddy-agent-1.12.17.jar",
     )
 
     maybe(
         http_jar,
         name = "org_ow2_asm_asm",
-        sha256 = "1263369b59e29c943918de11d6d6152e2ec6085ce63e5710516f8c67d368e4bc",
-        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm/9.3/asm-9.3.jar",
+        sha256 = "39d0e2b3dc45af65a09b097945750a94a126e052e124f93468443a1d0e15f381",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm/9.4/asm-9.4.jar",
     )
 
     maybe(
         http_jar,
         name = "org_ow2_asm_asm_commons",
-        sha256 = "a347c24732db2aead106b6e5996a015b06a3ef86e790a4f75b61761f0d2f7f39",
-        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-commons/9.3/asm-commons-9.3.jar",
+        sha256 = "0c128a9ec3f33c98959272f6d16cf14247b508f58951574bcdbd2b56d6326364",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-commons/9.4/asm-commons-9.4.jar",
     )
 
     maybe(
         http_jar,
         name = "org_ow2_asm_asm_tree",
-        sha256 = "ae629c2609f39681ef8d140a42a23800464a94f2d23e36d8f25cd10d5e4caff4",
-        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-tree/9.3/asm-tree-9.3.jar",
+        sha256 = "c42d479cf24566a21eb20af7eeaeef4e86bdb4a886306cf72f483b65e75b2acf",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-tree/9.4/asm-tree-9.4.jar",
     )
 
     maybe(
