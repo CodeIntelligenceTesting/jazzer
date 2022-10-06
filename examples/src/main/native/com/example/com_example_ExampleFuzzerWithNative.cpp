@@ -14,6 +14,7 @@
 
 #include "com_example_ExampleFuzzerWithNative.h"
 
+#include <cstring>
 #include <limits>
 #include <string>
 
@@ -27,8 +28,10 @@ __attribute__((optnone)) void parseInternal(const std::string &input) {
   }
   if (input[0] == 'a' && input[1] == 'b' && input[5] == 'c') {
     if (input.find("secret_in_native_library") != std::string::npos) {
-      // Crashes with ASan.
-      [[maybe_unused]] char foo = input[input.size() + 2];
+      // Crashes with ASan, whose use-after-free hooks detect
+      const char *mem = static_cast<const char *>(malloc(2));
+      free((void *)mem);
+      [[maybe_unused]] bool foo = memcmp(mem, mem + 1, 1);
     }
   }
 }
