@@ -9,10 +9,11 @@ java_fuzz_target_test(
     ],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     data = ["src/test/java/com/example/LongStringFuzzerInput"],
+    # Additionally verify that Jazzer-Fuzz-Target-Class is picked up if --target_class isn't set.
+    deploy_manifest_lines = ["Jazzer-Fuzz-Target-Class: com.example.LongStringFuzzer"],
     fuzzer_args = [
         "$(rootpath src/test/java/com/example/LongStringFuzzerInput)",
     ],
-    target_class = "com.example.LongStringFuzzer",
     verify_crash_input = False,
 )
 
