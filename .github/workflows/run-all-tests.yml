@@ -52,13 +52,17 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ matrix.disk_cache }}
-          key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
+          key: bazel-disk-cache-${{ matrix.arch }}-${{ github.run_id }}
+          restore-keys: |
+            bazel-disk-cache-${{ matrix.arch }}
 
       - name: Mount Bazel repository cache
         uses: actions/cache@v2
         with:
           path: ${{ matrix.repo_cache }}
-          key: bazel-repository-cache-${{ matrix.arch }}
+          key: bazel-repository-cache-${{ matrix.arch }}-${{ github.run_id }}
+          restore-keys: |
+            bazel-repository-cache-${{ matrix.arch }}
 
       - name: Set Build Buddy config
         run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
