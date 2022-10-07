@@ -19,15 +19,18 @@ jobs:
         include:
           - os: ubuntu-20.04
             arch: "linux"
-            cache: "/home/runner/.cache/bazel-disk"
+            disk_cache: "/home/runner/.cache/bazel-disk"
+            repo_cache: "/home/runner/.cache/bazel-repo"
           - os: macos-11
             arch: "macos-x86_64"
             # Always use the toolchain as UBSan produces linker errors with Apple LLVM 13.
             bazel_args: "--config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-darwin --xcode_version_config=//.github:host_xcodes"
-            cache: "/private/var/tmp/bazel-disk"
+            disk_cache: "/private/var/tmp/bazel-disk"
+            repo_cache: "/private/var/tmp/bazel-repo"
           - os: windows-2019
             arch: "windows"
-            cache: "%HOME%/bazel-disk"
+            disk_cache: "%HOME%/bazel-disk"
+            repo_cache: "%HOME%/bazel-repo"
 
     steps:
       - uses: actions/checkout@v2
@@ -48,18 +51,24 @@ jobs:
       - name: Mount Bazel disk cache
         uses: actions/cache@v2
         with:
-          path: ${{ matrix.cache }}
+          path: ${{ matrix.disk_cache }}
           key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
+
+      - name: Mount Bazel repository cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ matrix.repo_cache }}
+          key: bazel-repository-cache-${{ matrix.arch }}
 
       - name: Set Build Buddy config
         run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
         shell: bash
 
       - name: Build
-        run: bazelisk build ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} //...
+        run: bazelisk build ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.disk_cache }} --repository_cache=${{ matrix.repo_cache }} ${{ matrix.bazel_args }} //...
 
       - name: Test
-        run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} //...
+        run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.disk_cache }} --repository_cache=${{ matrix.repo_cache }} ${{ matrix.bazel_args }} //...
 
       - name: Upload test logs
         if: always()
