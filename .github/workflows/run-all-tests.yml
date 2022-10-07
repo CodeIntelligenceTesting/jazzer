@@ -37,6 +37,14 @@ jobs:
         with:
           java-version: ${{ matrix.jdk }}
 
+      - name: Set up MSYS2 to work around bazelbuild/bazel#15919
+        if: contains(matrix.os, 'windows')
+        shell: cmd
+        run: |
+          where bash.exe
+          md C:\tools\msys64\usr\bin
+          mklink C:\tools\msys64\usr\bin\bash.exe "C:\Program Files\Git\usr\bin\bash.exe"
+
       - name: Mount Bazel disk cache
         uses: actions/cache@v2
         with:
