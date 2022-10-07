@@ -4,7 +4,6 @@ load("@rules_jvm_external//:defs.bzl", "javadoc")
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 load("//bazel:jar.bzl", "strip_jar")
 load("//:maven.bzl", "JAZZER_JUNIT_MAVEN_DEPS")
-load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
 # The Jazzer JUnit integration without its dependencies declared in the pom.xml, together with the unshaded sources.
 java_import(

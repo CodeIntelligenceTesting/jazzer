@@ -24,7 +24,7 @@ RUN curl -L 'https://github.com/coursier/coursier/releases/download/v2.0.16/cour
     chmod +x coursier.jar
 
 COPY entrypoint.sh /app/
-COPY --from=jazzer /app/jazzer_agent_deploy.jar /app/jazzer /app/
+COPY --from=jazzer /app/* /app/
 
 WORKDIR /fuzzing
 ENTRYPOINT ["/app/entrypoint.sh"]

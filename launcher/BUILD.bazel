@@ -23,7 +23,7 @@ cc_library(
 cc_binary(
     name = "jazzer",
     data = [
-        "//agent:jazzer_agent_deploy",
+        "//driver/src/main/java/com/code_intelligence/jazzer",
     ],
     linkstatic = True,
     visibility = ["//visibility:public"],
@@ -35,7 +35,7 @@ cc_test(
     size = "small",
     srcs = ["jvm_tooling_test.cpp"],
     data = [
-        "//agent:jazzer_agent_deploy",
+        "//driver/src/main/java/com/code_intelligence/jazzer",
         "//launcher/testdata:fuzz_target_mocks_deploy.jar",
     ],
     env = {
@@ -59,7 +59,7 @@ cc_test(
         "//conditions:default": ["-std=c++17"],
     }),
     data = [
-        "//agent:jazzer_agent_deploy",
+        "//driver/src/main/java/com/code_intelligence/jazzer",
         "//launcher/testdata:fuzz_target_mocks_deploy.jar",
     ],
     env = {

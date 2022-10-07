@@ -41,8 +41,9 @@ constexpr auto kPathSeparator = '/';
 #endif
 
 namespace {
-constexpr auto kAgentBazelRunfilesPath = "jazzer/agent/jazzer_agent_deploy.jar";
-constexpr auto kAgentFileName = "jazzer_agent_deploy.jar";
+constexpr auto kJazzerBazelRunfilesPath =
+    "jazzer/driver/src/main/java/com/code_intelligence/jazzer/jazzer.jar";
+constexpr auto kJazzerFileName = "jazzer.jar";
 
 std::string dirFromFullPath(const std::string &path) {
   const auto pos = path.rfind(kPathSeparator);
@@ -58,7 +59,7 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
   // User provided agent location takes precedence.
   if (!FLAGS_agent_path.empty()) {
     if (std::ifstream(FLAGS_agent_path).good()) return FLAGS_agent_path;
-    std::cerr << "ERROR: Could not find " << kAgentFileName << " at \""
+    std::cerr << "ERROR: Could not find " << kJazzerFileName << " at \""
               << FLAGS_agent_path << "\"" << std::endl;
     exit(1);
   }
@@ -70,7 +71,7 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
     std::unique_ptr<Runfiles> runfiles(
         Runfiles::Create(std::string(executable_path), &error));
     if (runfiles != nullptr) {
-      auto bazel_path = runfiles->Rlocation(kAgentBazelRunfilesPath);
+      auto bazel_path = runfiles->Rlocation(kJazzerBazelRunfilesPath);
       if (!bazel_path.empty() && std::ifstream(bazel_path).good())
         return bazel_path;
     }
@@ -79,9 +80,9 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
   // If the agent is not in the bazel path we look next to the jazzer binary.
   const auto dir = dirFromFullPath(executable_path);
   auto agent_path =
-      absl::StrFormat("%s%c%s", dir, kPathSeparator, kAgentFileName);
+      absl::StrFormat("%s%c%s", dir, kPathSeparator, kJazzerFileName);
   if (std::ifstream(agent_path).good()) return agent_path;
-  std::cerr << "ERROR: Could not find " << kAgentFileName
+  std::cerr << "ERROR: Could not find " << kJazzerFileName
             << ". Please provide the pathname via the --agent_path flag."
             << std::endl;
   exit(1);
