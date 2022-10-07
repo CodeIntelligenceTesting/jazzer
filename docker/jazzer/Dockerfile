@@ -25,15 +25,16 @@ RUN curl -L https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/baz
     # The LLVM toolchain requires ld and ld.gold to exist, but does not use them.
     touch /usr/bin/ld && \
     touch /usr/bin/ld.gold && \
-    BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1 \
-    bazelisk build --config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux \
-      //agent:jazzer_agent_deploy //launcher:jazzer
+    bazelisk build --config=docker //driver/src/main/java/com/code_intelligence/jazzer //launcher:jazzer && \
+    mkdir -p /app && \
+    cp $(bazelisk cquery --config=docker --output=files //driver/src/main/java/com/code_intelligence/jazzer) /app/ && \
+    cp $(bazelisk cquery --config=docker --output=files //launcher:jazzer) /app/
 
 # :debug includes a busybox shell, which is needed for libFuzzer's use of system() for e.g. the
 # -fork and -minimize_crash commands.
 FROM gcr.io/distroless/java:debug
 
-COPY --from=builder /root/jazzer/bazel-bin/agent/jazzer_agent_deploy.jar /root/jazzer/bazel-bin/launcher/jazzer /app/
+COPY --from=builder /app/* /app/
 # system() expects the shell at /bin/sh, but the image has it at /busybox/sh. We create a symlink,
 # but have to use the long form as a simple RUN <command> also requires /bin/sh.
 RUN ["/busybox/sh", "-c", "ln -s /busybox/sh /bin/sh"]

@@ -1,76 +1,3 @@
-load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
-load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
-load("//bazel:jar.bzl", "strip_jar")
-load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
-
-# These classes are contained in jazzer_boostrap.jar and will thus be
-# available on the bootstrap class path.
-java_binary(
-    name = "jazzer_agent_deploy_env",
-    create_executable = False,
-    runtime_deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
-        "//agent/src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
-        # We should strive to exclude this class as well, but adding it here would also exclude the
-        # Kotlin stdlib, which the agent and the bootstrap code need their own copy of.
-        # TODO(fmeum): Get rid of Kotlin in utils.
-        # "//agent/src/main/java/com/code_intelligence/jazzer/utils",
-    ],
-)
-
-java_binary(
-    name = "jazzer_agent_unshaded",
-    create_executable = False,
-    # Note: We can't add
-    # //agent/src/main/java/com/code_intelligence/jazzer/runtime:java_bootstrap_unshaded itself as
-    # the agent should have its own copy of its (few) external dependencies. For example,
-    # FuzzedDataProviderImpl may load its native library using RulesJni before the agent has been
-    # added to the bootstrap classpath.
-    deploy_env = [
-        ":jazzer_agent_deploy_env",
-    ],
-    deploy_manifest_lines = [
-        "Jazzer-Hook-Classes: ",
-    ] + [" {}:".format(c) for c in SANITIZER_CLASSES],
-    runtime_deps = [
-        "//driver/src/main/java/com/code_intelligence/jazzer:jazzer_lib",
-    ],
-)
-
-strip_jar(
-    name = "jazzer_agent_deploy",
-    out = "jazzer_agent_deploy.jar",
-    jar = ":jazzer_agent_shaded_deploy",
-    paths_to_strip = [
-        "module-info.class",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-jar_jar(
-    name = "jazzer_agent_shaded_deploy",
-    input_jar = "jazzer_agent_unshaded_deploy.jar",
-    rules = "agent_shade_rules",
-)
-
-sh_test(
-    name = "jazzer_agent_shading_test",
-    srcs = ["verify_shading.sh"],
-    args = [
-        "$(rootpath :jazzer_agent_deploy)",
-    ],
-    data = [
-        ":jazzer_agent_deploy",
-        "@local_jdk//:bin/jar",
-    ],
-    tags = [
-        # Coverage instrumentation necessarily adds files to the jar that we
-        # wouldn't want to release and thus causes this test to fail.
-        "no-coverage",
-    ],
-    target_compatible_with = SKIP_ON_WINDOWS,
-)
-
 java_binary(
     name = "jazzer_api",
     create_executable = False,
@@ -85,5 +12,4 @@ java_import(
     ],
     neverlink = True,
     visibility = ["//visibility:public"],
-    deps = [],
 )

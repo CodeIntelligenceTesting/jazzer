@@ -1,6 +1,6 @@
 java_library(
     name = "sanitizers",
-    visibility = ["//visibility:public"],
+    visibility = ["//agent/src/main/java/com/code_intelligence/jazzer/runtime:__pkg__"],
     runtime_deps = [
         "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers",
     ],

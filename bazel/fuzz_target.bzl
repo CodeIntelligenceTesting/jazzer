@@ -48,7 +48,7 @@ def java_fuzz_target_test(
     # excludes e.g. Kotlin libraries wrapped into java_binary via runtime_deps.
     deps = deps + ["//agent:jazzer_api_compile_only"] if srcs else []
     if launcher_variant == "java":
-        runtime_deps = runtime_deps + ["//driver/src/main/java/com/code_intelligence/jazzer:jazzer_lib"]
+        runtime_deps = runtime_deps + ["//driver/src/main/java/com/code_intelligence/jazzer:jazzer_import"]
     native.java_binary(
         name = target_name,
         srcs = srcs,
@@ -71,7 +71,7 @@ def java_fuzz_target_test(
         name = name,
         runtime_deps = [
             "//bazel/tools/java:fuzz_target_test_wrapper",
-            "//agent:jazzer_api_deploy.jar",
+            "//driver/src/main/java/com/code_intelligence/jazzer:jazzer_import",
             ":%s_deploy.jar" % target_name,
         ],
         jvm_flags = [
@@ -98,7 +98,7 @@ def java_fuzz_target_test(
         ] + fuzzer_args,
         data = [
             ":%s_deploy.jar" % target_name,
-            "//agent:jazzer_agent_deploy",
+            "//driver/src/main/java/com/code_intelligence/jazzer:jazzer_import",
             "//agent:jazzer_api_deploy.jar",
             driver,
         ] + data + ([hook_jar] if hook_jar else []),

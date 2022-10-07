@@ -26,17 +26,19 @@ define_kt_toolchain(
 pkg_tar(
     name = "jazzer_release",
     srcs = [
-        "//agent:jazzer_agent_deploy",
-        "//agent:jazzer_api_deploy.jar",
+        "//agent:jazzer_api",
+        "//driver/src/main/java/com/code_intelligence/jazzer",
         "//launcher:jazzer",
     ],
     extension = "tar.gz",
     mode = "0777",
     remap_paths = {
-        "agent/jazzer_agent_deploy.jar": "jazzer_agent_deploy.jar",
-        "agent/jazzer_api_deploy.jar": "jazzer_api_deploy.jar",
-        "launcher/jazzer": "jazzer",
-    },
+        "agent/jazzer_api.jar": "jazzer_api_deploy.jar",
+        "driver/src/main/java/com/code_intelligence/jazzer/jazzer.jar": "jazzer.jar",
+    } | select({
+        "@platforms//os:windows": {"launcher/jazzer": "jazzer.exe"},
+        "//conditions:default": {"launcher/jazzer": "jazzer"},
+    }),
     strip_prefix = "./",
 )
 
