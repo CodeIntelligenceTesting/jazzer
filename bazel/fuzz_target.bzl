@@ -17,10 +17,10 @@ def java_fuzz_target_test(
         target_class = None,
         target_method = None,
         deps = [],
+        runtime_deps = [],
         hook_jar = None,
         data = [],
-        launcher_variant = None,
-        visibility = None,
+        launcher_variant = "native",
         tags = [],
         fuzzer_args = [],
         srcs = [],
@@ -36,36 +36,37 @@ def java_fuzz_target_test(
         expect_crash = None,
         **kwargs):
     target_name = name + "_target"
-    deploy_manifest_lines = []
     if target_class:
-        deploy_manifest_lines.append("Jazzer-Fuzz-Target-Class: %s" % target_class)
+        fuzzer_args = fuzzer_args + ["--target_class=" + target_class]
     if target_method:
-        fuzzer_args = list(fuzzer_args) + ["--target_method=" + target_method]
+        fuzzer_args = fuzzer_args + ["--target_method=" + target_method]
     if expect_crash == None:
         expect_crash = len(allowed_findings) != 0
 
     # Deps can only be specified on java_binary targets with sources, which
     # excludes e.g. Kotlin libraries wrapped into java_binary via runtime_deps.
-    target_deps = deps + ["//agent:jazzer_api_compile_only"] if srcs else []
+    deps = deps + ["//agent:jazzer_api_compile_only"] if srcs else []
+    if launcher_variant == "java":
+        runtime_deps = runtime_deps + ["//driver/src/main/java/com/code_intelligence/jazzer:jazzer_lib"]
     native.java_binary(
         name = target_name,
         srcs = srcs,
         visibility = ["//visibility:private"],
-        create_executable = False,
-        deploy_manifest_lines = deploy_manifest_lines,
-        deps = target_deps,
+        main_class = "com.code_intelligence.jazzer.Jazzer",
+        deps = deps,
+        runtime_deps = runtime_deps,
         testonly = True,
         **kwargs
     )
 
-    if launcher_variant == None:
+    if launcher_variant == "native":
         driver = "//launcher:jazzer"
     elif launcher_variant == "address":
         driver = "//launcher:jazzer_asan"
     elif launcher_variant == "undefined":
         driver = "//launcher:jazzer_ubsan"
     elif launcher_variant == "java":
-        driver = "//driver/src/main/java/com/code_intelligence/jazzer:Jazzer"
+        driver = target_name
     else:
         fail("Invalid launcher variant: " + launcher_variant)
 
@@ -108,5 +109,4 @@ def java_fuzz_target_test(
         main_class = "com.code_intelligence.jazzer.tools.FuzzTargetTestWrapper",
         use_testrunner = False,
         tags = tags,
-        visibility = visibility,
     )
