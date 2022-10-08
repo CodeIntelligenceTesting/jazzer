@@ -15,7 +15,8 @@
 package com.code_intelligence.jazzer.driver;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -52,15 +53,16 @@ public class FuzzedDataProviderImplTest {
     assertEqual(true,
         Arrays.equals(new long[] {0x0123456789abdcefL, 0xfedcba9876543210L}, data.consumeLongs(2)));
 
-    assertEqual((float) 0.28969181, data.consumeProbabilityFloat());
-    assertEqual(0.086814121166605432, data.consumeProbabilityDouble());
-    assertEqual((float) 0.30104411, data.consumeProbabilityFloat());
-    assertEqual(0.96218831486039413, data.consumeProbabilityDouble());
+    assertAtLeastAsPrecise((float) 0.28969181, data.consumeProbabilityFloat());
+    assertAtLeastAsPrecise(0.086814121166605432, data.consumeProbabilityDouble());
+    assertAtLeastAsPrecise((float) 0.30104411, data.consumeProbabilityFloat());
+    assertAtLeastAsPrecise(0.96218831486039413, data.consumeProbabilityDouble());
 
-    assertEqual((float) -2.8546307e+38, data.consumeRegularFloat());
-    assertEqual(8.0940194040236032e+307, data.consumeRegularDouble());
-    assertEqual((float) 271.49084, data.consumeRegularFloat((float) 123.0, (float) 777.0));
-    assertEqual(30.859126145478349, data.consumeRegularDouble(13.37, 31.337));
+    assertAtLeastAsPrecise((float) -2.8546307e+38, data.consumeRegularFloat());
+    assertAtLeastAsPrecise(8.0940194040236032e+307, data.consumeRegularDouble());
+    assertAtLeastAsPrecise(
+        (float) 271.49084, data.consumeRegularFloat((float) 123.0, (float) 777.0));
+    assertAtLeastAsPrecise(30.859126145478349, data.consumeRegularDouble(13.37, 31.337));
 
     assertEqual((float) 0.0, data.consumeFloat());
     assertEqual((float) -0.0, data.consumeFloat());
@@ -111,6 +113,16 @@ public class FuzzedDataProviderImplTest {
     assertEqual("", data.consumeRemainingAsString());
     assertEqual("", data.consumeAsciiString(100));
     assertEqual("", data.consumeString(100));
+  }
+
+  private static void assertAtLeastAsPrecise(double expected, double actual) {
+    BigDecimal exactExpected = BigDecimal.valueOf(expected);
+    BigDecimal roundedActual =
+        BigDecimal.valueOf(actual).setScale(exactExpected.scale(), RoundingMode.HALF_UP);
+    if (!exactExpected.equals(roundedActual)) {
+      throw new IllegalArgumentException(
+          String.format("Expected: %s, got: %s (rounded: %s)", expected, actual, roundedActual));
+    }
   }
 
   private static <T extends Comparable<T>> void assertEqual(T a, T b) {
