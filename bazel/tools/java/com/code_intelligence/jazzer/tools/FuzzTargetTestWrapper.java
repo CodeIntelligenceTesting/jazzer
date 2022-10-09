@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.tools.JavaCompiler;
@@ -47,6 +48,7 @@ public class FuzzTargetTestWrapper {
   private static final boolean JAZZER_CI = "1".equals(System.getenv("JAZZER_CI"));
   private static final String EXCEPTION_PREFIX = "== Java Exception: ";
   private static final String FRAME_PREFIX = "\tat ";
+  private static final Pattern SANITIZER_FINDING = Pattern.compile("^SUMMARY: \\w*Sanitizer");
   private static final String THREAD_DUMP_HEADER = "Stack traces of all JVM threads:";
   private static final Set<String> PUBLIC_JAZZER_PACKAGES = Collections.unmodifiableSet(
       Stream.of("api", "replay", "sanitizers").collect(Collectors.toSet()));
@@ -225,12 +227,13 @@ public class FuzzTargetTestWrapper {
       InputStream fuzzerOutput, Set<String> expectedFindings, boolean noHooks) throws IOException {
     List<String> stackTrace;
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(fuzzerOutput))) {
-      stackTrace = reader.lines()
-                       .peek(System.err::println)
-                       .filter(line
-                           -> line.startsWith(EXCEPTION_PREFIX) || line.startsWith(FRAME_PREFIX)
-                               || line.equals(THREAD_DUMP_HEADER))
-                       .collect(toList());
+      stackTrace =
+          reader.lines()
+              .peek(System.err::println)
+              .filter(line
+                  -> line.startsWith(EXCEPTION_PREFIX) || line.startsWith(FRAME_PREFIX)
+                      || line.equals(THREAD_DUMP_HEADER) || SANITIZER_FINDING.matcher(line).find())
+              .collect(toList());
     }
     if (expectedFindings.isEmpty()) {
       if (stackTrace.isEmpty()) {
@@ -239,9 +242,12 @@ public class FuzzTargetTestWrapper {
       throw new IllegalStateException(String.format(
           "Did not expect a finding, but got a stack trace:%n%s", String.join("\n", stackTrace)));
     }
-    if (expectedFindings.contains("thread_dump")) {
-      // Expect THREAD_DUMP_PREFIX as well as at least one frame.
-      if (!stackTrace.contains(THREAD_DUMP_HEADER) || stackTrace.size() < 2) {
+    if (expectedFindings.contains("native")) {
+      // Expect a native sanitizer finding as well as a thread dump with at least one frame.
+      if (stackTrace.stream().noneMatch(line -> SANITIZER_FINDING.matcher(line).find())) {
+        throw new IllegalStateException("Expected native sanitizer finding, but did not get any");
+      }
+      if (!stackTrace.contains(THREAD_DUMP_HEADER) || stackTrace.size() < 3) {
         throw new IllegalStateException(
             "Expected stack traces for all threads, but did not get any");
       }
