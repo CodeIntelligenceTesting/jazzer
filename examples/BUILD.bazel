@@ -51,7 +51,7 @@ java_jni_library(
 
 java_fuzz_target_test(
     name = "ExampleFuzzerWithASan",
-    allowed_findings = ["thread_dump"],
+    allowed_findings = ["native"],
     env = {"EXAMPLE_NATIVE_LIB": "native_asan"},
     env_inherit = ["CC"],
     fuzzer_args = [
@@ -71,7 +71,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "ExampleFuzzerWithUBSan",
-    allowed_findings = ["thread_dump"],
+    allowed_findings = ["native"],
     env = {"EXAMPLE_NATIVE_LIB": "native_ubsan"},
     env_inherit = ["CC"],
     fuzzer_args = [
