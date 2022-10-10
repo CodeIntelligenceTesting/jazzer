@@ -172,8 +172,7 @@ public class FuzzTargetTestWrapper {
 
     if (JAZZER_CI && verifyCrashReproducer) {
       try {
-        verifyCrashReproducer(
-            outputDir, driverActualPath, apiActualPath, jarActualPath, allowedFindings);
+        verifyCrashReproducer(outputDir, apiActualPath, jarActualPath, allowedFindings);
       } catch (Exception e) {
         e.printStackTrace();
         System.exit(1);
@@ -274,8 +273,8 @@ public class FuzzTargetTestWrapper {
     }
   }
 
-  private static void verifyCrashReproducer(String outputDir, String driver, String api, String jar,
-      Set<String> expectedFindings) throws Exception {
+  private static void verifyCrashReproducer(
+      String outputDir, String api, String jar, Set<String> expectedFindings) throws Exception {
     File source =
         Files.list(Paths.get(outputDir))
             .filter(f -> f.toFile().getName().endsWith(".java"))
@@ -285,17 +284,15 @@ public class FuzzTargetTestWrapper {
             .map(Path::toFile)
             .orElseThrow(
                 () -> new IllegalStateException("Could not find crash reproducer in " + outputDir));
-    String crashReproducer = compile(source, driver, api, jar);
+    String crashReproducer = compile(source, api, jar);
     execute(crashReproducer, outputDir, expectedFindings);
   }
 
-  private static String compile(File source, String driver, String api, String jar)
-      throws IOException {
+  private static String compile(File source, String api, String jar) throws IOException {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null)) {
       Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjects(source);
-      List<String> options =
-          Arrays.asList("-classpath", String.join(File.pathSeparator, driver, api, jar));
+      List<String> options = Arrays.asList("-classpath", String.join(File.pathSeparator, api, jar));
       System.out.printf(
           "Compile crash reproducer %s with options %s%n", source.getAbsolutePath(), options);
       CompilationTask task =
