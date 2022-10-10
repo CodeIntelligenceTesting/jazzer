@@ -5,7 +5,7 @@ public class Crash_%1$s {
     static final String base64Bytes = String.join("", "%2$s");
 
     public static void main(String[] args) throws Throwable {
-        ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true);
+        Crash_%1$s.class.getClassLoader().setDefaultAssertionStatus(true);
         try {
             Method fuzzerInitialize = %3$s.class.getMethod("fuzzerInitialize");
             fuzzerInitialize.invoke(null);
