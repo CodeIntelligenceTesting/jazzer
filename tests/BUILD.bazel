@@ -14,6 +14,7 @@ java_fuzz_target_test(
     fuzzer_args = [
         "$(rootpath src/test/java/com/example/LongStringFuzzerInput)",
     ],
+    launcher_variant = "native",
     verify_crash_input = False,
 )
 
@@ -78,6 +79,7 @@ java_fuzz_target_test(
         "@platforms//os:windows": ["--jvm_args=-Dfoo=foo;-Dbar=b\\\\;ar"],
         "//conditions:default": ["--jvm_args=-Dfoo=foo:-Dbar=b\\\\:ar"],
     }),
+    launcher_variant = "native",
     # Consumes more resources than can be expressed via the size attribute.
     tags = ["exclusive-if-local"],
     target_class = "com.example.ForkModeFuzzer",
@@ -247,7 +249,6 @@ java_fuzz_target_test(
         "-use_value_profile=1",
         "--native",
     ],
-    launcher_variant = "java",
     target_class = "com.example.NativeValueProfileFuzzer",
     target_compatible_with = SKIP_ON_WINDOWS,
     verify_crash_reproducer = False,
@@ -307,7 +308,6 @@ java_fuzz_target_test(
     fuzzer_args = [
         "--autofuzz=java.util.regex.Pattern::compile",
     ],
-    launcher_variant = "java",
 )
 
 java_fuzz_target_test(
@@ -317,7 +317,6 @@ java_fuzz_target_test(
         "--autofuzz=java.util.regex.Pattern::compile",
         "-fork=2",
     ],
-    launcher_variant = "java",
     # -fork is broken on macOS for unknown reasons.
     target_compatible_with = SKIP_ON_MACOS,
 )

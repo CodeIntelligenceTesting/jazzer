@@ -20,7 +20,7 @@ def java_fuzz_target_test(
         runtime_deps = [],
         hook_jar = None,
         data = [],
-        launcher_variant = "native",
+        launcher_variant = "java",
         tags = [],
         fuzzer_args = [],
         srcs = [],
