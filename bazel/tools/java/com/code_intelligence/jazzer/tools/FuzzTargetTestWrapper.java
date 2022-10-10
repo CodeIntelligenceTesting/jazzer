@@ -54,10 +54,10 @@ public class FuzzTargetTestWrapper {
 
   public static void main(String[] args) {
     Runfiles runfiles;
-    String driverActualPath;
-    String apiActualPath;
-    String jarActualPath;
-    String hookJarActualPath;
+    Path driverActualPath;
+    Path apiActualPath;
+    Path targetJarActualPath;
+    Path hookJarActualPath;
     boolean verifyCrashInput;
     boolean verifyCrashReproducer;
     boolean expectCrash;
@@ -68,7 +68,7 @@ public class FuzzTargetTestWrapper {
       runfiles = Runfiles.create();
       driverActualPath = lookUpRunfile(runfiles, args[0]);
       apiActualPath = lookUpRunfile(runfiles, args[1]);
-      jarActualPath = lookUpRunfile(runfiles, args[2]);
+      targetJarActualPath = lookUpRunfile(runfiles, args[2]);
       hookJarActualPath = args[3].isEmpty() ? null : lookUpRunfile(runfiles, args[3]);
       verifyCrashInput = Boolean.parseBoolean(args[4]);
       verifyCrashReproducer = Boolean.parseBoolean(args[5]);
@@ -80,7 +80,9 @@ public class FuzzTargetTestWrapper {
       arguments =
           Arrays.stream(args)
               .skip(9)
-              .map(arg -> arg.startsWith("-") ? arg : lookUpRunfileWithFallback(runfiles, arg))
+              .map(arg
+                  -> arg.startsWith("-") ? arg
+                                         : lookUpRunfileWithFallback(runfiles, arg).toString())
               .collect(toList());
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
@@ -95,17 +97,18 @@ public class FuzzTargetTestWrapper {
 
     // Crashes will be available as test outputs. These are cleared on the next run,
     // so this is only useful for examples.
-    String outputDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR");
+    Path outputDir = Paths.get(System.getenv("TEST_UNDECLARED_OUTPUTS_DIR"));
 
     List<String> command = new ArrayList<>();
-    command.add(driverActualPath);
+    command.add(driverActualPath.toString());
     command.add(String.format("-artifact_prefix=%s/", outputDir));
     command.add(String.format("--reproducer_path=%s", outputDir));
     if (!usesJavaLauncher) {
       command.add(String.format("--cp=%s",
-          hookJarActualPath == null ? jarActualPath
-                                    : String.join(System.getProperty("path.separator"),
-                                        jarActualPath, hookJarActualPath)));
+          hookJarActualPath == null
+              ? targetJarActualPath
+              : String.join(System.getProperty("path.separator"), targetJarActualPath.toString(),
+                  hookJarActualPath.toString())));
     }
     if (System.getenv("JAZZER_NO_EXPLICIT_SEED") == null) {
       command.add("-seed=2735196724");
@@ -148,20 +151,22 @@ public class FuzzTargetTestWrapper {
         System.err.printf("Did expect a crash, but Jazzer exited with exit code %d%n", exitCode);
         System.exit(1);
       }
-      String[] outputFiles = new File(outputDir).list();
-      if (outputFiles == null) {
+      List<Path> outputFiles = Files.list(outputDir).collect(toList());
+      if (outputFiles.isEmpty()) {
         System.err.printf("Jazzer did not write a crashing input into %s%n", outputDir);
         System.exit(1);
       }
       // Verify that libFuzzer dumped a crashing input.
       if (JAZZER_CI && verifyCrashInput
-          && Arrays.stream(outputFiles).noneMatch(name -> name.startsWith("crash-"))) {
+          && outputFiles.stream().noneMatch(
+              name -> name.getFileName().toString().startsWith("crash-"))) {
         System.err.printf("No crashing input found in %s%n", outputDir);
         System.exit(1);
       }
       // Verify that libFuzzer dumped a crash reproducer.
       if (JAZZER_CI && verifyCrashReproducer
-          && Arrays.stream(outputFiles).noneMatch(name -> name.startsWith("Crash_"))) {
+          && outputFiles.stream().noneMatch(
+              name -> name.getFileName().toString().startsWith("Crash_"))) {
         System.err.printf("No crash reproducer found in %s%n", outputDir);
         System.exit(1);
       }
@@ -172,7 +177,7 @@ public class FuzzTargetTestWrapper {
 
     if (JAZZER_CI && verifyCrashReproducer) {
       try {
-        verifyCrashReproducer(outputDir, apiActualPath, jarActualPath, allowedFindings);
+        verifyCrashReproducer(outputDir, apiActualPath, targetJarActualPath, allowedFindings);
       } catch (Exception e) {
         e.printStackTrace();
         System.exit(1);
@@ -182,22 +187,23 @@ public class FuzzTargetTestWrapper {
   }
 
   // Looks up a Bazel "rootpath" in this binary's runfiles and returns the resulting path.
-  private static String lookUpRunfile(Runfiles runfiles, String rootpath) {
-    return runfiles.rlocation(rlocationPath(rootpath));
+  private static Path lookUpRunfile(Runfiles runfiles, String rootpath) {
+    return Paths.get(runfiles.rlocation(rlocationPath(rootpath)));
   }
 
   // Looks up a Bazel "rootpath" in this binary's runfiles and returns the resulting path if it
   // exists. If not, returns the original path unmodified.
-  private static String lookUpRunfileWithFallback(Runfiles runfiles, String rootpath) {
-    String candidatePath;
+  private static Path lookUpRunfileWithFallback(Runfiles runfiles, String rootpathString) {
+    Path candidatePath;
+    Path rootpath = Paths.get(rootpathString);
     try {
-      candidatePath = lookUpRunfile(runfiles, rootpath);
+      candidatePath = lookUpRunfile(runfiles, rootpathString);
     } catch (IllegalArgumentException unused) {
       // The argument to Runfiles.rlocation had an invalid format, which indicates that rootpath
       // is not a Bazel "rootpath" but a user-supplied path that should be returned unchanged.
       return rootpath;
     }
-    if (new File(candidatePath).exists()) {
+    if (Files.exists(candidatePath)) {
       return candidatePath;
     } else {
       return rootpath;
@@ -274,9 +280,9 @@ public class FuzzTargetTestWrapper {
   }
 
   private static void verifyCrashReproducer(
-      String outputDir, String api, String jar, Set<String> expectedFindings) throws Exception {
+      Path outputDir, Path api, Path targetJar, Set<String> expectedFindings) throws Exception {
     File source =
-        Files.list(Paths.get(outputDir))
+        Files.list(outputDir)
             .filter(f -> f.toFile().getName().endsWith(".java"))
             // Verify the crash reproducer that was created last in order to reproduce the last
             // crash when using --keep_going.
@@ -284,15 +290,16 @@ public class FuzzTargetTestWrapper {
             .map(Path::toFile)
             .orElseThrow(
                 () -> new IllegalStateException("Could not find crash reproducer in " + outputDir));
-    String crashReproducer = compile(source, api, jar);
+    String crashReproducer = compile(source, api, targetJar);
     execute(crashReproducer, outputDir, expectedFindings);
   }
 
-  private static String compile(File source, String api, String jar) throws IOException {
+  private static String compile(File source, Path api, Path targetJar) throws IOException {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null)) {
       Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjects(source);
-      List<String> options = Arrays.asList("-classpath", String.join(File.pathSeparator, api, jar));
+      List<String> options = Arrays.asList(
+          "-classpath", String.join(File.pathSeparator, api.toString(), targetJar.toString()));
       System.out.printf(
           "Compile crash reproducer %s with options %s%n", source.getAbsolutePath(), options);
       CompilationTask task =
@@ -304,12 +311,11 @@ public class FuzzTargetTestWrapper {
     }
   }
 
-  private static void execute(String classFile, String outputDir, Set<String> expectedFindings)
+  private static void execute(String classFile, Path outputDir, Set<String> expectedFindings)
       throws IOException, ReflectiveOperationException {
     try {
       System.out.printf("Execute crash reproducer %s%n", classFile);
-      URLClassLoader classLoader =
-          new URLClassLoader(new URL[] {new URL("file://" + outputDir + "/")});
+      URLClassLoader classLoader = new URLClassLoader(new URL[] {outputDir.toUri().toURL()});
       Class<?> crashReproducerClass = classLoader.loadClass(classFile);
       Method main = crashReproducerClass.getMethod("main", String[].class);
       System.setProperty("jazzer.is_reproducer", "true");
