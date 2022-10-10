@@ -291,7 +291,7 @@ public class FuzzTargetTestWrapper {
             .orElseThrow(
                 () -> new IllegalStateException("Could not find crash reproducer in " + outputDir));
     String crashReproducer = compile(source, api, targetJar);
-    execute(crashReproducer, outputDir, expectedFindings);
+    execute(crashReproducer, outputDir, api, targetJar, expectedFindings);
   }
 
   private static String compile(File source, Path api, Path targetJar) throws IOException {
@@ -311,11 +311,17 @@ public class FuzzTargetTestWrapper {
     }
   }
 
-  private static void execute(String classFile, Path outputDir, Set<String> expectedFindings)
-      throws IOException, ReflectiveOperationException {
+  private static void execute(String classFile, Path outputDir, Path api, Path targetJar,
+      Set<String> expectedFindings) throws IOException, ReflectiveOperationException {
     try {
       System.out.printf("Execute crash reproducer %s%n", classFile);
-      URLClassLoader classLoader = new URLClassLoader(new URL[] {outputDir.toUri().toURL()});
+      URLClassLoader classLoader = new URLClassLoader(
+          new URL[] {
+              outputDir.toUri().toURL(),
+              api.toUri().toURL(),
+              targetJar.toUri().toURL(),
+          },
+          getPlatformClassLoader());
       Class<?> crashReproducerClass = classLoader.loadClass(classFile);
       Method main = crashReproducerClass.getMethod("main", String[].class);
       System.setProperty("jazzer.is_reproducer", "true");
@@ -337,6 +343,20 @@ public class FuzzTargetTestWrapper {
             classFile + " did not crash with any of " + String.join(", ", expectedFindings),
             finding);
       }
+    }
+  }
+
+  private static ClassLoader getPlatformClassLoader() {
+    try {
+      Method getter = ClassLoader.class.getMethod("getPlatformClassLoader");
+      // Java 9 and higher
+      return (ClassLoader) getter.invoke(null);
+    } catch (NoSuchMethodException e) {
+      // Java 8: All standard library classes are visible through the ClassLoader represented by
+      // null.
+      return null;
+    } catch (InvocationTargetException | IllegalAccessException e) {
+      throw new RuntimeException(e);
     }
   }
 }
