@@ -1,5 +1,14 @@
 load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
 
+java_test(
+    name = "JazzerFuzzTestExecutorTest",
+    srcs = ["JazzerFuzzTestExecutorTest.java"],
+    deps = [
+        "//driver/src/main/java/com/code_intelligence/jazzer/junit:jazzer_test_engine",
+        "@maven//:com_google_truth_truth",
+    ],
+)
+
 [
     java_test(
         name = "RegressionTestTest" + JAZZER_FUZZ,
