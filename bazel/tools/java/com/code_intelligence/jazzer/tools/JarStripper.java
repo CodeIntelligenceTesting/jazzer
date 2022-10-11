@@ -14,7 +14,14 @@
 
 package com.code_intelligence.jazzer.tools;
 
+import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.partitioningBy;
+import static java.util.stream.Collectors.toList;
+
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
@@ -23,14 +30,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class JarStripper {
@@ -45,14 +52,23 @@ public class JarStripper {
     if (args.length < 2) {
       System.err.println(
           "Hermetically removes files and directories from .jar files by relative paths.");
-      System.err.println("Usage: in.jar out.jar [relative path]...");
+      System.err.println("Usage: in.jar out.jar [[+]path]...");
       System.exit(1);
     }
 
     Path inFile = Paths.get(args[0]);
     Path outFile = Paths.get(args[1]);
-    List<String> rawPathsToDelete =
-        Collections.unmodifiableList(Arrays.stream(args).skip(2).collect(Collectors.toList()));
+    Map<Boolean, List<String>> rawPaths = unmodifiableMap(
+        Arrays.stream(args)
+            .skip(2)
+            .map(arg -> {
+              if (arg.startsWith("+")) {
+                return new SimpleEntry<>(true, arg.substring(1));
+              } else {
+                return new SimpleEntry<>(false, arg);
+              }
+            })
+            .collect(partitioningBy(e -> e.getKey(), mapping(e -> e.getValue(), toList()))));
 
     try {
       Files.copy(inFile, outFile);
@@ -78,35 +94,55 @@ public class JarStripper {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
     try (FileSystem zipFs = FileSystems.newFileSystem(outUri, ZIP_FS_PROPERTIES)) {
-      String globPattern = String.format("glob:{%s}",
-          rawPathsToDelete.stream()
-              .flatMap(pattern -> {
-                if (pattern.endsWith("/**")) {
-                  // When removing all contents of a directory, also remove the directory itself.
-                  return Stream.of(
-                      pattern, pattern.substring(0, pattern.length() - "/**".length()));
-                } else {
-                  return Stream.of(pattern);
-                }
-              })
-              .collect(Collectors.joining(",")));
-      PathMatcher pathsToDelete = zipFs.getPathMatcher(globPattern);
+      PathMatcher pathsToDelete = toPathMatcher(zipFs, rawPaths.get(false), false);
+      PathMatcher pathsToKeep = toPathMatcher(zipFs, rawPaths.get(true), true);
       try (Stream<Path> walk = Files.walk(zipFs.getPath(""))) {
-        walk.sorted(Comparator.reverseOrder()).filter(pathsToDelete::matches).forEach(path -> {
-          try {
-            Files.delete(path);
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
+        walk.sorted(Comparator.reverseOrder())
+            .filter(path
+                -> (pathsToKeep != null && !pathsToKeep.matches(path))
+                    || (pathsToDelete != null && pathsToDelete.matches(path)))
+            .forEach(path -> {
+              try {
+                Files.delete(path);
+              } catch (IOException e) {
+                throw new UncheckedIOException(e);
+              }
+            });
       }
     } catch (Throwable e) {
       Throwable throwable = e;
-      if (throwable instanceof RuntimeException) {
+      if (throwable instanceof UncheckedIOException) {
         throwable = throwable.getCause();
       }
       throwable.printStackTrace();
       System.exit(1);
     }
+  }
+
+  private static PathMatcher toPathMatcher(FileSystem fs, List<String> paths, boolean keep) {
+    if (paths.isEmpty()) {
+      return null;
+    }
+    return fs.getPathMatcher(String.format("glob:{%s}",
+        paths.stream()
+            .flatMap(pattern -> keep ? toKeepGlobs(pattern) : toRemoveGlobs(pattern))
+            .collect(joining(","))));
+  }
+
+  private static Stream<String> toRemoveGlobs(String path) {
+    if (path.endsWith("/**")) {
+      // When removing all contents of a directory, also remove the directory itself.
+      return Stream.of(path, path.substring(0, path.length() - "/**".length()));
+    } else {
+      return Stream.of(path);
+    }
+  }
+
+  private static Stream<String> toKeepGlobs(String path) {
+    // When keeping something, also keep all parents.
+    String[] segments = path.split("/");
+    return Stream.concat(Stream.of(path),
+        IntStream.range(0, segments.length)
+            .mapToObj(i -> Arrays.stream(segments).limit(i).collect(joining("/"))));
   }
 }
