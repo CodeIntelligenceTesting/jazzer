@@ -26,14 +26,62 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
 /**
- * A {@link ParameterizedTest} with input data generated dynamically by the Java fuzzer <a
+ * A parameterized test with parameters generated automatically by the Java fuzzer <a
  * href="https://github.com/CodeIntelligenceTesting/jazzer">Jazzer</a>.
  *
- * <p>Methods annotated with {@link FuzzTest} must take a single parameter of type {@code byte[]} or
- * {@link com.code_intelligence.jazzer.api.FuzzedDataProvider}. The latter provides convenience
- * methods to generate common Java types from the raw fuzzer input.
+ * <h2>Test parameters</h2>
  *
- * <p>Only a single method per class can be annotated with {@link FuzzTest}.
+ * <p>Methods annotated with {@link FuzzTest} can take either of the following types of parameters:
+ *
+ * <dl>
+ * <dt>{@code byte[]}</dt>
+ * <dd>Raw byte input mutated by the fuzzer. Use this signature when your fuzz test naturally
+ * handles raw bytes (e.g. when fuzzing a binary format parser). This is the most efficient, but
+ * also the least convenient way to write a fuzz test.</dd>
+ *
+ * <dt>{@link com.code_intelligence.jazzer.api.FuzzedDataProvider}</dt>
+ * <dd>Provides convenience methods that generate instances of commonly used Java types from the raw
+ * fuzzer input. This is generally the best way to write fuzz tests.</dd>
+ *
+ * <dt>any non-zero number of parameters of any type</dt>
+ * <dd>In this case, Jazzer will rely on reflection and class path scanning to instantiate concrete
+ * arguments. While convenient and a good way to get started, fuzz tests using this feature will
+ * generally be less efficient than fuzz tests using any of the other possible signatures. Due to
+ * the reliance on class path scanning, any change to the class path may also render previous
+ * findings unreproducible.</dd>
+ * </dl>
+ *
+ * <h2>Test modes</h2>
+ *
+ * A fuzz test can be run in two modes: fuzzing and regression testing.
+ *
+ * <h3>Fuzzing</h3>
+ * <p>When the environment variable {@code JAZZER_FUZZ} is set to any non-empty value, fuzz tests
+ * run in "fuzzing" mode. In this mode, the method annotated with {@link FuzzTest} are invoked
+ * repeatedly with inputs that Jazzer generates and mutates based on feedback obtained from
+ * instrumentation it applies to the test and every class loaded by it.
+ *
+ * <p>When an assertion in the test fails, an exception is thrown but not caught, or Jazzer's
+ * instrumentation detects a security issue (e.g. SQL injection or insecure deserialization), the
+ * fuzz test is reported as failed and the input is collected in the inputs directory for the test
+ * class (see "Regression testing" for details).
+ *
+ * <p>When no issue has been found after the configured {@link FuzzTest#maxDuration()}, the test
+ * passes.
+ *
+ * <p>Only a single fuzz test per test run will be executed in fuzzing mode. All other fuzz tests
+ * will be skipped.
+ *
+ * <h3>Regression testing</h3>
+ * <p>By default, a fuzz test is executed as a regular JUnit {@link ParameterizedTest} running on a
+ * fixed set of inputs. It can be run together with regular unit tests and used to verify that past
+ * findings remain fixed. In IDEs with JUnit 5 integration, it can also be used to conveniently
+ * debug individual findings.
+ *
+ * <p>Fuzz tests are always executed on the empty input as well as all input files contained in the
+ * resource directory called {@code <TestClassName>Inputs} in the current package. For example,
+ * all fuzz tests contained in the class {@code com.example.MyFuzzTests} would run on all files
+ * under {@code src/test/resources/com/example/MyFuzzTestsInputs}.
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
@@ -49,9 +97,9 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 public @interface FuzzTest {
   /**
    * A duration string such as "1h 2m 30s" indicating for how long the fuzz test should be executed
-   * when fuzzing.
+   * during fuzzing.
    *
-   * <p>Defaults to 1 minute.
+   * <p>This option has no effect during regression testing.
    */
   String maxDuration() default "1m";
 }
