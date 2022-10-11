@@ -101,5 +101,5 @@ public @interface FuzzTest {
    *
    * <p>This option has no effect during regression testing.
    */
-  String maxDuration() default "1m";
+  String maxDuration() default "5m";
 }
