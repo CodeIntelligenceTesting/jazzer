@@ -134,6 +134,7 @@ java_library(
     resources = [
         "//driver/src/main/resources:jazzer_test_engine_service",
     ],
+    visibility = ["//driver/src/test/java/com/code_intelligence/jazzer/junit:__pkg__"],
     deps = [
         ":agent_configurator",
         ":fuzz_test",
