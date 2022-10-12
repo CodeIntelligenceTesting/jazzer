@@ -49,8 +49,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 /**
- * Entrypoint for Jazzer to run in a user-controlled JVM rather than the JVM started by the native
- * Jazzer launcher.
+ * The libFuzzer-compatible CLI entrypoint for Jazzer.
  *
  * <p>Arguments to Jazzer are passed as command-line arguments or {@code jazzer.*} system
  * properties. For example, setting the property {@code jazzer.target_class} to
