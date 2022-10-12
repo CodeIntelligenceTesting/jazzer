@@ -1,28 +1,7 @@
-load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load(":sanitizers.bzl", "SANITIZER_CLASSES")
-
 java_library(
     name = "sanitizers",
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers",
     ],
-)
-
-write_file(
-    name = "sanitizers_java",
-    out = "Constants.java",
-    content = [
-        "package com.code_intelligence.jazzer.sanitizers;",
-        "import java.io.File;",
-        "public final class Constants {",
-        "  public static final String SANITIZER_HOOK_NAMES = \"%s\";" % "\" + File.pathSeparator + \"".join(SANITIZER_CLASSES),
-        "}",
-    ],
-)
-
-java_library(
-    name = "sanitizer_constants",
-    srcs = [":sanitizers_java"],
-    visibility = ["//visibility:public"],
 )
