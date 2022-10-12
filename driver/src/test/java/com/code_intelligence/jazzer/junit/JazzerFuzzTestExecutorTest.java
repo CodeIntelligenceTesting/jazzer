@@ -26,6 +26,7 @@ public class JazzerFuzzTestExecutorTest {
     assertThat(durationStringToSeconds("1min")).isEqualTo(60);
     assertThat(durationStringToSeconds("1h")).isEqualTo(60 * 60);
     assertThat(durationStringToSeconds("1h   2m 30s")).isEqualTo(60 * 60 + 2 * 60 + 30);
+    assertThat(durationStringToSeconds("1hr2min30sec")).isEqualTo(60 * 60 + 2 * 60 + 30);
     assertThat(durationStringToSeconds("1h2m30s")).isEqualTo(60 * 60 + 2 * 60 + 30);
   }
 }
