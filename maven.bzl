@@ -15,15 +15,9 @@
 load("@rules_jvm_external//:specs.bzl", "maven")
 
 JAZZER_VERSION = "0.12.0"
+JAZZER_COORDINATES = "com.code-intelligence:jazzer:%s" % JAZZER_VERSION
 JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_VERSION
 JAZZER_JUNIT_COORDINATES = "com.code-intelligence:jazzer-junit:%s" % JAZZER_VERSION
-JAZZER_JUNIT_MAVEN_DEPS = [
-    Label("//deploy:api"),
-    Label("@maven//:org_junit_jupiter_junit_jupiter_api"),
-    Label("@maven//:org_junit_jupiter_junit_jupiter_params"),
-    Label("@maven//:org_junit_platform_junit_platform_commons"),
-    Label("@maven//:org_junit_platform_junit_platform_engine"),
-]
 
 # **WARNING**: These Maven dependencies have known vulnerabilities and are only used to test that
 #              Jazzer finds these issues. DO NOT USE.

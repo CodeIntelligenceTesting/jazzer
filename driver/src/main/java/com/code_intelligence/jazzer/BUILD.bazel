@@ -1,6 +1,7 @@
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+load("@rules_jvm_external//:defs.bzl", "javadoc")
 load("//:maven.bzl", "JAZZER_VERSION")
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 load("//bazel:jar.bzl", "strip_jar")
@@ -34,9 +35,12 @@ jar_jar(
     rules = "jazzer_shade_rules.jarjar",
 )
 
+DEPLOY_MANIFEST_LINES = [
+    "Jazzer-Hook-Classes: ",
+] + [" {}:".format(c) for c in SANITIZER_CLASSES]
+
 java_binary(
     name = "jazzer_unshaded",
-    srcs = ["Jazzer.java"],
     # Note: We can't add
     # //agent/src/main/java/com/code_intelligence/jazzer/runtime:java_bootstrap_unshaded itself as
     # that would also strip out external dependencies common between Jazzer and its bootstrap jar,
@@ -44,10 +48,46 @@ java_binary(
     deploy_env = [
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap_env",
     ],
-    deploy_manifest_lines = [
-        "Jazzer-Hook-Classes: ",
-    ] + [" {}:".format(c) for c in SANITIZER_CLASSES],
+    deploy_manifest_lines = DEPLOY_MANIFEST_LINES,
     main_class = "com.code_intelligence.jazzer.Jazzer",
+    visibility = ["//driver/src/main/java/com/code_intelligence/jazzer/junit:__pkg__"],
+    runtime_deps = [":jazzer_lib"],
+)
+
+# Docs are only generated for the com.code_intelligence.jazzer package. Everything else is not
+# considered a public interface.
+javadoc(
+    name = "jazzer-docs",
+    visibility = ["//deploy:__pkg__"],
+    deps = [":jazzer_lib"],
+)
+
+strip_jar(
+    name = "jazzer-sources",
+    jar = ":jazzer_transitive_sources_deploy-src.jar",
+    paths_to_keep = [
+        "com/code_intelligence/jazzer/**",
+        "jaz/**",
+        "META-INF/**",
+    ],
+    visibility = ["//deploy:__pkg__"],
+)
+
+# The _deploy-src.jar for this target includes the sources for the jazzer_bootstrap library.
+java_binary(
+    name = "jazzer_transitive_sources",
+    deploy_manifest_lines = DEPLOY_MANIFEST_LINES,
+    main_class = "com.code_intelligence.jazzer.Jazzer",
+    runtime_deps = [
+        ":jazzer_lib",
+        "//agent/src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap_lib",
+    ],
+)
+
+java_library(
+    name = "jazzer_lib",
+    srcs = ["Jazzer.java"],
+    visibility = ["//driver/src/main/java/com/code_intelligence/jazzer/junit:__pkg__"],
     runtime_deps = select({
         "@platforms//os:windows": [],
         "//conditions:default": ["//driver/src/main/native/com/code_intelligence/jazzer:jazzer_preload"],
