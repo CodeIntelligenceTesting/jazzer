@@ -161,7 +161,8 @@ class JazzerFuzzTestExecutor {
   static long durationStringToSeconds(String duration) {
     // Convert the string to ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601#Durations). We do not
     // allow for duration units longer than hours, so we can always prepend PT.
-    String isoDuration = "PT" + duration.replace("min", "m").replace(" ", "");
+    String isoDuration =
+        "PT" + duration.replace("sec", "s").replace("min", "m").replace("hr", "h").replace(" ", "");
     return Duration.parse(isoDuration).getSeconds();
   }
 }
