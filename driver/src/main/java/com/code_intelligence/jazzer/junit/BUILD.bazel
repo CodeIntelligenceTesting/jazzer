@@ -93,7 +93,7 @@ java_library(
     ],
     deps = [
         ":utils",
-        "//sanitizers:sanitizer_constants",
+        "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers:constants",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_platform_junit_platform_engine",
     ],
