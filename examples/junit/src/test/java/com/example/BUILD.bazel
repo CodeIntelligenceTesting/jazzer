@@ -11,7 +11,7 @@ java_binary(
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
         "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
-        "//driver/src/main/java/com/code_intelligence/jazzer/junit:junit_for_testing",
+        "//driver/src/main/java/com/code_intelligence/jazzer/junit",
         "//examples/junit/src/main/java/com/example:parser",
         "//examples/junit/src/test/resources:example_seed_corpora",
         "@maven//:org_junit_jupiter_junit_jupiter_api",

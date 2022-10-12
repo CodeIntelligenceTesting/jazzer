@@ -10,6 +10,12 @@ load("//bazel:jar.bzl", "strip_jar")
 java_binary(
     name = "jazzer_bootstrap_unshaded",
     create_executable = False,
+    runtime_deps = [":jazzer_bootstrap_lib"],
+)
+
+java_library(
+    name = "jazzer_bootstrap_lib",
+    visibility = ["//driver/src/main/java/com/code_intelligence/jazzer:__pkg__"],
     runtime_deps = [
         ":runtime",
         "//sanitizers",
