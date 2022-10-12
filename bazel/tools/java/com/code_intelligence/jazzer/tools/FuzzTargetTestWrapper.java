@@ -58,8 +58,8 @@ public class FuzzTargetTestWrapper {
     Path apiActualPath;
     Path targetJarActualPath;
     Path hookJarActualPath;
-    boolean verifyCrashInput;
-    boolean verifyCrashReproducer;
+    boolean shouldVerifyCrashInput;
+    boolean shouldVerifyCrashReproducer;
     boolean expectCrash;
     boolean usesJavaLauncher;
     Set<String> allowedFindings;
@@ -70,8 +70,8 @@ public class FuzzTargetTestWrapper {
       apiActualPath = lookUpRunfile(runfiles, args[1]);
       targetJarActualPath = lookUpRunfile(runfiles, args[2]);
       hookJarActualPath = args[3].isEmpty() ? null : lookUpRunfile(runfiles, args[3]);
-      verifyCrashInput = Boolean.parseBoolean(args[4]);
-      verifyCrashReproducer = Boolean.parseBoolean(args[5]);
+      shouldVerifyCrashInput = Boolean.parseBoolean(args[4]);
+      shouldVerifyCrashReproducer = Boolean.parseBoolean(args[5]);
       expectCrash = Boolean.parseBoolean(args[6]);
       usesJavaLauncher = Boolean.parseBoolean(args[7]);
       allowedFindings =
@@ -157,14 +157,14 @@ public class FuzzTargetTestWrapper {
         System.exit(1);
       }
       // Verify that libFuzzer dumped a crashing input.
-      if (JAZZER_CI && verifyCrashInput
+      if (JAZZER_CI && shouldVerifyCrashInput
           && outputFiles.stream().noneMatch(
               name -> name.getFileName().toString().startsWith("crash-"))) {
         System.err.printf("No crashing input found in %s%n", outputDir);
         System.exit(1);
       }
       // Verify that libFuzzer dumped a crash reproducer.
-      if (JAZZER_CI && verifyCrashReproducer
+      if (JAZZER_CI && shouldVerifyCrashReproducer
           && outputFiles.stream().noneMatch(
               name -> name.getFileName().toString().startsWith("Crash_"))) {
         System.err.printf("No crash reproducer found in %s%n", outputDir);
@@ -175,7 +175,7 @@ public class FuzzTargetTestWrapper {
       System.exit(1);
     }
 
-    if (JAZZER_CI && verifyCrashReproducer) {
+    if (JAZZER_CI && shouldVerifyCrashReproducer) {
       try {
         verifyCrashReproducer(outputDir, apiActualPath, targetJarActualPath, allowedFindings);
       } catch (Exception e) {
@@ -290,8 +290,8 @@ public class FuzzTargetTestWrapper {
             .map(Path::toFile)
             .orElseThrow(
                 () -> new IllegalStateException("Could not find crash reproducer in " + outputDir));
-    String crashReproducer = compile(source, api, targetJar);
-    execute(crashReproducer, outputDir, api, targetJar, expectedFindings);
+    String reproducerClassName = compile(source, api, targetJar);
+    execute(reproducerClassName, outputDir, api, targetJar, expectedFindings);
   }
 
   private static String compile(File source, Path api, Path targetJar) throws IOException {
@@ -311,10 +311,10 @@ public class FuzzTargetTestWrapper {
     }
   }
 
-  private static void execute(String classFile, Path outputDir, Path api, Path targetJar,
+  private static void execute(String className, Path outputDir, Path api, Path targetJar,
       Set<String> expectedFindings) throws IOException, ReflectiveOperationException {
     try {
-      System.out.printf("Execute crash reproducer %s%n", classFile);
+      System.out.printf("Execute crash reproducer %s%n", className);
       URLClassLoader classLoader = new URLClassLoader(
           new URL[] {
               outputDir.toUri().toURL(),
@@ -322,25 +322,25 @@ public class FuzzTargetTestWrapper {
               targetJar.toUri().toURL(),
           },
           getPlatformClassLoader());
-      Class<?> crashReproducerClass = classLoader.loadClass(classFile);
+      Class<?> crashReproducerClass = classLoader.loadClass(className);
       Method main = crashReproducerClass.getMethod("main", String[].class);
       System.setProperty("jazzer.is_reproducer", "true");
       main.invoke(null, new Object[] {new String[] {}});
       if (!expectedFindings.isEmpty()) {
         throw new IllegalStateException("Expected crash with any of "
-            + String.join(", ", expectedFindings) + " not reproduced by " + classFile);
+            + String.join(", ", expectedFindings) + " not reproduced by " + className);
       }
       System.out.println("Reproducer finished successfully without finding");
     } catch (InvocationTargetException e) {
       // expect the invocation to fail with the prescribed finding
       Throwable finding = e.getCause();
       if (expectedFindings.isEmpty()) {
-        throw new IllegalStateException("Did not expect " + classFile + " to crash", finding);
+        throw new IllegalStateException("Did not expect " + className + " to crash", finding);
       } else if (expectedFindings.contains(finding.getClass().getName())) {
         System.out.printf("Reproduced exception \"%s\"%n", finding);
       } else {
         throw new IllegalStateException(
-            classFile + " did not crash with any of " + String.join(", ", expectedFindings),
+            className + " did not crash with any of " + String.join(", ", expectedFindings),
             finding);
       }
     }
