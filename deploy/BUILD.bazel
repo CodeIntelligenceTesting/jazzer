@@ -2,6 +2,12 @@ load("@rules_jvm_external//:defs.bzl", "java_export")
 load("//:maven.bzl", "JAZZER_API_COORDINATES", "JAZZER_COORDINATES", "JAZZER_JUNIT_COORDINATES")
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 
+sh_binary(
+    name = "deploy",
+    srcs = ["deploy.sh"],
+    args = [JAZZER_COORDINATES],
+)
+
 java_export(
     name = "jazzer-api",
     maven_coordinates = JAZZER_API_COORDINATES,
