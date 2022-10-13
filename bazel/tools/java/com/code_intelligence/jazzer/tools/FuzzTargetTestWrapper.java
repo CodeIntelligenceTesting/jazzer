@@ -105,15 +105,19 @@ public class FuzzTargetTestWrapper {
 
     List<String> command = new ArrayList<>();
     command.add(driverActualPath.toString());
-    command.add(String.format("-artifact_prefix=%s/", outputDir));
-    command.add(String.format("--reproducer_path=%s", outputDir));
-    if (!usesJavaLauncher) {
+    if (usesJavaLauncher) {
+      if (hookJarActualPath != null) {
+        command.add(String.format("--main_advice_classpath=%s", hookJarActualPath));
+      }
+    } else {
       command.add(String.format("--cp=%s",
           hookJarActualPath == null
               ? targetJarActualPath
               : String.join(System.getProperty("path.separator"), targetJarActualPath.toString(),
                   hookJarActualPath.toString())));
     }
+    command.add(String.format("-artifact_prefix=%s/", outputDir));
+    command.add(String.format("--reproducer_path=%s", outputDir));
     if (System.getenv("JAZZER_NO_EXPLICIT_SEED") == null) {
       command.add("-seed=2735196724");
     }
