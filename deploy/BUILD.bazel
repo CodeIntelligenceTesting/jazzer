@@ -73,3 +73,8 @@ filegroup(
     # https://github.com/bazelbuild/rules_jvm_external/blob/3cf0d483d59e9d817c356e1c6873697507853dbe/private/rules/maven_project_jar.bzl#L79
     output_group = "_source_jars",
 )
+
+exports_files([
+    "jazzer-api.pom",
+    "jazzer-junit.pom",
+])

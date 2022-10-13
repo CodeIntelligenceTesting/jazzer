@@ -115,7 +115,7 @@ java_library(
     name = "autofuzz_inner_class_target",
     srcs = ["src/test/java/com/example/AutofuzzInnerClassTarget.java"],
     deps = [
-        "//agent:jazzer_api_compile_only",
+        "//agent/src/main/java/com/code_intelligence/jazzer/api",
     ],
 )
 
@@ -239,7 +239,7 @@ java_jni_library(
     srcs = ["src/test/java/com/example/NativeValueProfileFuzzer.java"],
     native_libs = ["//tests/src/test/native/com/example:native_value_profile_fuzzer"],
     visibility = ["//tests/src/test/native/com/example:__pkg__"],
-    deps = ["//agent:jazzer_api_compile_only"],
+    deps = ["//agent/src/main/java/com/code_intelligence/jazzer/api"],
 )
 
 java_fuzz_target_test(
