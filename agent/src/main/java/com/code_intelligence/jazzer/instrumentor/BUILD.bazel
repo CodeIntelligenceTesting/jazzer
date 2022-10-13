@@ -1,5 +1,4 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
-load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 
 kt_jvm_library(
     name = "instrumentor",

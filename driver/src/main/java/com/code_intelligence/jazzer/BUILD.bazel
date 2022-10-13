@@ -1,6 +1,5 @@
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
-load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
 load("@rules_jvm_external//:defs.bzl", "javadoc")
 load("//:maven.bzl", "JAZZER_VERSION")
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
