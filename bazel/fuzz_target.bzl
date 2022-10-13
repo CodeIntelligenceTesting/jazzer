@@ -36,7 +36,6 @@ def java_fuzz_target_test(
         # By default, expect a crash iff allowed_findings isn't empty.
         expect_crash = None,
         **kwargs):
-    target_name = name + "_target"
     if target_class:
         fuzzer_args = fuzzer_args + ["--target_class=" + target_class]
     if target_method:
@@ -44,28 +43,47 @@ def java_fuzz_target_test(
     if expect_crash == None:
         expect_crash = len(allowed_findings) != 0
 
+    target_name = name + "_target"
+    target_deploy_jar = target_name + "_deploy.jar"
+
     # Deps can only be specified on java_binary targets with sources, which
     # excludes e.g. Kotlin libraries wrapped into java_binary via runtime_deps.
     deps = deps + ["//agent/src/main/java/com/code_intelligence/jazzer/api"] if srcs else []
-    if launcher_variant == "java":
-        runtime_deps = runtime_deps + [
-            "//driver/src/main/java/com/code_intelligence/jazzer:jazzer_import",
-        ] + ([hook_jar] if hook_jar else [])
     native.java_binary(
         name = target_name,
         srcs = srcs,
+        create_executable = False,
         visibility = ["//visibility:private"],
-        main_class = "com.code_intelligence.jazzer.Jazzer",
         deps = deps,
         runtime_deps = runtime_deps,
         testonly = True,
         **kwargs
     )
 
+    if launcher_variant == "java":
+        # With the Java driver, we expect fuzz targets to depend on Jazzer
+        # rather than have the launcher start a JVM with Jazzer on the class
+        # path.
+        native.java_import(
+            name = target_name + "_import",
+            jars = [target_deploy_jar],
+            testonly = True,
+        )
+        target_with_driver_name = target_name + "_driver"
+        native.java_binary(
+            name = target_with_driver_name,
+            runtime_deps = [
+                target_name + "_import",
+                "//driver/src/main/java/com/code_intelligence/jazzer:jazzer_import",
+            ],
+            main_class = "com.code_intelligence.jazzer.Jazzer",
+            testonly = True,
+        )
+
     if launcher_variant == "native":
         driver = "//launcher:jazzer"
     elif launcher_variant == "java":
-        driver = target_name
+        driver = target_with_driver_name
     else:
         fail("Invalid launcher variant: " + launcher_variant)
 
@@ -73,8 +91,6 @@ def java_fuzz_target_test(
         name = name,
         runtime_deps = [
             "//bazel/tools/java:fuzz_target_test_wrapper",
-            "//driver/src/main/java/com/code_intelligence/jazzer:jazzer_import",
-            ":%s_deploy.jar" % target_name,
         ],
         jvm_flags = [
             # Use the same memory settings for reproducers as those suggested by Jazzer when
@@ -90,7 +106,7 @@ def java_fuzz_target_test(
         args = [
             "$(rootpath %s)" % driver,
             "$(rootpath //agent/src/main/java/com/code_intelligence/jazzer/api:api_jar)",
-            "$(rootpath :%s_deploy.jar)" % target_name,
+            "$(rootpath %s)" % target_deploy_jar,
             "$(rootpath %s)" % hook_jar if hook_jar else "''",
             str(verify_crash_input),
             str(verify_crash_reproducer),
@@ -99,8 +115,7 @@ def java_fuzz_target_test(
             "'" + ",".join(allowed_findings) + "'",
         ] + fuzzer_args,
         data = [
-            ":%s_deploy.jar" % target_name,
-            "//driver/src/main/java/com/code_intelligence/jazzer:jazzer_import",
+            target_deploy_jar,
             "//agent/src/main/java/com/code_intelligence/jazzer/api:api_jar",
             driver,
         ] + data + ([hook_jar] if hook_jar else []),
