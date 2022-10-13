@@ -1,4 +1,7 @@
-java_library(
+load("@rules_jvm_external//:defs.bzl", "java_export")
+load("//:maven.bzl", "JAZZER_API_COORDINATES")
+
+java_export(
     name = "api",
     srcs = [
         "Autofuzz.java",
@@ -17,10 +20,19 @@ java_library(
         "Function5.java",
         "FuzzedDataProvider.java",
     ],
+    maven_coordinates = JAZZER_API_COORDINATES,
+    pom_template = "//deploy:jazzer-api.pom",
     visibility = ["//visibility:public"],
     runtime_deps = [
         ":hooks",
     ],
+)
+
+# Workaround for https://github.com/bazelbuild/bazel/issues/15043
+filegroup(
+    name = "api_jar",
+    srcs = [":api"],
+    visibility = ["//:__subpackages__"],
 )
 
 java_library(
