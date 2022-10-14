@@ -4,125 +4,104 @@ on:
   workflow_dispatch:
 
 jobs:
+  # RELEASE_MATRIX isn't really secret, but this appears to be the only way to pass per-repo configuration into a
+  # workflow. GitHub does not allow secrets to be returned as outputs, so we store the secret encoded as Base64.
+  # Its current value can be generated with:
+  #
+  # echo '{"include":[{"os":"ubuntu-20.04","name":"linux"},{"os":"macos-11","name":"macos-x86_64"},{"os":"windows-2019",name:"windows"}]}' | base64 -w 0
+  #
+  # Based on https://docs.github.com/en/actions/learn-github-actions/expressions#example-returning-a-json-object
+  configure_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: echo "matrix=$(echo '${{ secrets.RELEASE_MATRIX }}' | base64 -d)" >> $GITHUB_OUTPUT
+
   build_release:
+    needs: configure_matrix
+
     runs-on: ${{ matrix.os }}
     strategy:
-      matrix:
-        # Keep arch names in sync with replayer and junit download and merge
-        os: [ubuntu-20.04, macos-11, windows-2019]
-        include:
-          - os: ubuntu-20.04
-            arch: "linux"
-            bazel_args: "--config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux"
-          - os: macos-11
-            arch: "macos-x86_64"
-            bazel_args: "--config=toolchain --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-darwin"
-          - os: windows-2019
-            arch: "windows"
-            bazel_args: ""
+      matrix: ${{ fromJSON(needs.configure_matrix.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
+          distribution: zulu
           java-version: 8
 
+      - name: Set up MSYS2 to work around bazelbuild/bazel#15919
+        if: contains(matrix.os, 'windows')
+        shell: cmd
+        run: |
+          where bash.exe
+          md C:\tools\msys64\usr\bin
+          mklink C:\tools\msys64\usr\bin\bash.exe "C:\Program Files\Git\usr\bin\bash.exe"
+
       - name: Set Build Buddy config
-        run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
         shell: bash
+        run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
+
+      - name: Append build settings to .bazelrc
+        shell: bash
+        run: |
+          echo "build --announce_rc" >> .bazelrc
+          echo "build --config=maven" >> .bazelrc
+          echo "build:linux --config=toolchain" >> .bazelrc
+          echo "build:linux --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux" >> .bazelrc
+          echo "build:macos --config=toolchain" >> .bazelrc
+          echo "build:macos --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-darwin" >> .bazelrc
 
       - name: Build
+        shell: bash
+        # Double forward slashes are converted to single ones by Git Bash on Windows, so we use working directory
+        # relative labels instead.
         run: |
-          bazelisk build ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_8 ${{ matrix.bazel_args }} //driver/src/main/java/com/code_intelligence/jazzer/replay:Replayer_deploy.jar //deploy:junit //:jazzer_release
-          cp -L $(bazel cquery --output=files //driver/src/main/java/com/code_intelligence/jazzer/replay:Replayer_deploy.jar) replayer.jar
-          cp -L $(bazel cquery --output=files //deploy:junit) junit.jar
-          cp -L $(bazel cquery --output=files //:jazzer_release) release-${{ matrix.arch }}.tar.gz
+          bazelisk build ${{env.BUILD_BUDDY_CONFIG}} deploy:jazzer :jazzer_release
+          cp -L $(bazel cquery --output=files deploy:jazzer) jazzer-${{ matrix.name }}.jar
+          cp -L $(bazel cquery --output=files :jazzer_release) jazzer-${{ matrix.name }}.tar.gz
 
-      - name: Upload replayer
-        uses: actions/upload-artifact@v2
+      - name: Upload jazzer.jar
+        uses: actions/upload-artifact@v3
         with:
-          name: replayer_${{ matrix.arch }}
-          path: replayer.jar
+          name: jazzer_tmp
+          path: jazzer-${{ matrix.name }}.jar
+          if-no-files-found: error
 
-      - name: Upload JUnit integration
-        uses: actions/upload-artifact@v2
-        with:
-          name: junit_${{ matrix.arch }}
-          path: junit.jar
-
-      - name: Upload release tar
-        uses: actions/upload-artifact@v2
+      - name: Upload release archive
+        uses: actions/upload-artifact@v3
         with:
           name: jazzer_releases
-          path: release-${{ matrix.arch}}.tar.gz
+          path: jazzer-${{ matrix.name }}.tar.gz
+          if-no-files-found: error
 
   merge_jars:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build_release
 
     steps:
-      - name: Download macOS x86_64 replayer jar
-        uses: actions/download-artifact@v2
-        with:
-          name: replayer_macos-x86_64
-          path: replayer_macos-x86_64
+      - uses: actions/checkout@v3
 
-      - name: Download macOS x86_64 JUnit jar
-        uses: actions/download-artifact@v2
+      - name: Download individual jars
+        uses: actions/download-artifact@v3
         with:
-          name: junit_macos-x86_64
-          path: junit_macos-x86_64
+          name: jazzer_tmp
+          path: _tmp/
 
-      - name: Download Linux replayer jar
-        uses: actions/download-artifact@v2
-        with:
-          name: replayer_linux
-          path: replayer_linux
-
-      - name: Download Linux JUnit jar
-        uses: actions/download-artifact@v2
-        with:
-          name: junit_linux
-          path: junit_linux
-
-      - name: Download Windows replayer jar
-        uses: actions/download-artifact@v2
-        with:
-          name: replayer_windows
-          path: replayer_windows
-
-      - name: Download Windows JUnit jar
-        uses: actions/download-artifact@v2
-        with:
-          name: junit_windows
-          path: junit_windows
-
-      - name: Merge replayer jars
+      - name: Merge jars
         run: |
-          mkdir replayer_merged
-          unzip -o replayer_macos-x86_64/replayer.jar -d replayer_merged
-          unzip -o replayer_linux/replayer.jar -d replayer_merged
-          unzip -o replayer_windows/replayer.jar -d replayer_merged
-          jar cvmf replayer_merged/META-INF/MANIFEST.MF replayer.jar -C replayer_merged .
+          bazel run @rules_jvm_external//private/tools/java/rules/jvm/external/jar:MergeJars -- \
+            --output "$(pwd)"/_tmp/jazzer.jar \
+            $(find "$(pwd)/_tmp/" -name '*.jar' -printf "--sources %h/%f ")
 
-      - name: Merge JUnit jars
-        run: |
-          mkdir junit_merged
-          unzip -o junit_macos-x86_64/junit.jar -d junit_merged
-          unzip -o junit_linux/junit.jar -d junit_merged
-          unzip -o junit_windows/junit.jar -d junit_merged
-          jar cvmf junit_merged/META-INF/MANIFEST.MF junit.jar -C junit_merged .
-
-      - name: Upload merged replayer jar
-        uses: actions/upload-artifact@v2
+      - name: Upload merged jar
+        uses: actions/upload-artifact@v3
         with:
-          name: replayer
-          path: replayer.jar
-
-      - name: Upload merged JUnit jar
-        uses: actions/upload-artifact@v2
-        with:
-          name: junit
-          path: junit.jar
+          name: jazzer
+          path: _tmp/jazzer.jar
+          if-no-files-found: error
