@@ -55,9 +55,7 @@ build:ci --remote_cache=grpcs://remote.buildbuddy.io
 build:ci --remote_timeout=3600
 
 # Maven publishing (local only, requires GPG signature)
-build:maven --config=toolchain
 build:maven --stamp
-build:maven --define "maven_repo=https://oss.sonatype.org/service/local/staging/deploy/maven2"
 build:maven --java_runtime_version=local_jdk_8
 
 # Docker images
