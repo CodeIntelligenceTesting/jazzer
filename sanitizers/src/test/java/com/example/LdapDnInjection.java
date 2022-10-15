@@ -15,20 +15,12 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import java.util.Hashtable;
-import javax.naming.Context;
-import javax.naming.NamingException;
-import javax.naming.directory.InitialDirContext;
+import com.example.ldap.MockLdapContext;
+import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 
 public class LdapDnInjection {
-  private static InitialDirContext ctx;
-
-  public static void fuzzerInitialize() throws NamingException {
-    Hashtable<String, String> env = new Hashtable<>();
-    env.put(Context.INITIAL_CONTEXT_FACTORY, "com.example.ldap.MockInitialContextFactory");
-    ctx = new InitialDirContext(env);
-  }
+  private static final DirContext ctx = new MockLdapContext();
 
   public static void fuzzerTestOneInput(FuzzedDataProvider fuzzedDataProvider) throws Exception {
     // Externally provided DN input needs to be escaped properly

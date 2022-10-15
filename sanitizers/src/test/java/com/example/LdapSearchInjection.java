@@ -15,20 +15,12 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import java.util.Hashtable;
-import javax.naming.Context;
-import javax.naming.NamingException;
+import com.example.ldap.MockLdapContext;
 import javax.naming.directory.SearchControls;
-import javax.naming.ldap.InitialLdapContext;
+import javax.naming.ldap.LdapContext;
 
 public class LdapSearchInjection {
-  private static InitialLdapContext ctx;
-
-  public static void fuzzerInitialize() throws NamingException {
-    Hashtable<String, String> env = new Hashtable<>();
-    env.put(Context.INITIAL_CONTEXT_FACTORY, "com.example.ldap.MockInitialContextFactory");
-    ctx = new InitialLdapContext(env, null);
-  }
+  private static final LdapContext ctx = new MockLdapContext();
 
   public static void fuzzerTestOneInput(FuzzedDataProvider fuzzedDataProvider) throws Exception {
     // Externally provided LDAP query input needs to be escaped properly
