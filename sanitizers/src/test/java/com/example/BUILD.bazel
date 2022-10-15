@@ -85,7 +85,6 @@ java_fuzz_target_test(
     name = "LdapSearchInjection",
     srcs = [
         "LdapSearchInjection.java",
-        "ldap/MockInitialContextFactory.java",
         "ldap/MockLdapContext.java",
     ],
     allowed_findings = [
@@ -103,7 +102,6 @@ java_fuzz_target_test(
     name = "LdapDnInjection",
     srcs = [
         "LdapDnInjection.java",
-        "ldap/MockInitialContextFactory.java",
         "ldap/MockLdapContext.java",
     ],
     allowed_findings = [
