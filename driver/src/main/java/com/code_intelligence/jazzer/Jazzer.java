@@ -17,6 +17,8 @@
 package com.code_intelligence.jazzer;
 
 import static java.lang.System.exit;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -117,10 +119,10 @@ public class Jazzer {
                   "verify_asan_link_order=0"));
       System.err.println(
           "WARN: Jazzer is not compatible with LeakSanitizer. Leaks are not reported.");
-      preloadLibs.add(findHostClangLibrary(asanLibName()));
+      preloadLibs.add(findHostClangLibrary(asanLibNames()));
     }
     if (loadUBSan) {
-      preloadLibs.add(findHostClangLibrary(ubsanLibName()));
+      preloadLibs.add(findHostClangLibrary(ubsanLibNames()));
     }
     // The launcher script we generate is executed by /bin/sh on macOS, which is codesigned without
     // the allow-dyld-environment-variables entitlement. The dynamic linker would thus remove all
@@ -237,13 +239,27 @@ public class Jazzer {
     return currentValue + File.pathSeparator + additionalOptions;
   }
 
+  private static Path findHostClangLibrary(List<String> candidateNames) {
+    return candidateNames.stream()
+        .map(Jazzer::tryFindHostClangLibrary)
+        .filter(Optional::isPresent)
+        .findFirst()
+        .orElseGet(() -> {
+          System.err.printf("ERROR: '%s' failed to find one of: %s%n", hostClang(),
+              String.join(", ", candidateNames));
+          exit(1);
+          throw new IllegalStateException("not reached");
+        })
+        .get();
+  }
+
   /**
    * Given a library name such as "libclang_rt.asan-x86_64.so", get the full path to the library
-   * installed on the host from clang (or CC, if set).
+   * installed on the host from clang (or CC, if set). Returns Optional.empty() if clang does not
+   * find the library and exits with a message in case of any other error condition.
    */
-  private static Path findHostClangLibrary(String name) {
-    String clang = Optional.ofNullable(System.getenv("CC")).orElse("clang");
-    List<String> command = Stream.of(clang, "--print-file-name", name).collect(toList());
+  private static Optional<Path> tryFindHostClangLibrary(String name) {
+    List<String> command = asList(hostClang(), "--print-file-name", name);
     ProcessBuilder processBuilder = new ProcessBuilder(command);
     byte[] output;
     try {
@@ -263,27 +279,30 @@ public class Jazzer {
       throw new IllegalStateException("not reached");
     }
     Path library = Paths.get(new String(output).trim());
-    if (!Files.exists(library)) {
-      System.err.printf(
-          "ERROR: '%s' returned '%s', but it doesn't exist%n", String.join(" ", command), library);
-      exit(1);
+    if (Files.exists(library)) {
+      return Optional.of(library);
     }
-    return library;
+    return Optional.empty();
   }
 
-  private static String asanLibName() {
+  private static String hostClang() {
+    return Optional.ofNullable(System.getenv("CC")).orElse("clang");
+  }
+
+  private static List<String> asanLibNames() {
     if (isLinux()) {
-      return "libclang_rt.asan-x86_64.so";
+      // Since LLVM 15 sanitizer runtimes no longer have the architecture in the filename.
+      return asList("libclang_rt.asan.so", "libclang_rt.asan-x86_64.so");
     } else {
-      return "libclang_rt.asan_osx_dynamic.dylib";
+      return singletonList("libclang_rt.asan_osx_dynamic.dylib");
     }
   }
 
-  private static String ubsanLibName() {
+  private static List<String> ubsanLibNames() {
     if (isLinux()) {
-      return "libclang_rt.ubsan_standalone-x86_64.so";
+      return asList("libclang_rt.ubsan_standalone.so", "libclang_rt.ubsan_standalone-x86_64.so");
     } else {
-      return "libclang_rt.ubsan_osx_dynamic.dylib";
+      return singletonList("libclang_rt.ubsan_osx_dynamic.dylib");
     }
   }
 
