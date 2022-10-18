@@ -15,6 +15,7 @@
 package com.code_intelligence.jazzer.junit;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
+import com.code_intelligence.jazzer.driver.Opt;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -37,7 +38,7 @@ class RegressionTestExtensions implements TestInstancePreConstructCallback, Afte
       TestInstanceFactoryContext testInstanceFactoryContext, ExtensionContext extensionContext) {
     // These methods are idempotent, so there is no need to synchronize.
     AgentConfigurator.forRegressionTest(extensionContext);
-    AgentInstaller.install(true);
+    AgentInstaller.install(Opt.hooks);
   }
 
   @Override
