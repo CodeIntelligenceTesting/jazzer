@@ -64,6 +64,9 @@ public class AutofuzzTest {
             .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
             .execute();
 
+    results.containerEvents().debug().assertEventsMatchExactly(
+        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
+        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED),
             test("com.example.AutofuzzFuzzTest", "autofuzz(String, IntHolder) (Fuzzing)")),
@@ -72,9 +75,6 @@ public class AutofuzzTest {
         event(type(EventType.FINISHED),
             test("com.example.AutofuzzFuzzTest", "autofuzz(String, IntHolder) (Fuzzing)"),
             finishedWithFailure(instanceOf(RuntimeException.class))));
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
 
     // Should crash on an input that contains "jazzer", with the crash emitted into the base
     // directory since there is no seed corpus.
@@ -112,6 +112,7 @@ public class AutofuzzTest {
                 "com.example.AutofuzzWithCorpusFuzzTest#autofuzzWithCorpus(java.lang.String,int)"))
             .execute();
 
+    results.containerEvents().debug();
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
         // "No fuzzing has been performed..."

@@ -61,6 +61,9 @@ public class DirectoryInputsTest {
             .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
             .execute();
 
+    results.containerEvents().debug().assertEventsMatchExactly(
+        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
+        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED),
             test(
@@ -68,9 +71,6 @@ public class DirectoryInputsTest {
         event(type(EventType.FINISHED),
             test("com.example.DirectoryInputsFuzzTest", "inputsFuzz(FuzzedDataProvider) (Fuzzing)"),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
 
     // Should crash on the exact input "directory" as provided by the seed, with the crash emitted
     // into the seed corpus.
@@ -105,6 +105,7 @@ public class DirectoryInputsTest {
             .selectors(selectClass("com.example.DirectoryInputsFuzzTest"))
             .execute();
 
+    results.containerEvents().debug();
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
         // "No fuzzing has been performed..."

@@ -76,15 +76,15 @@ public class ValueProfileTest {
 
     EngineExecutionResults results = executeTests();
 
+    results.containerEvents().debug().assertEventsMatchExactly(
+        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
+        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED),
             test("com.example.ValueProfileFuzzTest", "valueProfileFuzz(byte[]) (Fuzzing)")),
         event(type(EventType.FINISHED),
             test("com.example.ValueProfileFuzzTest", "valueProfileFuzz(byte[]) (Fuzzing)"),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
 
     // Should crash on the exact input "Jazzer", with the crash emitted into the seed corpus.
     try (Stream<Path> crashFiles = Files.list(baseDir).filter(
@@ -114,15 +114,15 @@ public class ValueProfileTest {
 
     EngineExecutionResults results = executeTests();
 
+    results.containerEvents().debug().assertEventsMatchExactly(
+        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
+        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED),
             test("com.example.ValueProfileFuzzTest", "valueProfileFuzz(byte[]) (Fuzzing)")),
         event(type(EventType.FINISHED),
             test("com.example.ValueProfileFuzzTest", "valueProfileFuzz(byte[]) (Fuzzing)"),
             finishedSuccessfully()));
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
 
     // No crash means no crashing input is emitted anywhere.
     try (Stream<Path> crashFiles = Files.list(baseDir).filter(

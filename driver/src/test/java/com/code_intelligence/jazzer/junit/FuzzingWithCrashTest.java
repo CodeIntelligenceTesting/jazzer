@@ -77,6 +77,9 @@ public class FuzzingWithCrashTest {
 
     EngineExecutionResults results = executeTests();
 
+    results.containerEvents().debug().assertEventsMatchExactly(
+        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
+        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED),
             test("com.example.ValidFuzzTests", "byteFuzz(byte[]) (Fuzzing)")),
@@ -87,9 +90,6 @@ public class FuzzingWithCrashTest {
             test("com.example.ValidFuzzTests", "noCrashFuzz(byte[]) (Fuzzing)")),
         event(type(EventType.SKIPPED),
             test("com.example.ValidFuzzTests", "dataFuzz(FuzzedDataProvider) (Fuzzing)")));
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
 
     // Jazzer first tries the empty input, which doesn't crash the ByteFuzzTest. The second input is
     // the seed we planted, which is crashing, so verify that a crash file with the same content is
@@ -122,11 +122,11 @@ public class FuzzingWithCrashTest {
     EngineExecutionResults results = executeTests();
 
     // When fuzzing isn't requested, the Jazzer test engine doesn't discover any tests.
-    results.testEvents().debug().assertEventsMatchExactly();
     results.containerEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
         event(type(EventType.FINISHED), container("com.code_intelligence.jazzer"),
             finishedSuccessfully()));
+    results.testEvents().debug().assertEventsMatchExactly();
     // No fuzzing means no crashes means no new seeds.
     try (Stream<Path> seeds = Files.list(inputsDirectory)) {
       assertThat(seeds).containsExactly(inputsDirectory.resolve(CRASHING_SEED_NAME));
