@@ -1,7 +1,6 @@
 load("@rules_jvm_external//:defs.bzl", "java_export")
-load("//:maven.bzl", "JAZZER_API_COORDINATES")
 
-java_export(
+java_library(
     name = "api",
     srcs = [
         "Autofuzz.java",
@@ -20,8 +19,6 @@ java_export(
         "Function5.java",
         "FuzzedDataProvider.java",
     ],
-    maven_coordinates = JAZZER_API_COORDINATES,
-    pom_template = "//deploy:jazzer-api.pom",
     visibility = ["//visibility:public"],
     runtime_deps = [
         ":hooks",
