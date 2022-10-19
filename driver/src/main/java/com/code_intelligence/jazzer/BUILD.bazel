@@ -48,7 +48,6 @@ java_binary(
     ],
     deploy_manifest_lines = DEPLOY_MANIFEST_LINES,
     main_class = "com.code_intelligence.jazzer.Jazzer",
-    visibility = ["//driver/src/main/java/com/code_intelligence/jazzer/junit:__pkg__"],
     runtime_deps = [":jazzer_lib"],
 )
 

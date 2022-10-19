@@ -1,12 +1,13 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
 load("@rules_jvm_external//:defs.bzl", "java_export")
 load("//:maven.bzl", "JAZZER_JUNIT_COORDINATES")
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 
 java_export(
     name = "junit",
     # Exclude the unshaded classes comprising com.code-intelligence:jazzer since the java_library
     # target comprising jazzer-junit depend on the individual libraries, not the shaded jar.
-    deploy_env = ["//driver/src/main/java/com/code_intelligence/jazzer:jazzer_unshaded"],
+    deploy_env = ["//driver/src/main/java/com/code_intelligence/jazzer:jazzer_lib"],
     maven_coordinates = JAZZER_JUNIT_COORDINATES,
     pom_template = "//deploy:jazzer-junit.pom",
     visibility = ["//visibility:public"],
@@ -14,6 +15,30 @@ java_export(
         ":fuzz_test",
         ":jazzer_test_engine",
     ],
+)
+
+# Workaround for https://github.com/bazelbuild/bazel/issues/15043
+filegroup(
+    name = "junit_jar",
+    srcs = [":junit"],
+)
+
+sh_test(
+    name = "junit_artifact_test",
+    srcs = ["junit_artifact_test.sh"],
+    args = [
+        "$(rootpath :junit_jar)",
+    ],
+    data = [
+        ":junit_jar",
+        "@local_jdk//:bin/jar",
+    ],
+    tags = [
+        # Coverage instrumentation necessarily adds files to the jar that we
+        # wouldn't want to release and thus causes this test to fail.
+        "no-coverage",
+    ],
+    target_compatible_with = SKIP_ON_WINDOWS,
 )
 
 java_library(
