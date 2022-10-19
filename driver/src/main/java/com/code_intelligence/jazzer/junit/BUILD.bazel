@@ -17,20 +17,12 @@ java_export(
     ],
 )
 
-# Workaround for https://github.com/bazelbuild/bazel/issues/15043
-filegroup(
-    name = "junit_jar",
-    srcs = [":junit"],
-)
-
 sh_test(
     name = "junit_artifact_test",
     srcs = ["junit_artifact_test.sh"],
-    args = [
-        "$(rootpath :junit_jar)",
-    ],
+    args = ["$(rootpath :junit)"],
     data = [
-        ":junit_jar",
+        ":junit",
         "@local_jdk//:bin/jar",
     ],
     tags = [
