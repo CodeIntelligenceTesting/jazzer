@@ -1,4 +1,5 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("//bazel:compat.bzl", "LINUX_ONLY", "SKIP_ON_MACOS", "SKIP_ON_WINDOWS")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
@@ -319,4 +320,17 @@ java_fuzz_target_test(
     ],
     # -fork is broken on macOS for unknown reasons.
     target_compatible_with = SKIP_ON_MACOS,
+)
+
+kt_jvm_library(
+    name = "kotlin_vararg",
+    srcs = ["src/test/java/com/example/KotlinVararg.kt"],
+)
+
+java_fuzz_target_test(
+    name = "KotlinVarargFuzzer",
+    srcs = ["src/test/java/com/example/KotlinVarargFuzzer.java"],
+    allowed_findings = ["java.io.IOException"],
+    target_class = "com.example.KotlinVarargFuzzer",
+    deps = [":kotlin_vararg"],
 )
