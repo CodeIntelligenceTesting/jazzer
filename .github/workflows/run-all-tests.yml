@@ -31,7 +31,7 @@ jobs:
             cache: "%HOME%/bazel-disk"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up JDK
         uses: actions/setup-java@v3
@@ -54,7 +54,7 @@ jobs:
           mklink C:\tools\msys64\usr\bin\bash.exe "C:\Program Files\Git\usr\bin\bash.exe"
 
       - name: Mount Bazel disk cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ matrix.cache }}
           key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload test logs
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: testlogs-${{ matrix.arch }}-${{ matrix.jdk }}
           # https://github.com/actions/upload-artifact/issues/92#issuecomment-711107236
