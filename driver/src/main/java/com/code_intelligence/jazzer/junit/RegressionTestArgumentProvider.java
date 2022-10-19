@@ -17,9 +17,11 @@ package com.code_intelligence.jazzer.junit;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.autofuzz.Meta;
 import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
+import com.code_intelligence.jazzer.driver.Opt;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -34,6 +36,7 @@ import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
@@ -43,6 +46,15 @@ import org.junit.jupiter.params.support.AnnotationConsumer;
 class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationConsumer<FuzzTest> {
   private static final String INCORRECT_PARAMETERS_MESSAGE =
       "Methods annotated with @FuzzTest must take at least one parameter";
+  private static final AtomicBoolean agentInstalled = new AtomicBoolean(false);
+
+  private static void configureAndInstallAgent(ExtensionContext extensionContext) {
+    if (agentInstalled.compareAndSet(false, true)) {
+      AgentConfigurator.forRegressionTest(extensionContext);
+      AgentInstaller.install(Opt.hooks);
+    }
+  }
+
   private FuzzTest annotation;
 
   @Override
@@ -53,6 +65,9 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
   @Override
   public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext)
       throws IOException {
+    // FIXME(fmeum): Calling this here feels like a hack. There should be a lifecycle hook that runs
+    // before the argument discovery for a ParameterizedTest is kicked off, but I haven't found one.
+    configureAndInstallAgent(extensionContext);
     Class<?> testClass = extensionContext.getRequiredTestClass();
     Stream<Map.Entry<String, byte[]>> rawSeeds = Stream.concat(
         Stream.of(new SimpleEntry<>("<empty input>", new byte[] {})), walkInputs(testClass));
