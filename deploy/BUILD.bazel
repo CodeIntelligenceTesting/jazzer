@@ -1,9 +1,13 @@
 load("@rules_jvm_external//:defs.bzl", "java_export")
-load("//:maven.bzl", "JAZZER_COORDINATES")
+load("//:maven.bzl", "JAZZER_API_COORDINATES", "JAZZER_COORDINATES")
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 
-alias(
-    name = "jazzer-api.publish",
-    actual = "//agent/src/main/java/com/code_intelligence/jazzer/api:api.publish",
+java_export(
+    name = "jazzer-api",
+    maven_coordinates = JAZZER_API_COORDINATES,
+    pom_template = "//deploy:jazzer-api.pom",
+    visibility = ["//visibility:public"],
+    runtime_deps = ["//agent/src/main/java/com/code_intelligence/jazzer/api"],
 )
 
 java_export(
@@ -32,6 +36,31 @@ alias(
 alias(
     name = "jazzer-junit.publish",
     actual = "//driver/src/main/java/com/code_intelligence/jazzer/junit:junit.publish",
+)
+
+# Workaround for https://github.com/bazelbuild/bazel/issues/15043
+filegroup(
+    name = "jazzer_jar",
+    srcs = [":jazzer"],
+    visibility = ["//:__subpackages__"],
+)
+
+sh_test(
+    name = "jazzer_artifact_test",
+    srcs = ["jazzer_artifact_test.sh"],
+    args = [
+        "$(rootpath :jazzer_jar)",
+    ],
+    data = [
+        ":jazzer_jar",
+        "@local_jdk//:bin/jar",
+    ],
+    tags = [
+        # Coverage instrumentation necessarily adds files to the jar that we
+        # wouldn't want to release and thus causes this test to fail.
+        "no-coverage",
+    ],
+    target_compatible_with = SKIP_ON_WINDOWS,
 )
 
 exports_files([

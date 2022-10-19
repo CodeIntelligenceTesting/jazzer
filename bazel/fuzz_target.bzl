@@ -48,7 +48,7 @@ def java_fuzz_target_test(
 
     # Deps can only be specified on java_binary targets with sources, which
     # excludes e.g. Kotlin libraries wrapped into java_binary via runtime_deps.
-    deps = deps + ["//agent/src/main/java/com/code_intelligence/jazzer/api"] if srcs else []
+    deps = deps + ["//deploy:jazzer-api"] if srcs else []
     native.java_binary(
         name = target_name,
         srcs = srcs,
@@ -105,7 +105,7 @@ def java_fuzz_target_test(
         # are empty.
         args = [
             "$(rootpath %s)" % driver,
-            "$(rootpath //agent/src/main/java/com/code_intelligence/jazzer/api:api_jar)",
+            "$(rootpath //deploy:jazzer-api)",
             "$(rootpath %s)" % target_deploy_jar,
             "$(rootpath %s)" % hook_jar if hook_jar else "''",
             str(verify_crash_input),
@@ -116,7 +116,7 @@ def java_fuzz_target_test(
         ] + fuzzer_args,
         data = [
             target_deploy_jar,
-            "//agent/src/main/java/com/code_intelligence/jazzer/api:api_jar",
+            "//deploy:jazzer-api",
             driver,
         ] + data + ([hook_jar] if hook_jar else []),
         env = env,

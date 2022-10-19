@@ -2,7 +2,6 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@rules_jvm_external//:defs.bzl", "javadoc")
 load("//:maven.bzl", "JAZZER_VERSION")
-load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 load("//bazel:jar.bzl", "strip_jar")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
@@ -95,24 +94,6 @@ java_library(
         "//driver/src/main/java/com/code_intelligence/jazzer/driver",
         "@fmeum_rules_jni//jni/tools/native_loader",
     ],
-)
-
-sh_test(
-    name = "jazzer_shading_test",
-    srcs = ["verify_shading.sh"],
-    args = [
-        "$(rootpath :jazzer)",
-    ],
-    data = [
-        ":jazzer",
-        "@local_jdk//:bin/jar",
-    ],
-    tags = [
-        # Coverage instrumentation necessarily adds files to the jar that we
-        # wouldn't want to release and thus causes this test to fail.
-        "no-coverage",
-    ],
-    target_compatible_with = SKIP_ON_WINDOWS,
 )
 
 write_file(
