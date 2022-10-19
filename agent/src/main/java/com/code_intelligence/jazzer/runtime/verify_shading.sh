@@ -19,9 +19,9 @@
 # match.
 ! external/local_jdk/bin/jar tf "$1" | \
   grep -v \
-    -e '^build-data.properties$' \
     -e '^com/$' \
     -e '^com/code_intelligence/$' \
     -e '^com/code_intelligence/jazzer/' \
     -e '^jaz/' \
-    -e '^META-INF/'
+    -e '^META-INF/$' \
+    -e '^META-INF/MANIFEST.MF$'
