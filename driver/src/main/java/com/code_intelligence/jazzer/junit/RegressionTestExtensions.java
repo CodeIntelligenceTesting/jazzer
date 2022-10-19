@@ -14,8 +14,6 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import com.code_intelligence.jazzer.agent.AgentInstaller;
-import com.code_intelligence.jazzer.driver.Opt;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -24,22 +22,12 @@ import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
-import org.junit.jupiter.api.extension.TestInstanceFactoryContext;
-import org.junit.jupiter.api.extension.TestInstancePreConstructCallback;
 
-class RegressionTestExtensions implements TestInstancePreConstructCallback, AfterEachCallback,
-                                          InvocationInterceptor, ExecutionCondition {
+class RegressionTestExtensions
+    implements AfterEachCallback, InvocationInterceptor, ExecutionCondition {
   private static final boolean DISABLE_FOR_FUZZING =
       System.getenv("JAZZER_FUZZ") != null && !System.getenv("JAZZER_FUZZ").isEmpty();
   private static Field lastFindingField;
-
-  @Override
-  public void preConstructTestInstance(
-      TestInstanceFactoryContext testInstanceFactoryContext, ExtensionContext extensionContext) {
-    // These methods are idempotent, so there is no need to synchronize.
-    AgentConfigurator.forRegressionTest(extensionContext);
-    AgentInstaller.install(Opt.hooks);
-  }
 
   @Override
   public void interceptTestTemplateMethod(Invocation<Void> invocation,
