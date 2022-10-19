@@ -9,8 +9,12 @@ strip_jar(
     name = "jazzer",
     out = "jazzer.jar",
     jar = ":jazzer_shaded",
-    paths_to_strip = [
-        "module-info.class",
+    paths_to_keep = [
+        "com/code_intelligence/jazzer/**",
+        "jaz/**",
+        "META-INF/MANIFEST.MF",
+        "win32-x86/**",
+        "win32-x86-64/**",
     ],
     visibility = ["//visibility:public"],
 )
@@ -65,7 +69,7 @@ strip_jar(
     paths_to_keep = [
         "com/code_intelligence/jazzer/**",
         "jaz/**",
-        "META-INF/**",
+        "META-INF/MANIFEST.MF",
     ],
     visibility = ["//deploy:__pkg__"],
 )
