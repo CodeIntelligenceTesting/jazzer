@@ -63,6 +63,9 @@ public class FuzzingWithoutCrashTest {
 
     EngineExecutionResults results = executeTests();
 
+    results.containerEvents().debug().assertEventsMatchExactly(
+        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
+        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED),
             test("com.example.ValidFuzzTests", "noCrashFuzz(byte[]) (Fuzzing)")),
@@ -72,9 +75,6 @@ public class FuzzingWithoutCrashTest {
         event(type(EventType.FINISHED),
             test("com.example.ValidFuzzTests", "noCrashFuzz(byte[]) (Fuzzing)"),
             finishedSuccessfully()));
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
 
     // Verify that the engine created the generated corpus directory. As the fuzz test produces
     // coverage (but no crash), it should not be empty.
@@ -93,10 +93,10 @@ public class FuzzingWithoutCrashTest {
     EngineExecutionResults results = executeTests();
 
     // When fuzzing isn't requested, the Jazzer test engine doesn't discover any tests.
-    results.testEvents().debug().assertEventsMatchExactly();
     results.containerEvents().debug().assertEventsMatchExactly(
         event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
         event(type(EventType.FINISHED), container("com.code_intelligence.jazzer"),
             finishedSuccessfully()));
+    results.testEvents().debug().assertEventsMatchExactly();
   }
 }

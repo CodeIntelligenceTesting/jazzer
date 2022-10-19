@@ -50,6 +50,10 @@ public class RegressionTestTest {
 
     EngineExecutionResults results = executeTests();
 
+    results.containerEvents().debug().assertEventsMatchLoosely(
+        event(container("invalidParameterCountFuzz"),
+            finishedWithFailure(instanceOf(IllegalArgumentException.class),
+                message("Methods annotated with @FuzzTest must take at least one parameter"))));
     results.testEvents().debug().assertEventsMatchLoosely(
         event(test("dataFuzz", "<empty input>"),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))),
@@ -68,10 +72,6 @@ public class RegressionTestTest {
             test("byteFuzz", "fails"), finishedWithFailure(instanceOf(AssertionFailedError.class))),
         event(test("autofuzzWithCorpus", "crashing_input"),
             finishedWithFailure(instanceOf(RuntimeException.class))));
-    results.containerEvents().debug().assertEventsMatchLoosely(
-        event(container("invalidParameterCountFuzz"),
-            finishedWithFailure(instanceOf(IllegalArgumentException.class),
-                message("Methods annotated with @FuzzTest must take at least one parameter"))));
   }
 
   @Test
@@ -81,7 +81,6 @@ public class RegressionTestTest {
     EngineExecutionResults results = executeTests();
 
     // When fuzzing is requested, all regression tests are disabled.
-    results.testEvents().debug().assertEventsMatchExactly();
     results.containerEvents().debug().assertEventsMatchLoosely(
         event(container("dataFuzz"),
             skippedWithReason(r -> r.contains("Regression tests are disabled"))),
@@ -89,5 +88,6 @@ public class RegressionTestTest {
             skippedWithReason(r -> r.contains("Regression tests are disabled"))),
         event(container("invalidParameterCountFuzz"),
             skippedWithReason(r -> r.contains("Regression tests are disabled"))));
+    results.testEvents().debug().assertEventsMatchExactly();
   }
 }
