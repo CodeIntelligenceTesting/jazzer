@@ -38,6 +38,23 @@ alias(
     actual = "//driver/src/main/java/com/code_intelligence/jazzer/junit:junit.publish",
 )
 
+sh_test(
+    name = "jazzer-api_artifact_test",
+    srcs = ["jazzer-api_artifact_test.sh"],
+    args = [
+        "$(rootpath :jazzer-api)",
+    ],
+    data = [
+        ":jazzer-api",
+        "@local_jdk//:bin/jar",
+    ],
+    tags = [
+        # Coverage instrumentation necessarily adds files to the jar that we
+        # wouldn't want to release and thus causes this test to fail.
+        "no-coverage",
+    ],
+    target_compatible_with = SKIP_ON_WINDOWS,
+)
 
 sh_test(
     name = "jazzer_artifact_test",
