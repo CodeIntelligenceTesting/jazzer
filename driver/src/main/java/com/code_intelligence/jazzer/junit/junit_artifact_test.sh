@@ -22,8 +22,9 @@
     -e '^build-data.properties$' \
     -e '^com/$' \
     -e '^com/code_intelligence/$' \
-    -e '^com/code_intelligence/jazzer/' \
-    -e '^jaz/' \
-    -e '^win32-x86/' \
-    -e '^win32-x86-64/' \
-    -e '^META-INF/'
+    -e '^com/code_intelligence/jazzer/$' \
+    -e '^com/code_intelligence/jazzer/junit/' \
+    -e '^com/code_intelligence/jazzer/sanitizers/Constants.class$' \
+    -e '^META-INF/$' \
+    -e '^META-INF/MANIFEST.MF$' \
+    -e '^META-INF/services/org.junit.platform.engine.TestEngine$'
