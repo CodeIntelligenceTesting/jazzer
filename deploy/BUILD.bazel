@@ -38,21 +38,13 @@ alias(
     actual = "//driver/src/main/java/com/code_intelligence/jazzer/junit:junit.publish",
 )
 
-# Workaround for https://github.com/bazelbuild/bazel/issues/15043
-filegroup(
-    name = "jazzer_jar",
-    srcs = [":jazzer"],
-    visibility = ["//:__subpackages__"],
-)
 
 sh_test(
     name = "jazzer_artifact_test",
     srcs = ["jazzer_artifact_test.sh"],
-    args = [
-        "$(rootpath :jazzer_jar)",
-    ],
+    args = ["$(rootpath :jazzer)"],
     data = [
-        ":jazzer_jar",
+        ":jazzer",
         "@local_jdk//:bin/jar",
     ],
     tags = [
