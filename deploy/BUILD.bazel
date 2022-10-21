@@ -1,5 +1,5 @@
 load("@rules_jvm_external//:defs.bzl", "java_export")
-load("//:maven.bzl", "JAZZER_API_COORDINATES", "JAZZER_COORDINATES")
+load("//:maven.bzl", "JAZZER_API_COORDINATES", "JAZZER_COORDINATES", "JAZZER_JUNIT_COORDINATES")
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 
 java_export(
@@ -33,46 +33,38 @@ alias(
     actual = "//driver/src/main/java/com/code_intelligence/jazzer:jazzer-sources",
 )
 
-alias(
-    name = "jazzer-junit.publish",
-    actual = "//driver/src/main/java/com/code_intelligence/jazzer/junit:junit.publish",
+java_export(
+    name = "jazzer-junit",
+    # Exclude the unshaded classes comprising com.code-intelligence:jazzer since the java_library
+    # target comprising jazzer-junit depend on the individual libraries, not the shaded jar.
+    deploy_env = ["//driver/src/main/java/com/code_intelligence/jazzer:jazzer_lib"],
+    maven_coordinates = JAZZER_JUNIT_COORDINATES,
+    pom_template = "jazzer-junit.pom",
+    visibility = ["//visibility:public"],
+    runtime_deps = ["//driver/src/main/java/com/code_intelligence/jazzer/junit"],
 )
 
-sh_test(
-    name = "jazzer-api_artifact_test",
-    srcs = ["jazzer-api_artifact_test.sh"],
-    args = [
-        "$(rootpath :jazzer-api)",
-    ],
-    data = [
-        ":jazzer-api",
-        "@local_jdk//:bin/jar",
-    ],
-    tags = [
-        # Coverage instrumentation necessarily adds files to the jar that we
-        # wouldn't want to release and thus causes this test to fail.
-        "no-coverage",
-    ],
-    target_compatible_with = SKIP_ON_WINDOWS,
-)
-
-sh_test(
-    name = "jazzer_artifact_test",
-    srcs = ["jazzer_artifact_test.sh"],
-    args = ["$(rootpath :jazzer)"],
-    data = [
-        ":jazzer",
-        "@local_jdk//:bin/jar",
-    ],
-    tags = [
-        # Coverage instrumentation necessarily adds files to the jar that we
-        # wouldn't want to release and thus causes this test to fail.
-        "no-coverage",
-    ],
-    target_compatible_with = SKIP_ON_WINDOWS,
-)
-
-exports_files([
-    "jazzer-api.pom",
-    "jazzer-junit.pom",
-])
+[
+    sh_test(
+        name = artifact + "_artifact_test",
+        srcs = [artifact + "_artifact_test.sh"],
+        args = [
+            "$(rootpath :%s)" % artifact,
+        ],
+        data = [
+            ":" + artifact,
+            "@local_jdk//:bin/jar",
+        ],
+        tags = [
+            # Coverage instrumentation necessarily adds files to the jar that we
+            # wouldn't want to release and thus causes this test to fail.
+            "no-coverage",
+        ],
+        target_compatible_with = SKIP_ON_WINDOWS,
+    )
+    for artifact in [
+        "jazzer-api",
+        "jazzer",
+        "jazzer-junit",
+    ]
+]
