@@ -59,7 +59,8 @@ public class SqlInjection {
   private static final Set<String> SQL_SYNTAX_ERROR_EXCEPTIONS = unmodifiableSet(
       Stream
           .of("java.sql.SQLException", "java.sql.SQLNonTransientException",
-              "java.sql.SQLSyntaxErrorException", "org.h2.jdbc.JdbcSQLSyntaxErrorException")
+              "java.sql.SQLSyntaxErrorException", "org.h2.jdbc.JdbcSQLSyntaxErrorException",
+              "org.h2.jdbc.JdbcSQLFeatureNotSupportedException")
           .collect(toSet()));
 
   @MethodHook(
