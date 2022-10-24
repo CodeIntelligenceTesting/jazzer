@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 import sun.misc.Unsafe;
 
 /**
@@ -264,7 +265,8 @@ public final class FuzzTargetRunner {
             ignoredTokens.stream()
                 .map(token -> Long.toUnsignedString(token, 16))
                 .collect(joining(",")),
-            finding.getClass().getName());
+            Stream.concat(Opt.autofuzzIgnore.stream(), Stream.of(finding.getClass().getName()))
+                .collect(joining(",")));
       }
       System.exit(LIBFUZZER_ERROR_EXIT_CODE);
       throw new IllegalStateException("Not reached");
