@@ -42,8 +42,9 @@ constexpr auto kPathSeparator = '/';
 
 namespace {
 constexpr auto kJazzerBazelRunfilesPath =
-    "jazzer/driver/src/main/java/com/code_intelligence/jazzer/jazzer.jar";
-constexpr auto kJazzerFileName = "jazzer.jar";
+    "jazzer/driver/src/main/java/com/code_intelligence/jazzer/"
+    "jazzer_standalone_deploy.jar";
+constexpr auto kJazzerFileName = "jazzer_standalone.jar";
 
 std::string dirFromFullPath(const std::string &path) {
   const auto pos = path.rfind(kPathSeparator);
