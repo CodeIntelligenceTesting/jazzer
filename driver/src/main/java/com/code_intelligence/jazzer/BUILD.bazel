@@ -5,6 +5,18 @@ load("//:maven.bzl", "JAZZER_VERSION")
 load("//bazel:jar.bzl", "strip_jar")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
+java_binary(
+    name = "jazzer_standalone",
+    visibility = [
+        "//:__pkg__",
+        "//launcher:__pkg__",
+    ],
+    runtime_deps = [
+        ":jazzer_import",
+        "//deploy:jazzer-api",
+    ],
+)
+
 strip_jar(
     name = "jazzer",
     out = "jazzer.jar",
@@ -29,6 +41,7 @@ java_import(
     name = "jazzer_import",
     jars = [":jazzer"],
     visibility = ["//:__subpackages__"],
+    deps = ["//deploy:jazzer-api"],
 )
 
 jar_jar(
@@ -48,6 +61,7 @@ java_binary(
     # that would also strip out external dependencies common between Jazzer and its bootstrap jar,
     # such as e.g. RulesJni, which should be shaded into distinct classes.
     deploy_env = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api:api_deploy_env",
         "//agent/src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap_env",
     ],
     deploy_manifest_lines = DEPLOY_MANIFEST_LINES,

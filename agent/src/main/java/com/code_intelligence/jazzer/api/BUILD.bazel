@@ -25,6 +25,13 @@ java_library(
     ],
 )
 
+java_binary(
+    name = "api_deploy_env",
+    create_executable = False,
+    visibility = ["//driver/src/main/java/com/code_intelligence/jazzer:__pkg__"],
+    runtime_deps = [":api"],
+)
+
 java_library(
     name = "hooks",
     srcs = [
