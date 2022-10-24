@@ -49,11 +49,21 @@ java_jni_library(
     ],
 )
 
+filegroup(
+    name = "cc_toolchain",
+    srcs = ["@bazel_tools//tools/cpp:current_cc_toolchain"],
+)
+
 java_fuzz_target_test(
     name = "ExampleFuzzerWithASan",
     allowed_findings = ["native"],
-    env = {"EXAMPLE_NATIVE_LIB": "native_asan"},
-    env_inherit = ["CC"],
+    data = [
+        ":cc_toolchain",
+    ],
+    env = {
+        "EXAMPLE_NATIVE_LIB": "native_asan",
+        "CC": "$(CC)",
+    },
     fuzzer_args = [
         "--asan",
     ],
@@ -71,8 +81,13 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "ExampleFuzzerWithUBSan",
     allowed_findings = ["native"],
-    env = {"EXAMPLE_NATIVE_LIB": "native_ubsan"},
-    env_inherit = ["CC"],
+    data = [
+        ":cc_toolchain",
+    ],
+    env = {
+        "EXAMPLE_NATIVE_LIB": "native_ubsan",
+        "CC": "$(CC)",
+    },
     fuzzer_args = [
         "--ubsan",
     ],

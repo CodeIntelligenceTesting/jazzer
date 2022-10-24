@@ -22,9 +22,8 @@ jobs:
             cache: "/home/runner/.cache/bazel-disk"
           - os: macos-12
             arch: "macos-x86_64"
-            # Inherit CC from the environment so that LLVM clang is picked over Apple clang.
-            # Also work around https://github.com/bazelbuild/bazel/issues/13944#issuecomment-1271745466.
-            bazel_args: "--repo_env=CC --features=-layering_check"
+            # Work around https://github.com/bazelbuild/bazel/issues/13944#issuecomment-1271745466.
+            bazel_args: "--features=-layering_check"
             cache: "/private/var/tmp/bazel-disk"
           - os: windows-2019
             arch: "windows"
@@ -61,17 +60,6 @@ jobs:
 
       - name: Set Build Buddy config
         run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
-        shell: bash
-
-      - name: Set CC to LLVM clang on macOS
-        if: contains(matrix.os, 'mac')
-        run: |
-          export CC="$(brew --prefix llvm@14)/bin/clang"
-          which "$CC"
-          "$CC" --version
-          "$CC" -print-resource-dir
-          "$CC" --print-file-name libclang_rt.asan_osx_dynamic.dylib
-          echo "CC=$CC" >> $GITHUB_ENV
         shell: bash
 
       - name: Build
