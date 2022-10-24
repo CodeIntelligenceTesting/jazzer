@@ -47,7 +47,11 @@ java_export(
     maven_coordinates = JAZZER_JUNIT_COORDINATES,
     pom_template = "jazzer-junit.pom",
     visibility = ["//visibility:public"],
-    runtime_deps = ["//driver/src/main/java/com/code_intelligence/jazzer/junit"],
+    runtime_deps = [
+        # This dep's only effect is to include a dependency on the 'jazzer' Maven artifact in the POM.
+        "//deploy:jazzer",
+        "//driver/src/main/java/com/code_intelligence/jazzer/junit",
+    ],
 )
 
 [
