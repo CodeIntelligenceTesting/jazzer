@@ -1,0 +1,5 @@
+platforms:
+  //:macos-x86_64
+    --cpu=darwin_x86_64
+  //:macos-arm64
+    --cpu=darwin_arm64

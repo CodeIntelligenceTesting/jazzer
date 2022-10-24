@@ -74,6 +74,22 @@ platform(
     ],
 )
 
+platform(
+    name = "macos-arm64",
+    constraint_values = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
+)
+
+platform(
+    name = "macos-x86_64",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:macos",
+    ],
+)
+
 default_java_toolchain(
     name = "java_non_prebuilt",
     configuration = NONPREBUILT_TOOLCHAIN_CONFIGURATION,

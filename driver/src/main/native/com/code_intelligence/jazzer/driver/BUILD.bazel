@@ -3,6 +3,13 @@ load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 
 cc_jni_library(
     name = "jazzer_driver",
+    platforms = select({
+        "@platforms//os:macos": [
+            "//:macos-arm64",
+            "//:macos-x86_64",
+        ],
+        "//conditions:default": None,
+    }),
     visibility = [
         "//agent/src/jmh:__subpackages__",
         "//agent/src/test:__subpackages__",
