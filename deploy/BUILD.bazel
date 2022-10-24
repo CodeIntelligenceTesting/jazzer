@@ -48,8 +48,10 @@ java_export(
     pom_template = "jazzer-junit.pom",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        # This dep's only effect is to include a dependency on the 'jazzer' Maven artifact in the POM.
+        # These deps' only effect is to include a dependency on the 'jazzer' and 'jazzer-api' Maven artifacts in the
+        # POM.
         "//deploy:jazzer",
+        "//deploy:jazzer-api",
         "//driver/src/main/java/com/code_intelligence/jazzer/junit",
     ],
 )
