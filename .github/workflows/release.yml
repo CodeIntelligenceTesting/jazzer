@@ -54,8 +54,6 @@ jobs:
           echo "build --config=maven" >> .bazelrc
           echo "build:linux --config=toolchain" >> .bazelrc
           echo "build:linux --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux" >> .bazelrc
-          echo "build:macos --config=toolchain" >> .bazelrc
-          echo "build:macos --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-darwin" >> .bazelrc
 
       - name: Build
         shell: bash
