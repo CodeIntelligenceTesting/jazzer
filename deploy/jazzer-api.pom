@@ -3,10 +3,10 @@
     <groupId>{groupId}</groupId>
     <artifactId>{artifactId}</artifactId>
     <version>{version}</version>
-    <packaging>jar</packaging>
+    <packaging>{type}</packaging>
 
     <dependencies>
-        {dependencies}
+{dependencies}
     </dependencies>
 
     <name>Jazzer API</name>
