@@ -31,10 +31,7 @@ run:windows --noincompatible_strict_action_env
 build:macos --extra_toolchains=//:java_non_prebuilt_definition
 build:macos --java_runtime_version=11
 build:macos --tool_java_runtime_version=11
-# Allow Jazzer to find LLVM rather than Apple clang. The former is not
-# contained in the default PATH set by Bazel.
-test:macos --test_env=PATH
-run:macos --test_env=PATH
+test:macos --test_env=DEVELOPER_DIR
 
 # Toolchain
 # Since the toolchain is conditional on OS and architecture, set it on the particular GitHub Action.
