@@ -1,5 +1,3 @@
-load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
-
 java_test(
     name = "JazzerFuzzTestExecutorTest",
     srcs = ["JazzerFuzzTestExecutorTest.java"],
@@ -130,40 +128,17 @@ java_test(
     ]
 ]
 
-copy_directory(
-    name = "test_resources_root_windows",
-    src = "test_resources_root",
-    out = "test_resources_root",
-    tags = ["manual"],
-)
-
 [
     java_test(
         name = "DirectoryInputsTest" + JAZZER_FUZZ,
         srcs = ["DirectoryInputsTest.java"],
-        args = select({
-            "@platforms//os:windows": [
-                # --main_advice_classpath isn't passed through Rlocation on Windows, which makes it
-                # impossible to resolve the resources root from runfiles. Instead, we abuse the fact
-                # that execution isn't sandboxed to resolve the regular exec path location relative
-                # to the runfiles root:
-                # .../jazzer/junit/DirectoryInputsTest.runfiles/jazzer -->
-                # .../jazzer/junit/test_resources_root
-                # TODO: Get rid of this hack when https://github.com/bazelbuild/bazel/pull/16227 has
-                #  been merged.
-                "--main_advice_classpath=../../test_resources_root",
-            ],
-            "//conditions:default": [
-                # Add a test resource root containing the seed corpus directory in a Maven layout to
-                # the classpath rather than seeds in a resource directory packaged in a JAR, as
-                # would happen if we added the directory to java_test's resources.
-                "--main_advice_classpath=$(rootpath test_resources_root)",
-            ],
-        }),
-        data = select({
-            "@platforms//os:windows": [":test_resources_root_windows"],
-            "//conditions:default": ["test_resources_root"],
-        }),
+        args = [
+            # Add a test resource root containing the seed corpus directory in a Maven layout to
+            # the classpath rather than seeds in a resource directory packaged in a JAR, as
+            # would happen if we added the directory to java_test's resources.
+            "--main_advice_classpath=$(rootpath test_resources_root)",
+        ],
+        data = ["test_resources_root"],
         env = {
             "JAZZER_FUZZ": JAZZER_FUZZ,
         },
