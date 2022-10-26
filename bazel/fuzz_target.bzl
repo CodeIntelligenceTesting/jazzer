@@ -104,10 +104,10 @@ def java_fuzz_target_test(
         # args are shell tokenized and thus quotes are required in the case where arguments
         # are empty.
         args = [
-            "$(rootpath %s)" % driver,
-            "$(rootpath //deploy:jazzer-api)",
-            "$(rootpath %s)" % target_deploy_jar,
-            "$(rootpath %s)" % hook_jar if hook_jar else "''",
+            "$(rlocationpath %s)" % driver,
+            "$(rlocationpath //deploy:jazzer-api)",
+            "$(rlocationpath %s)" % target_deploy_jar,
+            "$(rlocationpath %s)" % hook_jar if hook_jar else "''",
             str(verify_crash_input),
             str(verify_crash_reproducer),
             str(expect_crash),

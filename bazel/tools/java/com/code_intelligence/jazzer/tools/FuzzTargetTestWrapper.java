@@ -67,10 +67,10 @@ public class FuzzTargetTestWrapper {
     List<String> arguments;
     try {
       runfiles = Runfiles.create();
-      driverActualPath = lookUpRunfile(runfiles, args[0]);
-      apiActualPath = lookUpRunfile(runfiles, args[1]);
-      targetJarActualPath = lookUpRunfile(runfiles, args[2]);
-      hookJarActualPath = args[3].isEmpty() ? null : lookUpRunfile(runfiles, args[3]);
+      driverActualPath = Paths.get(runfiles.rlocation(args[0]));
+      apiActualPath = Paths.get(runfiles.rlocation(args[1]));
+      targetJarActualPath = Paths.get(runfiles.rlocation(args[2]));
+      hookJarActualPath = args[3].isEmpty() ? null : Paths.get(runfiles.rlocation(args[3]));
       shouldVerifyCrashInput = Boolean.parseBoolean(args[4]);
       shouldVerifyCrashReproducer = Boolean.parseBoolean(args[5]);
       expectCrash = Boolean.parseBoolean(args[6]);
@@ -78,13 +78,10 @@ public class FuzzTargetTestWrapper {
       allowedFindings =
           Arrays.stream(args[8].split(",")).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
       // Map all files/dirs to real location
-      arguments =
-          Arrays.stream(args)
-              .skip(9)
-              .map(arg
-                  -> arg.startsWith("-") ? arg
-                                         : lookUpRunfileWithFallback(runfiles, arg).toString())
-              .collect(toList());
+      arguments = Arrays.stream(args)
+                      .skip(9)
+                      .map(arg -> arg.startsWith("-") ? arg : runfiles.rlocation(arg))
+                      .collect(toList());
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
@@ -192,39 +189,6 @@ public class FuzzTargetTestWrapper {
       }
     }
     System.exit(0);
-  }
-
-  // Looks up a Bazel "rootpath" in this binary's runfiles and returns the resulting path.
-  private static Path lookUpRunfile(Runfiles runfiles, String rootpath) {
-    return Paths.get(runfiles.rlocation(rlocationPath(rootpath)));
-  }
-
-  // Looks up a Bazel "rootpath" in this binary's runfiles and returns the resulting path if it
-  // exists. If not, returns the original path unmodified.
-  private static Path lookUpRunfileWithFallback(Runfiles runfiles, String rootpathString) {
-    Path candidatePath;
-    Path rootpath = Paths.get(rootpathString);
-    try {
-      candidatePath = lookUpRunfile(runfiles, rootpathString);
-    } catch (IllegalArgumentException unused) {
-      // The argument to Runfiles.rlocation had an invalid format, which indicates that rootpath
-      // is not a Bazel "rootpath" but a user-supplied path that should be returned unchanged.
-      return rootpath;
-    }
-    if (Files.exists(candidatePath)) {
-      return candidatePath;
-    } else {
-      return rootpath;
-    }
-  }
-
-  // Turns the result of Bazel's `$(rootpath ...)` into the correct format for rlocation.
-  private static String rlocationPath(String rootpath) {
-    if (rootpath.startsWith("external/")) {
-      return rootpath.substring("external/".length());
-    } else {
-      return "jazzer/" + rootpath;
-    }
   }
 
   private static void verifyFuzzerOutput(
