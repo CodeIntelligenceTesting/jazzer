@@ -13,7 +13,7 @@ java_fuzz_target_test(
     # Additionally verify that Jazzer-Fuzz-Target-Class is picked up if --target_class isn't set.
     deploy_manifest_lines = ["Jazzer-Fuzz-Target-Class: com.example.LongStringFuzzer"],
     fuzzer_args = [
-        "$(rootpath src/test/java/com/example/LongStringFuzzerInput)",
+        "$(rlocationpath src/test/java/com/example/LongStringFuzzerInput)",
     ],
     launcher_variant = "native",
     verify_crash_input = False,
