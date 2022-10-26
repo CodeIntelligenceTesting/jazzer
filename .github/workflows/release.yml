@@ -35,14 +35,6 @@ jobs:
           distribution: zulu
           java-version: 8
 
-      - name: Set up MSYS2 to work around bazelbuild/bazel#15919
-        if: contains(matrix.os, 'windows')
-        shell: cmd
-        run: |
-          where bash.exe
-          md C:\tools\msys64\usr\bin
-          mklink C:\tools\msys64\usr\bin\bash.exe "C:\Program Files\Git\usr\bin\bash.exe"
-
       - name: Set Build Buddy config
         shell: bash
         run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV

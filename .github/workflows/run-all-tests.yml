@@ -29,8 +29,7 @@ jobs:
           - os: macos-12
             arch: "macos-x86_64"
             # Inherit CC from the environment so that LLVM clang is picked over Apple clang.
-            # Also work around https://github.com/bazelbuild/bazel/issues/13944#issuecomment-1271745466.
-            bazel_args: "--repo_env=CC --features=-layering_check"
+            bazel_args: "--repo_env=CC"
             cache: "/private/var/tmp/bazel-disk"
           - os: windows-2019
             arch: "windows"
@@ -50,14 +49,6 @@ jobs:
       - name: Remove codesign signature on java binary
         if: contains(matrix.os, 'mac')
         run: codesign --remove-signature "$JAVA_HOME"/bin/java
-
-      - name: Set up MSYS2 to work around bazelbuild/bazel#15919
-        if: contains(matrix.os, 'windows')
-        shell: cmd
-        run: |
-          where bash.exe
-          md C:\tools\msys64\usr\bin
-          mklink C:\tools\msys64\usr\bin\bash.exe "C:\Program Files\Git\usr\bin\bash.exe"
 
       - name: Mount Bazel disk cache
         uses: actions/cache@v3

@@ -32,8 +32,6 @@ def _strip_jar(ctx):
     return [
         DefaultInfo(
             files = depset([out_jar]),
-            # Workaround for https://github.com/bazelbuild/bazel/issues/15043.
-            runfiles = ctx.runfiles(files = [out_jar]),
         ),
         coverage_common.instrumented_files_info(
             ctx,
