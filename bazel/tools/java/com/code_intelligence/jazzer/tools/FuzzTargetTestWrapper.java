@@ -15,6 +15,7 @@ package com.code_intelligence.jazzer.tools;
 
 import static java.util.stream.Collectors.toList;
 
+import com.google.devtools.build.runfiles.AutoBazelRepository;
 import com.google.devtools.build.runfiles.Runfiles;
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,6 +45,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
+@AutoBazelRepository
 public class FuzzTargetTestWrapper {
   private static final boolean JAZZER_CI = "1".equals(System.getenv("JAZZER_CI"));
   private static final String EXCEPTION_PREFIX = "== Java Exception: ";
@@ -66,7 +68,8 @@ public class FuzzTargetTestWrapper {
     Set<String> allowedFindings;
     List<String> arguments;
     try {
-      runfiles = Runfiles.create();
+      runfiles =
+          Runfiles.preload().withSourceRepository(AutoBazelRepository_FuzzTargetTestWrapper.NAME);
       driverActualPath = Paths.get(runfiles.rlocation(args[0]));
       apiActualPath = Paths.get(runfiles.rlocation(args[1]));
       targetJarActualPath = Paths.get(runfiles.rlocation(args[2]));

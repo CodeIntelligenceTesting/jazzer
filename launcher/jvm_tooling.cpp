@@ -69,8 +69,8 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
   {
     using bazel::tools::cpp::runfiles::Runfiles;
     std::string error;
-    std::unique_ptr<Runfiles> runfiles(
-        Runfiles::Create(std::string(executable_path), &error));
+    std::unique_ptr<Runfiles> runfiles(Runfiles::Create(
+        std::string(executable_path), BAZEL_CURRENT_REPOSITORY, &error));
     if (runfiles != nullptr) {
       auto bazel_path = runfiles->Rlocation(kJazzerBazelRunfilesPath);
       if (!bazel_path.empty() && std::ifstream(bazel_path).good())
