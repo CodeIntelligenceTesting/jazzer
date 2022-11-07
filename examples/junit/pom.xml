@@ -37,7 +37,7 @@
         <dependency>
             <groupId>com.code-intelligence</groupId>
             <artifactId>jazzer-junit</artifactId>
-            <version>0.12.0</version>
+            <version>0.13.0</version>
         </dependency>
     </dependencies>
 
