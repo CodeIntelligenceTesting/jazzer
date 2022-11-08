@@ -539,9 +539,9 @@ public class Meta {
                                     .ignoreClassVisibility()
                                     .ignoreMethodVisibility()
                                     .enableInterClassDependencies()
-                                    .rejectPackages("jaz.*");
+                                    .rejectPackages("jaz");
         if (!IS_TEST) {
-          classGraph.rejectPackages("com.code_intelligence.jazzer.*");
+          classGraph.rejectPackages("com.code_intelligence.jazzer");
         }
         try (ScanResult result = classGraph.scan()) {
           ClassInfoList children =
