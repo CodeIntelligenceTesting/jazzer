@@ -28,6 +28,14 @@ java_library(
     ],
 )
 
+java_library(
+    name = "script_engine_injection",
+    srcs = ["ScriptEngineInjection.java"],
+    deps = [
+        "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
+    ],
+)
+
 kt_jvm_library(
     name = "sanitizers",
     srcs = [
@@ -45,6 +53,7 @@ kt_jvm_library(
     runtime_deps = [
         ":regex_roadblocks",
         ":server_side_request_forgery",
+        ":script_engine_injection",
         ":sql_injection",
     ],
     deps = [
