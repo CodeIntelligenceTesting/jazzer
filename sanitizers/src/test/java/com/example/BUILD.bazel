@@ -259,3 +259,15 @@ java_fuzz_target_test(
     target_class = "com.example.SsrfHttpClient",
     verify_crash_reproducer = False,
 )
+
+java_fuzz_target_test(
+    name = "ScriptEngineInjection",
+    srcs = [
+        "ScriptEngineInjection.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
+    ],
+    target_class = "com.example.ScriptEngineInjection",
+    verify_crash_reproducer = False,
+)
