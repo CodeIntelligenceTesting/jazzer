@@ -24,6 +24,7 @@ _sanitizer_class_names = [
     "ReflectiveCall",
     "RegexInjection",
     "RegexRoadblocks",
+    "ScriptEngineInjection",
     "ServerSideRequestForgery",
     "SqlInjection",
     "XPathInjection",
