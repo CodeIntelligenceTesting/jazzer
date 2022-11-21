@@ -61,5 +61,6 @@ MAVEN_ARTIFACTS = [
     "org.apache.xmlgraphics:batik-css:1.14",
     maven.artifact("org.apache.logging.log4j", "log4j-api", "2.14.1", testonly = True),
     maven.artifact("org.apache.logging.log4j", "log4j-core", "2.14.1", testonly = True),
+    maven.artifact("org.apache.commons", "commons-text", "1.9", testonly = True),
     maven.artifact("com.h2database", "h2", "2.1.212", testonly = True),
 ]
