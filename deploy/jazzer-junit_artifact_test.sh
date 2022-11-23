@@ -23,7 +23,9 @@
     -e '^com/code_intelligence/$' \
     -e '^com/code_intelligence/jazzer/$' \
     -e '^com/code_intelligence/jazzer/junit/' \
+    -e '^com/code_intelligence/jazzer/sanitizers/$' \
     -e '^com/code_intelligence/jazzer/sanitizers/Constants.class$' \
     -e '^META-INF/$' \
     -e '^META-INF/MANIFEST.MF$' \
+    -e '^META-INF/services/$' \
     -e '^META-INF/services/org.junit.platform.engine.TestEngine$'
