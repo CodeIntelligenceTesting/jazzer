@@ -14,8 +14,6 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import static com.code_intelligence.jazzer.sanitizers.Constants.SANITIZER_HOOK_NAMES;
-
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -56,7 +54,6 @@ class AgentConfigurator {
   }
 
   private static void applyCommonConfiguration() {
-    System.setProperty("jazzer.custom_hooks", SANITIZER_HOOK_NAMES);
     // Do not hook common IDE and JUnit classes and their dependencies.
     System.setProperty("jazzer.custom_hook_excludes",
         String.join(File.pathSeparator, "com.google.testing.junit.**", "com.intellij.**",

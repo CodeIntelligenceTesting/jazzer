@@ -25,5 +25,6 @@ kt_jvm_library(
         "//agent/src/main/java/com/code_intelligence/jazzer/utils:class_name_globber",
         "//agent/src/main/java/com/code_intelligence/jazzer/utils:manifest_utils",
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers:constants",
     ],
 )
