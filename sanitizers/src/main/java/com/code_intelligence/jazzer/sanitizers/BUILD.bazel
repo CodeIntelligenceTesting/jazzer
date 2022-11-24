@@ -46,7 +46,7 @@ kt_jvm_library(
 java_library(
     name = "constants",
     srcs = [":constants_java"],
-    visibility = ["//visibility:public"],
+    visibility = ["//agent/src/main/java/com/code_intelligence/jazzer/agent:__pkg__"],
 )
 
 write_file(
@@ -54,9 +54,10 @@ write_file(
     out = "Constants.java",
     content = [
         "package com.code_intelligence.jazzer.sanitizers;",
-        "import java.io.File;",
+        "import java.util.Arrays;",
+        "import java.util.List;",
         "public final class Constants {",
-        "  public static final String SANITIZER_HOOK_NAMES = \"%s\";" % "\" + File.pathSeparator + \"".join(SANITIZER_CLASSES),
+        "  public static final List<String> SANITIZER_HOOK_NAMES = Arrays.asList(%s);" % ", ".join(["\"%s\"" % name for name in SANITIZER_CLASSES]),
         "}",
     ],
 )

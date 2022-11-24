@@ -20,6 +20,7 @@ import com.code_intelligence.jazzer.driver.Opt
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hooks
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
+import com.code_intelligence.jazzer.sanitizers.Constants
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import com.code_intelligence.jazzer.utils.ManifestUtils
 import java.lang.instrument.Instrumentation
@@ -32,7 +33,8 @@ fun install(instrumentation: Instrumentation) {
         ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES).flatMap {
             it.split(':')
         }.filter { it.isNotBlank() }
-    val allCustomHookNames = (manifestCustomHookNames + Opt.customHooks).toSet()
+    val allCustomHookNames = (Constants.SANITIZER_HOOK_NAMES + manifestCustomHookNames + Opt.customHooks).toSet()
+    check(allCustomHookNames.isNotEmpty()) { "No hooks registered; expected at least the built-in hooks" }
     val disabledCustomHookNames = Opt.disabledHooks.toSet()
     val customHookNames = allCustomHookNames - disabledCustomHookNames
     val disabledCustomHooksToPrint = allCustomHookNames - customHookNames.toSet()
