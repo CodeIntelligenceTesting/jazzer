@@ -7,6 +7,7 @@ load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
 java_binary(
     name = "jazzer_standalone",
+    main_class = "com.code_intelligence.jazzer.Jazzer",
     visibility = [
         "//:__pkg__",
         "//launcher:__pkg__",
