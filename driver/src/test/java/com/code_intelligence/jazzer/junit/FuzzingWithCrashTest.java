@@ -35,6 +35,7 @@ import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.platform.launcher.TagFilter;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.junit.platform.testkit.engine.EventType;
@@ -65,6 +66,7 @@ public class FuzzingWithCrashTest {
   private EngineExecutionResults executeTests() {
     return EngineTestKit.engine("com.code_intelligence.jazzer")
         .selectors(selectClass("com.example.ValidFuzzTests"))
+        .filters(TagFilter.includeTags("jazzer"))
         .configurationParameter(
             "jazzer.instrument", "com.other.package.**,com.example.**,com.yet.another.package.*")
         .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())

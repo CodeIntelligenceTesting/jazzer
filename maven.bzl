@@ -45,6 +45,7 @@ MAVEN_ARTIFACTS = [
     "org.junit.jupiter:junit-jupiter-engine:5.9.0",
     "org.junit.jupiter:junit-jupiter-params:5.9.0",
     "org.junit.platform:junit-platform-commons:jar:1.9.0",
+    "org.junit.platform:junit-platform-launcher:jar:1.9.0",
     "org.junit.platform:junit-platform-engine:jar:1.9.0",
     "org.junit.platform:junit-platform-testkit:jar:1.9.0",
     "org.openjdk.jmh:jmh-core:1.34",

@@ -18,7 +18,9 @@ import com.code_intelligence.jazzer.Constants;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.platform.commons.support.AnnotationSupport;
@@ -30,6 +32,7 @@ import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.TestEngine;
 import org.junit.platform.engine.TestExecutionResult;
+import org.junit.platform.engine.TestTag;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.discovery.ClassSelector;
 import org.junit.platform.engine.discovery.ClasspathRootSelector;
@@ -63,6 +66,11 @@ public class JazzerTestEngine implements TestEngine {
     @Override
     public Type getType() {
       return Type.TEST;
+    }
+
+    @Override
+    public Set<TestTag> getTags() {
+      return Collections.singleton(TestTag.create("jazzer"));
     }
 
     public Method getMethod() {
