@@ -143,6 +143,9 @@ JVM::JVM(const std::string &executable_path) {
       JavaVMOption{.optionString = (char *)"-XX:-OmitStackTraceInFastThrow"});
   // Optimize GC for high throughput rather than low latency.
   options.push_back(JavaVMOption{.optionString = (char *)"-XX:+UseParallelGC"});
+  // CriticalJNINatives has been removed in JDK 18.
+  options.push_back(
+      JavaVMOption{.optionString = (char *)"-XX:+IgnoreUnrecognizedVMOptions"});
   options.push_back(
       JavaVMOption{.optionString = (char *)"-XX:+CriticalJNINatives"});
 
