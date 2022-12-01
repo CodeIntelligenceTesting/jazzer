@@ -20,6 +20,12 @@ jobs:
           - os: ubuntu-20.04
             arch: "linux"
             cache: "/home/runner/.cache/bazel-disk"
+          - os: ubuntu-20.04
+            jdk: 19
+            # Workaround for https://github.com/bazelbuild/bazel/issues/14502
+            bazel_args: "--jvmopt=-Djava.security.manager=allow"
+            arch: "linux"
+            cache: "/home/runner/.cache/bazel-disk"
           - os: macos-12
             arch: "macos-x86_64"
             # Inherit CC from the environment so that LLVM clang is picked over Apple clang.
