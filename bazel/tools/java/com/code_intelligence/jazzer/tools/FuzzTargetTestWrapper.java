@@ -153,9 +153,10 @@ public class FuzzTargetTestWrapper {
         }
         System.exit(0);
       }
-      // Assert that we either found a crash in Java (exit code 77) or a sanitizer crash (exit code
-      // 76).
-      if (exitCode != 76 && exitCode != 77) {
+      // Assert that we either found a crash in Java (exit code 77), a sanitizer crash (exit code
+      // 76), or a timeout (exit code 70).
+      if (exitCode != 76 && exitCode != 77
+          && !(allowedFindings.contains("timeout") && exitCode == 70)) {
         System.err.printf("Did expect a crash, but Jazzer exited with exit code %d%n", exitCode);
         System.exit(1);
       }
@@ -167,7 +168,10 @@ public class FuzzTargetTestWrapper {
       // Verify that libFuzzer dumped a crashing input.
       if (JAZZER_CI && shouldVerifyCrashInput
           && outputFiles.stream().noneMatch(
-              name -> name.getFileName().toString().startsWith("crash-"))) {
+              name -> name.getFileName().toString().startsWith("crash-"))
+          && !(allowedFindings.contains("timeout")
+              && outputFiles.stream().anyMatch(
+                  name -> name.getFileName().toString().startsWith("timeout-")))) {
         System.err.printf("No crashing input found in %s%n", outputDir);
         System.exit(1);
       }
@@ -222,9 +226,20 @@ public class FuzzTargetTestWrapper {
         throw new IllegalStateException(
             "Expected stack traces for all threads, but did not get any");
       }
-      if (expectedFindings.size() == 1) {
-        return;
+      if (expectedFindings.size() != 1) {
+        throw new IllegalStateException("Cannot expect both a native and other findings");
       }
+      return;
+    }
+    if (expectedFindings.contains("timeout")) {
+      if (!stackTrace.contains(THREAD_DUMP_HEADER) || stackTrace.size() < 3) {
+        throw new IllegalStateException(
+            "Expected stack traces for all threads, but did not get any");
+      }
+      if (expectedFindings.size() != 1) {
+        throw new IllegalStateException("Cannot expect both a timeout and other findings");
+      }
+      return;
     }
     List<String> findings =
         stackTrace.stream()
