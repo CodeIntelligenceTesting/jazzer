@@ -334,3 +334,15 @@ java_fuzz_target_test(
     target_class = "com.example.KotlinVarargFuzzer",
     deps = [":kotlin_vararg"],
 )
+
+java_fuzz_target_test(
+    name = "TimeoutFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/TimeoutFuzzer.java"],
+    allowed_findings = ["timeout"],
+    fuzzer_args = [
+        "-timeout=1",
+    ],
+    target_class = "com.example.TimeoutFuzzer",
+    verify_crash_reproducer = False,
+)
