@@ -6,6 +6,7 @@ build --enable_platform_specific_config
 build -c opt
 
 # C/C++
+# GCC is supported on a best-effort basis.
 common --repo_env=CC=clang
 # We want stock LLVM to be configured on macOS rather than Xcode's Apple Clang
 # toolchain.
