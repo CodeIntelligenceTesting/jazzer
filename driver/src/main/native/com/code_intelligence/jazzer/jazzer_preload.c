@@ -22,6 +22,7 @@
 #include <dlfcn.h>
 #include <stdatomic.h>
 #include <stddef.h>
+#include <stdint.h>
 #ifdef __APPLE__
 // Using dyld's interpose feature requires knowing the addresses of libc
 // functions.

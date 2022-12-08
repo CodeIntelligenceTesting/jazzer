@@ -13,7 +13,6 @@ cc_library(
         "-fno-exceptions",
         "-funwind-tables",
         "-fno-stack-protector",
-        "-fno-sanitize=safe-stack",
         "-fvisibility=hidden",
         "-fno-lto",
     ] + select({
