@@ -24,7 +24,7 @@ Java rewrite of native components.
 * Feature: Add sanitizer for OS command injection
 * Feature: Add sanitizer for regex injection
 * Feature: Add sanitizer for LDAP injections
-* Feature: Add sanitizer for arbitrary class loading 
+* Feature: Add sanitizer for arbitrary class loading
 * Feature: Guide fuzzer to generate proper map lookups keys
 * Feature: Generate standalone Java reproducers for autofuzz
 * Feature: Hooks targeting interfaces and abstract classes hook all implementations
@@ -44,7 +44,7 @@ This release also includes smaller improvements and bugfixes.
 ## Version 0.10.0
 
 * **Breaking change**: Use OS-specific classpath separator to split jvm_args
-* Feature: Add support to "autofuzz" targets without the need to manually write fuzz targets 
+* Feature: Add support to "autofuzz" targets without the need to manually write fuzz targets
 * Feature: Add macOS and Windows support
 * Feature: Add option to generate coverage report
 * Feature: Support multiple hook annotations per hook method
@@ -62,7 +62,7 @@ This release also includes smaller improvements and bugfixes.
 * Fixed: Make initialized `this` object available to `<init>` AFTER hooks
 * Fixed: Allow instrumented classes loaded by custom class loaders to find Jazzer internals
 
-This release also includes smaller improvements and bugfixes. 
+This release also includes smaller improvements and bugfixes.
 
 ## Version 0.9.1
 
