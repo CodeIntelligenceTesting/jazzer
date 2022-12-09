@@ -47,7 +47,6 @@ import javax.tools.ToolProvider;
 
 @AutoBazelRepository
 public class FuzzTargetTestWrapper {
-  private static final boolean JAZZER_CI = "1".equals(System.getenv("JAZZER_CI"));
   private static final String EXCEPTION_PREFIX = "== Java Exception: ";
   private static final String FRAME_PREFIX = "\tat ";
   private static final Pattern SANITIZER_FINDING = Pattern.compile("^SUMMARY: \\w*Sanitizer");
@@ -123,26 +122,20 @@ public class FuzzTargetTestWrapper {
     }
     command.addAll(arguments);
 
-    if (JAZZER_CI) {
-      // Make JVM error reports available in test outputs.
-      processBuilder.environment().put(
-          "JAVA_TOOL_OPTIONS", String.format("-XX:ErrorFile=%s/hs_err_pid%%p.log", outputDir));
-      processBuilder.redirectOutput(Redirect.INHERIT);
-      processBuilder.redirectInput(Redirect.INHERIT);
-    } else {
-      processBuilder.inheritIO();
-    }
+    // Make JVM error reports available in test outputs.
+    processBuilder.environment().put(
+        "JAVA_TOOL_OPTIONS", String.format("-XX:ErrorFile=%s/hs_err_pid%%p.log", outputDir));
+    processBuilder.redirectOutput(Redirect.INHERIT);
+    processBuilder.redirectInput(Redirect.INHERIT);
     processBuilder.command(command);
 
     try {
       Process process = processBuilder.start();
-      if (JAZZER_CI) {
-        try {
-          verifyFuzzerOutput(
-              process.getErrorStream(), allowedFindings, arguments.contains("--nohooks"));
-        } finally {
-          process.getErrorStream().close();
-        }
+      try {
+        verifyFuzzerOutput(
+            process.getErrorStream(), allowedFindings, arguments.contains("--nohooks"));
+      } finally {
+        process.getErrorStream().close();
       }
       int exitCode = process.waitFor();
       if (!expectCrash) {
@@ -166,7 +159,7 @@ public class FuzzTargetTestWrapper {
         System.exit(1);
       }
       // Verify that libFuzzer dumped a crashing input.
-      if (JAZZER_CI && shouldVerifyCrashInput
+      if (shouldVerifyCrashInput
           && outputFiles.stream().noneMatch(
               name -> name.getFileName().toString().startsWith("crash-"))
           && !(allowedFindings.contains("timeout")
@@ -176,7 +169,7 @@ public class FuzzTargetTestWrapper {
         System.exit(1);
       }
       // Verify that libFuzzer dumped a crash reproducer.
-      if (JAZZER_CI && shouldVerifyCrashReproducer
+      if (shouldVerifyCrashReproducer
           && outputFiles.stream().noneMatch(
               name -> name.getFileName().toString().startsWith("Crash_"))) {
         System.err.printf("No crash reproducer found in %s%n", outputDir);
@@ -187,7 +180,7 @@ public class FuzzTargetTestWrapper {
       System.exit(1);
     }
 
-    if (JAZZER_CI && shouldVerifyCrashReproducer) {
+    if (shouldVerifyCrashReproducer) {
       try {
         verifyCrashReproducer(outputDir, apiActualPath, targetJarActualPath, allowedFindings);
       } catch (Exception e) {

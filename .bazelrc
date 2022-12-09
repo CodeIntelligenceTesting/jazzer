@@ -4,6 +4,12 @@ build --incompatible_strict_action_env
 build --sandbox_tmpfs_path=/tmp
 build --enable_platform_specific_config
 build -c opt
+# Ensure that paths of files printed by our examples are valid.
+# Enabling this on Windows leads to an error.
+# FIXME: Remove this workaround once
+#  https://github.com/bazelbuild/bazel/pull/16973 has been merged.
+build:linux --nozip_undeclared_test_outputs
+build:macos --nozip_undeclared_test_outputs
 
 # C/C++
 # GCC is supported on a best-effort basis.
@@ -49,7 +55,6 @@ test --test_env=JAZZER_AUTOFUZZ_DEBUG
 test --test_env=JAZZER_REFLECTION_DEBUG
 
 # CI tests (not using the toolchain to test OSS-Fuzz & local compatibility)
-test:ci --test_env=JAZZER_CI=1
 build:ci --bes_results_url=https://app.buildbuddy.io/invocation/
 build:ci --bes_backend=grpcs://remote.buildbuddy.io
 build:ci --remote_cache=grpcs://remote.buildbuddy.io
