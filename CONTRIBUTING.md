@@ -36,7 +36,7 @@ Target //:jazzer_release up-to-date:
 
 #### macOS
 
-The build may fail with the clang shipped with Xcode. 
+The build may fail with the clang shipped with Xcode.
 In that case, install LLVM clang via `brew install llvm` and set `CC` to the path of LLVM clang.
 
 #### Windows
