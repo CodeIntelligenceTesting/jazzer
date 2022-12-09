@@ -96,3 +96,8 @@ jobs:
           name: jazzer
           path: _tmp/jazzer.jar
           if-no-files-found: error
+
+      - name: Delete temporary artifacts
+        uses: actions/delete-artifact@v2
+        with:
+          name: jazzer_tmp
