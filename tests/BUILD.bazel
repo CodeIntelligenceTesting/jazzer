@@ -134,7 +134,7 @@ java_fuzz_target_test(
 # Regression test for https://github.com/CodeIntelligenceTesting/jazzer/issues/405.
 java_fuzz_target_test(
     name = "MemoryLeakFuzzer",
-    timeout = "short",
+    timeout = "moderate",
     srcs = ["src/test/java/com/example/MemoryLeakFuzzer.java"],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     env = {
@@ -185,7 +185,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "BytesMemoryLeakFuzzer",
-    timeout = "short",
+    timeout = "moderate",
     srcs = ["src/test/java/com/example/BytesMemoryLeakFuzzer.java"],
     env = {
         "JAVA_OPTS": "-Xmx200m",
