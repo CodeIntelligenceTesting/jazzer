@@ -73,6 +73,8 @@ java_export(
             "https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/",
             "-link",
             "https://codeintelligencetesting.github.io/jazzer-docs/jazzer/",
+            "-link",
+            "https://junit.org/junit5/docs/current/api/",
         ],
         "//conditions:default": [],
     }),
