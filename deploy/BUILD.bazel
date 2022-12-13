@@ -24,10 +24,13 @@ sh_binary(
 
 java_export(
     name = "jazzer-api",
-    javadocopts = [
-        "-link",
-        "https://docs.oracle.com/en/java/javase/17/docs/api/",
-    ],
+    javadocopts = select({
+        ":emit_linked_javadoc": [
+            "-link",
+            "https://docs.oracle.com/en/java/javase/17/docs/api/",
+        ],
+        "//conditions:default": [],
+    }),
     maven_coordinates = JAZZER_API_COORDINATES,
     pom_template = "//deploy:jazzer-api.pom",
     visibility = ["//visibility:public"],
@@ -62,11 +65,10 @@ java_export(
     # Exclude the unshaded classes comprising com.code-intelligence:jazzer since the java_library
     # target comprising jazzer-junit depend on the individual libraries, not the shaded jar.
     deploy_env = ["//driver/src/main/java/com/code_intelligence/jazzer:jazzer_lib"],
-    javadocopts = [
-        "-link",
-        "https://docs.oracle.com/en/java/javase/17/docs/api/",
-    ] + select({
+    javadocopts = select({
         ":emit_linked_javadoc": [
+            "-link",
+            "https://docs.oracle.com/en/java/javase/17/docs/api/",
             "-link",
             "https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/",
             "-link",
