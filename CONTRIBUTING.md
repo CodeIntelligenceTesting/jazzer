@@ -77,3 +77,17 @@ Requires an accounts on [Sonatype](https://issues.sonatype.org) with access to t
 7. Log into https://oss.sonatype.org, select both staging repositories and "Close" them.
    Wait and refresh, then select them again and "Release" them.
 8. Locally, with Docker credentials available, run `docker/push_all.sh` to build and push the `cifuzz/jazzer` and `cifuzz/jazzer-autofuzz` Docker images.
+
+### Updating the hosted javadocs
+
+Javadocs are hosted at https://codeintelligencetesting.github.io/jazzer-docs, which is populated from https://github.com/CodeIntelligenceTesting/jazzer-docs.
+
+To update the docs after a release with API changes, follow these steps to get properly linked cross-references:
+
+1. Delete the contents of all subdirectories of `jazzer-docs`.
+2. Run `bazel build --//deploy:linked_javadoc //deploy:jazzer-api-docs` and unpack the jar into the `jazzer-api` subdirectory of `jazzer-docs`.
+3. Commit and push the changes, then wait for them to be published (can take a minute).
+4. Run `bazel build --//deploy:linked_javadoc //deploy:jazzer-docs` and unpack the jar into the `jazzer` subdirectory of `jazzer-docs`.
+5. Commit and push the changes, then wait for them to be published (can take a minute).
+6. Run `bazel build --//deploy:linked_javadoc //deploy:jazzer-junit-docs` and unpack the jar into the `jazzer-junit` subdirectory of `jazzer-docs`.
+7. Commit and push the changes, then wait for them to be published (can take a minute).
