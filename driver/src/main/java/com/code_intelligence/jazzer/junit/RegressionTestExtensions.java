@@ -24,8 +24,6 @@ import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 
 class RegressionTestExtensions implements InvocationInterceptor, ExecutionCondition {
-  private static final boolean DISABLE_FOR_FUZZING =
-      System.getenv("JAZZER_FUZZ") != null && !System.getenv("JAZZER_FUZZ").isEmpty();
   private static Field lastFindingField;
 
   @Override
@@ -67,7 +65,7 @@ class RegressionTestExtensions implements InvocationInterceptor, ExecutionCondit
     // when a particular test method is requested. However, since the agent can currently only be
     // configured once, we must not let this happen and thus implement our own disabling condition.
     // https://junit.org/junit5/docs/current/user-guide/#extensions-conditions-deactivation
-    if (DISABLE_FOR_FUZZING) {
+    if (Utils.isFuzzing()) {
       return ConditionEvaluationResult.disabled(
           "Regression tests are disabled while fuzzing is enabled with a non-empty value for the JAZZER_FUZZ environment variable");
     } else {
