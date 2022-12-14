@@ -14,15 +14,13 @@
 
 package com.example;
 
-import java.util.ArrayList;
-
 public class ExampleOutOfMemoryFuzzer {
+  public static long[] leak;
+
   public static void fuzzerTestOneInput(byte[] input) {
-    ArrayList<Byte> bytes = new ArrayList<>();
-    int pos = 0;
-    while (pos >= 0 && pos < input.length) {
-      bytes.add(input[pos]);
-      pos += input[pos] + 1;
+    if (input.length == 0) {
+      return;
     }
+    leak = new long[Integer.MAX_VALUE];
   }
 }

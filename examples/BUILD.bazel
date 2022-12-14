@@ -130,6 +130,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "ExampleOutOfMemoryFuzzer",
+    timeout = "short",
     srcs = [
         "src/main/java/com/example/ExampleOutOfMemoryFuzzer.java",
     ],
