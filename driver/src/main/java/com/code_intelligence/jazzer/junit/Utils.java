@@ -86,4 +86,10 @@ class Utils {
     return ManagementFactory.getRuntimeMXBean().getInputArguments().stream().anyMatch(
         s -> COVERAGE_AGENT_ARG.matcher(s).matches());
   }
+
+  private static final boolean IS_FUZZING =
+      System.getenv("JAZZER_FUZZ") != null && !System.getenv("JAZZER_FUZZ").isEmpty();
+  static boolean isFuzzing() {
+    return IS_FUZZING;
+  }
 }
