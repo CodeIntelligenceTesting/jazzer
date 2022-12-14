@@ -51,6 +51,7 @@ MAVEN_ARTIFACTS = [
     "org.openjdk.jmh:jmh-core:1.34",
     "org.openjdk.jmh:jmh-generator-annprocess:1.34",
     "org.opentest4j:opentest4j:jar:1.2.0",
+    "org.assertj:assertj-core:jar:3.23.1",
     maven.artifact("org.apache.logging.log4j", "log4j-api", "2.14.1", testonly = True),
     maven.artifact("org.apache.logging.log4j", "log4j-core", "2.14.1", testonly = True),
     maven.artifact("com.h2database", "h2", "2.1.212", testonly = True),

@@ -20,11 +20,18 @@ import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.container;
+import static org.junit.platform.testkit.engine.EventConditions.displayName;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.EventConditions.type;
+import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstrings;
+import static org.junit.platform.testkit.engine.EventType.DYNAMIC_TEST_REGISTERED;
+import static org.junit.platform.testkit.engine.EventType.FINISHED;
+import static org.junit.platform.testkit.engine.EventType.REPORTING_ENTRY_PUBLISHED;
+import static org.junit.platform.testkit.engine.EventType.SKIPPED;
+import static org.junit.platform.testkit.engine.EventType.STARTED;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
 import java.io.IOException;
@@ -38,7 +45,6 @@ import org.junit.Test;
 import org.junit.platform.launcher.TagFilter;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.junit.platform.testkit.engine.EventType;
 import org.junit.rules.TemporaryFolder;
 import org.opentest4j.AssertionFailedError;
 
@@ -47,6 +53,13 @@ public class FuzzingWithCrashTest {
   // Crashes ByteFuzzTest since 'b' % 2 == 0.
   private static final byte[] CRASHING_SEED_CONTENT = new byte[] {'b', 'a', 'c'};
   private static final String CRASHING_SEED_DIGEST = "5e4dec23c9afa48bd5bee3daa2a0ab66e147012b";
+  private static final String ENGINE = "engine:junit-jupiter";
+  private static final String CLAZZ = "class:com.example.ValidFuzzTests";
+  private static final String BYTE_FUZZ = "test-template:byteFuzz([B)";
+  private static final String NO_CRASH_FUZZ = "test-template:noCrashFuzz([B)";
+  private static final String DATA_FUZZ =
+      "test-template:dataFuzz(com.code_intelligence.jazzer.api.FuzzedDataProvider)";
+  private static final String INVOCATION = "test-template-invocation:#1";
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   Path baseDir;
@@ -64,7 +77,7 @@ public class FuzzingWithCrashTest {
   }
 
   private EngineExecutionResults executeTests() {
-    return EngineTestKit.engine("com.code_intelligence.jazzer")
+    return EngineTestKit.engine("junit-jupiter")
         .selectors(selectClass("com.example.ValidFuzzTests"))
         .filters(TagFilter.includeTags("jazzer"))
         .configurationParameter(
@@ -79,19 +92,23 @@ public class FuzzingWithCrashTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
-    results.testEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED),
-            test("com.example.ValidFuzzTests", "byteFuzz(byte[]) (Fuzzing)")),
-        event(type(EventType.FINISHED),
-            test("com.example.ValidFuzzTests", "byteFuzz(byte[]) (Fuzzing)"),
-            finishedWithFailure(instanceOf(AssertionFailedError.class))),
-        event(type(EventType.SKIPPED),
-            test("com.example.ValidFuzzTests", "noCrashFuzz(byte[]) (Fuzzing)")),
-        event(type(EventType.SKIPPED),
-            test("com.example.ValidFuzzTests", "dataFuzz(FuzzedDataProvider) (Fuzzing)")));
+    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ)),
+            finishedSuccessfully()),
+        event(type(SKIPPED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+        event(type(SKIPPED), container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
+        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+
+    results.testEvents().assertEventsMatchExactly(
+        event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ))),
+        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ, INVOCATION)),
+            displayName("Fuzzing...")),
+        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ, INVOCATION)),
+            displayName("Fuzzing..."),
+            finishedWithFailure(instanceOf(AssertionFailedError.class))));
 
     // Jazzer first tries the empty input, which doesn't crash the ByteFuzzTest. The second input is
     // the seed we planted, which is crashing, so verify that a crash file with the same content is
@@ -123,12 +140,24 @@ public class FuzzingWithCrashTest {
 
     EngineExecutionResults results = executeTests();
 
-    // When fuzzing isn't requested, the Jazzer test engine doesn't discover any tests.
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer"),
-            finishedSuccessfully()));
-    results.testEvents().debug().assertEventsMatchExactly();
+    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ))),
+        event(type(REPORTING_ENTRY_PUBLISHED),
+            container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ)),
+            finishedSuccessfully()),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+        event(type(REPORTING_ENTRY_PUBLISHED),
+            container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ))),
+        event(type(REPORTING_ENTRY_PUBLISHED),
+            container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
+        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+
     // No fuzzing means no crashes means no new seeds.
     try (Stream<Path> seeds = Files.list(inputsDirectory)) {
       assertThat(seeds).containsExactly(inputsDirectory.resolve(CRASHING_SEED_NAME));

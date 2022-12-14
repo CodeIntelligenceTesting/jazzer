@@ -14,11 +14,9 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
-import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.displayName;
 import static org.junit.platform.testkit.engine.EventConditions.event;
@@ -34,30 +32,21 @@ import static org.junit.platform.testkit.engine.EventType.SKIPPED;
 import static org.junit.platform.testkit.engine.EventType.STARTED;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
-import com.google.common.truth.Truth8;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-import org.assertj.core.api.Condition;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.junit.platform.testkit.engine.Event;
-import org.junit.platform.testkit.engine.EventType;
-import org.junit.platform.testkit.engine.Events;
 import org.junit.rules.TemporaryFolder;
-import org.opentest4j.AssertionFailedError;
 
-public class FuzzingWithoutCrashTest {
+public class LifecycleTest {
   private static final String ENGINE = "engine:junit-jupiter";
-  private static final String CLAZZ = "class:com.example.ValidFuzzTests";
-  private static final String NO_CRASH_FUZZ = "test-template:noCrashFuzz([B)";
-  private static final String INVOCATION = "test-template-invocation:#";
+  private static final String CLAZZ = "class:com.example.LifecycleFuzzTest";
+  private static final String DISABLED_FUZZ = "test-template:disabledFuzz([B)";
+  private static final String LIFECYCLE_FUZZ = "test-template:lifecycleFuzz([B)";
+  private static final String INVOCATION = "test-template-invocation:#1";
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   Path baseDir;
 
@@ -68,7 +57,7 @@ public class FuzzingWithoutCrashTest {
 
   private EngineExecutionResults executeTests() {
     return EngineTestKit.engine("junit-jupiter")
-        .selectors(selectMethod("com.example.ValidFuzzTests#noCrashFuzz(byte[])"))
+        .selectors(selectClass("com.example.LifecycleFuzzTest"))
         .configurationParameter(
             "jazzer.instrument", "com.other.package.**,com.example.**,com.yet.another.package.*")
         .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
@@ -76,38 +65,31 @@ public class FuzzingWithoutCrashTest {
   }
 
   @Test
-  public void fuzzingEnabled() throws IOException {
+  public void fuzzingEnabled() {
     assumeFalse(System.getenv("JAZZER_FUZZ").isEmpty());
 
     EngineExecutionResults results = executeTests();
 
     results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
         event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+        event(type(SKIPPED), container(uniqueIdSubstrings(ENGINE, CLAZZ, DISABLED_FUZZ))),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
         // Warning because the seed corpus directory hasn't been found.
         event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ)),
+            container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ)),
             finishedSuccessfully()),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+            finishedWithFailure(instanceOf(IOException.class))),
         event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
     results.testEvents().assertEventsMatchExactly(
         event(
-            type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION)),
+            type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION)),
             displayName("Fuzzing...")),
-        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION)),
+        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION)),
             displayName("Fuzzing..."), finishedSuccessfully()));
-
-    // Verify that the engine created the generated corpus directory. As the fuzz test produces
-    // coverage (but no crash), it should not be empty.
-    Path generatedCorpus =
-        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.ValidFuzzTests"));
-    assertThat(Files.isDirectory(generatedCorpus)).isTrue();
-    try (Stream<Path> entries = Files.list(generatedCorpus)) {
-      assertThat(entries).isNotEmpty();
-    }
   }
 
   @Test
@@ -118,29 +100,21 @@ public class FuzzingWithoutCrashTest {
 
     results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
         event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+        event(type(SKIPPED), container(uniqueIdSubstrings(ENGINE, CLAZZ, DISABLED_FUZZ))),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
         event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
+            container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+            finishedWithFailure(instanceOf(IOException.class))),
         event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
     results.testEvents().assertEventsMatchExactly(
-        IntStream.rangeClosed(1, 6)
-            .boxed()
-            .flatMap(i
-                -> Stream.of(event(type(DYNAMIC_TEST_REGISTERED),
-                                 test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-                    event(type(STARTED),
-                        test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION + i))),
-                    event(type(FINISHED),
-                        test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION + i)),
-                        finishedSuccessfully())))
-            .toArray(Condition[] ::new));
-
-    // Verify that the generated corpus directory hasn't been created.
-    Path generatedCorpus =
-        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.ValidFuzzTests"));
-    assertThat(Files.notExists(generatedCorpus)).isTrue();
+        event(
+            type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION)),
+            displayName("<empty input>")),
+        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION)),
+            displayName("<empty input>"), finishedSuccessfully()));
   }
 }

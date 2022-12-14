@@ -19,8 +19,6 @@ import static com.code_intelligence.jazzer.utils.Utils.getReadableDescriptor;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
-import com.code_intelligence.jazzer.junit.JazzerTestEngine.JazzerFuzzTestDescriptor;
-import com.code_intelligence.jazzer.junit.JazzerTestEngine.JazzerSetupError;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -31,36 +29,33 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.platform.commons.support.AnnotationSupport;
-import org.junit.platform.engine.ExecutionRequest;
-import org.junit.platform.engine.TestExecutionResult;
-import org.junit.platform.engine.reporting.ReportEntry;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-class JazzerFuzzTestExecutor {
-  private static final AtomicBoolean hasExecutedOnce = new AtomicBoolean();
+class FuzzTestExecutor {
+  private static final AtomicBoolean hasBeenPrepared = new AtomicBoolean();
 
-  private final ExecutionRequest request;
-  private final JazzerFuzzTestDescriptor fuzzTestDescriptor;
-  private final Path baseDir;
+  private final List<String> libFuzzerArgs;
 
-  public JazzerFuzzTestExecutor(
-      ExecutionRequest request, JazzerFuzzTestDescriptor fuzzTestDescriptor, Path baseDir) {
-    this.request = request;
-    this.fuzzTestDescriptor = fuzzTestDescriptor;
-    this.baseDir = baseDir;
+  private FuzzTestExecutor(List<String> libFuzzerArgs) {
+    this.libFuzzerArgs = libFuzzerArgs;
   }
 
-  public TestExecutionResult execute() throws IOException, URISyntaxException {
-    if (!hasExecutedOnce.compareAndSet(false, true)) {
+  public static FuzzTestExecutor prepare(ExtensionContext context, String maxDuration)
+      throws IOException {
+    if (!hasBeenPrepared.compareAndSet(false, true)) {
       throw new IllegalStateException(
-          "Only a single fuzz test can be executed by JazzerFuzzTestExecutor per test run");
+          "JazzerFuzzTestExecutor#prepare can only be called once per test run");
     }
 
-    final Method fuzzTestMethod = fuzzTestDescriptor.getMethod();
-    final Class<?> fuzzTestClass = fuzzTestMethod.getDeclaringClass();
+    Path baseDir =
+        Paths.get(context.getConfigurationParameter("jazzer.internal.basedir").orElse(""));
+
+    final Method fuzzTestMethod = context.getRequiredTestMethod();
+    final Class<?> fuzzTestClass = context.getRequiredTestClass();
 
     ArrayList<String> libFuzzerArgs = new ArrayList<>();
     libFuzzerArgs.add("fake_argv0");
@@ -84,13 +79,16 @@ class JazzerFuzzTestExecutor {
               + "fuzz test and automatically run them as regression tests with JUnit Jupiter, create a "
               + "test resource directory called '%s' in package '%s' and move the files there.",
           inputsDirectoryResourcePath, fuzzTestClass.getPackage().getName());
-      request.getEngineExecutionListener().reportingEntryPublished(
-          fuzzTestDescriptor, ReportEntry.from("missing inputs directory", message));
+      context.publishReportEntry("missing inputs directory", message);
       libFuzzerArgs.add(String.format("-artifact_prefix=%s%c", baseDir, File.separatorChar));
     } else if ("file".equals(inputsDirectoryUrl.getProtocol())) {
       // From the second positional argument on, files and directories are used as seeds but not
       // modified. Using inputsDirectoryUrl.getFile() fails on Windows.
-      libFuzzerArgs.add(Paths.get(inputsDirectoryUrl.toURI()).toString());
+      try {
+        libFuzzerArgs.add(Paths.get(inputsDirectoryUrl.toURI()).toString());
+      } catch (URISyntaxException e) {
+        throw new IOException(e);
+      }
       // We try to find the source tree representation of the inputs directory and emit findings
       // into it.
       inputsDirectorySourcePath(fuzzTestClass, baseDir)
@@ -108,26 +106,25 @@ class JazzerFuzzTestExecutor {
         libFuzzerArgs.add(
             String.format("-artifact_prefix=%s%c", inputsDirectory.get(), File.separatorChar));
       } else {
-        request.getEngineExecutionListener().reportingEntryPublished(fuzzTestDescriptor,
-            ReportEntry.from("missing inputs directory",
-                "When running Jazzer fuzz tests from a JAR rather than class files, the inputs "
-                    + "directory isn't used unless it is located under src/test/resources/..."));
+        context.publishReportEntry("missing inputs directory",
+            "When running Jazzer fuzz tests from a JAR rather than class files, the inputs directory isn't used "
+                + "unless it is located under src/test/resources/...");
       }
     }
 
-    FuzzTest fuzzTest = AnnotationSupport.findAnnotation(fuzzTestMethod, FuzzTest.class).get();
-    libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(fuzzTest.maxDuration()));
+    libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
     // Disable libFuzzer's out of memory detection: It is only useful for native library fuzzing,
     // which we don't support without our native driver, and leads to false positives where it picks
     // up IntelliJ's memory usage.
     libFuzzerArgs.add("-rss_limit_mb=0");
-    if (request.getConfigurationParameters().getBoolean("jazzer.valueprofile").orElse(false)) {
+    if (Utils.permissivelyParseBoolean(
+            context.getConfigurationParameter("jazzer.valueprofile").orElse("false"))) {
       libFuzzerArgs.add("-use_value_profile=1");
     }
 
     if (fuzzTestMethod.getParameterCount() == 0) {
-      return TestExecutionResult.failed(new JazzerSetupError(
-          "Methods annotated with @FuzzTest must take at least one parameter"));
+      throw new IllegalArgumentException(
+          "Methods annotated with @FuzzTest must take at least one parameter");
     }
     if (fuzzTestMethod.getParameterCount() == 1
         && (fuzzTestMethod.getParameterTypes()[0] == byte[].class
@@ -139,8 +136,11 @@ class JazzerFuzzTestExecutor {
           String.format("%s::%s%s", fuzzTestClass.getName(), fuzzTestMethod.getName(),
               getReadableDescriptor(fuzzTestMethod)));
     }
-    AgentConfigurator.forFuzzing(request, fuzzTestClass);
 
+    return new FuzzTestExecutor(libFuzzerArgs);
+  }
+
+  public Optional<Throwable> execute() {
     AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
     FuzzTargetRunner.registerFindingHandler(t -> {
       atomicFinding.set(t);
@@ -149,12 +149,11 @@ class JazzerFuzzTestExecutor {
     int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
     Throwable finding = atomicFinding.get();
     if (finding != null) {
-      return TestExecutionResult.failed(finding);
+      return Optional.of(finding);
     } else if (exitCode != 0) {
-      return TestExecutionResult.failed(
-          new JazzerSetupError("libFuzzer exited with exit code " + exitCode));
+      return Optional.of(new IllegalStateException("Jazzer exited with exit code " + exitCode));
     } else {
-      return TestExecutionResult.successful();
+      return Optional.empty();
     }
   }
 

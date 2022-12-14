@@ -21,11 +21,17 @@ import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
 import static org.junit.platform.testkit.engine.EventConditions.container;
+import static org.junit.platform.testkit.engine.EventConditions.displayName;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.EventConditions.type;
+import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstrings;
+import static org.junit.platform.testkit.engine.EventType.DYNAMIC_TEST_REGISTERED;
+import static org.junit.platform.testkit.engine.EventType.FINISHED;
+import static org.junit.platform.testkit.engine.EventType.REPORTING_ENTRY_PUBLISHED;
+import static org.junit.platform.testkit.engine.EventType.STARTED;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
 import java.io.IOException;
@@ -40,7 +46,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.junit.platform.testkit.engine.EventType;
 import org.junit.rules.TemporaryFolder;
 
 public class AutofuzzTest {
@@ -58,23 +63,34 @@ public class AutofuzzTest {
     Files.createDirectories(inputsDirectory);
 
     EngineExecutionResults results =
-        EngineTestKit.engine("com.code_intelligence.jazzer")
+        EngineTestKit.engine("junit-jupiter")
             .selectors(selectMethod(
                 "com.example.AutofuzzFuzzTest#autofuzz(java.lang.String,com.example.AutofuzzFuzzTest$IntHolder)"))
             .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
             .execute();
 
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
-    results.testEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED),
-            test("com.example.AutofuzzFuzzTest", "autofuzz(String, IntHolder) (Fuzzing)")),
+    final String engine = "engine:junit-jupiter";
+    final String clazz = "class:com.example.AutofuzzFuzzTest";
+    final String autofuzz =
+        "test-template:autofuzz(java.lang.String, com.example.AutofuzzFuzzTest$IntHolder)";
+    final String invocation = "test-template-invocation:#1";
+
+    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(engine)),
+        event(type(STARTED), container(uniqueIdSubstrings(engine, clazz))),
+        event(type(STARTED), container(uniqueIdSubstrings(engine, clazz, autofuzz))),
         // No seed corpus.
-        event(type(EventType.REPORTING_ENTRY_PUBLISHED)),
-        event(type(EventType.FINISHED),
-            test("com.example.AutofuzzFuzzTest", "autofuzz(String, IntHolder) (Fuzzing)"),
-            finishedWithFailure(instanceOf(RuntimeException.class))));
+        event(type(REPORTING_ENTRY_PUBLISHED)),
+        event(type(FINISHED), container(uniqueIdSubstrings(engine, clazz, autofuzz)),
+            finishedSuccessfully()),
+        event(type(FINISHED), container(uniqueIdSubstrings(engine, clazz)), finishedSuccessfully()),
+        event(type(FINISHED), container(engine), finishedSuccessfully()));
+
+    results.testEvents().assertEventsMatchExactly(
+        event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(engine, clazz, autofuzz))),
+        event(type(STARTED), test(uniqueIdSubstrings(engine, clazz, autofuzz, invocation)),
+            displayName("Fuzzing...")),
+        event(type(FINISHED), test(uniqueIdSubstrings(engine, clazz, autofuzz, invocation)),
+            displayName("Fuzzing..."), finishedWithFailure(instanceOf(RuntimeException.class))));
 
     // Should crash on an input that contains "jazzer", with the crash emitted into the base
     // directory since there is no seed corpus.
@@ -112,13 +128,25 @@ public class AutofuzzTest {
                 "com.example.AutofuzzWithCorpusFuzzTest#autofuzzWithCorpus(java.lang.String,int)"))
             .execute();
 
-    results.containerEvents().debug().assertEventsMatchLoosely(
+    final String engine = "engine:junit-jupiter";
+    final String clazz = "class:com.example.AutofuzzWithCorpusFuzzTest";
+    final String autofuzzWithCorpus = "test-template:autofuzzWithCorpus(java.lang.String, int)";
+
+    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(engine)),
+        event(type(STARTED), container(uniqueIdSubstrings(engine, clazz))),
+        event(type(STARTED), container(uniqueIdSubstrings(engine, clazz, autofuzzWithCorpus))),
         // "No fuzzing has been performed..."
-        event(type(EventType.REPORTING_ENTRY_PUBLISHED), container("autofuzzWithCorpus")));
-    results.testEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
+        event(type(REPORTING_ENTRY_PUBLISHED),
+            container(uniqueIdSubstrings(engine, clazz, autofuzzWithCorpus))),
+        event(type(FINISHED), container(uniqueIdSubstrings(engine, clazz, autofuzzWithCorpus)),
+            finishedSuccessfully()),
+        event(type(FINISHED), container(uniqueIdSubstrings(engine, clazz)), finishedSuccessfully()),
+        event(type(FINISHED), container(engine), finishedSuccessfully()));
+
+    results.testEvents().assertEventsMatchExactly(event(type(DYNAMIC_TEST_REGISTERED)),
+        event(type(STARTED)),
         event(test("autofuzzWithCorpus", "<empty input>"), finishedSuccessfully()),
-        event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
+        event(type(DYNAMIC_TEST_REGISTERED)), event(type(STARTED)),
         event(test("autofuzzWithCorpus", "crashing_input"),
             finishedWithFailure(instanceOf(RuntimeException.class))));
   }

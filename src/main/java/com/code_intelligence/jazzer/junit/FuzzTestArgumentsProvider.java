@@ -39,21 +39,15 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.support.AnnotationConsumer;
 
-class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationConsumer<FuzzTest> {
+class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer<FuzzTest> {
   private static final String INCORRECT_PARAMETERS_MESSAGE =
       "Methods annotated with @FuzzTest must take at least one parameter";
   private static final AtomicBoolean agentInstalled = new AtomicBoolean(false);
-
-  private static void configureAndInstallAgent(ExtensionContext extensionContext) {
-    if (agentInstalled.compareAndSet(false, true)) {
-      AgentConfigurator.forRegressionTest(extensionContext);
-      AgentInstaller.install(Opt.hooks);
-    }
-  }
 
   private FuzzTest annotation;
 
@@ -62,24 +56,53 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
     this.annotation = annotation;
   }
 
+  private void configureAndInstallAgent(ExtensionContext extensionContext) throws IOException {
+    if (!agentInstalled.compareAndSet(false, true)) {
+      return;
+    }
+    if (Utils.isFuzzing()) {
+      FuzzTestExecutor executor =
+          FuzzTestExecutor.prepare(extensionContext, annotation.maxDuration());
+      extensionContext.getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
+      AgentConfigurator.forFuzzing(extensionContext);
+    } else {
+      AgentConfigurator.forRegressionTest(extensionContext);
+    }
+    AgentInstaller.install(Opt.hooks);
+  }
+
   @Override
   public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext)
       throws IOException {
     // FIXME(fmeum): Calling this here feels like a hack. There should be a lifecycle hook that runs
-    // before the argument discovery for a ParameterizedTest is kicked off, but I haven't found one.
+    //  before the argument discovery for a ParameterizedTest is kicked off, but I haven't found
+    //  one.
     configureAndInstallAgent(extensionContext);
-    Class<?> testClass = extensionContext.getRequiredTestClass();
-    Stream<Map.Entry<String, byte[]>> rawSeeds = Stream.concat(
-        Stream.of(new SimpleEntry<>("<empty input>", new byte[] {})), walkInputs(testClass));
-    if (Utils.isCoverageAgentPresent() && Files.isDirectory(Utils.generatedCorpusPath(testClass))) {
-      rawSeeds = Stream.concat(rawSeeds, walkInputsInPath(Utils.generatedCorpusPath(testClass)));
+    Stream<Map.Entry<String, byte[]>> rawSeeds;
+    if (Utils.isFuzzing()) {
+      // When fuzzing, supply a single set of arguments to trigger an invocation of the test method.
+      // An InvocationInterceptor is used to skip the actual invocation and instead start the
+      // fuzzer.
+      rawSeeds = Stream.of(new SimpleEntry<>("Fuzzing...", new byte[] {}));
+    } else {
+      rawSeeds = Stream.of(new SimpleEntry<>("<empty input>", new byte[] {}));
+      Class<?> testClass = extensionContext.getRequiredTestClass();
+      rawSeeds = Stream.concat(rawSeeds, walkInputs(testClass));
+      if (Utils.isCoverageAgentPresent()
+          && Files.isDirectory(Utils.generatedCorpusPath(testClass))) {
+        rawSeeds = Stream.concat(rawSeeds, walkInputsInPath(Utils.generatedCorpusPath(testClass)));
+      }
     }
-    return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds).onClose(() -> {
-      extensionContext.publishReportEntry(
-          "No fuzzing has been performed, the fuzz test has only been executed on the fixed set of inputs in the "
-          + "seed corpus.\n"
-          + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a non-empty value.");
-    });
+    return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds)
+        .onClose(() -> {
+          if (!Utils.isFuzzing()) {
+            extensionContext.publishReportEntry(
+                "No fuzzing has been performed, the fuzz test has only been executed on the fixed "
+                + "set of inputs in the seed corpus.\n"
+                + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a "
+                + "non-empty value.");
+          }
+        });
   }
 
   private Stream<? extends Arguments> adaptInputsForFuzzTest(
