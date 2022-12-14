@@ -20,11 +20,17 @@ import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.container;
+import static org.junit.platform.testkit.engine.EventConditions.displayName;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.EventConditions.type;
+import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstrings;
+import static org.junit.platform.testkit.engine.EventType.DYNAMIC_TEST_REGISTERED;
+import static org.junit.platform.testkit.engine.EventType.FINISHED;
+import static org.junit.platform.testkit.engine.EventType.REPORTING_ENTRY_PUBLISHED;
+import static org.junit.platform.testkit.engine.EventType.STARTED;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
@@ -34,21 +40,32 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.junit.platform.testkit.engine.EventType;
 import org.junit.rules.TemporaryFolder;
 
 public class DirectoryInputsTest {
+  private static final String ENGINE = "engine:junit-jupiter";
+  private static final String CLAZZ = "class:com.example.DirectoryInputsFuzzTest";
+  private static final String INPUTS_FUZZ =
+      "test-template:inputsFuzz(com.code_intelligence.jazzer.api.FuzzedDataProvider)";
+  private static final String INVOCATION = "test-template-invocation:#";
+
   @Rule public TemporaryFolder temp = new TemporaryFolder();
+  Path baseDir;
+
+  @Before
+  public void setup() {
+    baseDir = temp.getRoot().toPath();
+  }
 
   @Test
   public void fuzzingEnabled() throws IOException {
     assumeFalse(System.getenv("JAZZER_FUZZ").isEmpty());
 
-    Path baseDir = temp.getRoot().toPath();
     // Create a fake test resource directory structure with an inputs directory to verify that
     // Jazzer uses it and emits a crash file into it.
     Path inputsDirectory = baseDir.resolve(
@@ -56,20 +73,25 @@ public class DirectoryInputsTest {
     Files.createDirectories(inputsDirectory);
 
     EngineExecutionResults results =
-        EngineTestKit.engine("com.code_intelligence.jazzer")
+        EngineTestKit.engine("junit-jupiter")
             .selectors(selectClass("com.example.DirectoryInputsFuzzTest"))
             .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
             .execute();
 
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
-    results.testEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED),
-            test(
-                "com.example.DirectoryInputsFuzzTest", "inputsFuzz(FuzzedDataProvider) (Fuzzing)")),
-        event(type(EventType.FINISHED),
-            test("com.example.DirectoryInputsFuzzTest", "inputsFuzz(FuzzedDataProvider) (Fuzzing)"),
+    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ)),
+            finishedSuccessfully()),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
+        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+
+    results.testEvents().assertEventsMatchExactly(
+        event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
+        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION)),
+            displayName("Fuzzing...")),
+        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION)),
+            displayName("Fuzzing..."),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
 
     // Should crash on the exact input "directory" as provided by the seed, with the crash emitted
@@ -105,14 +127,28 @@ public class DirectoryInputsTest {
             .selectors(selectClass("com.example.DirectoryInputsFuzzTest"))
             .execute();
 
-    results.containerEvents().debug().assertEventsMatchLoosely(
-        // "No fuzzing has been performed..."
-        event(type(EventType.REPORTING_ENTRY_PUBLISHED), container("inputsFuzz")));
-    results.testEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
-        event(test("inputsFuzz", "<empty input>"), finishedSuccessfully()),
-        event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
-        event(test("inputsFuzz", "seed"),
-            finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
+    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
+        event(type(REPORTING_ENTRY_PUBLISHED),
+            container(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
+        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+
+    results.testEvents().assertEventsMatchExactly(
+        event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
+        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 1))),
+        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 1)),
+            finishedSuccessfully()),
+        event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
+        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 2))),
+        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 2)),
+            displayName("seed"), finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
+
+    // Verify that the generated corpus directory hasn't been created.
+    Path generatedCorpus =
+        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.DirectoryInputsFuzzTest"));
+    assertThat(Files.notExists(generatedCorpus)).isTrue();
   }
 }

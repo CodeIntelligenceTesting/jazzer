@@ -85,8 +85,8 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-@ArgumentsSource(RegressionTestArgumentProvider.class)
-@ExtendWith(RegressionTestExtensions.class)
+@ArgumentsSource(FuzzTestArgumentsProvider.class)
+@ExtendWith(FuzzTestExtensions.class)
 // {0} is expanded to the basename of the seed by the ArgumentProvider.
 @ParameterizedTest(name = "{0}")
 @Tag("jazzer")

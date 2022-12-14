@@ -20,11 +20,17 @@ import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.testkit.engine.EventConditions.container;
+import static org.junit.platform.testkit.engine.EventConditions.displayName;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.EventConditions.type;
+import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstrings;
+import static org.junit.platform.testkit.engine.EventType.DYNAMIC_TEST_REGISTERED;
+import static org.junit.platform.testkit.engine.EventType.FINISHED;
+import static org.junit.platform.testkit.engine.EventType.SKIPPED;
+import static org.junit.platform.testkit.engine.EventType.STARTED;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
@@ -46,6 +52,11 @@ public class ValueProfileTest {
   private static final boolean VALUE_PROFILE_ENABLED =
       "True".equals(System.getenv("JAZZER_VALUE_PROFILE"));
 
+  private static final String ENGINE = "engine:junit-jupiter";
+  private static final String CLAZZ = "class:com.example.ValueProfileFuzzTest";
+  private static final String VALUE_PROFILE_FUZZ = "test-template:valueProfileFuzz([B)";
+  private static final String INVOCATION = "test-template-invocation:#1";
+
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   Path baseDir;
   Path inputsDirectories;
@@ -61,7 +72,7 @@ public class ValueProfileTest {
   }
 
   private EngineExecutionResults executeTests() {
-    return EngineTestKit.engine("com.code_intelligence.jazzer")
+    return EngineTestKit.engine("junit-jupiter")
         .selectors(selectClass("com.example.ValueProfileFuzzTest"))
         .configurationParameter(
             "jazzer.instrument", "com.other.package.**,com.example.**,com.yet.another.package.*")
@@ -76,14 +87,23 @@ public class ValueProfileTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
-    results.testEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED),
-            test("com.example.ValueProfileFuzzTest", "valueProfileFuzz(byte[]) (Fuzzing)")),
-        event(type(EventType.FINISHED),
-            test("com.example.ValueProfileFuzzTest", "valueProfileFuzz(byte[]) (Fuzzing)"),
+    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ)),
+            finishedSuccessfully()),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
+        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+
+    results.testEvents().assertEventsMatchExactly(
+        event(type(DYNAMIC_TEST_REGISTERED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+        event(type(STARTED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION)),
+            displayName("Fuzzing...")),
+        event(type(FINISHED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION)),
+            displayName("Fuzzing..."),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
 
     // Should crash on the exact input "Jazzer", with the crash emitted into the seed corpus.
@@ -114,15 +134,23 @@ public class ValueProfileTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED), container("com.code_intelligence.jazzer")),
-        event(type(EventType.FINISHED), container("com.code_intelligence.jazzer")));
-    results.testEvents().debug().assertEventsMatchExactly(
-        event(type(EventType.STARTED),
-            test("com.example.ValueProfileFuzzTest", "valueProfileFuzz(byte[]) (Fuzzing)")),
-        event(type(EventType.FINISHED),
-            test("com.example.ValueProfileFuzzTest", "valueProfileFuzz(byte[]) (Fuzzing)"),
-            finishedSuccessfully()));
+    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ)),
+            finishedSuccessfully()),
+        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
+        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+
+    results.testEvents().assertEventsMatchExactly(
+        event(type(DYNAMIC_TEST_REGISTERED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+        event(type(STARTED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION)),
+            displayName("Fuzzing...")),
+        event(type(FINISHED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION)),
+            displayName("Fuzzing..."), finishedSuccessfully()));
 
     // No crash means no crashing input is emitted anywhere.
     try (Stream<Path> crashFiles = Files.list(baseDir).filter(

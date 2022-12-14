@@ -92,4 +92,11 @@ class Utils {
   static boolean isFuzzing() {
     return IS_FUZZING;
   }
+
+  /**
+   * Returns true if and only if the value is equal to "true", "1", or "yes" case-insensitively.
+   */
+  static boolean permissivelyParseBoolean(String value) {
+    return value.equalsIgnoreCase("true") || value.equals("1") || value.equalsIgnoreCase("yes");
+  }
 }

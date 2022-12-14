@@ -19,14 +19,18 @@ import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 
 public class DirectoryInputsFuzzTest {
-  private static long runs = 0;
+  private static boolean firstSeed = true;
 
   @FuzzTest(maxDuration = "0s")
   public void inputsFuzz(FuzzedDataProvider data) {
-    if (runs++ > 1) {
-      // Only execute the fuzz test logic on the empty input and the only seed.
+    // Only execute the fuzz test logic on the empty input and the only seed.
+    if (data.remainingBytes() == 0) {
       return;
     }
+    if (!firstSeed) {
+      return;
+    }
+    firstSeed = false;
     if (data.consumeRemainingAsString().equals("directory")) {
       throw new FuzzerSecurityIssueMedium();
     }

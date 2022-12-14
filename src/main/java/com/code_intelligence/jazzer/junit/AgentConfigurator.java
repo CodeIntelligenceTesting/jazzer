@@ -17,7 +17,6 @@ package com.code_intelligence.jazzer.junit;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.platform.engine.ExecutionRequest;
 
 class AgentConfigurator {
   private static final AtomicBoolean hasBeenConfigured = new AtomicBoolean();
@@ -37,7 +36,7 @@ class AgentConfigurator {
                 "jazzer.custom_hook_includes", String.join(File.pathSeparator, s.split(","))));
   }
 
-  static void forFuzzing(ExecutionRequest executionRequest, Class<?> fuzzTestClass) {
+  static void forFuzzing(ExtensionContext executionRequest) {
     if (!hasBeenConfigured.compareAndSet(false, true)) {
       throw new IllegalStateException("Only a single fuzz test should be executed per fuzzing run");
     }
@@ -45,9 +44,9 @@ class AgentConfigurator {
     applyCommonConfiguration();
 
     String instrumentationFilter =
-        executionRequest.getConfigurationParameters()
-            .get("jazzer.instrument")
-            .orElseGet(() -> Utils.defaultInstrumentationFilter(fuzzTestClass));
+        executionRequest.getConfigurationParameter("jazzer.instrument")
+            .orElseGet(
+                () -> Utils.defaultInstrumentationFilter(executionRequest.getRequiredTestClass()));
     String filter = String.join(File.pathSeparator, instrumentationFilter.split(","));
     System.setProperty("jazzer.custom_hook_includes", filter);
     System.setProperty("jazzer.instrumentation_includes", filter);

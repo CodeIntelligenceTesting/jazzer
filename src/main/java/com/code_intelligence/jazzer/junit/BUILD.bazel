@@ -5,7 +5,6 @@ java_library(
     visibility = ["//deploy:__pkg__"],
     runtime_deps = [
         ":fuzz_test",
-        ":jazzer_test_engine",
     ],
 )
 
@@ -17,25 +16,22 @@ java_library(
     deps = [
         ":utils",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
-        "@maven//:org_junit_platform_junit_platform_engine",
     ],
 )
 
-java_jni_library(
+java_library(
     name = "fuzz_test",
     srcs = [
         "FuzzTest.java",
-        "RegressionTestArgumentProvider.java",
-        "RegressionTestExtensions.java",
-    ],
-    native_libs = [
-        "//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
+        "FuzzTestArgumentsProvider.java",
+        "FuzzTestExtensions.java",
     ],
     visibility = [
         "//examples/junit/src/test/java/com/example:__pkg__",
     ],
     deps = [
         ":agent_configurator",
+        ":fuzz_test_executor",
         ":utils",
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
         "//src/main/java/com/code_intelligence/jazzer/api",
@@ -44,32 +40,26 @@ java_jni_library(
         "//src/main/java/com/code_intelligence/jazzer/driver:opt",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
-        "@maven//:org_junit_platform_junit_platform_commons",
     ],
 )
 
-java_library(
-    name = "jazzer_test_engine",
+java_jni_library(
+    name = "fuzz_test_executor",
     srcs = [
-        "JazzerFuzzTestExecutor.java",
-        "JazzerTestEngine.java",
+        "FuzzTestExecutor.java",
     ],
-    resources = [
-        "//src/main/resources:jazzer_test_engine_service",
+    native_libs = [
+        "//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
     ],
-    visibility = ["//src/test/java/com/code_intelligence/jazzer/junit:__pkg__"],
+    visibility = [
+        "//examples/junit/src/test/java/com/example:__pkg__",
+    ],
     deps = [
-        ":agent_configurator",
-        ":fuzz_test",
         ":utils",
-        "//src/main/java/com/code_intelligence/jazzer:constants",
-        "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
         "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner",
         "//src/main/java/com/code_intelligence/jazzer/utils",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
-        "@maven//:org_junit_platform_junit_platform_commons",
-        "@maven//:org_junit_platform_junit_platform_engine",
     ],
 )
 
