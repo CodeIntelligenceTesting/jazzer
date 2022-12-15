@@ -23,8 +23,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 
-class RegressionTestExtensions
-    implements AfterEachCallback, InvocationInterceptor, ExecutionCondition {
+class RegressionTestExtensions implements InvocationInterceptor, ExecutionCondition {
   private static final boolean DISABLE_FOR_FUZZING =
       System.getenv("JAZZER_FUZZ") != null && !System.getenv("JAZZER_FUZZ").isEmpty();
   private static Field lastFindingField;
@@ -51,14 +50,6 @@ class RegressionTestExtensions
     } else if (thrown != null) {
       throw thrown;
     }
-  }
-
-  @Override
-  public void afterEach(ExtensionContext extensionContext) {
-    extensionContext.publishReportEntry(
-        "No fuzzing has been performed, the fuzz test has only been executed on the fixed set of inputs in the "
-        + "seed corpus.\n"
-        + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a non-empty value.");
   }
 
   private static Field getLastFindingField() throws Throwable {

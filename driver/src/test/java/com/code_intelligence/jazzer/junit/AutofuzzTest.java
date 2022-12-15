@@ -112,15 +112,13 @@ public class AutofuzzTest {
                 "com.example.AutofuzzWithCorpusFuzzTest#autofuzzWithCorpus(java.lang.String,int)"))
             .execute();
 
-    results.containerEvents().debug();
+    results.containerEvents().debug().assertEventsMatchLoosely(
+        // "No fuzzing has been performed..."
+        event(type(EventType.REPORTING_ENTRY_PUBLISHED), container("autofuzzWithCorpus")));
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
-        // "No fuzzing has been performed..."
-        event(type(EventType.REPORTING_ENTRY_PUBLISHED)),
         event(test("autofuzzWithCorpus", "<empty input>"), finishedSuccessfully()),
         event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
-        // "No fuzzing has been performed..."
-        event(type(EventType.REPORTING_ENTRY_PUBLISHED)),
         event(test("autofuzzWithCorpus", "crashing_input"),
             finishedWithFailure(instanceOf(RuntimeException.class))));
   }

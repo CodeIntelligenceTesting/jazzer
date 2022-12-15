@@ -74,7 +74,12 @@ class RegressionTestArgumentProvider implements ArgumentsProvider, AnnotationCon
     if (Utils.isCoverageAgentPresent() && Files.isDirectory(Utils.generatedCorpusPath(testClass))) {
       rawSeeds = Stream.concat(rawSeeds, walkInputsInPath(Utils.generatedCorpusPath(testClass)));
     }
-    return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds);
+    return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds).onClose(() -> {
+      extensionContext.publishReportEntry(
+          "No fuzzing has been performed, the fuzz test has only been executed on the fixed set of inputs in the "
+          + "seed corpus.\n"
+          + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a non-empty value.");
+    });
   }
 
   private Stream<? extends Arguments> adaptInputsForFuzzTest(
