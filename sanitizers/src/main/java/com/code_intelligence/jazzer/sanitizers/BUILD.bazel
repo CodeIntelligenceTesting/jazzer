@@ -6,9 +6,9 @@ java_library(
     name = "regex_roadblocks",
     srcs = ["RegexRoadblocks.java"],
     deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
-        "//agent/src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
         "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers/utils:reflection_utils",
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
 )
 
@@ -16,7 +16,7 @@ java_library(
     name = "sql_injection",
     srcs = ["SqlInjection.java"],
     deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
         "@maven//:com_github_jsqlparser_jsqlparser",
     ],
 )
@@ -39,14 +39,14 @@ kt_jvm_library(
         ":sql_injection",
     ],
     deps = [
-        "//agent/src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
     ],
 )
 
 java_library(
     name = "constants",
     srcs = [":constants_java"],
-    visibility = ["//agent/src/main/java/com/code_intelligence/jazzer/agent:__pkg__"],
+    visibility = ["//src/main/java/com/code_intelligence/jazzer/agent:__pkg__"],
 )
 
 write_file(

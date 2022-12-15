@@ -1,0 +1,49 @@
+load("@rules_jvm_external//:defs.bzl", "java_export")
+
+java_library(
+    name = "api",
+    srcs = [
+        "Autofuzz.java",
+        "AutofuzzConstructionException.java",
+        "AutofuzzInvocationException.java",
+        "CannedFuzzedDataProvider.java",
+        "Consumer1.java",
+        "Consumer2.java",
+        "Consumer3.java",
+        "Consumer4.java",
+        "Consumer5.java",
+        "Function1.java",
+        "Function2.java",
+        "Function3.java",
+        "Function4.java",
+        "Function5.java",
+        "FuzzedDataProvider.java",
+    ],
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        ":hooks",
+    ],
+)
+
+java_binary(
+    name = "api_deploy_env",
+    create_executable = False,
+    visibility = ["//src/main/java/com/code_intelligence/jazzer:__pkg__"],
+    runtime_deps = [":api"],
+)
+
+java_library(
+    name = "hooks",
+    srcs = [
+        "FuzzerSecurityIssueCritical.java",
+        "FuzzerSecurityIssueHigh.java",
+        "FuzzerSecurityIssueLow.java",
+        "FuzzerSecurityIssueMedium.java",
+        "HookType.java",
+        "Jazzer.java",
+        "MethodHook.java",
+        "MethodHooks.java",
+        "//src/main/java/jaz",
+    ],
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,14 @@
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+
+java_test(
+    name = "TraceCmpHooksTest",
+    srcs = [
+        "TraceCmpHooksTest.java",
+    ],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/runtime",
+        "//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
+        "@maven//:junit_junit",
+    ],
+)

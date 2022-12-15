@@ -74,7 +74,7 @@ def java_fuzz_target_test(
             name = target_with_driver_name,
             runtime_deps = [
                 target_name + "_import",
-                "//driver/src/main/java/com/code_intelligence/jazzer:jazzer_import",
+                "//src/main/java/com/code_intelligence/jazzer:jazzer_import",
             ],
             main_class = "com.code_intelligence.jazzer.Jazzer",
             testonly = True,

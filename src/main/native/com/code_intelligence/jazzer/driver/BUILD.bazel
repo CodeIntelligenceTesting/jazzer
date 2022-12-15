@@ -1,0 +1,142 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+
+cc_jni_library(
+    name = "jazzer_driver",
+    visibility = [
+        "//src/jmh:__subpackages__",
+        "//src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/junit:__pkg__",
+        "//src/test:__subpackages__",
+    ],
+    deps = [
+        ":jazzer_driver_lib",
+        "@jazzer_libfuzzer//:libfuzzer_no_main",
+    ] + select({
+        # Windows doesn't have a concept analogous to RTLD_GLOBAL.
+        "@platforms//os:windows": [],
+        "//conditions:default": [":init_jazzer_preload"],
+    }),
+)
+
+cc_library(
+    name = "jazzer_driver_lib",
+    visibility = ["//src/test/native/com/code_intelligence/jazzer/driver/mocks:__pkg__"],
+    deps = [
+        ":coverage_tracker",
+        ":fuzz_target_runner",
+        ":jazzer_fuzzer_callbacks",
+        ":libfuzzer_callbacks",
+    ],
+)
+
+cc_library(
+    name = "coverage_tracker",
+    srcs = ["coverage_tracker.cpp"],
+    hdrs = ["coverage_tracker.h"],
+    deps = ["//src/main/java/com/code_intelligence/jazzer/runtime:coverage_map.hdrs"],
+    # Symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
+    name = "fuzz_target_runner",
+    srcs = ["fuzz_target_runner.cpp"],
+    hdrs = ["fuzz_target_runner.h"],
+    linkopts = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": ["-ldl"],
+    }),
+    deps = [
+        ":sanitizer_symbols",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:fuzz_target_runner_natives.hdrs",
+    ],
+    # With sanitizers, symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
+    name = "fuzzed_data_provider",
+    srcs = ["fuzzed_data_provider.cpp"],
+    visibility = [
+        "//launcher:__pkg__",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl.hdrs",
+    ],
+    # Symbols may only be referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_jni_library(
+    name = "jazzer_fuzzed_data_provider",
+    visibility = ["//src/main/java/com/code_intelligence/jazzer/driver:__pkg__"],
+    deps = [":fuzzed_data_provider"],
+)
+
+cc_library(
+    name = "jazzer_fuzzer_callbacks",
+    srcs = ["jazzer_fuzzer_callbacks.cpp"],
+    deps = [
+        ":sanitizer_hooks_with_pc",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
+    ],
+    alwayslink = True,
+)
+
+cc_jni_library(
+    name = "jazzer_signal_handler",
+    srcs = ["signal_handler.cpp"],
+    visibility = ["//src/main/java/com/code_intelligence/jazzer/driver:__pkg__"],
+    deps = ["//src/main/java/com/code_intelligence/jazzer/driver:signal_handler.hdrs"],
+)
+
+cc_library(
+    name = "libfuzzer_callbacks",
+    srcs = ["libfuzzer_callbacks.cpp"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
+        "@com_google_absl//absl/strings",
+    ],
+    # Symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
+    name = "init_jazzer_preload",
+    srcs = ["init_jazzer_preload.cpp"],
+    linkopts = ["-ldl"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    deps = ["@fmeum_rules_jni//jni"],
+    # Symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sanitizer_hooks_with_pc",
+    hdrs = ["sanitizer_hooks_with_pc.h"],
+    visibility = ["//:__subpackages__"],
+)
+
+cc_library(
+    name = "sanitizer_symbols",
+    srcs = ["sanitizer_symbols.cpp"],
+    # Symbols are referenced dynamically by libFuzzer.
+    alwayslink = True,
+)
+
+cc_test(
+    name = "fuzzed_data_provider_test",
+    size = "small",
+    srcs = ["fuzzed_data_provider_test.cpp"],
+    copts = select({
+        "@platforms//os:windows": ["/std:c++17"],
+        "//conditions:default": ["-std=c++17"],
+    }),
+    deps = [
+        ":fuzzed_data_provider",
+        "@fmeum_rules_jni//jni",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)

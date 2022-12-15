@@ -6,7 +6,7 @@ java_binary(
     srcs = glob(["*.java"]),
     create_executable = False,
     visibility = [
-        "//driver/src/test/java/com/code_intelligence/jazzer/junit:__pkg__",
+        "//src/test/java/com/code_intelligence/jazzer/junit:__pkg__",
     ],
     deps = [
         "//deploy:jazzer",
@@ -27,8 +27,8 @@ java_fuzz_target_test(
     target_method = "dataFuzz",
     verify_crash_reproducer = False,
     deps = [
-        "//driver/src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "//examples/junit/src/main/java/com/example:parser",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 )
@@ -42,8 +42,8 @@ java_fuzz_target_test(
     target_method = "byteFuzz",
     verify_crash_reproducer = False,
     deps = [
-        "//driver/src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "//examples/junit/src/main/java/com/example:parser",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 )

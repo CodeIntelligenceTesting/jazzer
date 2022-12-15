@@ -1,0 +1,114 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+
+java_library(
+    name = "driver",
+    srcs = ["Driver.java"],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer:__pkg__",
+    ],
+    deps = [
+        ":fuzz_target_runner",
+        "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
+    ],
+)
+
+kt_jvm_library(
+    name = "exception_utils",
+    srcs = ["ExceptionUtils.kt"],
+    deps = ["//src/main/java/com/code_intelligence/jazzer/api:hooks"],
+)
+
+java_library(
+    name = "fuzz_target_finder",
+    srcs = ["FuzzTargetFinder.java"],
+    deps = [
+        ":opt",
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/utils:manifest_utils",
+        "@org_ow2_asm_asm//jar",
+        "@org_ow2_asm_asm_commons//jar",
+        "@org_ow2_asm_asm_tree//jar",
+    ],
+)
+
+java_jni_library(
+    name = "fuzz_target_runner",
+    srcs = ["FuzzTargetRunner.java"],
+    # This library is loaded by the classes in the agent runtime package as it needs to be available
+    # in the bootstrap class loader. It is packaged here rather than in jazzer_boostrap.jar since
+    # the bootstrap class loader doesn't support resources.
+    native_libs = [
+        "//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
+    ],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/junit:__pkg__",
+        "//src/test:__subpackages__",
+    ],
+    deps = [
+        ":exception_utils",
+        ":fuzz_target_finder",
+        ":fuzzed_data_provider_impl",
+        ":opt",
+        ":recording_fuzzed_data_provider",
+        ":reproducer_template",
+        ":signal_handler",
+        "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/autofuzz",
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap_compile_only",
+        "//src/main/java/com/code_intelligence/jazzer/utils:manifest_utils",
+        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
+    ],
+)
+
+java_jni_library(
+    name = "fuzzed_data_provider_impl",
+    srcs = ["FuzzedDataProviderImpl.java"],
+    native_libs = ["//src/main/native/com/code_intelligence/jazzer/driver:jazzer_fuzzed_data_provider"],
+    visibility = [
+        "//src:__subpackages__",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
+    ],
+)
+
+java_library(
+    name = "reproducer_template",
+    srcs = ["ReproducerTemplate.java"],
+    resources = ["Reproducer.java.tmpl"],
+    deps = [":opt"],
+)
+
+java_library(
+    name = "opt",
+    srcs = [
+        "Opt.java",
+        "OptParser.java",
+    ],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer:__subpackages__",
+        "//src/main/java/com/code_intelligence/jazzer/junit:__pkg__",
+        "//src/test/java/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer:constants",
+    ],
+)
+
+java_library(
+    name = "recording_fuzzed_data_provider",
+    srcs = ["RecordingFuzzedDataProvider.java"],
+    visibility = ["//src/test/java/com/code_intelligence/jazzer/driver:__pkg__"],
+    deps = ["//src/main/java/com/code_intelligence/jazzer/api"],
+)
+
+java_jni_library(
+    name = "signal_handler",
+    srcs = ["SignalHandler.java"],
+    native_libs = ["//src/main/native/com/code_intelligence/jazzer/driver:jazzer_signal_handler"],
+    visibility = ["//src/main/native/com/code_intelligence/jazzer/driver:__pkg__"],
+)

@@ -26,13 +26,13 @@ define_kt_toolchain(
 pkg_tar(
     name = "jazzer_release",
     srcs = [
-        "//driver/src/main/java/com/code_intelligence/jazzer:jazzer_standalone_deploy.jar",
         "//launcher:jazzer",
+        "//src/main/java/com/code_intelligence/jazzer:jazzer_standalone_deploy.jar",
     ],
     extension = "tar.gz",
     mode = "0777",
     remap_paths = {
-        "driver/src/main/java/com/code_intelligence/jazzer/jazzer_standalone_deploy.jar": "jazzer_standalone.jar",
+        "src/main/java/com/code_intelligence/jazzer/jazzer_standalone_deploy.jar": "jazzer_standalone.jar",
         "launcher/jazzer": "jazzer",
     },
     strip_prefix = select({

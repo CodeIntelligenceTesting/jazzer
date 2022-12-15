@@ -34,7 +34,7 @@ java_export(
     maven_coordinates = JAZZER_API_COORDINATES,
     pom_template = "//deploy:jazzer-api.pom",
     visibility = ["//visibility:public"],
-    runtime_deps = ["//agent/src/main/java/com/code_intelligence/jazzer/api"],
+    runtime_deps = ["//src/main/java/com/code_intelligence/jazzer/api"],
 )
 
 java_export(
@@ -46,25 +46,25 @@ java_export(
     tags = ["no-javadocs"],
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//driver/src/main/java/com/code_intelligence/jazzer:jazzer_import",
+        "//src/main/java/com/code_intelligence/jazzer:jazzer_import",
     ],
 )
 
 alias(
     name = "jazzer-docs",
-    actual = "//driver/src/main/java/com/code_intelligence/jazzer:jazzer-docs",
+    actual = "//src/main/java/com/code_intelligence/jazzer:jazzer-docs",
 )
 
 alias(
     name = "jazzer-sources",
-    actual = "//driver/src/main/java/com/code_intelligence/jazzer:jazzer-sources",
+    actual = "//src/main/java/com/code_intelligence/jazzer:jazzer-sources",
 )
 
 java_export(
     name = "jazzer-junit",
     # Exclude the unshaded classes comprising com.code-intelligence:jazzer since the java_library
     # target comprising jazzer-junit depend on the individual libraries, not the shaded jar.
-    deploy_env = ["//driver/src/main/java/com/code_intelligence/jazzer:jazzer_lib"],
+    deploy_env = ["//src/main/java/com/code_intelligence/jazzer:jazzer_lib"],
     javadocopts = select({
         ":emit_linked_javadoc": [
             "-link",
@@ -86,7 +86,7 @@ java_export(
         # POM.
         "//deploy:jazzer",
         "//deploy:jazzer-api",
-        "//driver/src/main/java/com/code_intelligence/jazzer/junit",
+        "//src/main/java/com/code_intelligence/jazzer/junit",
     ],
 )
 

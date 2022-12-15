@@ -1,0 +1,8 @@
+filegroup(
+    name = "jaz",
+    srcs = [
+        "Ter.java",
+        "Zer.java",
+    ],
+    visibility = ["//src/main/java/com/code_intelligence/jazzer/api:__pkg__"],
+)

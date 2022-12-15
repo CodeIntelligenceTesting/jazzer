@@ -1,0 +1,42 @@
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+
+kt_jvm_library(
+    name = "utils",
+    srcs = ["Utils.kt"],
+    visibility = ["//visibility:public"],
+)
+
+kt_jvm_library(
+    name = "class_name_globber",
+    srcs = ["ClassNameGlobber.kt"],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
+    ],
+    deps = [":simple_glob_matcher"],
+)
+
+kt_jvm_library(
+    name = "manifest_utils",
+    srcs = ["ManifestUtils.kt"],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
+)
+
+kt_jvm_library(
+    name = "simple_glob_matcher",
+    srcs = ["SimpleGlobMatcher.kt"],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/autofuzz:__pkg__",
+    ],
+)
+
+java_library(
+    name = "unsafe_provider",
+    srcs = ["UnsafeProvider.java"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+)
