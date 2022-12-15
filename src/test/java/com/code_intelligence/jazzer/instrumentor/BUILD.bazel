@@ -1,0 +1,150 @@
+load("//bazel:kotlin.bzl", "wrapped_kt_jvm_test")
+load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+
+kt_jvm_library(
+    name = "patch_test_utils",
+    srcs = [
+        "DynamicTestContract.java",
+        "PatchTestUtils.kt",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+wrapped_kt_jvm_test(
+    name = "trace_data_flow_instrumentation_test",
+    size = "small",
+    srcs = [
+        "MockTraceDataFlowCallbacks.java",
+        "TraceDataFlowInstrumentationTarget.java",
+        "TraceDataFlowInstrumentationTest.kt",
+    ],
+    associates = [
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor:instrumentor",
+    ],
+    test_class = "com.code_intelligence.jazzer.instrumentor.TraceDataFlowInstrumentationTest",
+    deps = [
+        ":patch_test_utils",
+        "@com_github_jetbrains_kotlin//:kotlin-test",
+        "@maven//:junit_junit",
+    ],
+)
+
+wrapped_kt_jvm_test(
+    name = "coverage_instrumentation_test",
+    size = "small",
+    srcs = [
+        "CoverageInstrumentationSpecialCasesTarget.java",
+        "CoverageInstrumentationTarget.java",
+        "CoverageInstrumentationTest.kt",
+        "MockCoverageMap.java",
+    ],
+    associates = [
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor:instrumentor",
+    ],
+    test_class = "com.code_intelligence.jazzer.instrumentor.CoverageInstrumentationTest",
+    deps = [
+        ":patch_test_utils",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:coverage_map",
+        "@com_github_jetbrains_kotlin//:kotlin-test",
+        "@maven//:junit_junit",
+    ],
+)
+
+wrapped_kt_jvm_test(
+    name = "descriptor_utils_test",
+    size = "small",
+    srcs = [
+        "DescriptorUtilsTest.kt",
+    ],
+    associates = [
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor:instrumentor",
+    ],
+    test_class = "com.code_intelligence.jazzer.instrumentor.DescriptorUtilsTest",
+    deps = [
+        "@com_github_jetbrains_kotlin//:kotlin-test",
+        "@maven//:junit_junit",
+    ],
+)
+
+wrapped_kt_jvm_test(
+    name = "hook_validation_test",
+    size = "small",
+    srcs = [
+        "HookValidationTest.kt",
+        "InvalidHookMocks.java",
+        "ValidHookMocks.java",
+    ],
+    associates = [
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor:instrumentor",
+    ],
+    test_class = "com.code_intelligence.jazzer.instrumentor.HookValidationTest",
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "@com_github_jetbrains_kotlin//:kotlin-test",
+        "@maven//:junit_junit",
+    ],
+)
+
+wrapped_kt_jvm_test(
+    name = "after_hooks_patch_test",
+    size = "small",
+    srcs = [
+        "AfterHooks.java",
+        "AfterHooksPatchTest.kt",
+        "AfterHooksTarget.java",
+        "AfterHooksTargetContract.java",
+    ],
+    associates = [
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor:instrumentor",
+    ],
+    test_class = "com.code_intelligence.jazzer.instrumentor.AfterHookTest",
+    deps = [
+        ":patch_test_utils",
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "@com_github_jetbrains_kotlin//:kotlin-test",
+        "@maven//:junit_junit",
+    ],
+)
+
+wrapped_kt_jvm_test(
+    name = "before_hooks_patch_test",
+    size = "small",
+    srcs = [
+        "BeforeHooks.java",
+        "BeforeHooksPatchTest.kt",
+        "BeforeHooksTarget.java",
+        "BeforeHooksTargetContract.java",
+    ],
+    associates = [
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor:instrumentor",
+    ],
+    test_class = "com.code_intelligence.jazzer.instrumentor.BeforeHookTest",
+    deps = [
+        ":patch_test_utils",
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "@com_github_jetbrains_kotlin//:kotlin-test",
+        "@maven//:junit_junit",
+    ],
+)
+
+wrapped_kt_jvm_test(
+    name = "replace_hooks_patch_test",
+    size = "small",
+    srcs = [
+        "ReplaceHooks.java",
+        "ReplaceHooksInit.java",
+        "ReplaceHooksPatchTest.kt",
+        "ReplaceHooksTarget.java",
+        "ReplaceHooksTargetContract.java",
+    ],
+    associates = [
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor:instrumentor",
+    ],
+    test_class = "com.code_intelligence.jazzer.instrumentor.ReplaceHookTest",
+    deps = [
+        ":patch_test_utils",
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "@com_github_jetbrains_kotlin//:kotlin-test",
+        "@maven//:junit_junit",
+    ],
+)

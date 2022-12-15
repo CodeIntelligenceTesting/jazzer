@@ -42,7 +42,7 @@ constexpr auto kPathSeparator = '/';
 
 namespace {
 constexpr auto kJazzerBazelRunfilesPath =
-    "jazzer/driver/src/main/java/com/code_intelligence/jazzer/"
+    "jazzer/src/main/java/com/code_intelligence/jazzer/"
     "jazzer_standalone_deploy.jar";
 constexpr auto kJazzerFileName = "jazzer_standalone.jar";
 

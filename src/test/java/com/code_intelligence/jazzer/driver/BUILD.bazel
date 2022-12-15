@@ -1,0 +1,45 @@
+java_test(
+    name = "FuzzTargetRunnerTest",
+    srcs = ["FuzzTargetRunnerTest.java"],
+    jvm_flags = ["-ea"],
+    use_testrunner = False,
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:coverage_map",
+        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
+    ],
+)
+
+java_test(
+    name = "FuzzedDataProviderImplTest",
+    srcs = ["FuzzedDataProviderImplTest.java"],
+    use_testrunner = False,
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
+    ],
+)
+
+java_test(
+    name = "OptTest",
+    srcs = ["OptTest.java"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
+    name = "RecordingFuzzedDataProviderTest",
+    srcs = [
+        "RecordingFuzzedDataProviderTest.java",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
+        "//src/main/java/com/code_intelligence/jazzer/driver:recording_fuzzed_data_provider",
+        "@maven//:junit_junit",
+    ],
+)

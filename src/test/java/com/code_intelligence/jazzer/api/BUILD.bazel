@@ -1,0 +1,22 @@
+java_test(
+    name = "AutofuzzTest",
+    size = "small",
+    srcs = [
+        "AutofuzzTest.java",
+    ],
+    env = {
+        # Also consider implementing classes from com.code_intelligence.jazzer.*.
+        "JAZZER_AUTOFUZZ_TESTING": "1",
+    },
+    test_class = "com.code_intelligence.jazzer.api.AutofuzzTest",
+    runtime_deps = [
+        "//src/main/java/com/code_intelligence/jazzer/autofuzz",
+        # Needed for JazzerInternal.
+        "//src/main/java/com/code_intelligence/jazzer/runtime",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
+        "@maven//:junit_junit",
+    ],
+)

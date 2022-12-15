@@ -1,0 +1,16 @@
+load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+
+java_jni_library(
+    name = "replay",
+    srcs = ["Replayer.java"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
+    ],
+)
+
+java_binary(
+    name = "Replayer",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":replay"],
+)

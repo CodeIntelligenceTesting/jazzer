@@ -1,0 +1,93 @@
+java_test(
+    name = "MetaTest",
+    size = "small",
+    srcs = [
+        "MetaTest.java",
+    ],
+    env = {
+        "JAZZER_AUTOFUZZ_DEBUG": "1",
+        # Also consider implementing classes from com.code_intelligence.jazzer.*.
+        "JAZZER_AUTOFUZZ_TESTING": "1",
+    },
+    test_class = "com.code_intelligence.jazzer.autofuzz.MetaTest",
+    deps = [
+        ":test_helpers",
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/autofuzz",
+        "@maven//:com_mikesamuel_json_sanitizer",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
+    name = "InterfaceCreationTest",
+    size = "small",
+    srcs = [
+        "InterfaceCreationTest.java",
+    ],
+    env = {
+        "JAZZER_AUTOFUZZ_DEBUG": "1",
+        # Also consider implementing classes from com.code_intelligence.jazzer.*.
+        "JAZZER_AUTOFUZZ_TESTING": "1",
+    },
+    test_class = "com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest",
+    deps = [
+        ":test_helpers",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
+    name = "BuilderPatternTest",
+    size = "small",
+    srcs = [
+        "BuilderPatternTest.java",
+    ],
+    env = {
+        "JAZZER_AUTOFUZZ_DEBUG": "1",
+    },
+    test_class = "com.code_intelligence.jazzer.autofuzz.BuilderPatternTest",
+    deps = [
+        ":test_helpers",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
+    name = "SettersTest",
+    size = "small",
+    srcs = [
+        "SettersTest.java",
+    ],
+    env = {
+        "JAZZER_AUTOFUZZ_DEBUG": "1",
+    },
+    test_class = "com.code_intelligence.jazzer.autofuzz.SettersTest",
+    deps = [
+        ":test_helpers",
+        "//src/test/java/com/code_intelligence/jazzer/autofuzz/testdata:test_data",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
+    name = "AutofuzzCodegenVisitorTest",
+    srcs = [
+        "AutofuzzCodegenVisitorTest.java",
+    ],
+    test_class = "com.code_intelligence.jazzer.autofuzz.AutofuzzCodegenVisitorTest",
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/autofuzz",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_library(
+    name = "test_helpers",
+    srcs = ["TestHelpers.java"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/autofuzz",
+        "@maven//:junit_junit",
+    ],
+)

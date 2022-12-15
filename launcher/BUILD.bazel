@@ -13,7 +13,7 @@ cc_library(
     srcs = ["jvm_tooling.cpp"],
     hdrs = ["jvm_tooling.h"],
     data = [
-        "//driver/src/main/java/com/code_intelligence/jazzer:jazzer_standalone_deploy.jar",
+        "//src/main/java/com/code_intelligence/jazzer:jazzer_standalone_deploy.jar",
     ],
     deps = [
         "@bazel_tools//tools/cpp/runfiles",
@@ -67,7 +67,7 @@ cc_test(
     deps = [
         ":jvm_tooling_lib",
         ":test_main",
-        "//driver/src/main/native/com/code_intelligence/jazzer/driver:fuzzed_data_provider",
+        "//src/main/native/com/code_intelligence/jazzer/driver:fuzzed_data_provider",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
     ],

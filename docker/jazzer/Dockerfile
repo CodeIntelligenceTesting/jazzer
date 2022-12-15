@@ -27,7 +27,7 @@ RUN curl -L https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/baz
     touch /usr/bin/ld.gold && \
     bazelisk build --config=docker //launcher:jazzer && \
     mkdir -p /app && \
-    cp $(bazelisk cquery --config=docker --output=files //driver/src/main/java/com/code_intelligence/jazzer:jazzer_standalone_deploy.jar) /app/jazzer_standalone.jar && \
+    cp $(bazelisk cquery --config=docker --output=files //src/main/java/com/code_intelligence/jazzer:jazzer_standalone_deploy.jar) /app/jazzer_standalone.jar && \
     cp $(bazelisk cquery --config=docker --output=files //launcher:jazzer) /app/
 
 # :debug includes a busybox shell, which is needed for libFuzzer's use of system() for e.g. the
