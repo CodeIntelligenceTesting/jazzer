@@ -83,7 +83,7 @@ java_library(
     name = "jazzer_bootstrap_compile_only",
     neverlink = True,
     visibility = [
-        "//agent:__subpackages__",
+        "//agent/src/main/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
         "//driver/src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
     ],
     exports = [

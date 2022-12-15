@@ -77,5 +77,5 @@ coverage --repo_env=BAZEL_USE_LLVM_NATIVE_COVERAGE=1
 coverage --repo_env=GCOV=llvm-profdata
 
 # Instrument all source files of non-test targets matching at least one of these regexes.
-coverage --instrumentation_filter=^//agent/src/main[:/],^//driver:,^//sanitizers/src/main[:/]
+coverage --instrumentation_filter=^//agent/src/main[:/],^//driver/src/main[:/],^//sanitizers/src/main[:/]
 coverage --test_tag_filters=-no-coverage

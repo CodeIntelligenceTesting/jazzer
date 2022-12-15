@@ -5,7 +5,6 @@ java_library(
     name = "driver",
     srcs = ["Driver.java"],
     visibility = [
-        "//agent:__pkg__",
         "//driver/src/main/java/com/code_intelligence/jazzer:__pkg__",
     ],
     deps = [
@@ -43,7 +42,6 @@ java_jni_library(
         "//driver/src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
     ],
     visibility = [
-        "//agent:__pkg__",
         "//driver/src/main/java/com/code_intelligence/jazzer/junit:__pkg__",
         "//driver/src/test:__subpackages__",
     ],
@@ -70,8 +68,7 @@ java_jni_library(
     srcs = ["FuzzedDataProviderImpl.java"],
     native_libs = ["//driver/src/main/native/com/code_intelligence/jazzer/driver:jazzer_fuzzed_data_provider"],
     visibility = [
-        "//driver:__subpackages__",
-        "//junit:__subpackages__",
+        "//driver/src:__subpackages__",
     ],
     deps = [
         "//agent/src/main/java/com/code_intelligence/jazzer/api",
