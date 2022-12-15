@@ -105,14 +105,13 @@ public class DirectoryInputsTest {
             .selectors(selectClass("com.example.DirectoryInputsFuzzTest"))
             .execute();
 
-    results.containerEvents().debug();
+    results.containerEvents().debug().assertEventsMatchLoosely(
+        // "No fuzzing has been performed..."
+        event(type(EventType.REPORTING_ENTRY_PUBLISHED), container("inputsFuzz")));
     results.testEvents().debug().assertEventsMatchExactly(
         event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
-        // "No fuzzing has been performed..."
-        event(type(EventType.REPORTING_ENTRY_PUBLISHED)),
         event(test("inputsFuzz", "<empty input>"), finishedSuccessfully()),
         event(type(EventType.DYNAMIC_TEST_REGISTERED)), event(type(EventType.STARTED)),
-        event(type(EventType.REPORTING_ENTRY_PUBLISHED)),
         event(test("inputsFuzz", "seed"),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
   }
