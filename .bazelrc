@@ -14,9 +14,6 @@ build:macos --nozip_undeclared_test_outputs
 # C/C++
 # GCC is supported on a best-effort basis.
 common --repo_env=CC=clang
-# We want stock LLVM to be configured on macOS rather than Xcode's Apple Clang
-# toolchain.
-common --repo_env=BAZEL_USE_CPP_ONLY_TOOLCHAIN=1
 build --incompatible_enable_cc_toolchain_resolution
 # Requires a relatively modern clang.
 build:ci --features=layering_check
@@ -41,10 +38,6 @@ run:windows --noincompatible_strict_action_env
 build:macos --extra_toolchains=//:java_non_prebuilt_definition
 build:macos --java_runtime_version=11
 build:macos --tool_java_runtime_version=11
-# Allow Jazzer to find LLVM rather than Apple clang. The former is not
-# contained in the default PATH set by Bazel.
-test:macos --test_env=PATH
-run:macos --test_env=PATH
 
 # Toolchain
 # Since the toolchain is conditional on OS and architecture, set it on the particular GitHub Action.
