@@ -1,8 +1,9 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
-load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("//bazel:compat.bzl", "MULTI_PLATFORM", "SKIP_ON_WINDOWS")
 
 cc_jni_library(
     name = "jazzer_driver",
+    platforms = MULTI_PLATFORM,
     visibility = [
         "//src/jmh:__subpackages__",
         "//src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
@@ -70,6 +71,7 @@ cc_library(
 
 cc_jni_library(
     name = "jazzer_fuzzed_data_provider",
+    platforms = MULTI_PLATFORM,
     visibility = ["//src/main/java/com/code_intelligence/jazzer/driver:__pkg__"],
     deps = [":fuzzed_data_provider"],
 )
@@ -87,6 +89,7 @@ cc_library(
 cc_jni_library(
     name = "jazzer_signal_handler",
     srcs = ["signal_handler.cpp"],
+    platforms = MULTI_PLATFORM,
     visibility = ["//src/main/java/com/code_intelligence/jazzer/driver:__pkg__"],
     deps = ["//src/main/java/com/code_intelligence/jazzer/driver:signal_handler.hdrs"],
 )
