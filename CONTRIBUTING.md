@@ -6,7 +6,10 @@ Jazzer has the following dependencies when being built from source:
 
 * [Bazelisk](https://github.com/bazelbuild/bazelisk) or the version of Bazel specified in [`.bazelversion`](.bazelversion)
 * JDK 8 to 19 (e.g. [OpenJDK](https://openjdk.java.net/))
-* [Clang](https://clang.llvm.org/) 9.0 or later (using GCC should work with `--repo_env=CC=gcc`, but is not tested)
+* One of the following C++ compilers:
+  * [Clang](https://clang.llvm.org/) 9.0+ (clang-cl on Windows)
+  * Xcode (Xcode.app is required, not just the developer tools)
+  * GCC (should work with `--repo_env=CC=gcc`, but is not tested)
 
 It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) to automatically download and install Bazel.
 Simply download the release binary for your OS and architecture and ensure that it is available in the `PATH`.
@@ -33,15 +36,6 @@ Target //:jazzer_release up-to-date:
   bazel-bin/jazzer_release.tar.gz
 ...
 ```
-
-#### macOS
-
-The build may fail with the clang shipped with Xcode.
-In that case, install LLVM clang via `brew install llvm` and set `CC` to the path of LLVM clang.
-
-#### Windows
-
-`clang-cl` is required to build Jazzer on Windows.
 
 ### Running the tests
 
