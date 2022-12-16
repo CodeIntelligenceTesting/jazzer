@@ -1,5 +1,5 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
-load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("//bazel:compat.bzl", "MULTI_PLATFORM", "SKIP_ON_WINDOWS")
 
 DYNAMIC_SYMBOLS_TO_EXPORT = [
     "__sancov_lowest_stack",
@@ -53,6 +53,7 @@ cc_jni_library(
         ],
         "//conditions:default": [],
     }),
+    platforms = MULTI_PLATFORM,
     target_compatible_with = SKIP_ON_WINDOWS,
     visibility = ["//src/main/java/com/code_intelligence/jazzer:__pkg__"],
     deps = ["//src/main/native/com/code_intelligence/jazzer/driver:sanitizer_hooks_with_pc"],

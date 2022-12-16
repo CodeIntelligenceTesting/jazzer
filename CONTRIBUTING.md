@@ -55,22 +55,20 @@ See [check-formatting.yml](.github/workflows/check-formatting.yml) for how to ob
 Requires an accounts on [Sonatype](https://issues.sonatype.org) with access to the `com.code-intelligence` group as well as a YubiKey with the signing key.
 
 1. Update `JAZZER_VERSION` in [`maven.bzl`](maven.bzl).
-2. Create a tag for the release.
-3. Push the tag to the private fork at https://github.com/CodeIntelligenceTesting/jazzer-trusted.
-4. Trigger the "Release" GitHub Actions workflow for the tag **in `jazzer-trusted`**.
+2. Create a release, using the auto-generated changelog as a base for the release notes.
+3. Trigger the "Release" GitHub Actions workflow for the tag.
    This builds release archives for GitHub as well as the multi-architecture jar for the `com.code-intelligence:jazzer` Maven artifact.
-   Using `jazzer-trusted` is unfortunately required as there is [no safe way to add a private runner to a public repository](https://docs.github.com/en/actions/hosting-your-own-runners/about-self-hosted-runners#self-hosted-runner-security) and there are no public macOS M1 runners.
-5. Create a GitHub release and upload the contents of the `jazzer_releases` artifact from the workflow run.
-6. Check out the tag locally and, with the YubiKey plugged in, run `bazel run //deploy` with the following environment variables to upload the Maven artifacts:
+4. Create a GitHub release and upload the contents of the `jazzer_releases` artifact from the workflow run.
+5. Check out the tag locally and, with the YubiKey plugged in, run `bazel run //deploy` with the following environment variables to upload the Maven artifacts:
     * `JAZZER_JAR_PATH`: local path of the multi-architecture `jazzer.jar` contained in the `jazzer` artifact of the "Release" workflow
     * `JAVA_HOME`: path to a JDK 8
     * `MAVEN_USER`: username on https://oss.sonatype.org
     * `MAVEN_PASSWORD`: password on https://oss.sonatype.org
 
    The YubiKey blinks repeatedly and needs a touch to confirm each individual signature.
-7. Log into https://oss.sonatype.org, select both staging repositories and "Close" them.
+6. Log into https://oss.sonatype.org, select both staging repositories and "Close" them.
    Wait and refresh, then select them again and "Release" them.
-8. Locally, with Docker credentials available, run `docker/push_all.sh` to build and push the `cifuzz/jazzer` and `cifuzz/jazzer-autofuzz` Docker images.
+7. Locally, with Docker credentials available, run `docker/push_all.sh` to build and push the `cifuzz/jazzer` and `cifuzz/jazzer-autofuzz` Docker images.
 
 ### Updating the hosted javadocs
 

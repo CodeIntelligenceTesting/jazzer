@@ -26,3 +26,11 @@ LINUX_ONLY = select({
     "@platforms//os:linux": [],
     "//conditions:default": ["@platforms//:incompatible"],
 })
+
+MULTI_PLATFORM = select({
+    "@platforms//os:macos": [
+        "//:macos_arm64",
+        "//:macos_x86_64",
+    ],
+    "//conditions:default": [],
+})

@@ -4,27 +4,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  # RELEASE_MATRIX isn't really secret, but this appears to be the only way to pass per-repo configuration into a
-  # workflow. GitHub does not allow secrets to be returned as outputs, so we store the secret encoded as Base64.
-  # Its current value can be generated with:
-  #
-  # echo '{"include":[{"os":"ubuntu-20.04","name":"linux"},{"os":"macos-11","name":"macos-x86_64"},{"os":"windows-2019",name:"windows"}]}' | base64 -w 0
-  #
-  # Based on https://docs.github.com/en/actions/learn-github-actions/expressions#example-returning-a-json-object
-  configure_matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - id: set-matrix
-        run: echo "matrix=$(echo '${{ secrets.RELEASE_MATRIX }}' | base64 -d)" >> $GITHUB_OUTPUT
-
   build_release:
-    needs: configure_matrix
-
     runs-on: ${{ matrix.os }}
     strategy:
-      matrix: ${{ fromJSON(needs.configure_matrix.outputs.matrix) }}
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            name: linux
+          - os: macos-11
+            name: macos
+          - os: windows-2019
+            name: windows
 
     steps:
       - uses: actions/checkout@v3
