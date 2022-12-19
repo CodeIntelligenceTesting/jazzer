@@ -15,10 +15,10 @@
 FROM ubuntu:20.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y curl git python3 python-is-python3 openjdk-11-jdk-headless
+RUN apt-get update && apt-get install -y curl git python3 openjdk-17-jdk-headless
 
 WORKDIR /root
-RUN curl -L https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/bazelisk-linux-amd64 -o /usr/bin/bazelisk && \
+RUN curl -L https://github.com/bazelbuild/bazelisk/releases/download/v1.15.0/bazelisk-linux-amd64 -o /usr/bin/bazelisk && \
     chmod +x /usr/bin/bazelisk && \
     git clone --depth=1 https://github.com/CodeIntelligenceTesting/jazzer.git && \
     cd jazzer && \

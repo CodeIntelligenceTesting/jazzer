@@ -27,7 +27,7 @@ If you want to learn more about Jazzer and OSS-Fuzz, [watch the FuzzCon 2020 tal
 
 ### Using Docker
 
-The "distroless" Docker image [cifuzz/jazzer](https://hub.docker.com/r/cifuzz/jazzer) includes Jazzer together with OpenJDK 11. Just mount a directory containing your compiled fuzz target into the container under `/fuzzing` by running:
+The "distroless" Docker image [cifuzz/jazzer](https://hub.docker.com/r/cifuzz/jazzer) includes Jazzer together with OpenJDK 17. Just mount a directory containing your compiled fuzz target into the container under `/fuzzing` by running:
 
 ```sh
 docker run -v path/containing/the/application:/fuzzing cifuzz/jazzer <arguments>
