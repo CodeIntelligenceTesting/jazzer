@@ -1,3 +1,5 @@
+load("@build_bazel_apple_support//rules:universal_binary.bzl", "universal_binary")
+
 cc_library(
     name = "jazzer_main",
     srcs = ["jazzer_main.cpp"],
@@ -24,10 +26,18 @@ cc_library(
 )
 
 cc_binary(
-    name = "jazzer",
+    name = "jazzer_single_arch",
     linkstatic = True,
-    visibility = ["//visibility:public"],
+    tags = ["manual"],
     deps = [":jazzer_main"],
+)
+
+# On macOS, builds a binary that supports both x86_64 and arm64.
+# On all other platforms, is just symlinks the input binary.
+universal_binary(
+    name = "jazzer",
+    binary = ":jazzer_single_arch",
+    visibility = ["//visibility:public"],
 )
 
 cc_test(
