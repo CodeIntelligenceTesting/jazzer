@@ -47,6 +47,13 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
+        name = "build_bazel_apple_support",
+        sha256 = "2e3dc4d0000e8c2f5782ea7bb53162f37c485b5d8dc62bb3d7d7fc7c276f0d00",
+        url = "https://github.com/bazelbuild/apple_support/releases/download/1.3.2/apple_support.1.3.2.tar.gz",
+    )
+
+    maybe(
+        http_archive,
         name = "com_google_absl",
         sha256 = "4208129b49006089ba1d6710845a45e31c59b0ab6bff9e5788a87f55c5abd602",
         strip_prefix = "abseil-cpp-20220623.0",

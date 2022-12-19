@@ -19,6 +19,7 @@ load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar_repositories")
 load("@io_bazel_rules_kotlin//kotlin:dependencies.bzl", "kt_download_local_dev_dependencies")
 load("@io_bazel_rules_kotlin//kotlin:repositories.bzl", "kotlin_repositories")
 load("@fmeum_rules_jni//jni:repositories.bzl", "rules_jni_dependencies")
+load("@build_bazel_apple_support//lib:repositories.bzl", "apple_support_dependencies")
 
 def jazzer_init():
     bazel_skylib_workspace()
@@ -27,3 +28,4 @@ def jazzer_init():
     native.register_toolchains("@jazzer//:kotlin_toolchain")
     jar_jar_repositories()
     rules_jni_dependencies()
+    apple_support_dependencies()

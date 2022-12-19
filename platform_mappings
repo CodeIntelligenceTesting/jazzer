@@ -1,0 +1,8 @@
+# Required for compatibility with apple_support's universal_binary, which
+# doesn't support toolchain resolution yet and instead transitions on --cpu.
+flags:
+  --cpu=darwin_x86_64
+    //:macos_x86_64
+
+  --cpu=darwin_arm64
+    //:macos_arm64
