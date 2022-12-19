@@ -81,9 +81,8 @@ This functionality is also available to fuzz targets, where it can be used to im
 See [ExampleFuzzerHooks.java](examples/src/main/java/com/example/ExampleFuzzerHooks.java) for an example of such a hook.
 An example for a sanitizer can be found in [ExamplePathTraversalFuzzerHooks.java](examples/src/main/java/com/example/ExamplePathTraversalFuzzerHooks.java).
 
-Method hooks can be declared using the `@MethodHook` annotation defined in the `com.code_intelligence.jazzer.api` package, which is contained in `jazzer_api_deploy.jar` (binary release) or built by the target `//agent:jazzer_api_deploy.jar` (Bazel).
-It is also available from [Maven Central](https://search.maven.org/search?q=g:com.code-intelligence%20a:jazzer-api).
-See the [javadocs of the `@MethodHook` API](https://codeintelligencetesting.github.io/jazzer-api/com/code_intelligence/jazzer/api/MethodHook.html) for more details.
+Method hooks can be declared using the `@MethodHook` annotation defined in the `com.code_intelligence.jazzer.api` package, which is contained in `jazzer_standalone.jar` (binary release) or in the Maven artifact [`com.code-intelligence:jazzer-api`](https://search.maven.org/search?q=g:com.code-intelligence%20a:jazzer-api).
+See the [javadocs of the `@MethodHook` API](https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/com/code_intelligence/jazzer/api/MethodHook.html) for more details.
 
 To use the compiled method hooks, they have to be available on the classpath provided by `--cp` and can then be loaded by providing the flag `--custom_hooks`, which takes a colon-separated list of names of classes to load hooks from.
 Hooks have to be loaded from separate JAR files so that Jazzer can [add it to the bootstrap class loader search](https://docs.oracle.com/javase/8/docs/api/java/lang/instrument/Instrumentation.html#appendToBootstrapClassLoaderSearch-java.util.jar.JarFile-).
