@@ -1,0 +1,154 @@
+commit 05e6433e79b82192876644e4faf39a5a2ea89801
+Author: Fabian Meumertzheim <fabian@meumertzhe.im>
+Date:   Mon Dec 19 15:08:41 2022 +0100
+
+    Print origin and target bytecode offsets for IDs
+
+diff --git org.jacoco.core/pom.xml org.jacoco.core/pom.xml
+index 8f9eda68..5b1992ef 100644
+--- org.jacoco.core/pom.xml
++++ org.jacoco.core/pom.xml
+@@ -65,6 +65,14 @@
+           </archive>
+         </configuration>
+       </plugin>
++      <plugin>
++        <groupId>org.apache.maven.plugins</groupId>
++        <artifactId>maven-compiler-plugin</artifactId>
++        <configuration>
++          <source>8</source>
++          <target>8</target>
++        </configuration>
++      </plugin>
+     </plugins>
+   </build>
+ </project>
+diff --git org.jacoco.core/src/org/jacoco/core/internal/flow/ClassProbesAdapter.java org.jacoco.core/src/org/jacoco/core/internal/flow/ClassProbesAdapter.java
+index f3f5be66..63a4e4d7 100644
+--- org.jacoco.core/src/org/jacoco/core/internal/flow/ClassProbesAdapter.java
++++ org.jacoco.core/src/org/jacoco/core/internal/flow/ClassProbesAdapter.java
+@@ -79,6 +79,7 @@ public class ClassProbesAdapter extends ClassVisitor
+ 			public void visitEnd() {
+ 				super.visitEnd();
+ 				LabelFlowAnalyzer.markLabels(this);
++				System.err.printf("  %s%s:%n", name, desc);
+ 				final MethodProbesAdapter probesAdapter = new MethodProbesAdapter(
+ 						methodProbes, ClassProbesAdapter.this);
+ 				if (trackFrames) {
+diff --git org.jacoco.core/src/org/jacoco/core/internal/flow/MethodProbesAdapter.java org.jacoco.core/src/org/jacoco/core/internal/flow/MethodProbesAdapter.java
+index a2b0da60..49a8d62a 100644
+--- org.jacoco.core/src/org/jacoco/core/internal/flow/MethodProbesAdapter.java
++++ org.jacoco.core/src/org/jacoco/core/internal/flow/MethodProbesAdapter.java
+@@ -12,7 +12,9 @@
+  *******************************************************************************/
+ package org.jacoco.core.internal.flow;
+ 
++import java.util.ArrayList;
+ import java.util.HashMap;
++import java.util.List;
+ import java.util.Map;
+ 
+ import org.jacoco.core.internal.instr.InstrSupport;
+@@ -35,6 +37,8 @@ public final class MethodProbesAdapter extends MethodVisitor {
+ 
+ 	private final Map<Label, Label> tryCatchProbeLabels;
+ 
++	private final List<Runnable> lazyPrints = new ArrayList<>();
++
+ 	/**
+ 	 * Create a new adapter instance.
+ 	 *
+@@ -62,6 +66,13 @@ public final class MethodProbesAdapter extends MethodVisitor {
+ 		this.analyzer = analyzer;
+ 	}
+ 
++	@Override
++	public void visitEnd() {
++		probesVisitor.visitEnd();
++		lazyPrints.stream().forEach(Runnable::run);
++		lazyPrints.clear();
++	}
++
+ 	@Override
+ 	public void visitTryCatchBlock(final Label start, final Label end,
+ 			final Label handler, final String type) {
+@@ -85,13 +96,21 @@ public final class MethodProbesAdapter extends MethodVisitor {
+ 
+ 	@Override
+ 	public void visitLabel(final Label label) {
++		Integer id;
++		Label origin;
+ 		if (LabelInfo.needsProbe(label)) {
+ 			if (tryCatchProbeLabels.containsKey(label)) {
+ 				probesVisitor.visitLabel(tryCatchProbeLabels.get(label));
+ 			}
+-			probesVisitor.visitProbe(idGenerator.nextId());
++			id = idGenerator.nextId();
++			probesVisitor.visitProbe(id);
++		} else {
++			id = null;
+ 		}
+ 		probesVisitor.visitLabel(label);
++		if (id != null) {
++			lazyPrints.add(() -> System.out.printf("    %d: previous instruction --> %d%n", id, label.getOffset()));
++		}
+ 	}
+ 
+ 	@Override
+@@ -104,7 +123,11 @@ public final class MethodProbesAdapter extends MethodVisitor {
+ 		case Opcodes.ARETURN:
+ 		case Opcodes.RETURN:
+ 		case Opcodes.ATHROW:
+-			probesVisitor.visitInsnWithProbe(opcode, idGenerator.nextId());
++			int id = idGenerator.nextId();
++			Label origin = new Label();
++			probesVisitor.visitLabel(origin);
++			lazyPrints.add(() -> System.out.printf("    %d: %d --> return or throw%n", id, origin.getOffset()));
++			probesVisitor.visitInsnWithProbe(opcode, id);
+ 			break;
+ 		default:
+ 			probesVisitor.visitInsn(opcode);
+@@ -115,8 +138,12 @@ public final class MethodProbesAdapter extends MethodVisitor {
+ 	@Override
+ 	public void visitJumpInsn(final int opcode, final Label label) {
+ 		if (LabelInfo.isMultiTarget(label)) {
++			int id = idGenerator.nextId();
++			Label origin = new Label();
++			probesVisitor.visitLabel(origin);
++			lazyPrints.add(() -> System.out.printf("    %d: %d --> %d%n", id, origin.getOffset(), label.getOffset()));
+ 			probesVisitor.visitJumpInsnWithProbe(opcode, label,
+-					idGenerator.nextId(), frame(jumpPopCount(opcode)));
++					id, frame(jumpPopCount(opcode)));
+ 		} else {
+ 			probesVisitor.visitJumpInsn(opcode, label);
+ 		}
+@@ -166,16 +193,27 @@ public final class MethodProbesAdapter extends MethodVisitor {
+ 		boolean probe = false;
+ 		LabelInfo.resetDone(labels);
+ 		if (LabelInfo.isMultiTarget(dflt)) {
+-			LabelInfo.setProbeId(dflt, idGenerator.nextId());
++			int id = idGenerator.nextId();
++			Label origin = new Label();
++			probesVisitor.visitLabel(origin);
++			lazyPrints.add(() -> System.out.printf("    %d: %d --> %d (default case)%n", id, origin.getOffset(), dflt.getOffset()));
++			LabelInfo.setProbeId(dflt, id);
+ 			probe = true;
+ 		}
+ 		LabelInfo.setDone(dflt);
++		int caseIdx = 0;
+ 		for (final Label l : labels) {
+ 			if (LabelInfo.isMultiTarget(l) && !LabelInfo.isDone(l)) {
+-				LabelInfo.setProbeId(l, idGenerator.nextId());
++				int id = idGenerator.nextId();
++				Label origin = new Label();
++				probesVisitor.visitLabel(origin);
++				final int finalCaseIdx = caseIdx;
++				lazyPrints.add(() -> System.out.printf("    %d: %d --> %d (case #%d)%n", id, origin.getOffset(), dflt.getOffset(), finalCaseIdx));
++				LabelInfo.setProbeId(l, id);
+ 				probe = true;
+ 			}
+ 			LabelInfo.setDone(l);
++			caseIdx++;
+ 		}
+ 		return probe;
+ 	}

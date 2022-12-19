@@ -160,6 +160,7 @@ class RuntimeInstrumentor(
     }
 
     private fun instrument(internalClassName: String, bytecode: ByteArray, fullInstrumentation: Boolean): ByteArray {
+        println(internalClassName);
         return ClassInstrumentor(bytecode).run {
             if (fullInstrumentation) {
                 // Hook instrumentation must be performed after data flow tracing as the injected
