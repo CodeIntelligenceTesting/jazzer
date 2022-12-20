@@ -65,7 +65,10 @@ class RuntimeInstrumentor(
             // Throwables raised from transform are silently dropped, making it extremely hard to detect instrumentation
             // failures. The docs advise to use a top-level try-catch.
             // https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/ClassFileTransformer.html
-            System.err.println("ERROR: Failed to instrument $internalClassName:")
+            if (dumpClassesDir != null) {
+                dumpToClassFile(internalClassName, classfileBuffer, basenameSuffix = ".failed")
+            }
+            System.err.println("WARN: Failed to instrument $internalClassName:")
             t.printStackTrace()
             throw t
         }.also { instrumentedByteCode ->
@@ -93,7 +96,7 @@ class RuntimeInstrumentor(
         protectionDomain: ProtectionDomain?,
         classfileBuffer: ByteArray,
     ): ByteArray? {
-        return try {
+        try {
             if (module != null && !module.canRead(RuntimeInstrumentor::class.java.module)) {
                 // Make all other modules read our (unnamed) module, which allows them to access the classes needed by the
                 // instrumentations, e.g. CoverageMap. If a module can't be modified, it should not be instrumented as the
@@ -113,14 +116,18 @@ class RuntimeInstrumentor(
                     emptyMap(),
                 )
             }
-            transform(loader, internalClassName, classBeingRedefined, protectionDomain, classfileBuffer)
         } catch (t: Throwable) {
             // Throwables raised from transform are silently dropped, making it extremely hard to detect instrumentation
             // failures. The docs advise to use a top-level try-catch.
             // https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/ClassFileTransformer.html
+            if (dumpClassesDir != null) {
+                dumpToClassFile(internalClassName, classfileBuffer, basenameSuffix = ".failed")
+            }
+            System.err.println("WARN: Failed to instrument $internalClassName:")
             t.printStackTrace()
             throw t
         }
+        return transform(loader, internalClassName, classBeingRedefined, protectionDomain, classfileBuffer)
     }
 
     @OptIn(kotlin.time.ExperimentalTime::class)
@@ -142,10 +149,6 @@ class RuntimeInstrumentor(
                 System.err.println("ERROR: Coverage IDs are out of sync")
                 e.printStackTrace()
                 exitProcess(1)
-            } catch (e: Exception) {
-                println("WARN: Failed to instrument $prettyClassName, skipping")
-                e.printStackTrace()
-                return null
             }
         }
         val durationInMs = duration.inWholeMilliseconds
