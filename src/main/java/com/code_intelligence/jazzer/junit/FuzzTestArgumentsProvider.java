@@ -173,6 +173,10 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
             (fileOrDir, basicFileAttributes)
                 -> !basicFileAttributes.isDirectory(),
             FileVisitOption.FOLLOW_LINKS)
+        // JUnit identifies individual runs of a `@ParameterizedTest` via their invocation number.
+        // In order to get reproducible behavior e.g. when trying to debug a particular input, all
+        // inputs thus have to be provided in deterministic order.
+        .sorted()
         .map(file -> new SimpleEntry<>(file.getFileName().toString(), readAllBytesUnchecked(file)));
   }
 
