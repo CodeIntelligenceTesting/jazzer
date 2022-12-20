@@ -19,6 +19,7 @@ import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hook
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
+import io.github.classgraph.ClassGraph
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
 import java.nio.file.Path
@@ -60,7 +61,21 @@ class RuntimeInstrumentor(
             if (internalClassName.startsWith("com/code_intelligence/jazzer/")) {
                 return null
             }
-            transformInternal(internalClassName, classfileBuffer)
+            // Workaround for a JDK bug (filed as 9074562, similar to
+            // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8228604) still present in JDK 19:
+            //
+            // When retransforming a class in the Java standard library, the provided classfileBuffer does not contain
+            // any StackMapTable attributes. Our transformations require stack map frames to calculate the number of
+            // local variables and stack slots as well as when adding control flow.
+            //
+            // We work around this by reloading the class file contents if we are retransforming (classBeingRedefined
+            // is also non-null in this situation) and the class is provided by the bootstrap loader.
+            //
+            // Alternatives considered:
+            // Using ClassWriter.COMPUTE_FRAMES as an escape hatch isn't possible in the context of an agent as the
+            // computation may itself need to load classes, which leads to circular loads and incompatible class
+            // redefinitions.
+            transformInternal(internalClassName, classfileBuffer.takeUnless { loader == null && classBeingRedefined != null })
         } catch (t: Throwable) {
             // Throwables raised from transform are silently dropped, making it extremely hard to detect instrumentation
             // failures. The docs advise to use a top-level try-catch.
@@ -131,7 +146,7 @@ class RuntimeInstrumentor(
     }
 
     @OptIn(kotlin.time.ExperimentalTime::class)
-    fun transformInternal(internalClassName: String, classfileBuffer: ByteArray): ByteArray? {
+    fun transformInternal(internalClassName: String, maybeClassfileBuffer: ByteArray?): ByteArray? {
         val (fullInstrumentation, printInfo) = when {
             classesToFullyInstrument.includes(internalClassName) -> Pair(true, true)
             classesToHookInstrument.includes(internalClassName) -> Pair(false, true)
@@ -141,7 +156,15 @@ class RuntimeInstrumentor(
             additionalClassesToHookInstrument.includes(internalClassName) -> Pair(false, false)
             else -> return null
         }
-        val prettyClassName = internalClassName.replace('/', '.')
+        val className = internalClassName.replace('/', '.')
+        val classfileBuffer = maybeClassfileBuffer ?: ClassGraph()
+            .enableSystemJarsAndModules()
+            .ignoreClassVisibility()
+            .acceptClasses(className)
+            .scan()
+            .use {
+                it.getClassInfo(className).resource.load()
+            }
         val (instrumentedBytecode, duration) = measureTimedValue {
             try {
                 instrument(internalClassName, classfileBuffer, fullInstrumentation)
@@ -155,9 +178,9 @@ class RuntimeInstrumentor(
         val sizeIncrease = ((100.0 * (instrumentedBytecode.size - classfileBuffer.size)) / classfileBuffer.size).roundToInt()
         if (printInfo) {
             if (fullInstrumentation) {
-                println("INFO: Instrumented $prettyClassName (took $durationInMs ms, size +$sizeIncrease%)")
+                println("INFO: Instrumented $className (took $durationInMs ms, size +$sizeIncrease%)")
             } else {
-                println("INFO: Instrumented $prettyClassName with custom hooks only (took $durationInMs ms, size +$sizeIncrease%)")
+                println("INFO: Instrumented $className with custom hooks only (took $durationInMs ms, size +$sizeIncrease%)")
             }
         }
         return instrumentedBytecode

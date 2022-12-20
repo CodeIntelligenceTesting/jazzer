@@ -26,5 +26,6 @@ kt_jvm_library(
         "//src/main/java/com/code_intelligence/jazzer/instrumentor",
         "//src/main/java/com/code_intelligence/jazzer/utils:class_name_globber",
         "//src/main/java/com/code_intelligence/jazzer/utils:manifest_utils",
+        "@com_github_classgraph_classgraph//:classgraph",
     ],
 )
