@@ -1,4 +1,13 @@
 java_test(
+    name = "FuzzTestExecutorTest",
+    srcs = ["FuzzTestExecutorTest.java"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test_executor",
+        "@maven//:com_google_truth_truth",
+    ],
+)
+
+java_test(
     name = "RegressionTestTest",
     srcs = ["RegressionTestTest.java"],
     test_class = "com.code_intelligence.jazzer.junit.RegressionTestTest",
