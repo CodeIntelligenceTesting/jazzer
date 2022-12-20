@@ -159,7 +159,7 @@ class InstrumentingClassLoader extends ClassLoader {
         throw new ClassNotFoundException(String.format("Failed to find class file for %s", name));
       }
       byte[] bytecode = readAllBytes(stream);
-      byte[] instrumentedBytecode = instrumentor.instrument(bytecode);
+      byte[] instrumentedBytecode = instrumentor.instrument(name.replace('.', '/'), bytecode);
       return defineClass(name, instrumentedBytecode, 0, instrumentedBytecode.length);
     } catch (IOException e) {
       throw new ClassNotFoundException(String.format("Failed to read class file for %s", name), e);

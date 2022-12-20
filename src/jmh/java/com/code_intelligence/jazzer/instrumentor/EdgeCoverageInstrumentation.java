@@ -56,7 +56,7 @@ public class EdgeCoverageInstrumentation {
 
   private byte[] applyInstrumentation(byte[] bytecode) {
     return new EdgeCoverageInstrumentor(new StaticMethodStrategy(), CoverageMap.class, 0)
-        .instrument(bytecode);
+        .instrument(EdgeCoverageTarget.class.getName().replace('.', '/'), bytecode);
   }
 
   @Benchmark

@@ -19,11 +19,15 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
 
-internal class HookInstrumentor(private val hooks: Iterable<Hook>, private val java6Mode: Boolean) : Instrumentor {
+internal class HookInstrumentor(
+    private val hooks: Iterable<Hook>,
+    private val java6Mode: Boolean,
+    private val classWithHooksEnabledField: String?,
+) : Instrumentor {
 
     private lateinit var random: DeterministicRandom
 
-    override fun instrument(bytecode: ByteArray): ByteArray {
+    override fun instrument(internalClassName: String, bytecode: ByteArray): ByteArray {
         val reader = ClassReader(bytecode)
         val writer = ClassWriter(reader, ClassWriter.COMPUTE_MAXS)
         random = DeterministicRandom("hook", reader.className)
@@ -37,7 +41,17 @@ internal class HookInstrumentor(private val hooks: Iterable<Hook>, private val j
             ): MethodVisitor? {
                 val mv = cv.visitMethod(access, name, descriptor, signature, exceptions) ?: return null
                 return if (shouldInstrument(access)) {
-                    makeHookMethodVisitor(access, descriptor, mv, hooks, java6Mode, random)
+                    makeHookMethodVisitor(
+                        internalClassName,
+                        access,
+                        name,
+                        descriptor,
+                        mv,
+                        hooks,
+                        java6Mode,
+                        random,
+                        classWithHooksEnabledField,
+                    )
                 } else {
                     mv
                 }

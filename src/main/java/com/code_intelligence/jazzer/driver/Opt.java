@@ -129,6 +129,11 @@ public final class Opt {
   public static final boolean dedup =
       boolSetting("dedup", hooks, "Compute and print a deduplication token for every finding");
 
+  // Whether hook instrumentation should add a check for JazzerInternal#hooksEnabled before
+  // executing hooks. Used to disable hooks during non-fuzz JUnit tests.
+  public static final boolean conditionalHooks =
+      boolSetting("internal.conditional_hooks", false, null);
+
   static final boolean mergeInner = boolSetting("internal.merge_inner", false, null);
 
   private static final boolean help =

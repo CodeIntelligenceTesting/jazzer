@@ -39,21 +39,17 @@ private fun makeTestable(strategy: EdgeCoverageStrategy): EdgeCoverageStrategy =
         }
     }
 
-private fun applyInstrumentation(bytecode: ByteArray): ByteArray {
-    return EdgeCoverageInstrumentor(
-        makeTestable(ClassInstrumentor.defaultEdgeCoverageStrategy),
-        MockCoverageMap::class.java,
-        0,
-    ).instrument(bytecode)
-}
-
 private fun getOriginalInstrumentationTargetInstance(): DynamicTestContract {
     return CoverageInstrumentationTarget()
 }
 
 private fun getInstrumentedInstrumentationTargetInstance(): DynamicTestContract {
     val originalBytecode = classToBytecode(CoverageInstrumentationTarget::class.java)
-    val patchedBytecode = applyInstrumentation(originalBytecode)
+    val patchedBytecode = EdgeCoverageInstrumentor(
+        makeTestable(ClassInstrumentor.defaultEdgeCoverageStrategy),
+        MockCoverageMap::class.java,
+        0,
+    ).instrument(CoverageInstrumentationTarget::class.java.name.replace('.', '/'), originalBytecode)
     // Make the patched class available in bazel-testlogs/.../test.outputs for manual inspection.
     val outDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR")
     File("$outDir/${CoverageInstrumentationTarget::class.java.simpleName}.class").writeBytes(originalBytecode)
@@ -163,7 +159,11 @@ class CoverageInstrumentationTest {
     @Test
     fun testSpecialCases() {
         val originalBytecode = classToBytecode(CoverageInstrumentationSpecialCasesTarget::class.java)
-        val patchedBytecode = applyInstrumentation(originalBytecode)
+        val patchedBytecode = EdgeCoverageInstrumentor(
+            makeTestable(ClassInstrumentor.defaultEdgeCoverageStrategy),
+            MockCoverageMap::class.java,
+            0,
+        ).instrument(CoverageInstrumentationSpecialCasesTarget::class.java.name.replace('.', '/'), originalBytecode)
         // Make the patched class available in bazel-testlogs/.../test.outputs for manual inspection.
         val outDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR")
         File("$outDir/${CoverageInstrumentationSpecialCasesTarget::class.simpleName}.class").writeBytes(originalBytecode)

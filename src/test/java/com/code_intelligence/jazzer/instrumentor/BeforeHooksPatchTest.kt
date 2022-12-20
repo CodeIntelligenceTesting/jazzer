@@ -19,11 +19,6 @@ import com.code_intelligence.jazzer.instrumentor.PatchTestUtils.classToBytecode
 import org.junit.Test
 import java.io.File
 
-private fun applyBeforeHooks(bytecode: ByteArray): ByteArray {
-    val hooks = Hooks.loadHooks(setOf(BeforeHooks::class.java.name)).first().hooks
-    return HookInstrumentor(hooks, false).instrument(bytecode)
-}
-
 private fun getOriginalBeforeHooksTargetInstance(): BeforeHooksTargetContract {
     return BeforeHooksTarget()
 }
@@ -31,14 +26,22 @@ private fun getOriginalBeforeHooksTargetInstance(): BeforeHooksTargetContract {
 private fun getNoHooksBeforeHooksTargetInstance(): BeforeHooksTargetContract {
     val originalBytecode = classToBytecode(BeforeHooksTarget::class.java)
     // Let the bytecode pass through the hooking logic, but don't apply any hooks.
-    val patchedBytecode = HookInstrumentor(emptyList(), false).instrument(originalBytecode)
+    val patchedBytecode = HookInstrumentor(emptyList(), false, null).instrument(
+        BeforeHooksTarget::class.java.name.replace('.', '/'),
+        originalBytecode,
+    )
     val patchedClass = bytecodeToClass(BeforeHooksTarget::class.java.name, patchedBytecode)
     return patchedClass.getDeclaredConstructor().newInstance() as BeforeHooksTargetContract
 }
 
-private fun getPatchedBeforeHooksTargetInstance(): BeforeHooksTargetContract {
+private fun getPatchedBeforeHooksTargetInstance(classWithHooksEnabledField: Class<*>?): BeforeHooksTargetContract {
     val originalBytecode = classToBytecode(BeforeHooksTarget::class.java)
-    val patchedBytecode = applyBeforeHooks(originalBytecode)
+    val hooks = Hooks.loadHooks(setOf(BeforeHooks::class.java.name)).first().hooks
+    val patchedBytecode = HookInstrumentor(
+        hooks,
+        false,
+        classWithHooksEnabledField = classWithHooksEnabledField?.name?.replace('.', '/'),
+    ).instrument(BeforeHooksTarget::class.java.name.replace('.', '/'), originalBytecode)
     // Make the patched class available in bazel-testlogs/.../test.outputs for manual inspection.
     val outDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR")
     File("$outDir/${BeforeHooksTarget::class.java.simpleName}.class").writeBytes(originalBytecode)
@@ -50,17 +53,37 @@ private fun getPatchedBeforeHooksTargetInstance(): BeforeHooksTargetContract {
 class BeforeHooksPatchTest {
 
     @Test
-    fun testBeforeHooksOriginal() {
+    fun testOriginal() {
         assertSelfCheck(getOriginalBeforeHooksTargetInstance(), false)
     }
 
     @Test
-    fun testBeforeHooksNoHooks() {
+    fun testPatchedWithoutHooks() {
         assertSelfCheck(getNoHooksBeforeHooksTargetInstance(), false)
     }
 
     @Test
-    fun testBeforeHooksPatched() {
-        assertSelfCheck(getPatchedBeforeHooksTargetInstance(), true)
+    fun testPatched() {
+        assertSelfCheck(getPatchedBeforeHooksTargetInstance(null), true)
+    }
+
+    object HooksEnabled {
+        @Suppress("unused")
+        const val hooksEnabled = true
+    }
+
+    object HooksDisabled {
+        @Suppress("unused")
+        const val hooksEnabled = false
+    }
+
+    @Test
+    fun testPatchedWithConditionalHooksEnabled() {
+        assertSelfCheck(getPatchedBeforeHooksTargetInstance(HooksEnabled::class.java), true)
+    }
+
+    @Test
+    fun testPatchedWithConditionalHooksDisabled() {
+        assertSelfCheck(getPatchedBeforeHooksTargetInstance(HooksDisabled::class.java), false)
     }
 }

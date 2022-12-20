@@ -20,7 +20,7 @@ fun extractClassFileMajorVersion(classfileBuffer: ByteArray): Int {
     return ((classfileBuffer[6].toInt() and 0xff) shl 8) or (classfileBuffer[7].toInt() and 0xff)
 }
 
-class ClassInstrumentor constructor(bytecode: ByteArray) {
+class ClassInstrumentor(private val internalClassName: String, bytecode: ByteArray) {
 
     var instrumentedBytecode = bytecode
         private set
@@ -31,19 +31,21 @@ class ClassInstrumentor constructor(bytecode: ByteArray) {
             defaultCoverageMap,
             initialEdgeId,
         )
-        instrumentedBytecode = edgeCoverageInstrumentor.instrument(instrumentedBytecode)
+        instrumentedBytecode = edgeCoverageInstrumentor.instrument(internalClassName, instrumentedBytecode)
         return edgeCoverageInstrumentor.numEdges
     }
 
     fun traceDataFlow(instrumentations: Set<InstrumentationType>) {
-        instrumentedBytecode = TraceDataFlowInstrumentor(instrumentations).instrument(instrumentedBytecode)
+        instrumentedBytecode =
+            TraceDataFlowInstrumentor(instrumentations).instrument(internalClassName, instrumentedBytecode)
     }
 
-    fun hooks(hooks: Iterable<Hook>) {
+    fun hooks(hooks: Iterable<Hook>, classWithHooksEnabledField: String?) {
         instrumentedBytecode = HookInstrumentor(
             hooks,
             java6Mode = extractClassFileMajorVersion(instrumentedBytecode) < 51,
-        ).instrument(instrumentedBytecode)
+            classWithHooksEnabledField = classWithHooksEnabledField,
+        ).instrument(internalClassName, instrumentedBytecode)
     }
 
     companion object {

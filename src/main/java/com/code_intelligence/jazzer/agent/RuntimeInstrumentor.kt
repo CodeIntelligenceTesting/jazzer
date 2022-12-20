@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.agent
 
+import com.code_intelligence.jazzer.driver.Opt
 import com.code_intelligence.jazzer.instrumentor.ClassInstrumentor
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hook
@@ -187,14 +188,21 @@ class RuntimeInstrumentor(
     }
 
     private fun instrument(internalClassName: String, bytecode: ByteArray, fullInstrumentation: Boolean): ByteArray {
-        return ClassInstrumentor(bytecode).run {
+        val classWithHooksEnabledField = if (Opt.conditionalHooks) {
+            // Let the hook instrumentation emit additional logic that checks the value of the
+            // hooksEnabled field on this class and skips the hook if it is false.
+            "com/code_intelligence/jazzer/runtime/JazzerInternal"
+        } else {
+            null
+        }
+        return ClassInstrumentor(internalClassName, bytecode).run {
             if (fullInstrumentation) {
                 // Hook instrumentation must be performed after data flow tracing as the injected
                 // bytecode would trigger the GEP callbacks for byte[]. Coverage instrumentation
                 // must be performed after hook instrumentation as the injected bytecode would
                 // trigger the GEP callbacks for ByteBuffer.
                 traceDataFlow(instrumentationTypes)
-                hooks(includedHooks + customHooks)
+                hooks(includedHooks + customHooks, classWithHooksEnabledField)
                 coverageIdSynchronizer.withIdForClass(internalClassName) { firstId ->
                     coverage(firstId).also { actualNumEdgeIds ->
                         CoverageRecorder.recordInstrumentedClass(
@@ -206,7 +214,7 @@ class RuntimeInstrumentor(
                     }
                 }
             } else {
-                hooks(customHooks)
+                hooks(customHooks, classWithHooksEnabledField)
             }
             instrumentedBytecode
         }
