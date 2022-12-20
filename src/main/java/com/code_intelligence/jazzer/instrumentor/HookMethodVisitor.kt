@@ -16,31 +16,71 @@ package com.code_intelligence.jazzer.instrumentor
 
 import com.code_intelligence.jazzer.api.HookType
 import org.objectweb.asm.Handle
+import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
+import org.objectweb.asm.commons.AnalyzerAdapter
 import org.objectweb.asm.commons.LocalVariablesSorter
 import java.util.concurrent.atomic.AtomicBoolean
 
 internal fun makeHookMethodVisitor(
+    owner: String,
     access: Int,
+    name: String?,
     descriptor: String?,
     methodVisitor: MethodVisitor?,
     hooks: Iterable<Hook>,
     java6Mode: Boolean,
     random: DeterministicRandom,
+    classWithHooksEnabledField: String?,
 ): MethodVisitor {
-    return HookMethodVisitor(access, descriptor, methodVisitor, hooks, java6Mode, random).lvs
+    return HookMethodVisitor(
+        owner,
+        access,
+        name,
+        descriptor,
+        methodVisitor,
+        hooks,
+        java6Mode,
+        random,
+        classWithHooksEnabledField,
+    ).lvs
 }
 
 private class HookMethodVisitor(
+    owner: String,
     access: Int,
+    val name: String?,
     descriptor: String?,
     methodVisitor: MethodVisitor?,
     hooks: Iterable<Hook>,
     private val java6Mode: Boolean,
     private val random: DeterministicRandom,
-) : MethodVisitor(Instrumentor.ASM_API_VERSION, methodVisitor) {
+    private val classWithHooksEnabledField: String?,
+) : MethodVisitor(
+    Instrumentor.ASM_API_VERSION,
+    // AnalyzerAdapter computes stack map frames at every instruction, which is needed for the
+    // conditional hook logic as it adds a conditional jump. Before Java 7, stack map frames were
+    // neither included nor required in class files.
+    //
+    // Note: Delegating to AnalyzerAdapter rather than having AnalyzerAdapter delegate to our
+    // MethodVisitor is unusual. We do this since we insert conditional jumps around method calls,
+    // which requires knowing the stack map both before and after the call. If AnalyzerAdapter
+    // delegated to this MethodVisitor, we would only be able to access the stack map before the
+    // method call in visitMethodInsn.
+    if (classWithHooksEnabledField != null && !java6Mode) {
+        AnalyzerAdapter(
+            owner,
+            access,
+            name,
+            descriptor,
+            methodVisitor,
+        )
+    } else {
+        methodVisitor
+    },
+) {
 
     companion object {
         private val showUnsupportedHookWarning = AtomicBoolean(true)
@@ -78,6 +118,28 @@ private class HookMethodVisitor(
         handleMethodInsn(opcode, owner, methodName, methodDescriptor, isInterface)
     }
 
+    // Transforms a stack map specification from the form used by the JVM and AnalyzerAdapter, where
+    // LONG and DOUBLE values are followed by an additional TOP entry, to the form accepted by
+    // visitFrame, which doesn't expect this additional entry.
+    private fun dropImplicitTop(stack: Collection<Any>?): Array<Any>? {
+        if (stack == null) {
+            return null
+        }
+        val filteredStack = mutableListOf<Any>()
+        var previousElement: Any? = null
+        for (element in stack) {
+            if (element != Opcodes.TOP || (previousElement != Opcodes.DOUBLE && previousElement != Opcodes.LONG)) {
+                filteredStack.add(element)
+            }
+            previousElement = element
+        }
+        return filteredStack.toTypedArray()
+    }
+
+    private fun storeFrame(aa: AnalyzerAdapter?): Pair<Array<Any>?, Array<Any>?>? {
+        return Pair(dropImplicitTop((aa ?: return null).locals), dropImplicitTop(aa.stack))
+    }
+
     fun handleMethodInsn(
         opcode: Int,
         owner: String,
@@ -90,6 +152,39 @@ private class HookMethodVisitor(
         if (matchingHooks.isEmpty()) {
             mv.visitMethodInsn(opcode, owner, methodName, methodDescriptor, isInterface)
             return
+        }
+
+        val skipHooksLabel = Label()
+        val applyHooksLabel = Label()
+        val useConditionalHooks = classWithHooksEnabledField != null
+        var postCallFrame: Pair<Array<Any>?, Array<Any>?>? = null
+        if (useConditionalHooks) {
+            val preCallFrame = (mv as? AnalyzerAdapter)?.let { storeFrame(it) }
+            // If hooks aren't enabled, skip the hook invocations.
+            mv.visitFieldInsn(
+                Opcodes.GETSTATIC,
+                classWithHooksEnabledField,
+                "hooksEnabled",
+                "Z",
+            )
+            mv.visitJumpInsn(Opcodes.IFNE, applyHooksLabel)
+            mv.visitMethodInsn(opcode, owner, methodName, methodDescriptor, isInterface)
+            postCallFrame = (mv as? AnalyzerAdapter)?.let { storeFrame(it) }
+            mv.visitJumpInsn(Opcodes.GOTO, skipHooksLabel)
+            // Needs a stack map frame as both the successor of an unconditional jump and the target
+            // of a jump.
+            mv.visitLabel(applyHooksLabel)
+            if (preCallFrame != null) {
+                mv.visitFrame(
+                    Opcodes.F_NEW,
+                    preCallFrame.first?.size ?: 0,
+                    preCallFrame.first,
+                    preCallFrame.second?.size ?: 0,
+                    preCallFrame.second,
+                )
+            }
+            // All successor instructions emitted below do not have a stack map frame attached, so
+            // we do not need to emit a NOP to prevent duplicated stack map frames.
         }
 
         val paramDescriptors = extractParameterTypeDescriptors(methodDescriptor)
@@ -262,6 +357,22 @@ private class HookMethodVisitor(
                     }
                 }
             }
+        }
+        if (useConditionalHooks) {
+            // Needs a stack map frame as the target of a jump.
+            mv.visitLabel(skipHooksLabel)
+            if (postCallFrame != null) {
+                mv.visitFrame(
+                    Opcodes.F_NEW,
+                    postCallFrame.first?.size ?: 0,
+                    postCallFrame.first,
+                    postCallFrame.second?.size ?: 0,
+                    postCallFrame.second,
+                )
+            }
+            // We do not control the next visitor calls, but we must not emit two frames for the
+            // same instruction.
+            mv.visitInsn(Opcodes.NOP)
         }
     }
 

@@ -27,7 +27,7 @@ enum class InstrumentationType {
 }
 
 internal interface Instrumentor {
-    fun instrument(bytecode: ByteArray): ByteArray
+    fun instrument(internalClassName: String, bytecode: ByteArray): ByteArray
 
     fun shouldInstrument(access: Int): Boolean {
         return (access and Opcodes.ACC_ABSTRACT == 0) &&

@@ -35,7 +35,7 @@ internal class TraceDataFlowInstrumentor(
 
     private lateinit var random: DeterministicRandom
 
-    override fun instrument(bytecode: ByteArray): ByteArray {
+    override fun instrument(internalClassName: String, bytecode: ByteArray): ByteArray {
         val node = ClassNode()
         val reader = ClassReader(bytecode)
         reader.accept(node, 0)

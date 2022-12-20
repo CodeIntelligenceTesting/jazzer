@@ -101,7 +101,7 @@ class EdgeCoverageInstrumentor(
             ),
         )
 
-    override fun instrument(bytecode: ByteArray): ByteArray {
+    override fun instrument(internalClassName: String, bytecode: ByteArray): ByteArray {
         val reader = InstrSupport.classReaderFor(bytecode)
         val writer = ClassWriter(reader, 0)
         val version = InstrSupport.getMajorVersion(reader)
