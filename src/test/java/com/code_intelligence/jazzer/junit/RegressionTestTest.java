@@ -14,16 +14,14 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import static org.junit.Assume.assumeFalse;
+import static com.google.common.truth.Truth8.assertThat;
 import static org.junit.Assume.assumeTrue;
-import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectPackage;
 import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.displayName;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
-import static org.junit.platform.testkit.engine.EventConditions.skippedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.EventConditions.type;
 import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstrings;
@@ -38,10 +36,11 @@ import com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical;
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh;
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
-import java.util.Optional;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import org.junit.Test;
-import org.junit.platform.engine.discovery.ClassNameFilter;
-import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.opentest4j.AssertionFailedError;
@@ -75,7 +74,23 @@ public class RegressionTestTest {
   public void regressionTestEnabled() {
     assumeTrue(System.getenv("JAZZER_FUZZ") == null);
 
+    // Record Jazzer's stderr.
+    PrintStream stderr = System.err;
+    ByteArrayOutputStream recordedStderr = new ByteArrayOutputStream();
+    System.setErr(new PrintStream(recordedStderr));
+
     EngineExecutionResults results = executeTests();
+    System.setErr(stderr);
+
+    // Verify that Jazzer doesn't print any warning or errors.
+    String[] stderrLines =
+        new String(recordedStderr.toByteArray(), StandardCharsets.UTF_8).split("\n");
+    for (String line : stderrLines) {
+      System.err.println(line);
+    }
+    assertThat(Arrays.stream(stderrLines)
+                   .filter(line -> line.startsWith("WARN:") || line.startsWith("ERROR:")))
+        .isEmpty();
 
     results.containerEvents().debug().assertEventsMatchLoosely(
         event(type(STARTED), container(ENGINE)),

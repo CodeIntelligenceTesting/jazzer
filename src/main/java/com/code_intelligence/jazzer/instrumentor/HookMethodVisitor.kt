@@ -287,6 +287,7 @@ private class HookMethodVisitor(
                         mv.visitMethodInsn(opcode, owner, methodName, methodDescriptor, isInterface)
                     }
                 }
+
                 HookType.REPLACE -> {
                     // Call the hook method
                     mv.visitMethodInsn(
@@ -314,6 +315,7 @@ private class HookMethodVisitor(
                         }
                     }
                 }
+
                 HookType.AFTER -> {
                     // Call the original method before the first AFTER hook
                     if (index == 0 || matchingHooks[index - 1].hookType != HookType.AFTER) {

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
@@ -90,10 +91,11 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 // {0} is expanded to the basename of the seed by the ArgumentProvider.
 @ParameterizedTest(name = "{0}")
 @Tag("jazzer")
-// JazzerInternal keeps global state about the last finding. Compared to the cost of starting up the
-// agent, running individual regression test cases should be very fast, so we wouldn't gain much
-// from parallelization.
-@ResourceLock(value = "jazzer", mode = ResourceAccessMode.READ_WRITE)
+// Fuzz tests can't run in parallel with other fuzz tests since the last finding is kept in a global
+// variable.
+// Fuzz tests also can't run in parallel with other non-fuzz tests since method hooks are enabled
+// conditionally based on a global variable.
+@ResourceLock(value = Resources.GLOBAL, mode = ResourceAccessMode.READ_WRITE)
 public @interface FuzzTest {
   /**
    * A duration string such as "1h 2m 30s" indicating for how long the fuzz test should be executed
