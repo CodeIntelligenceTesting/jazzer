@@ -140,30 +140,4 @@ object Deserialization {
         if (inputStream?.markSupported() != true) return
         guideMarkableInputStreamTowardsEquality(inputStream, SERIALIZED_JAZ_ZER_INSTANCE, hookId)
     }
-
-    /**
-     * Calls [Object.finalize] early if the returned object is [jaz.Zer]. A call to finalize is
-     * guaranteed to happen at some point, but calling it early means that we can accurately report
-     * the input that lead to its execution.
-     */
-    @MethodHooks(
-        MethodHook(type = HookType.AFTER, targetClassName = "java.io.ObjectInputStream", targetMethod = "readObject"),
-        MethodHook(type = HookType.AFTER, targetClassName = "java.io.ObjectInputStream", targetMethod = "readObjectOverride"),
-        MethodHook(type = HookType.AFTER, targetClassName = "java.io.ObjectInputStream", targetMethod = "readUnshared"),
-    )
-    @JvmStatic
-    fun readObjectAfterHook(
-        method: MethodHandle?,
-        objectInputStream: ObjectInputStream?,
-        args: Array<Any?>,
-        hookId: Int,
-        deserializedObject: Any?,
-    ) {
-        if (deserializedObject?.javaClass?.name == HONEYPOT_CLASS_NAME) {
-            deserializedObject.javaClass.getDeclaredMethod("finalize").run {
-                isAccessible = true
-                invoke(deserializedObject)
-            }
-        }
-    }
 }
