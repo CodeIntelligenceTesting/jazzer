@@ -228,13 +228,7 @@ public final class Jazzer {
       // reproducer. Just throw the finding.
       rethrowUnchecked(finding);
     } catch (InvocationTargetException e) {
-      // reportFindingFromHook throws a HardToCatchThrowable, which will bubble up wrapped in an
-      // InvocationTargetException that should not be stopped here.
-      if (e.getCause().getClass().getName().endsWith(".HardToCatchError")) {
-        throw(Error) e.getCause();
-      } else {
-        e.printStackTrace();
-      }
+      rethrowUnchecked(e.getCause());
     }
   }
 
