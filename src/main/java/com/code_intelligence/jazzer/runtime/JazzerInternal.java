@@ -17,9 +17,9 @@ package com.code_intelligence.jazzer.runtime;
 import java.util.ArrayList;
 
 final public class JazzerInternal {
-  private static final ArrayList<Runnable> ON_FUZZ_TARGET_READY_CALLBACKS = new ArrayList<>();
-
   public static Throwable lastFinding;
+
+  private static final ArrayList<Runnable> onFuzzTargetReadyCallbacks = new ArrayList<>();
 
   // Accessed from api.Jazzer via reflection.
   public static void reportFindingFromHook(Throwable finding) {
@@ -31,11 +31,11 @@ final public class JazzerInternal {
   }
 
   public static void registerOnFuzzTargetReadyCallback(Runnable callback) {
-    ON_FUZZ_TARGET_READY_CALLBACKS.add(callback);
+    onFuzzTargetReadyCallbacks.add(callback);
   }
 
   public static void onFuzzTargetReady(String fuzzTargetClass) {
-    ON_FUZZ_TARGET_READY_CALLBACKS.forEach(Runnable::run);
-    ON_FUZZ_TARGET_READY_CALLBACKS.clear();
+    onFuzzTargetReadyCallbacks.forEach(Runnable::run);
+    onFuzzTargetReadyCallbacks.clear();
   }
 }
