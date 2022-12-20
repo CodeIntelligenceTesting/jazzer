@@ -26,8 +26,11 @@ import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 
 class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
+  private static final String JAZZER_INTERNAL =
+      "com.code_intelligence.jazzer.runtime.JazzerInternal";
   private static final AtomicReference<Method> fuzzTestMethod = new AtomicReference<>();
   private static Field lastFindingField;
+  private static Field hooksEnabledField;
 
   @Override
   public void interceptTestTemplateMethod(Invocation<Void> invocation,
@@ -51,7 +54,21 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
       // 3. Otherwise, nothing is reported.
       Throwable thrown = null;
       getLastFindingField().set(null, null);
-      try {
+      // When running in regression test mode, the agent emits additional bytecode logic in front of
+      // method hook invocations that enables them only while a global variable managed by
+      // withHooksEnabled is true.
+      //
+      // Alternatives considered:
+      // * Using a dedicated class loader for @FuzzTests: First-class support for this isn't
+      //   available in JUnit 5 (https://github.com/junit-team/junit5/issues/201), but
+      //   third-party extensions have done it:
+      //   https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-tools/spring-boot-test-support/src/main/java/org/springframework/boot/testsupport/classpath/ModifiedClassPathExtension.java
+      //   However, as this involves launching a new test run as part of running a test, this
+      //   introduces a number of inconsistencies if applied on the test method rather than test
+      //   class level. For example, @BeforeAll methods will have to be run twice in different class
+      //   loaders, which may not be safe if they are using global resources not separated by class
+      //   loaders (e.g. files).
+      try (AutoCloseable ignored = withHooksEnabled()) {
         invocation.proceed();
       } catch (Throwable t) {
         thrown = t;
@@ -83,12 +100,26 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
         "Only one fuzz test can be run at a time, but multiple tests have been annotated with @FuzzTest");
   }
 
-  private static Field getLastFindingField() throws Throwable {
+  private static Field getLastFindingField() throws ClassNotFoundException, NoSuchFieldException {
     if (lastFindingField == null) {
-      Class<?> jazzerInternal =
-          Class.forName("com.code_intelligence.jazzer.runtime.JazzerInternal");
+      Class<?> jazzerInternal = Class.forName(JAZZER_INTERNAL);
       lastFindingField = jazzerInternal.getField("lastFinding");
     }
     return lastFindingField;
+  }
+
+  private static Field getHooksEnabledField() throws ClassNotFoundException, NoSuchFieldException {
+    if (hooksEnabledField == null) {
+      Class<?> jazzerInternal = Class.forName(JAZZER_INTERNAL);
+      hooksEnabledField = jazzerInternal.getField("hooksEnabled");
+    }
+    return hooksEnabledField;
+  }
+
+  private static AutoCloseable withHooksEnabled()
+      throws NoSuchFieldException, ClassNotFoundException, IllegalAccessException {
+    Field hooksEnabledField = getHooksEnabledField();
+    hooksEnabledField.setBoolean(null, true);
+    return () -> hooksEnabledField.setBoolean(null, false);
   }
 }

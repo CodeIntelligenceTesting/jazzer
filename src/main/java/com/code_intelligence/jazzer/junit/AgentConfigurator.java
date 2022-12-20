@@ -28,6 +28,8 @@ class AgentConfigurator {
 
     applyCommonConfiguration();
 
+    // Add logic to the hook instrumentation that allows us to enable and disable hooks at runtime.
+    System.setProperty("jazzer.internal.conditional_hooks", "true");
     // Apply all hooks, but no coverage or compare instrumentation.
     System.setProperty("jazzer.instrumentation_excludes", "**");
     extensionContext.getConfigurationParameter("jazzer.instrument")
