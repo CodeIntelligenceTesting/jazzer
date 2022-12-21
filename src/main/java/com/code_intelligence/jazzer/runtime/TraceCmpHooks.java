@@ -17,10 +17,7 @@ package com.code_intelligence.jazzer.runtime;
 import com.code_intelligence.jazzer.api.HookType;
 import com.code_intelligence.jazzer.api.MethodHook;
 import java.lang.invoke.MethodHandle;
-import java.util.Arrays;
-import java.util.ConcurrentModificationException;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 @SuppressWarnings("unused")
 final public class TraceCmpHooks {
@@ -210,6 +207,222 @@ final public class TraceCmpHooks {
     if (original.equals(returnValue)) {
       String target = arguments[0].toString();
       TraceDataFlowNativeCallbacks.traceStrstr(original, target, hookId);
+    }
+  }
+
+  // For standard Kotlin packages, which are named according to the pattern kotlin.*, we append a
+  // whitespace to the package name of the target class so that they are not mangled due to shading.
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.jvm.internal.Intrinsics ",
+      targetMethod = "areEqual")
+  @MethodHook(
+      type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ", targetMethod = "equals")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "equals$default")
+  public static void
+  equalsKt(MethodHandle method, Object alwaysNull, Object[] arguments, int hookId,
+      Boolean equalStrings) {
+    if (arguments[0] instanceof String && arguments[1] instanceof String && !equalStrings) {
+      TraceDataFlowNativeCallbacks.traceStrcmp(
+          (String) arguments[0], (String) arguments[1], 1, hookId);
+    }
+  }
+
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "contentEquals")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "contentEquals$default")
+  public static void
+  contentEqualKt(MethodHandle method, Object alwaysNull, Object[] arguments, int hookId,
+      Boolean equalStrings) {
+    if (arguments[0] instanceof CharSequence && arguments[1] instanceof CharSequence
+        && !equalStrings) {
+      TraceDataFlowNativeCallbacks.traceStrcmp(
+          arguments[0].toString(), arguments[1].toString(), 1, hookId);
+    }
+  }
+
+  @MethodHook(
+      type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ", targetMethod = "compareTo")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "compareTo$default")
+  public static void
+  compareToKt(
+      MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, Integer returnValue) {
+    if (arguments[0] instanceof String && arguments[1] instanceof String && returnValue != 0) {
+      TraceDataFlowNativeCallbacks.traceStrcmp(
+          (String) arguments[0], (String) arguments[1], 1, hookId);
+    }
+  }
+
+  @MethodHook(
+      type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ", targetMethod = "endsWith")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "endsWith$default")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "startsWith")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "startsWith$default")
+  public static void
+  startsWithKt(MethodHandle method, Object alwaysNull, Object[] arguments, int hookId,
+      Boolean doesStartOrEndsWith) {
+    if (arguments[0] instanceof CharSequence && arguments[1] instanceof CharSequence
+        && !doesStartOrEndsWith) {
+      TraceDataFlowNativeCallbacks.traceStrstr(
+          arguments[0].toString(), arguments[1].toString(), hookId);
+    }
+  }
+
+  @MethodHook(
+      type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ", targetMethod = "contains")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "contains$default")
+  public static void
+  containsKt(
+      MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, Boolean doesContain) {
+    if (arguments[0] instanceof CharSequence && arguments[1] instanceof CharSequence
+        && !doesContain) {
+      TraceDataFlowNativeCallbacks.traceStrstr(
+          arguments[0].toString(), arguments[1].toString(), hookId);
+    }
+  }
+
+  @MethodHook(
+      type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ", targetMethod = "indexOf")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "indexOf$default")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "lastIndexOf")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "lastIndexOf$default")
+  public static void
+  indexOfKt(
+      MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, Integer returnValue) {
+    if (!(arguments[0] instanceof CharSequence) || returnValue != -1) {
+      return;
+    }
+    if (arguments[1] instanceof String) {
+      TraceDataFlowNativeCallbacks.traceStrstr(
+          arguments[0].toString(), (String) arguments[1], hookId);
+    } else if (arguments[1] instanceof Character) {
+      TraceDataFlowNativeCallbacks.traceStrstr(
+          arguments[0].toString(), ((Character) arguments[1]).toString(), hookId);
+    }
+  }
+
+  @MethodHook(
+      type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ", targetMethod = "replace")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "replace$default")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "replaceAfter")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "replaceAfter$default")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "replaceAfterLast")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "replaceAfterLast$default")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "replaceBefore")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "replaceBefore$default")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "replaceBeforeLast")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "replaceBeforeLast$default")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "replaceFirst")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "replaceFirst$default")
+  public static void
+  replaceKt(
+      MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, String returnValue) {
+    if (!(arguments[0] instanceof String)) {
+      return;
+    }
+    String original = (String) arguments[0];
+    if (!original.equals(returnValue)) {
+      return;
+    }
+
+    // We currently don't handle the overloads that take a regex as a second argument.
+    if (arguments[1] instanceof String || arguments[1] instanceof Character) {
+      TraceDataFlowNativeCallbacks.traceStrstr(original, arguments[1].toString(), hookId);
+    }
+  }
+
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "regionMatches",
+      targetMethodDescriptor = "(Ljava/lang/String;ILjava/lang/String;IIZ)Z")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "regionMatches$default",
+      targetMethodDescriptor = "(Ljava/lang/String;ILjava/lang/String;IIZILjava/lang/Object;)Z")
+  public static void
+  regionMatchesKt(MethodHandle method, Object alwaysNull, Object[] arguments, int hookId,
+      Boolean doesRegionMatch) {
+    if (doesRegionMatch) {
+      return;
+    }
+
+    String thisString = arguments[0].toString();
+    int thisOffset = (int) arguments[1];
+    String other = arguments[2].toString();
+    int otherOffset = (int) arguments[3];
+    int length = (int) arguments[4];
+    regionMatchesInternal(thisString, thisOffset, other, otherOffset, length, hookId);
+  }
+
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "indexOfAny")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "indexOfAny$default")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "lastIndexOfAny")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "lastIndexOfAny$default")
+  public static void
+  indexOfAnyKt(
+      MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, Integer returnValue) {
+    if (arguments[0] instanceof CharSequence && returnValue == -1) {
+      guideTowardContainmentOfFirstElement(arguments[0].toString(), arguments[1], hookId);
+    }
+  }
+
+  @MethodHook(
+      type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ", targetMethod = "findAnyOf")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "findAnyOf$default")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "findLastAnyOf")
+  @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "findLastAnyOf$default")
+  public static void
+  findAnyKt(
+      MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, Object returnValue) {
+    if (arguments[0] instanceof CharSequence && returnValue == null) {
+      guideTowardContainmentOfFirstElement(arguments[0].toString(), arguments[1], hookId);
+    }
+  }
+
+  private static void guideTowardContainmentOfFirstElement(
+      String containingString, Object candidateCollectionObj, int hookId) {
+    if (candidateCollectionObj instanceof Collection<?>) {
+      Collection<?> strings = (Collection<?>) candidateCollectionObj;
+      if (strings.isEmpty()) {
+        return;
+      }
+      Object firstElementObj = strings.iterator().next();
+      if (firstElementObj instanceof CharSequence) {
+        TraceDataFlowNativeCallbacks.traceStrstr(
+            containingString, firstElementObj.toString(), hookId);
+      }
+    } else if (candidateCollectionObj.getClass().isArray()) {
+      if (candidateCollectionObj.getClass().getComponentType() == char.class) {
+        char[] chars = (char[]) candidateCollectionObj;
+        if (chars.length > 0) {
+          TraceDataFlowNativeCallbacks.traceStrstr(
+              containingString, Character.toString(chars[0]), hookId);
+        }
+      }
     }
   }
 
