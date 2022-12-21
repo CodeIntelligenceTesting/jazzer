@@ -75,13 +75,11 @@ data class Hooks(
 
             private fun loadHooks(hookClassName: String): List<Pair<Hook, Class<*>>> {
                 return try {
-                    // Custom hook classes outside the agent jar can not be found by bootstrap
-                    // class loader, so use the system class loader as that will be the main application
-                    // class loader and can access jars on the classpath.
                     // We let the static initializers of hook classes execute so that hooks can run
                     // code before the fuzz target class has been loaded (e.g., register themselves
                     // for the onFuzzTargetReady callback).
-                    val hookClass = Class.forName(hookClassName, true, ClassLoader.getSystemClassLoader())
+                    val hookClass =
+                        Class.forName(hookClassName, true, Companion::class.java.classLoader)
                     loadHooks(hookClass).also {
                         println("INFO: Loaded ${it.size} hooks from $hookClassName")
                     }.map {
