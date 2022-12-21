@@ -353,6 +353,25 @@ java_fuzz_target_test(
     runtime_deps = [":KlaxonFuzzTarget"],
 )
 
+kt_jvm_library(
+    name = "ExampleKotlinFuzzTarget",
+    srcs = [
+        "src/main/java/com/example/ExampleKotlinFuzzer.kt",
+    ],
+    deps = [
+        "//deploy:jazzer-api",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "ExampleKotlinFuzzer",
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
+    ],
+    target_class = "com.example.ExampleKotlinFuzzer",
+    runtime_deps = [":ExampleKotlinFuzzTarget"],
+)
+
 java_fuzz_target_test(
     name = "TurboJpegFuzzer",
     srcs = [
