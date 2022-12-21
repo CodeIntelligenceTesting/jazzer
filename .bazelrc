@@ -25,7 +25,8 @@ build --tool_java_language_version=8
 # Windows
 # Only compiles with clang on Windows.
 build:windows --extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl
-build:windows --extra_execution_platforms=//:x64_windows-clang-cl
+build:windows --extra_toolchains=@local_config_cc//:cc-toolchain-arm64_windows-clang-cl
+build:windows --extra_execution_platforms=//:windows_x86_64-clang-cl
 build:windows --features=static_link_msvcrt
 # Required as PATH doubles as the shared library search path on Windows and the
 # Java agent functionality depends on system-provided shared libraries.

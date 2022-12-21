@@ -34,7 +34,7 @@ It is based on [libFuzzer](https://llvm.org/docs/LibFuzzer.html) and brings many
 Jazzer currently supports the following platforms:
 * Linux x86_64
 * macOS 12+ x86_64 & arm64
-* Windows x86_64
+* Windows x86_64 & arm64
 
 ## Quick start
 

@@ -32,5 +32,9 @@ MULTI_PLATFORM = select({
         "//:macos_arm64",
         "//:macos_x86_64",
     ],
+    "@platforms//os:windows": [
+        "//:windows_arm64-clang-cl",
+        "//:windows_x86_64-clang-cl",
+    ],
     "//conditions:default": [],
 })
