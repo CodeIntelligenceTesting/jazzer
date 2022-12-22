@@ -52,6 +52,9 @@ build:ci --bes_results_url=https://app.buildbuddy.io/invocation/
 build:ci --bes_backend=grpcs://remote.buildbuddy.io
 build:ci --remote_cache=grpcs://remote.buildbuddy.io
 build:ci --remote_timeout=3600
+# Fail if Bazel can't find Xcode. This improves error messages as the fallback toolchain will only
+# fail when requested to cross-compile.
+build:ci --repo_env=BAZEL_USE_XCODE_TOOLCHAIN=1
 
 # Maven publishing (local only, requires GPG signature)
 build:maven --stamp
