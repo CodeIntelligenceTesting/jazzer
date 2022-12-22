@@ -27,6 +27,7 @@ jobs:
             arch: "linux"
             cache: "/home/runner/.cache/bazel-disk"
           - os: macos-12
+            bazel_args: "--xcode_version_config=//.github:host_xcodes"
             arch: "macos-x86_64"
             cache: "/private/var/tmp/bazel-disk"
           - os: windows-2019
