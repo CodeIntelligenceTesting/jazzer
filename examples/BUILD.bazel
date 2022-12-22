@@ -345,6 +345,7 @@ java_fuzz_target_test(
         "java.lang.ClassCastException",
         "java.lang.IllegalStateException",
         "java.lang.NumberFormatException",
+        "java.lang.NullPointerException",
     ],
     fuzzer_args = [
         "--keep_going=7",
