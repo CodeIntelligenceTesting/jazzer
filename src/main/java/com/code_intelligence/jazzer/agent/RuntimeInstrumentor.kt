@@ -57,8 +57,9 @@ class RuntimeInstrumentor(
         return try {
             // Bail out early if we would instrument ourselves. This prevents ClassCircularityErrors as we might need to
             // load additional Jazzer classes until we reach the full exclusion logic.
-            if (internalClassName.startsWith("com/code_intelligence/jazzer/"))
+            if (internalClassName.startsWith("com/code_intelligence/jazzer/")) {
                 return null
+            }
             transformInternal(internalClassName, classfileBuffer)
         } catch (t: Throwable) {
             // Throwables raised from transform are silently dropped, making it extremely hard to detect instrumentation
@@ -90,7 +91,7 @@ class RuntimeInstrumentor(
         internalClassName: String,
         classBeingRedefined: Class<*>?,
         protectionDomain: ProtectionDomain?,
-        classfileBuffer: ByteArray
+        classfileBuffer: ByteArray,
     ): ByteArray? {
         return try {
             if (module != null && !module.canRead(RuntimeInstrumentor::class.java.module)) {
@@ -109,7 +110,7 @@ class RuntimeInstrumentor(
                     emptyMap(),
                     emptyMap(),
                     emptySet(),
-                    emptyMap()
+                    emptyMap(),
                 )
             }
             transform(loader, internalClassName, classBeingRedefined, protectionDomain, classfileBuffer)
@@ -174,7 +175,7 @@ class RuntimeInstrumentor(
                             internalClassName,
                             bytecode,
                             firstId,
-                            actualNumEdgeIds
+                            actualNumEdgeIds,
                         )
                     }
                 }

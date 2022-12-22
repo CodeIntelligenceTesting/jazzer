@@ -32,7 +32,7 @@ private fun makeTestable(strategy: EdgeCoverageStrategy): EdgeCoverageStrategy =
             mv: MethodVisitor,
             edgeId: Int,
             variable: Int,
-            coverageMapInternalClassName: String
+            coverageMapInternalClassName: String,
         ) {
             strategy.instrumentControlFlowEdge(mv, edgeId, variable, coverageMapInternalClassName)
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, coverageMapInternalClassName, "updated", "()V", false)
@@ -43,7 +43,7 @@ private fun applyInstrumentation(bytecode: ByteArray): ByteArray {
     return EdgeCoverageInstrumentor(
         makeTestable(ClassInstrumentor.defaultEdgeCoverageStrategy),
         MockCoverageMap::class.java,
-        0
+        0,
     ).instrument(bytecode)
 }
 
@@ -123,14 +123,16 @@ class CoverageInstrumentationTest {
         }.toList()
         val forControlFlow = forFirstRunControlFlow + forSecondRunControlFlow
         val fooCallControlFlow = listOf(
-            barAfterPutInvocation, fooAfterBarInvocation, afterFooInvocation
+            barAfterPutInvocation,
+            fooAfterBarInvocation,
+            afterFooInvocation,
         )
         assertControlFlow(
             listOf(constructorReturn) +
                 mapControlFlow +
                 ifControlFlow +
                 forControlFlow +
-                fooCallControlFlow
+                fooCallControlFlow,
         )
     }
 
@@ -166,7 +168,7 @@ class CoverageInstrumentationTest {
         val outDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR")
         File("$outDir/${CoverageInstrumentationSpecialCasesTarget::class.simpleName}.class").writeBytes(originalBytecode)
         File("$outDir/${CoverageInstrumentationSpecialCasesTarget::class.simpleName}.patched.class").writeBytes(
-            patchedBytecode
+            patchedBytecode,
         )
         val patchedClass = bytecodeToClass(CoverageInstrumentationSpecialCasesTarget::class.java.name, patchedBytecode)
         // Trigger a class load

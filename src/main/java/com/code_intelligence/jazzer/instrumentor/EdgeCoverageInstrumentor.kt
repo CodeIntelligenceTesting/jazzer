@@ -49,7 +49,7 @@ interface EdgeCoverageStrategy {
         mv: MethodVisitor,
         edgeId: Int,
         variable: Int,
-        coverageMapInternalClassName: String
+        coverageMapInternalClassName: String,
     )
 
     /**
@@ -97,8 +97,8 @@ class EdgeCoverageInstrumentor(
             "enlargeIfNeeded",
             methodType(
                 Void::class.javaPrimitiveType,
-                Int::class.javaPrimitiveType
-            )
+                Int::class.javaPrimitiveType,
+            ),
         )
 
     override fun instrument(bytecode: ByteArray): ByteArray {
@@ -107,7 +107,7 @@ class EdgeCoverageInstrumentor(
         val version = InstrSupport.getMajorVersion(reader)
         val visitor = EdgeCoverageClassProbesAdapter(
             ClassInstrumenter(edgeCoverageProbeArrayStrategy, edgeCoverageProbeInserterFactory, writer),
-            InstrSupport.needsFrames(version)
+            InstrSupport.needsFrames(version),
         )
         reader.accept(visitor, ClassReader.EXPAND_FRAMES)
         return writer.toByteArray()

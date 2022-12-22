@@ -71,15 +71,16 @@ object Deserialization {
         type = HookType.BEFORE,
         targetClassName = "java.io.ObjectInputStream",
         targetMethod = "<init>",
-        targetMethodDescriptor = "(Ljava/io/InputStream;)V"
+        targetMethodDescriptor = "(Ljava/io/InputStream;)V",
     )
     @JvmStatic
     fun objectInputStreamInitBeforeHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
         val originalInputStream = args[0] as? InputStream ?: return
-        val fixedInputStream = if (originalInputStream.markSupported())
+        val fixedInputStream = if (originalInputStream.markSupported()) {
             originalInputStream
-        else
+        } else {
             BufferedInputStream(originalInputStream)
+        }
         args[0] = fixedInputStream
         guideMarkableInputStreamTowardsEquality(fixedInputStream, OBJECT_INPUT_STREAM_HEADER, hookId)
     }
@@ -91,7 +92,7 @@ object Deserialization {
         type = HookType.AFTER,
         targetClassName = "java.io.ObjectInputStream",
         targetMethod = "<init>",
-        targetMethodDescriptor = "(Ljava/io/InputStream;)V"
+        targetMethodDescriptor = "(Ljava/io/InputStream;)V",
     )
     @JvmStatic
     fun objectInputStreamInitAfterHook(
@@ -115,17 +116,17 @@ object Deserialization {
         MethodHook(
             type = HookType.BEFORE,
             targetClassName = "java.io.ObjectInputStream",
-            targetMethod = "readObject"
+            targetMethod = "readObject",
         ),
         MethodHook(
             type = HookType.BEFORE,
             targetClassName = "java.io.ObjectInputStream",
-            targetMethod = "readObjectOverride"
+            targetMethod = "readObjectOverride",
         ),
         MethodHook(
             type = HookType.BEFORE,
             targetClassName = "java.io.ObjectInputStream",
-            targetMethod = "readUnshared"
+            targetMethod = "readUnshared",
         ),
     )
     @JvmStatic

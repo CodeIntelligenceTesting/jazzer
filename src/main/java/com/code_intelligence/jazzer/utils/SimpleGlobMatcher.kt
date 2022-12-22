@@ -18,8 +18,10 @@ class SimpleGlobMatcher(val glob: String) {
     private enum class Type {
         // foo.bar (matches foo.bar only)
         FULL_MATCH,
+
         // foo.** (matches foo.bar and foo.bar.baz)
         PATH_WILDCARD_SUFFIX,
+
         // foo.* (matches foo.bar, but not foo.bar.baz)
         SEGMENT_WILDCARD_SUFFIX,
     }
@@ -46,7 +48,7 @@ class SimpleGlobMatcher(val glob: String) {
                 prefix = pattern.removeSuffix("*")
             }
             else -> throw IllegalArgumentException(
-                "Unsupported glob pattern (only foo.bar, foo.* and foo.** are supported): $pattern"
+                "Unsupported glob pattern (only foo.bar, foo.* and foo.** are supported): $pattern",
             )
         }
     }

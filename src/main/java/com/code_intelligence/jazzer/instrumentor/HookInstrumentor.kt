@@ -36,10 +36,11 @@ internal class HookInstrumentor(private val hooks: Iterable<Hook>, private val j
                 exceptions: Array<String>?,
             ): MethodVisitor? {
                 val mv = cv.visitMethod(access, name, descriptor, signature, exceptions) ?: return null
-                return if (shouldInstrument(access))
+                return if (shouldInstrument(access)) {
                     makeHookMethodVisitor(access, descriptor, mv, hooks, java6Mode, random)
-                else
+                } else {
                     mv
+                }
             }
         }
         reader.accept(interceptor, ClassReader.EXPAND_FRAMES)

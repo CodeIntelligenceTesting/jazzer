@@ -19,15 +19,15 @@ jobs:
       - name: Setup Go environment
         uses: actions/setup-go@v3
         with:
-          go-version: '^1.19.2'
+          go-version: 'stable'
 
       - name: Install formatters
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo apt-get install software-properties-common
-          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main'
-          sudo apt-get install clang-format-13
-          curl -sSLO https://github.com/pinterest/ktlint/releases/download/0.42.1/ktlint && chmod a+x ktlint && sudo mv ktlint /usr/bin/ktlint
+          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main'
+          sudo apt-get install clang-format-14
+          curl -sSLO https://github.com/pinterest/ktlint/releases/download/0.48.0/ktlint && chmod a+x ktlint && sudo mv ktlint /usr/bin/ktlint
           go install github.com/google/addlicense@latest
           go install github.com/bazelbuild/buildtools/buildifier@latest
 

@@ -24,9 +24,9 @@ private fun applyInstrumentation(bytecode: ByteArray): ByteArray {
         setOf(
             InstrumentationType.CMP,
             InstrumentationType.DIV,
-            InstrumentationType.GEP
+            InstrumentationType.GEP,
         ),
-        MockTraceDataFlowCallbacks::class.java.name.replace('.', '/')
+        MockTraceDataFlowCallbacks::class.java.name.replace('.', '/'),
     ).instrument(bytecode)
 }
 

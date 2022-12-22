@@ -55,8 +55,8 @@ object NamingContextLookup {
                 FuzzerSecurityIssueCritical(
                     """Remote JNDI Lookup
 JNDI lookups with attacker-controlled remote URLs can, depending on the JDK
-version, lead to remote code execution or the exfiltration of information."""
-                )
+version, lead to remote code execution or the exfiltration of information.""",
+                ),
             )
         }
         Jazzer.guideTowardsEquality(name, RMI_MARKER, hookId)

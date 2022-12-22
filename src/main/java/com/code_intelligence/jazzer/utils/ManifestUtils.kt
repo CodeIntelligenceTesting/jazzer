@@ -45,7 +45,8 @@ object ManifestUtils {
                 println(
                     """
                     |WARN: More than one Jazzer-Fuzz-Target-Class manifest entry detected on the
-                    |classpath.""".trimMargin()
+                    |classpath.
+                    """.trimMargin(),
                 )
                 null
             }

@@ -90,10 +90,11 @@ fun install(instrumentation: Instrumentation) {
                 else -> null
             }
         }
-    val coverageIdSynchronizer = if (idSyncFile != null)
+    val coverageIdSynchronizer = if (idSyncFile != null) {
         FileSyncCoverageIdStrategy(idSyncFile)
-    else
+    } else {
         MemSyncCoverageIdStrategy()
+    }
 
     // If we don't append the JARs containing the custom hooks to the bootstrap class loader,
     // third-party hooks not contained in the agent JAR will not be able to instrument Java standard

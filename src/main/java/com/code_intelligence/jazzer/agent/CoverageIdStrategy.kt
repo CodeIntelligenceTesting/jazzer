@@ -108,7 +108,7 @@ class FileSyncCoverageIdStrategy(private val idSyncFile: Path) : CoverageIdStrat
             val localIdFile = FileChannel.open(
                 idSyncFile,
                 StandardOpenOption.WRITE,
-                StandardOpenOption.READ
+                StandardOpenOption.READ,
             )
             // Wait until we have obtained the lock on the sync file. We hold the lock from this point until we have
             // finished reading and writing (if necessary) to the file.

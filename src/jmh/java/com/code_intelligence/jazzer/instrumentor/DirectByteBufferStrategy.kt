@@ -23,7 +23,7 @@ object DirectByteBufferStrategy : EdgeCoverageStrategy {
         mv: MethodVisitor,
         edgeId: Int,
         variable: Int,
-        coverageMapInternalClassName: String
+        coverageMapInternalClassName: String,
     ) {
         mv.apply {
             visitVarInsn(Opcodes.ALOAD, variable)
