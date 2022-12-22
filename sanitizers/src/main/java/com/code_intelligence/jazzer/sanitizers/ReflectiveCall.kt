@@ -64,7 +64,7 @@ object ReflectiveCall {
         val libraryName = args[0] as? String ?: return
         if (libraryName == HONEYPOT_LIBRARY_NAME) {
             Jazzer.reportFindingFromHook(
-                FuzzerSecurityIssueHigh("load arbitrary library")
+                FuzzerSecurityIssueHigh("load arbitrary library"),
             )
         }
         Jazzer.guideTowardsEquality(libraryName, HONEYPOT_LIBRARY_NAME, hookId)

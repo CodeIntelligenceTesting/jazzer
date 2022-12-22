@@ -101,8 +101,9 @@ fun preprocessThrowable(throwable: Throwable): Throwable = when (throwable) {
     }
     is OutOfMemoryError -> stripOwnStackTrace(
         FuzzerSecurityIssueLow(
-            "Out of memory (use '${getReproducingXmxArg()}' to reproduce)", throwable
-        )
+            "Out of memory (use '${getReproducingXmxArg()}' to reproduce)",
+            throwable,
+        ),
     )
     is VirtualMachineError -> stripOwnStackTrace(FuzzerSecurityIssueLow(throwable))
     else -> throwable
@@ -163,8 +164,8 @@ private fun readJavaFullFinalFlags(): String? {
     val javaPrintFlagsProcess = ProcessBuilder(
         listOf(javaBinary) + currentJvmArgs + listOf(
             "-XX:+PrintFlagsFinal",
-            "-version"
-        )
+            "-version",
+        ),
     ).start()
     return javaPrintFlagsProcess.inputStream.bufferedReader().useLines { lineSequence ->
         lineSequence
@@ -196,6 +197,6 @@ fun dumpAllStackTraces() {
     System.err.println(
         ManagementFactory.getGarbageCollectorMXBeans().joinToString("\n", "\n", "\n") {
             "${it.name}: ${it.collectionCount} collections took ${it.collectionTime}ms"
-        }
+        },
     )
 }

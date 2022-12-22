@@ -23,10 +23,11 @@ val Class<*>.descriptor: String
     get() = Type.getDescriptor(this)
 
 val Executable.descriptor: String
-    get() = if (this is Method)
+    get() = if (this is Method) {
         Type.getMethodDescriptor(this)
-    else
+    } else {
         Type.getConstructorDescriptor(this as Constructor<*>?)
+    }
 
 internal fun isPrimitiveType(typeDescriptor: String): Boolean {
     return typeDescriptor in arrayOf("B", "C", "D", "F", "I", "J", "S", "V", "Z")

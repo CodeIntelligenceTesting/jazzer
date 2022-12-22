@@ -30,7 +30,7 @@ import org.objectweb.asm.tree.TableSwitchInsnNode
 
 internal class TraceDataFlowInstrumentor(
     private val types: Set<InstrumentationType>,
-    private val callbackInternalClassName: String = "com/code_intelligence/jazzer/runtime/TraceDataFlowNativeCallbacks"
+    private val callbackInternalClassName: String = "com/code_intelligence/jazzer/runtime/TraceDataFlowNativeCallbacks",
 ) : Instrumentor {
 
     private lateinit var random: DeterministicRandom
@@ -62,13 +62,15 @@ internal class TraceDataFlowInstrumentor(
                 }
                 Opcodes.IF_ICMPEQ, Opcodes.IF_ICMPNE,
                 Opcodes.IF_ICMPLT, Opcodes.IF_ICMPLE,
-                Opcodes.IF_ICMPGT, Opcodes.IF_ICMPGE -> {
+                Opcodes.IF_ICMPGT, Opcodes.IF_ICMPGE,
+                -> {
                     if (InstrumentationType.CMP !in types) continue@loop
                     method.instructions.insertBefore(inst, intCmpInstrumentation())
                 }
                 Opcodes.IFEQ, Opcodes.IFNE,
                 Opcodes.IFLT, Opcodes.IFLE,
-                Opcodes.IFGT, Opcodes.IFGE -> {
+                Opcodes.IFGT, Opcodes.IFGE,
+                -> {
                     if (InstrumentationType.CMP !in types) continue@loop
                     // The IF* opcodes are often used to branch based on the result of a compare
                     // instruction for a type other than int. The operands of this compare will
@@ -77,8 +79,9 @@ internal class TraceDataFlowInstrumentor(
                     // operands will be in {-1, 0, 1}. Skip instrumentation for it.
                     if (inst.previous?.opcode in listOf(Opcodes.DCMPG, Opcodes.DCMPL, Opcodes.FCMPG, Opcodes.DCMPL) ||
                         (inst.previous as? MethodInsnNode)?.name == "traceCmpLongWrapper"
-                    )
+                    ) {
                         continue@loop
+                    }
                     method.instructions.insertBefore(inst, ifInstrumentation())
                 }
                 Opcodes.LOOKUPSWITCH, Opcodes.TABLESWITCH -> {
@@ -89,13 +92,15 @@ internal class TraceDataFlowInstrumentor(
                     // sorted by unsigned value.
                     val caseValues = when (inst) {
                         is LookupSwitchInsnNode -> {
-                            if (inst.keys.isEmpty() || (0 <= inst.keys.first() && inst.keys.last() < 256))
+                            if (inst.keys.isEmpty() || (0 <= inst.keys.first() && inst.keys.last() < 256)) {
                                 continue@loop
+                            }
                             inst.keys
                         }
                         is TableSwitchInsnNode -> {
-                            if (0 <= inst.min && inst.max < 256)
+                            if (0 <= inst.min && inst.max < 256) {
                                 continue@loop
+                            }
                             (inst.min..inst.max).filter { caseValue ->
                                 val index = caseValue - inst.min
                                 // Filter out "gap cases".
@@ -118,7 +123,8 @@ internal class TraceDataFlowInstrumentor(
                 Opcodes.AALOAD, Opcodes.BALOAD,
                 Opcodes.CALOAD, Opcodes.DALOAD,
                 Opcodes.FALOAD, Opcodes.IALOAD,
-                Opcodes.LALOAD, Opcodes.SALOAD -> {
+                Opcodes.LALOAD, Opcodes.SALOAD,
+                -> {
                     if (InstrumentationType.GEP !in types) continue@loop
                     if (!isConstantIntegerPushInsn(inst.previous)) continue@loop
                     method.instructions.insertBefore(inst, gepLoadInstrumentation())
@@ -228,9 +234,13 @@ internal class TraceDataFlowInstrumentor(
     companion object {
         // Low constants (0, 1) are omitted as they create a lot of noise.
         val CONSTANT_INTEGER_PUSH_OPCODES = listOf(
-            Opcodes.BIPUSH, Opcodes.SIPUSH,
+            Opcodes.BIPUSH,
+            Opcodes.SIPUSH,
             Opcodes.LDC,
-            Opcodes.ICONST_2, Opcodes.ICONST_3, Opcodes.ICONST_4, Opcodes.ICONST_5
+            Opcodes.ICONST_2,
+            Opcodes.ICONST_3,
+            Opcodes.ICONST_4,
+            Opcodes.ICONST_5,
         )
 
         data class MethodInfo(val internalClassName: String, val name: String, val returnType: String)

@@ -34,7 +34,7 @@ class Hook private constructor(
     private val hookClassName: String,
     val hookInternalClassName: String,
     val hookMethodName: String,
-    val hookMethodDescriptor: String
+    val hookMethodDescriptor: String,
 ) {
 
     override fun toString(): String {
@@ -64,7 +64,7 @@ class Hook private constructor(
                 hookClassName = hookClassName,
                 hookInternalClassName = hookClassName.replace('.', '/'),
                 hookMethodName = hookMethod.name,
-                hookMethodDescriptor = hookMethod.descriptor
+                hookMethodDescriptor = hookMethod.descriptor,
             )
         }
 
@@ -102,8 +102,8 @@ class Hook private constructor(
                             hookMethod.returnType.descriptor in listOf(
                                 java.lang.Object::class.java.descriptor,
                                 potentialHook.targetReturnTypeDescriptor,
-                                potentialHook.targetWrappedReturnTypeDescriptor
-                            )
+                                potentialHook.targetWrappedReturnTypeDescriptor,
+                            ),
                         ) {
                             "$potentialHook: return type must have type Object or match the descriptors ${potentialHook.targetReturnTypeDescriptor} or ${potentialHook.targetWrappedReturnTypeDescriptor}"
                         }
@@ -117,7 +117,7 @@ class Hook private constructor(
                 if (potentialHook.targetReturnTypeDescriptor != null) {
                     require(
                         parameterTypes[4] == java.lang.Object::class.java ||
-                            parameterTypes[4].descriptor == potentialHook.targetWrappedReturnTypeDescriptor
+                            parameterTypes[4].descriptor == potentialHook.targetWrappedReturnTypeDescriptor,
                     ) {
                         "$potentialHook: fifth parameter must have type Object or match the descriptor ${potentialHook.targetWrappedReturnTypeDescriptor}"
                     }

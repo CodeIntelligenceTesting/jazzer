@@ -43,10 +43,14 @@ object CoverageRecorder {
     private val additionalCoverage = mutableSetOf<Int>()
 
     fun recordInstrumentedClass(internalClassName: String, bytecode: ByteArray, firstId: Int, numIds: Int) {
-        if (startTimestamp == null)
+        if (startTimestamp == null) {
             startTimestamp = Instant.now()
+        }
         instrumentedClassInfo[internalClassName] = InstrumentedClassInfo(
-            CRC64.classId(bytecode), firstId, firstId + numIds, bytecode
+            CRC64.classId(bytecode),
+            firstId,
+            firstId + numIds,
+            bytecode,
         )
     }
 
@@ -76,7 +80,7 @@ object CoverageRecorder {
         return coverage.sourceFiles.joinToString(
             "\n",
             prefix = "Branch coverage:\n",
-            postfix = "\n\n"
+            postfix = "\n\n",
         ) { fileCoverage ->
             val counter = fileCoverage.branchCounter
             val percentage = 100 * counter.coveredRatio
@@ -84,7 +88,7 @@ object CoverageRecorder {
         } + coverage.sourceFiles.joinToString(
             "\n",
             prefix = "Line coverage:\n",
-            postfix = "\n\n"
+            postfix = "\n\n",
         ) { fileCoverage ->
             val counter = fileCoverage.lineCounter
             val percentage = 100 * counter.coveredRatio
@@ -92,7 +96,7 @@ object CoverageRecorder {
         } + coverage.sourceFiles.joinToString(
             "\n",
             prefix = "Incompletely covered lines:\n",
-            postfix = "\n\n"
+            postfix = "\n\n",
         ) { fileCoverage ->
             "${fileCoverage.name}: " + (fileCoverage.firstLine..fileCoverage.lastLine).filter {
                 val instructions = fileCoverage.getLine(it).instructionCounter
@@ -136,7 +140,7 @@ object CoverageRecorder {
         val dumpTimestamp = Instant.now()
         val outWriter = ExecutionDataWriter(outStream)
         outWriter.visitSessionInfo(
-            SessionInfo(UUID.randomUUID().toString(), startTimestamp.epochSecond, dumpTimestamp.epochSecond)
+            SessionInfo(UUID.randomUUID().toString(), startTimestamp.epochSecond, dumpTimestamp.epochSecond),
         )
         analyzeJacocoCoverage(coveredIds.toSet()).accept(outWriter)
     }
@@ -194,7 +198,7 @@ object CoverageRecorder {
                         executionDataStore,
                         coverage,
                         info.bytecode,
-                        internalClassName
+                        internalClassName,
                     )
             }
             coverage
@@ -238,7 +242,7 @@ object CoverageRecorder {
                                 emptyExecutionDataStore,
                                 coverage,
                                 resource.load(),
-                                classInfo.name.replace('.', '/')
+                                classInfo.name.replace('.', '/'),
                             )
                         }
                     }

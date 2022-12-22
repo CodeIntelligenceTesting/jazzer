@@ -42,7 +42,7 @@ class ClassInstrumentor constructor(bytecode: ByteArray) {
     fun hooks(hooks: Iterable<Hook>) {
         instrumentedBytecode = HookInstrumentor(
             hooks,
-            java6Mode = extractClassFileMajorVersion(instrumentedBytecode) < 51
+            java6Mode = extractClassFileMajorVersion(instrumentedBytecode) < 51,
         ).instrument(instrumentedBytecode)
     }
 

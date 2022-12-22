@@ -58,8 +58,9 @@ private class HookMethodVisitor(
 
     private val hooks = hooks.groupBy { hook ->
         var hookKey = "${hook.hookType}#${hook.targetInternalClassName}#${hook.targetMethodName}"
-        if (hook.targetMethodDescriptor != null)
+        if (hook.targetMethodDescriptor != null) {
             hookKey += "#${hook.targetMethodDescriptor}"
+        }
         hookKey
     }
 
@@ -151,8 +152,8 @@ private class HookMethodVisitor(
                             owner,
                             methodName,
                             methodDescriptor,
-                            isInterface
-                        )
+                            isInterface,
+                        ),
                     ) // push MethodHandle
                 }
                 // Stack layout: ... | MethodHandle (objectref)
@@ -175,7 +176,7 @@ private class HookMethodVisitor(
                         hook.hookInternalClassName,
                         hook.hookMethodName,
                         hook.hookMethodDescriptor,
-                        false
+                        false,
                     )
 
                     // Call the original method if this is the last BEFORE hook. If not, the original method will be
@@ -198,7 +199,7 @@ private class HookMethodVisitor(
                         hook.hookInternalClassName,
                         hook.hookMethodName,
                         hook.hookMethodDescriptor,
-                        false
+                        false,
                     )
                     // Stack layout: ... | [return value (primitive/objectref)]
                     // Check if we need to process the return value
@@ -248,7 +249,7 @@ private class HookMethodVisitor(
                         hook.hookInternalClassName,
                         hook.hookMethodName,
                         hook.hookMethodDescriptor,
-                        false
+                        false,
                     )
                     // Stack layout: ...
                     // Push the return value on the stack after the last AFTER hook if the original method returns a value
@@ -268,7 +269,7 @@ private class HookMethodVisitor(
         Opcodes.INVOKEVIRTUAL,
         Opcodes.INVOKEINTERFACE,
         Opcodes.INVOKESTATIC,
-        Opcodes.INVOKESPECIAL
+        Opcodes.INVOKESPECIAL,
     )
 
     private fun findMatchingHooks(owner: String, name: String, descriptor: String): List<Hook> {
@@ -280,7 +281,7 @@ private class HookMethodVisitor(
         val replaceHookCount = result.count { it.hookType == HookType.REPLACE }
         check(
             replaceHookCount == 0 ||
-                (replaceHookCount == 1 && result.size == 1)
+                (replaceHookCount == 1 && result.size == 1),
         ) {
             "For a given method, You can either have a single REPLACE hook or BEFORE/AFTER hooks. Found:\n $result"
         }
@@ -297,7 +298,7 @@ private class HookMethodVisitor(
                     """WARN: Some hooks could not be applied to class files built for Java 7 or lower.
                       |WARN: Ensure that the fuzz target and its dependencies are compiled with
                       |WARN: -target 8 or higher to identify as many bugs as possible.
-            """.trimMargin()
+                    """.trimMargin(),
                 )
             }
             return true
@@ -393,7 +394,7 @@ private class HookMethodVisitor(
             wrappedTypeDescriptor,
             methodName,
             "()$primitiveTypeDescriptor",
-            false
+            false,
         )
     }
 }

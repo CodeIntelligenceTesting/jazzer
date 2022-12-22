@@ -40,28 +40,28 @@ class DescriptorUtilsTest {
             Triple(
                 String::class.java.getMethod("equals", Object::class.java),
                 listOf("Ljava/lang/Object;"),
-                "Z"
+                "Z",
             ),
             Triple(
                 String::class.java.getMethod("regionMatches", Boolean::class.javaPrimitiveType, Int::class.javaPrimitiveType, String::class.java, Int::class.javaPrimitiveType, Integer::class.javaPrimitiveType),
                 listOf("Z", "I", "Ljava/lang/String;", "I", "I"),
-                "Z"
+                "Z",
             ),
             Triple(
                 String::class.java.getMethod("getChars", Integer::class.javaPrimitiveType, Int::class.javaPrimitiveType, CharArray::class.java, Int::class.javaPrimitiveType),
                 listOf("I", "I", "[C", "I"),
-                "V"
+                "V",
             ),
             Triple(
                 String::class.java.getMethod("subSequence", Integer::class.javaPrimitiveType, Integer::class.javaPrimitiveType),
                 listOf("I", "I"),
-                "Ljava/lang/CharSequence;"
+                "Ljava/lang/CharSequence;",
             ),
             Triple(
                 String::class.java.getConstructor(),
                 emptyList(),
-                "V"
-            )
+                "V",
+            ),
         )
         for ((executable, parameterDescriptors, returnTypeDescriptor) in testCases) {
             val descriptor = executable.descriptor

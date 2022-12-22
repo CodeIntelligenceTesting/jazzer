@@ -56,14 +56,14 @@ object LdapInjection {
             targetClassName = "javax.naming.directory.DirContext",
             targetMethod = "search",
             targetMethodDescriptor = "(Ljava/lang/String;Ljavax/naming.directory/Attributes;)Ljavax/naming/NamingEnumeration;",
-            additionalClassesToHook = ["javax.naming.directory.InitialDirContext"]
+            additionalClassesToHook = ["javax.naming.directory.InitialDirContext"],
         ),
         MethodHook(
             type = HookType.REPLACE,
             targetClassName = "javax.naming.directory.DirContext",
             targetMethod = "search",
             targetMethodDescriptor = "(Ljava/lang/String;Ljavax/naming.directory/Attributes;[Ljava/lang/Sting;)Ljavax/naming/NamingEnumeration;",
-            additionalClassesToHook = ["javax.naming.directory.InitialDirContext"]
+            additionalClassesToHook = ["javax.naming.directory.InitialDirContext"],
         ),
 
         // Object search, possible DN and search filter injection
@@ -72,22 +72,22 @@ object LdapInjection {
             targetClassName = "javax.naming.directory.DirContext",
             targetMethod = "search",
             targetMethodDescriptor = "(Ljava/lang/String;Ljava/lang/String;Ljavax/naming/directory/SearchControls;)Ljavax/naming/NamingEnumeration;",
-            additionalClassesToHook = ["javax.naming.directory.InitialDirContext"]
+            additionalClassesToHook = ["javax.naming.directory.InitialDirContext"],
         ),
         MethodHook(
             type = HookType.REPLACE,
             targetClassName = "javax.naming.directory.DirContext",
             targetMethod = "search",
             targetMethodDescriptor = "(Ljavax/naming/Name;Ljava/lang/String;[Ljava.lang.Object;Ljavax/naming/directory/SearchControls;)Ljavax/naming/NamingEnumeration;",
-            additionalClassesToHook = ["javax.naming.directory.InitialDirContext"]
+            additionalClassesToHook = ["javax.naming.directory.InitialDirContext"],
         ),
         MethodHook(
             type = HookType.REPLACE,
             targetClassName = "javax.naming.directory.DirContext",
             targetMethod = "search",
             targetMethodDescriptor = "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;Ljavax/naming/directory/SearchControls;)Ljavax/naming/NamingEnumeration;",
-            additionalClassesToHook = ["javax.naming.directory.InitialDirContext"]
-        )
+            additionalClassesToHook = ["javax.naming.directory.InitialDirContext"],
+        ),
     )
     @JvmStatic
     fun searchLdapContext(method: MethodHandle, thisObject: Any?, args: Array<Any>, hookId: Int): Any? {
@@ -106,15 +106,15 @@ object LdapInjection {
                     Jazzer.reportFindingFromHook(
                         FuzzerSecurityIssueCritical(
                             """LDAP Injection
-Search filters based on untrusted data must be escape as specified in RFC 4515."""
-                        )
+Search filters based on untrusted data must be escape as specified in RFC 4515.""",
+                        ),
                     )
                 is NamingException ->
                     Jazzer.reportFindingFromHook(
                         FuzzerSecurityIssueCritical(
                             """LDAP Injection 
-Distinguished Names based on untrusted data must be escaped as specified in RFC 2253."""
-                        )
+Distinguished Names based on untrusted data must be escaped as specified in RFC 2253.""",
+                        ),
                     )
             }
             throw e

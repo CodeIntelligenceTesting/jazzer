@@ -33,7 +33,7 @@ object PatchTestUtils {
     }
 
     @JvmStatic
-    public fun dumpBytecode(outDir: String, name: String, originalBytecode: ByteArray) {
+    fun dumpBytecode(outDir: String, name: String, originalBytecode: ByteArray) {
         FileOutputStream("$outDir/$name.class").use { fos -> fos.write(originalBytecode) }
     }
 
@@ -44,8 +44,9 @@ object PatchTestUtils {
     class BytecodeClassLoader(val className: String, private val classBytecode: ByteArray) :
         ClassLoader(BytecodeClassLoader::class.java.classLoader) {
         override fun loadClass(name: String): Class<*> {
-            if (name != className)
+            if (name != className) {
                 return super.loadClass(name)
+            }
             return defineClass(className, classBytecode, 0, classBytecode.size)
         }
     }

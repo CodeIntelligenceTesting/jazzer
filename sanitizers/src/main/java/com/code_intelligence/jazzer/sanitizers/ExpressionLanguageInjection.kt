@@ -60,7 +60,7 @@ object ExpressionLanguageInjection {
         method: MethodHandle?,
         thisObject: Any?,
         arguments: Array<Any>,
-        hookId: Int
+        hookId: Int,
     ) {
         val expression = arguments[1] as? String ?: return
         Jazzer.guideTowardsContainment(expression, EXPRESSION_LANGUAGE_ATTACK, hookId)
@@ -76,14 +76,14 @@ object ExpressionLanguageInjection {
     @MethodHook(
         type = HookType.BEFORE,
         targetClassName = "javax.validation.ConstraintValidatorContext",
-        targetMethod = "buildConstraintViolationWithTemplate"
+        targetMethod = "buildConstraintViolationWithTemplate",
     )
     @JvmStatic
     fun hookBuildConstraintViolationWithTemplate(
         method: MethodHandle?,
         thisObject: Any?,
         arguments: Array<Any>,
-        hookId: Int
+        hookId: Int,
     ) {
         val message = arguments[0] as String
         Jazzer.guideTowardsContainment(message, EXPRESSION_LANGUAGE_ATTACK, hookId)

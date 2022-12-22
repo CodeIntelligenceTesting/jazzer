@@ -1,14 +1,16 @@
+#!/bin/bash
+
 # C++ & Java
-find -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.java' | xargs clang-format-13 -i
+find -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.java' | xargs clang-format-14 -i
 
 # Kotlin
-# curl -sSLO https://github.com/pinterest/ktlint/releases/download/0.42.1/ktlint && chmod a+x ktlint
+# curl -sSLO https://github.com/pinterest/ktlint/releases/download/0.48.0/ktlint && chmod a+x ktlint
 ktlint -F "examples/**/*.kt" "sanitizers/**/*.kt" "src/**/*.kt" "tests/**/*.kt"
 
 # BUILD files
-# go get github.com/bazelbuild/buildtools/buildifier
+# go install github.com/bazelbuild/buildtools/buildifier@latest
 buildifier -r .
 
 # Licence headers
-# go get -u github.com/google/addlicense
+# go install github.com/google/addlicense@latest
 addlicense -c "Code Intelligence GmbH" bazel/ deploy/ docker/ examples/ sanitizers/ src/ tests/ *.bzl

@@ -26,7 +26,7 @@ import java.util.jar.JarFile
 data class Hooks(
     val hooks: List<Hook>,
     val hookClasses: Set<Class<*>>,
-    val additionalHookClassNameGlobber: ClassNameGlobber
+    val additionalHookClassNameGlobber: ClassNameGlobber,
 ) {
 
     companion object {
@@ -68,7 +68,7 @@ data class Hooks(
                 val hookClasses = hooksWithHookClasses.map { it.second }.toSet()
                 val additionalHookClassNameGlobber = ClassNameGlobber(
                     hooks.flatMap(Hook::additionalClassesToHook),
-                    emptyList()
+                    emptyList(),
                 )
                 return Hooks(hooks, hookClasses, additionalHookClassNameGlobber)
             }
