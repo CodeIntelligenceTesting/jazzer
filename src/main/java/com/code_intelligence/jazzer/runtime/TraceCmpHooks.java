@@ -69,9 +69,8 @@ final public class TraceCmpHooks {
   @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.String",
       targetMethod = "equalsIgnoreCase")
   public static void
-  equals(
-      MethodHandle method, String thisObject, Object[] arguments, int hookId, Boolean returnValue) {
-    if (arguments[0] instanceof String && !returnValue) {
+  equals(MethodHandle method, String thisObject, Object[] arguments, int hookId, Boolean areEqual) {
+    if (!areEqual && arguments.length == 1 && arguments[0] instanceof String) {
       // The precise value of the result of the comparison is not used by libFuzzer as long as it is
       // non-zero.
       TraceDataFlowNativeCallbacks.traceStrcmp(thisObject, (String) arguments[0], 1, hookId);
@@ -84,8 +83,9 @@ final public class TraceCmpHooks {
   @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Number", targetMethod = "equals")
   public static void
   genericEquals(
-      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean returnValue) {
-    if (!returnValue && arguments[0] != null && thisObject.getClass() == arguments[0].getClass()) {
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean areEqual) {
+    if (!areEqual && arguments.length == 1 && arguments[0] != null
+        && thisObject.getClass() == arguments[0].getClass()) {
       TraceDataFlowNativeCallbacks.traceGenericCmp(thisObject, arguments[0], hookId);
     }
   }
@@ -97,7 +97,7 @@ final public class TraceCmpHooks {
   public static void
   compareTo(
       MethodHandle method, String thisObject, Object[] arguments, int hookId, Integer returnValue) {
-    if (arguments[0] instanceof String && returnValue != 0) {
+    if (returnValue != 0 && arguments.length == 1 && arguments[0] instanceof String) {
       TraceDataFlowNativeCallbacks.traceStrcmp(
           thisObject, (String) arguments[0], returnValue, hookId);
     }
@@ -106,9 +106,9 @@ final public class TraceCmpHooks {
   @MethodHook(
       type = HookType.AFTER, targetClassName = "java.lang.String", targetMethod = "contentEquals")
   public static void
-  contentEquals(
-      MethodHandle method, String thisObject, Object[] arguments, int hookId, Boolean returnValue) {
-    if (arguments[0] instanceof CharSequence && !returnValue) {
+  contentEquals(MethodHandle method, String thisObject, Object[] arguments, int hookId,
+      Boolean areEqualContents) {
+    if (!areEqualContents && arguments.length == 1 && arguments[0] instanceof CharSequence) {
       TraceDataFlowNativeCallbacks.traceStrcmp(
           thisObject, ((CharSequence) arguments[0]).toString(), 1, hookId);
     }
@@ -157,8 +157,8 @@ final public class TraceCmpHooks {
       type = HookType.AFTER, targetClassName = "java.lang.String", targetMethod = "contains")
   public static void
   contains(
-      MethodHandle method, String thisObject, Object[] arguments, int hookId, Boolean returnValue) {
-    if (arguments[0] instanceof CharSequence && !returnValue) {
+      MethodHandle method, String thisObject, Object[] arguments, int hookId, Boolean doesContain) {
+    if (!doesContain && arguments.length == 1 && arguments[0] instanceof CharSequence) {
       TraceDataFlowNativeCallbacks.traceStrstr(
           thisObject, ((CharSequence) arguments[0]).toString(), hookId);
     }
@@ -178,7 +178,7 @@ final public class TraceCmpHooks {
   public static void
   indexOf(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Integer returnValue) {
-    if (arguments[0] instanceof String && returnValue == -1) {
+    if (returnValue == -1 && arguments.length >= 1 && arguments[0] instanceof String) {
       TraceDataFlowNativeCallbacks.traceStrstr(
           thisObject.toString(), (String) arguments[0], hookId);
     }
@@ -189,9 +189,9 @@ final public class TraceCmpHooks {
   @MethodHook(
       type = HookType.AFTER, targetClassName = "java.lang.String", targetMethod = "endsWith")
   public static void
-  startsWith(
-      MethodHandle method, String thisObject, Object[] arguments, int hookId, Boolean returnValue) {
-    if (!returnValue) {
+  startsWith(MethodHandle method, String thisObject, Object[] arguments, int hookId,
+      Boolean doesStartOrEndsWith) {
+    if (!doesStartOrEndsWith && arguments.length >= 1 && arguments[0] instanceof String) {
       TraceDataFlowNativeCallbacks.traceStrstr(thisObject, (String) arguments[0], hookId);
     }
   }
@@ -221,7 +221,8 @@ final public class TraceCmpHooks {
   public static void
   equalsKt(MethodHandle method, Object alwaysNull, Object[] arguments, int hookId,
       Boolean equalStrings) {
-    if (arguments[0] instanceof String && arguments[1] instanceof String && !equalStrings) {
+    if (!equalStrings && arguments.length >= 2 && arguments[0] instanceof String
+        && arguments[1] instanceof String) {
       TraceDataFlowNativeCallbacks.traceStrcmp(
           (String) arguments[0], (String) arguments[1], 1, hookId);
     }
@@ -234,8 +235,8 @@ final public class TraceCmpHooks {
   public static void
   contentEqualKt(MethodHandle method, Object alwaysNull, Object[] arguments, int hookId,
       Boolean equalStrings) {
-    if (arguments[0] instanceof CharSequence && arguments[1] instanceof CharSequence
-        && !equalStrings) {
+    if (!equalStrings && arguments.length >= 2 && arguments[0] instanceof CharSequence
+        && arguments[1] instanceof CharSequence) {
       TraceDataFlowNativeCallbacks.traceStrcmp(
           arguments[0].toString(), arguments[1].toString(), 1, hookId);
     }
@@ -248,7 +249,8 @@ final public class TraceCmpHooks {
   public static void
   compareToKt(
       MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, Integer returnValue) {
-    if (arguments[0] instanceof String && arguments[1] instanceof String && returnValue != 0) {
+    if (returnValue != 0 && arguments.length >= 2 && arguments[0] instanceof String
+        && arguments[1] instanceof String) {
       TraceDataFlowNativeCallbacks.traceStrcmp(
           (String) arguments[0], (String) arguments[1], 1, hookId);
     }
@@ -265,8 +267,8 @@ final public class TraceCmpHooks {
   public static void
   startsWithKt(MethodHandle method, Object alwaysNull, Object[] arguments, int hookId,
       Boolean doesStartOrEndsWith) {
-    if (arguments[0] instanceof CharSequence && arguments[1] instanceof CharSequence
-        && !doesStartOrEndsWith) {
+    if (!doesStartOrEndsWith && arguments.length >= 2 && arguments[0] instanceof CharSequence
+        && arguments[1] instanceof CharSequence) {
       TraceDataFlowNativeCallbacks.traceStrstr(
           arguments[0].toString(), arguments[1].toString(), hookId);
     }
@@ -279,8 +281,8 @@ final public class TraceCmpHooks {
   public static void
   containsKt(
       MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, Boolean doesContain) {
-    if (arguments[0] instanceof CharSequence && arguments[1] instanceof CharSequence
-        && !doesContain) {
+    if (!doesContain && arguments.length >= 2 && arguments[0] instanceof CharSequence
+        && arguments[1] instanceof CharSequence) {
       TraceDataFlowNativeCallbacks.traceStrstr(
           arguments[0].toString(), arguments[1].toString(), hookId);
     }
@@ -297,7 +299,7 @@ final public class TraceCmpHooks {
   public static void
   indexOfKt(
       MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, Integer returnValue) {
-    if (!(arguments[0] instanceof CharSequence) || returnValue != -1) {
+    if (returnValue != -1 || arguments.length < 2 || !(arguments[0] instanceof CharSequence)) {
       return;
     }
     if (arguments[1] instanceof String) {
@@ -336,7 +338,7 @@ final public class TraceCmpHooks {
   public static void
   replaceKt(
       MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, String returnValue) {
-    if (!(arguments[0] instanceof String)) {
+    if (arguments.length < 2 || !(arguments[0] instanceof String)) {
       return;
     }
     String original = (String) arguments[0];
@@ -359,16 +361,14 @@ final public class TraceCmpHooks {
   public static void
   regionMatchesKt(MethodHandle method, Object alwaysNull, Object[] arguments, int hookId,
       Boolean doesRegionMatch) {
-    if (doesRegionMatch) {
-      return;
+    if (!doesRegionMatch) {
+      String thisString = arguments[0].toString();
+      int thisOffset = (int) arguments[1];
+      String other = arguments[2].toString();
+      int otherOffset = (int) arguments[3];
+      int length = (int) arguments[4];
+      regionMatchesInternal(thisString, thisOffset, other, otherOffset, length, hookId);
     }
-
-    String thisString = arguments[0].toString();
-    int thisOffset = (int) arguments[1];
-    String other = arguments[2].toString();
-    int otherOffset = (int) arguments[3];
-    int length = (int) arguments[4];
-    regionMatchesInternal(thisString, thisOffset, other, otherOffset, length, hookId);
   }
 
   @MethodHook(type = HookType.AFTER, targetClassName = "kotlin.text.StringsKt ",
@@ -382,7 +382,7 @@ final public class TraceCmpHooks {
   public static void
   indexOfAnyKt(
       MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, Integer returnValue) {
-    if (arguments[0] instanceof CharSequence && returnValue == -1) {
+    if (returnValue == -1 && arguments.length >= 2 && arguments[0] instanceof CharSequence) {
       guideTowardContainmentOfFirstElement(arguments[0].toString(), arguments[1], hookId);
     }
   }
@@ -398,7 +398,7 @@ final public class TraceCmpHooks {
   public static void
   findAnyKt(
       MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, Object returnValue) {
-    if (arguments[0] instanceof CharSequence && returnValue == null) {
+    if (returnValue == null && arguments.length >= 2 && arguments[0] instanceof CharSequence) {
       guideTowardContainmentOfFirstElement(arguments[0].toString(), arguments[1], hookId);
     }
   }
@@ -492,6 +492,9 @@ final public class TraceCmpHooks {
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Object returnValue) {
     if (returnValue != null)
       return;
+    if (arguments.length != 1) {
+      return;
+    }
     if (thisObject == null)
       return;
     final Map map = (Map) thisObject;
