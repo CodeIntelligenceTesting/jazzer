@@ -62,6 +62,8 @@ object ExpressionLanguageInjection {
         arguments: Array<Any>,
         hookId: Int,
     ) {
+        // The overloads taking a second string argument have either three or four arguments
+        if (arguments.size < 3) { return }
         val expression = arguments[1] as? String ?: return
         Jazzer.guideTowardsContainment(expression, EXPRESSION_LANGUAGE_ATTACK, hookId)
     }
@@ -85,6 +87,7 @@ object ExpressionLanguageInjection {
         arguments: Array<Any>,
         hookId: Int,
     ) {
+        if (arguments.size != 1) { return }
         val message = arguments[0] as String
         Jazzer.guideTowardsContainment(message, EXPRESSION_LANGUAGE_ATTACK, hookId)
     }

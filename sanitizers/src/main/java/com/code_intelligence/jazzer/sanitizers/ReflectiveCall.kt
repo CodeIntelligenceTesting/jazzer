@@ -61,6 +61,7 @@ object ReflectiveCall {
     )
     @JvmStatic
     fun loadLibraryHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
+        if (args.isEmpty()) { return }
         val libraryName = args[0] as? String ?: return
         if (libraryName == HONEYPOT_LIBRARY_NAME) {
             Jazzer.reportFindingFromHook(
