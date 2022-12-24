@@ -43,6 +43,7 @@ object OsCommandInjection {
     )
     @JvmStatic
     fun processImplStartHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
+        if (args.isEmpty()) { return }
         // Calling ProcessBuilder already checks if command array is empty
         @Suppress("UNCHECKED_CAST")
         (args[0] as? Array<String>)?.first().let { cmd ->
