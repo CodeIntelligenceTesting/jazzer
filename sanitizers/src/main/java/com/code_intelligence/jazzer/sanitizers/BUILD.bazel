@@ -32,6 +32,7 @@ kt_jvm_library(
         "OsCommandInjection.kt",
         "ReflectiveCall.kt",
         "RegexInjection.kt",
+        "SsrfInjection.kt",
         "Utils.kt",
         "XPathInjection.kt",
     ],
