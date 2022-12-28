@@ -393,6 +393,25 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "BatikTranscoderFuzzer",
+    srcs = [
+        "src/main/java/com/example/BatikTranscoderFuzzer.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
+    ],
+    target_class = "com.example.BatikTranscoderFuzzer",
+    timeout = "short",
+    deps = [
+        "@maven//:org_apache_xmlgraphics_batik_bridge",
+        "@maven//:org_apache_xmlgraphics_batik_util",
+        "@maven//:org_apache_xmlgraphics_batik_anim",
+        "@maven//:org_apache_xmlgraphics_batik_transcoder",
+        "@maven//:org_apache_xmlgraphics_batik_css",
+    ],
+)
+
 java_binary(
     name = "examples",
     create_executable = False,
@@ -404,5 +423,6 @@ java_binary(
         ":JacksonCborFuzzer_target_deploy.jar",
         ":JpegImageParserFuzzer_target_deploy.jar",
         ":JsonSanitizerDenylistFuzzer_target_deploy.jar",
+        ":BatikTranscoderFuzzer_target_deploy.jar"
     ],
 )
