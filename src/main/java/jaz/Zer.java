@@ -16,9 +16,7 @@ package jaz;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh;
 import com.code_intelligence.jazzer.api.Jazzer;
-import java.io.Closeable;
-import java.io.Flushable;
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
@@ -50,185 +48,304 @@ public class Zer
                Iterator, Runnable, Callable, Function, Collection, List {
   static final long serialVersionUID = 42L;
 
-  static {
+  // serialized size is 41 bytes
+  private static final byte REFLECTIVE_CALL_SANITIZER_ID = 0;
+  private static final byte DESERIALIZATION_SANITIZER_ID = 1;
+  private static final byte EXPRESSION_LANGUAGE_SANITIZER_ID = 2;
+
+  // A byte representing the relevant sanitizer for a given jaz.Zer instance. It is used to check
+  // whether the corresponding sanitizer is disabled and jaz.Zer will not report a finding in this
+  // case. Each sanitizer which relies on this class must set this byte accordingly. We choose a
+  // single byte to represent the sanitizer in order to keep the serialized version of jaz.Zer
+  // objects small (currently 41 bytes) so that it fits in the 64 byte limit of the words that can
+  // be used with Jazzer's methods that guide the fuzzer towards generating inputs that contain or
+  // are equal to target strings. This limit comes from the corresponding libFuzzer hooks that
+  // Jazzer uses under the hood.
+  private byte sanitizer = REFLECTIVE_CALL_SANITIZER_ID;
+
+  // Common constructors
+  public Zer() {
+    reportFindingIfEnabled();
+  }
+
+  public Zer(String arg1) {
+    reportFindingIfEnabled();
+  }
+
+  public Zer(String arg1, Throwable arg2) {
+    reportFindingIfEnabled();
+  }
+
+  public Zer(byte sanitizer) {
+    this.sanitizer = sanitizer;
+    reportFindingIfEnabled();
+  }
+
+  // A special static method that is called by the expression language injection sanitizer. We
+  // choose a parameterless method to keep the string that the sanitizer guides the fuzzer to
+  // generate within the 64-byte boundary required by the corresponding guiding methods.
+  public static void el() {
+    if (isSanitizerEnabled(EXPRESSION_LANGUAGE_SANITIZER_ID)) {
+      reportFinding();
+    }
+  }
+
+  private void reportFindingIfEnabled() {
+    if (isSanitizerEnabled(sanitizer)) {
+      reportFinding();
+    }
+  }
+
+  private static void reportFinding() {
     Jazzer.reportFindingFromHook(new FuzzerSecurityIssueHigh("Remote Code Execution\n"
-        + "Unrestricted class loading based on externally controlled data may allow\n"
+        + "Unrestricted class/object creation based on externally controlled data may allow\n"
         + "remote code execution depending on available classes on the classpath."));
   }
 
-  // Common constructors
+  private static boolean isSanitizerEnabled(byte sanitizerId) {
+    String allDisabledHooks = System.getProperty("jazzer.disabled_hooks");
+    if (allDisabledHooks == null || allDisabledHooks.equals("")) {
+      return true;
+    }
 
-  public Zer() {}
-
-  public Zer(String arg1) {}
-
-  public Zer(String arg1, Throwable arg2) {}
+    String sanitizer;
+    switch (sanitizerId) {
+      case DESERIALIZATION_SANITIZER_ID:
+        sanitizer = "com.code_intelligence.jazzer.sanitizers.Deserialization";
+        break;
+      case EXPRESSION_LANGUAGE_SANITIZER_ID:
+        sanitizer = "com.code_intelligence.jazzer.sanitizers.ExpressionLanguageInjection";
+        break;
+      default:
+        sanitizer = "com.code_intelligence.jazzer.sanitizers.ReflectiveCall";
+    }
+    return Arrays.stream(allDisabledHooks.split(",")).noneMatch(sanitizer::equals);
+  }
 
   // Getter/Setter
 
   public Object getJaz() {
+    reportFindingIfEnabled();
     return this;
   }
 
-  public void setJaz(String jaz) {}
+  public void setJaz(String jaz) {
+    reportFindingIfEnabled();
+  }
+
+  @Override
+  public int hashCode() {
+    reportFindingIfEnabled();
+    return super.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    reportFindingIfEnabled();
+    return super.equals(obj);
+  }
+
+  @Override
+  public String toString() {
+    reportFindingIfEnabled();
+    return super.toString();
+  }
 
   // Common interface stubs
 
   @Override
-  public void close() {}
+  public void close() {
+    reportFindingIfEnabled();
+  }
 
   @Override
-  public void flush() {}
+  public void flush() {
+    reportFindingIfEnabled();
+  }
 
   @Override
   public int compareTo(Zer o) {
+    reportFindingIfEnabled();
     return 0;
   }
 
   @Override
   public int compare(Object o1, Object o2) {
+    reportFindingIfEnabled();
     return 0;
   }
 
   @Override
   public int size() {
+    reportFindingIfEnabled();
     return 0;
   }
 
   @Override
   public boolean isEmpty() {
+    reportFindingIfEnabled();
     return false;
   }
 
   @Override
   public boolean contains(Object o) {
+    reportFindingIfEnabled();
     return false;
   }
 
   @Override
   public Object[] toArray() {
+    reportFindingIfEnabled();
     return new Object[0];
   }
 
   @Override
   public boolean add(Object o) {
+    reportFindingIfEnabled();
     return false;
   }
 
   @Override
   public boolean remove(Object o) {
+    reportFindingIfEnabled();
     return false;
   }
 
   @Override
   public boolean addAll(Collection c) {
+    reportFindingIfEnabled();
     return false;
   }
 
   @Override
   public boolean addAll(int index, Collection c) {
+    reportFindingIfEnabled();
     return false;
   }
 
   @Override
-  public void clear() {}
+  public void clear() {
+    reportFindingIfEnabled();
+  }
 
   @Override
   public Object get(int index) {
+    reportFindingIfEnabled();
     return this;
   }
 
   @Override
   public Object set(int index, Object element) {
+    reportFindingIfEnabled();
     return this;
   }
 
   @Override
-  public void add(int index, Object element) {}
+  public void add(int index, Object element) {
+    reportFindingIfEnabled();
+  }
 
   @Override
   public Object remove(int index) {
+    reportFindingIfEnabled();
     return this;
   }
 
   @Override
   public int indexOf(Object o) {
+    reportFindingIfEnabled();
     return 0;
   }
 
   @Override
   public int lastIndexOf(Object o) {
+    reportFindingIfEnabled();
     return 0;
   }
 
   @Override
   @SuppressWarnings("ConstantConditions")
   public ListIterator listIterator() {
+    reportFindingIfEnabled();
     return null;
   }
 
   @Override
   @SuppressWarnings("ConstantConditions")
   public ListIterator listIterator(int index) {
+    reportFindingIfEnabled();
     return null;
   }
 
   @Override
   public List subList(int fromIndex, int toIndex) {
+    reportFindingIfEnabled();
     return this;
   }
 
   @Override
   public boolean retainAll(Collection c) {
+    reportFindingIfEnabled();
     return false;
   }
 
   @Override
   public boolean removeAll(Collection c) {
+    reportFindingIfEnabled();
     return false;
   }
 
   @Override
   public boolean containsAll(Collection c) {
+    reportFindingIfEnabled();
     return false;
   }
 
   @Override
   public Object[] toArray(Object[] a) {
+    reportFindingIfEnabled();
     return new Object[0];
   }
 
   @Override
   public Iterator iterator() {
+    reportFindingIfEnabled();
     return this;
   }
 
   @Override
-  public void run() {}
+  public void run() {
+    reportFindingIfEnabled();
+  }
 
   @Override
   public boolean hasNext() {
+    reportFindingIfEnabled();
     return false;
   }
 
   @Override
   public Object next() {
+    reportFindingIfEnabled();
     return this;
   }
 
   @Override
   public Object call() throws Exception {
+    reportFindingIfEnabled();
     return this;
   }
 
   @Override
   public Object apply(Object o) {
+    reportFindingIfEnabled();
     return this;
   }
 
   @Override
   @SuppressWarnings("MethodDoesntCallSuperMethod")
   public Object clone() {
+    reportFindingIfEnabled();
     return this;
   }
 }

@@ -32,8 +32,8 @@ class ValidFuzzTests {
         fail("JUnit assert failed");
       case "honeypot":
         try {
-          Class.forName("jaz.Zer");
-        } catch (ClassNotFoundException ignored) {
+          Class.forName("jaz.Zer").newInstance();
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ignored) {
           // Ignored, but the honeypot class should still throw an exception.
         }
       case "sanitizer_internal_class":

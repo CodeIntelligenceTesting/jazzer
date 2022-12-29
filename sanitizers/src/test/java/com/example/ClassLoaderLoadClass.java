@@ -22,9 +22,11 @@ public class ClassLoaderLoadClass {
     String input = data.consumeRemainingAsAsciiString();
     try {
       // create an instance to trigger class initialization
-      ClassLoaderLoadClass.class.getClassLoader().loadClass(input).getConstructor().newInstance();
-    } catch (ClassNotFoundException | InvocationTargetException | InstantiationException
-        | IllegalAccessException | NoSuchMethodException ignored) {
+      ClassLoaderLoadClass.class.getClassLoader().loadClass(input).newInstance();
+      // TODO(khaled): this fails to reproduce the finding. It seems that this is related to not
+      // throwing a hard-to-catch error when not running in the fuzzing mode.
+      // ClassLoaderLoadClass.class.getClassLoader().loadClass(input).getConstructor().newInstance();
+    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ignored) {
     }
   }
 }
