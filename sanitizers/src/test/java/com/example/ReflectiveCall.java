@@ -22,8 +22,8 @@ public class ReflectiveCall {
     if (input.startsWith("@")) {
       String className = input.substring(1);
       try {
-        Class.forName(className);
-      } catch (ClassNotFoundException ignored) {
+        Class.forName(className).newInstance();
+      } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ignored) {
       }
     }
   }

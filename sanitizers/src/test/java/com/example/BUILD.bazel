@@ -184,3 +184,16 @@ java_fuzz_target_test(
         "@maven//:com_h2database_h2",
     ],
 )
+
+java_test(
+    name = "DisabledHooksTest",
+    size = "small",
+    srcs = [
+        "DisabledHooksTest.java",
+    ],
+    test_class = "com.example.DisabledHooksTest",
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+    ],
+)
