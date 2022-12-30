@@ -395,6 +395,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "BatikTranscoderFuzzer",
+    timeout = "short",
     srcs = [
         "src/main/java/com/example/BatikTranscoderFuzzer.java",
     ],
@@ -402,13 +403,12 @@ java_fuzz_target_test(
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
     ],
     target_class = "com.example.BatikTranscoderFuzzer",
-    timeout = "short",
     deps = [
-        "@maven//:org_apache_xmlgraphics_batik_bridge",
-        "@maven//:org_apache_xmlgraphics_batik_util",
         "@maven//:org_apache_xmlgraphics_batik_anim",
-        "@maven//:org_apache_xmlgraphics_batik_transcoder",
+        "@maven//:org_apache_xmlgraphics_batik_bridge",
         "@maven//:org_apache_xmlgraphics_batik_css",
+        "@maven//:org_apache_xmlgraphics_batik_transcoder",
+        "@maven//:org_apache_xmlgraphics_batik_util",
     ],
 )
 
@@ -417,12 +417,12 @@ java_binary(
     create_executable = False,
     visibility = ["//visibility:public"],
     runtime_deps = [
+        ":BatikTranscoderFuzzer_target_deploy.jar",
         ":ExampleFuzzer_target_deploy.jar",
         ":ExampleValueProfileFuzzer_target_deploy.jar",
         ":FastJsonFuzzer_target_deploy.jar",
         ":JacksonCborFuzzer_target_deploy.jar",
         ":JpegImageParserFuzzer_target_deploy.jar",
         ":JsonSanitizerDenylistFuzzer_target_deploy.jar",
-        ":BatikTranscoderFuzzer_target_deploy.jar"
     ],
 )

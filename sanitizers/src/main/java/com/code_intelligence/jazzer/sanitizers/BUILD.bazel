@@ -31,8 +31,8 @@ kt_jvm_library(
         "OsCommandInjection.kt",
         "ReflectiveCall.kt",
         "RegexInjection.kt",
+        "SsrfInjection.kt",
         "Utils.kt",
-        "SsrfInjection.kt"
     ],
     visibility = ["//sanitizers:__pkg__"],
     runtime_deps = [
