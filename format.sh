@@ -5,7 +5,7 @@ find -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.java' | xargs clang
 
 # Kotlin
 # curl -sSLO https://github.com/pinterest/ktlint/releases/download/0.48.0/ktlint && chmod a+x ktlint
-ktlint -F "examples/**/*.kt" "sanitizers/**/*.kt" "src/**/*.kt" "tests/**/*.kt"
+ktlint -F "examples/**/*.kt" "sanitizers/**/*.kt" "src/**/*.kt" "tests/**/*.kt" --disabled_rules=package-name
 
 # BUILD files
 # go install github.com/bazelbuild/buildtools/buildifier@latest

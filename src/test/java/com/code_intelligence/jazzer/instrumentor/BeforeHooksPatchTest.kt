@@ -47,7 +47,7 @@ private fun getPatchedBeforeHooksTargetInstance(): BeforeHooksTargetContract {
     return patchedClass.getDeclaredConstructor().newInstance() as BeforeHooksTargetContract
 }
 
-class BeforeHookTest {
+class BeforeHooksPatchTest {
 
     @Test
     fun testBeforeHooksOriginal() {

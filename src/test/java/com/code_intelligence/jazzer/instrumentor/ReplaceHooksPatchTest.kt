@@ -47,7 +47,7 @@ private fun getPatchedReplaceHooksTargetInstance(): ReplaceHooksTargetContract {
     return patchedClass.getDeclaredConstructor().newInstance() as ReplaceHooksTargetContract
 }
 
-class ReplaceHookTest {
+class ReplaceHooksPatchTest {
 
     @Test
     fun testReplaceHooksOriginal() {
