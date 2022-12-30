@@ -381,3 +381,11 @@ java_fuzz_target_test(
         ":autofuzz_assertion_error_target",
     ],
 )
+
+java_fuzz_target_test(
+    name = "SilencedFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/SilencedFuzzer.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
+    target_class = "com.example.SilencedFuzzer",
+)

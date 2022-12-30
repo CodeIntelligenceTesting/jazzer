@@ -73,6 +73,10 @@ public class Jazzer {
   }
 
   private static void start(List<String> args) throws IOException, InterruptedException {
+    // Lock in the output PrintStreams so that Jazzer can still emit output even if the fuzz target
+    // itself is "silenced" by redirecting System.out and/or System.err.
+    Log.fixOutErr(System.out, System.err);
+
     parseJazzerArgsToProperties(args);
     // --asan and --ubsan imply --native by default, but --native can also be used by itself to fuzz
     // native libraries without sanitizers (e.g. to quickly grow a corpus).
