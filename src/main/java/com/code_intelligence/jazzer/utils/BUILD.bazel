@@ -16,6 +16,12 @@ kt_jvm_library(
     deps = [":simple_glob_matcher"],
 )
 
+java_library(
+    name = "log",
+    srcs = ["Log.java"],
+    visibility = ["//visibility:public"],
+)
+
 kt_jvm_library(
     name = "manifest_utils",
     srcs = ["ManifestUtils.kt"],
