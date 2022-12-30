@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.driver
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow
+import com.code_intelligence.jazzer.utils.Log
 import java.lang.management.ManagementFactory
 import java.nio.ByteBuffer
 import java.security.MessageDigest
@@ -175,9 +176,9 @@ private fun readJavaFullFinalFlags(): String? {
 }
 
 fun dumpAllStackTraces() {
-    System.err.println("\nStack traces of all JVM threads:\n")
+    Log.println("\nStack traces of all JVM threads:")
     for ((thread, stack) in Thread.getAllStackTraces()) {
-        System.err.println(thread)
+        Log.println(thread.toString())
         // Remove traces of this method and the methods it calls.
         stack.asList()
             .asReversed()
@@ -189,12 +190,12 @@ fun dumpAllStackTraces() {
             }
             .asReversed()
             .forEach { frame ->
-                System.err.println("\tat $frame")
+                Log.println("\tat $frame")
             }
-        System.err.println()
+        Log.println("")
     }
-    System.err.println("Garbage collector stats:")
-    System.err.println(
+    Log.println("Garbage collector stats:")
+    Log.println(
         ManagementFactory.getGarbageCollectorMXBeans().joinToString("\n", "\n", "\n") {
             "${it.name}: ${it.collectionCount} collections took ${it.collectionTime}ms"
         },

@@ -12,6 +12,7 @@ java_library(
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/utils",
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
         "//src/main/java/com/code_intelligence/jazzer/utils:simple_glob_matcher",
         "@com_github_classgraph_classgraph//:classgraph",
         "@com_github_jhalterman_typetools//:typetools",

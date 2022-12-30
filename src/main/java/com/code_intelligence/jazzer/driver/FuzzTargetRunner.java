@@ -16,9 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
-import static java.lang.System.err;
 import static java.lang.System.exit;
-import static java.lang.System.out;
 import static java.util.stream.Collectors.joining;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
@@ -27,6 +25,7 @@ import com.code_intelligence.jazzer.autofuzz.FuzzTarget;
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder;
 import com.code_intelligence.jazzer.runtime.FuzzTargetRunnerNatives;
 import com.code_intelligence.jazzer.runtime.JazzerInternal;
+import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
@@ -87,7 +86,7 @@ public final class FuzzTargetRunner {
   static {
     String targetClassName = FuzzTargetFinder.findFuzzTargetClassName();
     if (targetClassName == null) {
-      err.println("Missing argument --target_class=<fuzz_target_class>");
+      Log.error("Missing argument --target_class=<fuzz_target_class>");
       exit(1);
       throw new IllegalStateException("Not reached");
     }
@@ -97,9 +96,9 @@ public final class FuzzTargetRunner {
       fuzzTargetClass =
           Class.forName(targetClassName, false, FuzzTargetRunner.class.getClassLoader());
     } catch (ClassNotFoundException e) {
-      err.printf(
-          "ERROR: '%s' not found on classpath:%n%n%s%n%nAll required classes must be on the classpath specified via --cp.%n",
-          targetClassName, System.getProperty("java.class.path"));
+      Log.error(String.format(
+          "'%s' not found on classpath:%n%n%s%n%nAll required classes must be on the classpath specified via --cp.",
+          targetClassName, System.getProperty("java.class.path")));
       exit(1);
       throw new IllegalStateException("Not reached");
     }
@@ -112,7 +111,7 @@ public final class FuzzTargetRunner {
     try {
       fuzzTarget = FuzzTargetFinder.findFuzzTarget(fuzzTargetClass);
     } catch (IllegalArgumentException e) {
-      err.printf("ERROR: %s%n", e.getMessage());
+      Log.error(e.getMessage());
       exit(1);
       throw new IllegalStateException("Not reached");
     }
@@ -129,9 +128,8 @@ public final class FuzzTargetRunner {
 
     try {
       fuzzTargetInstance = fuzzTarget.newInstance.call();
-    } catch (Throwable e) {
-      err.print("== Java Exception during initialization: ");
-      e.printStackTrace(err);
+    } catch (Throwable t) {
+      Log.finding(t);
       exit(1);
       throw new IllegalStateException("Not reached");
     }
@@ -234,16 +232,14 @@ public final class FuzzTargetRunner {
     // result in a "fuzz target exited" warning being printed by libFuzzer.
     temporarilyDisableLibfuzzerExitHook();
 
-    err.println();
-    err.print("== Java Exception: ");
-    finding.printStackTrace(err);
+    Log.finding(finding);
     if (Opt.dedup) {
       // Has to be printed to stdout as it is parsed by libFuzzer when minimizing a crash. It does
       // not necessarily have to appear at the beginning of a line.
       // https://github.com/llvm/llvm-project/blob/4c106c93eb68f8f9f201202677cd31e326c16823/compiler-rt/lib/fuzzer/FuzzerDriver.cpp#L342
-      out.printf(Locale.ROOT, "DEDUP_TOKEN: %016x%n", dedupToken);
+      Log.structuredOutput(String.format(Locale.ROOT, "DEDUP_TOKEN: %016x", dedupToken));
     }
-    err.println("== libFuzzer crashing input ==");
+    Log.println("== libFuzzer crashing input ==");
     printCrashingInput();
     // dumpReproducer needs to be called after libFuzzer printed its final stats as otherwise it
     // would report incorrect coverage - the reproducer generation involved rerunning the fuzz
@@ -258,16 +254,17 @@ public final class FuzzTargetRunner {
       // Reached the maximum amount of findings to keep going for, crash after shutdown. We use
       // _Exit rather than System.exit to not trigger libFuzzer's exit handlers.
       if (!Opt.autofuzz.isEmpty() && Opt.dedup) {
-        System.err.printf(
-            "%nNote: To continue fuzzing past this particular finding, rerun with the following additional argument:"
+        Log.println("");
+        Log.info(String.format(
+            "To continue fuzzing past this particular finding, rerun with the following additional argument:"
                 + "%n%n    --ignore=%s%n%n"
                 + "To ignore all findings of this kind, rerun with the following additional argument:"
-                + "%n%n    --autofuzz_ignore=%s%n",
+                + "%n%n    --autofuzz_ignore=%s",
             ignoredTokens.stream()
                 .map(token -> Long.toUnsignedString(token, 16))
                 .collect(joining(",")),
             Stream.concat(Opt.autofuzzIgnore.stream(), Stream.of(finding.getClass().getName()))
-                .collect(joining(",")));
+                .collect(joining(","))));
       }
       System.exit(LIBFUZZER_ERROR_EXIT_CODE);
       throw new IllegalStateException("Not reached");
@@ -308,17 +305,14 @@ public final class FuzzTargetRunner {
     if (fuzzerTearDown == null) {
       return;
     }
-    err.println("calling fuzzerTearDown function");
+    Log.info("calling fuzzerTearDown function");
     try {
       fuzzerTearDown.invoke(null);
     } catch (InvocationTargetException e) {
-      // An exception in fuzzerTearDown is a regular finding.
-      err.print("== Java Exception in fuzzerTearDown: ");
-      e.getCause().printStackTrace(err);
+      Log.finding(e.getCause());
       System.exit(LIBFUZZER_ERROR_EXIT_CODE);
     } catch (Throwable t) {
-      // Any other exception is an error.
-      t.printStackTrace(err);
+      Log.error(t);
       System.exit(1);
     }
   }
@@ -351,7 +345,7 @@ public final class FuzzTargetRunner {
       try {
         fuzzTargetMethod.invokeExact(recordingFuzzedDataProvider);
         if (JazzerInternal.lastFinding == null) {
-          err.println("Failed to reproduce crash when rerunning with recorder");
+          Log.warn("Failed to reproduce crash when rerunning with recorder");
         }
       } catch (Throwable ignored) {
         // Expected.
@@ -360,8 +354,7 @@ public final class FuzzTargetRunner {
         base64Data = RecordingFuzzedDataProvider.serializeFuzzedDataProviderProxy(
             recordingFuzzedDataProvider);
       } catch (IOException e) {
-        err.print("ERROR: Failed to create reproducer: ");
-        e.printStackTrace(err);
+        Log.error("Failed to create reproducer", e);
         // Don't let libFuzzer print a native stack trace.
         System.exit(1);
         throw new IllegalStateException("Not reached");

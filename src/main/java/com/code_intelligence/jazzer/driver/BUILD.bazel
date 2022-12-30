@@ -10,13 +10,17 @@ java_library(
     deps = [
         ":fuzz_target_runner",
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
     ],
 )
 
 kt_jvm_library(
     name = "exception_utils",
     srcs = ["ExceptionUtils.kt"],
-    deps = ["//src/main/java/com/code_intelligence/jazzer/api:hooks"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
+    ],
 )
 
 java_library(
@@ -58,6 +62,7 @@ java_jni_library(
         "//src/main/java/com/code_intelligence/jazzer/autofuzz",
         "//src/main/java/com/code_intelligence/jazzer/instrumentor",
         "//src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap_compile_only",
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
         "//src/main/java/com/code_intelligence/jazzer/utils:manifest_utils",
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
@@ -80,7 +85,10 @@ java_library(
     name = "reproducer_template",
     srcs = ["ReproducerTemplate.java"],
     resources = ["Reproducer.java.tmpl"],
-    deps = [":opt"],
+    deps = [
+        ":opt",
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
+    ],
 )
 
 java_library(
@@ -96,6 +104,7 @@ java_library(
     ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer:constants",
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
     ],
 )
 

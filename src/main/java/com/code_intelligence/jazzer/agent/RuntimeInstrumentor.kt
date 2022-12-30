@@ -20,6 +20,7 @@ import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hook
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
+import com.code_intelligence.jazzer.utils.Log
 import io.github.classgraph.ClassGraph
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
@@ -82,8 +83,7 @@ class RuntimeInstrumentor(
             if (dumpClassesDir != null) {
                 dumpToClassFile(internalClassName, classfileBuffer, basenameSuffix = ".failed")
             }
-            System.err.println("WARN: Failed to instrument $internalClassName:")
-            t.printStackTrace()
+            Log.warn("Failed to instrument $internalClassName:", t)
             throw t
         }.also { instrumentedByteCode ->
             // Only dump classes that were instrumented.
@@ -118,7 +118,7 @@ class RuntimeInstrumentor(
                 // https://mail.openjdk.java.net/pipermail/jigsaw-dev/2021-May/014663.html
                 if (!instrumentation.isModifiableModule(module)) {
                     val prettyClassName = internalClassName.replace('/', '.')
-                    println("WARN: Failed to instrument $prettyClassName in unmodifiable module ${module.name}, skipping")
+                    Log.warn("Failed to instrument $prettyClassName in unmodifiable module ${module.name}, skipping")
                     return null
                 }
                 instrumentation.redefineModule(
@@ -137,8 +137,7 @@ class RuntimeInstrumentor(
             if (dumpClassesDir != null) {
                 dumpToClassFile(internalClassName, classfileBuffer, basenameSuffix = ".failed")
             }
-            System.err.println("WARN: Failed to instrument $internalClassName:")
-            t.printStackTrace()
+            Log.warn("Failed to instrument $internalClassName:", t)
             throw t
         }
         return transform(loader, internalClassName, classBeingRedefined, protectionDomain, classfileBuffer)
@@ -168,7 +167,7 @@ class RuntimeInstrumentor(
             try {
                 instrument(internalClassName, classfileBuffer, fullInstrumentation)
             } catch (e: CoverageIdException) {
-                System.err.println("ERROR: Coverage IDs are out of sync")
+                Log.error("Coverage IDs are out of sync")
                 e.printStackTrace()
                 exitProcess(1)
             }
@@ -177,9 +176,9 @@ class RuntimeInstrumentor(
         val sizeIncrease = ((100.0 * (instrumentedBytecode.size - classfileBuffer.size)) / classfileBuffer.size).roundToInt()
         if (printInfo) {
             if (fullInstrumentation) {
-                println("INFO: Instrumented $className (took $durationInMs ms, size +$sizeIncrease%)")
+                Log.info("Instrumented $className (took $durationInMs ms, size +$sizeIncrease%)")
             } else {
-                println("INFO: Instrumented $className with custom hooks only (took $durationInMs ms, size +$sizeIncrease%)")
+                Log.info("Instrumented $className with custom hooks only (took $durationInMs ms, size +$sizeIncrease%)")
             }
         }
         return instrumentedBytecode

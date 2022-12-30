@@ -22,6 +22,8 @@ import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -30,7 +32,7 @@ import sun.misc.Unsafe;
 
 public class FuzzTargetRunnerTest {
   private static final Pattern DEDUP_TOKEN_PATTERN =
-      Pattern.compile("(?m)^DEDUP_TOKEN: ([0-9a-f]{16})$");
+      Pattern.compile("(?m)^DEDUP_TOKEN: ([0-9a-f]{16})(?:\r\n|\r|\n)");
   private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
   private static final ByteArrayOutputStream recordedErr = new ByteArrayOutputStream();
   private static final ByteArrayOutputStream recordedOut = new ByteArrayOutputStream();
@@ -109,9 +111,14 @@ public class FuzzTargetRunnerTest {
       assert UNSAFE.getByte(CoverageMap.countersAddress + 3) == 0;
 
       String errOutput = new String(recordedErr.toByteArray(), StandardCharsets.UTF_8);
-      assert errOutput.isEmpty();
+      List<String> unexpectedLines = Arrays.stream(errOutput.split("\n"))
+                                         .filter(line -> !line.startsWith("INFO: "))
+                                         .collect(Collectors.toList());
+      assert unexpectedLines.isEmpty()
+          : "Unexpected output on System.err: '"
+          + String.join("\n", unexpectedLines) + "'";
       String outOutput = new String(recordedOut.toByteArray(), StandardCharsets.UTF_8);
-      assert outOutput.isEmpty();
+      assert outOutput.isEmpty() : "Non-empty System.out: '" + outOutput + "'";
     }
 
     String firstDedupToken = null;
@@ -131,7 +138,7 @@ public class FuzzTargetRunnerTest {
         assert errOutput.contains(
             "== Java Exception: java.lang.IllegalArgumentException: first finding");
         Matcher dedupTokenMatcher = DEDUP_TOKEN_PATTERN.matcher(outOutput);
-        assert dedupTokenMatcher.find();
+        assert dedupTokenMatcher.matches() : "Unexpected output on System.out: '" + outOutput + "'";
         firstDedupToken = dedupTokenMatcher.group();
         recordedErr.reset();
         recordedOut.reset();
@@ -160,7 +167,7 @@ public class FuzzTargetRunnerTest {
             "== Java Exception: com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow: Stack overflow (use ");
         assert !errOutput.contains("not reported");
         Matcher dedupTokenMatcher = DEDUP_TOKEN_PATTERN.matcher(outOutput);
-        assert dedupTokenMatcher.find();
+        assert dedupTokenMatcher.matches() : "Unexpected output on System.out: '" + outOutput + "'";
         assert !firstDedupToken.equals(dedupTokenMatcher.group());
         recordedErr.reset();
         recordedOut.reset();

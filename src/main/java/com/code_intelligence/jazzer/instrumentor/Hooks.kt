@@ -17,6 +17,7 @@ package com.code_intelligence.jazzer.instrumentor
 import com.code_intelligence.jazzer.api.MethodHook
 import com.code_intelligence.jazzer.api.MethodHooks
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
+import com.code_intelligence.jazzer.utils.Log
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.ScanResult
 import java.lang.instrument.Instrumentation
@@ -81,13 +82,12 @@ data class Hooks(
                     val hookClass =
                         Class.forName(hookClassName, true, Companion::class.java.classLoader)
                     loadHooks(hookClass).also {
-                        println("INFO: Loaded ${it.size} hooks from $hookClassName")
+                        Log.info("Loaded ${it.size} hooks from $hookClassName")
                     }.map {
                         it to hookClass
                     }
                 } catch (e: ClassNotFoundException) {
-                    println("WARN: Failed to load hooks from $hookClassName:")
-                    e.printStackTrace()
+                    Log.warn("Failed to load hooks from $hookClassName", e)
                     emptyList()
                 }
             }

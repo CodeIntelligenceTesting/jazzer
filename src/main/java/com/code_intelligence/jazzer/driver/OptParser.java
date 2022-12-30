@@ -16,9 +16,9 @@
 
 package com.code_intelligence.jazzer.driver;
 
-import static java.lang.System.err;
 import static java.lang.System.exit;
 
+import com.code_intelligence.jazzer.utils.Log;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -115,9 +115,9 @@ final class OptParser {
         .filter(key -> !knownArgs.containsKey(key))
         .findFirst()
         .ifPresent(unknownArg -> {
-          err.printf(
-              "Unknown argument '--%1$s' or property 'jazzer.%1$s' (list all available arguments with --help)%n",
-              unknownArg);
+          Log.error(String.format(
+              "Unknown argument '--%1$s' or property 'jazzer.%1$s' (list all available arguments with --help)",
+              unknownArg));
           exit(1);
         });
   }

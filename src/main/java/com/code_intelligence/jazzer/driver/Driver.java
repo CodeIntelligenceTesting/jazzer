@@ -16,8 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
-import static java.lang.System.err;
-
+import com.code_intelligence.jazzer.utils.Log;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,13 +30,11 @@ public class Driver {
         arg -> arg.startsWith("-fork=") || arg.startsWith("-jobs=") || arg.startsWith("-merge="));
     if (spawnsSubprocesses) {
       if (!System.getProperty("jazzer.coverage_report", "").isEmpty()) {
-        err.println(
-            "WARN: --coverage_report does not support parallel fuzzing and has been disabled");
+        Log.warn("--coverage_report does not support parallel fuzzing and has been disabled");
         System.clearProperty("jazzer.coverage_report");
       }
       if (!System.getProperty("jazzer.coverage_dump", "").isEmpty()) {
-        err.println(
-            "WARN: --coverage_dump does not support parallel fuzzing and has been disabled");
+        Log.warn("--coverage_dump does not support parallel fuzzing and has been disabled");
         System.clearProperty("jazzer.coverage_dump");
       }
 

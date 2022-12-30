@@ -42,12 +42,7 @@ object ManifestUtils {
             0 -> null
             1 -> fuzzTargets.first()
             else -> {
-                println(
-                    """
-                    |WARN: More than one Jazzer-Fuzz-Target-Class manifest entry detected on the
-                    |classpath.
-                    """.trimMargin(),
-                )
+                Log.warn("More than one Jazzer-Fuzz-Target-Class manifest entry detected on the classpath.")
                 null
             }
         }
