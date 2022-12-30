@@ -62,6 +62,7 @@ public final class FuzzTargetRunner {
       "org.opentest4j.TestAbortedException";
 
   private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
+
   private static final long BYTE_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
 
   // Default value of the libFuzzer -error_exitcode flag.

@@ -15,6 +15,7 @@
 package com.code_intelligence.jazzer.utils;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import sun.misc.Unsafe;
 
 public final class UnsafeProvider {
@@ -26,25 +27,30 @@ public final class UnsafeProvider {
 
   private static Unsafe getUnsafeInternal() {
     try {
-      // The Java agent is loaded by the bootstrap class loader and should thus
-      // pass the security checks in getUnsafe.
+      // The Jazzer runtime is loaded by the bootstrap class loader and should thus pass the
+      // security checks in getUnsafe, so try that first.
       return Unsafe.getUnsafe();
     } catch (Throwable unused) {
       // If not running as an agent, use the classical reflection trick to get an Unsafe instance,
       // taking into account that the private field may have a name other than "theUnsafe":
       // https://android.googlesource.com/platform/libcore/+/gingerbread/luni/src/main/java/sun/misc/Unsafe.java#32
-      try {
-        for (Field f : Unsafe.class.getDeclaredFields()) {
-          if (f.getType() == Unsafe.class) {
-            f.setAccessible(true);
+      for (Field f : Unsafe.class.getDeclaredFields()) {
+        if (f.getType() == Unsafe.class) {
+          f.setAccessible(true);
+          try {
             return (Unsafe) f.get(null);
+          } catch (IllegalAccessException e) {
+            throw new IllegalStateException(
+                "Please file a bug at https://github.com/CodeIntelligenceTesting/jazzer/issues/new "
+                    + "with this information: Failed to access Unsafe member on Unsafe class",
+                e);
           }
         }
-        return null;
-      } catch (Throwable t) {
-        t.printStackTrace();
-        return null;
       }
+      throw new IllegalStateException(String.format(
+          "Please file a bug at https://github.com/CodeIntelligenceTesting/jazzer/issues/new with "
+          + "this information: Failed to find Unsafe member on Unsafe class, have: "
+          + Arrays.deepToString(Unsafe.class.getDeclaredFields())));
     }
   }
 }

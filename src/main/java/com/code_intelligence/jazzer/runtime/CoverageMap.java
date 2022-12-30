@@ -16,6 +16,9 @@ package com.code_intelligence.jazzer.runtime;
 
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import com.github.fmeum.rules_jni.RulesJni;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -37,13 +40,20 @@ final public class CoverageMap {
       : 1 << 20;
 
   private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
+  private static final Class<?> LOG;
+  private static final MethodHandle LOG_INFO;
+  private static final MethodHandle LOG_ERROR;
 
   static {
-    if (UNSAFE == null) {
-      System.out.println("ERROR: Failed to get Unsafe instance for CoverageMap.%n"
-          + "       Please file a bug at:%n"
-          + "         https://github.com/CodeIntelligenceTesting/jazzer/issues/new");
-      System.exit(1);
+    try {
+      LOG = Class.forName(
+          "com.code_intelligence.jazzer.utils.Log", false, ClassLoader.getSystemClassLoader());
+      LOG_INFO = MethodHandles.lookup().findStatic(
+          LOG, "info", MethodType.methodType(void.class, String.class));
+      LOG_ERROR = MethodHandles.lookup().findStatic(
+          LOG, "error", MethodType.methodType(void.class, String.class, Throwable.class));
+    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -80,19 +90,20 @@ final public class CoverageMap {
     while (nextId >= newNumCounters) {
       newNumCounters = 2 * newNumCounters;
       if (newNumCounters > MAX_NUM_COUNTERS) {
-        System.out.printf("ERROR: Maximum number (%s) of coverage counters exceeded. Try to%n"
-                + "       limit the scope of a single fuzz target as much as possible to keep the%n"
-                + "       fuzzer fast.%n"
-                + "       If that is not possible, the maximum number of counters can be increased%n"
-                + "       via the %s environment variable.",
-            MAX_NUM_COUNTERS, ENV_MAX_NUM_COUNTERS);
+        logError(
+            String.format(
+                "Maximum number (%s) of coverage counters exceeded. Try to limit the scope of a single fuzz target as "
+                    + "much as possible to keep the fuzzer fast. If that is not possible, the maximum number of "
+                    + "counters can be increased via the %s environment variable.",
+                MAX_NUM_COUNTERS, ENV_MAX_NUM_COUNTERS),
+            null);
         System.exit(1);
       }
     }
     if (newNumCounters > currentNumCounters) {
       registerNewCounters(currentNumCounters, newNumCounters);
       currentNumCounters = newNumCounters;
-      System.out.println("INFO: New number of coverage counters: " + currentNumCounters);
+      logInfo("New number of coverage counters: " + currentNumCounters);
     }
   }
 
@@ -117,6 +128,28 @@ final public class CoverageMap {
   public static void replayCoveredIds(Set<Integer> coveredIds) {
     for (int id : coveredIds) {
       UNSAFE.putByte(countersAddress + id, (byte) 1);
+    }
+  }
+
+  private static void logInfo(String message) {
+    try {
+      LOG_INFO.invokeExact(message);
+    } catch (Throwable error) {
+      // Should not be reached, Log.error does not throw.
+      error.printStackTrace();
+      System.err.println("Failed to call Log.info:");
+      System.err.println(message);
+    }
+  }
+
+  private static void logError(String message, Throwable t) {
+    try {
+      LOG_ERROR.invokeExact(message, t);
+    } catch (Throwable error) {
+      // Should not be reached, Log.error does not throw.
+      error.printStackTrace();
+      System.err.println("Failed to call Log.error:");
+      System.err.println(message);
     }
   }
 
