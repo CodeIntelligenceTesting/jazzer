@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -euo pipefail
 
 # C++ & Java
 find -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.java' | xargs clang-format-14 -i
