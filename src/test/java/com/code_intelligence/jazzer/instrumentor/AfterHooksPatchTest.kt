@@ -47,7 +47,7 @@ private fun getPatchedAfterHooksTargetInstance(): AfterHooksTargetContract {
     return patchedClass.getDeclaredConstructor().newInstance() as AfterHooksTargetContract
 }
 
-class AfterHookTest {
+class AfterHooksPatchTest {
 
     @Test
     fun testAfterHooksOriginal() {
