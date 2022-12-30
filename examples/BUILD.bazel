@@ -398,9 +398,6 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/BatikTranscoderFuzzer.java",
     ],
-    allowed_findings = [
-        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
-    ],
     target_class = "com.example.BatikTranscoderFuzzer",
     deps = [
         "@maven//:org_apache_xmlgraphics_batik_anim",
