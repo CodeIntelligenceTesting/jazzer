@@ -22,6 +22,7 @@ import com.code_intelligence.jazzer.instrumentor.Hooks
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.sanitizers.Constants
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
+import com.code_intelligence.jazzer.utils.Log
 import com.code_intelligence.jazzer.utils.ManifestUtils
 import java.lang.instrument.Instrumentation
 import java.nio.file.Paths
@@ -49,7 +50,7 @@ fun installInternal(
     val customHookNames = allCustomHookNames - disabledHookNames.toSet()
     val disabledCustomHooksToPrint = allCustomHookNames - customHookNames.toSet()
     if (disabledCustomHooksToPrint.isNotEmpty()) {
-        println("INFO: Not using the following disabled hooks: ${disabledCustomHooksToPrint.joinToString(", ")}")
+        Log.info("Not using the following disabled hooks: ${disabledCustomHooksToPrint.joinToString(", ")}")
     }
 
     val classNameGlobber = ClassNameGlobber(instrumentationIncludes, instrumentationExcludes + customHookNames)
@@ -78,15 +79,15 @@ fun installInternal(
     }.toSet()
     val idSyncFilePath = idSyncFile?.takeUnless { it.isEmpty() }?.let {
         Paths.get(it).also { path ->
-            println("INFO: Synchronizing coverage IDs in ${path.toAbsolutePath()}")
+            Log.info("Synchronizing coverage IDs in ${path.toAbsolutePath()}")
         }
     }
     val dumpClassesDirPath = dumpClassesDir.takeUnless { it.isEmpty() }?.let {
         Paths.get(it).toAbsolutePath().also { path ->
             if (path.exists() && path.isDirectory()) {
-                println("INFO: Dumping instrumented classes into $path")
+                Log.info("Dumping instrumented classes into $path")
             } else {
-                println("ERROR: Cannot dump instrumented classes into $path; does not exist or not a directory")
+                Log.error("Cannot dump instrumented classes into $path; does not exist or not a directory")
             }
         }
     }
@@ -146,8 +147,8 @@ fun installInternal(
         if (instrumentation.isRetransformClassesSupported) {
             instrumentation.retransformClasses(*classesToRetransform)
         } else {
-            println("WARN: Instrumentation was not applied to the following classes as they are dependencies of hooks:")
-            println("WARN: ${classesToRetransform.joinToString()}")
+            Log.warn("Instrumentation was not applied to the following classes as they are dependencies of hooks:")
+            Log.warn(classesToRetransform.joinToString())
         }
     }
 }

@@ -24,6 +24,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import com.code_intelligence.jazzer.driver.Driver;
+import com.code_intelligence.jazzer.utils.Log;
 import com.github.fmeum.rules_jni.RulesJni;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -80,7 +81,7 @@ public class Jazzer {
     final boolean fuzzNative = Boolean.parseBoolean(
         System.getProperty("jazzer.native", Boolean.toString(loadASan || loadUBSan)));
     if ((loadASan || loadUBSan) && !fuzzNative) {
-      System.err.println("ERROR: --asan and --ubsan cannot be used without --native");
+      Log.error("--asan and --ubsan cannot be used without --native");
       exit(1);
     }
     // No native fuzzing has been requested, fuzz in the current process.
@@ -91,8 +92,7 @@ public class Jazzer {
     }
 
     if (!isLinux() && !isMacOs()) {
-      System.err.println(
-          "ERROR: --asan, --ubsan, and --native are only supported on Linux and macOS");
+      Log.error("--asan, --ubsan, and --native are only supported on Linux and macOS");
       exit(1);
     }
 
@@ -116,8 +116,7 @@ public class Jazzer {
                   "detect_leaks=0",
                   // We load jazzer_preload first.
                   "verify_asan_link_order=0"));
-      System.err.println(
-          "WARN: Jazzer is not compatible with LeakSanitizer. Leaks are not reported.");
+      Log.warn("Jazzer is not compatible with LeakSanitizer. Leaks are not reported.");
       preloadLibs.add(findHostClangLibrary(asanLibNames()));
     }
     if (loadUBSan) {
@@ -244,8 +243,8 @@ public class Jazzer {
         .filter(Optional::isPresent)
         .findFirst()
         .orElseGet(() -> {
-          System.err.printf("ERROR: '%s' failed to find one of: %s%n", hostClang(),
-              String.join(", ", candidateNames));
+          Log.error(String.format(
+              "'%s' failed to find one of: %s%n", hostClang(), String.join(", ", candidateNames)));
           exit(1);
           throw new IllegalStateException("not reached");
         })
@@ -264,16 +263,15 @@ public class Jazzer {
     try {
       Process process = processBuilder.start();
       if (process.waitFor() != 0) {
-        System.err.printf("ERROR: '%s' exited with exit code %d%n", String.join(" ", command),
-            process.exitValue());
+        Log.error(String.format(
+            "'%s' exited with exit code %d%n", String.join(" ", command), process.exitValue()));
         copy(process.getInputStream(), System.out);
         copy(process.getErrorStream(), System.err);
         exit(1);
       }
       output = readAllBytes(process.getInputStream());
     } catch (IOException | InterruptedException e) {
-      System.err.printf("ERROR: Failed to run '%s'%n", String.join(" ", command));
-      e.printStackTrace();
+      Log.error(String.format("Failed to run '%s'%n", String.join(" ", command)), e);
       exit(1);
       throw new IllegalStateException("not reached");
     }

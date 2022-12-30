@@ -29,6 +29,7 @@ kt_jvm_library(
         "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
         "//src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
     ],
+    deps = [":log"],
 )
 
 kt_jvm_library(

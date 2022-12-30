@@ -22,7 +22,6 @@ import static com.code_intelligence.jazzer.driver.OptParser.ignoreSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.stringListSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.stringSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.uint64Setting;
-import static java.lang.System.err;
 import static java.lang.System.exit;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
@@ -30,6 +29,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
 
+import com.code_intelligence.jazzer.utils.Log;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -144,27 +144,27 @@ public final class Opt {
     OptParser.failOnUnknownArgument();
 
     if (help) {
-      err.println(OptParser.getHelpText());
+      Log.println(OptParser.getHelpText());
       exit(0);
     }
     if (version) {
-      err.printf("Jazzer v%s", JAZZER_VERSION);
+      Log.println("Jazzer v" + JAZZER_VERSION);
       exit(0);
     }
     if (!targetClass.isEmpty() && !autofuzz.isEmpty()) {
-      err.println("--target_class and --autofuzz cannot be specified together");
+      Log.error("--target_class and --autofuzz cannot be specified together");
       exit(1);
     }
     if (!stringListSetting("target_args", ' ', null).isEmpty() && !autofuzz.isEmpty()) {
-      err.println("--target_args and --autofuzz cannot be specified together");
+      Log.error("--target_args and --autofuzz cannot be specified together");
       exit(1);
     }
     if (autofuzz.isEmpty() && !autofuzzIgnore.isEmpty()) {
-      err.println("--autofuzz_ignore requires --autofuzz");
+      Log.error("--autofuzz_ignore requires --autofuzz");
       exit(1);
     }
     if ((!ignore.isEmpty() || keepGoing > 1) && !dedup) {
-      err.println("--nodedup is not supported with --ignore or --keep_going");
+      Log.error("--nodedup is not supported with --ignore or --keep_going");
       exit(1);
     }
   }

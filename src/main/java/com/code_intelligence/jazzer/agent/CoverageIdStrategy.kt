@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.agent
 
+import com.code_intelligence.jazzer.utils.Log
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.channels.FileLock
@@ -155,7 +156,7 @@ class FileSyncCoverageIdStrategy(private val idSyncFile: Path) : CoverageIdStrat
                 }
                 else -> {
                     localIdFile.close()
-                    System.err.println(idInfo.joinToString("\n") { "${it.first}:${it.second}:${it.third}" })
+                    Log.println(idInfo.joinToString("\n") { "${it.first}:${it.second}:${it.third}" })
                     throw IllegalStateException("Multiple entries for $className in ID file")
                 }
             }

@@ -17,6 +17,7 @@ package com.code_intelligence.jazzer.autofuzz;
 import com.code_intelligence.jazzer.api.AutofuzzConstructionException;
 import com.code_intelligence.jazzer.api.AutofuzzInvocationException;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.SimpleGlobMatcher;
 import com.code_intelligence.jazzer.utils.Utils;
 import java.io.Closeable;
@@ -56,7 +57,7 @@ public final class FuzzTarget {
 
   public static void fuzzerInitialize(String[] args) {
     if (args.length == 0 || !args[0].contains("::")) {
-      System.err.println(
+      Log.error(
           "Expected the argument to --autofuzz to be a method reference (e.g. System.out::println)");
       System.exit(1);
     }
@@ -76,7 +77,7 @@ public final class FuzzTarget {
             URLDecoder.decode(methodNameAndOptionalDescriptor.substring(descriptorStart), "UTF-8");
       } catch (UnsupportedEncodingException e) {
         // UTF-8 is always supported.
-        e.printStackTrace();
+        Log.error(e);
         System.exit(1);
         return;
       }
@@ -93,10 +94,9 @@ public final class FuzzTarget {
       } catch (ClassNotFoundException e) {
         int classSeparatorIndex = targetClassName.lastIndexOf(".");
         if (classSeparatorIndex == -1) {
-          System.err.printf(
-              "Failed to find class %s for autofuzz, please ensure it is contained in the classpath "
-                  + "specified with --cp and specify the full package name%n",
-              className);
+          Log.error(String.format(
+              "Failed to find class %s for autofuzz, please ensure it is contained in the classpath specified with --cp and specify the full package name",
+              className));
           System.exit(1);
           return;
         }
@@ -137,9 +137,10 @@ public final class FuzzTarget {
     if (targetExecutables.length == 0) {
       if (isConstructor) {
         if (descriptor == null) {
-          System.err.printf("Failed to find constructors in class %s for autofuzz.%n", className);
+          Log.error(
+              String.format("Failed to find constructors in class %s for autofuzz.%n", className));
         } else {
-          System.err.printf(
+          Log.error(String.format(
               "Failed to find constructors with signature %s in class %s for autofuzz.%n"
                   + "Public constructors declared by the class:%n%s",
               descriptor, className,
@@ -150,11 +151,11 @@ public final class FuzzTarget {
                       -> String.format("%s::new%s", method.getDeclaringClass().getName(),
                           Utils.getReadableDescriptor(method)))
                   .distinct()
-                  .collect(Collectors.joining(System.lineSeparator())));
+                  .collect(Collectors.joining(System.lineSeparator()))));
         }
       } else {
         if (descriptor == null) {
-          System.err.printf("Failed to find methods named %s in class %s for autofuzz.%n"
+          Log.error(String.format("Failed to find methods named %s in class %s for autofuzz.%n"
                   + "Public methods declared by the class:%n%s",
               methodName, className,
               Arrays.stream(lookup.getAccessibleMethods(targetClass))
@@ -164,9 +165,9 @@ public final class FuzzTarget {
                       -> String.format(
                           "%s::%s", method.getDeclaringClass().getName(), method.getName()))
                   .distinct()
-                  .collect(Collectors.joining(System.lineSeparator())));
+                  .collect(Collectors.joining(System.lineSeparator()))));
         } else {
-          System.err.printf(
+          Log.error(String.format(
               "Failed to find public methods named %s with signature %s in class %s for autofuzz.%n"
                   + "Public methods with that name:%n%s",
               methodName, descriptor, className,
@@ -178,7 +179,7 @@ public final class FuzzTarget {
                       -> String.format("%s::%s%s", method.getDeclaringClass().getName(),
                           method.getName(), Utils.getReadableDescriptor(method)))
                   .distinct()
-                  .collect(Collectors.joining(System.lineSeparator())));
+                  .collect(Collectors.joining(System.lineSeparator()))));
         }
       }
       System.exit(1);
@@ -202,7 +203,8 @@ public final class FuzzTarget {
               try {
                 return ClassLoader.getSystemClassLoader().loadClass(name);
               } catch (ClassNotFoundException e) {
-                System.err.printf("Failed to find class '%s' specified in --autofuzz_ignore", name);
+                Log.error(String.format(
+                    "Failed to find class '%s' specified in --autofuzz_ignore", name));
                 System.exit(1);
               }
               throw new Error("Not reached");
@@ -224,7 +226,7 @@ public final class FuzzTarget {
     }
     fuzzerTestOneInput(data, codegenVisitor);
     if (codegenVisitor != null) {
-      System.err.println(codegenVisitor.generate());
+      Log.println(codegenVisitor.generate());
     }
   }
 
@@ -239,11 +241,10 @@ public final class FuzzTarget {
     try {
       Files.write(javaPath, javaSource.getBytes(StandardCharsets.UTF_8));
     } catch (IOException e) {
-      System.err.printf("ERROR: Failed to write Java reproducer to %s%n", javaPath);
-      e.printStackTrace();
+      Log.error(String.format("Failed to write Java reproducer to %s%n", javaPath), e);
     }
-    System.out.printf(
-        "reproducer_path='%s'; Java reproducer written to %s%n", reproducerPath, javaPath);
+    Log.println(String.format(
+        "reproducer_path='%s'; Java reproducer written to %s%n", reproducerPath, javaPath));
   }
 
   private static void fuzzerTestOneInput(
@@ -264,7 +265,7 @@ public final class FuzzTarget {
       executionsSinceLastInvocation = 0;
     } catch (AutofuzzConstructionException e) {
       if (Meta.IS_DEBUG) {
-        e.printStackTrace();
+        Log.error(e);
       }
       // Ignore exceptions thrown while constructing the parameters for the target method. We can
       // only guess how to generate valid parameters and any exceptions thrown while doing so
@@ -272,8 +273,9 @@ public final class FuzzTarget {
       // let the user know.
       executionsSinceLastInvocation++;
       if (executionsSinceLastInvocation >= MAX_EXECUTIONS_WITHOUT_INVOCATION) {
-        System.err.printf("Failed to generate valid arguments to '%s' in %d attempts; giving up%n",
-            methodReference, executionsSinceLastInvocation);
+        Log.error(
+            String.format("Failed to generate valid arguments to '%s' in %d attempts; giving up",
+                methodReference, executionsSinceLastInvocation));
         System.exit(1);
       } else if (executionsSinceLastInvocation == MAX_EXECUTIONS_WITHOUT_INVOCATION / 2) {
         // The application under test might perform classpath modifications or create classes
@@ -298,8 +300,7 @@ public final class FuzzTarget {
       cleanStackTraces(cause);
       throw cause;
     } catch (Throwable t) {
-      System.err.println("Unexpected exception encountered during autofuzz");
-      t.printStackTrace();
+      Log.error("Unexpected exception encountered during autofuzz", t);
       System.exit(1);
     } finally {
       if (returnValue instanceof Closeable) {
