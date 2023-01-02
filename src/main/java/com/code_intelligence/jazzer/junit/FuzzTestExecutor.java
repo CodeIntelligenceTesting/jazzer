@@ -52,7 +52,8 @@ class FuzzTestExecutor {
     }
 
     Path baseDir =
-        Paths.get(context.getConfigurationParameter("jazzer.internal.basedir").orElse(""));
+        Paths.get(context.getConfigurationParameter("jazzer.internal.basedir").orElse(""))
+            .toAbsolutePath();
 
     final Method fuzzTestMethod = context.getRequiredTestMethod();
     final Class<?> fuzzTestClass = context.getRequiredTestClass();
