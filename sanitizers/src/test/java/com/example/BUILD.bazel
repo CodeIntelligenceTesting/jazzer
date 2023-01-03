@@ -46,18 +46,14 @@ java_fuzz_target_test(
     name = "ExpressionLanguageInjection",
     srcs = [
         "ExpressionLanguageInjection.java",
-        "InsecureEmailValidator.java",
     ],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
     target_class = "com.example.ExpressionLanguageInjection",
     # The reproducer can't find jaz.Zer and thus doesn't crash.
     verify_crash_reproducer = False,
     deps = [
-        "@maven//:javax_el_javax_el_api",
+        "//sanitizers/src/test/java/com/example/el:ExpressionLanguageExample",
         "@maven//:javax_validation_validation_api",
-        "@maven//:javax_xml_bind_jaxb_api",
-        "@maven//:org_glassfish_javax_el",
-        "@maven//:org_hibernate_hibernate_validator",
     ],
 )
 

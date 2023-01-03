@@ -1,0 +1,15 @@
+java_library(
+    name = "ExpressionLanguageExample",
+    srcs = [
+        "InsecureEmailValidator.java",
+        "UserData.java",
+    ],
+    visibility = ["//sanitizers/src/test/java/com/example:__pkg__"],
+    deps = [
+        "@maven//:javax_el_javax_el_api",
+        "@maven//:javax_validation_validation_api",
+        "@maven//:javax_xml_bind_jaxb_api",
+        "@maven//:org_glassfish_javax_el",
+        "@maven//:org_hibernate_hibernate_validator",
+    ],
+)
