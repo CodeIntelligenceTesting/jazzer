@@ -56,11 +56,12 @@ public class AutofuzzTest {
     assumeFalse(System.getenv("JAZZER_FUZZ").isEmpty());
 
     Path baseDir = temp.getRoot().toPath();
-    // Create a fake test resource directory structure with an inputs directory to verify that
-    // Jazzer uses it and emits a crash file into it.
-    Path inputsDirectory = baseDir.resolve(
-        Paths.get("src", "test", "resources", "com", "example", "AutofuzzFuzzTestInputs"));
-    Files.createDirectories(inputsDirectory);
+    // Create a fake test resource directory structure to verify that Jazzer uses it and emits a
+    // crash file into it.
+    Path testResourceDir = baseDir.resolve("src").resolve("test").resolve("resources");
+    Files.createDirectories(testResourceDir);
+    Path inputsDirectory =
+        testResourceDir.resolve("com").resolve("example").resolve("AutofuzzFuzzTestInputs");
 
     EngineExecutionResults results =
         EngineTestKit.engine("junit-jupiter")
@@ -78,8 +79,6 @@ public class AutofuzzTest {
     results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(engine)),
         event(type(STARTED), container(uniqueIdSubstrings(engine, clazz))),
         event(type(STARTED), container(uniqueIdSubstrings(engine, clazz, autofuzz))),
-        // No seed corpus.
-        event(type(REPORTING_ENTRY_PUBLISHED)),
         event(type(FINISHED), container(uniqueIdSubstrings(engine, clazz, autofuzz)),
             finishedSuccessfully()),
         event(type(FINISHED), container(uniqueIdSubstrings(engine, clazz)), finishedSuccessfully()),
@@ -92,11 +91,12 @@ public class AutofuzzTest {
         event(type(FINISHED), test(uniqueIdSubstrings(engine, clazz, autofuzz, invocation)),
             displayName("Fuzzing..."), finishedWithFailure(instanceOf(RuntimeException.class))));
 
-    // Should crash on an input that contains "jazzer", with the crash emitted into the base
-    // directory since there is no seed corpus.
+    // Should crash on an input that contains "jazzer", with the crash emitted into the
+    // automatically created inputs directory.
     Path crashingInput;
-    try (Stream<Path> crashFiles = Files.list(baseDir).filter(
-             path -> path.getFileName().toString().startsWith("crash-"))) {
+    try (Stream<Path> crashFiles =
+             Files.list(inputsDirectory)
+                 .filter(path -> path.getFileName().toString().startsWith("crash-"))) {
       List<Path> crashFilesList = crashFiles.collect(Collectors.toList());
       assertWithMessage("Expected crashing input in " + baseDir).that(crashFilesList).hasSize(1);
       crashingInput = crashFilesList.get(0);
@@ -104,14 +104,14 @@ public class AutofuzzTest {
     assertThat(new String(Files.readAllBytes(crashingInput), StandardCharsets.UTF_8))
         .contains("jazzer");
 
-    try (Stream<Path> seeds = Files.list(inputsDirectory)) {
+    try (Stream<Path> seeds = Files.list(baseDir).filter(Files::isRegularFile)) {
       assertThat(seeds).isEmpty();
     }
 
     // Verify that the engine created the generated corpus directory. Since the crash was not found
     // on a seed, it should not be empty.
     Path generatedCorpus =
-        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.AutofuzzFuzzTest"));
+        baseDir.resolve(".cifuzz-corpus").resolve("com.example.AutofuzzFuzzTest");
     assertThat(Files.isDirectory(generatedCorpus)).isTrue();
     try (Stream<Path> entries = Files.list(generatedCorpus)) {
       assertThat(entries).isNotEmpty();

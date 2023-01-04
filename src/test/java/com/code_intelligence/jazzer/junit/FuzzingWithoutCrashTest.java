@@ -84,7 +84,10 @@ public class FuzzingWithoutCrashTest {
     results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
         event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
         event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        // Warning because the seed corpus directory hasn't been found.
+        // Warning because the inputs directory hasn't been found in the source tree.
+        event(type(REPORTING_ENTRY_PUBLISHED),
+            container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+        // Warning because the inputs directory has been found on the classpath, but only in a JAR.
         event(type(REPORTING_ENTRY_PUBLISHED),
             container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
         event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ)),
