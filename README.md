@@ -59,6 +59,7 @@ After a few seconds, Jazzer should trigger an `AssertionError`, reproducing a bu
 The following steps assume that JUnit 5 is set up for your project, for example based on the official [junit5-samples](https://github.com/junit-team/junit5-samples).
 
 1. Add a dependency on `com.code-intelligence:jazzer-junit:<latest version>`.
+   All Jazzer Maven artifacts are signed with [this key](deploy/maven.pub).
 2. Add a new *fuzz test* to a new or existing test class: a method annotated with [`@FuzzTest`](https://codeintelligencetesting.github.io/jazzer-docs/jazzer-junit/com/code_intelligence/jazzer/junit/FuzzTest.html) and at least one parameter.
    Using a single parameter of type [`FuzzedDataProvider`](https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/com/code_intelligence/jazzer/api/FuzzedDataProvider.html), which provides utility functions to produce commonly used Java values, or `byte[]` is recommended for optimal performance and reproducibility of findings.
 3. Assuming your test class is called `com.example.MyFuzzTests`, create the *inputs directory* `src/test/resources/com/example/MyFuzzTestsInputs`.
