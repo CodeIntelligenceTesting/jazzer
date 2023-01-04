@@ -202,7 +202,7 @@ public class Meta {
         Arrays.stream(arguments).map(Meta::deepToString).collect(Collectors.joining(", ")));
   }
 
-  private static Class<?> getRawType(Type genericType) {
+  static Class<?> getRawType(Type genericType) {
     if (genericType instanceof Class<?>) {
       return (Class<?>) genericType;
     } else if (genericType instanceof ParameterizedType) {
@@ -213,8 +213,9 @@ public class Meta {
     } else if (genericType instanceof TypeVariable<?>) {
       throw new AutofuzzError("Did not expect genericType to be a TypeVariable: " + genericType);
     } else if (genericType instanceof GenericArrayType) {
-      // TODO: Improve this;
-      return Object[].class;
+      return Array
+          .newInstance(getRawType(((GenericArrayType) genericType).getGenericComponentType()), 0)
+          .getClass();
     } else {
       throw new AutofuzzError("Got unexpected class implementing Type: " + genericType);
     }

@@ -195,6 +195,18 @@ public class MetaTest {
             (byte) 1, // do not return null
             0 /* first (and only) constructor*/));
   }
+
+  Class<?>[] returnsClassArray() {
+    throw new IllegalStateException(
+        "Should not be called, only exists to construct its generic return type");
+  }
+
+  @Test
+  public void testGetRawType() throws NoSuchMethodException {
+    Type classArrayType =
+        MetaTest.class.getDeclaredMethod("returnsClassArray").getGenericReturnType();
+    assertEquals(Class[].class, Meta.getRawType(classArrayType));
+  }
 }
 
 class OpinionatedClass {
