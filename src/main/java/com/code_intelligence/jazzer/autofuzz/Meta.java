@@ -328,43 +328,51 @@ public class Meta {
     Class<?> type = getRawType(genericType);
     if (type == byte.class || type == Byte.class) {
       byte result = data.consumeByte();
-      if (visitor != null)
+      if (visitor != null) {
         visitor.pushElement(String.format("(byte) %s", result));
+      }
       return result;
     } else if (type == short.class || type == Short.class) {
       short result = data.consumeShort();
-      if (visitor != null)
+      if (visitor != null) {
         visitor.pushElement(String.format("(short) %s", result));
+      }
       return result;
     } else if (type == int.class || type == Integer.class) {
       int result = data.consumeInt();
-      if (visitor != null)
+      if (visitor != null) {
         visitor.pushElement(Integer.toString(result));
+      }
       return result;
     } else if (type == long.class || type == Long.class) {
       long result = data.consumeLong();
-      if (visitor != null)
+      if (visitor != null) {
         visitor.pushElement(String.format("%sL", result));
+      }
       return result;
     } else if (type == float.class || type == Float.class) {
       float result = data.consumeFloat();
-      if (visitor != null)
+      if (visitor != null) {
         visitor.pushElement(String.format("%sF", result));
+      }
       return result;
     } else if (type == double.class || type == Double.class) {
       double result = data.consumeDouble();
-      if (visitor != null)
+      if (visitor != null) {
         visitor.pushElement(Double.toString(result));
+      }
       return result;
     } else if (type == boolean.class || type == Boolean.class) {
       boolean result = data.consumeBoolean();
-      if (visitor != null)
+      if (visitor != null) {
         visitor.pushElement(Boolean.toString(result));
+      }
       return result;
     } else if (type == char.class || type == Character.class) {
       char result = data.consumeChar();
-      if (visitor != null)
+      if (visitor != null) {
         visitor.addCharLiteral(result);
+      }
       return result;
     }
     // Sometimes, but rarely return null for non-primitive and non-boxed types.
@@ -383,8 +391,9 @@ public class Meta {
     }
     if (type == String.class || type == CharSequence.class) {
       String result = data.consumeString(consumeArrayLength(data, 1));
-      if (visitor != null)
+      if (visitor != null) {
         visitor.addStringLiteral(result);
+      }
       return result;
     } else if (type.isArray()) {
       if (type == byte[].class) {
@@ -525,8 +534,9 @@ public class Meta {
       }
       return enumValue;
     } else if (type == Class.class) {
-      if (visitor != null)
+      if (visitor != null) {
         visitor.pushElement(String.format("%s.class", YourAverageJavaClass.class.getName()));
+      }
       return YourAverageJavaClass.class;
     } else if (type == Method.class) {
       if (visitor != null) {
@@ -716,7 +726,7 @@ public class Meta {
     Object[] result;
     try {
       result = Arrays.stream(executable.getGenericParameterTypes())
-                   .map((type) -> consume(data, type, visitor))
+                   .map(type -> consume(data, type, visitor))
                    .toArray();
       return result;
     } catch (AutofuzzConstructionException e) {
