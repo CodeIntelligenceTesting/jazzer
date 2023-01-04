@@ -183,14 +183,23 @@ public class Meta {
     return bytesToSpend / Math.max(sizeOfElement, 1);
   }
 
+  private static String deepToString(Object obj) {
+    if (obj == null) {
+      return "null";
+    }
+    if (obj.getClass().isArray()) {
+      return String.format("(%s[]) %s", obj.getClass().getComponentType().getName(),
+          Arrays.deepToString((Object[]) obj));
+    }
+    return obj.toString();
+  }
+
   private static String getDebugSummary(
       Executable executable, Object thisObject, Object[] arguments) {
     return String.format("%nMethod: %s::%s%s%nthis: %s%nArguments: %s",
         executable.getDeclaringClass().getName(), executable.getName(),
         Utils.getReadableDescriptor(executable), thisObject,
-        Arrays.stream(arguments)
-            .map(arg -> arg == null ? "null" : arg.toString())
-            .collect(Collectors.joining(", ")));
+        Arrays.stream(arguments).map(Meta::deepToString).collect(Collectors.joining(", ")));
   }
 
   private static Class<?> getRawType(Type genericType) {
