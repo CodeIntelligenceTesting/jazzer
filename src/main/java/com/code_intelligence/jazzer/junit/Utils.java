@@ -36,6 +36,7 @@ class Utils {
 
   /**
    * Returns the file system path of the inputs corpus directory in the source tree, if it exists.
+   * The directory is created if it does not exist, but the test resource directory itself exists.
    */
   static Optional<Path> inputsDirectorySourcePath(Class<?> testClass, Path baseDir) {
     String inputsResourcePath = Utils.inputsDirectoryResourcePath(testClass);
@@ -48,11 +49,21 @@ class Utils {
     // Following the Maven directory layout, we look up the inputs directory under
     // src/test/resources. This should be correct also for multi-module projects as JUnit is usually
     // launched in the current module's root directory.
-    Path sourceInputsDirectory = baseDir.resolve(
-        ("src/test/resources" + inputsResourcePath).replace('/', File.separatorChar));
+    Path testResourcesDirectory = baseDir.resolve("src").resolve("test").resolve("resources");
+    Path sourceInputsDirectory = testResourcesDirectory;
+    for (String segment : inputsResourcePath.split("/")) {
+      sourceInputsDirectory = sourceInputsDirectory.resolve(segment);
+    }
     if (Files.isDirectory(sourceInputsDirectory)) {
       return Optional.of(sourceInputsDirectory);
-    } else {
+    }
+    // If we can at least find the test resource directory, create the inputs directory.
+    if (!Files.isDirectory(testResourcesDirectory)) {
+      return Optional.empty();
+    }
+    try {
+      return Optional.of(Files.createDirectories(sourceInputsDirectory));
+    } catch (Exception e) {
       return Optional.empty();
     }
   }
