@@ -52,7 +52,17 @@ See [check-formatting.yml](.github/workflows/check-formatting.yml) for how to ob
 
 ## Releasing (CI employees only)
 
-Requires an accounts on [Sonatype](https://issues.sonatype.org) with access to the `com.code-intelligence` group as well as a YubiKey with the signing key.
+Requires an account on [Sonatype](https://issues.sonatype.org) with access to the `com.code-intelligence` group as well as a YubiKey with the signing key.
+
+### One-time setup
+
+1. Install GPG prerequisites via `sudo apt-get install gnupg2 gnupg-agent scdaemon pcscd`.
+2. Execute `mkdir -p ~/.gnupg && echo use-agent >> ~/.gnupg/gpg.conf` to enable GPG's smart card support.
+3. Execute `cat deploy/maven.pub | gpg --import` to import the public key used for Maven signatures
+4. Plug in the YubiKey and execute `gpg --card-status` to generate a key stub.
+   If you see a `No such device` error, retry after executing `killall gpg-agent; killall pcscd` to remove existing locks on the YubiKey.
+
+### Per release
 
 1. Update `JAZZER_VERSION` in [`maven.bzl`](maven.bzl).
 2. Create a release, using the auto-generated changelog as a base for the release notes.
