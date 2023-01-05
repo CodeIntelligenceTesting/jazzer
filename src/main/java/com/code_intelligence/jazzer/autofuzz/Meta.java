@@ -290,6 +290,38 @@ public class Meta {
     }
   }
 
+  Object autofuzzForConsume(
+      FuzzedDataProvider data, Constructor<?> constructor, AutofuzzCodegenVisitor visitor) {
+    try {
+      return autofuzz(data, constructor, visitor);
+    } catch (AutofuzzConstructionException e) {
+      // Do not nest AutofuzzConstructionExceptions.
+      throw e;
+    } catch (AutofuzzInvocationException e) {
+      // If an invocation fails during consume and thus while trying to construct a valid object,
+      // the exception should not be reported as a finding, so we rewrap it.
+      throw new AutofuzzConstructionException(e.getCause());
+    } catch (Throwable t) {
+      throw new AutofuzzConstructionException(t);
+    }
+  }
+
+  Object autofuzzForConsume(
+      FuzzedDataProvider data, Method method, Object thisObject, AutofuzzCodegenVisitor visitor) {
+    try {
+      return autofuzz(data, method, thisObject, visitor);
+    } catch (AutofuzzConstructionException e) {
+      // Do not nest AutofuzzConstructionExceptions.
+      throw e;
+    } catch (AutofuzzInvocationException e) {
+      // If an invocation fails during consume and thus while trying to construct a valid object,
+      // the exception should not be reported as a finding, so we rewrap it.
+      throw new AutofuzzConstructionException(e.getCause());
+    } catch (Throwable t) {
+      throw new AutofuzzConstructionException(t);
+    }
+  }
+
   public <R> R autofuzz(FuzzedDataProvider data, Constructor<R> constructor) {
     return autofuzz(data, constructor, null);
   }
@@ -609,14 +641,14 @@ public class Meta {
             String.format("; %s.", uniqueVariableName),
             String.format("; return %s;})).get()", uniqueVariableName));
       }
-      Object obj = autofuzz(data, constructor, visitor);
+      Object obj = autofuzzForConsume(data, constructor, visitor);
       if (applySetters) {
         List<Method> potentialSetters = getPotentialSetters(type);
         if (!potentialSetters.isEmpty()) {
           List<Method> pickedSetters =
               data.pickValues(potentialSetters, data.consumeInt(0, potentialSetters.size()));
           for (Method setter : pickedSetters) {
-            autofuzz(data, setter, obj, visitor);
+            autofuzzForConsume(data, setter, obj, visitor);
           }
         }
         if (visitor != null) {
@@ -644,14 +676,14 @@ public class Meta {
         // Group for the chain of builder methods.
         visitor.pushGroup("", ".", "");
       }
-      Object builderObj =
-          autofuzz(data, data.pickValue(lookup.getAccessibleConstructors(pickedBuilder)), visitor);
+      Object builderObj = autofuzzForConsume(
+          data, data.pickValue(lookup.getAccessibleConstructors(pickedBuilder)), visitor);
       for (Method method : pickedMethods) {
-        builderObj = autofuzz(data, method, builderObj, visitor);
+        builderObj = autofuzzForConsume(data, method, builderObj, visitor);
       }
 
       try {
-        Object obj = autofuzz(data, builderMethod, builderObj, visitor);
+        Object obj = autofuzzForConsume(data, builderMethod, builderObj, visitor);
         if (visitor != null) {
           visitor.popGroup();
         }

@@ -346,3 +346,21 @@ java_fuzz_target_test(
     target_class = "com.example.TimeoutFuzzer",
     verify_crash_reproducer = False,
 )
+
+java_library(
+    name = "autofuzz_crashing_setter_target",
+    srcs = ["src/test/java/com/example/AutofuzzCrashingSetterTarget.java"],
+)
+
+# Regression test for https://github.com/CodeIntelligenceTesting/jazzer/issues/586.
+java_fuzz_target_test(
+    name = "AutofuzzCrashingSetterFuzzer",
+    fuzzer_args = [
+        "--autofuzz=com.example.AutofuzzCrashingSetterTarget::start",
+        "--autofuzz_ignore=java.lang.NullPointerException",
+        "-runs=100000",
+    ],
+    runtime_deps = [
+        ":autofuzz_crashing_setter_target",
+    ],
+)
