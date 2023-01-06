@@ -364,3 +364,20 @@ java_fuzz_target_test(
         ":autofuzz_crashing_setter_target",
     ],
 )
+
+java_library(
+    name = "autofuzz_assertion_error_target",
+    srcs = ["src/test/java/com/example/AutofuzzAssertionErrorTarget.java"],
+)
+
+# Regression test for https://github.com/CodeIntelligenceTesting/jazzer/issues/589.
+java_fuzz_target_test(
+    name = "AutofuzzAssertionError",
+    allowed_findings = ["java.lang.AssertionError"],
+    fuzzer_args = [
+        "--autofuzz=com.example.AutofuzzAssertionErrorTarget::autofuzz",
+    ],
+    runtime_deps = [
+        ":autofuzz_assertion_error_target",
+    ],
+)
