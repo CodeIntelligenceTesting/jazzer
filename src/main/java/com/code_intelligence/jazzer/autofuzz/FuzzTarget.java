@@ -88,8 +88,7 @@ public final class FuzzTarget {
     String targetClassName = className;
     do {
       try {
-        // Explicitly invoking static initializers to trigger some coverage in the code.
-        targetClassTemp = Class.forName(targetClassName, true, ClassLoader.getSystemClassLoader());
+        targetClassTemp = Class.forName(targetClassName);
       } catch (ClassNotFoundException e) {
         int classSeparatorIndex = targetClassName.lastIndexOf(".");
         if (classSeparatorIndex == -1) {
