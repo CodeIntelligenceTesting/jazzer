@@ -2,7 +2,7 @@
 # doesn't support toolchain resolution yet and instead transitions on --cpu.
 flags:
   --cpu=darwin_x86_64
-    //:macos_x86_64
+    //bazel/platforms:macos_x86_64
 
   --cpu=darwin_arm64
-    //:macos_arm64
+    //bazel/platforms:macos_arm64

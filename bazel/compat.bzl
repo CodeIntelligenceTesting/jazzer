@@ -29,8 +29,8 @@ LINUX_ONLY = select({
 
 MULTI_PLATFORM = select({
     "@platforms//os:macos": [
-        "//:macos_arm64",
-        "//:macos_x86_64",
+        "//bazel/platforms:macos_arm64",
+        "//bazel/platforms:macos_x86_64",
     ],
     "//conditions:default": [],
 })
