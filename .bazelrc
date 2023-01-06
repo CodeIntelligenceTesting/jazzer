@@ -38,7 +38,7 @@ run:windows --noincompatible_strict_action_env
 # macOS
 # Workaround for https://github.com/bazelbuild/bazel/issues/13944, which breaks external Java
 # dependencies on M1 Macs without Rosetta.
-build:macos --extra_toolchains=//:java_non_prebuilt_definition
+build:macos --extra_toolchains=//bazel/toolchains:java_non_prebuilt_definition
 build:macos --java_runtime_version=11
 build:macos --tool_java_runtime_version=11
 
