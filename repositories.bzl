@@ -47,6 +47,15 @@ def jazzer_dependencies():
 
     maybe(
         http_archive,
+        name = "rules_jvm_external",
+        sha256 = "6ebe13d95fc5549cc32b27d41c907426b16464c5aae893a163c7fe0c9051ec1d",
+        # TODO: Return to the next release.
+        strip_prefix = "rules_jvm_external-90280783fa4e74439b88191acafd99232ada61aa",
+        url = "https://github.com/bazelbuild/rules_jvm_external/archive/90280783fa4e74439b88191acafd99232ada61aa.tar.gz",
+    )
+
+    maybe(
+        http_archive,
         name = "build_bazel_apple_support",
         sha256 = "2e3dc4d0000e8c2f5782ea7bb53162f37c485b5d8dc62bb3d7d7fc7c276f0d00",
         url = "https://github.com/bazelbuild/apple_support/releases/download/1.3.2/apple_support.1.3.2.tar.gz",
@@ -120,6 +129,13 @@ def jazzer_dependencies():
         name = "org_ow2_asm_asm_tree",
         sha256 = "c42d479cf24566a21eb20af7eeaeef4e86bdb4a886306cf72f483b65e75b2acf",
         url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-tree/9.4/asm-tree-9.4.jar",
+    )
+
+    maybe(
+        http_jar,
+        name = "com_github_jsqlparser_jsqlparser",
+        sha256 = "aed9ce32d0b35ea2a61c0fc418ba472a8e7d9789f026782310c9788a061fa9dc",
+        url = "https://repo1.maven.org/maven2/com/github/jsqlparser/jsqlparser/4.5/jsqlparser-4.5.jar",
     )
 
     maybe(
