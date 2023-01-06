@@ -1,4 +1,3 @@
-load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
 load("@bazel_tools//tools/jdk:default_java_toolchain.bzl", "NONPREBUILT_TOOLCHAIN_CONFIGURATION", "default_java_toolchain")
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "define_kt_toolchain")
 load("@io_bazel_rules_kotlin//kotlin/internal:opts.bzl", "kt_javac_options", "kt_kotlinc_options")
@@ -44,25 +43,6 @@ pkg_tar(
 alias(
     name = "jazzer",
     actual = "//launcher:jazzer",
-)
-
-exports_files([
-    "jazzer-api.pom",
-])
-
-config_setting(
-    name = "clang",
-    flag_values = {"@bazel_tools//tools/cpp:compiler": "clang"},
-    visibility = ["//visibility:public"],
-)
-
-alias(
-    name = "clang_on_linux",
-    actual = select({
-        ":clang": "@platforms//os:linux",
-        "//conditions:default": ":clang",
-    }),
-    visibility = ["//visibility:public"],
 )
 
 platform(
