@@ -25,7 +25,7 @@ def jazzer_init():
     bazel_skylib_workspace()
     kt_download_local_dev_dependencies()
     kotlin_repositories()
-    native.register_toolchains("@jazzer//:kotlin_toolchain")
+    native.register_toolchains("@jazzer//bazel/toolchains:kotlin_toolchain")
     jar_jar_repositories()
     rules_jni_dependencies()
     apple_support_dependencies()
