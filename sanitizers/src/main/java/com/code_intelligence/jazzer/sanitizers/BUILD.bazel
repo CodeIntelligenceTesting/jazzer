@@ -17,7 +17,7 @@ java_library(
     srcs = ["SqlInjection.java"],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
-        "@maven//:com_github_jsqlparser_jsqlparser",
+        "@com_github_jsqlparser_jsqlparser//jar",
     ],
 )
 

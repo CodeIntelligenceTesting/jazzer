@@ -27,7 +27,6 @@ MAVEN_ARTIFACTS = [
     "com.fasterxml.jackson.core:jackson-core:2.12.1",
     "com.fasterxml.jackson.core:jackson-databind:2.12.1",
     "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.12.1",
-    "com.github.jsqlparser:jsqlparser:4.4",  # for SQL validation
     "com.google.code.gson:gson:2.8.6",
     "com.google.truth:truth:1.1.3",
     "com.google.truth.extensions:truth-java8-extension:1.1.3",
