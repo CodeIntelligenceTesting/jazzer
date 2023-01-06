@@ -39,9 +39,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class FuzzTarget {
-  private static final String AUTOFUZZ_REPRODUCER_TEMPLATE = "public class Crash_%s {\n"
+  private static final String AUTOFUZZ_REPRODUCER_TEMPLATE = "public class Crash_%1$s {\n"
       + "  public static void main(String[] args) throws Throwable {\n"
-      + "    %s;\n"
+      + "    Crash_%1$s.class.getClassLoader().setDefaultAssertionStatus(true);\n"
+      + "    %2$s;\n"
       + "  }\n"
       + "}";
   private static final long MAX_EXECUTIONS_WITHOUT_INVOCATION = 100;
