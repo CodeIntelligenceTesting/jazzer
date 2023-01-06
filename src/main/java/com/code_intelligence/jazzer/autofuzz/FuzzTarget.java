@@ -96,7 +96,6 @@ public final class FuzzTarget {
               "Failed to find class %s for autofuzz, please ensure it is contained in the classpath "
                   + "specified with --cp and specify the full package name%n",
               className);
-          e.printStackTrace();
           System.exit(1);
           return;
         }
