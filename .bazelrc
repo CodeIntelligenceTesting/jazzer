@@ -10,6 +10,9 @@ build -c opt
 #  https://github.com/bazelbuild/bazel/pull/16973 has been merged.
 build:linux --nozip_undeclared_test_outputs
 build:macos --nozip_undeclared_test_outputs
+# Improve caching for builds involving multiple configurations and work around
+# the Bazel issue fixed by https://github.com/bazelbuild/bazel/pull/17158.
+build --experimental_output_directory_naming_scheme=diff_against_baseline
 
 # C/C++
 # GCC is supported on a best-effort basis.
