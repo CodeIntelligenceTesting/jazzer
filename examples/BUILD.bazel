@@ -373,6 +373,28 @@ java_fuzz_target_test(
     runtime_deps = [":ExampleKotlinFuzzTarget"],
 )
 
+kt_jvm_library(
+    name = "ExampleKotlinValueProfileFuzzTarget",
+    srcs = [
+        "src/main/java/com/example/ExampleKotlinValueProfileFuzzer.kt",
+    ],
+    deps = [
+        "//deploy:jazzer-api",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "ExampleKotlinValueProfileFuzzer",
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
+    ],
+    fuzzer_args = [
+        "-use_value_profile=1",
+    ],
+    target_class = "com.example.ExampleKotlinValueProfileFuzzer",
+    runtime_deps = [":ExampleKotlinValueProfileFuzzTarget"],
+)
+
 java_fuzz_target_test(
     name = "TurboJpegFuzzer",
     srcs = [
