@@ -33,8 +33,10 @@ final public class TraceCmpHooks {
       targetMethod = "compare", targetMethodDescriptor = "(II)I")
   @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Integer",
       targetMethod = "compareUnsigned", targetMethodDescriptor = "(II)I")
+  @MethodHook(type = HookType.BEFORE, targetClassName = "kotlin.jvm.internal.Intrinsics ",
+      targetMethod = "compare", targetMethodDescriptor = "(II)I")
   public static void
-  integerCompare(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+  integerCompare(MethodHandle method, Object alwaysNull, Object[] arguments, int hookId) {
     TraceDataFlowNativeCallbacks.traceCmpInt((int) arguments[0], (int) arguments[1], hookId);
   }
 
@@ -63,6 +65,13 @@ final public class TraceCmpHooks {
   public static void
   longCompareTo(MethodHandle method, Long thisObject, Object[] arguments, int hookId) {
     TraceDataFlowNativeCallbacks.traceCmpLong(thisObject, (long) arguments[0], hookId);
+  }
+
+  @MethodHook(type = HookType.BEFORE, targetClassName = "kotlin.jvm.internal.Intrinsics ",
+      targetMethod = "compare", targetMethodDescriptor = "(JJ)I")
+  public static void
+  longCompareKt(MethodHandle method, Object alwaysNull, Object[] arguments, int hookId) {
+    TraceDataFlowNativeCallbacks.traceCmpLong((long) arguments[0], (long) arguments[1], hookId);
   }
 
   @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.String", targetMethod = "equals")
