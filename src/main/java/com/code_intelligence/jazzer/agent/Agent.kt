@@ -29,25 +29,35 @@ import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
 fun install(instrumentation: Instrumentation) {
-    val manifestCustomHookNames =
-        ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES).flatMap {
-            it.split(':')
-        }.filter { it.isNotBlank() }
-    val allCustomHookNames = (Constants.SANITIZER_HOOK_NAMES + manifestCustomHookNames + Opt.customHooks).toSet()
+    installInternal(instrumentation)
+}
+
+fun installInternal(
+    instrumentation: Instrumentation,
+    userHookNames: List<String> = findManifestCustomHookNames() + Opt.customHooks,
+    disabledHookNames: List<String> = Opt.disabledHooks,
+    instrumentationIncludes: List<String> = Opt.instrumentationIncludes,
+    instrumentationExcludes: List<String> = Opt.instrumentationExcludes,
+    customHookIncludes: List<String> = Opt.customHookIncludes,
+    customHookExcludes: List<String> = Opt.customHookExcludes,
+    trace: List<String> = Opt.trace,
+    idSyncFile: String? = Opt.idSyncFile,
+    dumpClassesDir: String = Opt.dumpClassesDir,
+) {
+    val allCustomHookNames = (Constants.SANITIZER_HOOK_NAMES + userHookNames).toSet()
     check(allCustomHookNames.isNotEmpty()) { "No hooks registered; expected at least the built-in hooks" }
-    val disabledCustomHookNames = Opt.disabledHooks.toSet()
-    val customHookNames = allCustomHookNames - disabledCustomHookNames
+    val customHookNames = allCustomHookNames - disabledHookNames.toSet()
     val disabledCustomHooksToPrint = allCustomHookNames - customHookNames.toSet()
     if (disabledCustomHooksToPrint.isNotEmpty()) {
         println("INFO: Not using the following disabled hooks: ${disabledCustomHooksToPrint.joinToString(", ")}")
     }
 
-    val classNameGlobber = ClassNameGlobber(Opt.instrumentationIncludes, Opt.instrumentationExcludes + customHookNames)
+    val classNameGlobber = ClassNameGlobber(instrumentationIncludes, instrumentationExcludes + customHookNames)
     CoverageRecorder.classNameGlobber = classNameGlobber
-    val customHookClassNameGlobber = ClassNameGlobber(Opt.customHookIncludes, Opt.customHookExcludes + customHookNames)
+    val customHookClassNameGlobber = ClassNameGlobber(customHookIncludes, customHookExcludes + customHookNames)
     // FIXME: Setting trace to the empty string explicitly results in all rather than no trace types
     //  being applied - this is unintuitive.
-    val instrumentationTypes = (Opt.trace.takeIf { it.isNotEmpty() } ?: listOf("all")).flatMap {
+    val instrumentationTypes = (trace.takeIf { it.isNotEmpty() } ?: listOf("all")).flatMap {
         when (it) {
             "cmp" -> setOf(InstrumentationType.CMP)
             "cov" -> setOf(InstrumentationType.COV)
@@ -66,12 +76,12 @@ fun install(instrumentation: Instrumentation) {
             }
         }
     }.toSet()
-    val idSyncFile = Opt.idSyncFile?.takeUnless { it.isEmpty() }?.let {
+    val idSyncFilePath = idSyncFile?.takeUnless { it.isEmpty() }?.let {
         Paths.get(it).also { path ->
             println("INFO: Synchronizing coverage IDs in ${path.toAbsolutePath()}")
         }
     }
-    val dumpClassesDir = Opt.dumpClassesDir.takeUnless { it.isEmpty() }?.let {
+    val dumpClassesDirPath = dumpClassesDir.takeUnless { it.isEmpty() }?.let {
         Paths.get(it).toAbsolutePath().also { path ->
             if (path.exists() && path.isDirectory()) {
                 println("INFO: Dumping instrumented classes into $path")
@@ -90,8 +100,8 @@ fun install(instrumentation: Instrumentation) {
                 else -> null
             }
         }
-    val coverageIdSynchronizer = if (idSyncFile != null) {
-        FileSyncCoverageIdStrategy(idSyncFile)
+    val coverageIdSynchronizer = if (idSyncFilePath != null) {
+        FileSyncCoverageIdStrategy(idSyncFilePath)
     } else {
         MemSyncCoverageIdStrategy()
     }
@@ -113,7 +123,7 @@ fun install(instrumentation: Instrumentation) {
         customHooks.hooks,
         customHooks.additionalHookClassNameGlobber,
         coverageIdSynchronizer,
-        dumpClassesDir,
+        dumpClassesDirPath,
     )
 
     // These classes are e.g. dependencies of the RuntimeInstrumentor or hooks and thus were loaded
@@ -141,3 +151,7 @@ fun install(instrumentation: Instrumentation) {
         }
     }
 }
+
+private fun findManifestCustomHookNames() = ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES)
+    .flatMap { it.split(':') }
+    .filter { it.isNotBlank() }
