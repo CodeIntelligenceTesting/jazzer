@@ -17,6 +17,7 @@ kt_jvm_library(
     name = "agent_lib",
     srcs = [
         "Agent.kt",
+        "AgentUtils.java",
         "CoverageIdStrategy.kt",
         "RuntimeInstrumentor.kt",
     ],
