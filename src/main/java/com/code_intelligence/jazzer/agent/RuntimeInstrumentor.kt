@@ -62,9 +62,7 @@ class RuntimeInstrumentor(
             if (internalClassName.startsWith("com/code_intelligence/jazzer/")) {
                 return null
             }
-            // Workaround for a JDK bug (filed as 9074562, similar to
-            // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8228604) still present in JDK 19:
-            //
+            // Workaround for a JDK bug (http://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8299798):
             // When retransforming a class in the Java standard library, the provided classfileBuffer does not contain
             // any StackMapTable attributes. Our transformations require stack map frames to calculate the number of
             // local variables and stack slots as well as when adding control flow.
