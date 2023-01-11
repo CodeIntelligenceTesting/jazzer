@@ -78,6 +78,8 @@ final public class Autofuzz {
     } catch (NoSuchMethodException | IllegalAccessException e) {
       // This should never happen as the Jazzer API is loaded from the agent and thus should always
       // match the version of the runtime classes.
+      // Does not use the Log class as it is unlikely it can be loaded if the Autofuzz classes
+      // couldn't be loaded.
       System.err.println("ERROR: Incompatible version of the Jazzer API detected, please update.");
       e.printStackTrace();
       System.exit(1);
