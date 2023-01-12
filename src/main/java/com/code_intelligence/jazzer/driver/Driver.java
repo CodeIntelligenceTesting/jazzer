@@ -25,9 +25,7 @@ import java.security.SecureRandom;
 import java.util.List;
 
 public class Driver {
-  public static int start(List<String> args) throws IOException {
-    final boolean spawnsSubprocesses = args.stream().anyMatch(
-        arg -> arg.startsWith("-fork=") || arg.startsWith("-jobs=") || arg.startsWith("-merge="));
+  public static int start(List<String> args, boolean spawnsSubprocesses) throws IOException {
     if (spawnsSubprocesses) {
       if (!System.getProperty("jazzer.coverage_report", "").isEmpty()) {
         Log.warn("--coverage_report does not support parallel fuzzing and has been disabled");

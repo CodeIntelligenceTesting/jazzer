@@ -90,9 +90,16 @@ public class Jazzer {
     }
     // No native fuzzing has been requested, fuzz in the current process.
     if (!fuzzNative) {
-      args =
-          Stream.concat(Stream.of(prepareArgv0(new HashMap<>())), args.stream()).collect(toList());
-      exit(Driver.start(args));
+      // We only create a wrapper script if libFuzzer runs in a mode that creates subprocesses.
+      // In LibFuzzer's fork mode, the subprocesses created continously by the main libFuzzer
+      // process do not create further subprocesses. Creating a wrapper script for each subprocess
+      // is an unnecessary overhead.
+      final boolean spawnsSubprocesses = args.stream().anyMatch(
+          arg -> arg.startsWith("-fork=") || arg.startsWith("-jobs=") || arg.startsWith("-merge="));
+      String arg0 = spawnsSubprocesses ? prepareArgv0(new HashMap<>())
+                                       : "unused_report_a_bug_if_you_see_this";
+      args = Stream.concat(Stream.of(arg0), args.stream()).collect(toList());
+      exit(Driver.start(args, spawnsSubprocesses));
     }
 
     if (!isLinux() && !isMacOs()) {
