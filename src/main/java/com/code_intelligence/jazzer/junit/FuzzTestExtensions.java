@@ -42,7 +42,7 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
       invocation.skip();
       Optional<Throwable> throwable = extensionContext.getStore(Namespace.GLOBAL)
                                           .get(FuzzTestExecutor.class, FuzzTestExecutor.class)
-                                          .execute();
+                                          .execute(extensionContext.getRequiredTestInstance());
       if (throwable.isPresent()) {
         throw throwable.get();
       }

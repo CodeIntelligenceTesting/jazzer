@@ -27,6 +27,7 @@ java_library(
     name = "fuzz_target_finder",
     srcs = ["FuzzTargetFinder.java"],
     deps = [
+        ":fuzz_target_instance_holder",
         ":opt",
         "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/utils:manifest_utils",
@@ -34,6 +35,12 @@ java_library(
         "@org_ow2_asm_asm_commons//jar",
         "@org_ow2_asm_asm_tree//jar",
     ],
+)
+
+java_library(
+    name = "fuzz_target_instance_holder",
+    srcs = ["FuzzTargetInstanceHolder.java"],
+    visibility = ["//src/main/java/com/code_intelligence/jazzer/junit:__pkg__"],
 )
 
 java_jni_library(

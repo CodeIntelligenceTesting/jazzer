@@ -117,6 +117,10 @@ class FuzzTargetFinder {
       method = annotatedMethods.get(0);
     }
 
+    // The method may not be accessible - JUnit test classes and methods are usually declared
+    // without access modifiers and thus package-private.
+    method.setAccessible(true);
+
     // The following checks ensure compatibility with the JUnit concept of a test class and test
     // method.
     // https://junit.org/junit5/docs/5.9.0/user-guide/#writing-tests-definitions
@@ -143,28 +147,33 @@ class FuzzTargetFinder {
           parameter.getName(), method.getName(), clazz.getName()));
     }
 
-    if (clazz.getDeclaredConstructors().length != 1) {
-      throw new IllegalArgumentException(String.format(
-          "Classes containing a method annotated with @FuzzTest must declare exactly one constructor, got multiple in %s",
-          clazz.getName()));
+    Callable<Object> newInstance;
+    if (FuzzTargetInstanceHolder.fuzzTargetInstance != null) {
+      // The JUnit executor will set the fuzz target instance before calling into FuzzTargetRunner.
+      newInstance = () -> FuzzTargetInstanceHolder.fuzzTargetInstance;
+    } else {
+      // TODO: All of this code should go away once we use JUnit's launcher to run @FuzzTests.
+      // Use the default constructor to initialize a test class instance.
+      if (clazz.getDeclaredConstructors().length != 1) {
+        throw new IllegalArgumentException(String.format(
+            "Classes containing a method annotated with @FuzzTest must declare exactly one constructor, got multiple in %s",
+            clazz.getName()));
+      }
+      Constructor<?> constructor = clazz.getDeclaredConstructors()[0];
+      // JUnit 5 supports injected constructor parameters, but we don't.
+      if (constructor.getParameterCount() > 0) {
+        throw new IllegalArgumentException(String.format(
+            "The constructor of a class containing a method annotated with @FuzzTest must take no parameters, got a non-zero number in %s",
+            clazz.getName()));
+      }
+      constructor.setAccessible(true);
+      newInstance = constructor::newInstance;
     }
-    Constructor<?> constructor = clazz.getDeclaredConstructors()[0];
-    // JUnit 5 supports injected constructor parameters, but we don't.
-    if (constructor.getParameterCount() > 0) {
-      throw new IllegalArgumentException(String.format(
-          "The constructor of a class containing a method annotated with @FuzzTest must take no parameters, got a non-zero number in %s",
-          clazz.getName()));
-    }
-
-    // Both the constructor and the method may not be accessible - JUnit test classes and methods
-    // are usually declared without access modifiers and thus package-private.
-    method.setAccessible(true);
-    constructor.setAccessible(true);
 
     // TODO: If it should become necessary, implement support for @AfterAll/@AfterEach as
     //  JUnit-idiomatic replacements for fuzzerTearDown.
     return Optional.of(new FuzzTarget(
-        parameter == FuzzedDataProvider.class, method, constructor::newInstance, Optional.empty()));
+        parameter == FuzzedDataProvider.class, method, newInstance, Optional.empty()));
   }
 
   // Finds the traditional static fuzzerTestOneInput fuzz target method.
