@@ -28,7 +28,7 @@ public class DirectoryInputsFuzzTest {
       return;
     }
     if (!firstSeed) {
-      return;
+      throw new IllegalStateException("Should have crashed on the first non-empty input");
     }
     firstSeed = false;
     if (data.consumeRemainingAsString().equals("directory")) {
