@@ -20,6 +20,7 @@ import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath
 import static com.code_intelligence.jazzer.utils.Utils.getReadableDescriptor;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.driver.FuzzTargetInstanceHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import java.io.File;
 import java.io.IOException;
@@ -140,7 +141,8 @@ class FuzzTestExecutor {
     return new FuzzTestExecutor(libFuzzerArgs);
   }
 
-  public Optional<Throwable> execute() {
+  public Optional<Throwable> execute(Object testClassInstance) {
+    FuzzTargetInstanceHolder.fuzzTargetInstance = testClassInstance;
     AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
     FuzzTargetRunner.registerFindingHandler(t -> {
       atomicFinding.set(t);

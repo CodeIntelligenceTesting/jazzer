@@ -26,13 +26,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@ExtendWith(LifecycleFuzzTest.LifecycleInstancePostProcessor.class)
 class LifecycleFuzzTest {
   private static int beforeAllCount = 0;
-  private static int beforeEachCount = 0;
-  private static int afterEachCount = 0;
+  private static int beforeEachGlobalCount = 0;
+  private static int afterEachGlobalCount = 0;
   private static int afterAllCount = 0;
+
+  private boolean beforeEachCalledOnInstance = false;
+  private boolean testInstancePostProcessorCalledOnInstance = false;
 
   @BeforeAll
   static void beforeAll() {
@@ -41,7 +48,8 @@ class LifecycleFuzzTest {
 
   @BeforeEach
   void beforeEach() {
-    beforeEachCount++;
+    beforeEachGlobalCount++;
+    beforeEachCalledOnInstance = true;
   }
 
   @Disabled
@@ -53,22 +61,31 @@ class LifecycleFuzzTest {
   @FuzzTest(maxDuration = "1s")
   void lifecycleFuzz(byte[] data) {
     Assertions.assertEquals(1, beforeAllCount);
-    Assertions.assertEquals(1, beforeEachCount);
-    Assertions.assertEquals(0, afterEachCount);
+    Assertions.assertEquals(1, beforeEachGlobalCount);
+    Assertions.assertEquals(0, afterEachGlobalCount);
+    Assertions.assertTrue(beforeEachCalledOnInstance);
+    Assertions.assertTrue(testInstancePostProcessorCalledOnInstance);
   }
 
   @AfterEach
   void afterEach() {
-    afterEachCount++;
+    afterEachGlobalCount++;
   }
 
   @AfterAll
   static void afterAll() throws IOException {
     afterAllCount++;
     Assertions.assertEquals(1, beforeAllCount);
-    Assertions.assertEquals(1, beforeEachCount);
-    Assertions.assertEquals(1, afterEachCount);
+    Assertions.assertEquals(1, beforeEachGlobalCount);
+    Assertions.assertEquals(1, afterEachGlobalCount);
     Assertions.assertEquals(1, afterAllCount);
     throw new IOException();
+  }
+
+  static class LifecycleInstancePostProcessor implements TestInstancePostProcessor {
+    @Override
+    public void postProcessTestInstance(Object o, ExtensionContext extensionContext) {
+      ((LifecycleFuzzTest) o).testInstancePostProcessorCalledOnInstance = true;
+    }
   }
 }

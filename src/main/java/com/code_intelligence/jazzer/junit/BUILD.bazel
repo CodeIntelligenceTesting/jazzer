@@ -55,6 +55,7 @@ java_jni_library(
     deps = [
         ":utils",
         "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_instance_holder",
         "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner",
         "//src/main/java/com/code_intelligence/jazzer/utils",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
