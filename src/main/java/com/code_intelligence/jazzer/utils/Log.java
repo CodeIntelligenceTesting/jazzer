@@ -87,7 +87,7 @@ public class Log {
     PrintStream err = getErr();
     err.print(prefix);
     if (message != null) {
-      err.print(message + ":\n");
+      err.println(message + (t != null ? ":" : ""));
     }
     if (t != null) {
       t.printStackTrace(err);
