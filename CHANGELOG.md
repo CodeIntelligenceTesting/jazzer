@@ -72,7 +72,7 @@ This release also includes smaller improvements and bugfixes.
 * Feature: `assert` can be used in fuzz targets
 * Feature: Coverage is now collision-free and more fine-grained (based on [JaCoCo](https://www.eclemma.org/jacoco/))
 * API: Added `pickValue(Collection c)` and `consumeChar(char min, char max)` to `FuzzedDataProvider`
-* API: Added `FuzzerSecurityIssue*` exceptions to allow specifiying the severity of findings
+* API: Added `FuzzerSecurityIssue*` exceptions to allow specifying the severity of findings
 
 ## Version 0.9.0
 
