@@ -249,17 +249,34 @@ public class Jazzer {
   }
 
   private static Path findHostClangLibrary(List<String> candidateNames) {
-    return candidateNames.stream()
-        .map(Jazzer::tryFindHostClangLibrary)
-        .filter(Optional::isPresent)
-        .findFirst()
-        .orElseGet(() -> {
-          Log.error(String.format(
-              "'%s' failed to find one of: %s", hostClang(), String.join(", ", candidateNames)));
-          exit(1);
-          throw new IllegalStateException("not reached");
-        })
-        .get();
+    for (String name : candidateNames) {
+      Optional<Path> path = tryFindLibraryInJazzerNativeSanitizersDir(name);
+      if (path.isPresent()) {
+        return path.get();
+      }
+    }
+    for (String name : candidateNames) {
+      Optional<Path> path = tryFindLibraryUsingClang(name);
+      if (path.isPresent()) {
+        return path.get();
+      }
+    }
+    Log.error("Failed to find one of: " + String.join(", ", candidateNames));
+    exit(1);
+    throw new IllegalStateException("not reached");
+  }
+
+  private static Optional<Path> tryFindLibraryInJazzerNativeSanitizersDir(String name) {
+    String nativeSanitizersDir = System.getenv("JAZZER_NATIVE_SANITIZERS_DIR");
+    if (nativeSanitizersDir == null) {
+      return Optional.empty();
+    }
+    Path candidatePath = Paths.get(nativeSanitizersDir, name);
+    if (Files.exists(candidatePath)) {
+      return Optional.of(candidatePath);
+    } else {
+      return Optional.empty();
+    }
   }
 
   /**
@@ -267,7 +284,7 @@ public class Jazzer {
    * installed on the host from clang (or CC, if set). Returns Optional.empty() if clang does not
    * find the library and exits with a message in case of any other error condition.
    */
-  private static Optional<Path> tryFindHostClangLibrary(String name) {
+  private static Optional<Path> tryFindLibraryUsingClang(String name) {
     List<String> command = asList(hostClang(), "--print-file-name", name);
     ProcessBuilder processBuilder = new ProcessBuilder(command);
     byte[] output;

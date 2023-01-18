@@ -131,6 +131,7 @@ The required compilation flags for native libraries are as follows:
 Then, start Jazzer with `--asan` and/or `--ubsan` to automatically preload the sanitizer runtimes.
 Jazzer defaults to using the runtimes associated with `clang` on the `PATH`.
 If you used a different compiler to compile the native libraries, specify it with `CC` to override this default.
+If no compiler is available in your runtime environment (e.g. in OSS-Fuzz) but you have a directory that contains the required sanitier libraries, specify its path in `JAZZER_NATIVE_SANITIZERS_DIR`.
 
 **Note:** On macOS, you may see Gatekeeper warnings when using `--asan` and/or `--ubsan` since these flags cause the native sanitizer libraries to be preloaded into the codesigned `java` executable via `DYLD_INSERT_LIBRARIES`.
 
