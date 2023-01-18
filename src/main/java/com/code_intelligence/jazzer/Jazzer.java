@@ -255,7 +255,7 @@ public class Jazzer {
         .findFirst()
         .orElseGet(() -> {
           Log.error(String.format(
-              "'%s' failed to find one of: %s%n", hostClang(), String.join(", ", candidateNames)));
+              "'%s' failed to find one of: %s", hostClang(), String.join(", ", candidateNames)));
           exit(1);
           throw new IllegalStateException("not reached");
         })
@@ -275,14 +275,14 @@ public class Jazzer {
       Process process = processBuilder.start();
       if (process.waitFor() != 0) {
         Log.error(String.format(
-            "'%s' exited with exit code %d%n", String.join(" ", command), process.exitValue()));
+            "'%s' exited with exit code %d", String.join(" ", command), process.exitValue()));
         copy(process.getInputStream(), System.out);
         copy(process.getErrorStream(), System.err);
         exit(1);
       }
       output = readAllBytes(process.getInputStream());
     } catch (IOException | InterruptedException e) {
-      Log.error(String.format("Failed to run '%s'%n", String.join(" ", command)), e);
+      Log.error(String.format("Failed to run '%s'", String.join(" ", command)), e);
       exit(1);
       throw new IllegalStateException("not reached");
     }
