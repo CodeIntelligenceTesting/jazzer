@@ -91,8 +91,7 @@ public final class FuzzTargetRunner {
 
     try {
       FuzzTargetRunner.class.getClassLoader().setDefaultAssertionStatus(true);
-      fuzzTargetClass =
-          Class.forName(targetClassName, false, FuzzTargetRunner.class.getClassLoader());
+      fuzzTargetClass = Class.forName(targetClassName);
     } catch (ClassNotFoundException e) {
       Log.error(String.format(
           "'%s' not found on classpath:%n%n%s%n%nAll required classes must be on the classpath specified via --cp.",
@@ -100,10 +99,6 @@ public final class FuzzTargetRunner {
       exit(1);
       throw new IllegalStateException("Not reached");
     }
-    // Inform the agent about the fuzz target class. Important note: This has to be done *before*
-    // the class is initialized so that hooks can enable themselves in time for the fuzz target's
-    // static initializer.
-    JazzerInternal.onFuzzTargetReady(targetClassName);
 
     FuzzTargetFinder.FuzzTarget fuzzTarget;
     try {
@@ -123,6 +118,8 @@ public final class FuzzTargetRunner {
     useFuzzedDataProvider = fuzzTarget.useFuzzedDataProvider;
     fuzzerTearDown = fuzzTarget.tearDown.orElse(null);
     reproducerTemplate = new ReproducerTemplate(fuzzTargetClass.getName(), useFuzzedDataProvider);
+
+    JazzerInternal.onFuzzTargetReady(targetClassName);
 
     try {
       fuzzTargetInstance = fuzzTarget.newInstance.call();

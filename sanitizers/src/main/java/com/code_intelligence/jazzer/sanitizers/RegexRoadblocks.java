@@ -65,13 +65,6 @@ public final class RegexRoadblocks {
   private static final ThreadLocal<WeakHashMap<Object, Character>> PREDICATE_SOLUTIONS =
       ThreadLocal.withInitial(WeakHashMap::new);
 
-  // Do not act on instrumented regexes used by Jazzer internally, e.g. by ClassGraph.
-  private static boolean HOOK_DISABLED = true;
-
-  static {
-    Jazzer.onFuzzTargetReady(() -> HOOK_DISABLED = UNSAFE == null);
-  }
-
   @MethodHook(type = HookType.AFTER, targetClassName = "java.util.regex.Pattern$Node",
       targetMethod = "match",
       targetMethodDescriptor = "(Ljava/util/regex/Matcher;ILjava/lang/CharSequence;)Z",
@@ -122,7 +115,7 @@ public final class RegexRoadblocks {
           })
   public static void
   nodeMatchHook(MethodHandle method, Object node, Object[] args, int hookId, Boolean matched) {
-    if (HOOK_DISABLED || matched || node == null)
+    if (matched || node == null)
       return;
     Matcher matcher = (Matcher) args[0];
     if (matcher == null)
@@ -211,7 +204,7 @@ public final class RegexRoadblocks {
       additionalClassesToHook = {"java.util.regex.Pattern"})
   public static void
   singleHook(MethodHandle method, Object node, Object[] args, int hookId, Object predicate) {
-    if (HOOK_DISABLED || predicate == null)
+    if (predicate == null)
       return;
     PREDICATE_SOLUTIONS.get().put(predicate, (char) (int) args[0]);
   }
@@ -229,7 +222,7 @@ public final class RegexRoadblocks {
   public static void
   java8SingleHook(
       MethodHandle method, Object property, Object[] args, int hookId, Object alwaysNull) {
-    if (HOOK_DISABLED || property == null)
+    if (property == null)
       return;
     PREDICATE_SOLUTIONS.get().put(property, (char) (int) args[0]);
   }
@@ -258,7 +251,7 @@ public final class RegexRoadblocks {
       additionalClassesToHook = {"java.util.regex.Pattern"})
   public static void
   rangeHook(MethodHandle method, Object node, Object[] args, int hookId, Object predicate) {
-    if (HOOK_DISABLED || predicate == null)
+    if (predicate == null)
       return;
     PREDICATE_SOLUTIONS.get().put(predicate, (char) (int) args[0]);
   }
@@ -280,7 +273,7 @@ public final class RegexRoadblocks {
   public static void
   unionHook(
       MethodHandle method, Object thisObject, Object[] args, int hookId, Object unionPredicate) {
-    if (HOOK_DISABLED || unionPredicate == null)
+    if (unionPredicate == null)
       return;
     Character solution = predicateSolution(thisObject);
     if (solution == null)
