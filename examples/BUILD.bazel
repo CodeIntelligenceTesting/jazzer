@@ -188,6 +188,7 @@ java_fuzz_target_test(
     fuzzer_args = [
         "-fork=2",
     ],
+    tags = ["exclusive-if-local"],
     target_class = "com.example.JpegImageParserFuzzer",
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
     target_compatible_with = SKIP_ON_MACOS,
