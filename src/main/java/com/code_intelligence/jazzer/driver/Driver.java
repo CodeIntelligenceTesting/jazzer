@@ -16,6 +16,8 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import static java.lang.System.exit;
+
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.utils.Log;
 import java.io.IOException;
@@ -84,8 +86,20 @@ public class Driver {
     // Do not modify properties beyond this point, loading Opt locks in their values.
 
     AgentInstaller.install(Opt.hooks);
-
     Driver.class.getClassLoader().setDefaultAssertionStatus(true);
+
+    if (!Opt.autofuzz.isEmpty()) {
+      FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.AUTOFUZZ_FUZZ_TARGET;
+      return FuzzTargetRunner.startLibFuzzer(args);
+    }
+
+    String targetClassName = FuzzTargetFinder.findFuzzTargetClassName();
+    if (targetClassName == null) {
+      Log.error("Missing argument --target_class=<fuzz_target_class>");
+      exit(1);
+    }
+
+    FuzzTargetHolder.fuzzTarget = FuzzTargetFinder.findFuzzTarget(targetClassName);
     return FuzzTargetRunner.startLibFuzzer(args);
   }
 

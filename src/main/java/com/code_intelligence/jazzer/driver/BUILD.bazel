@@ -14,6 +14,8 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer:__pkg__",
     ],
     deps = [
+        ":fuzz_target_finder",
+        ":fuzz_target_holder",
         ":fuzz_target_runner",
         ":opt",
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
@@ -33,10 +35,12 @@ kt_jvm_library(
 java_library(
     name = "fuzz_target_finder",
     srcs = ["FuzzTargetFinder.java"],
+    visibility = ["//src/test/java/com/code_intelligence/jazzer/driver:__pkg__"],
     deps = [
-        ":fuzz_target_instance_holder",
+        ":fuzz_target_holder",
         ":opt",
         "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
         "//src/main/java/com/code_intelligence/jazzer/utils:manifest_utils",
         "@org_ow2_asm_asm//jar",
         "@org_ow2_asm_asm_commons//jar",
@@ -45,9 +49,17 @@ java_library(
 )
 
 java_library(
-    name = "fuzz_target_instance_holder",
-    srcs = ["FuzzTargetInstanceHolder.java"],
-    visibility = ["//src/main/java/com/code_intelligence/jazzer/junit:__pkg__"],
+    name = "fuzz_target_holder",
+    srcs = ["FuzzTargetHolder.java"],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/junit:__pkg__",
+        "//src/test/java/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
+    deps = [
+        ":opt",
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/autofuzz",
+    ],
 )
 
 java_jni_library(
@@ -66,7 +78,7 @@ java_jni_library(
     deps = [
         ":constants",
         ":exception_utils",
-        ":fuzz_target_finder",
+        ":fuzz_target_holder",
         ":fuzzed_data_provider_impl",
         ":opt",
         ":recording_fuzzed_data_provider",

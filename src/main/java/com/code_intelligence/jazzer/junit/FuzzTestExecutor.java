@@ -20,7 +20,7 @@ import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath
 import static com.code_intelligence.jazzer.utils.Utils.getReadableDescriptor;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.code_intelligence.jazzer.driver.FuzzTargetInstanceHolder;
+import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import java.io.File;
 import java.io.IOException;
@@ -37,14 +37,17 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 
 class FuzzTestExecutor {
   private static final AtomicBoolean hasBeenPrepared = new AtomicBoolean();
 
   private final List<String> libFuzzerArgs;
+  private final boolean useAutofuzz;
 
-  private FuzzTestExecutor(List<String> libFuzzerArgs) {
+  private FuzzTestExecutor(List<String> libFuzzerArgs, boolean useAutofuzz) {
     this.libFuzzerArgs = libFuzzerArgs;
+    this.useAutofuzz = useAutofuzz;
   }
 
   public static FuzzTestExecutor prepare(ExtensionContext context, String maxDuration)
@@ -127,22 +130,26 @@ class FuzzTestExecutor {
       throw new IllegalArgumentException(
           "Methods annotated with @FuzzTest must take at least one parameter");
     }
-    if (fuzzTestMethod.getParameterCount() == 1
-        && (fuzzTestMethod.getParameterTypes()[0] == byte[].class
-            || fuzzTestMethod.getParameterTypes()[0] == FuzzedDataProvider.class)) {
-      System.setProperty("jazzer.target_class", fuzzTestClass.getName());
-      System.setProperty("jazzer.target_method", fuzzTestMethod.getName());
-    } else {
+    boolean useAutofuzz = fuzzTestMethod.getParameterCount() != 1
+        || (fuzzTestMethod.getParameterTypes()[0] != byte[].class
+            && fuzzTestMethod.getParameterTypes()[0] != FuzzedDataProvider.class);
+    if (useAutofuzz) {
       System.setProperty("jazzer.autofuzz",
           String.format("%s::%s%s", fuzzTestClass.getName(), fuzzTestMethod.getName(),
               getReadableDescriptor(fuzzTestMethod)));
     }
 
-    return new FuzzTestExecutor(libFuzzerArgs);
+    return new FuzzTestExecutor(libFuzzerArgs, useAutofuzz);
   }
 
-  public Optional<Throwable> execute(Object testClassInstance) {
-    FuzzTargetInstanceHolder.fuzzTargetInstance = testClassInstance;
+  public Optional<Throwable> execute(ReflectiveInvocationContext<Method> invocationContext) {
+    if (useAutofuzz) {
+      FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.AUTOFUZZ_FUZZ_TARGET;
+    } else {
+      FuzzTargetHolder.fuzzTarget =
+          new FuzzTargetHolder.FuzzTarget(invocationContext.getExecutable(),
+              () -> invocationContext.getTarget().get(), Optional.empty());
+    }
     AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
     FuzzTargetRunner.registerFindingHandler(t -> {
       atomicFinding.set(t);
