@@ -90,7 +90,6 @@ public final class FuzzTargetRunner {
     }
 
     try {
-      FuzzTargetRunner.class.getClassLoader().setDefaultAssertionStatus(true);
       fuzzTargetClass = Class.forName(targetClassName);
     } catch (ClassNotFoundException e) {
       Log.error(String.format(
