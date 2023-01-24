@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.api.Jazzer;
 import com.code_intelligence.jazzer.runtime.CoverageMap;
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
@@ -96,6 +97,8 @@ public class FuzzTargetRunnerTest {
     System.setProperty("jazzer.target_class", FuzzTargetRunnerTest.class.getName());
     // Keep going past all "no crash", "first finding" and "second finding" runs, then crash.
     System.setProperty("jazzer.keep_going", "3");
+
+    AgentInstaller.install(true);
 
     // Use a loop to simulate two findings with the same stack trace and thus verify that keep_going
     // works as advertised.

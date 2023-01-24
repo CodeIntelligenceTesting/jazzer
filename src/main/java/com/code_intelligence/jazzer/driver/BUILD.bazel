@@ -15,6 +15,7 @@ java_library(
     ],
     deps = [
         ":fuzz_target_runner",
+        ":opt",
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
     ],
@@ -71,7 +72,6 @@ java_jni_library(
         ":recording_fuzzed_data_provider",
         ":reproducer_template",
         ":signal_handler",
-        "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
         "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/autofuzz",
         "//src/main/java/com/code_intelligence/jazzer/instrumentor",

@@ -20,7 +20,6 @@ import static com.code_intelligence.jazzer.driver.Constants.JAZZER_FINDING_EXIT_
 import static java.lang.System.exit;
 import static java.util.stream.Collectors.joining;
 
-import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.autofuzz.FuzzTarget;
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder;
@@ -54,10 +53,6 @@ import sun.misc.Unsafe;
  * concurrently.
  */
 public final class FuzzTargetRunner {
-  static {
-    AgentInstaller.install(Opt.hooks);
-  }
-
   private static final String OPENTEST4J_TEST_ABORTED_EXCEPTION =
       "org.opentest4j.TestAbortedException";
 

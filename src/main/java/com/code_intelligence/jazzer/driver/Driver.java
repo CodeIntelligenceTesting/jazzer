@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.utils.Log;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -79,6 +80,10 @@ public class Driver {
     if (args.stream().noneMatch(arg -> arg.startsWith("-rss_limit_mb="))) {
       args.add(getDefaultRssLimitMbArg());
     }
+
+    // Do not modify properties beyond this point, loading Opt locks in their values.
+
+    AgentInstaller.install(Opt.hooks);
 
     Driver.class.getClassLoader().setDefaultAssertionStatus(true);
     return FuzzTargetRunner.startLibFuzzer(args);
