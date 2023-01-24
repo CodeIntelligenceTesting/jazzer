@@ -62,17 +62,22 @@ public class FuzzTargetRunnerTest {
   }
 
   public static void fuzzerTearDown() {
-    String errOutput = new String(recordedErr.toByteArray(), StandardCharsets.UTF_8);
-    assert errOutput.contains("== Java Exception: java.lang.RuntimeException: crash");
-    String outOutput = new String(recordedOut.toByteArray(), StandardCharsets.UTF_8);
-    assert DEDUP_TOKEN_PATTERN.matcher(outOutput).find();
+    try {
+      String errOutput = new String(recordedErr.toByteArray(), StandardCharsets.UTF_8);
+      assert errOutput.contains("== Java Exception: java.lang.RuntimeException: crash");
+      String outOutput = new String(recordedOut.toByteArray(), StandardCharsets.UTF_8);
+      assert DEDUP_TOKEN_PATTERN.matcher(outOutput).find();
 
-    assert finishedAllNonCrashingRuns : "Did not finish all expected runs before crashing";
-    assert CoverageMap.getCoveredIds().equals(Stream.of(0, 1, 2, 3).collect(Collectors.toSet()));
-    assert UNSAFE.getByte(CoverageMap.countersAddress) == 2;
-    assert UNSAFE.getByte(CoverageMap.countersAddress + 1) == 2;
-    assert UNSAFE.getByte(CoverageMap.countersAddress + 2) == 2;
-    assert UNSAFE.getByte(CoverageMap.countersAddress + 3) == 1;
+      assert finishedAllNonCrashingRuns : "Did not finish all expected runs before crashing";
+      assert CoverageMap.getCoveredIds().equals(Stream.of(0, 1, 2, 3).collect(Collectors.toSet()));
+      assert UNSAFE.getByte(CoverageMap.countersAddress) == 2;
+      assert UNSAFE.getByte(CoverageMap.countersAddress + 1) == 2;
+      assert UNSAFE.getByte(CoverageMap.countersAddress + 2) == 2;
+      assert UNSAFE.getByte(CoverageMap.countersAddress + 3) == 1;
+    } catch (AssertionError e) {
+      e.printStackTrace();
+      Runtime.getRuntime().halt(1);
+    }
     // FuzzTargetRunner calls _Exit after this function, so the test would fail unless this line is
     // executed. Use halt rather than exit to get around FuzzTargetRunner's shutdown hook calling
     // fuzzerTearDown, which would otherwise result in a shutdown hook loop.
