@@ -99,6 +99,8 @@ public class FuzzTargetRunnerTest {
     System.setProperty("jazzer.keep_going", "3");
 
     AgentInstaller.install(true);
+    FuzzTargetHolder.fuzzTarget =
+        FuzzTargetFinder.findFuzzTarget(FuzzTargetRunnerTest.class.getName());
 
     // Use a loop to simulate two findings with the same stack trace and thus verify that keep_going
     // works as advertised.

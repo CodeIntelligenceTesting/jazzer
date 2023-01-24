@@ -67,7 +67,6 @@ public final class FuzzTargetRunner {
   private static final Set<Long> ignoredTokens = new HashSet<>(Opt.ignore);
   private static final FuzzedDataProviderImpl fuzzedDataProvider =
       FuzzedDataProviderImpl.withNativeData();
-  private static final Class<?> fuzzTargetClass;
   private static final MethodHandle fuzzTargetMethod;
   private static final boolean useFuzzedDataProvider;
   // Reused in every iteration analogous to JUnit's PER_CLASS lifecycle.
@@ -77,43 +76,22 @@ public final class FuzzTargetRunner {
   private static Predicate<Throwable> findingHandler;
 
   static {
-    String targetClassName = FuzzTargetFinder.findFuzzTargetClassName();
-    if (targetClassName == null) {
-      Log.error("Missing argument --target_class=<fuzz_target_class>");
-      exit(1);
-      throw new IllegalStateException("Not reached");
-    }
+    FuzzTargetHolder.FuzzTarget fuzzTarget = FuzzTargetHolder.fuzzTarget;
+    Class<?> fuzzTargetClass = fuzzTarget.method.getDeclaringClass();
 
-    try {
-      fuzzTargetClass = Class.forName(targetClassName);
-    } catch (ClassNotFoundException e) {
-      Log.error(String.format(
-          "'%s' not found on classpath:%n%n%s%n%nAll required classes must be on the classpath specified via --cp.",
-          targetClassName, System.getProperty("java.class.path")));
-      exit(1);
-      throw new IllegalStateException("Not reached");
-    }
-
-    FuzzTargetFinder.FuzzTarget fuzzTarget;
-    try {
-      fuzzTarget = FuzzTargetFinder.findFuzzTarget(fuzzTargetClass);
-    } catch (IllegalArgumentException e) {
-      Log.error(e.getMessage());
-      exit(1);
-      throw new IllegalStateException("Not reached");
-    }
-
+    // The method may not be accessible - JUnit test classes and methods are usually declared
+    // without access modifiers and thus package-private.
+    fuzzTarget.method.setAccessible(true);
     try {
       fuzzTargetMethod = MethodHandles.lookup().unreflect(fuzzTarget.method);
     } catch (IllegalAccessException e) {
-      // Should have been made accessible in FuzzTargetFinder.
       throw new IllegalStateException(e);
     }
-    useFuzzedDataProvider = fuzzTarget.useFuzzedDataProvider;
+    useFuzzedDataProvider = fuzzTarget.usesFuzzedDataProvider();
     fuzzerTearDown = fuzzTarget.tearDown.orElse(null);
     reproducerTemplate = new ReproducerTemplate(fuzzTargetClass.getName(), useFuzzedDataProvider);
 
-    JazzerInternal.onFuzzTargetReady(targetClassName);
+    JazzerInternal.onFuzzTargetReady(fuzzTargetClass.getName());
 
     try {
       fuzzTargetInstance = fuzzTarget.newInstance.call();

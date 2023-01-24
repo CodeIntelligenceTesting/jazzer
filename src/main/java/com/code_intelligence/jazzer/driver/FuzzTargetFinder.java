@@ -16,9 +16,12 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import static java.lang.System.exit;
 import static java.util.stream.Collectors.toList;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.driver.FuzzTargetHolder.FuzzTarget;
+import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.ManifestUtils;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,23 +44,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 class FuzzTargetFinder {
-  static class FuzzTarget {
-    public final boolean useFuzzedDataProvider;
-    public final Method method;
-    public final Callable<Object> newInstance;
-    public final Optional<Method> tearDown;
-
-    public FuzzTarget(boolean usesFuzzedDataProvider, Method method, Callable<Object> newInstance,
-        Optional<Method> tearDown) {
-      this.useFuzzedDataProvider = usesFuzzedDataProvider;
-      this.method = method;
-      this.newInstance = newInstance;
-      this.tearDown = tearDown;
-    }
-  }
-
-  private static final String AUTOFUZZ_FUZZ_TARGET =
-      "com.code_intelligence.jazzer.autofuzz.FuzzTarget";
   private static final String FUZZ_TEST_ANNOTATION_CLASS =
       "com.code_intelligence.jazzer.junit.FuzzTest";
   private static final String FUZZ_TEST_ANNOTATION_DESCRIPTOR =
@@ -67,9 +53,6 @@ class FuzzTargetFinder {
   private static final String FUZZER_TEAR_DOWN = "fuzzerTearDown";
 
   static String findFuzzTargetClassName() {
-    if (!Opt.autofuzz.isEmpty()) {
-      return AUTOFUZZ_FUZZ_TARGET;
-    }
     if (!Opt.targetClass.isEmpty()) {
       return Opt.targetClass;
     }
@@ -78,11 +61,23 @@ class FuzzTargetFinder {
 
   /**
    * @throws IllegalArgumentException if the fuzz target method is invalid or couldn't be found
-   * @param clazz the fuzz target class
+   * @param targetClassName name of the fuzz target class
    * @return a {@link FuzzTarget}
    */
-  static FuzzTarget findFuzzTarget(Class<?> clazz) {
-    return findFuzzTargetByAnnotation(clazz).orElseGet(() -> findFuzzTargetByMethodName(clazz));
+  static FuzzTarget findFuzzTarget(String targetClassName) {
+    Class<?> fuzzTargetClass;
+    try {
+      fuzzTargetClass = Class.forName(targetClassName);
+    } catch (ClassNotFoundException e) {
+      Log.error(String.format(
+          "'%s' not found on classpath:%n%n%s%n%nAll required classes must be on the classpath specified via --cp.",
+          targetClassName, System.getProperty("java.class.path")));
+      exit(1);
+      throw new IllegalStateException("Not reached");
+    }
+
+    return findFuzzTargetByAnnotation(fuzzTargetClass)
+        .orElseGet(() -> findFuzzTargetByMethodName(fuzzTargetClass));
   }
 
   // Finds and validates methods annotated with @FuzzTest.
@@ -117,10 +112,6 @@ class FuzzTargetFinder {
       method = annotatedMethods.get(0);
     }
 
-    // The method may not be accessible - JUnit test classes and methods are usually declared
-    // without access modifiers and thus package-private.
-    method.setAccessible(true);
-
     // The following checks ensure compatibility with the JUnit concept of a test class and test
     // method.
     // https://junit.org/junit5/docs/5.9.0/user-guide/#writing-tests-definitions
@@ -147,33 +138,25 @@ class FuzzTargetFinder {
           parameter.getName(), method.getName(), clazz.getName()));
     }
 
-    Callable<Object> newInstance;
-    if (FuzzTargetInstanceHolder.fuzzTargetInstance != null) {
-      // The JUnit executor will set the fuzz target instance before calling into FuzzTargetRunner.
-      newInstance = () -> FuzzTargetInstanceHolder.fuzzTargetInstance;
-    } else {
-      // TODO: All of this code should go away once we use JUnit's launcher to run @FuzzTests.
-      // Use the default constructor to initialize a test class instance.
-      if (clazz.getDeclaredConstructors().length != 1) {
-        throw new IllegalArgumentException(String.format(
-            "Classes containing a method annotated with @FuzzTest must declare exactly one constructor, got multiple in %s",
-            clazz.getName()));
-      }
-      Constructor<?> constructor = clazz.getDeclaredConstructors()[0];
-      // JUnit 5 supports injected constructor parameters, but we don't.
-      if (constructor.getParameterCount() > 0) {
-        throw new IllegalArgumentException(String.format(
-            "The constructor of a class containing a method annotated with @FuzzTest must take no parameters, got a non-zero number in %s",
-            clazz.getName()));
-      }
-      constructor.setAccessible(true);
-      newInstance = constructor::newInstance;
+    // TODO: All of this code should go away once we use JUnit's launcher to run @FuzzTests.
+    // Use the default constructor to initialize a test class instance.
+    if (clazz.getDeclaredConstructors().length != 1) {
+      throw new IllegalArgumentException(String.format(
+          "Classes containing a method annotated with @FuzzTest must declare exactly one constructor, got multiple in %s",
+          clazz.getName()));
     }
+    Constructor<?> constructor = clazz.getDeclaredConstructors()[0];
+    // JUnit 5 supports injected constructor parameters, but we don't.
+    if (constructor.getParameterCount() > 0) {
+      throw new IllegalArgumentException(String.format(
+          "The constructor of a class containing a method annotated with @FuzzTest must take no parameters, got a non-zero number in %s",
+          clazz.getName()));
+    }
+    constructor.setAccessible(true);
 
     // TODO: If it should become necessary, implement support for @AfterAll/@AfterEach as
     //  JUnit-idiomatic replacements for fuzzerTearDown.
-    return Optional.of(new FuzzTarget(
-        parameter == FuzzedDataProvider.class, method, newInstance, Optional.empty()));
+    return Optional.of(new FuzzTarget(method, constructor::newInstance, Optional.empty()));
   }
 
   // Finds the traditional static fuzzerTestOneInput fuzz target method.
@@ -208,8 +191,7 @@ class FuzzTargetFinder {
             .findFirst()
             .orElse(() -> null);
 
-    return new FuzzTarget(dataFuzzTarget.isPresent(),
-        dataFuzzTarget.orElseGet(bytesFuzzTarget::get), initialize,
+    return new FuzzTarget(dataFuzzTarget.orElseGet(bytesFuzzTarget::get), initialize,
         targetPublicStaticMethod(clazz, FUZZER_TEAR_DOWN));
   }
 
