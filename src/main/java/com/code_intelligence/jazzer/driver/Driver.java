@@ -80,6 +80,7 @@ public class Driver {
       args.add(getDefaultRssLimitMbArg());
     }
 
+    Driver.class.getClassLoader().setDefaultAssertionStatus(true);
     return FuzzTargetRunner.startLibFuzzer(args);
   }
 
