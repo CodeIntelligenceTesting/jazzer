@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import static com.code_intelligence.jazzer.driver.Constants.JAZZER_FINDING_EXIT_CODE;
 import static java.lang.System.exit;
 import static java.util.stream.Collectors.joining;
 
@@ -63,9 +64,6 @@ public final class FuzzTargetRunner {
   private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
 
   private static final long BYTE_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
-
-  // Default value of the libFuzzer -error_exitcode flag.
-  private static final int LIBFUZZER_ERROR_EXIT_CODE = 77;
 
   // Possible return values for the libFuzzer callback runOne.
   private static final int LIBFUZZER_CONTINUE = 0;
@@ -266,7 +264,7 @@ public final class FuzzTargetRunner {
             Stream.concat(Opt.autofuzzIgnore.stream(), Stream.of(finding.getClass().getName()))
                 .collect(joining(","))));
       }
-      System.exit(LIBFUZZER_ERROR_EXIT_CODE);
+      System.exit(JAZZER_FINDING_EXIT_CODE);
       throw new IllegalStateException("Not reached");
     }
     return LIBFUZZER_CONTINUE;
@@ -310,7 +308,7 @@ public final class FuzzTargetRunner {
       fuzzerTearDown.invoke(null);
     } catch (InvocationTargetException e) {
       Log.finding(e.getCause());
-      System.exit(LIBFUZZER_ERROR_EXIT_CODE);
+      System.exit(JAZZER_FINDING_EXIT_CODE);
     } catch (Throwable t) {
       Log.error(t);
       System.exit(1);
