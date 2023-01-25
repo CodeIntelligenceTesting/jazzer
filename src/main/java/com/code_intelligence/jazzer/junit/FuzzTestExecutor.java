@@ -39,29 +39,38 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 
-class FuzzTestExecutor {
+abstract class FuzzTestExecutor {
   private static final AtomicBoolean hasBeenPrepared = new AtomicBoolean();
-
-  private final List<String> libFuzzerArgs;
-  private final boolean useAutofuzz;
-
-  private FuzzTestExecutor(List<String> libFuzzerArgs, boolean useAutofuzz) {
-    this.libFuzzerArgs = libFuzzerArgs;
-    this.useAutofuzz = useAutofuzz;
-  }
 
   public static FuzzTestExecutor prepare(ExtensionContext context, String maxDuration)
       throws IOException {
     if (!hasBeenPrepared.compareAndSet(false, true)) {
       throw new IllegalStateException(
-          "JazzerFuzzTestExecutor#prepare can only be called once per test run");
+          "FuzzTestExecutor#prepare can only be called once per test run");
     }
 
+    Method fuzzTestMethod = context.getRequiredTestMethod();
+
+    if (fuzzTestMethod.getParameterCount() == 0) {
+      throw new IllegalArgumentException(
+          "Methods annotated with @FuzzTest must take at least one parameter");
+    }
+
+    if (useAutofuzz(fuzzTestMethod)) {
+      System.setProperty("jazzer.autofuzz",
+          String.format("%s::%s%s", fuzzTestMethod.getDeclaringClass().getName(),
+              fuzzTestMethod.getName(), getReadableDescriptor(fuzzTestMethod)));
+    }
+
+    return prepareForTestRunner(context, maxDuration);
+  }
+
+  private static FuzzTestExecutor prepareForTestRunner(ExtensionContext context, String maxDuration)
+      throws IOException {
     Path baseDir =
         Paths.get(context.getConfigurationParameter("jazzer.internal.basedir").orElse(""))
             .toAbsolutePath();
 
-    final Method fuzzTestMethod = context.getRequiredTestMethod();
     final Class<?> fuzzTestClass = context.getRequiredTestClass();
 
     ArrayList<String> libFuzzerArgs = new ArrayList<>();
@@ -126,44 +135,7 @@ class FuzzTestExecutor {
       libFuzzerArgs.add("-use_value_profile=1");
     }
 
-    if (fuzzTestMethod.getParameterCount() == 0) {
-      throw new IllegalArgumentException(
-          "Methods annotated with @FuzzTest must take at least one parameter");
-    }
-    boolean useAutofuzz = fuzzTestMethod.getParameterCount() != 1
-        || (fuzzTestMethod.getParameterTypes()[0] != byte[].class
-            && fuzzTestMethod.getParameterTypes()[0] != FuzzedDataProvider.class);
-    if (useAutofuzz) {
-      System.setProperty("jazzer.autofuzz",
-          String.format("%s::%s%s", fuzzTestClass.getName(), fuzzTestMethod.getName(),
-              getReadableDescriptor(fuzzTestMethod)));
-    }
-
-    return new FuzzTestExecutor(libFuzzerArgs, useAutofuzz);
-  }
-
-  public Optional<Throwable> execute(ReflectiveInvocationContext<Method> invocationContext) {
-    if (useAutofuzz) {
-      FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.AUTOFUZZ_FUZZ_TARGET;
-    } else {
-      FuzzTargetHolder.fuzzTarget =
-          new FuzzTargetHolder.FuzzTarget(invocationContext.getExecutable(),
-              () -> invocationContext.getTarget().get(), Optional.empty());
-    }
-    AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
-    FuzzTargetRunner.registerFindingHandler(t -> {
-      atomicFinding.set(t);
-      return false;
-    });
-    int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
-    Throwable finding = atomicFinding.get();
-    if (finding != null) {
-      return Optional.of(finding);
-    } else if (exitCode != 0) {
-      return Optional.of(new IllegalStateException("Jazzer exited with exit code " + exitCode));
-    } else {
-      return Optional.empty();
-    }
+    return new TestRunnerFuzzTestExecutor(libFuzzerArgs);
   }
 
   static long durationStringToSeconds(String duration) {
@@ -172,5 +144,52 @@ class FuzzTestExecutor {
     String isoDuration =
         "PT" + duration.replace("sec", "s").replace("min", "m").replace("hr", "h").replace(" ", "");
     return Duration.parse(isoDuration).getSeconds();
+  }
+
+  private static boolean useAutofuzz(Method fuzzTestMethod) {
+    return fuzzTestMethod.getParameterCount() != 1
+        || (fuzzTestMethod.getParameterTypes()[0] != byte[].class
+            && fuzzTestMethod.getParameterTypes()[0] != FuzzedDataProvider.class);
+  }
+
+  abstract public Optional<Throwable> executeInternal(
+      ReflectiveInvocationContext<Method> invocationContext);
+
+  public Optional<Throwable> execute(ReflectiveInvocationContext<Method> invocationContext) {
+    if (FuzzTestExecutor.useAutofuzz(invocationContext.getExecutable())) {
+      FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.AUTOFUZZ_FUZZ_TARGET;
+    } else {
+      FuzzTargetHolder.fuzzTarget =
+          new FuzzTargetHolder.FuzzTarget(invocationContext.getExecutable(),
+              () -> invocationContext.getTarget().get(), Optional.empty());
+    }
+    return executeInternal(invocationContext);
+  }
+
+  private static final class TestRunnerFuzzTestExecutor extends FuzzTestExecutor {
+    private final List<String> libFuzzerArgs;
+
+    private TestRunnerFuzzTestExecutor(List<String> libFuzzerArgs) {
+      this.libFuzzerArgs = libFuzzerArgs;
+    }
+
+    @Override
+    public Optional<Throwable> executeInternal(
+        ReflectiveInvocationContext<Method> invocationContext) {
+      AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
+      FuzzTargetRunner.registerFindingHandler(t -> {
+        atomicFinding.set(t);
+        return false;
+      });
+      int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
+      Throwable finding = atomicFinding.get();
+      if (finding != null) {
+        return Optional.of(finding);
+      } else if (exitCode != 0) {
+        return Optional.of(new IllegalStateException("Jazzer exited with exit code " + exitCode));
+      } else {
+        return Optional.empty();
+      }
+    }
   }
 }
