@@ -1,0 +1,30 @@
+java_library(
+    name = "junit_runner",
+    srcs = ["JUnitRunner.java"],
+    visibility = ["//src/main/java/com/code_intelligence/jazzer/driver:__pkg__"],
+    deps = [
+        ":exit_code_exception",
+        ":junit_compile_only",
+        "//src/main/java/com/code_intelligence/jazzer/driver:constants",
+        "//src/main/java/com/code_intelligence/jazzer/driver:exception_utils",
+        "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner",
+        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
+        "@maven//:org_junit_platform_junit_platform_engine",
+    ],
+)
+
+java_library(
+    name = "exit_code_exception",
+    srcs = ["ExitCodeException.java"],
+    visibility = ["//src/main/java/com/code_intelligence/jazzer/junit:__pkg__"],
+)
+
+java_library(
+    name = "junit_compile_only",
+    neverlink = True,
+    exports = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        "@maven//:org_junit_platform_junit_platform_launcher",
+    ],
+)

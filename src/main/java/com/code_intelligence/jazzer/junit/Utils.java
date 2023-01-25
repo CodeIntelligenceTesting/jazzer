@@ -14,7 +14,6 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,6 +23,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 class Utils {
   /**
@@ -98,10 +98,16 @@ class Utils {
         s -> COVERAGE_AGENT_ARG.matcher(s).matches());
   }
 
-  private static final boolean IS_FUZZING =
+  private static final boolean IS_FUZZING_ENV =
       System.getenv("JAZZER_FUZZ") != null && !System.getenv("JAZZER_FUZZ").isEmpty();
-  static boolean isFuzzing() {
-    return IS_FUZZING;
+  static boolean isFuzzing(ExtensionContext extensionContext) {
+    return IS_FUZZING_ENV || runFromCommandLine(extensionContext);
+  }
+
+  static boolean runFromCommandLine(ExtensionContext extensionContext) {
+    return extensionContext.getConfigurationParameter("jazzer.internal.commandLine")
+        .map(Boolean::parseBoolean)
+        .orElse(false);
   }
 
   /**

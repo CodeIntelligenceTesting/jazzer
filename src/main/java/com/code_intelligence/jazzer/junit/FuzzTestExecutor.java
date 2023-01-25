@@ -17,11 +17,14 @@ package com.code_intelligence.jazzer.junit;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
+import static com.code_intelligence.jazzer.junit.Utils.runFromCommandLine;
 import static com.code_intelligence.jazzer.utils.Utils.getReadableDescriptor;
+import static java.util.Collections.unmodifiableList;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
+import com.code_intelligence.jazzer.driver.junit.ExitCodeException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -62,7 +65,15 @@ abstract class FuzzTestExecutor {
               fuzzTestMethod.getName(), getReadableDescriptor(fuzzTestMethod)));
     }
 
-    return prepareForTestRunner(context, maxDuration);
+    if (runFromCommandLine(context)) {
+      return prepareForCommandLine(context);
+    } else {
+      return prepareForTestRunner(context, maxDuration);
+    }
+  }
+
+  private static FuzzTestExecutor prepareForCommandLine(ExtensionContext context) {
+    return new CommandLineFuzzTestExecutor(context);
   }
 
   private static FuzzTestExecutor prepareForTestRunner(ExtensionContext context, String maxDuration)
@@ -164,6 +175,40 @@ abstract class FuzzTestExecutor {
               () -> invocationContext.getTarget().get(), Optional.empty());
     }
     return executeInternal(invocationContext);
+  }
+
+  private static final class CommandLineFuzzTestExecutor extends FuzzTestExecutor {
+    private final List<String> libFuzzerArgs;
+
+    private CommandLineFuzzTestExecutor(ExtensionContext extensionContext) {
+      this.libFuzzerArgs = getLibFuzzerArgs(extensionContext);
+    }
+
+    /**
+     * Returns the list of arguments set on the command line.
+     */
+    private static List<String> getLibFuzzerArgs(ExtensionContext extensionContext) {
+      ArrayList<String> args = new ArrayList<>();
+      for (int i = 0;; i++) {
+        Optional<String> arg =
+            extensionContext.getConfigurationParameter("jazzer.internal.arg." + i);
+        if (!arg.isPresent()) {
+          break;
+        }
+        args.add(arg.get());
+      }
+      return unmodifiableList(args);
+    }
+
+    public Optional<Throwable> executeInternal(
+        ReflectiveInvocationContext<Method> invocationContext) {
+      int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
+      if (exitCode != 0) {
+        return Optional.of(new ExitCodeException(exitCode));
+      } else {
+        return Optional.empty();
+      }
+    }
   }
 
   private static final class TestRunnerFuzzTestExecutor extends FuzzTestExecutor {

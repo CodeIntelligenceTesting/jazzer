@@ -30,6 +30,9 @@ java_fuzz_target_test(
     target_class = "com.example.ValidFuzzTests",
     target_method = "dataFuzz",
     verify_crash_reproducer = False,
+    runtime_deps = [
+        ":junit_runtime",
+    ],
     deps = [
         "//examples/junit/src/main/java/com/example:parser",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
@@ -49,9 +52,64 @@ java_fuzz_target_test(
     target_class = "com.example.ByteFuzzTest",
     target_method = "byteFuzz",
     verify_crash_reproducer = False,
+    runtime_deps = [
+        ":junit_runtime",
+    ],
     deps = [
         "//examples/junit/src/main/java/com/example:parser",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "LifecycleFuzzTest",
+    srcs = ["LifecycleFuzzTest.java"],
+    allowed_findings = ["java.io.IOException"],
+    fuzzer_args = [
+        "--instrumentation_includes=com.example.**",
+        "--custom_hook_includes=com.example.**",
+        "-runs=0",
+    ],
+    target_class = "com.example.LifecycleFuzzTest",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        ":junit_runtime",
+    ],
+    deps = [
+        "//examples/junit/src/main/java/com/example:parser",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+# Verifies that fuzzer command-line arguments are honored for @FuzzTests.
+java_fuzz_target_test(
+    name = "CommandLineFuzzTest",
+    srcs = ["CommandLineFuzzTest.java"],
+    allowed_findings = ["java.lang.Error"],
+    fuzzer_args = [
+        "--instrumentation_includes=com.example.**",
+        "--custom_hook_includes=com.example.**",
+        # Ignore the first two findings.
+        "--ignore=d5e250a5298b81e6,d86371e6d41739ec",
+    ],
+    target_class = "com.example.CommandLineFuzzTest",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        ":junit_runtime",
+    ],
+    deps = [
+        "//examples/junit/src/main/java/com/example:parser",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+java_library(
+    name = "junit_runtime",
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        "@maven//:org_junit_platform_junit_platform_launcher",
     ],
 )

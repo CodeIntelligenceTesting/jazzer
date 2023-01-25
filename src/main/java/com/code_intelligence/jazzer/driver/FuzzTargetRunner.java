@@ -374,7 +374,7 @@ public final class FuzzTargetRunner {
    * Causes libFuzzer to write the current input to disk as a crashing input and emit some
    * information about it to stderr.
    */
-  private static void printCrashingInput() {
+  public static void printCrashingInput() {
     FuzzTargetRunnerNatives.printCrashingInput();
   }
 

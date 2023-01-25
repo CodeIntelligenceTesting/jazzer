@@ -36,7 +36,7 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
   public void interceptTestTemplateMethod(Invocation<Void> invocation,
       ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext)
       throws Throwable {
-    if (Utils.isFuzzing()) {
+    if (Utils.isFuzzing(extensionContext)) {
       // Skip the invocation of the test method with the trivial arguments provided by
       // FuzzTestArgumentsProvider and start fuzzing instead.
       invocation.skip();
@@ -84,7 +84,7 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
 
   @Override
   public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext extensionContext) {
-    if (!Utils.isFuzzing()) {
+    if (!Utils.isFuzzing(extensionContext)) {
       return ConditionEvaluationResult.enabled(
           "Regression tests are run instead of fuzzing since JAZZER_FUZZ has not been set to a non-empty value");
     }

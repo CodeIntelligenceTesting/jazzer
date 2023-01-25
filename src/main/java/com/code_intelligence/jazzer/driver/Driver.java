@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.driver;
 import static java.lang.System.exit;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
+import com.code_intelligence.jazzer.driver.junit.JUnitRunner;
 import com.code_intelligence.jazzer.utils.Log;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Optional;
 
 public class Driver {
   public static int start(List<String> args, boolean spawnsSubprocesses) throws IOException {
@@ -97,6 +99,13 @@ public class Driver {
     if (targetClassName == null) {
       Log.error("Missing argument --target_class=<fuzz_target_class>");
       exit(1);
+    }
+
+    if (JUnitRunner.isSupported()) {
+      Optional<JUnitRunner> runner = JUnitRunner.create(targetClassName, args);
+      if (runner.isPresent()) {
+        return runner.get().run();
+      }
     }
 
     FuzzTargetHolder.fuzzTarget = FuzzTargetFinder.findFuzzTarget(targetClassName);

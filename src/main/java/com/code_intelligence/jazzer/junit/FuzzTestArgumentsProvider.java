@@ -60,7 +60,7 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
     if (!agentInstalled.compareAndSet(false, true)) {
       return;
     }
-    if (Utils.isFuzzing()) {
+    if (Utils.isFuzzing(extensionContext)) {
       FuzzTestExecutor executor =
           FuzzTestExecutor.prepare(extensionContext, annotation.maxDuration());
       extensionContext.getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
@@ -79,7 +79,7 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
     //  one.
     configureAndInstallAgent(extensionContext);
     Stream<Map.Entry<String, byte[]>> rawSeeds;
-    if (Utils.isFuzzing()) {
+    if (Utils.isFuzzing(extensionContext)) {
       // When fuzzing, supply a single set of arguments to trigger an invocation of the test method.
       // An InvocationInterceptor is used to skip the actual invocation and instead start the
       // fuzzer.
@@ -95,7 +95,7 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
     }
     return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds)
         .onClose(() -> {
-          if (!Utils.isFuzzing()) {
+          if (!Utils.isFuzzing(extensionContext)) {
             extensionContext.publishReportEntry(
                 "No fuzzing has been performed, the fuzz test has only been executed on the fixed "
                 + "set of inputs in the seed corpus.\n"
