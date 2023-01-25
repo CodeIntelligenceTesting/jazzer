@@ -35,6 +35,12 @@ object Deserialization {
     private val OBJECT_INPUT_STREAM_HEADER =
         ObjectStreamConstants.STREAM_MAGIC.toBytes() + ObjectStreamConstants.STREAM_VERSION.toBytes()
 
+    init {
+        require(OBJECT_INPUT_STREAM_HEADER.size <= 64) {
+            "Object input stream header must fit in a table of recent compares entry (64 bytes)"
+        }
+    }
+
     /**
      * Used to memoize the [InputStream] used to construct a given [ObjectInputStream].
      * [ThreadLocal] is required because the map is not synchronized (and likely cheaper than
@@ -62,6 +68,12 @@ object Deserialization {
         val posToPatch = serializedJazTerInstance.indexOf("jaz.Ter".toByteArray())
         serializedJazTerInstance[posToPatch + "jaz.".length] = 'Z'.code.toByte()
         serializedJazTerInstance
+    }
+
+    init {
+        require(SERIALIZED_JAZ_ZER_INSTANCE.size <= 64) {
+            "Serialized jaz.Zer instance must fit in a table of recent compares entry (64 bytes)"
+        }
     }
 
     /**
