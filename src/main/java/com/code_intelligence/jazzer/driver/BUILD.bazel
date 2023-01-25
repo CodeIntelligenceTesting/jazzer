@@ -2,6 +2,12 @@ load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 java_library(
+    name = "constants",
+    srcs = ["Constants.java"],
+    visibility = ["//src/main/java/com/code_intelligence/jazzer/driver:__subpackages__"],
+)
+
+java_library(
     name = "driver",
     srcs = ["Driver.java"],
     visibility = [
@@ -57,6 +63,7 @@ java_jni_library(
         "//src/test:__subpackages__",
     ],
     deps = [
+        ":constants",
         ":exception_utils",
         ":fuzz_target_finder",
         ":fuzzed_data_provider_impl",
