@@ -31,7 +31,7 @@ object ExpressionLanguageInjection {
      * Try to call the default constructor of the honeypot class.
      */
     private const val EXPRESSION_LANGUAGE_ATTACK =
-        "\${\"\".getClass().forName(\"$HONEYPOT_CLASS_NAME\").getMethod(\"el\").invoke(null)}"
+        "\${Byte.class.forName(\"$HONEYPOT_CLASS_NAME\").getMethod(\"el\").invoke(null)}"
 
     @MethodHooks(
         MethodHook(
