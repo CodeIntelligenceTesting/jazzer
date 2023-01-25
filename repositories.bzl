@@ -72,9 +72,9 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "com_github_johnynek_bazel_jar_jar",
-        sha256 = "138a33a5c6ed9355e4411caa22f2fe45460b7e1e4468cbc29f7955367d7a001a",
-        strip_prefix = "bazel_jar_jar-commit-d97cfd22d47cba9a20708fa092f20348b72fb5ed",
-        url = "https://github.com/CodeIntelligenceTesting/bazel_jar_jar/archive/refs/tags/commit-d97cfd22d47cba9a20708fa092f20348b72fb5ed.tar.gz",
+        sha256 = "c6410314975a86b454a822f9b2647879bf521483e5f2f0d480eb165f70844a39",
+        strip_prefix = "bazel_jar_jar-commit-55e3d3bf454641c496e592d77537cf8e65b241c0",
+        url = "https://github.com/CodeIntelligenceTesting/bazel_jar_jar/archive/refs/tags/commit-55e3d3bf454641c496e592d77537cf8e65b241c0.tar.gz",
     )
 
     maybe(
