@@ -33,6 +33,12 @@ object ExpressionLanguageInjection {
     private const val EXPRESSION_LANGUAGE_ATTACK =
         "\${Byte.class.forName(\"$HONEYPOT_CLASS_NAME\").getMethod(\"el\").invoke(null)}"
 
+    init {
+        require(EXPRESSION_LANGUAGE_ATTACK.length <= 64) {
+            "Expression language exploit must fit in a table of recent compares entry (64 bytes)"
+        }
+    }
+
     @MethodHooks(
         MethodHook(
             type = HookType.BEFORE,
