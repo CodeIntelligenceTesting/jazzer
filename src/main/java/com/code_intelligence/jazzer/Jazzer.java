@@ -91,7 +91,7 @@ public class Jazzer {
     // No native fuzzing has been requested, fuzz in the current process.
     if (!fuzzNative) {
       // We only create a wrapper script if libFuzzer runs in a mode that creates subprocesses.
-      // In LibFuzzer's fork mode, the subprocesses created continously by the main libFuzzer
+      // In LibFuzzer's fork mode, the subprocesses created continuously by the main libFuzzer
       // process do not create further subprocesses. Creating a wrapper script for each subprocess
       // is an unnecessary overhead.
       final boolean spawnsSubprocesses = args.stream().anyMatch(

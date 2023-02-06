@@ -30,7 +30,7 @@ final class AgentUtils {
   public static JarFile extractBootstrapJar() {
     try (InputStream bootstrapJarStream = AgentUtils.class.getResourceAsStream(BOOTSTRAP_JAR)) {
       if (bootstrapJarStream == null) {
-        throw new IllegalStateException("Failed to find Jazzer agent boostrap jar in resources");
+        throw new IllegalStateException("Failed to find Jazzer agent bootstrap jar in resources");
       }
       File bootstrapJar = Files.createTempFile("jazzer-agent-", ".jar").toFile();
       bootstrapJar.deleteOnExit();

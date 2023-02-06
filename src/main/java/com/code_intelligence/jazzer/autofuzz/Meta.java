@@ -249,7 +249,7 @@ public class Meta {
     } else {
       if (visitor != null) {
         // This group will always have two elements: The thisObject and the method call.
-        // Since the this object can be a complex expression, wrap it in paranthesis.
+        // Since the this object can be a complex expression, wrap it in parenthesis.
         visitor.pushGroup("(", ").", "");
       }
       try {

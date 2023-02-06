@@ -431,7 +431,7 @@ std::pair<std::string, jint> FixUpModifiedUtf8(const uint8_t *data,
         ForceContinuationByte(c);
         // Preserve the zero character, which is coded on two bytes in modified
         // UTF-8. In all other cases ensure that we are not incorrectly encoding
-        // an ASCII character on two bytes by setting the eigth least
+        // an ASCII character on two bytes by setting the eighth least
         // significant bit of the encoded value (second least significant bit of
         // the leading byte).
         auto previous_c = static_cast<uint8_t>(str.back());

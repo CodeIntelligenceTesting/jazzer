@@ -30,7 +30,7 @@ std::once_flag ignore_list_flag;
 std::vector<std::pair<uintptr_t, uintptr_t>> ignore_for_interception_ranges;
 
 /**
- * Adds the address ranges of executable segmentes of the library lib_name to
+ * Adds the address ranges of executable segments of the library lib_name to
  * the ignorelist for C standard library function interception (strcmp, memcmp,
  * ...).
  */

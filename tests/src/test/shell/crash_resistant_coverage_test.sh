@@ -15,7 +15,7 @@
 
 # This test verifies that Jazzer's --nohook mode can be used to measure code coverage using the
 # JaCoCo agent.
-# It losely follows the OSS-Fuzz merge logic, which is the most important user of this feature:
+# It loosely follows the OSS-Fuzz merge logic, which is the most important user of this feature:
 # https://github.com/google/oss-fuzz/blob/b8ef6a216dc592f4f491daa35c815b14260315c0/infra/base-images/base-runner/coverage#L181
 # The use of libFuzzer's -merge feature should allow coverage collection to proceed through crashing
 # inputs, which is also verified by this test.

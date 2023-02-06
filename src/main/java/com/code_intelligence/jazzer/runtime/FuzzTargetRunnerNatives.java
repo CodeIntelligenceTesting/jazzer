@@ -27,7 +27,7 @@ public class FuzzTargetRunnerNatives {
   static {
     if (FuzzTargetRunnerNatives.class.getClassLoader() != null) {
       throw new IllegalStateException(
-          "FuzzTargetRunnerNatives must be loaded in the boostrap loader");
+          "FuzzTargetRunnerNatives must be loaded in the bootstrap loader");
     }
     RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
   }
