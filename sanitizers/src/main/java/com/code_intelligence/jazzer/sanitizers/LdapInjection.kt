@@ -106,7 +106,7 @@ object LdapInjection {
                     Jazzer.reportFindingFromHook(
                         FuzzerSecurityIssueCritical(
                             """LDAP Injection
-Search filters based on untrusted data must be escape as specified in RFC 4515.""",
+Search filters based on untrusted data must be escaped as specified in RFC 4515.""",
                         ),
                     )
                 is NamingException ->
