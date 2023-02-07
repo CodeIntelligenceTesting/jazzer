@@ -49,7 +49,7 @@ class RuntimeInstrumentor(
     private val dumpClassesDir: Path?,
 ) : ClassFileTransformer {
 
-    @OptIn(kotlin.time.ExperimentalTime::class)
+    @kotlin.time.ExperimentalTime
     override fun transform(
         loader: ClassLoader?,
         internalClassName: String,
@@ -102,6 +102,7 @@ class RuntimeInstrumentor(
         dumpFile.writeBytes(bytecode)
     }
 
+    @kotlin.time.ExperimentalTime
     override fun transform(
         module: Module?,
         loader: ClassLoader?,
@@ -143,7 +144,7 @@ class RuntimeInstrumentor(
         return transform(loader, internalClassName, classBeingRedefined, protectionDomain, classfileBuffer)
     }
 
-    @OptIn(kotlin.time.ExperimentalTime::class)
+    @kotlin.time.ExperimentalTime
     fun transformInternal(internalClassName: String, maybeClassfileBuffer: ByteArray?): ByteArray? {
         val (fullInstrumentation, printInfo) = when {
             classesToFullyInstrument.includes(internalClassName) -> Pair(true, true)

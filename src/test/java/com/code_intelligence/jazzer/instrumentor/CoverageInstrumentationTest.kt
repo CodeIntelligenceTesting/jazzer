@@ -132,7 +132,6 @@ class CoverageInstrumentationTest {
         )
     }
 
-    @OptIn(ExperimentalUnsignedTypes::class)
     @Test
     fun testCounters() {
         MockCoverageMap.clear()
