@@ -1,0 +1,26 @@
+java_library(
+    name = "proto",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator:__pkg__",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator/proto:__pkg__",
+    ],
+    deps = [
+        ":protobuf_runtime_compile_only",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/combinator",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+    ],
+)
+
+java_library(
+    name = "protobuf_runtime_compile_only",
+    # The proto mutator factory detects the presence of Protobuf at runtime and disables itself if
+    # it isn't found. Without something else bringing in the Protobuf runtime, there is no point in
+    # supporting proto mutations.
+    neverlink = True,
+    exports = [
+        "@com_google_protobuf_protobuf_java//jar",
+    ],
+)

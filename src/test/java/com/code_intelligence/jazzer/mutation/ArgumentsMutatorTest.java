@@ -1,0 +1,234 @@
+/*
+ * Copyright 2023 Code Intelligence GmbH
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.code_intelligence.jazzer.mutation;
+
+import static com.code_intelligence.jazzer.mutation.mutator.Mutators.FACTORY;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth8.assertThat;
+import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.SafeToMutate;
+import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+
+class ArgumentsMutatorTest {
+  private static List<List<Boolean>> fuzzThisFunctionArgument1;
+  private static List<Boolean> fuzzThisFunctionArgument2;
+
+  public static void fuzzThisFunction(
+      @SafeToMutate List<List<@NotNull Boolean>> list, List<Boolean> otherList) {
+    fuzzThisFunctionArgument1 = list;
+    fuzzThisFunctionArgument2 = otherList;
+  }
+
+  @Test
+  @ResourceLock(value = "fuzzThisFunction")
+  void testStaticMethod() throws Throwable {
+    Method method =
+        ArgumentsMutatorTest.class.getMethod("fuzzThisFunction", List.class, List.class);
+    Optional<ArgumentsMutator> maybeMutator = ArgumentsMutator.forStaticMethod(FACTORY, method);
+    assertThat(maybeMutator).isPresent();
+    ArgumentsMutator mutator = maybeMutator.get();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // outer list not null
+             1,
+             // outer list size 1
+             1,
+             // inner list not null
+             1,
+             // inner list size 1
+             1,
+             // boolean
+             true,
+             // outer list not null
+             1,
+             // outer list size 1
+             1,
+             // Boolean not null
+             1,
+             // boolean
+             false)) {
+      mutator.init(prng);
+    }
+
+    fuzzThisFunctionArgument1 = null;
+    fuzzThisFunctionArgument2 = null;
+    mutator.invoke();
+    assertThat(fuzzThisFunctionArgument1).containsExactly(singletonList(true));
+    assertThat(fuzzThisFunctionArgument2).containsExactly(false);
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate first argument
+             0,
+             // outer list not null
+             1,
+             // outer list mutate element
+             1,
+             // outer list mutate first element
+             0,
+             // inner list not null
+             1,
+             // inner list mutate element
+             1,
+             // inner list mutate first element
+             0)) {
+      mutator.mutate(prng);
+    }
+
+    fuzzThisFunctionArgument1 = null;
+    fuzzThisFunctionArgument2 = null;
+    mutator.invoke();
+    assertThat(fuzzThisFunctionArgument1).containsExactly(singletonList(false));
+    assertThat(fuzzThisFunctionArgument2).containsExactly(false);
+
+    // Modify the arguments passed to the function.
+    fuzzThisFunctionArgument1.clear();
+    assertThrows(UnsupportedOperationException.class, () -> fuzzThisFunctionArgument2.clear());
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate first argument
+             0,
+             // outer list not null
+             1,
+             // outer list mutate element
+             1,
+             // outer list mutate first element
+             0,
+             // inner list not null
+             1,
+             // inner list mutate element
+             1,
+             // inner list mutate first element
+             0)) {
+      mutator.mutate(prng);
+    }
+
+    fuzzThisFunctionArgument1 = null;
+    fuzzThisFunctionArgument2 = null;
+    mutator.invoke();
+    assertThat(fuzzThisFunctionArgument1).containsExactly(singletonList(true));
+    assertThat(fuzzThisFunctionArgument2).containsExactly(false);
+  }
+
+  private List<List<Boolean>> mutableFuzzThisFunctionArgument1;
+  private List<Boolean> mutableFuzzThisFunctionArgument2;
+
+  public void mutableFuzzThisFunction(
+      @SafeToMutate List<List<@NotNull Boolean>> list, List<Boolean> otherList) {
+    mutableFuzzThisFunctionArgument1 = list;
+    mutableFuzzThisFunctionArgument2 = otherList;
+  }
+
+  @Test
+  void testInstanceMethod() throws Throwable {
+    Method method =
+        ArgumentsMutatorTest.class.getMethod("mutableFuzzThisFunction", List.class, List.class);
+    Optional<ArgumentsMutator> maybeMutator =
+        ArgumentsMutator.forInstanceMethod(FACTORY, this, method);
+    assertThat(maybeMutator).isPresent();
+    ArgumentsMutator mutator = maybeMutator.get();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // outer list not null
+             1,
+             // outer list size 1
+             1,
+             // inner list not null
+             1,
+             // inner list size 1
+             1,
+             // boolean
+             true,
+             // outer list not null
+             1,
+             // outer list size 1
+             1,
+             // Boolean not null
+             1,
+             // boolean
+             false)) {
+      mutator.init(prng);
+    }
+
+    mutableFuzzThisFunctionArgument1 = null;
+    mutableFuzzThisFunctionArgument2 = null;
+    mutator.invoke();
+    assertThat(mutableFuzzThisFunctionArgument1).containsExactly(singletonList(true));
+    assertThat(mutableFuzzThisFunctionArgument2).containsExactly(false);
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate first argument
+             0,
+             // outer list not null
+             1,
+             // outer list mutate element
+             1,
+             // outer list mutate first element
+             0,
+             // inner list not null
+             1,
+             // inner list mutate element
+             1,
+             // inner list mutate first element
+             0)) {
+      mutator.mutate(prng);
+    }
+
+    mutableFuzzThisFunctionArgument1 = null;
+    mutableFuzzThisFunctionArgument2 = null;
+    mutator.invoke();
+    assertThat(mutableFuzzThisFunctionArgument1).containsExactly(singletonList(false));
+    assertThat(mutableFuzzThisFunctionArgument2).containsExactly(false);
+
+    // Modify the arguments passed to the function.
+    mutableFuzzThisFunctionArgument1.clear();
+    assertThrows(
+        UnsupportedOperationException.class, () -> mutableFuzzThisFunctionArgument2.clear());
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate first argument
+             0,
+             // outer list not null
+             1,
+             // outer list mutate element
+             1,
+             // outer list mutate first element
+             0,
+             // inner list not null
+             1,
+             // inner list mutate element
+             1,
+             // inner list mutate first element
+             0)) {
+      mutator.mutate(prng);
+    }
+
+    mutableFuzzThisFunctionArgument1 = null;
+    mutableFuzzThisFunctionArgument2 = null;
+    mutator.invoke();
+    assertThat(mutableFuzzThisFunctionArgument1).containsExactly(singletonList(true));
+    assertThat(mutableFuzzThisFunctionArgument2).containsExactly(false);
+  }
+}

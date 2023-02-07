@@ -1,0 +1,9 @@
+java_library(
+    name = "api",
+    srcs = glob(["*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+        "@com_google_errorprone_error_prone_annotations//jar",
+    ],
+)
