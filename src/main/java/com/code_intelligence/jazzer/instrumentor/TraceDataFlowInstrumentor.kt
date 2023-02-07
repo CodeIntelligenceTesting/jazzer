@@ -51,7 +51,6 @@ internal class TraceDataFlowInstrumentor(
         return writer.toByteArray()
     }
 
-    @OptIn(ExperimentalUnsignedTypes::class)
     private fun addDataFlowInstrumentation(method: MethodNode) {
         loop@ for (inst in method.instructions.toArray()) {
             when (inst.opcode) {
