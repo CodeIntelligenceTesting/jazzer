@@ -46,6 +46,7 @@ MAVEN_ARTIFACTS = [
     "org.junit.platform:junit-platform-commons:jar:1.9.0",
     "org.junit.platform:junit-platform-launcher:jar:1.9.0",
     "org.junit.platform:junit-platform-engine:jar:1.9.0",
+    "org.junit.platform:junit-platform-reporting:jar:1.9.0",
     "org.junit.platform:junit-platform-testkit:jar:1.9.0",
     "org.openjdk.jmh:jmh-core:1.34",
     "org.openjdk.jmh:jmh-generator-annprocess:1.34",

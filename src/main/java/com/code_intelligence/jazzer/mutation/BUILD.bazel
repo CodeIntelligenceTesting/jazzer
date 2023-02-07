@@ -1,0 +1,14 @@
+java_library(
+    name = "mutation",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/combinator",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+    ],
+)

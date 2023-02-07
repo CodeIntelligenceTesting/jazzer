@@ -1,0 +1,15 @@
+load("@contrib_rules_jvm//java:defs.bzl", "java_test_suite")
+
+java_test_suite(
+    name = "MutationTests",
+    size = "small",
+    srcs = glob(["*Test.java"]),
+    runner = "junit5",
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/support:test_support",
+    ],
+)

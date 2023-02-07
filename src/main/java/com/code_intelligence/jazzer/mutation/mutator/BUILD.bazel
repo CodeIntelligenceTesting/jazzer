@@ -1,0 +1,12 @@
+java_library(
+    name = "mutator",
+    srcs = glob(["*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/collection",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/lang",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/proto",
+    ],
+)
