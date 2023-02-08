@@ -24,11 +24,19 @@ import static java.util.stream.Collectors.joining;
 
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
+import com.code_intelligence.jazzer.mutation.api.Serializer;
+import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.api.ValueMutator;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import net.jodah.typetools.TypeResolver;
 
 public final class MutatorCombinators {
@@ -109,6 +117,69 @@ public final class MutatorCombinators {
       @Override
       public String toString() {
         return stream(mutators).map(Object::toString).collect(joining(", ", "{", "}"));
+      }
+    };
+  }
+
+  /**
+   * Assembles the parameters into a full implementation of {@link SerializingInPlaceMutator<T>}:
+   *
+   * @param makeDefaultInstance constructs a mutable default instance of {@code T}
+   * @param serializerDelegate  implementation of the {@link Serializer<T>} part
+   * @param partialMutators     one or more mutators that are combined with
+   *                            {@link #combine(InPlaceMutator[])}
+   */
+  @SafeVarargs
+  public static <T> SerializingInPlaceMutator<T> combine(Supplier<T> makeDefaultInstance,
+      Serializer<T> serializerDelegate, InPlaceMutator<T>... partialMutators) {
+    requireNonNull(makeDefaultInstance);
+    requireNonNull(serializerDelegate);
+
+    InPlaceMutator<T> mutatorDelegate = combine(partialMutators);
+    return new SerializingInPlaceMutator<T>() {
+      @Override
+      public void initInPlace(T reference, PseudoRandom prng) {
+        mutatorDelegate.initInPlace(reference, prng);
+      }
+
+      @Override
+      public void mutateInPlace(T reference, PseudoRandom prng) {
+        mutatorDelegate.mutateInPlace(reference, prng);
+      }
+
+      @Override
+      protected T makeDefaultInstance() {
+        return makeDefaultInstance.get();
+      }
+
+      @Override
+      public String toString() {
+        return mutatorDelegate.toString();
+      }
+
+      @Override
+      public T read(DataInputStream in) throws IOException {
+        return serializerDelegate.read(in);
+      }
+
+      @Override
+      public void write(T value, DataOutputStream out) throws IOException {
+        serializerDelegate.write(value, out);
+      }
+
+      @Override
+      public T readExclusive(InputStream in) throws IOException {
+        return serializerDelegate.readExclusive(in);
+      }
+
+      @Override
+      public void writeExclusive(T value, OutputStream out) throws IOException {
+        serializerDelegate.writeExclusive(value, out);
+      }
+
+      @Override
+      public T detach(T value) {
+        return serializerDelegate.detach(value);
       }
     };
   }
