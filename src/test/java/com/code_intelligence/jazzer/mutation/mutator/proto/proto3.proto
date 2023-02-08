@@ -27,3 +27,7 @@ message OptionalPrimitiveField3 {
 message RepeatedPrimitiveField3 {
   repeated bool some_field = 1;
 }
+
+message MessageField3 {
+  PrimitiveField3 message_field = 1;
+}

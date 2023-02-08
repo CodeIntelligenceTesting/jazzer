@@ -19,9 +19,11 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.combine;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateProperty;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateViaView;
+import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getMessageField;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getMutableRepeatedFieldView;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getPresentFieldOrNull;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setFieldWithPresence;
+import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setMessageField;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
@@ -35,6 +37,7 @@ import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.api.ValueMutator;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.Descriptors.FieldDescriptor.Type;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import java.io.DataInputStream;
@@ -68,8 +71,8 @@ public final class BuilderMutatorFactory extends MutatorFactory {
   }
 
   private static <T extends Builder, U> InPlaceMutator<T> mutatorForField(
-      FieldDescriptor field, MutatorFactory factory) {
-    AnnotatedType typeToMutate = TypeLibrary.getTypeToMutate(field);
+      FieldDescriptor field, T fieldBuilder, MutatorFactory factory) {
+    AnnotatedType typeToMutate = TypeLibrary.getTypeToMutate(field, fieldBuilder);
     requireNonNull(typeToMutate, () -> "Java class not specified for " + field);
 
     if (field.isRepeated()) {
@@ -78,10 +81,18 @@ public final class BuilderMutatorFactory extends MutatorFactory {
       return mutateViaView(
           builder -> getMutableRepeatedFieldView(builder, field), underlyingMutator);
     } else if (field.hasPresence()) {
-      ValueMutator<U> underlyingMutator = (ValueMutator<U>) factory.createOrThrow(typeToMutate);
-      return mutateProperty(builder
-          -> getPresentFieldOrNull(builder, field),
-          underlyingMutator, (builder, value) -> setFieldWithPresence(builder, field, value));
+      if (field.getType() == Type.MESSAGE) {
+        ValueMutator<Builder> underlyingMutator =
+            (ValueMutator<Builder>) factory.createOrThrow(typeToMutate);
+        return mutateProperty(builder
+            -> getMessageField(builder, field),
+            underlyingMutator, (builder, value) -> setMessageField(builder, field, value));
+      } else {
+        ValueMutator<U> underlyingMutator = (ValueMutator<U>) factory.createOrThrow(typeToMutate);
+        return mutateProperty(builder
+            -> getPresentFieldOrNull(builder, field),
+            underlyingMutator, (builder, value) -> setFieldWithPresence(builder, field, value));
+      }
     } else {
       ValueMutator<U> underlyingMutator = (ValueMutator<U>) factory.createOrThrow(typeToMutate);
       return mutateProperty(builder
@@ -152,7 +163,8 @@ public final class BuilderMutatorFactory extends MutatorFactory {
           getDescriptor(builderClass)
               .getFields()
               .stream()
-              .map(fieldDescriptor -> mutatorForField(fieldDescriptor, factory))
+              .map(fieldDescriptor
+                  -> mutatorForField(fieldDescriptor, builderSupplier.get(), factory))
               .toArray(InPlaceMutator[] ::new));
     });
   }

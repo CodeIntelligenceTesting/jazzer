@@ -91,5 +91,22 @@ final class BuilderAdapters {
     }
   }
 
+  static <T extends Builder> Builder getMessageField(T builder, FieldDescriptor field) {
+    if (builder.hasField(field)) {
+      return builder.getFieldBuilder(field);
+    } else {
+      return null;
+    }
+  }
+
+  static <T extends Builder> void setMessageField(
+      T builder, FieldDescriptor field, Builder fieldBuilder) {
+    if (fieldBuilder == null) {
+      builder.clearField(field);
+    } else {
+      builder.setField(field, fieldBuilder.build());
+    }
+  }
+
   private BuilderAdapters() {}
 }
