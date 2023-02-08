@@ -25,7 +25,7 @@ public final class ProtoMutators {
   private static MutatorFactory messageMutatorFactoryIfSupported() {
     try {
       Class.forName("com.google.protobuf.Message");
-      return new MessageMutatorFactory();
+      return new ChainedMutatorFactory(new MessageMutatorFactory(), new BuilderMutatorFactory());
     } catch (ClassNotFoundException e) {
       return new ChainedMutatorFactory();
     }

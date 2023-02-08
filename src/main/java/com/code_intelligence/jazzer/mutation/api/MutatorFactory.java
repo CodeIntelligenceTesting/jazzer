@@ -35,15 +35,22 @@ public abstract class MutatorFactory {
     return maybeMutator.get();
   }
 
-  public final <T> SerializingInPlaceMutator<T> createInPlaceOrThrow(Class<T> clazz) {
-    return (SerializingInPlaceMutator<T>) createOrThrow(asAnnotatedType(clazz));
+  public final SerializingInPlaceMutator<?> createInPlaceOrThrow(AnnotatedType type) {
+    Optional<SerializingInPlaceMutator<?>> maybeMutator = tryCreateInPlace(type);
+    require(maybeMutator.isPresent(), "Failed to create mutator for " + type);
+    return maybeMutator.get();
   }
 
-  public final SerializingInPlaceMutator<?> createInPlaceOrThrow(AnnotatedType type) {
-    SerializingMutator<?> mutator = createOrThrow(type);
-    require(mutator instanceof InPlaceMutator<?>,
-        format("Mutator for %s is not in-place: %s", type, mutator.getClass()));
-    return (SerializingInPlaceMutator<?>) mutator;
+  /**
+   * Tries to create a mutator for {@code type} and, if successful, asserts that it is an instance
+   * of {@link SerializingInPlaceMutator}.
+   */
+  public final Optional<SerializingInPlaceMutator<?>> tryCreateInPlace(AnnotatedType type) {
+    return tryCreate(type).map(mutator -> {
+      require(mutator instanceof InPlaceMutator<?>,
+          format("Mutator for %s is not in-place: %s", type, mutator.getClass()));
+      return (SerializingInPlaceMutator<?>) mutator;
+    });
   }
 
   @CheckReturnValue

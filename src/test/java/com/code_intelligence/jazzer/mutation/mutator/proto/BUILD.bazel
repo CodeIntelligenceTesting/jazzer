@@ -11,16 +11,18 @@ java_proto_library(
 )
 
 java_test_suite(
-    name = "ProtobufTests",
+    name = "ProtoTests",
     size = "small",
     srcs = glob(["*.java"]),
     runner = "junit5",
     deps = [
         ":proto3_java_proto",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/collection",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/lang",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/proto",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
         "//src/test/java/com/code_intelligence/jazzer/mutation/support:test_support",
         "@com_google_protobuf//java/core",
     ],

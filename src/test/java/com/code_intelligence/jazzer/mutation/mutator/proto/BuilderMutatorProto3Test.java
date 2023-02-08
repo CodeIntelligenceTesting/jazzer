@@ -19,26 +19,28 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutators;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
+import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.PrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedPrimitiveField3;
 import org.junit.jupiter.api.Test;
 
 class BuilderMutatorProto3Test {
-  static final MutatorFactory baseFactory =
-      new ChainedMutatorFactory(LangMutators.FACTORY, CollectionMutators.FACTORY);
-  static final BuilderMutatorFactory builderFactory = new BuilderMutatorFactory();
+  private static final MutatorFactory FACTORY = new ChainedMutatorFactory(
+      LangMutators.FACTORY, CollectionMutators.FACTORY, ProtoMutators.FACTORY);
 
   @Test
   void testPrimitiveField() {
     InPlaceMutator<PrimitiveField3.Builder> mutator =
-        builderFactory.tryCreate(PrimitiveField3.Builder.class, baseFactory).get();
+        (InPlaceMutator<PrimitiveField3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<PrimitiveField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Boolean}");
 
     PrimitiveField3.Builder builder = PrimitiveField3.newBuilder();
@@ -57,7 +59,8 @@ class BuilderMutatorProto3Test {
   @Test
   void testOptionalPrimitiveField() {
     InPlaceMutator<OptionalPrimitiveField3.Builder> mutator =
-        builderFactory.tryCreate(OptionalPrimitiveField3.Builder.class, baseFactory).get();
+        (InPlaceMutator<OptionalPrimitiveField3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<OptionalPrimitiveField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<Boolean>}");
 
     OptionalPrimitiveField3.Builder builder = OptionalPrimitiveField3.newBuilder();
@@ -104,7 +107,8 @@ class BuilderMutatorProto3Test {
   @Test
   void testRepeatedPrimitiveField() {
     InPlaceMutator<RepeatedPrimitiveField3.Builder> mutator =
-        builderFactory.tryCreate(RepeatedPrimitiveField3.Builder.class, baseFactory).get();
+        (InPlaceMutator<RepeatedPrimitiveField3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<RepeatedPrimitiveField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder via List<Boolean>}");
 
     RepeatedPrimitiveField3.Builder builder = RepeatedPrimitiveField3.newBuilder();
