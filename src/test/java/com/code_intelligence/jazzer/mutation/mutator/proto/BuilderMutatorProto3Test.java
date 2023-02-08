@@ -27,6 +27,7 @@ import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutato
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.protobuf.Proto3.MessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.PrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedPrimitiveField3;
@@ -141,5 +142,48 @@ class BuilderMutatorProto3Test {
       mutator.mutateInPlace(builder, prng);
     }
     assertThat(builder.getSomeFieldList()).containsExactly(true, false).inOrder();
+  }
+
+  @Test
+  void testMessageField() {
+    InPlaceMutator<MessageField3.Builder> mutator =
+        (InPlaceMutator<MessageField3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<MessageField3.@NotNull Builder>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<{Builder.Boolean}>}");
+
+    MessageField3.Builder builder = MessageField3.newBuilder();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // init submessage
+             1,
+             // boolean submessage field
+             true)) {
+      mutator.initInPlace(builder, prng);
+    }
+    assertThat(builder.getMessageField())
+        .isEqualTo(PrimitiveField3.newBuilder().setSomeField(true).build());
+    assertThat(builder.hasMessageField()).isTrue();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate first field
+             0,
+             // mutate submessage as non-null
+             1,
+             // mutate first field
+             0)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.getMessageField())
+        .isEqualTo(PrimitiveField3.newBuilder().setSomeField(false).build());
+    assertThat(builder.hasMessageField()).isTrue();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate first field
+             0,
+             // mutate submessage to null
+             0)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.hasMessageField()).isFalse();
   }
 }
