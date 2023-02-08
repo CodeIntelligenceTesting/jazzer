@@ -17,8 +17,10 @@
 package com.code_intelligence.jazzer.mutation.support;
 
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withTypeArguments;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth8.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
@@ -190,5 +192,16 @@ class TypeSupportTest {
         () -> withTypeArguments(new TypeHolder<List>() {}.annotatedType()));
     assertThrows(IllegalArgumentException.class, () -> withTypeArguments(new TypeHolder<List<?>>() {
     }.annotatedType(), asAnnotatedType(String.class)));
+  }
+
+  @Test
+  void testAsSubclassOrEmpty() {
+    assertThat(asSubclassOrEmpty(asAnnotatedType(String.class), String.class))
+        .hasValue(String.class);
+    assertThat(asSubclassOrEmpty(asAnnotatedType(String.class), CharSequence.class))
+        .hasValue(String.class);
+    assertThat(asSubclassOrEmpty(asAnnotatedType(CharSequence.class), String.class)).isEmpty();
+    assertThat(asSubclassOrEmpty(new TypeHolder<List<String>>() {
+    }.annotatedType(), List.class)).isEmpty();
   }
 }

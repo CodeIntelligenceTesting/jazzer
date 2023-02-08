@@ -35,6 +35,10 @@ public abstract class MutatorFactory {
     return maybeMutator.get();
   }
 
+  public final <T> SerializingInPlaceMutator<T> createInPlaceOrThrow(Class<T> clazz) {
+    return (SerializingInPlaceMutator<T>) createOrThrow(asAnnotatedType(clazz));
+  }
+
   public final SerializingInPlaceMutator<?> createInPlaceOrThrow(AnnotatedType type) {
     SerializingMutator<?> mutator = createOrThrow(type);
     require(mutator instanceof InPlaceMutator<?>,
