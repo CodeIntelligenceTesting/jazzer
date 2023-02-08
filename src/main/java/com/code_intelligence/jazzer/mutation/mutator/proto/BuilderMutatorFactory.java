@@ -22,23 +22,35 @@ import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinator
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getMutableRepeatedFieldView;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getPresentFieldOrNull;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setFieldWithPresence;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
+import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
+import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import com.code_intelligence.jazzer.mutation.api.Serializer;
+import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.api.ValueMutator;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
-public final class BuilderMutatorFactory {
+public final class BuilderMutatorFactory extends MutatorFactory {
   private static <T extends Builder> Descriptor getDescriptor(Class<T> builderClass) {
     Method getDescriptor;
     try {
@@ -78,14 +90,70 @@ public final class BuilderMutatorFactory {
     }
   }
 
-  public <T extends Builder> Optional<InPlaceMutator<T>> tryCreate(
-      Class<T> builderClass, MutatorFactory factory) {
-    return findFirstParentIfClass(asAnnotatedType(builderClass), Builder.class)
-        .map(parent
-            -> combine(getDescriptor(builderClass)
-                           .getFields()
-                           .stream()
-                           .map(fieldDescriptor -> mutatorForField(fieldDescriptor, factory))
-                           .toArray(InPlaceMutator[] ::new)));
+  private static <T extends Builder> Supplier<T> makeBuilderSupplier(Class<T> builderClass) {
+    Class<?> messageClass = builderClass.getEnclosingClass();
+    Method newBuilder;
+    try {
+      newBuilder = messageClass.getMethod("newBuilder");
+      check(Modifier.isStatic(newBuilder.getModifiers()));
+    } catch (NoSuchMethodException e) {
+      throw new IllegalStateException(
+          format(
+              "Message class for builder type %s does not have a newBuilder method", builderClass),
+          e);
+    }
+    return () -> {
+      try {
+        return (T) newBuilder.invoke(null);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        throw new IllegalStateException(
+            format(newBuilder + " isn't accessible or threw an exception"), e);
+      }
+    };
+  }
+
+  private static Serializer<Builder> makeBuilderSerializer(Supplier<Builder> supplier) {
+    return new Serializer<Builder>() {
+      @Override
+      public Builder read(DataInputStream in) throws IOException {
+        int length = in.readInt();
+        return supplier.get().mergeFrom(cap(in, length));
+      }
+
+      @Override
+      public void write(Builder builder, DataOutputStream out) throws IOException {
+        Message message = builder.build();
+        out.writeInt(message.getSerializedSize());
+        message.writeTo(out);
+      }
+
+      @Override
+      public Builder readExclusive(InputStream in) throws IOException {
+        return supplier.get().mergeFrom(in);
+      }
+
+      @Override
+      public void writeExclusive(Builder builder, OutputStream out) throws IOException {
+        builder.build().writeTo(out);
+      }
+
+      @Override
+      public Builder detach(Builder builder) {
+        return builder.build().toBuilder();
+      }
+    };
+  }
+
+  @Override
+  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+    return asSubclassOrEmpty(type, Builder.class).map(builderClass -> {
+      Supplier<Builder> builderSupplier = makeBuilderSupplier(builderClass);
+      return combine(builderSupplier, makeBuilderSerializer(builderSupplier),
+          getDescriptor(builderClass)
+              .getFields()
+              .stream()
+              .map(fieldDescriptor -> mutatorForField(fieldDescriptor, factory))
+              .toArray(InPlaceMutator[] ::new));
+    });
   }
 }

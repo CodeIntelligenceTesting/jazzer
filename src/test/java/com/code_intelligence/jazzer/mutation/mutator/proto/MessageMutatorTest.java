@@ -22,14 +22,15 @@ import static com.google.common.truth.Truth.assertThat;
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutators;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.protobuf.Proto3.PrimitiveField3;
 import org.junit.jupiter.api.Test;
 
 class MessageMutatorTest {
-  private static final MutatorFactory FACTORY =
-      new ChainedMutatorFactory(LangMutators.FACTORY, ProtoMutators.FACTORY);
+  private static final MutatorFactory FACTORY = new ChainedMutatorFactory(
+      LangMutators.FACTORY, CollectionMutators.FACTORY, ProtoMutators.FACTORY);
 
   @Test
   void testSimpleMessage() {
