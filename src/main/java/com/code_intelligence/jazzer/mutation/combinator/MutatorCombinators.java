@@ -36,6 +36,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -143,64 +144,22 @@ public final class MutatorCombinators {
   /**
    * Assembles the parameters into a full implementation of {@link SerializingInPlaceMutator<T>}:
    *
+   * @param registerSelf        a callback that will receive the uninitialized mutator instance
+   *                            before {@code lazyMutator} is invoked. For simple cases this can
+   *                            just do nothing, but it is needed to implement mutators for
+   *                            structures that are self-referential (e.g. Protobuf message A having
+   *                            a field of type A).
    * @param makeDefaultInstance constructs a mutable default instance of {@code T}
-   * @param serializerDelegate  implementation of the {@link Serializer<T>} part
-   * @param partialMutators     one or more mutators that are combined with
-   *                            {@link #combine(InPlaceMutator[])}
+   * @param serializer          implementation of the {@link Serializer<T>} part
+   * @param lazyMutator         supplies the implementation of the {@link InPlaceMutator<T>} part.
+   *                            This is guaranteed to be invoked exactly once and only after
+   *                            {@code registerSelf}.
    */
-  @SafeVarargs
-  public static <T> SerializingInPlaceMutator<T> combine(Supplier<T> makeDefaultInstance,
-      Serializer<T> serializerDelegate, InPlaceMutator<T>... partialMutators) {
-    requireNonNull(makeDefaultInstance);
-    requireNonNull(serializerDelegate);
-
-    InPlaceMutator<T> mutatorDelegate = combine(partialMutators);
-    return new SerializingInPlaceMutator<T>() {
-      @Override
-      public void initInPlace(T reference, PseudoRandom prng) {
-        mutatorDelegate.initInPlace(reference, prng);
-      }
-
-      @Override
-      public void mutateInPlace(T reference, PseudoRandom prng) {
-        mutatorDelegate.mutateInPlace(reference, prng);
-      }
-
-      @Override
-      protected T makeDefaultInstance() {
-        return makeDefaultInstance.get();
-      }
-
-      @Override
-      public String toDebugString(Predicate<Debuggable> isInCycle) {
-        return mutatorDelegate.toDebugString(isInCycle);
-      }
-
-      @Override
-      public T read(DataInputStream in) throws IOException {
-        return serializerDelegate.read(in);
-      }
-
-      @Override
-      public void write(T value, DataOutputStream out) throws IOException {
-        serializerDelegate.write(value, out);
-      }
-
-      @Override
-      public T readExclusive(InputStream in) throws IOException {
-        return serializerDelegate.readExclusive(in);
-      }
-
-      @Override
-      public void writeExclusive(T value, OutputStream out) throws IOException {
-        serializerDelegate.writeExclusive(value, out);
-      }
-
-      @Override
-      public T detach(T value) {
-        return serializerDelegate.detach(value);
-      }
-    };
+  public static <T> SerializingInPlaceMutator<T> assemble(
+      Consumer<SerializingInPlaceMutator<T>> registerSelf, Supplier<T> makeDefaultInstance,
+      Serializer<T> serializer, Supplier<InPlaceMutator<T>> lazyMutator) {
+    return new DelegatingSerializingInPlaceMutator<>(
+        registerSelf, makeDefaultInstance, serializer, lazyMutator);
   }
 
   public static <T, R> SerializingMutator<R> mutateThenMap(
@@ -224,5 +183,72 @@ public final class MutatorCombinators {
    */
   public static ProductMutator mutateProduct(SerializingMutator... mutators) {
     return new ProductMutator(mutators);
+  }
+
+  private static class DelegatingSerializingInPlaceMutator<T> extends SerializingInPlaceMutator<T> {
+    private final Supplier<T> makeDefaultInstance;
+    private final Serializer<T> serializer;
+    private final InPlaceMutator<T> mutator;
+
+    private DelegatingSerializingInPlaceMutator(Consumer<SerializingInPlaceMutator<T>> registerSelf,
+        Supplier<T> makeDefaultInstance, Serializer<T> serializer,
+        Supplier<InPlaceMutator<T>> lazyMutator) {
+      requireNonNull(makeDefaultInstance);
+      requireNonNull(serializer);
+
+      registerSelf.accept(this);
+      this.makeDefaultInstance = makeDefaultInstance;
+      this.serializer = serializer;
+      this.mutator = lazyMutator.get();
+    }
+
+    @Override
+    public void initInPlace(T reference, PseudoRandom prng) {
+      mutator.initInPlace(reference, prng);
+    }
+
+    @Override
+    public void mutateInPlace(T reference, PseudoRandom prng) {
+      mutator.mutateInPlace(reference, prng);
+    }
+
+    @Override
+    protected T makeDefaultInstance() {
+      return makeDefaultInstance.get();
+    }
+
+    @Override
+    public T read(DataInputStream in) throws IOException {
+      return serializer.read(in);
+    }
+
+    @Override
+    public void write(T value, DataOutputStream out) throws IOException {
+      serializer.write(value, out);
+    }
+
+    @Override
+    public T readExclusive(InputStream in) throws IOException {
+      return serializer.readExclusive(in);
+    }
+
+    @Override
+    public void writeExclusive(T value, OutputStream out) throws IOException {
+      serializer.writeExclusive(value, out);
+    }
+
+    @Override
+    public T detach(T value) {
+      return serializer.detach(value);
+    }
+
+    @Override
+    public String toDebugString(Predicate<Debuggable> isInCycle) {
+      if (isInCycle.test(this)) {
+        return "(cycle)";
+      } else {
+        return mutator.toDebugString(isInCycle);
+      }
+    }
   }
 }

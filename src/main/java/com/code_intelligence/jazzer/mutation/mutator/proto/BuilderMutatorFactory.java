@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
+import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.assemble;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.combine;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateProperty;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateViaView;
@@ -50,6 +51,7 @@ import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -163,17 +165,41 @@ public final class BuilderMutatorFactory extends MutatorFactory {
     };
   }
 
+  /*
+   * Ensures that only a single instance is created per builder class and shared among all mutators
+   * that need it. This ensures that arbitrarily nested recursive structures such as a Protobuf
+   * message type that contains itself as a message field are representable as fixed-size mutator
+   * structures.
+   *
+   * Note: The resulting mutator structures may no longer form a tree: If A is a protobuf message
+   * type with a message field B and B in turn has a message field of type A, then the mutators for
+   * A and B will reference each other, forming a cycle.
+   */
+  private final HashMap<Class<? extends Builder>, SerializingMutator<Builder>> internedMutators =
+      new HashMap<>();
+
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
     return asSubclassOrEmpty(type, Builder.class).map(builderClass -> {
+      if (internedMutators.containsKey(builderClass)) {
+        return internedMutators.get(builderClass);
+      }
       Supplier<Builder> builderSupplier = makeBuilderSupplier(builderClass);
-      return combine(builderSupplier, makeBuilderSerializer(builderSupplier),
-          getDescriptor(builderClass)
-              .getFields()
-              .stream()
-              .map(fieldDescriptor
-                  -> mutatorForField(fieldDescriptor, builderSupplier.get(), factory))
-              .toArray(InPlaceMutator[] ::new));
+      // assemble inserts the instance of the newly created builder mutator into the
+      // internedMutators map *before* recursively creating the mutators for its fields, which
+      // ensures that the recursion is finite (bounded by the total number of distinct message types
+      // that transitively occur as field types on the current message type).
+      return assemble(mutator
+          -> internedMutators.put(builderClass, mutator),
+          builderSupplier, makeBuilderSerializer(builderSupplier),
+          ()
+              -> combine(
+                  getDescriptor(builderClass)
+                      .getFields()
+                      .stream()
+                      .map(fieldDescriptor
+                          -> mutatorForField(fieldDescriptor, builderSupplier.get(), factory))
+                      .toArray(InPlaceMutator[] ::new)));
     });
   }
 }
