@@ -22,6 +22,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirs
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.google.errorprone.annotations.Immutable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -31,7 +32,13 @@ import java.lang.reflect.AnnotatedType;
 import java.util.Arrays;
 import java.util.Optional;
 
-public final class ByteArrayMutatorFactory extends MutatorFactory {
+final class ByteArrayMutatorFactory extends MutatorFactory {
+  @Override
+  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+    return findFirstParentIfClass(type, byte[].class).map(parent -> ByteArrayMutator.INSTANCE);
+  }
+
+  @Immutable
   private static final class ByteArrayMutator implements SerializingMutator<byte[]> {
     private static final ByteArrayMutator INSTANCE = new ByteArrayMutator();
 
@@ -79,10 +86,5 @@ public final class ByteArrayMutatorFactory extends MutatorFactory {
     public String toString() {
       return "ByteArray";
     }
-  }
-
-  @Override
-  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
-    return findFirstParentIfClass(type, byte[].class).map(parent -> ByteArrayMutator.INSTANCE);
   }
 }

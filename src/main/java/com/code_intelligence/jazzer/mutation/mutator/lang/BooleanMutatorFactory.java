@@ -21,6 +21,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirs
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.google.errorprone.annotations.Immutable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -34,6 +35,7 @@ final class BooleanMutatorFactory extends MutatorFactory {
         .map(parent -> BooleanMutator.INSTANCE);
   }
 
+  @Immutable
   private static final class BooleanMutator implements SerializingMutator<Boolean> {
     private static final BooleanMutator INSTANCE = new BooleanMutator();
 

@@ -24,6 +24,10 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
 
+/**
+ * Instances of this class are not required to be thread safe, but are generally lightweight and can
+ * thus be created as needed.
+ */
 public abstract class MutatorFactory {
   public final <T> SerializingMutator<T> createOrThrow(Class<T> clazz) {
     return (SerializingMutator<T>) createOrThrow(asAnnotatedType(clazz));

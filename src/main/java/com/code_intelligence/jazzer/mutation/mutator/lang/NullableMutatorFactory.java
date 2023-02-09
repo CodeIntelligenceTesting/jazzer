@@ -32,7 +32,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
 
-public final class NullableMutatorFactory extends MutatorFactory {
+final class NullableMutatorFactory extends MutatorFactory {
   private static final Annotation NOT_NULL =
       new TypeHolder<@NotNull String>() {}.annotatedType().getAnnotation(NotNull.class);
 

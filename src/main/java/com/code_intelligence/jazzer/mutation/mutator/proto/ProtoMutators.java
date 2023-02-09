@@ -20,9 +20,9 @@ import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 
 public final class ProtoMutators {
-  public static final MutatorFactory FACTORY = messageMutatorFactoryIfSupported();
+  private ProtoMutators() {}
 
-  private static MutatorFactory messageMutatorFactoryIfSupported() {
+  public static MutatorFactory newFactory() {
     try {
       Class.forName("com.google.protobuf.Message");
       return new ChainedMutatorFactory(new MessageMutatorFactory(), new BuilderMutatorFactory());
@@ -30,6 +30,4 @@ public final class ProtoMutators {
       return new ChainedMutatorFactory();
     }
   }
-
-  private ProtoMutators() {}
 }

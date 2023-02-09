@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 class BooleanMutatorTest {
   @Test
   void testPrimitive() {
-    SerializingMutator<Boolean> mutator = LangMutators.FACTORY.createOrThrow(boolean.class);
+    SerializingMutator<Boolean> mutator = LangMutators.newFactory().createOrThrow(boolean.class);
     assertThat(mutator.toString()).isEqualTo("Boolean");
 
     boolean bool;
@@ -46,7 +46,7 @@ class BooleanMutatorTest {
   @Test
   void testBoxed() {
     SerializingMutator<Boolean> mutator =
-        (SerializingMutator<Boolean>) LangMutators.FACTORY.createOrThrow(
+        (SerializingMutator<Boolean>) LangMutators.newFactory().createOrThrow(
             new TypeHolder<@NotNull Boolean>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Boolean");
 
