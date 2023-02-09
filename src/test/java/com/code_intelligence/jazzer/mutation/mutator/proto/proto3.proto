@@ -35,3 +35,13 @@ message MessageField3 {
 message RepeatedMessageField3 {
   repeated PrimitiveField3 message_field = 1;
 }
+
+message RecursiveMessageField3 {
+  bool some_field = 1;
+  RecursiveMessageField3 message_field = 2;
+}
+
+message RepeatedRecursiveMessageField3 {
+  bool some_field = 1;
+  repeated RepeatedRecursiveMessageField3 message_field = 2;
+}

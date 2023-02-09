@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
@@ -30,8 +31,10 @@ import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.code_intelligence.jazzer.protobuf.Proto3.MessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.PrimitiveField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.RecursiveMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedPrimitiveField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageField3;
 import org.junit.jupiter.api.Test;
 
 class BuilderMutatorProto3Test {
@@ -235,5 +238,63 @@ class BuilderMutatorProto3Test {
         .containsExactly(PrimitiveField3.newBuilder().setSomeField(true).build(),
             PrimitiveField3.newBuilder().setSomeField(false).build())
         .inOrder();
+  }
+
+  @Test
+  void testRecursiveMessageField() {
+    InPlaceMutator<RecursiveMessageField3.Builder> mutator =
+        (InPlaceMutator<RecursiveMessageField3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<RecursiveMessageField3.@NotNull Builder>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("{Builder.Boolean, Builder.Nullable<(cycle)>}");
+    RecursiveMessageField3.Builder builder = RecursiveMessageField3.newBuilder();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // boolean
+             true,
+             // message field is not null
+             1,
+             // nested boolean,
+             false,
+             // nested message field is not set
+             0)) {
+      mutator.initInPlace(builder, prng);
+    }
+    // Nested message field is *not* set explicitly and implicitly equal to the default instance.
+    assertThat(builder.build())
+        .isEqualTo(RecursiveMessageField3.newBuilder()
+                       .setSomeField(true)
+                       .setMessageField(RecursiveMessageField3.newBuilder())
+                       .build());
+    assertThat(builder.getMessageFieldBuilder().hasMessageField()).isFalse();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate message field
+             1,
+             // mutate message field as not null
+             1,
+             // mutate message field
+             1,
+             // nested boolean,
+             false,
+             // nested message field is null
+             0)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    // Nested message field *is* set explicitly and implicitly equal to the default instance.
+    assertThat(builder.build())
+        .isEqualTo(RecursiveMessageField3.newBuilder()
+                       .setSomeField(true)
+                       .setMessageField(RecursiveMessageField3.newBuilder().setMessageField(
+                           RecursiveMessageField3.newBuilder()))
+                       .build());
+    assertThat(builder.getMessageField().hasMessageField()).isTrue();
+  }
+
+  @Test
+  void testRepeatedRecursiveMessageField() {
+    InPlaceMutator<RepeatedRecursiveMessageField3.Builder> mutator =
+        (InPlaceMutator<RepeatedRecursiveMessageField3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<RepeatedRecursiveMessageField3.@NotNull Builder>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("{Builder.Boolean, Builder via List<(cycle)>}");
   }
 }
