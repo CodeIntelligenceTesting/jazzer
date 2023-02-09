@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.code_intelligence.jazzer.mutation.mutator.collection;
+package com.code_intelligence.jazzer.mutation.mutator.jazzer;
 
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 
-public final class CollectionMutators {
-  private CollectionMutators() {}
+public final class JazzerMutators {
+  private JazzerMutators() {}
 
   public static MutatorFactory newFactory() {
-    return new ChainedMutatorFactory(new ListMutatorFactory());
+    return new ChainedMutatorFactory(new FuzzedDataProviderMutatorFactory());
   }
 }

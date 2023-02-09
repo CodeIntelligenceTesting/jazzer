@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 
 class MessageMutatorTest {
   private static final MutatorFactory FACTORY = new ChainedMutatorFactory(
-      LangMutators.FACTORY, CollectionMutators.FACTORY, ProtoMutators.FACTORY);
+      LangMutators.newFactory(), CollectionMutators.newFactory(), ProtoMutators.newFactory());
 
   @Test
   void testSimpleMessage() {

@@ -23,8 +23,10 @@ import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.mutator.proto.ProtoMutators;
 
 public final class Mutators {
-  public static final MutatorFactory FACTORY = new ChainedMutatorFactory(
-      LangMutators.FACTORY, CollectionMutators.FACTORY, ProtoMutators.FACTORY);
-
   private Mutators() {}
+
+  public static MutatorFactory newFactory() {
+    return new ChainedMutatorFactory(
+        LangMutators.newFactory(), CollectionMutators.newFactory(), ProtoMutators.newFactory());
+  }
 }

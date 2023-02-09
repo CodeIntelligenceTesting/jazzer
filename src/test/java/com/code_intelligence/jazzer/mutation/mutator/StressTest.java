@@ -96,7 +96,7 @@ public class StressTest {
   void genericMutatorStressTest(AnnotatedType type, String mutatorTree,
       Consumer<List<Object>> expectedInitValues, Consumer<List<Object>> expectedMutatedValues)
       throws IOException {
-    SerializingMutator mutator = Mutators.FACTORY.createOrThrow(type);
+    SerializingMutator mutator = Mutators.newFactory().createOrThrow(type);
     assertThat(mutator.toString()).isEqualTo(mutatorTree);
 
     PseudoRandom rng = anyPseudoRandom();

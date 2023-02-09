@@ -17,10 +17,13 @@
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
+import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 
 public final class LangMutators {
-  public static final ChainedMutatorFactory FACTORY = new ChainedMutatorFactory(
-      new NullableMutatorFactory(), new BooleanMutatorFactory(), new ByteArrayMutatorFactory());
-
   private LangMutators() {}
+
+  public static MutatorFactory newFactory() {
+    return new ChainedMutatorFactory(
+        new NullableMutatorFactory(), new BooleanMutatorFactory(), new ByteArrayMutatorFactory());
+  }
 }

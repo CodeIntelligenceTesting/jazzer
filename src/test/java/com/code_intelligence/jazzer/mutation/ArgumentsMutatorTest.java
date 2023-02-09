@@ -16,7 +16,6 @@
 
 package com.code_intelligence.jazzer.mutation;
 
-import static com.code_intelligence.jazzer.mutation.mutator.Mutators.FACTORY;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
@@ -25,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.SafeToMutate;
+import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -47,7 +47,8 @@ class ArgumentsMutatorTest {
   void testStaticMethod() throws Throwable {
     Method method =
         ArgumentsMutatorTest.class.getMethod("fuzzThisFunction", List.class, List.class);
-    Optional<ArgumentsMutator> maybeMutator = ArgumentsMutator.forStaticMethod(FACTORY, method);
+    Optional<ArgumentsMutator> maybeMutator =
+        ArgumentsMutator.forStaticMethod(Mutators.newFactory(), method);
     assertThat(maybeMutator).isPresent();
     ArgumentsMutator mutator = maybeMutator.get();
 
@@ -146,7 +147,7 @@ class ArgumentsMutatorTest {
     Method method =
         ArgumentsMutatorTest.class.getMethod("mutableFuzzThisFunction", List.class, List.class);
     Optional<ArgumentsMutator> maybeMutator =
-        ArgumentsMutator.forInstanceMethod(FACTORY, this, method);
+        ArgumentsMutator.forInstanceMethod(Mutators.newFactory(), this, method);
     assertThat(maybeMutator).isPresent();
     ArgumentsMutator mutator = maybeMutator.get();
 
