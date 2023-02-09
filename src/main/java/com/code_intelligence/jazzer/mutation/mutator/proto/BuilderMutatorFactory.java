@@ -20,8 +20,9 @@ import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinator
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateProperty;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateViaView;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getMessageField;
-import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getMutableRepeatedFieldView;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getPresentFieldOrNull;
+import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.makeMutableRepeatedFieldView;
+import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.makeMutableRepeatedMessageFieldView;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setFieldWithPresence;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setMessageField;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
@@ -76,10 +77,17 @@ public final class BuilderMutatorFactory extends MutatorFactory {
     requireNonNull(typeToMutate, () -> "Java class not specified for " + field);
 
     if (field.isRepeated()) {
-      InPlaceMutator<List<U>> underlyingMutator =
-          (InPlaceMutator<List<U>>) factory.createInPlaceOrThrow(typeToMutate);
-      return mutateViaView(
-          builder -> getMutableRepeatedFieldView(builder, field), underlyingMutator);
+      if (field.getType() == Type.MESSAGE) {
+        InPlaceMutator<List<Builder>> underlyingMutator =
+            (InPlaceMutator<List<Builder>>) factory.createInPlaceOrThrow(typeToMutate);
+        return mutateViaView(
+            builder -> makeMutableRepeatedMessageFieldView(builder, field), underlyingMutator);
+      } else {
+        InPlaceMutator<List<U>> underlyingMutator =
+            (InPlaceMutator<List<U>>) factory.createInPlaceOrThrow(typeToMutate);
+        return mutateViaView(
+            builder -> makeMutableRepeatedFieldView(builder, field), underlyingMutator);
+      }
     } else if (field.hasPresence()) {
       if (field.getType() == Type.MESSAGE) {
         ValueMutator<Builder> underlyingMutator =

@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class BuilderAdapters {
-  static <T extends Builder, U> List<U> getMutableRepeatedFieldView(
+  static <T extends Builder, U> List<U> makeMutableRepeatedFieldView(
       T builder, FieldDescriptor field) {
     return new AbstractList<U>() {
       @Override
@@ -66,6 +66,55 @@ final class BuilderAdapters {
         for (int i = 0; i < size; i++) {
           if (i != index) {
             builder.addRepeatedField(field, temp.get(i));
+          }
+        }
+
+        return removed;
+      }
+    };
+  }
+
+  static <T extends Builder> List<Builder> makeMutableRepeatedMessageFieldView(
+      T builder, FieldDescriptor field) {
+    return new AbstractList<Builder>() {
+      @Override
+      public Builder get(int index) {
+        return builder.getRepeatedFieldBuilder(field, index);
+      }
+
+      @Override
+      public int size() {
+        return builder.getRepeatedFieldCount(field);
+      }
+
+      @Override
+      public boolean add(Builder fieldBuilder) {
+        builder.addRepeatedField(field, fieldBuilder.build());
+        return true;
+      }
+
+      @Override
+      public Builder set(int index, Builder fieldBuilder) {
+        Builder previous = get(index);
+        builder.setRepeatedField(field, index, fieldBuilder.build());
+        return previous;
+      }
+
+      @Override
+      public Builder remove(int index) {
+        int size = size();
+        if (index < 0 || index >= size) {
+          throw new IndexOutOfBoundsException(
+              format("index %d out of bounds for size %d", index, size));
+        }
+
+        ArrayList<Builder> temp = new ArrayList<>(this);
+        builder.clearField(field);
+
+        Builder removed = temp.get(index);
+        for (int i = 0; i < size; i++) {
+          if (i != index) {
+            builder.addRepeatedField(field, temp.get(i).build());
           }
         }
 

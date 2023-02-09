@@ -31,3 +31,7 @@ message RepeatedPrimitiveField3 {
 message MessageField3 {
   PrimitiveField3 message_field = 1;
 }
+
+message RepeatedMessageField3 {
+  repeated PrimitiveField3 message_field = 1;
+}

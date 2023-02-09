@@ -30,6 +30,7 @@ import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.code_intelligence.jazzer.protobuf.Proto3.MessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.PrimitiveField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedPrimitiveField3;
 import org.junit.jupiter.api.Test;
 
@@ -185,5 +186,54 @@ class BuilderMutatorProto3Test {
       mutator.mutateInPlace(builder, prng);
     }
     assertThat(builder.hasMessageField()).isFalse();
+  }
+
+  @Test
+  void testRepeatedMessageField() {
+    InPlaceMutator<RepeatedMessageField3.Builder> mutator =
+        (InPlaceMutator<RepeatedMessageField3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<RepeatedMessageField3.@NotNull Builder>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("{Builder via List<{Builder.Boolean}>}");
+
+    RepeatedMessageField3.Builder builder = RepeatedMessageField3.newBuilder();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // list size 1
+             1,
+             // boolean
+             true)) {
+      mutator.initInPlace(builder, prng);
+    }
+    assertThat(builder.getMessageFieldList())
+        .containsExactly(PrimitiveField3.newBuilder().setSomeField(true).build())
+        .inOrder();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate first field
+             0,
+             // mutate the list itself by duplicating an entry
+             0)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.getMessageFieldList())
+        .containsExactly(PrimitiveField3.newBuilder().setSomeField(true).build(),
+            PrimitiveField3.newBuilder().setSomeField(true).build())
+        .inOrder();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate first field
+             0,
+             // mutate a list element
+             1,
+             // mutate the second element
+             1,
+             // mutate the first field
+             0)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.getMessageFieldList())
+        .containsExactly(PrimitiveField3.newBuilder().setSomeField(true).build(),
+            PrimitiveField3.newBuilder().setSomeField(false).build())
+        .inOrder();
   }
 }
