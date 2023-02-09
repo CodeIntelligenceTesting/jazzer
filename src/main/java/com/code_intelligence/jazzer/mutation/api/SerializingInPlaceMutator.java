@@ -30,7 +30,7 @@ import java.io.InputStream;
  * <p>Implementing classes SHOULD be declared final.
  */
 public abstract class SerializingInPlaceMutator<T>
-    implements SerializingMutator<T>, InPlaceMutator<T> {
+    extends SerializingMutator<T> implements InPlaceMutator<T> {
   // ByteArrayInputStream#close is documented as being a no-op, so it is safe to reuse an instance
   // here.
   // TODO: Introduce a dedicated empty InputStream implementation.

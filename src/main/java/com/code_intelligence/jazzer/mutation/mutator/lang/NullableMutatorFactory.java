@@ -21,6 +21,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtr
 import static java.util.Arrays.stream;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 final class NullableMutatorFactory extends MutatorFactory {
   private static final Annotation NOT_NULL =
@@ -52,7 +54,7 @@ final class NullableMutatorFactory extends MutatorFactory {
         .map(NullableMutator::new);
   }
 
-  private static final class NullableMutator<T> implements SerializingMutator<T> {
+  private static final class NullableMutator<T> extends SerializingMutator<T> {
     private static final int INVERSE_FREQUENCY_NULL = 100;
 
     private final SerializingMutator<T> mutator;
@@ -108,8 +110,8 @@ final class NullableMutatorFactory extends MutatorFactory {
     }
 
     @Override
-    public String toString() {
-      return "Nullable<" + mutator + ">";
+    public String toDebugString(Predicate<Debuggable> isInCycle) {
+      return "Nullable<" + mutator.toDebugString(isInCycle) + ">";
     }
   }
 }

@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.mutation.mutator.collection;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.parameterTypeIfParameterized;
 import static java.lang.Math.min;
 
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.RandomAccess;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 final class ListMutatorFactory extends MutatorFactory {
@@ -118,8 +120,8 @@ final class ListMutatorFactory extends MutatorFactory {
     }
 
     @Override
-    public String toString() {
-      return "List<" + elementMutator + ">";
+    public String toDebugString(Predicate<Debuggable> isInCycle) {
+      return "List<" + elementMutator.toDebugString(isInCycle) + ">";
     }
 
     private int minInitialSize() {

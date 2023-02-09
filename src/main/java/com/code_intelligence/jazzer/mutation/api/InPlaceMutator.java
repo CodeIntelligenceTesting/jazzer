@@ -31,13 +31,13 @@ package com.code_intelligence.jazzer.mutation.api;
  *   <li>SHOULD use {@link com.code_intelligence.jazzer.mutation.support.WeakIdentityHashMap} for
  *   this purpose;
  *   <li>MUST otherwise be deeply immutable;
- *   <li>SHOULD override {@link Object#toString()} to return a stable but otherwise unspecified
- *   debug representation of their subtree of mutators.
+ *   <li>SHOULD override {@link Object#toString()} to return {@code
+ * Debuggable.getDebugString(this)}.
  * </ul>
  *
  * @param <T> the reference type this mutator operates on
  */
-public interface InPlaceMutator<T> {
+public interface InPlaceMutator<T> extends Debuggable {
   /**
    * Implementations
    * <ul>

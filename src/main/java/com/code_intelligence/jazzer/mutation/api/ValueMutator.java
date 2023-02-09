@@ -32,13 +32,13 @@ import com.google.errorprone.annotations.CheckReturnValue;
  *   <li>SHOULD use {@link com.code_intelligence.jazzer.mutation.support.WeakIdentityHashMap} for
  *   this purpose;
  *   <li>MUST otherwise be deeply immutable;
- *   <li>SHOULD override {@link Object#toString()} to return a stable but otherwise unspecified
- *   debug representation of their subtree of mutators.
+ *   <li>SHOULD override {@link Object#toString()} to return {@code
+ * Debuggable.getDebugString(this)}.
  * </ul>
  *
  * @param <T> the type this mutator operates on
  */
-public interface ValueMutator<T> {
+public interface ValueMutator<T> extends Debuggable {
   /**
    * Implementations
    * <ul>

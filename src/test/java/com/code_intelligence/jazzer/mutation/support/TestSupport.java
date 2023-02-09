@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toCollection;
 
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
@@ -32,6 +33,7 @@ import java.io.OutputStream;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public final class TestSupport {
   private static final DataOutputStream nullDataOutputStream =
@@ -88,7 +90,7 @@ public final class TestSupport {
       }
 
       @Override
-      public String toString() {
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
         if (initialValue == null) {
           return "null";
         }

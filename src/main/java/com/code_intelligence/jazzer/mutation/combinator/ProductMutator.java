@@ -22,6 +22,7 @@ import static com.code_intelligence.jazzer.mutation.support.Preconditions.requir
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.function.Predicate;
 
 public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
   private final SerializingMutator[] mutators;
@@ -119,7 +121,9 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
   }
 
   @Override
-  public String toString() {
-    return stream(mutators).map(Object::toString).collect(joining(", ", "[", "]"));
+  public String toDebugString(Predicate<Debuggable> isInCycle) {
+    return stream(mutators)
+        .map(mutator -> mutator.toDebugString(isInCycle))
+        .collect(joining(", ", "[", "]"));
   }
 }

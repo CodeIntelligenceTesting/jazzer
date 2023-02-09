@@ -22,6 +22,7 @@ import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
@@ -36,6 +37,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import net.jodah.typetools.TypeResolver;
 
@@ -59,10 +61,15 @@ public final class MutatorCombinators {
       }
 
       @Override
-      public String toString() {
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
         Class<?> owningType =
             TypeResolver.resolveRawArguments(Function.class, getter.getClass())[0];
-        return owningType.getSimpleName() + "." + mutator;
+        return owningType.getSimpleName() + "." + mutator.toDebugString(isInCycle);
+      }
+
+      @Override
+      public String toString() {
+        return Debuggable.getDebugString(this);
       }
     };
   }
@@ -83,9 +90,14 @@ public final class MutatorCombinators {
       }
 
       @Override
-      public String toString() {
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
         Class<?> owningType = TypeResolver.resolveRawArguments(Function.class, map.getClass())[0];
-        return owningType.getSimpleName() + " via " + mutator;
+        return owningType.getSimpleName() + " via " + mutator.toDebugString(isInCycle);
+      }
+
+      @Override
+      public String toString() {
+        return Debuggable.getDebugString(this);
       }
     };
   }
@@ -115,8 +127,15 @@ public final class MutatorCombinators {
       }
 
       @Override
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return stream(mutators)
+            .map(mutator -> mutator.toDebugString(isInCycle))
+            .collect(joining(", ", "{", "}"));
+      }
+
+      @Override
       public String toString() {
-        return stream(mutators).map(Object::toString).collect(joining(", ", "{", "}"));
+        return Debuggable.getDebugString(this);
       }
     };
   }
@@ -153,8 +172,8 @@ public final class MutatorCombinators {
       }
 
       @Override
-      public String toString() {
-        return mutatorDelegate.toString();
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return mutatorDelegate.toDebugString(isInCycle);
       }
 
       @Override
