@@ -8,6 +8,7 @@ java_library(
     exports = JUNIT5_DEPS + [
         # keep sorted
         "@maven//:com_google_truth_extensions_truth_java8_extension",
+        "@maven//:com_google_truth_extensions_truth_proto_extension",
         "@maven//:com_google_truth_truth",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
