@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.readAllBytes;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
 
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -31,6 +32,7 @@ import java.io.OutputStream;
 import java.lang.reflect.AnnotatedType;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 final class ByteArrayMutatorFactory extends MutatorFactory {
   @Override
@@ -39,7 +41,7 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
   }
 
   @Immutable
-  private static final class ByteArrayMutator implements SerializingMutator<byte[]> {
+  private static final class ByteArrayMutator extends SerializingMutator<byte[]> {
     private static final ByteArrayMutator INSTANCE = new ByteArrayMutator();
 
     private ByteArrayMutator() {}
@@ -83,7 +85,7 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
     }
 
     @Override
-    public String toString() {
+    public String toDebugString(Predicate<Debuggable> isInCycle) {
       return "ByteArray";
     }
   }

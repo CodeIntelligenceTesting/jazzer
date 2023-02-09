@@ -27,6 +27,7 @@ import static com.code_intelligence.jazzer.mutation.support.TestSupport.nullData
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -35,6 +36,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 class MutatorCombinatorsTest {
@@ -77,7 +79,7 @@ class MutatorCombinatorsTest {
       }
 
       @Override
-      public String toString() {
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
         return "List<Integer>";
       }
     });
@@ -120,7 +122,7 @@ class MutatorCombinatorsTest {
           }
 
           @Override
-          public String toString() {
+          public String toDebugString(Predicate<Debuggable> isInCycle) {
             return "List<Integer>";
           }
         });

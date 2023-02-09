@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.mutation.combinator;
 
 import static java.util.Objects.requireNonNull;
 
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import java.io.DataInputStream;
@@ -26,9 +27,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import net.jodah.typetools.TypeResolver;
 
-abstract class PostComposedMutator<T, R> implements SerializingMutator<R> {
+abstract class PostComposedMutator<T, R> extends SerializingMutator<R> {
   private final SerializingMutator<T> mutator;
   private final Function<T, R> map;
   private final Function<R, T> inverse;
@@ -75,8 +77,8 @@ abstract class PostComposedMutator<T, R> implements SerializingMutator<R> {
   }
 
   @Override
-  public final String toString() {
+  public String toDebugString(Predicate<Debuggable> isInCycle) {
     Class<?> returnType = TypeResolver.resolveRawArguments(Function.class, map.getClass())[1];
-    return mutator + " -> " + returnType.getSimpleName();
+    return mutator.toDebugString(isInCycle) + " -> " + returnType.getSimpleName();
   }
 }

@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
 
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -27,6 +28,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 final class BooleanMutatorFactory extends MutatorFactory {
   @Override
@@ -36,7 +38,7 @@ final class BooleanMutatorFactory extends MutatorFactory {
   }
 
   @Immutable
-  private static final class BooleanMutator implements SerializingMutator<Boolean> {
+  private static final class BooleanMutator extends SerializingMutator<Boolean> {
     private static final BooleanMutator INSTANCE = new BooleanMutator();
 
     @Override
@@ -60,7 +62,7 @@ final class BooleanMutatorFactory extends MutatorFactory {
     }
 
     @Override
-    public String toString() {
+    public String toDebugString(Predicate<Debuggable> isInLoop) {
       return "Boolean";
     }
 

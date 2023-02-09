@@ -27,4 +27,9 @@ import com.google.errorprone.annotations.DoNotMock;
  * consider implementing the more versatile {@link SerializingInPlaceMutator} instead.
  */
 @DoNotMock("Use TestSupport#mockMutator instead")
-public interface SerializingMutator<T> extends Serializer<T>, ValueMutator<T> {}
+public abstract class SerializingMutator<T> implements Serializer<T>, ValueMutator<T> {
+  @Override
+  public final String toString() {
+    return Debuggable.getDebugString(this);
+  }
+}
