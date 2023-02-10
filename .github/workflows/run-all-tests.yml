@@ -11,6 +11,23 @@ on:
 
 jobs:
 
+  test_junit_springboot:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 11
+      - name: Build and run tests
+        # The Spring Boot example project is built with Maven. The shell script builds the project
+        # against the local version of Jazzer and runs its unit and fuzz tests.
+        run: |
+          cd examples/junit-spring-web
+          ./build-and-run-tests.sh
+        shell: bash
+
   build_and_test:
     runs-on: ${{ matrix.os }}
     strategy:
