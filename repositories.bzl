@@ -145,6 +145,7 @@ def jazzer_dependencies():
         patches = [
             Label("//third_party:jacoco-make-probe-adapter-subclassable.patch"),
             Label("//third_party:jacoco-make-probe-inserter-subclassable.patch"),
+            Label("//third_party:jacoco-ignore-offline-instrumentation.patch"),
         ],
         sha256 = "c603cfcc5f3d95ecda46fb369dc54c82a453bb6b640a605c3970607d10896725",
         strip_prefix = "jacoco-0.8.8",
