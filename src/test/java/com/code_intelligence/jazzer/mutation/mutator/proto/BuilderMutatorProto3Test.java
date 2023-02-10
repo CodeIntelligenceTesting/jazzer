@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
@@ -29,12 +30,15 @@ import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.code_intelligence.jazzer.protobuf.Proto3.MessageField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.OneOfField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.PrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RecursiveMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedPrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageField3;
+import com.google.protobuf.Any;
+import com.google.protobuf.Descriptors.OneofDescriptor;
 import org.junit.jupiter.api.Test;
 
 class BuilderMutatorProto3Test {
@@ -296,5 +300,107 @@ class BuilderMutatorProto3Test {
         (InPlaceMutator<RepeatedRecursiveMessageField3.Builder>) FACTORY.createInPlaceOrThrow(
             new TypeHolder<RepeatedRecursiveMessageField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Boolean, Builder via List<(cycle)>}");
+  }
+
+  @Test
+  void testOneOfField3() {
+    InPlaceMutator<OneOfField3.Builder> mutator =
+        (InPlaceMutator<OneOfField3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<OneOfField3.@NotNull Builder>() {}.annotatedType());
+    assertThat(mutator.toString())
+        .isEqualTo(
+            "{Builder.Boolean, Builder.Boolean, Builder.Nullable<Boolean> | Builder.Nullable<{Builder.Boolean}>}");
+    OneOfField3.Builder builder = OneOfField3.newBuilder();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // other_field
+             true,
+             // yet_another_field
+             true,
+             // oneof: first field
+             0,
+             // bool_field present
+             1,
+             // bool_field
+             true)) {
+      mutator.initInPlace(builder, prng);
+    }
+    assertThat(builder.build())
+        .isEqualTo(OneOfField3.newBuilder()
+                       .setOtherField(true)
+                       .setBoolField(true)
+                       .setYetAnotherField(true)
+                       .build());
+    assertThat(builder.build().hasBoolField()).isTrue();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate oneof
+             2,
+             // preserve oneof state
+             1,
+             // mutate bool_field as non-null
+             1)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.build())
+        .isEqualTo(OneOfField3.newBuilder()
+                       .setOtherField(true)
+                       .setBoolField(false)
+                       .setYetAnotherField(true)
+                       .build());
+    assertThat(builder.build().hasBoolField()).isTrue();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate oneof
+             2,
+             // switch oneof state
+             0,
+             // new oneof state
+             1,
+             // init message_field as non-null
+             1,
+             // init some_field as true
+             true)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.build())
+        .isEqualTo(OneOfField3.newBuilder()
+                       .setOtherField(true)
+                       .setMessageField(PrimitiveField3.newBuilder().setSomeField(true))
+                       .setYetAnotherField(true)
+                       .build());
+    assertThat(builder.build().hasMessageField()).isTrue();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate oneof
+             2,
+             // preserve oneof state
+             1,
+             // mutate message_field as non-null
+             1,
+             // mutate some_field
+             0)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.build())
+        .isEqualTo(OneOfField3.newBuilder()
+                       .setOtherField(true)
+                       .setMessageField(PrimitiveField3.newBuilder().setSomeField(false))
+                       .setYetAnotherField(true)
+                       .build());
+    assertThat(builder.build().hasMessageField()).isTrue();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate oneof
+             2,
+             // preserve oneof state
+             1,
+             // mutate message_field to null (and thus oneof state to indeterminate)
+             0)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.build())
+        .isEqualTo(OneOfField3.newBuilder().setOtherField(true).setYetAnotherField(true).build());
+    assertThat(builder.build().hasMessageField()).isFalse();
   }
 }

@@ -40,6 +40,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 import net.jodah.typetools.TypeResolver;
 
 public final class MutatorCombinators {
@@ -183,6 +184,51 @@ public final class MutatorCombinators {
    */
   public static ProductMutator mutateProduct(SerializingMutator... mutators) {
     return new ProductMutator(mutators);
+  }
+
+  /**
+   * Mutates a sum type (e.g. a Protobuf oneof) in place, preferring to mutate the current state
+   * but occasionally switching to a different state.
+   * @param getState a function that returns the current state of the sum type as an index into
+   *                 {@code perStateMutators}, or -1 if the state is indeterminate.
+   * @param perStateMutators the mutators for each state
+   * @return a mutator that mutates the sum type in place
+   */
+  @SafeVarargs
+  public static <T> InPlaceMutator<T> mutateSumInPlace(
+      ToIntFunction<T> getState, InPlaceMutator<T>... perStateMutators) {
+    return new InPlaceMutator<T>() {
+      private final InPlaceMutator<T>[] mutators =
+          Arrays.copyOf(perStateMutators, perStateMutators.length);
+
+      @Override
+      public void initInPlace(T reference, PseudoRandom prng) {
+        mutators[prng.nextInt(mutators.length)].initInPlace(reference, prng);
+      }
+
+      @Override
+      public void mutateInPlace(T reference, PseudoRandom prng) {
+        int currentState = getState.applyAsInt(reference);
+        if (currentState == -1) {
+          // The value is in an indeterminate state, initialize it.
+          initInPlace(reference, prng);
+        } else if (prng.nextInt(100) != 0) {
+          // Mutate within the current state.
+          mutators[currentState].mutateInPlace(reference, prng);
+        } else {
+          // Initialize to a different state.
+          int newState = (currentState + prng.nextInt(1, mutators.length)) % mutators.length;
+          mutators[newState].initInPlace(reference, prng);
+        }
+      }
+
+      @Override
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return stream(mutators)
+            .map(mutator -> mutator.toDebugString(isInCycle))
+            .collect(joining(" | "));
+      }
+    };
   }
 
   private static class DelegatingSerializingInPlaceMutator<T> extends SerializingInPlaceMutator<T> {
