@@ -389,3 +389,38 @@ java_fuzz_target_test(
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
     target_class = "com.example.SilencedFuzzer",
 )
+
+java_binary(
+    name = "jacococli",
+    main_class = "org.jacoco.cli.internal.Main",
+    runtime_deps = ["@jacococli//file:jacococli.jar"],
+)
+
+java_library(
+    name = "OfflineInstrumentedTarget",
+    srcs = ["src/test/java/com/example/OfflineInstrumentedTarget.java"],
+)
+
+genrule(
+    name = "OfflineInstrumentedTargetInstrumented",
+    srcs = [":OfflineInstrumentedTarget"],
+    outs = ["OfflineInstrumentedTargetInstrumented.jar"],
+    cmd = """
+$(location :jacococli) instrument $< --dest jacoco-instrumented
+cp jacoco-instrumented/*.jar $@
+""",
+    tags = ["manual"],
+    tools = [":jacococli"],
+)
+
+java_fuzz_target_test(
+    name = "OfflineInstrumentedFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/OfflineInstrumentedFuzzer.java"],
+    allowed_findings = ["java.lang.IllegalStateException"],
+    target_class = "com.example.OfflineInstrumentedFuzzer",
+    deps = [
+        ":OfflineInstrumentedTargetInstrumented",
+        "@jacocoagent//file:jacocoagent.jar",  # Offline instrumented classes depend on the jacoco agent
+    ],
+)
