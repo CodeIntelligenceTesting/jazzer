@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.assemble;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.combine;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateProperty;
+import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateSumInPlace;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateViaView;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getMessageField;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getPresentFieldOrNull;
@@ -31,6 +32,8 @@ import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
@@ -40,6 +43,7 @@ import com.code_intelligence.jazzer.mutation.api.ValueMutator;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor.Type;
+import com.google.protobuf.Descriptors.OneofDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import java.io.DataInputStream;
@@ -52,9 +56,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public final class BuilderMutatorFactory extends MutatorFactory {
   private static <T extends Builder> Descriptor getDescriptor(Class<T> builderClass) {
@@ -74,8 +80,8 @@ public final class BuilderMutatorFactory extends MutatorFactory {
   }
 
   private static <T extends Builder, U> InPlaceMutator<T> mutatorForField(
-      FieldDescriptor field, T fieldBuilder, MutatorFactory factory) {
-    AnnotatedType typeToMutate = TypeLibrary.getTypeToMutate(field, fieldBuilder);
+      FieldDescriptor field, T builderInstance, MutatorFactory factory) {
+    AnnotatedType typeToMutate = TypeLibrary.getTypeToMutate(field, builderInstance);
     requireNonNull(typeToMutate, () -> "Java class not specified for " + field);
 
     if (field.isRepeated()) {
@@ -108,6 +114,37 @@ public final class BuilderMutatorFactory extends MutatorFactory {
       return mutateProperty(builder
           -> (U) builder.getField(field),
           underlyingMutator, (builder, value) -> builder.setField(field, value));
+    }
+  }
+
+  private static <T extends Builder> Stream<InPlaceMutator<T>> mutatorsForFields(
+      Optional<OneofDescriptor> oneofField, List<FieldDescriptor> fields, T builderInstance,
+      MutatorFactory factory) {
+    if (oneofField.isPresent()) {
+      // oneof fields are mutated as one as mutating them independently would cause the mutator to
+      // erratically switch between the different states. The individual fields are kept in the
+      // order in which they are defined in the .proto file.
+      return Stream.of(mutateSumInPlace(
+          (T builder)
+              -> {
+            FieldDescriptor setField = builder.getOneofFieldDescriptor(oneofField.get());
+            if (setField == null) {
+              return -1;
+            } else {
+              // The index of the field within the oneof is 1-based otherwise, so we need to
+              // subtract 1 to fulfill the contract of mutateSumInPlace.
+              return setField.getIndex() - 1;
+            }
+          },
+          // Mutating to the unset (-1) state is handled by the individual field mutators, which
+          // are created nullable as oneof fields report that they track presence.
+          fields.stream()
+              .map(field -> mutatorForField(field, builderInstance, factory))
+              .toArray(InPlaceMutator[] ::new)));
+    } else {
+      // All non-oneof fields are mutated independently, using the order in which they are declared
+      // in the .proto file (which may not coincide with the order by field number).
+      return fields.stream().map(field -> mutatorForField(field, builderInstance, factory));
     }
   }
 
@@ -197,8 +234,20 @@ public final class BuilderMutatorFactory extends MutatorFactory {
                   getDescriptor(builderClass)
                       .getFields()
                       .stream()
-                      .map(fieldDescriptor
-                          -> mutatorForField(fieldDescriptor, builderSupplier.get(), factory))
+                      // Keep oneofs sorted by the first appearance of their fields in the
+                      // .proto file.
+                      .collect(groupingBy(
+                          // groupingBy does not support null keys. We use getRealContainingOneof()
+                          // instead of getContainingOneof() as the latter also reports oneofs for
+                          // proto3 optional fields, which we handle separately.
+                          fieldDescriptor
+                          -> Optional.ofNullable(fieldDescriptor.getRealContainingOneof()),
+                          LinkedHashMap::new, toList()))
+                      .entrySet()
+                      .stream()
+                      .flatMap(entry
+                          -> mutatorsForFields(
+                              entry.getKey(), entry.getValue(), builderSupplier.get(), factory))
                       .toArray(InPlaceMutator[] ::new)));
     });
   }

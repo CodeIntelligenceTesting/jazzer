@@ -45,3 +45,12 @@ message RepeatedRecursiveMessageField3 {
   bool some_field = 1;
   repeated RepeatedRecursiveMessageField3 message_field = 2;
 }
+
+message OneOfField3 {
+  bool other_field = 4;
+  oneof oneof_field {
+    bool bool_field = 7;
+    PrimitiveField3 message_field = 2;
+  }
+  bool yet_another_field = 1;
+}
