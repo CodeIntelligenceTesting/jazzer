@@ -21,10 +21,16 @@ import static com.code_intelligence.jazzer.mutation.support.Preconditions.requir
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+import static java.lang.Math.floor;
+import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.IntStream.rangeClosed;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
@@ -48,8 +54,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class StressTest {
-  private static final int GENERIC_TEST_ITERATIONS = 1000;
-  private static final int GENERIC_TEST_MUTATIONS_PER_ITERATIONS = 100;
+  private static final int NUM_INITS = 1000;
+  private static final int NUM_MUTATE_PER_INIT = 100;
   private static final double MANY_DISTINCT_ELEMENTS_RATIO = 0.5;
 
   public static Stream<Arguments> stressTestCases() {
@@ -74,11 +80,96 @@ public class StressTest {
             "Nullable<List<Nullable<Boolean>>>",
             exactly(
                 null, emptyList(), singletonList(null), singletonList(false), singletonList(true)),
-            distinctElementsRatio(0.30)));
+            distinctElementsRatio(0.30)),
+        arguments(asAnnotatedType(byte.class), "Byte",
+            // init is heavily biased towards special values and only returns a uniformly random
+            // value in 1 out of 5 calls.
+            all(expectedNumberOfDistinctElements(1 << Byte.SIZE, boundHits(NUM_INITS, 0.2)),
+                contains((byte) 0, (byte) 1, Byte.MIN_VALUE, Byte.MAX_VALUE)),
+            // With mutations, we expect to reach all possible bytes.
+            exactly(rangeClosed(Byte.MIN_VALUE, Byte.MAX_VALUE).mapToObj(i -> (byte) i).toArray())),
+        arguments(asAnnotatedType(short.class), "Short",
+            // init is heavily biased towards special values and only returns a uniformly random
+            // value in 1 out of 5 calls.
+            all(expectedNumberOfDistinctElements(1 << Short.SIZE, boundHits(NUM_INITS, 0.2)),
+                contains((short) 0, (short) 1, Short.MIN_VALUE, Short.MAX_VALUE)),
+            // The integral type mutator does not always return uniformly random values and the
+            // random walk it uses is more likely to produce non-distinct elements, hence the test
+            // only passes with ~90% of the optimal parameters.
+            expectedNumberOfDistinctElements(
+                1 << Short.SIZE, NUM_INITS * NUM_MUTATE_PER_INIT * 9 / 10)),
+        arguments(asAnnotatedType(int.class), "Integer",
+            // init is heavily biased towards special values and only returns a uniformly random
+            // value in 1 out of 5 calls.
+            all(expectedNumberOfDistinctElements(1L << Integer.SIZE, boundHits(NUM_INITS, 0.2)),
+                contains(0, 1, Integer.MIN_VALUE, Integer.MAX_VALUE)),
+            // See "Short" case.
+            expectedNumberOfDistinctElements(
+                1L << Integer.SIZE, NUM_INITS * NUM_MUTATE_PER_INIT * 9 / 10)),
+        arguments(new TypeHolder<@NotNull @InRange(min = 0) Long>() {}.annotatedType(), "Long",
+            // init is heavily biased towards special values and only returns a uniformly random
+            // value in 1 out of 5 calls.
+            all(expectedNumberOfDistinctElements(1L << Long.SIZE - 1, boundHits(NUM_INITS, 0.2)),
+                contains(0L, 1L, Long.MAX_VALUE)),
+            // See "Short" case.
+            expectedNumberOfDistinctElements(
+                1L << Integer.SIZE - 1, NUM_INITS * NUM_MUTATE_PER_INIT * 9 / 10)),
+        arguments(
+            new TypeHolder<@NotNull @InRange(max = Integer.MIN_VALUE + 5) Integer>() {
+            }.annotatedType(),
+            "Integer",
+            exactly(rangeClosed(Integer.MIN_VALUE, Integer.MIN_VALUE + 5).boxed().toArray()),
+            exactly(rangeClosed(Integer.MIN_VALUE, Integer.MIN_VALUE + 5).boxed().toArray())));
+  }
+
+  @SafeVarargs
+  private static Consumer<List<Object>> all(Consumer<List<Object>>... checks) {
+    return list -> {
+      for (Consumer<List<Object>> check : checks) {
+        check.accept(list);
+      }
+    };
   }
 
   private static Consumer<List<Object>> manyDistinctElements() {
     return distinctElementsRatio(MANY_DISTINCT_ELEMENTS_RATIO);
+  }
+
+  /**
+   * Returns a lower bound on the expected number of hits when sampling from a domain of a given
+   * size with the given probability.
+   */
+  private static int boundHits(long domainSize, double probability) {
+    // Binomial distribution.
+    double expectedValue = domainSize * probability;
+    double variance = domainSize * probability * (1 - probability);
+    double standardDeviation = sqrt(variance);
+    // Allow missing the expected value by two standard deviations. For a normal distribution,
+    // this would correspond to 95% of all cases.
+    int almostCertainLowerBound = (int) floor(expectedValue - 2 * standardDeviation);
+    return almostCertainLowerBound;
+  }
+
+  /**
+   * Asserts that a given list contains at least as many distinct elements as can be expected when
+   * picking {@code picks} out of {@code domainSize} elements uniformly at random.
+   */
+  private static Consumer<List<Object>> expectedNumberOfDistinctElements(
+      long domainSize, int picks) {
+    // https://www.randomservices.org/random/urn/Birthday.html#mom2
+    double expectedValue = domainSize * (1 - pow(1 - 1.0 / domainSize, picks));
+    double variance = domainSize * (domainSize - 1) * pow(1 - 2.0 / domainSize, picks)
+        + domainSize * pow(1 - 1.0 / domainSize, picks)
+        - domainSize * domainSize * pow(1 - 1.0 / domainSize, 2 * picks);
+    double standardDeviation = sqrt(variance);
+    // Allow missing the expected value by two standard deviations. For a normal distribution,
+    // this would correspond to 95% of all cases.
+    int almostCertainLowerBound = (int) floor(expectedValue - 2 * standardDeviation);
+    return list
+        -> assertWithMessage("V=distinct elements among %s picked out of %s\nE[V]=%s\nσ[V]=%s",
+            picks, domainSize, expectedValue, standardDeviation)
+               .that(new HashSet<>(list).size())
+               .isAtLeast(almostCertainLowerBound);
   }
 
   private static Consumer<List<Object>> distinctElementsRatio(double ratio) {
@@ -89,6 +180,10 @@ public class StressTest {
 
   private static Consumer<List<Object>> exactly(Object... expected) {
     return list -> assertThat(new HashSet<>(list)).containsExactly(expected);
+  }
+
+  private static Consumer<List<Object>> contains(Object... expected) {
+    return list -> assertThat(new HashSet<>(list)).containsAtLeastElementsIn(expected);
   }
 
   @ParameterizedTest(name = "{0}")
@@ -103,7 +198,7 @@ public class StressTest {
 
     List<Object> initValues = new ArrayList<>();
     List<Object> mutatedValues = new ArrayList<>();
-    for (int i = 0; i < GENERIC_TEST_ITERATIONS; i++) {
+    for (int i = 0; i < NUM_INITS; i++) {
       Object value = mutator.init(rng);
 
       testReadWriteRoundtrip(mutator, value);
@@ -111,7 +206,7 @@ public class StressTest {
 
       initValues.add(mutator.detach(value));
 
-      for (int mutation = 0; mutation < GENERIC_TEST_MUTATIONS_PER_ITERATIONS; mutation++) {
+      for (int mutation = 0; mutation < NUM_MUTATE_PER_INIT; mutation++) {
         Object detachedOldValue = mutator.detach(value);
         value = mutator.mutate(value, rng);
         assertThat(value).isNotEqualTo(detachedOldValue);

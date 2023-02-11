@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.code_intelligence.jazzer.mutation.mutator.lang;
+package com.code_intelligence.jazzer.mutation.annotation;
 
-import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
-import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public final class LangMutators {
-  private LangMutators() {}
-
-  public static MutatorFactory newFactory() {
-    return new ChainedMutatorFactory(new NullableMutatorFactory(), new BooleanMutatorFactory(),
-        new IntegralMutatorFactory(), new ByteArrayMutatorFactory());
-  }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE_USE)
+public @interface InRange {
+  long min() default Long.MIN_VALUE;
+  long max() default Long.MAX_VALUE;
 }

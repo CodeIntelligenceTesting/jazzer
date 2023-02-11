@@ -1,0 +1,54 @@
+/*
+ * Copyright 2023 Code Intelligence GmbH
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.code_intelligence.jazzer.mutation.mutator.lang;
+
+import static com.code_intelligence.jazzer.mutation.mutator.lang.IntegralMutatorFactory.AbstractIntegralMutator.forceInRange;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+
+import java.util.stream.Stream;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+class IntegralMutatorTest {
+  static Stream<Arguments> forceInRangeCases() {
+    return Stream.of(arguments(0, 0, 1), arguments(5, 0, 1), arguments(-5, -10, -1),
+        arguments(-200, -10, -1), arguments(10, 0, 3), arguments(-5, 0, 3), arguments(10, -7, 7),
+        arguments(Long.MIN_VALUE, Long.MIN_VALUE, Long.MAX_VALUE),
+        arguments(Long.MIN_VALUE, Long.MIN_VALUE, 100),
+        arguments(Long.MIN_VALUE + 100, Long.MIN_VALUE, 100),
+        arguments(Long.MAX_VALUE, -100, Long.MAX_VALUE),
+        arguments(Long.MAX_VALUE - 100, -100, Long.MAX_VALUE),
+        arguments(Long.MAX_VALUE, Long.MIN_VALUE, Long.MAX_VALUE),
+        arguments(Long.MIN_VALUE, Long.MIN_VALUE + 1, Long.MAX_VALUE),
+        arguments(Long.MAX_VALUE, Long.MIN_VALUE, Long.MAX_VALUE - 1),
+        arguments(Long.MIN_VALUE, Long.MAX_VALUE - 5, Long.MAX_VALUE),
+        arguments(Long.MAX_VALUE, Long.MIN_VALUE, Long.MIN_VALUE + 5));
+  }
+
+  @ParameterizedTest
+  @MethodSource("forceInRangeCases")
+  void testForceInRange(long value, long minValue, long maxValue) {
+    long inRange = forceInRange(value, minValue, maxValue);
+    assertThat(inRange).isAtLeast(minValue);
+    assertThat(inRange).isAtMost(maxValue);
+    if (value >= minValue && value <= maxValue) {
+      assertThat(inRange).isEqualTo(value);
+    }
+  }
+}
