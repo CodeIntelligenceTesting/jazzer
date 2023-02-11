@@ -36,7 +36,7 @@ class NullableMutatorTest {
     assertThat(mutator.toString()).isEqualTo("Nullable<Boolean>");
 
     Boolean bool;
-    try (MockPseudoRandom prng = mockPseudoRandom(/* init to null */ 0)) {
+    try (MockPseudoRandom prng = mockPseudoRandom(/* init to null */ true)) {
       bool = mutator.init(prng);
     }
     assertThat(bool).isNull();
@@ -46,12 +46,12 @@ class NullableMutatorTest {
     }
     assertThat(bool).isFalse();
 
-    try (MockPseudoRandom prng = mockPseudoRandom(/* mutate to non-null Boolean */ 1)) {
+    try (MockPseudoRandom prng = mockPseudoRandom(/* mutate to non-null Boolean */ false)) {
       bool = mutator.mutate(bool, prng);
     }
     assertThat(bool).isTrue();
 
-    try (MockPseudoRandom prng = mockPseudoRandom(/* mutate to null */ 0)) {
+    try (MockPseudoRandom prng = mockPseudoRandom(/* mutate to null */ true)) {
       bool = mutator.mutate(bool, prng);
     }
     assertThat(bool).isNull();

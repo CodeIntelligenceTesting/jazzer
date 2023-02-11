@@ -76,7 +76,7 @@ class BuilderMutatorProto3Test {
 
     try (MockPseudoRandom prng = mockPseudoRandom(
              // present
-             1,
+             false,
              // boolean
              false)) {
       mutator.initInPlace(builder, prng);
@@ -86,7 +86,7 @@ class BuilderMutatorProto3Test {
 
     try (MockPseudoRandom prng = mockPseudoRandom(
              // present
-             1,
+             false,
              // boolean
              true)) {
       mutator.initInPlace(builder, prng);
@@ -98,7 +98,7 @@ class BuilderMutatorProto3Test {
              // mutate first field
              0,
              // mutate as non-null Boolean
-             1)) {
+             false)) {
       mutator.mutateInPlace(builder, prng);
     }
     assertThat(builder.hasSomeField()).isTrue();
@@ -106,7 +106,7 @@ class BuilderMutatorProto3Test {
 
     try (MockPseudoRandom prng = mockPseudoRandom(
              // not present
-             0)) {
+             true)) {
       mutator.initInPlace(builder, prng);
     }
     assertThat(builder.hasSomeField()).isFalse();
@@ -135,7 +135,7 @@ class BuilderMutatorProto3Test {
              // mutate first field
              0,
              // mutate the list itself by duplicating an entry
-             0)) {
+             true)) {
       mutator.mutateInPlace(builder, prng);
     }
     assertThat(builder.getSomeFieldList()).containsExactly(true, true).inOrder();
@@ -144,7 +144,7 @@ class BuilderMutatorProto3Test {
              // mutate first field
              0,
              // mutate a list element,
-             1,
+             false,
              // mutate the second element,
              1)) {
       mutator.mutateInPlace(builder, prng);
@@ -163,7 +163,7 @@ class BuilderMutatorProto3Test {
 
     try (MockPseudoRandom prng = mockPseudoRandom(
              // init submessage
-             1,
+             false,
              // boolean submessage field
              true)) {
       mutator.initInPlace(builder, prng);
@@ -176,7 +176,7 @@ class BuilderMutatorProto3Test {
              // mutate first field
              0,
              // mutate submessage as non-null
-             1,
+             false,
              // mutate first field
              0)) {
       mutator.mutateInPlace(builder, prng);
@@ -189,7 +189,7 @@ class BuilderMutatorProto3Test {
              // mutate first field
              0,
              // mutate submessage to null
-             0)) {
+             true)) {
       mutator.mutateInPlace(builder, prng);
     }
     assertThat(builder.hasMessageField()).isFalse();
@@ -219,7 +219,7 @@ class BuilderMutatorProto3Test {
              // mutate first field
              0,
              // mutate the list itself by duplicating an entry
-             0)) {
+             true)) {
       mutator.mutateInPlace(builder, prng);
     }
     assertThat(builder.getMessageFieldList())
@@ -231,7 +231,7 @@ class BuilderMutatorProto3Test {
              // mutate first field
              0,
              // mutate a list element
-             1,
+             false,
              // mutate the second element
              1,
              // mutate the first field
@@ -256,11 +256,11 @@ class BuilderMutatorProto3Test {
              // boolean
              true,
              // message field is not null
-             1,
+             false,
              // nested boolean,
              false,
              // nested message field is not set
-             0)) {
+             true)) {
       mutator.initInPlace(builder, prng);
     }
     // Nested message field is *not* set explicitly and implicitly equal to the default instance.
@@ -275,13 +275,13 @@ class BuilderMutatorProto3Test {
              // mutate message field
              1,
              // mutate message field as not null
-             1,
+             false,
              // mutate message field
              1,
              // nested boolean,
              false,
              // nested message field is null
-             0)) {
+             true)) {
       mutator.mutateInPlace(builder, prng);
     }
     // Nested message field *is* set explicitly and implicitly equal to the default instance.
@@ -320,7 +320,7 @@ class BuilderMutatorProto3Test {
              // oneof: first field
              0,
              // bool_field present
-             1,
+             false,
              // bool_field
              true)) {
       mutator.initInPlace(builder, prng);
@@ -337,9 +337,9 @@ class BuilderMutatorProto3Test {
              // mutate oneof
              2,
              // preserve oneof state
-             1,
+             false,
              // mutate bool_field as non-null
-             1)) {
+             false)) {
       mutator.mutateInPlace(builder, prng);
     }
     assertThat(builder.build())
@@ -354,11 +354,11 @@ class BuilderMutatorProto3Test {
              // mutate oneof
              2,
              // switch oneof state
-             0,
+             true,
              // new oneof state
              1,
              // init message_field as non-null
-             1,
+             false,
              // init some_field as true
              true)) {
       mutator.mutateInPlace(builder, prng);
@@ -375,9 +375,9 @@ class BuilderMutatorProto3Test {
              // mutate oneof
              2,
              // preserve oneof state
-             1,
+             false,
              // mutate message_field as non-null
-             1,
+             false,
              // mutate some_field
              0)) {
       mutator.mutateInPlace(builder, prng);
@@ -394,9 +394,9 @@ class BuilderMutatorProto3Test {
              // mutate oneof
              2,
              // preserve oneof state
-             1,
+             false,
              // mutate message_field to null (and thus oneof state to indeterminate)
-             0)) {
+             true)) {
       mutator.mutateInPlace(builder, prng);
     }
     assertThat(builder.build())

@@ -31,6 +31,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Queue;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -113,27 +114,76 @@ public final class TestSupport {
     }
 
     @Override
-    public boolean nextBoolean() {
+    public boolean choice() {
       assertThat(elements).isNotEmpty();
       return (boolean) elements.poll();
     }
 
     @Override
-    public int nextInt() {
+    public boolean trueInOneOutOf(int inverseFrequencyTrue) {
+      assertThat(inverseFrequencyTrue).isAtLeast(2);
+
+      assertThat(elements).isNotEmpty();
+      return (boolean) elements.poll();
+    }
+
+    @Override
+    public <T> int indexIn(T[] array) {
+      assertThat(array).isNotEmpty();
+
       assertThat(elements).isNotEmpty();
       return (int) elements.poll();
     }
 
     @Override
-    public int nextInt(int upperExclusive) {
+    public <T> int indexIn(List<T> list) {
+      assertThat(list).isNotEmpty();
+
       assertThat(elements).isNotEmpty();
       return (int) elements.poll();
     }
 
     @Override
-    public int nextInt(int lowerInclusive, int upperExclusive) {
+    public int indexIn(int range) {
+      assertThat(range).isAtLeast(2);
+
       assertThat(elements).isNotEmpty();
       return (int) elements.poll();
+    }
+
+    @Override
+    public <T> int otherIndex(T[] array, int currentIndex) {
+      assertThat(array.length).isAtLeast(2);
+      assertThat(currentIndex).isAtLeast(0);
+      assertThat(currentIndex).isLessThan(array.length);
+
+      assertThat(elements).isNotEmpty();
+      int nextIndex = (int) elements.poll();
+
+      assertThat(nextIndex).isNotEqualTo(currentIndex);
+      return nextIndex;
+    }
+
+    @Override
+    public int closedRange(int lowerInclusive, int upperInclusive) {
+      assertThat(lowerInclusive).isLessThan(upperInclusive);
+
+      assertThat(elements).isNotEmpty();
+      int result = (int) elements.poll();
+      assertThat(result).isAtLeast(lowerInclusive);
+      assertThat(result).isAtMost(upperInclusive);
+      return result;
+    }
+
+    @Override
+    public long closedRange(long lowerInclusive, long upperInclusive) {
+      assertThat(lowerInclusive).isLessThan(upperInclusive);
+
+      assertThat(elements).isNotEmpty();
+      long result = (long) elements.poll();
+      assertThat(result).isAtLeast(lowerInclusive);
+      assertThat(result).isAtMost(upperInclusive);
+      return result;
     }
 
     @Override

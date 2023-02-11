@@ -82,7 +82,7 @@ final class NullableMutatorFactory extends MutatorFactory {
 
     @Override
     public T init(PseudoRandom prng) {
-      if (prng.nextInt(0, INVERSE_FREQUENCY_NULL) == 0) {
+      if (prng.trueInOneOutOf(INVERSE_FREQUENCY_NULL)) {
         return null;
       } else {
         return mutator.init(prng);
@@ -93,7 +93,7 @@ final class NullableMutatorFactory extends MutatorFactory {
     public T mutate(T value, PseudoRandom prng) {
       if (value == null) {
         return mutator.init(prng);
-      } else if (prng.nextInt(0, INVERSE_FREQUENCY_NULL) == 0) {
+      } else if (prng.trueInOneOutOf(INVERSE_FREQUENCY_NULL)) {
         return null;
       } else {
         return mutator.mutate(value, prng);

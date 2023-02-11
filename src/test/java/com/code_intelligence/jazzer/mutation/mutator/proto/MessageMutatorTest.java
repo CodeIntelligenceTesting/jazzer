@@ -40,7 +40,7 @@ class MessageMutatorTest {
 
     try (MockPseudoRandom prng = mockPseudoRandom(
              // not null
-             1,
+             false,
              // boolean
              false)) {
       msg = mutator.init(prng);
@@ -49,7 +49,7 @@ class MessageMutatorTest {
 
     try (MockPseudoRandom prng = mockPseudoRandom(
              // not null,
-             1,
+             false,
              // mutate first field
              0)) {
       msg = mutator.mutate(msg, prng);

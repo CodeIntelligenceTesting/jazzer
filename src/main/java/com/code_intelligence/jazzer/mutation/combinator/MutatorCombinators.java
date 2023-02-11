@@ -125,7 +125,7 @@ public final class MutatorCombinators {
 
       @Override
       public void mutateInPlace(T reference, PseudoRandom prng) {
-        mutators[prng.nextInt(mutators.length)].mutateInPlace(reference, prng);
+        mutators[prng.indexIn(mutators)].mutateInPlace(reference, prng);
       }
 
       @Override
@@ -203,7 +203,7 @@ public final class MutatorCombinators {
 
       @Override
       public void initInPlace(T reference, PseudoRandom prng) {
-        mutators[prng.nextInt(mutators.length)].initInPlace(reference, prng);
+        mutators[prng.indexIn(mutators)].initInPlace(reference, prng);
       }
 
       @Override
@@ -212,13 +212,12 @@ public final class MutatorCombinators {
         if (currentState == -1) {
           // The value is in an indeterminate state, initialize it.
           initInPlace(reference, prng);
-        } else if (prng.nextInt(100) != 0) {
+        } else if (prng.trueInOneOutOf(100)) {
+          // Initialize to a different state.
+          mutators[prng.otherIndex(mutators, currentState)].initInPlace(reference, prng);
+        } else {
           // Mutate within the current state.
           mutators[currentState].mutateInPlace(reference, prng);
-        } else {
-          // Initialize to a different state.
-          int newState = (currentState + prng.nextInt(1, mutators.length)) % mutators.length;
-          mutators[newState].initInPlace(reference, prng);
         }
       }
 
