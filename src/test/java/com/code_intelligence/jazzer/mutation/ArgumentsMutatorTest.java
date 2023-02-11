@@ -54,21 +54,21 @@ class ArgumentsMutatorTest {
 
     try (MockPseudoRandom prng = mockPseudoRandom(
              // outer list not null
-             1,
+             false,
              // outer list size 1
              1,
              // inner list not null
-             1,
+             false,
              // inner list size 1
              1,
              // boolean
              true,
              // outer list not null
-             1,
+             false,
              // outer list size 1
              1,
              // Boolean not null
-             1,
+             false,
              // boolean
              false)) {
       mutator.init(prng);
@@ -84,15 +84,15 @@ class ArgumentsMutatorTest {
              // mutate first argument
              0,
              // outer list not null
-             1,
+             false,
              // outer list mutate element
-             1,
+             false,
              // outer list mutate first element
              0,
              // inner list not null
-             1,
+             false,
              // inner list mutate element
-             1,
+             false,
              // inner list mutate first element
              0)) {
       mutator.mutate(prng);
@@ -112,15 +112,15 @@ class ArgumentsMutatorTest {
              // mutate first argument
              0,
              // outer list not null
-             1,
+             false,
              // outer list mutate element
-             1,
+             false,
              // outer list mutate first element
              0,
              // inner list not null
-             1,
+             false,
              // inner list mutate element
-             1,
+             false,
              // inner list mutate first element
              0)) {
       mutator.mutate(prng);
@@ -153,21 +153,21 @@ class ArgumentsMutatorTest {
 
     try (MockPseudoRandom prng = mockPseudoRandom(
              // outer list not null
-             1,
+             false,
              // outer list size 1
              1,
              // inner list not null
-             1,
+             false,
              // inner list size 1
              1,
              // boolean
              true,
              // outer list not null
-             1,
+             false,
              // outer list size 1
              1,
              // Boolean not null
-             1,
+             false,
              // boolean
              false)) {
       mutator.init(prng);
@@ -183,15 +183,15 @@ class ArgumentsMutatorTest {
              // mutate first argument
              0,
              // outer list not null
-             1,
+             false,
              // outer list mutate element
-             1,
+             false,
              // outer list mutate first element
              0,
              // inner list not null
-             1,
+             false,
              // inner list mutate element
-             1,
+             false,
              // inner list mutate first element
              0)) {
       mutator.mutate(prng);
@@ -212,15 +212,15 @@ class ArgumentsMutatorTest {
              // mutate first argument
              0,
              // outer list not null
-             1,
+             false,
              // outer list mutate element
-             1,
+             false,
              // outer list mutate first element
              0,
              // inner list not null
-             1,
+             false,
              // inner list mutate element
-             1,
+             false,
              // inner list mutate first element
              0)) {
       mutator.mutate(prng);

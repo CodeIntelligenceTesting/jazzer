@@ -53,7 +53,7 @@ final class BooleanMutatorFactory extends MutatorFactory {
 
     @Override
     public Boolean init(PseudoRandom prng) {
-      return prng.nextBoolean();
+      return prng.choice();
     }
 
     @Override

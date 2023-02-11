@@ -95,7 +95,7 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
 
   @Override
   public void mutateInPlace(Object[] reference, PseudoRandom prng) {
-    int i = prng.nextInt(mutators.length);
+    int i = prng.indexIn(mutators);
     reference[i] = mutators[i].mutate(reference[i], prng);
   }
 

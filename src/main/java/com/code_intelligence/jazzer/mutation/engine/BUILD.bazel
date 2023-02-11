@@ -4,5 +4,8 @@ java_library(
     visibility = [
         "//src/test/java/com/code_intelligence/jazzer/mutation:__subpackages__",
     ],
-    deps = ["//src/main/java/com/code_intelligence/jazzer/mutation/api"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+    ],
 )

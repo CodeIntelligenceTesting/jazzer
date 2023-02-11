@@ -89,7 +89,7 @@ final class ListMutatorFactory extends MutatorFactory {
 
     @Override
     public void initInPlace(List<T> reference, PseudoRandom prng) {
-      int targetSize = prng.nextInt(minInitialSize(), maxInitialSize() + 1);
+      int targetSize = prng.closedRange(minInitialSize(), maxInitialSize());
       List<T> list = underlyingMutableList(reference);
       list.clear();
       for (int i = 0; i < targetSize; i++) {
@@ -102,8 +102,8 @@ final class ListMutatorFactory extends MutatorFactory {
       List<T> list = underlyingMutableList(reference);
       if (list.isEmpty()) {
         list.add(elementMutator.init(prng));
-      } else if (prng.nextInt(4) != 0) {
-        int i = prng.nextInt(list.size());
+      } else if (!prng.trueInOneOutOf(4)) {
+        int i = prng.indexIn(list);
         list.set(i, elementMutator.mutate(list.get(i), prng));
       } else if (list.size() < maxSize) {
         list.add(list.get(list.size() - 1));
