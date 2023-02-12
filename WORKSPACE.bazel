@@ -265,6 +265,14 @@ load("@buildifier_prebuilt//:defs.bzl", "buildifier_prebuilt_register_toolchains
 
 buildifier_prebuilt_register_toolchains()
 
+http_jar(
+    name = "google-java-format",
+    sha256 = "33068bbbdce1099982ec1171f5e202898eb35f2919cf486141e439fc6e3a4203",
+    urls = [
+        "https://github.com/google/google-java-format/releases/download/v1.17.0/google-java-format-1.17.0-all-deps.jar",
+    ],
+)
+
 http_file(
     name = "clang-format-15-darwin-x64",
     downloaded_file_path = "clang-format",
