@@ -21,8 +21,11 @@ THIS_DIR="$(pwd -P)"
 # Licence headers
 bazel run --config=quiet //:addlicense -- -c "Code Intelligence GmbH" -ignore '**/third_party/**' -ignore '**/.github/**' "$THIS_DIR"
 
-# C++ & Java
-find "$THIS_DIR" \( -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.java' \) -print0 | xargs -0 bazel run --config=quiet //:clang-format -- -i
+# Java
+find "$THIS_DIR" \( -name '*.java' \) -print0 | xargs -0 bazel run --config=quiet //:google-java-format -- --replace
+
+# C++
+find "$THIS_DIR" \( -name '*.cpp' -o -name '*.c' -o -name '*.h' \) -print0 | xargs -0 bazel run --config=quiet //:clang-format -- -i
 
 # No need to run in CI as these formatters have corresponding Bazel tests.
 if [[ "${CI:-0}" == 0 ]]; then
