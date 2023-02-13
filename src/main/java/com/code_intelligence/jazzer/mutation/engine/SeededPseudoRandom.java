@@ -65,12 +65,17 @@ public final class SeededPseudoRandom implements PseudoRandom {
   }
 
   @Override
-  public <T> int otherIndex(T[] array, int currentIndex) {
-    int otherIndex = currentIndex + closedRange(1, array.length - 1);
-    if (otherIndex < array.length) {
+  public <T> int otherIndexIn(T[] array, int currentIndex) {
+    return otherIndexIn(array.length, currentIndex);
+  }
+
+  @Override
+  public int otherIndexIn(int range, int currentIndex) {
+    int otherIndex = currentIndex + closedRange(1, range - 1);
+    if (otherIndex < range) {
       return otherIndex;
     } else {
-      return otherIndex - array.length;
+      return otherIndex - range;
     }
   }
 

@@ -24,6 +24,7 @@ public final class LangMutators {
 
   public static MutatorFactory newFactory() {
     return new ChainedMutatorFactory(new NullableMutatorFactory(), new BooleanMutatorFactory(),
-        new IntegralMutatorFactory(), new ByteArrayMutatorFactory(), new StringMutatorFactory());
+        new IntegralMutatorFactory(), new ByteArrayMutatorFactory(), new StringMutatorFactory(),
+        new EnumMutatorFactory());
   }
 }

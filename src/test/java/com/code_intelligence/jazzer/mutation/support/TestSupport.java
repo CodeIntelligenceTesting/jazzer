@@ -152,16 +152,19 @@ public final class TestSupport {
     }
 
     @Override
-    public <T> int otherIndex(T[] array, int currentIndex) {
-      assertThat(array.length).isAtLeast(2);
-      assertThat(currentIndex).isAtLeast(0);
-      assertThat(currentIndex).isLessThan(array.length);
+    public <T> int otherIndexIn(T[] array, int currentIndex) {
+      return otherIndexIn(array.length, currentIndex);
+    }
 
+    @Override
+    public int otherIndexIn(int range, int currentValue) {
+      assertThat(range).isAtLeast(2);
       assertThat(elements).isNotEmpty();
-      int nextIndex = (int) elements.poll();
-
-      assertThat(nextIndex).isNotEqualTo(currentIndex);
-      return nextIndex;
+      int result = (int) elements.poll();
+      assertThat(result).isAtLeast(0);
+      assertThat(result).isAtMost(range - 1);
+      assertThat(result).isNotEqualTo(currentValue);
+      return result;
     }
 
     @Override

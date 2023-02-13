@@ -63,6 +63,10 @@ public class StressTest {
   private static final int NUM_MUTATE_PER_INIT = 100;
   private static final double MANY_DISTINCT_ELEMENTS_RATIO = 0.5;
 
+  private static enum TestEnumTwo { A, B }
+
+  private static enum TestEnumThree { A, B, C }
+
   public static Stream<Arguments> stressTestCases() {
     return Stream.of(arguments(asAnnotatedType(boolean.class), "Boolean", exactly(false, true),
                          exactly(false, true)),
@@ -124,7 +128,13 @@ public class StressTest {
             }.annotatedType(),
             "Integer",
             exactly(rangeClosed(Integer.MIN_VALUE, Integer.MIN_VALUE + 5).boxed().toArray()),
-            exactly(rangeClosed(Integer.MIN_VALUE, Integer.MIN_VALUE + 5).boxed().toArray())));
+            exactly(rangeClosed(Integer.MIN_VALUE, Integer.MIN_VALUE + 5).boxed().toArray())),
+        arguments(asAnnotatedType(TestEnumTwo.class), "Nullable<Enum<TestEnumTwo>>",
+            exactly(null, TestEnumTwo.A, TestEnumTwo.B),
+            exactly(null, TestEnumTwo.A, TestEnumTwo.B)),
+        arguments(asAnnotatedType(TestEnumThree.class), "Nullable<Enum<TestEnumThree>>",
+            exactly(null, TestEnumThree.A, TestEnumThree.B, TestEnumThree.C),
+            exactly(null, TestEnumThree.A, TestEnumThree.B, TestEnumThree.C)));
   }
 
   public static Stream<Arguments> protoStressTestCases() {
