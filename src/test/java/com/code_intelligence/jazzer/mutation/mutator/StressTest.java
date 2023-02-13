@@ -36,7 +36,9 @@ import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.protobuf.Proto3.IntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedIntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageField3;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -142,7 +144,30 @@ public class StressTest {
                 RepeatedRecursiveMessageField3.newBuilder()
                     .addMessageField(RepeatedRecursiveMessageField3.newBuilder().setSomeField(true))
                     .build()),
-            manyDistinctElements()));
+            manyDistinctElements()),
+        arguments(new TypeHolder<@NotNull IntegralField3>() {}.annotatedType(),
+            "{Builder.Integer} -> Message",
+            // init is heavily biased towards special values and only returns a uniformly random
+            // value in 1 out of 5 calls.
+            all(expectedNumberOfDistinctElements(1L << Integer.SIZE, boundHits(NUM_INITS, 0.2)),
+                contains(IntegralField3.newBuilder().build(),
+                    IntegralField3.newBuilder().setSomeField(1).build(),
+                    IntegralField3.newBuilder().setSomeField(Integer.MIN_VALUE).build(),
+                    IntegralField3.newBuilder().setSomeField(Integer.MAX_VALUE).build())),
+            // Our mutations return uniformly random elements in ~3/8 of all cases.
+            expectedNumberOfDistinctElements(
+                1L << Integer.SIZE, NUM_INITS * NUM_MUTATE_PER_INIT * 3 / 8)),
+        arguments(new TypeHolder<@NotNull RepeatedIntegralField3>() {}.annotatedType(),
+            "{Builder via List<Integer>} -> Message",
+            contains(RepeatedIntegralField3.getDefaultInstance(),
+                RepeatedIntegralField3.newBuilder().addSomeField(0).build(),
+                RepeatedIntegralField3.newBuilder().addSomeField(1).build(),
+                RepeatedIntegralField3.newBuilder().addSomeField(Integer.MAX_VALUE).build(),
+                RepeatedIntegralField3.newBuilder().addSomeField(Integer.MIN_VALUE).build()),
+            // TODO: This ratio is on the lower end, most likely because of the strong bias towards
+            //  special values combined with the small initial size of the list. When we improve the
+            //  list mutator, this may be increased.
+            distinctElementsRatio(0.25)));
   }
 
   @SafeVarargs
