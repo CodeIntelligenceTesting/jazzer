@@ -601,6 +601,9 @@ public class Meta {
           implementingClasses = children.getStandardClasses()
                                     .filter(info -> !Modifier.isAbstract(info.getModifiers()))
                                     .filter(info -> lookup.isAccessible(info, info.getModifiers()))
+                                    // Filter out anonymous and local classes, which can't be
+                                    // instantiated in reproducers.
+                                    .filter(info -> info.getName() != null)
                                     .loadClasses();
           implementingClassesCache.put(type, implementingClasses);
         }
