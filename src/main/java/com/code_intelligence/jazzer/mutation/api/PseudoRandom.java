@@ -57,7 +57,14 @@ public interface PseudoRandom {
    * @return a uniformly random index valid for the given array and different from
    * {@code currentIndex}
    */
-  <T> int otherIndex(T[] array, int currentIndex);
+  <T> int otherIndexIn(T[] array, int currentIndex);
+
+  /**
+   * @throws IllegalArgumentException if {@code length < 2}
+   * @return a uniformly random {@code int} in the closed range {@code [0, length)} that is
+   *     different from {@code currentIndex}
+   */
+  int otherIndexIn(int range, int currentIndex);
 
   /**
    * @return a uniformly random {@code int} in the closed range

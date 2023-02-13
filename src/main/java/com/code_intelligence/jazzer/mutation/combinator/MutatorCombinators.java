@@ -169,12 +169,73 @@ public final class MutatorCombinators {
     return new PostComposedMutator<T, R>(mutator, map, inverse) {};
   }
 
+  public static <T, R> SerializingMutator<R> mutateThenMap(SerializingMutator<T> mutator,
+      Function<T, R> map, Function<R, T> inverse, Function<Predicate<Debuggable>, String> debug) {
+    return new PostComposedMutator<T, R>(mutator, map, inverse) {
+      @Override
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return debug.apply(isInCycle);
+      }
+    };
+  }
+
   public static <T, @ImmutableTypeParameter R> SerializingMutator<R> mutateThenMapToImmutable(
       SerializingMutator<T> mutator, Function<T, R> map, Function<R, T> inverse) {
     return new PostComposedMutator<T, R>(mutator, map, inverse) {
       @Override
       public R detach(R value) {
         return value;
+      }
+    };
+  }
+
+  public static <T, @ImmutableTypeParameter R> SerializingMutator<R> mutateThenMapToImmutable(
+      SerializingMutator<T> mutator, Function<T, R> map, Function<R, T> inverse,
+      Function<Predicate<Debuggable>, String> debug) {
+    return new PostComposedMutator<T, R>(mutator, map, inverse) {
+      @Override
+      public R detach(R value) {
+        return value;
+      }
+
+      @Override
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return debug.apply(isInCycle);
+      }
+    };
+  }
+
+  public static SerializingMutator<Integer> mutateIndices(int length) {
+    require(length > 1, "There should be at least two indices to choose from");
+    return new SerializingMutator<Integer>() {
+      @Override
+      public Integer read(DataInputStream in) throws IOException {
+        return in.readInt() % length;
+      }
+
+      @Override
+      public void write(Integer value, DataOutputStream out) throws IOException {
+        out.writeInt(value);
+      }
+
+      @Override
+      public Integer detach(Integer value) {
+        return value;
+      }
+
+      @Override
+      public Integer init(PseudoRandom prng) {
+        return prng.closedRange(0, length - 1);
+      }
+
+      @Override
+      public Integer mutate(Integer value, PseudoRandom prng) {
+        return prng.otherIndexIn(length, value);
+      }
+
+      @Override
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return "mutateIndices(" + length + ")";
       }
     };
   }
@@ -215,7 +276,7 @@ public final class MutatorCombinators {
           initInPlace(reference, prng);
         } else if (prng.trueInOneOutOf(100)) {
           // Initialize to a different state.
-          mutators[prng.otherIndex(mutators, currentState)].initInPlace(reference, prng);
+          mutators[prng.otherIndexIn(mutators, currentState)].initInPlace(reference, prng);
         } else {
           // Mutate within the current state.
           mutators[currentState].mutateInPlace(reference, prng);
