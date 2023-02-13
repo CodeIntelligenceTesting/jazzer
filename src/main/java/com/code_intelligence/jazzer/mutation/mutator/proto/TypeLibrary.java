@@ -54,29 +54,23 @@ final class TypeLibrary {
     return withExtraAnnotations(getBaseTypeWithPresence(field, builder), NOT_NULL);
   }
 
+  @SuppressWarnings("DuplicateBranchesInSwitch") /* False positives caused by TypeHolder */
   private static <T extends Builder> AnnotatedType getBaseTypeWithPresence(
       FieldDescriptor field, T builder) {
-    switch (field.getType()) {
-      case BOOL:
+    switch (field.getJavaType()) {
+      case BOOLEAN:
         return new TypeHolder<Boolean>() {}.annotatedType();
       case MESSAGE:
         return asAnnotatedType(builder.newBuilderForField(field).getClass());
-      case BYTES:
-      case DOUBLE:
-      case ENUM:
-      case FIXED32:
-      case FIXED64:
+      case INT:
+        return new TypeHolder<Integer>() {}.annotatedType();
+      case LONG:
+        return new TypeHolder<Long>() {}.annotatedType();
       case FLOAT:
-      case GROUP:
-      case INT32:
-      case INT64:
-      case SFIXED32:
-      case SFIXED64:
-      case SINT32:
-      case SINT64:
+      case DOUBLE:
       case STRING:
-      case UINT32:
-      case UINT64:
+      case BYTE_STRING:
+      case ENUM:
         throw new UnsupportedOperationException(field.getType() + " has not been implemented");
       default:
         throw new IllegalStateException("Unexpected type: " + field.getType());
