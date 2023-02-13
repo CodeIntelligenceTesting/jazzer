@@ -31,6 +31,7 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.RandomAccess;
 import java.util.stream.Collectors;
 
 final class ListMutatorFactory extends MutatorFactory {
@@ -148,7 +149,7 @@ final class ListMutatorFactory extends MutatorFactory {
     }
   }
 
-  private static final class ImmutableListView<T> extends AbstractList<T> {
+  private static final class ImmutableListView<T> extends AbstractList<T> implements RandomAccess {
     private final List<T> mutableList;
 
     ImmutableListView(List<T> mutableList) {
