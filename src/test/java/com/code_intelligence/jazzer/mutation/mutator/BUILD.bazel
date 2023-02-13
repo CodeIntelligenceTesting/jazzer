@@ -10,6 +10,7 @@ java_test_suite(
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator/proto:proto3_java_proto",
         "//src/test/java/com/code_intelligence/jazzer/mutation/support:test_support",
     ],
 )

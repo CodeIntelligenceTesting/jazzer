@@ -19,7 +19,6 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
@@ -36,9 +35,6 @@ import com.code_intelligence.jazzer.protobuf.Proto3.PrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RecursiveMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedPrimitiveField3;
-import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageField3;
-import com.google.protobuf.Any;
-import com.google.protobuf.Descriptors.OneofDescriptor;
 import org.junit.jupiter.api.Test;
 
 class BuilderMutatorProto3Test {
@@ -292,14 +288,6 @@ class BuilderMutatorProto3Test {
                            RecursiveMessageField3.newBuilder()))
                        .build());
     assertThat(builder.getMessageField().hasMessageField()).isTrue();
-  }
-
-  @Test
-  void testRepeatedRecursiveMessageField() {
-    InPlaceMutator<RepeatedRecursiveMessageField3.Builder> mutator =
-        (InPlaceMutator<RepeatedRecursiveMessageField3.Builder>) FACTORY.createInPlaceOrThrow(
-            new TypeHolder<RepeatedRecursiveMessageField3.@NotNull Builder>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("{Builder.Boolean, Builder via List<(cycle)>}");
   }
 
   @Test

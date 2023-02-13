@@ -36,13 +36,13 @@ import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageField3;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.lang.reflect.AnnotatedType;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -122,6 +122,29 @@ public class StressTest {
             exactly(rangeClosed(Integer.MIN_VALUE, Integer.MIN_VALUE + 5).boxed().toArray())));
   }
 
+  public static Stream<Arguments> protoStressTestCases() {
+    return Stream.of(
+        arguments(new TypeHolder<@NotNull OptionalPrimitiveField3>() {}.annotatedType(),
+            "{Builder.Nullable<Boolean>} -> Message",
+            exactly(OptionalPrimitiveField3.newBuilder().build(),
+                OptionalPrimitiveField3.newBuilder().setSomeField(false).build(),
+                OptionalPrimitiveField3.newBuilder().setSomeField(true).build()),
+            exactly(OptionalPrimitiveField3.newBuilder().build(),
+                OptionalPrimitiveField3.newBuilder().setSomeField(false).build(),
+                OptionalPrimitiveField3.newBuilder().setSomeField(true).build())),
+        arguments(new TypeHolder<@NotNull RepeatedRecursiveMessageField3>() {}.annotatedType(),
+            "{Builder.Boolean, Builder via List<(cycle)>} -> Message",
+            contains(RepeatedRecursiveMessageField3.getDefaultInstance(),
+                RepeatedRecursiveMessageField3.newBuilder().setSomeField(true).build(),
+                RepeatedRecursiveMessageField3.newBuilder()
+                    .addMessageField(RepeatedRecursiveMessageField3.getDefaultInstance())
+                    .build(),
+                RepeatedRecursiveMessageField3.newBuilder()
+                    .addMessageField(RepeatedRecursiveMessageField3.newBuilder().setSomeField(true))
+                    .build()),
+            manyDistinctElements()));
+  }
+
   @SafeVarargs
   private static Consumer<List<Object>> all(Consumer<List<Object>>... checks) {
     return list -> {
@@ -129,6 +152,10 @@ public class StressTest {
         check.accept(list);
       }
     };
+  }
+
+  private static Consumer<List<Object>> distinctElements(int num) {
+    return list -> assertThat(new HashSet<>(list).size()).isAtLeast(num);
   }
 
   private static Consumer<List<Object>> manyDistinctElements() {
@@ -187,7 +214,7 @@ public class StressTest {
   }
 
   @ParameterizedTest(name = "{0}")
-  @MethodSource("stressTestCases")
+  @MethodSource({"stressTestCases", "protoStressTestCases"})
   void genericMutatorStressTest(AnnotatedType type, String mutatorTree,
       Consumer<List<Object>> expectedInitValues, Consumer<List<Object>> expectedMutatedValues)
       throws IOException {
