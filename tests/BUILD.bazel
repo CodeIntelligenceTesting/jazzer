@@ -406,7 +406,7 @@ genrule(
     srcs = [":OfflineInstrumentedTarget"],
     outs = ["OfflineInstrumentedTargetInstrumented.jar"],
     cmd = """
-$(location :jacococli) instrument $< --dest jacoco-instrumented
+$(location :jacococli) instrument $< --dest jacoco-instrumented --quiet
 cp jacoco-instrumented/*.jar $@
 """,
     tags = ["manual"],
