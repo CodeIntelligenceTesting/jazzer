@@ -81,7 +81,7 @@ final class ListMutatorFactory extends MutatorFactory {
     }
 
     @Override
-    public List<T> makeDefaultInstance() {
+    protected List<T> makeDefaultInstance() {
       // Wrap in an immutable view for additional protection against accidental mutation in fuzz
       // tests.
       return toImmutableListView(new ArrayList<>(maxInitialSize()));
