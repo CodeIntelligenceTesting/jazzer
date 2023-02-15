@@ -14,16 +14,6 @@
  * limitations under the License.
  */
 
-package com.code_intelligence.jazzer.mutation.mutator.lang;
+package com.code_intelligence.jazzer.mutation.annotation;
 
-import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
-import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
-
-public final class LangMutators {
-  private LangMutators() {}
-
-  public static MutatorFactory newFactory() {
-    return new ChainedMutatorFactory(new NullableMutatorFactory(), new BooleanMutatorFactory(),
-        new IntegralMutatorFactory(), new ByteArrayMutatorFactory(), new StringMutatorFactory());
-  }
-}
+public @interface Ascii {}

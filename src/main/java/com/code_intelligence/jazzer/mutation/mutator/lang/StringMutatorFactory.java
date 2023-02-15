@@ -1,0 +1,155 @@
+/*
+ * Copyright 2023 Code Intelligence GmbH
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.code_intelligence.jazzer.mutation.mutator.lang;
+
+import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
+
+import com.code_intelligence.jazzer.mutation.annotation.Ascii;
+import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import java.lang.reflect.AnnotatedType;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
+
+final class StringMutatorFactory extends MutatorFactory {
+  private static final int HEADER_MASK = 0b1100_0000;
+  private static final int BODY_MASK = 0b0011_1111;
+  private static final int CONTINUATION_HEADER = 0b1000_0000;
+
+  static void fixUpAscii(byte[] bytes) {
+    for (int i = 0; i < bytes.length; i++) {
+      bytes[i] &= 0x7F;
+    }
+  }
+
+  // Based on
+  // https://github.com/google/libprotobuf-mutator/blob/af3bb18749db3559dc4968dd85319d05168d4b5e/src/utf8_fix.cc#L32
+  // SPDX: Apache-2.0
+  // Copyright 2022 Google LLC
+  static void fixUpUtf8(byte[] bytes) {
+    for (int pos = 0; pos < bytes.length;) {
+      // Leniently read a UTF-8 code point consisting of any byte viewed as the leading byte and up
+      // to three following bytes that have a continuation byte header.
+      //
+      // Since the upper two bits of a byte are 10 with probability 25%, this roughly results in
+      // the following distribution for characters:
+      //
+      // ASCII code point: 75%
+      // two-byte UTF-8: 18.75%
+      // three-byte UTF-8: ~4.7%
+      // four-byte UTF-8: ~1.2%
+      int scanPos = pos + 1;
+      int maxScanPos = Math.min(pos + 4, bytes.length);
+
+      int codePoint = bytes[pos] & 0xFF;
+      for (; scanPos < maxScanPos; scanPos++) {
+        byte b = bytes[scanPos];
+        if ((b & HEADER_MASK) != CONTINUATION_HEADER) {
+          break;
+        }
+        codePoint = (codePoint << 6) + (b & BODY_MASK);
+      }
+
+      int size = scanPos - pos;
+      int nextPos = scanPos;
+      switch (size) {
+        case 1:
+          // Force code point to be ASCII.
+          codePoint &= 0x7F;
+
+          bytes[pos] = (byte) codePoint;
+          break;
+        case 2:
+          codePoint &= 0x7FF;
+          if (codePoint <= 0x7F) {
+            // The code point encoding must not be longer than necessary, so fix up the code point
+            // to actually require two bytes without fixing too many bits.
+            codePoint |= 0x80;
+          }
+
+          bytes[--scanPos] = (byte) (CONTINUATION_HEADER | (codePoint & BODY_MASK));
+          codePoint >>= 6;
+          bytes[pos] = (byte) (0b1100_0000 | codePoint);
+          break;
+        case 3:
+          codePoint &= 0xFFFF;
+          if (codePoint <= 0x7FF) {
+            // The code point encoding must not be longer than necessary, so fix up the code point
+            // to actually require three bytes without fixing too many bits.
+            codePoint |= 0x800;
+          }
+          if (codePoint >= 0xD800 && codePoint <= 0xDFFF) {
+            // The code point must not be a low or high UTF-16 surrogate pair, which are not allowed
+            // in UTF-8.
+            codePoint |= (codePoint & ~0xF000) | 0xE000;
+          }
+
+          bytes[--scanPos] = (byte) (CONTINUATION_HEADER | (codePoint & BODY_MASK));
+          codePoint >>= 6;
+          bytes[--scanPos] = (byte) (CONTINUATION_HEADER | (codePoint & BODY_MASK));
+          codePoint >>= 6;
+          bytes[pos] = (byte) (0b1110_0000 | codePoint);
+          break;
+        case 4:
+          codePoint &= 0x1FFFFF;
+          if (codePoint <= 0xFFFF) {
+            // The code point encoding must not be longer than necessary, so fix up the code point
+            // to actually require four bytes without fixing too many bits.
+            codePoint |= 0x100000;
+          }
+          if (codePoint > 0x10FFFF) {
+            // The code point must be in the valid Unicode range, so fix it up by clearing as few
+            // bits as possible.
+            codePoint &= ~0x10FFFF;
+          }
+
+          bytes[--scanPos] = (byte) (CONTINUATION_HEADER | (codePoint & BODY_MASK));
+          codePoint >>= 6;
+          bytes[--scanPos] = (byte) (CONTINUATION_HEADER | (codePoint & BODY_MASK));
+          codePoint >>= 6;
+          bytes[--scanPos] = (byte) (CONTINUATION_HEADER | (codePoint & BODY_MASK));
+          codePoint >>= 6;
+          bytes[pos] = (byte) (0b1111_0000 | codePoint);
+          break;
+        default:
+          throw new IllegalStateException("Not reached as scanPos <= pos + 4");
+      }
+
+      pos = nextPos;
+    }
+  }
+
+  @Override
+  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+    return findFirstParentIfClass(type, String.class)
+        .flatMap(parent -> factory.tryCreate(notNull(asAnnotatedType(byte[].class))))
+        .map(byteArrayMutator -> {
+          boolean fixUpAscii = type.getDeclaredAnnotation(Ascii.class) != null;
+          return mutateThenMapToImmutable((SerializingMutator<byte[]>) byteArrayMutator, bytes -> {
+            if (fixUpAscii) {
+              fixUpAscii(bytes);
+            } else {
+              fixUpUtf8(bytes);
+            }
+            return new String(bytes, StandardCharsets.UTF_8);
+          }, string -> string.getBytes(StandardCharsets.UTF_8));
+        });
+  }
+}
