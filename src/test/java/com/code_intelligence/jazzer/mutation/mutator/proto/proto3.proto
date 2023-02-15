@@ -66,3 +66,7 @@ message RepeatedIntegralField3 {
 message BytesField3 {
   bytes some_field = 1;
 }
+
+message StringField3 {
+  string some_field = 1;
+}

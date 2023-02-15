@@ -25,6 +25,7 @@ import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.Descriptors.FieldDescriptor.Type;
 import com.google.protobuf.Message.Builder;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
@@ -68,9 +69,10 @@ final class TypeLibrary {
         return new TypeHolder<Long>() {}.annotatedType();
       case BYTE_STRING:
         return new TypeHolder<ByteString>() {}.annotatedType();
+      case STRING:
+        return new TypeHolder<String>() {}.annotatedType();
       case FLOAT:
       case DOUBLE:
-      case STRING:
       case ENUM:
         throw new UnsupportedOperationException(field.getType() + " has not been implemented");
       default:
