@@ -187,6 +187,14 @@ public final class TestSupport {
     }
 
     @Override
+    public void bytes(byte[] bytes) {
+      assertThat(elements).isNotEmpty();
+      byte[] result = (byte[]) elements.poll();
+      assertThat(result).hasLength(bytes.length);
+      System.arraycopy(result, 0, bytes, 0, bytes.length);
+    }
+
+    @Override
     public void close() {
       assertThat(elements).isEmpty();
     }

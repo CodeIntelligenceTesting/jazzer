@@ -23,6 +23,7 @@ import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
 import com.google.errorprone.annotations.Immutable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -76,17 +77,23 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
 
     @Override
     public byte[] init(PseudoRandom prng) {
-      throw new UnsupportedOperationException("not implemented");
+      // TODO: Improve the way the upper bound is determined, e.g. grow it over time and/or add
+      //  support for the WithSize annotation.
+      byte[] bytes = new byte[prng.indexIn(1000)];
+      prng.bytes(bytes);
+      return bytes;
     }
 
     @Override
     public byte[] mutate(byte[] value, PseudoRandom prng) {
-      throw new UnsupportedOperationException("not implemented");
+      // TODO: The way maxSizeIncrease is determined is just a heuristic and hasn't been
+      //  benchmarked.
+      return LibFuzzerMutator.mutateDefault(value, Math.max(8, value.length / 16));
     }
 
     @Override
     public String toDebugString(Predicate<Debuggable> isInCycle) {
-      return "ByteArray";
+      return "byte[]";
     }
   }
 }

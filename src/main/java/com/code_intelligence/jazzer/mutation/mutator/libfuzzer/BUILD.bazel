@@ -1,0 +1,14 @@
+java_library(
+    name = "libfuzzer",
+    srcs = ["LibFuzzerMutator.java"],
+    visibility = [
+        # libFuzzer's mutators should only by used by mutators for primitive types as we want to get
+        # rid of this dependency eventually.
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/lang:__pkg__",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:mutator",
+    ],
+)
