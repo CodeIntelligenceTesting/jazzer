@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withTypeArguments;
 
@@ -29,8 +30,6 @@ import java.lang.reflect.AnnotatedType;
 import java.util.List;
 
 final class TypeLibrary {
-  private static final Annotation NOT_NULL =
-      new TypeHolder<@NotNull String>() {}.annotatedType().getAnnotation(NotNull.class);
   private static final AnnotatedType RAW_LIST = new TypeHolder<@NotNull List>() {}.annotatedType();
 
   static <T extends Builder> AnnotatedType getTypeToMutate(FieldDescriptor field, T builder) {
@@ -51,7 +50,7 @@ final class TypeLibrary {
   }
 
   private static <T extends Builder> AnnotatedType getBaseType(FieldDescriptor field, T builder) {
-    return withExtraAnnotations(getBaseTypeWithPresence(field, builder), NOT_NULL);
+    return notNull(getBaseTypeWithPresence(field, builder));
   }
 
   @SuppressWarnings("DuplicateBranchesInSwitch") /* False positives caused by TypeHolder */
