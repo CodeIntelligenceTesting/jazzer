@@ -6,5 +6,6 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
         "@com_github_jhalterman_typetools//:typetools",
+        "@com_google_errorprone_error_prone_type_annotations//jar",
     ],
 )

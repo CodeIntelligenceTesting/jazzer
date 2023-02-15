@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.mutation.api;
 
 import static com.code_intelligence.jazzer.mutation.support.ExceptionSupport.asUnchecked;
 
+import com.google.errorprone.annotations.ForOverride;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +46,7 @@ public abstract class SerializingInPlaceMutator<T>
    *
    * @return a default instance of {@code T}
    */
+  @ForOverride
   protected T makeDefaultInstance() {
     try {
       return readExclusive(emptyInputStream);

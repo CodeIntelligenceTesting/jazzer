@@ -147,6 +147,13 @@ def jazzer_dependencies():
 
     maybe(
         http_jar,
+        name = "com_google_errorprone_error_prone_type_annotations",
+        sha256 = "d2ab73bc6807277f7463391504313e47bc3465ab1916339c8e82be633a9ab375",
+        url = "https://repo1.maven.org/maven2/com/google/errorprone/error_prone_type_annotations/2.18.0/error_prone_type_annotations-2.18.0.jar",
+    )
+
+    maybe(
+        http_jar,
         name = "com_google_protobuf_protobuf_java",
         sha256 = "3f3edbda9286246080f3eaf561dd6b0d5a2b1f1008f6909115c8609ceae9df87",
         # Keep in sync with com_google_protobuf in WORKSPACE.

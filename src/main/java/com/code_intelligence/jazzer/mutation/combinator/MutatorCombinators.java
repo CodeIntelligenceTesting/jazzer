@@ -29,6 +29,7 @@ import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.api.ValueMutator;
+import com.google.errorprone.annotations.ImmutableTypeParameter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -168,7 +169,7 @@ public final class MutatorCombinators {
     return new PostComposedMutator<T, R>(mutator, map, inverse) {};
   }
 
-  public static <T, R> SerializingMutator<R> mutateThenMapToImmutable(
+  public static <T, @ImmutableTypeParameter R> SerializingMutator<R> mutateThenMapToImmutable(
       SerializingMutator<T> mutator, Function<T, R> map, Function<R, T> inverse) {
     return new PostComposedMutator<T, R>(mutator, map, inverse) {
       @Override

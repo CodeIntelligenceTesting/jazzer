@@ -82,7 +82,7 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
   }
 
   @Override
-  public Object[] makeDefaultInstance() {
+  protected Object[] makeDefaultInstance() {
     return new Object[mutators.length];
   }
 
