@@ -36,6 +36,7 @@ import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.protobuf.Proto3.BytesField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.IntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedIntegralField3;
@@ -167,7 +168,10 @@ public class StressTest {
             // TODO: This ratio is on the lower end, most likely because of the strong bias towards
             //  special values combined with the small initial size of the list. When we improve the
             //  list mutator, this may be increased.
-            distinctElementsRatio(0.25)));
+            distinctElementsRatio(0.25)),
+        arguments(new TypeHolder<@NotNull BytesField3>() {}.annotatedType(),
+            "{Builder.byte[] -> ByteString} -> Message", manyDistinctElements(),
+            manyDistinctElements()));
   }
 
   @SafeVarargs

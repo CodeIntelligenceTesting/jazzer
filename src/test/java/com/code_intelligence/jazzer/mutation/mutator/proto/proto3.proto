@@ -62,3 +62,7 @@ message IntegralField3 {
 message RepeatedIntegralField3 {
   repeated uint32 some_field = 1;
 }
+
+message BytesField3 {
+  bytes some_field = 1;
+}
