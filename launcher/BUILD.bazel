@@ -17,6 +17,10 @@ cc_library(
     data = [
         "//src/main/java/com/code_intelligence/jazzer:jazzer_standalone_deploy.jar",
     ],
+    linkopts = select({
+        "@platforms//os:android": ["-ldl"],
+        "//conditions:default": [],
+    }),
     deps = [
         "@bazel_tools//tools/cpp/runfiles",
         "@com_google_absl//absl/strings",
@@ -29,6 +33,7 @@ cc_binary(
     name = "jazzer_single_arch",
     linkstatic = True,
     tags = ["manual"],
+    visibility = ["//launcher/android:__pkg__"],
     deps = [":jazzer_main"],
 )
 

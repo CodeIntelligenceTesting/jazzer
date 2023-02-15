@@ -16,6 +16,7 @@ package com.code_intelligence.jazzer.runtime;
 
 import com.code_intelligence.jazzer.api.HookType;
 import com.code_intelligence.jazzer.api.MethodHook;
+import com.code_intelligence.jazzer.driver.Opt;
 import java.lang.invoke.MethodHandle;
 
 @SuppressWarnings("unused")
@@ -30,6 +31,10 @@ final public class NativeLibHooks {
       targetMethodDescriptor = "(Ljava/lang/String;)V")
   public static void
   loadLibraryHook(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    if (Opt.isAndroid) {
+      return;
+    }
+
     TraceDataFlowNativeCallbacks.handleLibraryLoad();
   }
 }

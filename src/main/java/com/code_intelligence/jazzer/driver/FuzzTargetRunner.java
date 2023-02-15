@@ -88,6 +88,12 @@ public final class FuzzTargetRunner {
       throw new IllegalStateException(e);
     }
     useFuzzedDataProvider = fuzzTarget.usesFuzzedDataProvider();
+    if (!useFuzzedDataProvider && Opt.isAndroid) {
+      Log.error("Android fuzz targets must use " + FuzzedDataProvider.class.getName());
+      exit(1);
+      throw new IllegalStateException("Not reached");
+    }
+
     fuzzerTearDown = fuzzTarget.tearDown.orElse(null);
     reproducerTemplate = new ReproducerTemplate(fuzzTargetClass.getName(), useFuzzedDataProvider);
 

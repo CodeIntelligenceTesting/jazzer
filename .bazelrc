@@ -25,6 +25,11 @@ build:ci --features=layering_check
 build --java_language_version=8
 build --tool_java_language_version=8
 
+# Android
+build:android_arm --incompatible_enable_android_toolchain_resolution
+build:android_arm --android_platforms=//:android_arm64
+build:android_arm --copt=-D_ANDROID
+
 # Windows
 # Only compiles with clang on Windows.
 build:windows --extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl

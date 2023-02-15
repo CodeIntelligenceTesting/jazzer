@@ -96,16 +96,21 @@ fun preprocessThrowable(throwable: Throwable): Throwable = when (throwable) {
         val bottomFramesWithoutRepetition = throwable.stackTrace.takeLastWhile { frame ->
             (frame !in observedFrames).also { observedFrames.add(frame) }
         }
-        FuzzerSecurityIssueLow("Stack overflow (use '${getReproducingXssArg()}' to reproduce)", throwable).apply {
+        var securityIssueMessage = "Stack overflow"
+        if (!Opt.isAndroid) {
+            securityIssueMessage = "$securityIssueMessage (use '${getReproducingXssArg()}' to reproduce)"
+        }
+        FuzzerSecurityIssueLow(securityIssueMessage, throwable).apply {
             stackTrace = bottomFramesWithoutRepetition.toTypedArray()
         }
     }
-    is OutOfMemoryError -> stripOwnStackTrace(
-        FuzzerSecurityIssueLow(
-            "Out of memory (use '${getReproducingXmxArg()}' to reproduce)",
-            throwable,
-        ),
-    )
+    is OutOfMemoryError -> {
+        var securityIssueMessage = "Out of memory"
+        if (!Opt.isAndroid) {
+            securityIssueMessage = "$securityIssueMessage (use '${getReproducingXmxArg()}' to reproduce)"
+        }
+        stripOwnStackTrace(FuzzerSecurityIssueLow(securityIssueMessage, throwable))
+    }
     is VirtualMachineError -> stripOwnStackTrace(FuzzerSecurityIssueLow(throwable))
     else -> throwable
 }.also { dropInternalFrames(it) }
@@ -194,6 +199,12 @@ fun dumpAllStackTraces() {
             }
         Log.println("")
     }
+
+    if (Opt.isAndroid) {
+        // ManagementFactory is not supported on Android
+        return
+    }
+
     Log.println("Garbage collector stats:")
     Log.println(
         ManagementFactory.getGarbageCollectorMXBeans().joinToString("\n", "\n", "\n") {

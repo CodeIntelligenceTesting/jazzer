@@ -17,6 +17,12 @@
 
 #include <cstdlib>
 
+#if defined(_ANDROID)
+#define __jni_version__ JNI_VERSION_1_6
+#else
+#define __jni_version__ JNI_VERSION_1_8
+#endif
+
 // The jazzer_preload library, if used, forwards all calls to native libFuzzer
 // hooks such as __sanitizer_cov_trace_cmp8 to the Jazzer JNI library. In order
 // to load the hook symbols when the library is ready, it needs to be passed a
@@ -46,5 +52,5 @@ jint JNI_OnLoad(JavaVM *, void *) {
 
   dlclose(handle);
 
-  return JNI_VERSION_1_8;
+  return __jni_version__;
 }

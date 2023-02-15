@@ -24,3 +24,12 @@ alias(
     name = "jazzer",
     actual = "//launcher:jazzer",
 )
+
+platform(
+    name = "android_arm64",
+    constraint_values = [
+        "@platforms//cpu:arm64",
+        "@platforms//os:android",
+    ],
+    visibility = ["//:__subpackages__"],
+)

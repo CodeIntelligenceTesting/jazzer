@@ -21,6 +21,7 @@ import static java.lang.System.exit;
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.junit.JUnitRunner;
 import com.code_intelligence.jazzer.utils.Log;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,6 +32,22 @@ import java.util.Optional;
 
 public class Driver {
   public static int start(List<String> args, boolean spawnsSubprocesses) throws IOException {
+    boolean isAndroid = Boolean.parseBoolean(System.getProperty("jazzer.android", "false"));
+    if (isAndroid) {
+      if (!System.getProperty("jazzer.autofuzz", "").isEmpty()) {
+        Log.error("--autofuzz is not supported for Android");
+        return 1;
+      }
+      if (!System.getProperty("jazzer.coverage_report", "").isEmpty()) {
+        Log.warn("--coverage_report is not supported for Android and has been disabled");
+        System.clearProperty("jazzer.coverage_report");
+      }
+      if (!System.getProperty("jazzer.coverage_dump", "").isEmpty()) {
+        Log.warn("--coverage_dump is not supported for Android and has been disabled");
+        System.clearProperty("jazzer.coverage_dump");
+      }
+    }
+
     if (spawnsSubprocesses) {
       if (!System.getProperty("jazzer.coverage_report", "").isEmpty()) {
         Log.warn("--coverage_report does not support parallel fuzzing and has been disabled");
@@ -48,7 +65,13 @@ public class Driver {
         // pass its path to the agent in every child process. This requires adding
         // the argument to argv for it to be picked up by libFuzzer, which then
         // forwards it to child processes.
-        idSyncFile = Files.createTempFile("jazzer-", "");
+        if (!isAndroid) {
+          idSyncFile = Files.createTempFile("jazzer-", "");
+        } else {
+          File f = File.createTempFile("jazzer-", "", new File("/data/local/tmp/"));
+          idSyncFile = f.toPath();
+        }
+
         args.add("--id_sync_file=" + idSyncFile.toAbsolutePath());
       } else {
         // Creates the file, truncating it if it exists.
@@ -87,7 +110,9 @@ public class Driver {
 
     // Do not modify properties beyond this point, loading Opt locks in their values.
 
-    AgentInstaller.install(Opt.hooks);
+    if (!isAndroid) {
+      AgentInstaller.install(Opt.hooks);
+    }
     Driver.class.getClassLoader().setDefaultAssertionStatus(true);
 
     if (!Opt.autofuzz.isEmpty()) {

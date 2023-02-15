@@ -14,6 +14,10 @@
 
 #include "jvm_tooling.h"
 
+#if defined(_ANDROID)
+#include <dlfcn.h>
+#endif
+
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -120,7 +124,53 @@ std::vector<std::string> splitEscaped(const std::string &str) {
 
 namespace jazzer {
 
-JVM::JVM(const std::string &executable_path) {
+#if defined(_ANDROID)
+typedef jint (*JNI_CreateJavaVM_t)(JavaVM **, JNIEnv **, void *);
+JNI_CreateJavaVM_t LoadAndroidVMLibs() {
+  std::cout << "Loading Android libraries" << std::endl;
+
+  void *art_so = nullptr;
+  art_so = dlopen("libnativehelper.so", RTLD_NOW);
+
+  if (art_so == nullptr) {
+    std::cerr << "Could not find ART library" << std::endl;
+    exit(1);
+  }
+
+  typedef void *(*JniInvocationCreate_t)();
+  JniInvocationCreate_t JniInvocationCreate =
+      reinterpret_cast<JniInvocationCreate_t>(
+          dlsym(art_so, "JniInvocationCreate"));
+  if (JniInvocationCreate == nullptr) {
+    std::cout << "JniInvocationCreate is null" << std::endl;
+    exit(1);
+  }
+
+  void *impl = JniInvocationCreate();
+  typedef bool (*JniInvocationInit_t)(void *, const char *);
+  JniInvocationInit_t JniInvocationInit =
+      reinterpret_cast<JniInvocationInit_t>(dlsym(art_so, "JniInvocationInit"));
+  if (JniInvocationInit == nullptr) {
+    std::cout << "JniInvocationInit is null" << std::endl;
+    exit(1);
+  }
+
+  JniInvocationInit(impl, nullptr);
+
+  constexpr char create_jvm_symbol[] = "JNI_CreateJavaVM";
+  typedef jint (*JNI_CreateJavaVM_t)(JavaVM **, JNIEnv **, void *);
+  JNI_CreateJavaVM_t JNI_CreateArtVM =
+      reinterpret_cast<JNI_CreateJavaVM_t>(dlsym(art_so, create_jvm_symbol));
+  if (JNI_CreateArtVM == nullptr) {
+    std::cout << "JNI_CreateJavaVM is null" << std::endl;
+    exit(1);
+  }
+
+  return JNI_CreateArtVM;
+}
+#endif
+
+std::string GetClassPath(const std::string &executable_path) {
   // combine class path from command line flags and JAVA_FUZZER_CLASSPATH env
   // variable
   std::string class_path = absl::StrFormat("-Djava.class.path=%s", FLAGS_cp);
@@ -128,12 +178,20 @@ JVM::JVM(const std::string &executable_path) {
   if (class_path_from_env) {
     class_path += absl::StrCat(ARG_SEPARATOR, class_path_from_env);
   }
+
   class_path +=
       absl::StrCat(ARG_SEPARATOR, getInstrumentorAgentPath(executable_path));
+  return class_path;
+}
+
+JVM::JVM(const std::string &executable_path) {
+  std::string class_path = GetClassPath(executable_path);
 
   std::vector<JavaVMOption> options;
   options.push_back(
       JavaVMOption{.optionString = const_cast<char *>(class_path.c_str())});
+
+#if !defined(_ANDROID)
   // Set the maximum heap size to a value that is slightly smaller than
   // libFuzzer's default rss_limit_mb. This prevents erroneous oom reports.
   options.push_back(JavaVMOption{.optionString = (char *)"-Xmx1800m"});
@@ -148,13 +206,14 @@ JVM::JVM(const std::string &executable_path) {
       JavaVMOption{.optionString = (char *)"-XX:+IgnoreUnrecognizedVMOptions"});
   options.push_back(
       JavaVMOption{.optionString = (char *)"-XX:+CriticalJNINatives"});
+#endif
 
-  // Add additional JVM options set through JAVA_OPTS.
   std::vector<std::string> java_opts_args;
   const char *java_opts = std::getenv("JAVA_OPTS");
   if (java_opts != nullptr) {
     // Mimic the behavior of the JVM when it sees JAVA_TOOL_OPTIONS.
     std::cerr << "Picked up JAVA_OPTS: " << java_opts << std::endl;
+
     java_opts_args = absl::StrSplit(java_opts, ' ');
     for (const std::string &java_opt : java_opts_args) {
       options.push_back(
@@ -162,30 +221,51 @@ JVM::JVM(const std::string &executable_path) {
     }
   }
 
-  // add additional jvm options set through command line flags
+  // Add additional jvm options set through command line flags.
+  // Keep the vectors in scope as they contain the strings backing the C strings
+  // added to options.
   std::vector<std::string> jvm_args;
   if (!FLAGS_jvm_args.empty()) {
     jvm_args = splitEscaped(FLAGS_jvm_args);
+    for (const auto &arg : jvm_args) {
+      options.push_back(
+          JavaVMOption{.optionString = const_cast<char *>(arg.c_str())});
+    }
   }
-  for (const auto &arg : jvm_args) {
-    options.push_back(
-        JavaVMOption{.optionString = const_cast<char *>(arg.c_str())});
-  }
+
   std::vector<std::string> additional_jvm_args;
   if (!FLAGS_additional_jvm_args.empty()) {
     additional_jvm_args = splitEscaped(FLAGS_additional_jvm_args);
-  }
-  for (const auto &arg : additional_jvm_args) {
-    options.push_back(
-        JavaVMOption{.optionString = const_cast<char *>(arg.c_str())});
+    for (const auto &arg : additional_jvm_args) {
+      options.push_back(
+          JavaVMOption{.optionString = const_cast<char *>(arg.c_str())});
+    }
   }
 
-  JavaVMInitArgs jvm_init_args = {.version = JNI_VERSION_1_8,
+#if !defined(_ANDROID)
+  jint jni_version = JNI_VERSION_1_8;
+#else
+  jint jni_version = JNI_VERSION_1_6;
+#endif
+
+  JavaVMInitArgs jvm_init_args = {.version = jni_version,
                                   .nOptions = (int)options.size(),
                                   .options = options.data(),
                                   .ignoreUnrecognized = JNI_FALSE};
 
-  auto ret = JNI_CreateJavaVM(&jvm_, (void **)&env_, &jvm_init_args);
+#if !defined(_ANDROID)
+  int ret = JNI_CreateJavaVM(&jvm_, (void **)&env_, &jvm_init_args);
+#else
+  JNI_CreateJavaVM_t CreateArtVM = LoadAndroidVMLibs();
+  if (CreateArtVM == nullptr) {
+    std::cerr << "JNI_CreateJavaVM for Android not found" << std::endl;
+    exit(1);
+  }
+
+  std::cout << "Starting Art VM" << std::endl;
+  int ret = CreateArtVM(&jvm_, (JNIEnv_ **)&env_, &jvm_init_args);
+#endif
+
   if (ret != JNI_OK) {
     throw std::runtime_error(
         absl::StrFormat("JNI_CreateJavaVM returned code %d", ret));
