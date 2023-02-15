@@ -23,6 +23,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Inherited;
 import java.lang.reflect.AnnotatedArrayType;
@@ -42,6 +43,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class TypeSupport {
+  private static final Annotation NOT_NULL =
+      new TypeHolder<@NotNull String>() {}.annotatedType().getAnnotation(NotNull.class);
+
   private TypeSupport() {}
 
   public static boolean isPrimitive(AnnotatedType type) {
@@ -126,6 +130,10 @@ public final class TypeSupport {
             "equals() is not supported as its behavior isn't specified");
       }
     };
+  }
+
+  public static AnnotatedType notNull(AnnotatedType type) {
+    return withExtraAnnotations(type, NOT_NULL);
   }
 
   public static AnnotatedParameterizedType withTypeArguments(
