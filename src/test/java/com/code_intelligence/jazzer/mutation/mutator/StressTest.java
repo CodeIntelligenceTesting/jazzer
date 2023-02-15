@@ -41,6 +41,7 @@ import com.code_intelligence.jazzer.protobuf.Proto3.IntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedIntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.StringField3;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -171,6 +172,9 @@ public class StressTest {
             distinctElementsRatio(0.25)),
         arguments(new TypeHolder<@NotNull BytesField3>() {}.annotatedType(),
             "{Builder.byte[] -> ByteString} -> Message", manyDistinctElements(),
+            manyDistinctElements()),
+        arguments(new TypeHolder<@NotNull StringField3>() {}.annotatedType(),
+            "{Builder.byte[] -> String} -> Message", manyDistinctElements(),
             manyDistinctElements()));
   }
 
