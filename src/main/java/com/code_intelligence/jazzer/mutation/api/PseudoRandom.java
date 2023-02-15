@@ -70,4 +70,9 @@ public interface PseudoRandom {
    * {@code [lowerInclusive, upperInclusive]}.
    */
   long closedRange(long lowerInclusive, long upperInclusive);
+
+  /**
+   * Fills the given array with random bytes.
+   */
+  void bytes(byte[] bytes);
 }

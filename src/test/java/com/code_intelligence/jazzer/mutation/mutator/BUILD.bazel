@@ -4,6 +4,7 @@ java_test_suite(
     name = "MutatorTests",
     size = "small",
     srcs = glob(["*.java"]),
+    env = {"JAZZER_MOCK_LIBFUZZER_MUTATOR": "true"},
     runner = "junit5",
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",

@@ -115,6 +115,11 @@ public final class ArgumentsMutator {
   }
 
   public void invoke() throws Throwable {
+    // TODO: Sometimes hash the serialized value before and after the invocation and check that the
+    //  hashes match to catch fuzz tests that mutate mutable inputs (e.g. byte[]).
+    //  Alternatively, always detach arguments and instead of the SafeToMutate annotation have a
+    //  Mutable annotation that can be used to e.g. receive a mutable implementation of List. This
+    //  is always safe, but could incur additional overhead for arrays.
     try {
       method.invoke(instance, productMutator.detachSelectively(arguments, shouldDetach));
     } catch (IllegalAccessException e) {

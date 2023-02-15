@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.mutation.engine;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
+import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import java.util.List;
 import java.util.SplittableRandom;
 
@@ -110,5 +111,10 @@ public final class SeededPseudoRandom implements PseudoRandom {
       } while (r < lowerInclusive);
       return r;
     }
+  }
+
+  @Override
+  public void bytes(byte[] bytes) {
+    RandomSupport.nextBytes(random, bytes);
   }
 }
