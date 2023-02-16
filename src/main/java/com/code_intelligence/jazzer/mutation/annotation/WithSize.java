@@ -16,14 +16,18 @@
 
 package com.code_intelligence.jazzer.mutation.annotation;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import static java.lang.annotation.ElementType.TYPE_USE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.PARAMETER, ElementType.TYPE_USE})
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.util.List;
+
+@Target(TYPE_USE)
+@Retention(RUNTIME)
+@AppliesTo(List.class)
 public @interface WithSize {
   int min() default 0;
+
   int max() default 1000;
 }

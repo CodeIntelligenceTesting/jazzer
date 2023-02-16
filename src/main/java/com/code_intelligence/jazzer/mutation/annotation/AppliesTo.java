@@ -16,14 +16,25 @@
 
 package com.code_intelligence.jazzer.mutation.annotation;
 
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.ElementType.TYPE_USE;
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-@Target({PARAMETER, TYPE_USE})
+/**
+ * A meta-annotation that limits the concrete types an annotation for type usages applies to.
+ */
+@Target(ANNOTATION_TYPE)
 @Retention(RUNTIME)
-@AppliesTo(subClassesOf = Object.class)
-public @interface NotNull {}
+public @interface AppliesTo {
+  /**
+   * The meta-annotated annotation can be applied to these classes.
+   */
+  Class<?>[] value() default {};
+
+  /**
+   * The meta-annotated annotation can be applied to subclasses of these classes.
+   */
+  Class<?>[] subClassesOf() default {};
+}
