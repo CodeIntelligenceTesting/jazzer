@@ -76,7 +76,7 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
     DataOutputStream dataOut = new DataOutputStream(out);
     int lastIndex = mutators.length - 1;
     for (int i = 0; i < lastIndex; i++) {
-      mutators[i].write(value, dataOut);
+      mutators[i].write(value[i], dataOut);
     }
     mutators[lastIndex].writeExclusive(value[lastIndex], out);
   }
