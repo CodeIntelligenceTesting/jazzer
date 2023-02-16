@@ -2,6 +2,7 @@ java_library(
     name = "engine",
     srcs = glob(["*.java"]),
     visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation:__pkg__",
         "//src/test/java/com/code_intelligence/jazzer/mutation:__subpackages__",
     ],
     deps = [
