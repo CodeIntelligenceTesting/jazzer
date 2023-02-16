@@ -424,3 +424,24 @@ java_fuzz_target_test(
         "@jacocoagent//file:jacocoagent.jar",  # Offline instrumented classes depend on the jacoco agent
     ],
 )
+
+# TODO: Move to //examples eventually.
+java_fuzz_target_test(
+    name = "ExperimentalMutatorFuzzer",
+    srcs = ["src/test/java/com/example/ExperimentalMutatorFuzzer.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
+    fuzzer_args = [
+        "--experimental_mutator",
+        "--instrumentation_includes=com.example.**",
+        "--custom_hook_includes=com.example.**",
+        # TODO: Investigate whether we can automatically exclude protos.
+        "--instrumentation_excludes=com.example.SimpleProto*",
+        "--custom_hook_excludes=com.example.SimpleProto*",
+    ],
+    target_class = "com.example.ExperimentalMutatorFuzzer",
+    verify_crash_reproducer = False,
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//tests/src/test/proto:simple_java_proto",
+    ],
+)

@@ -34,12 +34,15 @@
 extern "C" int LLVMFuzzerRunDriver(int *argc, char ***argv,
                                    int (*UserCb)(const uint8_t *Data,
                                                  size_t Size));
+extern "C" size_t LLVMFuzzerMutate(uint8_t *Data, size_t Size, size_t MaxSize);
 
 namespace {
 jclass gRunner;
 jmethodID gRunOneId;
+jmethodID gMutateOneId;
 JavaVM *gJavaVm;
 JNIEnv *gEnv;
+jboolean gUseExperimentalMutator;
 
 // A libFuzzer-registered callback that outputs the crashing input, but does
 // not include a stack trace.
@@ -57,6 +60,27 @@ int testOneInput(const uint8_t *data, const std::size_t size) {
   return res;
 }
 }  // namespace
+
+extern "C" size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
+                                          size_t MaxSize, unsigned int Seed) {
+  if (gUseExperimentalMutator) {
+    JNIEnv &env = *gEnv;
+    jint jsize =
+        std::min(Size, static_cast<size_t>(std::numeric_limits<jint>::max()));
+    jint jmaxSize = std::min(
+        MaxSize, static_cast<size_t>(std::numeric_limits<jint>::max()));
+    jint jseed = static_cast<jint>(Seed);
+    jint newSize = env.CallStaticLongMethod(gRunner, gMutateOneId, Data, jsize,
+                                            jmaxSize, jseed);
+    if (env.ExceptionCheck()) {
+      env.ExceptionDescribe();
+      _Exit(1);
+    }
+    return static_cast<uint32_t>(newSize);
+  } else {
+    return LLVMFuzzerMutate(Data, Size, MaxSize);
+  }
+}
 
 namespace jazzer {
 void DumpJvmStackTraces() {
@@ -82,11 +106,14 @@ void DumpJvmStackTraces() {
 
 [[maybe_unused]] jint
 Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_startLibFuzzer(
-    JNIEnv *env, jclass, jobjectArray args, jclass runner) {
+    JNIEnv *env, jclass, jobjectArray args, jclass runner,
+    jboolean useExperimentalMutator) {
+  gUseExperimentalMutator = useExperimentalMutator;
   gEnv = env;
   env->GetJavaVM(&gJavaVm);
   gRunner = reinterpret_cast<jclass>(env->NewGlobalRef(runner));
   gRunOneId = env->GetStaticMethodID(runner, "runOne", "(JI)I");
+  gMutateOneId = env->GetStaticMethodID(runner, "mutateOne", "(JIII)I");
   if (gRunOneId == nullptr) {
     env->ExceptionDescribe();
     _Exit(1);

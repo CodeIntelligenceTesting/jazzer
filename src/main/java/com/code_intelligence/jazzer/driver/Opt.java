@@ -93,6 +93,8 @@ public final class Opt {
       "Names of classes from which hooks (custom or built-in) should not be loaded from");
   public static final String dumpClassesDir = stringSetting(
       "dump_classes_dir", "", "Directory to dump instrumented .class files into (if non-empty)");
+  public static final boolean experimentalMutator =
+      boolSetting("experimental_mutator", false, "Use an experimental structured mutator");
   public static final boolean hooks = boolSetting(
       "hooks", true, "Apply fuzzing instrumentation (use 'trace' for finer-grained control)");
   public static final String idSyncFile = stringSetting("id_sync_file", null, null);

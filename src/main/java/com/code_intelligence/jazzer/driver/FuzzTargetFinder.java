@@ -24,8 +24,11 @@ import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.ManifestUtils;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class FuzzTargetFinder {
@@ -71,17 +74,34 @@ class FuzzTargetFinder {
 
   // Finds the traditional static fuzzerTestOneInput fuzz target method.
   private static FuzzTarget findFuzzTargetByMethodName(Class<?> clazz) {
-    Optional<Method> bytesFuzzTarget =
-        targetPublicStaticMethod(clazz, FUZZER_TEST_ONE_INPUT, byte[].class);
-    Optional<Method> dataFuzzTarget =
-        targetPublicStaticMethod(clazz, FUZZER_TEST_ONE_INPUT, FuzzedDataProvider.class);
-    if (bytesFuzzTarget.isPresent() == dataFuzzTarget.isPresent()) {
-      throw new IllegalArgumentException(String.format(
-          "%s must define exactly one of the following two functions:%n"
-              + "public static void fuzzerTestOneInput(byte[] ...)%n"
-              + "public static void fuzzerTestOneInput(FuzzedDataProvider ...)%n"
-              + "Note: Fuzz targets returning boolean are no longer supported; exceptions should be thrown instead of returning true.",
-          clazz.getName()));
+    Method fuzzTargetMethod;
+    if (Opt.experimentalMutator) {
+      List<Method> fuzzTargetMethods =
+          Arrays.stream(clazz.getMethods())
+              .filter(method -> "fuzzerTestOneInput".equals(method.getName()))
+              .filter(method -> Modifier.isStatic(method.getModifiers()))
+              .collect(Collectors.toList());
+      if (fuzzTargetMethods.size() != 1) {
+        throw new IllegalArgumentException(
+            String.format("%s must define exactly one function of this form:%n"
+                    + "public static void fuzzerTestOneInput(...)%n",
+                clazz.getName()));
+      }
+      fuzzTargetMethod = fuzzTargetMethods.get(0);
+    } else {
+      Optional<Method> bytesFuzzTarget =
+          targetPublicStaticMethod(clazz, FUZZER_TEST_ONE_INPUT, byte[].class);
+      Optional<Method> dataFuzzTarget =
+          targetPublicStaticMethod(clazz, FUZZER_TEST_ONE_INPUT, FuzzedDataProvider.class);
+      if (bytesFuzzTarget.isPresent() == dataFuzzTarget.isPresent()) {
+        throw new IllegalArgumentException(String.format(
+            "%s must define exactly one of the following two functions:%n"
+                + "public static void fuzzerTestOneInput(byte[] ...)%n"
+                + "public static void fuzzerTestOneInput(FuzzedDataProvider ...)%n"
+                + "Note: Fuzz targets returning boolean are no longer supported; exceptions should be thrown instead of returning true.",
+            clazz.getName()));
+      }
+      fuzzTargetMethod = dataFuzzTarget.orElseGet(bytesFuzzTarget::get);
     }
 
     Callable<Object> initialize =
@@ -101,8 +121,8 @@ class FuzzTargetFinder {
             .findFirst()
             .orElse(() -> null);
 
-    return new FuzzTarget(dataFuzzTarget.orElseGet(bytesFuzzTarget::get), initialize,
-        targetPublicStaticMethod(clazz, FUZZER_TEAR_DOWN));
+    return new FuzzTarget(
+        fuzzTargetMethod, initialize, targetPublicStaticMethod(clazz, FUZZER_TEAR_DOWN));
   }
 
   private static Optional<Method> targetPublicStaticMethod(

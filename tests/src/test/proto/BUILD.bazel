@@ -1,0 +1,10 @@
+proto_library(
+    name = "simple_proto",
+    srcs = ["simple_proto.proto"],
+)
+
+java_proto_library(
+    name = "simple_java_proto",
+    visibility = ["//tests:__pkg__"],
+    deps = [":simple_proto"],
+)
