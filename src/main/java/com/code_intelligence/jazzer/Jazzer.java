@@ -78,14 +78,16 @@ public class Jazzer {
     Log.fixOutErr(System.out, System.err);
 
     parseJazzerArgsToProperties(args);
+
     // --asan and --ubsan imply --native by default, but --native can also be used by itself to fuzz
     // native libraries without sanitizers (e.g. to quickly grow a corpus).
     final boolean loadASan = Boolean.parseBoolean(System.getProperty("jazzer.asan", "false"));
     final boolean loadUBSan = Boolean.parseBoolean(System.getProperty("jazzer.ubsan", "false"));
+    final boolean loadHWASan = Boolean.parseBoolean(System.getProperty("jazzer.hwasan", "false"));
     final boolean fuzzNative = Boolean.parseBoolean(
-        System.getProperty("jazzer.native", Boolean.toString(loadASan || loadUBSan)));
-    if ((loadASan || loadUBSan) && !fuzzNative) {
-      Log.error("--asan and --ubsan cannot be used without --native");
+        System.getProperty("jazzer.native", Boolean.toString(loadASan || loadUBSan || loadHWASan)));
+    if ((loadASan || loadUBSan || loadHWASan) && !fuzzNative) {
+      Log.error("--asan, --hwasan and --ubsan cannot be used without --native");
       exit(1);
     }
     // No native fuzzing has been requested, fuzz in the current process.
@@ -109,7 +111,8 @@ public class Jazzer {
 
     // Run ourselves as a subprocess with `jazzer_preload` and (optionally) native sanitizers
     // preloaded. By inheriting IO, this wrapping should become invisible for the user.
-    Set<String> argsToFilter = Stream.of("--asan", "--ubsan", "--native").collect(toSet());
+    Set<String> argsToFilter =
+        Stream.of("--asan", "--ubsan", "--hwasan", "--native").collect(toSet());
     ProcessBuilder processBuilder = new ProcessBuilder();
     List<Path> preloadLibs = new ArrayList<>();
     // We have to load jazzer_preload before we load ASan since the ASan includes no-op definitions
@@ -128,10 +131,24 @@ public class Jazzer {
                   // We load jazzer_preload first.
                   "verify_asan_link_order=0"));
       Log.warn("Jazzer is not compatible with LeakSanitizer. Leaks are not reported.");
-      preloadLibs.add(findHostClangLibrary(asanLibNames()));
+      preloadLibs.add(findLibrary(asanLibNames()));
+    }
+    if (loadHWASan) {
+      processBuilder.environment().compute("HWASAN_OPTIONS",
+          (name, currentValue)
+              -> appendWithPathListSeparator(name,
+                  // The JVM produces an extremely large number of false positive leaks, which makes
+                  // it impossible to use LeakSanitizer.
+                  // TODO: Investigate whether we can hook malloc/free only for JNI shared
+                  // libraries, not the JVM itself.
+                  "detect_leaks=0",
+                  // We load jazzer_preload first.
+                  "verify_asan_link_order=0"));
+      Log.warn("Jazzer is not compatible with LeakSanitizer. Leaks are not reported.");
+      preloadLibs.add(findLibrary(hwasanLibNames()));
     }
     if (loadUBSan) {
-      preloadLibs.add(findHostClangLibrary(ubsanLibNames()));
+      preloadLibs.add(findLibrary(ubsanLibNames()));
     }
     // The launcher script we generate is executed by /bin/sh on macOS, which is codesigned without
     // the allow-dyld-environment-variables entitlement. The dynamic linker would thus remove all
@@ -185,14 +202,22 @@ public class Jazzer {
   // libFuzzer's argv[0], libFuzzer modes that rely on subprocesses can work with the Java driver.
   // This trick is also used to allow native sanitizers to be preloaded.
   private static String prepareArgv0(Map<String, String> additionalEnvironment) throws IOException {
-    if (!isPosix() && !additionalEnvironment.isEmpty()) {
+    if (!isPosixOrAndroid() && !additionalEnvironment.isEmpty()) {
       throw new IllegalArgumentException(
-          "Setting environment variables in the wrapper is only supported on POSIX systems");
+          "Setting environment variables in the wrapper is only supported on POSIX systems and Android");
     }
-    char shellQuote = isPosix() ? '\'' : '"';
-    String launcherTemplate = isPosix() ? "#!/usr/bin/env sh\n%s $@\n" : "@echo off\r\n%s %%*\r\n";
+    char shellQuote = isPosixOrAndroid() ? '\'' : '"';
+    String launcherTemplate;
+    if (isAndroid()) {
+      launcherTemplate = "#!/system/bin/env sh\n%s $@\n";
+    } else if (isPosix()) {
+      launcherTemplate = "#!/usr/bin/env sh\n%s $@\n";
+    } else {
+      launcherTemplate = "@echo off\r\n%s %%*\r\n";
+    }
+
     String launcherExtension = isPosix() ? ".sh" : ".bat";
-    FileAttribute<?>[] launcherScriptAttributes = isPosix()
+    FileAttribute<?>[] launcherScriptAttributes = isPosixOrAndroid()
         ? new FileAttribute[] {PosixFilePermissions.asFileAttribute(
             PosixFilePermissions.fromString("rwx------"))}
         : new FileAttribute[] {};
@@ -205,30 +230,54 @@ public class Jazzer {
                          // Escape individual arguments for the shell.
                          .map(str -> shellQuote + str + shellQuote)
                          .collect(joining(" "));
+
     String invocation = env.isEmpty() ? command : env + " " + command;
     String launcherContent = String.format(launcherTemplate, invocation);
-    Path launcher = Files.createTempFile("jazzer-", launcherExtension, launcherScriptAttributes);
+
+    Path launcher;
+    if (isAndroid()) {
+      launcher = Files.createTempFile(
+          Paths.get("/data/local/tmp/"), "jazzer-", launcherExtension, launcherScriptAttributes);
+    } else {
+      launcher = Files.createTempFile("jazzer-", launcherExtension, launcherScriptAttributes);
+    }
+
     launcher.toFile().deleteOnExit();
     Files.write(launcher, launcherContent.getBytes(StandardCharsets.UTF_8));
     return launcher.toAbsolutePath().toString();
   }
 
   private static Path javaBinary() {
-    return Paths.get(System.getProperty("java.home"), "bin", isPosix() ? "java" : "java.exe");
+    String javaBinaryName;
+    if (isAndroid()) {
+      javaBinaryName = "dalvikvm";
+    } else if (isPosix()) {
+      javaBinaryName = "java";
+    } else {
+      javaBinaryName = "java.exe";
+    }
+
+    return Paths.get(System.getProperty("java.home"), "bin", javaBinaryName);
   }
 
   private static Stream<String> javaBinaryArgs() {
-    return Stream.concat(ManagementFactory.getRuntimeMXBean().getInputArguments().stream(),
-        Stream.of("-cp", System.getProperty("java.class.path"),
-            // Make ByteBuddyAgent's job simpler by allowing it to attach directly to the JVM
-            // rather than relying on an external helper. The latter fails on macOS 12 with JDK 11+
-            // (but not 8) and UBSan preloaded with:
-            // Caused by: java.io.IOException: Cannot run program
-            // "/Users/runner/hostedtoolcache/Java_Zulu_jdk/17.0.4-8/x64/bin/java": error=0, Failed
-            // to exec spawn helper: pid: 8227, signal: 9
-            // Presumably, this issue is caused by codesigning and the exec helper missing the
-            // entitlements required for library insertion.
-            "-Djdk.attach.allowAttachSelf=true", Jazzer.class.getName()));
+    Stream<String> stream = Stream.of("-cp", System.getProperty("java.class.path"),
+        // Make ByteBuddyAgent's job simpler by allowing it to attach directly to the JVM
+        // rather than relying on an external helper. The latter fails on macOS 12 with JDK 11+
+        // (but not 8) and UBSan preloaded with:
+        // Caused by: java.io.IOException: Cannot run program
+        // "/Users/runner/hostedtoolcache/Java_Zulu_jdk/17.0.4-8/x64/bin/java": error=0, Failed
+        // to exec spawn helper: pid: 8227, signal: 9
+        // Presumably, this issue is caused by codesigning and the exec helper missing the
+        // entitlements required for library insertion.
+        "-Djdk.attach.allowAttachSelf=true", Jazzer.class.getName());
+
+    if (isAndroid()) {
+      // ManagementFactory wont work with Android
+      return stream;
+    }
+
+    return Stream.concat(ManagementFactory.getRuntimeMXBean().getInputArguments().stream(), stream);
   }
 
   /**
@@ -246,6 +295,27 @@ public class Jazzer {
       return additionalOptions;
     }
     return currentValue + File.pathSeparator + additionalOptions;
+  }
+
+  private static Path findLibrary(List<String> candidateNames) {
+    if (!isAndroid()) {
+      return findHostClangLibrary(candidateNames);
+    }
+
+    for (String candidateName : candidateNames) {
+      String candidateFullPath = "/apex/com.android.runtime/lib64/bionic/" + candidateName;
+      File f = new File(candidateFullPath);
+      if (f.exists()) {
+        return Paths.get(candidateFullPath);
+      }
+    }
+
+    Log.error(
+        String.format("Failed to find one of %s%n for Android", String.join(", ", candidateNames)));
+    Log.error("If fuzzing hwasan, make sure you have a hwasan build flashed to your device");
+
+    exit(1);
+    throw new IllegalStateException("not reached");
   }
 
   private static Path findHostClangLibrary(List<String> candidateNames) {
@@ -314,8 +384,23 @@ public class Jazzer {
     return Optional.ofNullable(System.getenv("CC")).orElse("clang");
   }
 
+  private static List<String> hwasanLibNames() {
+    if (!isAndroid()) {
+      Log.error("HWAsan is only supported for Android. Please try --asan");
+      exit(1);
+    }
+
+    return singletonList("libclang_rt.hwasan-aarch64-android.so");
+  }
+
   private static List<String> asanLibNames() {
     if (isLinux()) {
+      if (isAndroid()) {
+        Log.error("ASan is not supported for Android at this time. Use --hwasan for Address "
+            + "Sanitization on Android");
+        exit(1);
+      }
+
       // Since LLVM 15 sanitizer runtimes no longer have the architecture in the filename.
       return asList("libclang_rt.asan.so", "libclang_rt.asan-x86_64.so");
     } else {
@@ -325,6 +410,12 @@ public class Jazzer {
 
   private static List<String> ubsanLibNames() {
     if (isLinux()) {
+      if (isAndroid()) {
+        // return asList("libclang_rt.ubsan_standalone-aarch64-android.so");
+        Log.error("ERROR: UBSan is not supported for Android at this time.");
+        exit(1);
+      }
+
       return asList("libclang_rt.ubsan_standalone.so", "libclang_rt.ubsan_standalone-x86_64.so");
     } else {
       return singletonList("libclang_rt.ubsan_osx_dynamic.dylib");
@@ -344,7 +435,15 @@ public class Jazzer {
   }
 
   private static boolean isPosix() {
-    return FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+    return !isAndroid() && FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+  }
+
+  private static boolean isAndroid() {
+    return Boolean.parseBoolean(System.getProperty("jazzer.android", "false"));
+  }
+
+  private static boolean isPosixOrAndroid() {
+    return isPosix() || isAndroid();
   }
 
   private static byte[] readAllBytes(InputStream in) throws IOException {

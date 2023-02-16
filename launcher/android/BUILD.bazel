@@ -1,0 +1,32 @@
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+
+android_library(
+    name = "jazzer_android_lib",
+    data = [
+        "//launcher:jazzer_single_arch",
+        "//src/main/java/com/code_intelligence/jazzer/android:jazzer_standalone_android.apk",
+    ],
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+)
+
+android_binary(
+    name = "jazzer_android",
+    manifest = ":android_manifest",
+    min_sdk_version = 26,
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":jazzer_android_lib",
+    ],
+)
+
+filegroup(
+    name = "android_manifest",
+    srcs = ["AndroidManifest.xml"],
+    tags = ["manual"],
+    visibility = [
+        "//visibility:public",
+    ],
+)

@@ -68,6 +68,7 @@ public final class Opt {
         "asan", false, "Allow fuzzing of native libraries compiled with '-fsanitize=address'");
     boolSetting(
         "ubsan", false, "Allow fuzzing of native libraries compiled with '-fsanitize=undefined'");
+    boolSetting("hwasan", false, "Allow fuzzing of native libraries compiled with hwasan");
     boolSetting("native", false,
         "Allow fuzzing of native libraries compiled with '-fsanitize=fuzzer' (implied by --asan and --ubsan)");
   }
@@ -128,6 +129,10 @@ public final class Opt {
   // runner, but still support hooks = false && dedup = true.
   public static final boolean dedup =
       boolSetting("dedup", hooks, "Compute and print a deduplication token for every finding");
+
+  // Default to false. Sets if fuzzing is taking place on Android device (virtual or physical)
+  public static final boolean isAndroid =
+      boolSetting("android", false, "Jazzer is running on Android");
 
   // Whether hook instrumentation should add a check for JazzerInternal#hooksEnabled before
   // executing hooks. Used to disable hooks during non-fuzz JUnit tests.

@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.runtime;
 
+import com.code_intelligence.jazzer.driver.Opt;
 import com.github.fmeum.rules_jni.RulesJni;
 
 /**
@@ -25,7 +26,7 @@ import com.github.fmeum.rules_jni.RulesJni;
  */
 public class FuzzTargetRunnerNatives {
   static {
-    if (FuzzTargetRunnerNatives.class.getClassLoader() != null) {
+    if (!Opt.isAndroid && FuzzTargetRunnerNatives.class.getClassLoader() != null) {
       throw new IllegalStateException(
           "FuzzTargetRunnerNatives must be loaded in the bootstrap loader");
     }

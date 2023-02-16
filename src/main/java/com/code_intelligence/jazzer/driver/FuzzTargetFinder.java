@@ -37,6 +37,10 @@ class FuzzTargetFinder {
     if (!Opt.targetClass.isEmpty()) {
       return Opt.targetClass;
     }
+    if (Opt.isAndroid) {
+      // Fuzz target detection tools aren't supported on android
+      return null;
+    }
     return ManifestUtils.detectFuzzTargetClass();
   }
 
@@ -48,7 +52,12 @@ class FuzzTargetFinder {
   static FuzzTarget findFuzzTarget(String targetClassName) {
     Class<?> fuzzTargetClass;
     try {
-      fuzzTargetClass = Class.forName(targetClassName);
+      if (Opt.isAndroid) {
+        fuzzTargetClass =
+            Class.forName(targetClassName, false, FuzzTargetFinder.class.getClassLoader());
+      } else {
+        fuzzTargetClass = Class.forName(targetClassName);
+      }
     } catch (ClassNotFoundException e) {
       Log.error(String.format(
           "'%s' not found on classpath:%n%n%s%n%nAll required classes must be on the classpath specified via --cp.",

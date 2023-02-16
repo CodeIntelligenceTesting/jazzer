@@ -16,6 +16,7 @@ package com.code_intelligence.jazzer.agent;
 
 import static com.code_intelligence.jazzer.agent.AgentUtils.extractBootstrapJar;
 
+import com.code_intelligence.jazzer.driver.Opt;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -35,6 +36,11 @@ public class AgentInstaller {
     if (!hasBeenInstalled.compareAndSet(false, true)) {
       return;
     }
+
+    if (Opt.isAndroid) {
+      return;
+    }
+
     Instrumentation instrumentation = ByteBuddyAgent.install();
     instrumentation.appendToBootstrapClassLoaderSearch(extractBootstrapJar());
     if (!enableAgent) {

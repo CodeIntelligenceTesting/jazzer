@@ -5,3 +5,11 @@ java_library(
         "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers",
     ],
 )
+
+java_library(
+    name = "offline_only_sanitizers",
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        ":sanitizers",
+    ],
+)

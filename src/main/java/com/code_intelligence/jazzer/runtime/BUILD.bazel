@@ -103,6 +103,7 @@ java_jni_library(
         "//src/test:__subpackages__",
     ],
     deps = [
+        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
 )
@@ -120,6 +121,9 @@ java_jni_library(
     name = "fuzz_target_runner_natives",
     srcs = ["FuzzTargetRunnerNatives.java"],
     visibility = ["//src/main/native/com/code_intelligence/jazzer/driver:__pkg__"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+    ],
 )
 
 java_library(
@@ -133,6 +137,7 @@ java_library(
         "TraceIndirHooks.java",
     ],
     visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/android:__pkg__",
         "//src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
         "//src/test:__subpackages__",
     ],
@@ -146,5 +151,6 @@ java_library(
         ":coverage_map",
         ":trace_data_flow_native_callbacks",
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
     ],
 )
