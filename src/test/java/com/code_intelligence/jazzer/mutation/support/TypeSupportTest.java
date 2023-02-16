@@ -18,14 +18,22 @@ package com.code_intelligence.jazzer.mutation.support;
 
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.visitAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withTypeArguments;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
+import static java.util.Arrays.stream;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.AnnotatedParameterizedType;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -203,5 +211,30 @@ class TypeSupportTest {
     assertThat(asSubclassOrEmpty(asAnnotatedType(CharSequence.class), String.class)).isEmpty();
     assertThat(asSubclassOrEmpty(new TypeHolder<List<String>>() {
     }.annotatedType(), List.class)).isEmpty();
+  }
+
+  @Target(ElementType.TYPE_USE)
+  @Retention(RetentionPolicy.RUNTIME)
+  private @interface A {
+    int value();
+  }
+
+  @Test
+  void testVisitAnnotatedType() {
+    Map<Integer, Class<?>> visited = new LinkedHashMap<>();
+    AnnotatedType type = new TypeHolder<@A(
+        1) List<@A(2) Map<@A(3) byte @A(4)[] @A(5)[], @A(6) Byte> @A(7)[] @A(8)[]>>(){}
+                             .annotatedType();
+
+    visitAnnotatedType(type,
+        (clazz, annotations)
+            -> stream(annotations)
+                   .map(annotation -> ((A) annotation).value())
+                   .forEach(value -> visited.put(value, clazz)));
+
+    assertThat(visited)
+        .containsExactly(1, List.class, 7, Map[][].class, 8, Map[].class, 2, Map.class, 4,
+            byte[][].class, 5, byte[].class, 3, byte.class, 6, Byte.class)
+        .inOrder();
   }
 }

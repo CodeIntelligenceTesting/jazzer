@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.support;
 
+import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.requireNonNullElements;
 import static java.util.Arrays.stream;
@@ -32,6 +33,7 @@ import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.AnnotatedTypeVariable;
 import java.lang.reflect.AnnotatedWildcardType;
+import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -39,6 +41,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -130,6 +133,57 @@ public final class TypeSupport {
             "equals() is not supported as its behavior isn't specified");
       }
     };
+  }
+
+  /**
+   * Visits the individual classes and their directly present annotations that make up the given
+   * type.
+   *
+   * <p>Classes are visited in left-to-right order as they appear in the type definition, except
+   * that an array class is visited before its component class.
+   *
+   * @throws IllegalArgumentException if the given type contains a wildcard type or type variable
+   */
+  public static void visitAnnotatedType(
+      AnnotatedType type, BiConsumer<Class<?>, Annotation[]> visitor) {
+    visitAnnotatedTypeInternal(type, visitor);
+  }
+
+  private static Class<?> visitAnnotatedTypeInternal(
+      AnnotatedType type, BiConsumer<Class<?>, Annotation[]> visitor) {
+    Class<?> clazz;
+    if (type instanceof AnnotatedWildcardType) {
+      throw new IllegalArgumentException("Wildcard types are not supported: " + type);
+    } else if (type instanceof AnnotatedTypeVariable) {
+      throw new IllegalArgumentException("Type variables are not supported: " + type);
+    } else if (type instanceof AnnotatedParameterizedType) {
+      AnnotatedParameterizedType annotatedParameterizedType = (AnnotatedParameterizedType) type;
+      check(annotatedParameterizedType.getType() instanceof ParameterizedType);
+      Type rawType = ((ParameterizedType) annotatedParameterizedType.getType()).getRawType();
+      check(rawType instanceof Class<?>);
+      clazz = (Class<?>) rawType;
+
+      visitor.accept(clazz, type.getDeclaredAnnotations());
+      for (AnnotatedType typeArgument :
+          annotatedParameterizedType.getAnnotatedActualTypeArguments()) {
+        visitAnnotatedTypeInternal(typeArgument, visitor);
+      }
+    } else if (type instanceof AnnotatedArrayType) {
+      AnnotatedArrayType arrayType = (AnnotatedArrayType) type;
+
+      // Recursively determine the array class before visiting the component type.
+      Class<?> componentClass =
+          visitAnnotatedTypeInternal(arrayType.getAnnotatedGenericComponentType(), (c, a) -> {});
+      clazz = Array.newInstance(componentClass, 0).getClass();
+      visitor.accept(clazz, type.getDeclaredAnnotations());
+      visitAnnotatedTypeInternal(arrayType.getAnnotatedGenericComponentType(), visitor);
+    } else {
+      check(type.getType() instanceof Class<?>);
+      clazz = (Class<?>) type.getType();
+
+      visitor.accept(clazz, type.getDeclaredAnnotations());
+    }
+    return clazz;
   }
 
   public static AnnotatedType notNull(AnnotatedType type) {

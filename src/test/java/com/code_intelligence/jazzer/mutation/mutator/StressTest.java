@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator;
 
+import static com.code_intelligence.jazzer.mutation.mutator.Mutators.validateAnnotationUsage;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithZeros;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
@@ -251,6 +252,7 @@ public class StressTest {
   void genericMutatorStressTest(AnnotatedType type, String mutatorTree,
       Consumer<List<Object>> expectedInitValues, Consumer<List<Object>> expectedMutatedValues)
       throws IOException {
+    validateAnnotationUsage(type);
     SerializingMutator mutator = Mutators.newFactory().createOrThrow(type);
     assertThat(mutator.toString()).isEqualTo(mutatorTree);
 

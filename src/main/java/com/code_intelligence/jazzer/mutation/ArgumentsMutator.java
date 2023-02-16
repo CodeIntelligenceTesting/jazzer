@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation;
 
+import static com.code_intelligence.jazzer.mutation.mutator.Mutators.validateAnnotationUsage;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toBooleanArray;
@@ -33,6 +34,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -56,6 +58,9 @@ public final class ArgumentsMutator {
 
   private static Optional<ArgumentsMutator> forMethod(
       MutatorFactory mutatorFactory, Object instance, Method method) {
+    for (AnnotatedType parameter : method.getAnnotatedParameterTypes()) {
+      validateAnnotationUsage(parameter);
+    }
     return toArrayOrEmpty(
         stream(method.getAnnotatedParameterTypes()).map(mutatorFactory::tryCreate),
         SerializingMutator<?>[] ::new)
