@@ -1,0 +1,12 @@
+java_library(
+    name = "collection",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator:__pkg__",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator:__subpackages__",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+    ],
+)

@@ -1,0 +1,129 @@
+/*
+ * Copyright 2023 Code Intelligence GmbH
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.code_intelligence.jazzer.mutation.combinator;
+
+import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithZeros;
+import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
+import static com.code_intelligence.jazzer.mutation.support.Preconditions.requireNonNullElements;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
+
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
+import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
+import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
+import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.function.Predicate;
+
+public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
+  private final SerializingMutator[] mutators;
+
+  ProductMutator(SerializingMutator[] mutators) {
+    requireNonNullElements(mutators);
+    require(mutators.length > 0, "mutators must not be empty");
+    this.mutators = Arrays.copyOf(mutators, mutators.length);
+  }
+
+  @Override
+  public Object[] read(DataInputStream in) throws IOException {
+    Object[] value = new Object[mutators.length];
+    for (int i = 0; i < mutators.length; i++) {
+      value[i] = mutators[i].read(in);
+    }
+    return value;
+  }
+
+  @Override
+  public Object[] readExclusive(InputStream in) throws IOException {
+    Object[] value = new Object[mutators.length];
+    int lastIndex = mutators.length - 1;
+    DataInputStream endlessData = new DataInputStream(extendWithZeros(in));
+    for (int i = 0; i < lastIndex; i++) {
+      value[i] = mutators[i].read(endlessData);
+    }
+    value[lastIndex] = mutators[lastIndex].readExclusive(in);
+    return value;
+  }
+
+  @Override
+  public void write(Object[] value, DataOutputStream out) throws IOException {
+    for (int i = 0; i < mutators.length; i++) {
+      mutators[i].write(value[i], out);
+    }
+  }
+
+  @Override
+  public void writeExclusive(Object[] value, OutputStream out) throws IOException {
+    DataOutputStream dataOut = new DataOutputStream(out);
+    int lastIndex = mutators.length - 1;
+    for (int i = 0; i < lastIndex; i++) {
+      mutators[i].write(value, dataOut);
+    }
+    mutators[lastIndex].writeExclusive(value[lastIndex], out);
+  }
+
+  @Override
+  public Object[] makeDefaultInstance() {
+    return new Object[mutators.length];
+  }
+
+  @Override
+  public void initInPlace(Object[] reference, PseudoRandom prng) {
+    for (int i = 0; i < mutators.length; i++) {
+      reference[i] = mutators[i].init(prng);
+    }
+  }
+
+  @Override
+  public void mutateInPlace(Object[] reference, PseudoRandom prng) {
+    int i = prng.nextInt(mutators.length);
+    reference[i] = mutators[i].mutate(reference[i], prng);
+  }
+
+  @Override
+  public Object[] detach(Object[] value) {
+    Object[] clone = new Object[mutators.length];
+    for (int i = 0; i < mutators.length; i++) {
+      clone[i] = mutators[i].detach(value[i]);
+    }
+    return clone;
+  }
+
+  public Object[] detachSelectively(Object[] value, boolean[] shouldDetach) {
+    Object[] clone = new Object[mutators.length];
+    for (int i = 0; i < mutators.length; i++) {
+      if (shouldDetach[i]) {
+        clone[i] = mutators[i].detach(value[i]);
+      } else {
+        clone[i] = value[i];
+      }
+    }
+    return clone;
+  }
+
+  @Override
+  public String toDebugString(Predicate<Debuggable> isInCycle) {
+    return stream(mutators)
+        .map(mutator -> mutator.toDebugString(isInCycle))
+        .collect(joining(", ", "[", "]"));
+  }
+}

@@ -1,0 +1,13 @@
+diff --git BUILD.bazel BUILD.bazel
+index 0f6e41e3a..2cf73afe8 100644
+--- BUILD.bazel
++++ BUILD.bazel
+@@ -16,6 +16,8 @@ load(
+     "py_proto_library",
+ )
+ 
++package(features = ["-layering_check"])
++
+ licenses(["notice"])
+ 
+ exports_files(["LICENSE"])

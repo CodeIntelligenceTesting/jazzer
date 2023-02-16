@@ -1,0 +1,29 @@
+load("@contrib_rules_jvm//java:defs.bzl", "java_test_suite")
+
+proto_library(
+    name = "proto3_proto",
+    srcs = ["proto3.proto"],
+)
+
+java_proto_library(
+    name = "proto3_java_proto",
+    deps = [":proto3_proto"],
+)
+
+java_test_suite(
+    name = "ProtoTests",
+    size = "small",
+    srcs = glob(["*.java"]),
+    runner = "junit5",
+    deps = [
+        ":proto3_java_proto",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/collection",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/lang",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/proto",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/support:test_support",
+        "@com_google_protobuf//java/core",
+    ],
+)

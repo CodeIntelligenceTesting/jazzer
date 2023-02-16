@@ -4,4 +4,5 @@ BasedOnStyle: Google
 ---
 Language: Java
 BasedOnStyle: Google
+AllowShortFunctionsOnASingleLine: Empty
 ...

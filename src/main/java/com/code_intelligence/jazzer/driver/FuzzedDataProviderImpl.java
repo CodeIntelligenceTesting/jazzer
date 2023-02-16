@@ -27,7 +27,7 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
 
   private static native void nativeInit();
 
-  private final boolean ownsNativeData;
+  private final byte[] javaData;
   private long originalDataPtr;
   private int originalRemainingBytes;
 
@@ -35,8 +35,8 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
   private long dataPtr;
   private int remainingBytes;
 
-  private FuzzedDataProviderImpl(long dataPtr, int remainingBytes, boolean ownsNativeData) {
-    this.ownsNativeData = ownsNativeData;
+  private FuzzedDataProviderImpl(long dataPtr, int remainingBytes, byte[] javaData) {
+    this.javaData = javaData;
     this.originalDataPtr = dataPtr;
     this.dataPtr = dataPtr;
     this.originalRemainingBytes = remainingBytes;
@@ -57,7 +57,7 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
    * @return a {@link FuzzedDataProvider} backed by {@code data}
    */
   public static FuzzedDataProviderImpl withJavaData(byte[] data) {
-    return new FuzzedDataProviderImpl(allocateNativeCopy(data), data.length, true);
+    return new FuzzedDataProviderImpl(allocateNativeCopy(data), data.length, data);
   }
 
   /**
@@ -69,7 +69,7 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
    * @return a {@link FuzzedDataProvider} backed by an empty array.
    */
   public static FuzzedDataProviderImpl withNativeData() {
-    return new FuzzedDataProviderImpl(0, 0, false);
+    return new FuzzedDataProviderImpl(0, 0, null);
   }
 
   /**
@@ -85,6 +85,14 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
     this.dataPtr = dataPtr;
     this.originalRemainingBytes = dataLength;
     this.remainingBytes = dataLength;
+  }
+
+  /**
+   * Returns the Java byte array used to construct the instance, or null if it was created with
+   * {@link FuzzedDataProviderImpl#withNativeData()};
+   */
+  public byte[] getJavaData() {
+    return javaData;
   }
 
   /**
@@ -107,7 +115,8 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
     if (originalDataPtr == 0) {
       return;
     }
-    if (ownsNativeData) {
+    // We own the native memory iff the instance was created backed by a Java byte array.
+    if (javaData != null) {
       UNSAFE.freeMemory(originalDataPtr);
     }
     // Prevent double-frees and use-after-frees by effectively making all methods no-ops after

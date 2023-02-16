@@ -139,6 +139,21 @@ def jazzer_dependencies():
     )
 
     maybe(
+        http_jar,
+        name = "com_google_errorprone_error_prone_annotations",
+        sha256 = "9e6814cb71816988a4fd1b07a993a8f21bb7058d522c162b1de849e19bea54ae",
+        url = "https://repo1.maven.org/maven2/com/google/errorprone/error_prone_annotations/2.18.0/error_prone_annotations-2.18.0.jar",
+    )
+
+    maybe(
+        http_jar,
+        name = "com_google_protobuf_protobuf_java",
+        sha256 = "3f3edbda9286246080f3eaf561dd6b0d5a2b1f1008f6909115c8609ceae9df87",
+        # Keep in sync with com_google_protobuf in WORKSPACE.
+        url = "https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/3.21.12/protobuf-java-3.21.12.jar",
+    )
+
+    maybe(
         http_archive,
         name = "jazzer_jacoco",
         build_file = Label("//third_party:jacoco_internal.BUILD"),

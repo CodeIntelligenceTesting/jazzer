@@ -10,6 +10,15 @@ load("//:init.bzl", "jazzer_init")
 jazzer_init()
 
 http_archive(
+    name = "com_google_protobuf",
+    patches = ["//third_party:protobuf-disable-layering_check.patch"],
+    sha256 = "930c2c3b5ecc6c9c12615cf5ad93f1cd6e12d0aba862b572e076259970ac3a53",
+    strip_prefix = "protobuf-3.21.12",
+    # Keep in sync with com_google_protobuf_protobuf_java in repositories.bzl.
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.21.12.tar.gz"],
+)
+
+http_archive(
     name = "org_chromium_sysroot_linux_x64",
     build_file_content = """
 filegroup(
@@ -59,12 +68,6 @@ http_archive(
     url = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/2.0.90.tar.gz",
 )
 
-http_jar(
-    name = "org_kohsuke_args4j_args4j",
-    sha256 = "91ddeaba0b24adce72291c618c00bbdce1c884755f6c4dba9c5c46e871c69ed6",
-    url = "https://repo1.maven.org/maven2/args4j/args4j/2.33/args4j-2.33.jar",
-)
-
 http_archive(
     name = "rules_pkg",
     sha256 = "8a298e832762eda1830597d64fe7db58178aa84cd5926d76d5b744d6558941c2",
@@ -73,6 +76,59 @@ http_archive(
         "https://github.com/bazelbuild/rules_pkg/releases/download/0.7.0/rules_pkg-0.7.0.tar.gz",
     ],
 )
+
+http_archive(
+    name = "contrib_rules_jvm",
+    # TODO: Return to the next release after https://github.com/bazel-contrib/rules_jvm/pull/134 has
+    #       been merged.
+    sha256 = "b96f5af09d2a67f494f3eb63ea8d3b1444676e5707530d21b40e68ea4e84a2ba",
+    strip_prefix = "rules_jvm-java-8",
+    url = "https://github.com/CodeIntelligenceTesting/rules_jvm/archive/refs/tags/java-8.tar.gz",
+)
+
+http_archive(
+    name = "build_bazel_rules_android",
+    sha256 = "cd06d15dd8bb59926e4d65f9003bfc20f9da4b2519985c27e190cddc8b7a7806",
+    strip_prefix = "rules_android-0.1.1",
+    urls = ["https://github.com/bazelbuild/rules_android/archive/v0.1.1.zip"],
+)
+
+http_archive(
+    name = "rules_android_ndk",
+    sha256 = "0fcaeed391bfc0ee784ab0365312e6c59fe75db9df3a67e8708c606e2a9cfd90",
+    strip_prefix = "rules_android_ndk-79923720aef601fad89c94e8802f5d77c1b73c5d",
+    url = "https://github.com/bazelbuild/rules_android_ndk/archive/79923720aef601fad89c94e8802f5d77c1b73c5d.zip",
+)
+
+http_file(
+    name = "genhtml",
+    downloaded_file_path = "genhtml",
+    executable = True,
+    sha256 = "4120cc9186a0687db218520a2d0dc9bae75d15faf41d87448b6b6c5140c19156",
+    urls = ["https://raw.githubusercontent.com/linux-test-project/lcov/6da8399c7a7a3370de2c69b16b092e945442ffcd/bin/genhtml"],
+)
+
+http_file(
+    name = "jacocoagent",
+    downloaded_file_path = "jacocoagent.jar",
+    sha256 = "67de51e9ca1db044f3a3d10613518befb02e8eee1015f2ff6d56cfb9d4506546",
+    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/0.8.8/org.jacoco.agent-0.8.8-runtime.jar"],
+)
+
+http_file(
+    name = "jacococli",
+    downloaded_file_path = "jacococli.jar",
+    sha256 = "c449591174982bbc003d1290003fcbc7b939215436922d2f0f25239d110d531a",
+    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.cli/0.8.8/org.jacoco.cli-0.8.8-nodeps.jar"],
+)
+
+load("@contrib_rules_jvm//:repositories.bzl", "contrib_rules_jvm_deps")
+
+contrib_rules_jvm_deps()
+
+load("@contrib_rules_jvm//:setup.bzl", "contrib_rules_jvm_setup")
+
+contrib_rules_jvm_setup()
 
 load("@com_grail_bazel_toolchain//toolchain:deps.bzl", "bazel_toolchain_dependencies")
 
@@ -110,6 +166,7 @@ maven_install(
     override_targets = {
         "org.jetbrains.kotlin:kotlin-reflect": "@com_github_jetbrains_kotlin//:kotlin-reflect",
         "org.jetbrains.kotlin:kotlin-stdlib": "@com_github_jetbrains_kotlin//:kotlin-stdlib",
+        "com.google.errorprone:error_prone_annotations": "@com_google_errorprone_error_prone_annotations//jar",
     },
     repositories = [
         "https://repo1.maven.org/maven2",
@@ -125,13 +182,9 @@ load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 
 rules_pkg_dependencies()
 
-http_file(
-    name = "genhtml",
-    downloaded_file_path = "genhtml",
-    executable = True,
-    sha256 = "4120cc9186a0687db218520a2d0dc9bae75d15faf41d87448b6b6c5140c19156",
-    urls = ["https://raw.githubusercontent.com/linux-test-project/lcov/6da8399c7a7a3370de2c69b16b092e945442ffcd/bin/genhtml"],
-)
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
 
 http_file(
     name = "jacocoagent",
@@ -145,20 +198,6 @@ http_file(
     downloaded_file_path = "jacococli.jar",
     sha256 = "c449591174982bbc003d1290003fcbc7b939215436922d2f0f25239d110d531a",
     urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.cli/0.8.8/org.jacoco.cli-0.8.8-nodeps.jar"],
-)
-
-http_archive(
-    name = "build_bazel_rules_android",
-    sha256 = "cd06d15dd8bb59926e4d65f9003bfc20f9da4b2519985c27e190cddc8b7a7806",
-    strip_prefix = "rules_android-0.1.1",
-    urls = ["https://github.com/bazelbuild/rules_android/archive/v0.1.1.zip"],
-)
-
-http_archive(
-    name = "rules_android_ndk",
-    sha256 = "0fcaeed391bfc0ee784ab0365312e6c59fe75db9df3a67e8708c606e2a9cfd90",
-    strip_prefix = "rules_android_ndk-79923720aef601fad89c94e8802f5d77c1b73c5d",
-    url = "https://github.com/bazelbuild/rules_android_ndk/archive/79923720aef601fad89c94e8802f5d77c1b73c5d.zip",
 )
 
 load("//third_party/android:android_configure.bzl", "android_configure")

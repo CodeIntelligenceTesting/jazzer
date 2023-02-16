@@ -1,0 +1,35 @@
+load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_test_suite")
+
+java_library(
+    name = "test_support",
+    testonly = True,
+    srcs = ["TestSupport.java"],
+    visibility = ["//src/test/java/com/code_intelligence/jazzer/mutation:__subpackages__"],
+    exports = JUNIT5_DEPS + [
+        # keep sorted
+        "@maven//:com_google_truth_extensions_truth_java8_extension",
+        "@maven//:com_google_truth_extensions_truth_proto_extension",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/engine",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+        "@com_google_errorprone_error_prone_annotations//jar",
+        "@maven//:com_google_truth_truth",
+    ],
+)
+
+java_test_suite(
+    name = "SupportTests",
+    size = "small",
+    srcs = glob(["*Test.java"]),
+    runner = "junit5",
+    deps = [
+        ":test_support",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+    ],
+)
