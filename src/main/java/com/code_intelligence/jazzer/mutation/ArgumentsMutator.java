@@ -17,12 +17,14 @@
 package com.code_intelligence.jazzer.mutation;
 
 import static com.code_intelligence.jazzer.mutation.mutator.Mutators.validateAnnotationUsage;
+import static com.code_intelligence.jazzer.mutation.support.ExceptionSupport.asUnchecked;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toBooleanArray;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 
 import com.code_intelligence.jazzer.mutation.annotation.SafeToMutate;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
@@ -30,9 +32,12 @@ import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
 import com.code_intelligence.jazzer.mutation.combinator.ProductMutator;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
+import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
@@ -41,6 +46,39 @@ import java.lang.reflect.Modifier;
 import java.util.Optional;
 
 public final class ArgumentsMutator {
+  private final Object instance;
+  private final Method method;
+  private final ProductMutator productMutator;
+  private final boolean[] shouldDetach;
+  private Object[] arguments;
+
+  private ArgumentsMutator(
+      Object instance, Method method, ProductMutator productMutator, boolean[] shouldDetach) {
+    this.instance = instance;
+    this.method = method;
+    this.productMutator = productMutator;
+    this.shouldDetach = shouldDetach;
+  }
+
+  private static String prettyPrintMethod(Method method) {
+    return format("%s.%s(%s)", method.getDeclaringClass().getName(), method.getName(),
+        stream(method.getAnnotatedParameterTypes()).map(Object::toString).collect(joining(", ")));
+  }
+
+  public static ArgumentsMutator forInstanceMethod(Object instance, Method method) {
+    return forInstanceMethod(Mutators.newFactory(), instance, method)
+        .orElseThrow(()
+                         -> new IllegalArgumentException(
+                             "Failed to construct mutator for " + prettyPrintMethod(method)));
+  }
+
+  public static ArgumentsMutator forStaticMethod(Method method) {
+    return forStaticMethod(Mutators.newFactory(), method)
+        .orElseThrow(()
+                         -> new IllegalArgumentException(
+                             "Failed to construct mutator for " + prettyPrintMethod(method)));
+  }
+
   public static Optional<ArgumentsMutator> forInstanceMethod(
       MutatorFactory mutatorFactory, Object instance, Method method) {
     require(!isStatic(method), "method must not be static");
@@ -58,6 +96,7 @@ public final class ArgumentsMutator {
 
   private static Optional<ArgumentsMutator> forMethod(
       MutatorFactory mutatorFactory, Object instance, Method method) {
+    require(method.getParameterCount() > 0, "Can't fuzz method without parameters: " + method);
     for (AnnotatedType parameter : method.getAnnotatedParameterTypes()) {
       validateAnnotationUsage(parameter);
     }
@@ -86,34 +125,41 @@ public final class ArgumentsMutator {
     return Modifier.isStatic(method.getModifiers());
   }
 
-  private final Object instance;
-  private final Method method;
-  private final ProductMutator productMutator;
-  private final boolean[] shouldDetach;
-
-  private Object[] arguments;
-
-  private ArgumentsMutator(
-      Object instance, Method method, ProductMutator productMutator, boolean[] shouldDetach) {
-    this.instance = instance;
-    this.method = method;
-    this.productMutator = productMutator;
-    this.shouldDetach = shouldDetach;
+  /**
+   * @throws UncheckedIOException if the underlying InputStream throws
+   */
+  public void read(InputStream data) {
+    try {
+      this.arguments = productMutator.readExclusive(data);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
-  public void read(DataInputStream data) throws IOException {
-    this.arguments = productMutator.readExclusive(data);
+  /**
+   * @throws UncheckedIOException if the underlying OutputStream throws
+   */
+  public void write(OutputStream data) {
+    try {
+      productMutator.writeExclusive(arguments, data);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
-  public void write(DataOutputStream data) throws IOException {
-    productMutator.writeExclusive(arguments, data);
+  public void init(long seed) {
+    init(new SeededPseudoRandom(seed));
   }
 
-  public void init(PseudoRandom prng) {
+  void init(PseudoRandom prng) {
     this.arguments = productMutator.init(prng);
   }
 
-  public void mutate(PseudoRandom prng) {
+  public void mutate(long seed) {
+    mutate(new SeededPseudoRandom(seed));
+  }
+
+  void mutate(PseudoRandom prng) {
     // TODO: Sometimes mutate the entire byte representation of the current value with libFuzzer's
     //  dictionary and TORC mutations.
     productMutator.mutate(arguments, prng);
@@ -136,6 +182,6 @@ public final class ArgumentsMutator {
 
   @Override
   public String toString() {
-    return "Arguments" + productMutator + "";
+    return "Arguments" + productMutator;
   }
 }
