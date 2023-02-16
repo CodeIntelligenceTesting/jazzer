@@ -23,19 +23,24 @@ import static java.util.stream.Collectors.joining;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.autofuzz.FuzzTarget;
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder;
+import com.code_intelligence.jazzer.mutation.ArgumentsMutator;
 import com.code_intelligence.jazzer.runtime.FuzzTargetRunnerNatives;
 import com.code_intelligence.jazzer.runtime.JazzerInternal;
 import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
@@ -72,6 +77,7 @@ public final class FuzzTargetRunner {
   // Reused in every iteration analogous to JUnit's PER_CLASS lifecycle.
   private static final Object fuzzTargetInstance;
   private static final Method fuzzerTearDown;
+  private static final ArgumentsMutator mutator;
   private static final ReproducerTemplate reproducerTemplate;
   private static Predicate<Throwable> findingHandler;
 
@@ -107,6 +113,17 @@ public final class FuzzTargetRunner {
       throw new IllegalStateException("Not reached");
     }
 
+    if (Opt.experimentalMutator) {
+      if (Modifier.isStatic(fuzzTarget.method.getModifiers())) {
+        mutator = ArgumentsMutator.forStaticMethod(fuzzTarget.method);
+      } else {
+        mutator = ArgumentsMutator.forInstanceMethod(fuzzTargetInstance, fuzzTarget.method);
+      }
+      Log.info("Using experimental mutator: " + mutator);
+    } else {
+      mutator = null;
+    }
+
     if (Opt.hooks) {
       // libFuzzer will clear the coverage map after this method returns and keeps no record of the
       // coverage accumulated so far (e.g. by static initializers). We record it here to keep it
@@ -133,17 +150,26 @@ public final class FuzzTargetRunner {
   /**
    * Executes the user-provided fuzz target once.
    *
-   * @param dataPtr a native pointer to beginning of the input provided by the fuzzer for this
-   *     execution
+   * @param dataPtr    a native pointer to beginning of the input provided by the fuzzer for this
+   *                   execution
    * @param dataLength length of the fuzzer input
    * @return the value that the native LLVMFuzzerTestOneInput function should return. Currently,
-   *         this is always 0. The function may exit the process instead of returning.
+   * this is always 0. The function may exit the process instead of returning.
    */
   private static int runOne(long dataPtr, int dataLength) {
     Throwable finding = null;
     byte[] data;
     Object argument;
-    if (useFuzzedDataProvider) {
+    if (Opt.experimentalMutator) {
+      // TODO: Instead of copying the native data and then reading it in, consider the following
+      //  optimizations if they turn out to be worthwhile in benchmarks:
+      //  1. Let libFuzzer pass in a null pointer if the byte array hasn't changed since the last
+      //     call to our custom mutator and skip the read entirely.
+      //  2. Implement a InputStream backed by Unsafe to avoid the copyToArray overhead.
+      mutator.read(new ByteArrayInputStream(copyToArray(dataPtr, dataLength)));
+      data = null;
+      argument = null;
+    } else if (useFuzzedDataProvider) {
       fuzzedDataProvider.setNativeData(dataPtr, dataLength);
       data = null;
       argument = fuzzedDataProvider;
@@ -152,7 +178,9 @@ public final class FuzzTargetRunner {
       argument = data;
     }
     try {
-      if (fuzzTargetInstance == null) {
+      if (Opt.experimentalMutator) {
+        mutator.invoke();
+      } else if (fuzzTargetInstance == null) {
         fuzzTargetMethod.invoke(argument);
       } else {
         fuzzTargetMethod.invoke(fuzzTargetInstance, argument);
@@ -219,7 +247,9 @@ public final class FuzzTargetRunner {
     // target.
     // It doesn't support @FuzzTest fuzz targets, but these come with an integrated regression test
     // that satisfies the same purpose.
-    if (fuzzTargetInstance == null) {
+    // It also doesn't support the experimental mutator yet as that requires implementing Java code
+    // generation for mutators.
+    if (fuzzTargetInstance == null && !Opt.experimentalMutator) {
       dumpReproducer(data);
     }
 
@@ -245,10 +275,48 @@ public final class FuzzTargetRunner {
     return LIBFUZZER_CONTINUE;
   }
 
+  // Called via JNI, being passed data from LLVMFuzzerCustomMutator.
+  private static int mutateOne(long data, int size, int maxSize, int seed) {
+    // libFuzzer sends the input "\n" when there are no corpus entries. We use that as a signal to
+    // initialize the mutator instead of just reading that trivial input to produce a more
+    // interesting value.
+    if (size == 1 && UNSAFE.getByte(data) == '\n') {
+      mutator.init(seed);
+    } else {
+      // TODO: See the comment on earlier calls to read for potential optimizations.
+      mutator.read(new ByteArrayInputStream(copyToArray(data, size)));
+      mutator.mutate(seed);
+    }
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    // TODO: Instead of writing to a byte array and then copying that array's contents into
+    //  memory, consider introducing an OutputStream backed by Unsafe.
+    mutator.write(out);
+    byte[] mutatedBytes = out.toByteArray();
+
+    int newSize = Math.min(mutatedBytes.length, maxSize);
+    UNSAFE.copyMemory(mutatedBytes, BYTE_ARRAY_OFFSET, null, data, newSize);
+    return newSize;
+  }
+
   /*
    * Starts libFuzzer via LLVMFuzzerRunDriver.
    */
   public static int startLibFuzzer(List<String> args) {
+    // We always define LLVMFuzzerCustomMutator, but only use it when --experimental_mutator is
+    // specified. libFuzzer contains logic that disables --len_control when it finds the custom
+    // mutator symbol:
+    // https://github.com/llvm/llvm-project/blob/da3623de2411dd931913eb510e94fe846c929c24/compiler-rt/lib/fuzzer/FuzzerDriver.cpp#L202-L207
+    // We thus have to explicitly set --len_control to its default value when not using the new
+    // mutator.
+    // TODO: libFuzzer still emits a message about --len_control being disabled by default even if
+    //  we override it via a flag. We may want to patch this out.
+    if (!Opt.experimentalMutator) {
+      // args may not be mutable.
+      args = new ArrayList<>(args);
+      // https://github.com/llvm/llvm-project/blob/da3623de2411dd931913eb510e94fe846c929c24/compiler-rt/lib/fuzzer/FuzzerFlags.def#L19
+      args.add("-len_control=100");
+    }
     SignalHandler.initialize();
     return startLibFuzzer(
         args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][] ::new));
@@ -258,8 +326,8 @@ public final class FuzzTargetRunner {
    * Registers a custom handler for findings.
    *
    * @param findingHandler a consumer for the finding that returns true if the fuzzer should
-   *     continue fuzzing and false
-   *                       if it should return from {@link FuzzTargetRunner#startLibFuzzer(List)}.
+   *                       continue fuzzing and false if it should return from
+   *                       {@link FuzzTargetRunner#startLibFuzzer(List)}.
    */
   public static void registerFindingHandler(Predicate<Throwable> findingHandler) {
     FuzzTargetRunner.findingHandler = findingHandler;
@@ -373,7 +441,8 @@ public final class FuzzTargetRunner {
    * @return the return value of LLVMFuzzerRunDriver
    */
   private static int startLibFuzzer(byte[][] args) {
-    return FuzzTargetRunnerNatives.startLibFuzzer(args, FuzzTargetRunner.class);
+    return FuzzTargetRunnerNatives.startLibFuzzer(
+        args, FuzzTargetRunner.class, Opt.experimentalMutator);
   }
 
   /**

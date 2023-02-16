@@ -33,7 +33,8 @@ public class FuzzTargetRunnerNatives {
     RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
   }
 
-  public static native int startLibFuzzer(byte[][] args, Class<?> runner);
+  public static native int startLibFuzzer(
+      byte[][] args, Class<?> runner, boolean useExperimentalMutator);
 
   public static native void printCrashingInput();
 
