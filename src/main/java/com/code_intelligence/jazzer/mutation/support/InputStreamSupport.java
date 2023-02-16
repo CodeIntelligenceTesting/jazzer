@@ -51,8 +51,11 @@ public final class InputStreamSupport {
     byte[] result = new byte[arrayLength];
     int offset = 0;
     byte[] buffer;
+    int remaining = arrayLength;
     while ((buffer = buffers.poll()) != null) {
-      System.arraycopy(buffer, 0, result, offset, buffer.length);
+      int toCopy = min(buffer.length, remaining);
+      System.arraycopy(buffer, 0, result, offset, toCopy);
+      remaining -= toCopy;
     }
     return result;
   }

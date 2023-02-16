@@ -19,12 +19,15 @@ package com.code_intelligence.jazzer.mutation.support;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithZeros;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.infiniteZeros;
+import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.readAllBytes;
 import static com.google.common.truth.Truth.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class InputStreamSupportTest {
   @Test
@@ -99,5 +102,18 @@ class InputStreamSupportTest {
     assertThat(input.available()).isEqualTo(3);
     assertThat(input.read(bytes, 0, 5)).isEqualTo(3);
     assertThat(bytes).asList().containsExactly((byte) 1, (byte) 2, (byte) 3, (byte) 0, (byte) 0);
+  }
+
+  @ParameterizedTest
+  // 8192 is the internal buffer size.
+  @ValueSource(ints = {0, 1, 3, 500, 8192, 8192 + 17, 8192 * 8192 + 17})
+  void testReadAllBytes(int length) throws IOException {
+    byte[] bytes = new byte[length];
+    for (int i = 0; i < bytes.length; i++) {
+      bytes[i] = (byte) i;
+    }
+    InputStream input = new ByteArrayInputStream(bytes);
+
+    assertThat(readAllBytes(input)).isEqualTo(bytes);
   }
 }
