@@ -176,7 +176,7 @@ public final class BuilderMutatorFactory extends MutatorFactory {
     return new Serializer<Builder>() {
       @Override
       public Builder read(DataInputStream in) throws IOException {
-        int length = in.readInt();
+        int length = Math.max(in.readInt(), 0);
         return parseLeniently(cap(in, length));
       }
 
