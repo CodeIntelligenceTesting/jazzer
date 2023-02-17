@@ -52,8 +52,8 @@ build:macos --tool_java_runtime_version=11
 common:toolchain --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 
 # Forward debug variables to tests
-test --test_env=JAZZER_AUTOFUZZ_DEBUG
-test --test_env=JAZZER_REFLECTION_DEBUG
+build --test_env=JAZZER_AUTOFUZZ_DEBUG
+build --test_env=JAZZER_REFLECTION_DEBUG
 
 # CI tests (not using the toolchain to test OSS-Fuzz & local compatibility)
 build:ci --bes_results_url=https://app.buildbuddy.io/invocation/
