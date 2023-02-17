@@ -44,8 +44,10 @@ import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor.Type;
 import com.google.protobuf.Descriptors.OneofDescriptor;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
+import com.google.protobuf.UnknownFieldSet;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -175,7 +177,25 @@ public final class BuilderMutatorFactory extends MutatorFactory {
       @Override
       public Builder read(DataInputStream in) throws IOException {
         int length = in.readInt();
-        return supplier.get().mergeFrom(cap(in, length));
+        return parseLeniently(cap(in, length));
+      }
+
+      @Override
+      public Builder readExclusive(InputStream in) throws IOException {
+        return parseLeniently(in);
+      }
+
+      private Builder parseLeniently(InputStream in) throws IOException {
+        Builder builder = supplier.get();
+        try {
+          builder.mergeFrom(in);
+        } catch (InvalidProtocolBufferException ignored) {
+          // builder has been partially modified with what could be decoded before the parser error.
+        }
+        // We never want the fuzz test to see unknown fields and our mutations should never produce
+        // them.
+        builder.setUnknownFields(UnknownFieldSet.getDefaultInstance());
+        return builder;
       }
 
       @Override
@@ -183,11 +203,6 @@ public final class BuilderMutatorFactory extends MutatorFactory {
         Message message = builder.build();
         out.writeInt(message.getSerializedSize());
         message.writeTo(out);
-      }
-
-      @Override
-      public Builder readExclusive(InputStream in) throws IOException {
-        return supplier.get().mergeFrom(in);
       }
 
       @Override
