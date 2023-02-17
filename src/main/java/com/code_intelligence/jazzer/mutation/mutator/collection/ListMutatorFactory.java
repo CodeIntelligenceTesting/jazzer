@@ -62,7 +62,7 @@ final class ListMutatorFactory extends MutatorFactory {
 
     @Override
     public List<T> read(DataInputStream in) throws IOException {
-      int size = in.readInt();
+      int size = Math.max(in.readInt(), 0);
       ArrayList<T> list = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
         list.add(elementMutator.read(in));

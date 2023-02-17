@@ -49,7 +49,8 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
 
     @Override
     public byte[] read(DataInputStream in) throws IOException {
-      byte[] bytes = new byte[in.readInt()];
+      int length = Math.max(in.readInt(), 0);
+      byte[] bytes = new byte[length];
       in.readFully(bytes);
       return bytes;
     }
