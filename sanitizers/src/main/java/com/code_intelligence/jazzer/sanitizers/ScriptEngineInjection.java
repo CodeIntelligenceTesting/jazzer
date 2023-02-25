@@ -77,14 +77,18 @@ public final class ScriptEngineInjection {
     return current;
   }
 
-  @MethodHook(type = HookType.REPLACE, targetClassName = "javax.script.ScriptEngineManager", targetMethod = "registerEngineName")
+  @MethodHook(type = HookType.REPLACE, targetClassName = "javax.script.ScriptEngineManager",
+    targetMethod = "registerEngineName")
   public static Object ensureScriptEngine(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
       throws Throwable {
     return method.invokeWithArguments(Stream.concat(Stream.of(thisObject),
         Stream.concat(Stream.of((Object) ENGINE), Arrays.stream(arguments, 1, arguments.length))).toArray());
   }
 
-  @MethodHook(type = HookType.REPLACE, targetClassName = "javax.script.ScriptEngineManager", targetMethod = "getEngineByName")
+  @MethodHook(type = HookType.REPLACE,
+    targetClassName = "javax.script.ScriptEngineManager",
+    targetMethod = "getEngineByName",
+    targetMethodDescriptor = "(Ljava/lang/String;)Ljavax/script/ScriptEngine;")
   public static Object hookEngineName(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
       throws Throwable {
     String engine = (String) arguments[0];
@@ -92,7 +96,12 @@ public final class ScriptEngineInjection {
     return method.invokeWithArguments(Stream.concat(Stream.of(thisObject), Arrays.stream(arguments)).toArray());
   }
 
-  @MethodHook(type = HookType.BEFORE, targetClassName = "javax.script.ScriptEngine", targetMethod = "eval")
+  @MethodHook(type = HookType.BEFORE, targetClassName = "javax.script.ScriptEngine",
+    targetMethod = "eval",
+    targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;")
+  @MethodHook(type = HookType.BEFORE, targetClassName = "javax.script.ScriptEngine",
+    targetMethod = "eval",
+    targetMethodDescriptor = "(Ljava/io/Reader;)Ljava/lang/Object;")
   public static void checkScriptEngineExecute(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
       throws Throwable {
     String script = null;
