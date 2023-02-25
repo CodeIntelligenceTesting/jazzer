@@ -109,10 +109,7 @@ public class ScriptEngineInjection {
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Exception {
     try {
       insecureScriptEval(data.consumeRemainingAsAsciiString());
-    } catch (Throwable t) {
-      if (t instanceof FuzzerSecurityIssueCritical) {
-        throw t;
-      }
+    } catch(Exception ignored) {
     }
   }
 }
