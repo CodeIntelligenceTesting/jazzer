@@ -72,14 +72,14 @@ Multiple instrumentation types can be combined with a colon (Linux, macOS) or a 
 
 The run-time flag `-use_value_profile=1` enables [libFuzzer's value profiling mode](https://llvm.org/docs/LibFuzzer.html#value-profile).
 When running with this flag, the feedback about compares and constants received from Jazzer's trace instrumentation is associated with the particular bytecode location and used to provide additional coverage instrumentation.
-See [ExampleValueProfileFuzzer.java](examples/src/main/java/com/example/ExampleValueProfileFuzzer.java) for a fuzz target that would be very hard to fuzz without value profile.
+See [ExampleValueProfileFuzzer.java](../examples/src/main/java/com/example/ExampleValueProfileFuzzer.java) for a fuzz target that would be very hard to fuzz without value profile.
 
 ### Custom hooks
 
 In order to obtain information about data passed into functions such as `String.equals` or `String.startsWith`, Jazzer hooks invocations to these methods.
 This functionality is also available to fuzz targets, where it can be used to implement custom sanitizers or stub out methods that block the fuzzer from progressing (e.g. checksum verifications or random number generation).
-See [ExampleFuzzerHooks.java](examples/src/main/java/com/example/ExampleFuzzerHooks.java) for an example of such a hook.
-An example for a sanitizer can be found in [ExamplePathTraversalFuzzerHooks.java](examples/src/main/java/com/example/ExamplePathTraversalFuzzerHooks.java).
+See [ExampleFuzzerHooks.java](../examples/src/main/java/com/example/ExampleFuzzerHooks.java) for an example of such a hook.
+An example for a sanitizer can be found in [ExamplePathTraversalFuzzerHooks.java](../examples/src/main/java/com/example/ExamplePathTraversalFuzzerHooks.java).
 
 Method hooks can be declared using the `@MethodHook` annotation defined in the `com.code_intelligence.jazzer.api` package, which is contained in `jazzer_standalone.jar` (binary release) or in the Maven artifact [`com.code-intelligence:jazzer-api`](https://search.maven.org/search?q=g:com.code-intelligence%20a:jazzer-api).
 See the [javadocs of the `@MethodHook` API](https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/com/code_intelligence/jazzer/api/MethodHook.html) for more details.
@@ -138,7 +138,7 @@ If no compiler is available in your runtime environment (e.g. in OSS-Fuzz) but y
 Sanitizers other than AddressSanitizer and UndefinedBehaviorSanitizer are not yet supported.
 Furthermore, due to the nature of the JVM's GC, LeakSanitizer reports too many false positives to be useful and is thus disabled.
 
-The fuzz targets `ExampleFuzzerWithNativeASan` and `ExampleFuzzerWithNativeUBSan` in the [`examples`](examples/src/main/java/com/example) directory contain minimal working examples for fuzzing with native libraries.
+The fuzz targets `ExampleFuzzerWithNativeASan` and `ExampleFuzzerWithNativeUBSan` in the [`examples`](../examples/src/main/java/com/example) directory contain minimal working examples for fuzzing with native libraries.
 Also see `TurboJpegFuzzer` for a real-world example.
 
 ### Fuzzing mutators
