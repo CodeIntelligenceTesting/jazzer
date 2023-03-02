@@ -138,7 +138,7 @@ If no compiler is available in your runtime environment (e.g. in OSS-Fuzz) but y
 Sanitizers other than AddressSanitizer and UndefinedBehaviorSanitizer are not yet supported.
 Furthermore, due to the nature of the JVM's GC, LeakSanitizer reports too many false positives to be useful and is thus disabled.
 
-The fuzz targets `ExampleFuzzerWithNativeASan` and `ExampleFuzzerWithNativeUBSan` in the [`examples`](../examples/src/main/java/com/example) directory contain minimal working examples for fuzzing with native libraries.
+The fuzz targets `ExampleFuzzerWithASan` and `ExampleFuzzerWithUBSan` in the [`examples`](../examples/src/main/java/com/example) directory contain minimal working examples for fuzzing with native libraries.
 Also see `TurboJpegFuzzer` for a real-world example.
 
 ### Fuzzing mutators
