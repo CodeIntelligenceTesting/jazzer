@@ -1,0 +1,76 @@
+// Copyright 2023 Code Intelligence GmbH
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto2";
+
+option java_package = "com.code_intelligence.jazzer.protobuf";
+
+message PrimitiveField2 {
+optional bool some_field = 1;
+}
+
+message RequiredPrimitiveField2 {
+required bool some_field = 1;
+}
+
+message RepeatedPrimitiveField2 {
+repeated bool some_field = 1;
+}
+
+message MessageField2 {
+optional RequiredPrimitiveField2 message_field = 1;
+}
+
+message RepeatedMessageField2 {
+repeated RequiredPrimitiveField2 message_field = 1;
+}
+
+message RepeatedOptionalMessageField2 {
+repeated PrimitiveField2 message_field = 1;
+}
+
+message RecursiveMessageField2 {
+required bool some_field = 1;
+optional RecursiveMessageField2 message_field = 2;
+}
+
+message RepeatedRecursiveMessageField2 {
+optional bool some_field = 1;
+repeated RepeatedRecursiveMessageField2 message_field = 2;
+}
+
+message OneOfField2 {
+required bool other_field = 4;
+oneof oneof_field {
+  bool bool_field = 7;
+  RequiredPrimitiveField2 message_field = 2;
+}
+optional bool yet_another_field = 1;
+}
+
+message IntegralField2 {
+optional uint32 some_field = 1;
+}
+
+message RepeatedIntegralField2 {
+repeated uint32 some_field = 1;
+}
+
+message BytesField2 {
+optional bytes some_field = 1;
+}
+
+message StringField2 {
+optional string some_field = 1;
+}
