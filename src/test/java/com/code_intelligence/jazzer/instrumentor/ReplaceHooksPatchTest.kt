@@ -36,7 +36,7 @@ private fun getNoHooksReplaceHooksTargetInstance(): ReplaceHooksTargetContract {
 
 private fun getPatchedReplaceHooksTargetInstance(classWithHooksEnabledField: Class<*>?): ReplaceHooksTargetContract {
     val originalBytecode = classToBytecode(ReplaceHooksTarget::class.java)
-    val hooks = Hooks.loadHooks(setOf(ReplaceHooks::class.java.name)).first().hooks
+    val hooks = Hooks.loadHooks(emptyList(), setOf(ReplaceHooks::class.java.name)).first().hooks
     val patchedBytecode = HookInstrumentor(
         hooks,
         false,

@@ -44,6 +44,7 @@ fun installInternal(
     trace: List<String> = Opt.trace,
     idSyncFile: String? = Opt.idSyncFile,
     dumpClassesDir: String = Opt.dumpClassesDir,
+    additionalClassesExcludes: List<String> = Opt.additionalClassesExcludes,
 ) {
     val allCustomHookNames = (Constants.SANITIZER_HOOK_NAMES + userHookNames).toSet()
     check(allCustomHookNames.isNotEmpty()) { "No hooks registered; expected at least the built-in hooks" }
@@ -77,6 +78,7 @@ fun installInternal(
             }
         }
     }.toSet()
+
     val idSyncFilePath = idSyncFile?.takeUnless { it.isEmpty() }?.let {
         Paths.get(it).also { path ->
             Log.info("Synchronizing coverage IDs in ${path.toAbsolutePath()}")
@@ -113,7 +115,7 @@ fun installInternal(
     // not be considered when resolving references to hook methods, leading to NoClassDefFoundError
     // being thrown.
     Hooks.appendHooksToBootstrapClassLoaderSearch(instrumentation, customHookNames.toSet())
-    val (includedHooks, customHooks) = Hooks.loadHooks(includedHookNames.toSet(), customHookNames.toSet())
+    val (includedHooks, customHooks) = Hooks.loadHooks(additionalClassesExcludes, includedHookNames.toSet(), customHookNames.toSet())
 
     val runtimeInstrumentor = RuntimeInstrumentor(
         instrumentation,

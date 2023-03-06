@@ -36,7 +36,7 @@ private fun getNoHooksAfterHooksTargetInstance(): AfterHooksTargetContract {
 
 private fun getPatchedAfterHooksTargetInstance(classWithHooksEnabledField: Class<*>?): AfterHooksTargetContract {
     val originalBytecode = classToBytecode(AfterHooksTarget::class.java)
-    val hooks = Hooks.loadHooks(setOf(AfterHooks::class.java.name)).first().hooks
+    val hooks = Hooks.loadHooks(emptyList(), setOf(AfterHooks::class.java.name)).first().hooks
     val patchedBytecode = HookInstrumentor(
         hooks,
         false,
