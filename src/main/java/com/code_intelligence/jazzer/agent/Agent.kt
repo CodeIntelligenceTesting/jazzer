@@ -147,10 +147,22 @@ fun installInternal(
 
     if (classesToRetransform.isNotEmpty()) {
         if (instrumentation.isRetransformClassesSupported) {
-            instrumentation.retransformClasses(*classesToRetransform)
+            retransformClassesWithRetry(instrumentation, classesToRetransform)
+        }
+    }
+}
+
+private fun retransformClassesWithRetry(instrumentation: Instrumentation, classesToRetransform: Array<Class<*>>) {
+    try {
+        instrumentation.retransformClasses(*classesToRetransform)
+    } catch (e: Throwable) {
+        if (classesToRetransform.size == 1) {
+            Log.warn("Error retransforming class ${classesToRetransform[0].name }", e)
         } else {
-            Log.warn("Instrumentation was not applied to the following classes as they are dependencies of hooks:")
-            Log.warn(classesToRetransform.joinToString())
+            // The docs state that no transformation was performed if an exception is thrown.
+            // Try again in a binary search fashion, until the not transformable classes have been isolated and reported.
+            retransformClassesWithRetry(instrumentation, classesToRetransform.copyOfRange(0, classesToRetransform.size / 2))
+            retransformClassesWithRetry(instrumentation, classesToRetransform.copyOfRange(classesToRetransform.size / 2, classesToRetransform.size))
         }
     }
 }
