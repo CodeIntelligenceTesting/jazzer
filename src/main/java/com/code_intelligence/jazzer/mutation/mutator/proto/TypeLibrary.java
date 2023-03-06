@@ -39,10 +39,8 @@ final class TypeLibrary {
       throw new UnsupportedOperationException("Map fields haven't been implemented yet");
     }
     if (field.isRequired()) {
-      throw new UnsupportedOperationException("Required fields haven't been implemented yet");
-    }
-
-    if (field.isRepeated()) {
+      return getBaseType(field, builder);
+    } else if (field.isRepeated()) {
       return withTypeArguments(RAW_LIST, getBaseType(field, builder));
     } else if (field.hasPresence()) {
       return getBaseTypeWithPresence(field, builder);
