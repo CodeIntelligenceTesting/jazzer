@@ -48,7 +48,7 @@ data class Hooks(
                 .forEach { instrumentation.appendToBootstrapClassLoaderSearch(it) }
         }
 
-        fun loadHooks(vararg hookClassNames: Set<String>): List<Hooks> {
+        fun loadHooks(excludeHookClassNames: List<String>, vararg hookClassNames: Set<String>): List<Hooks> {
             return ClassGraph()
                 .enableClassInfo()
                 .enableSystemJarsAndModules()
@@ -57,19 +57,20 @@ data class Hooks(
                 .use { scanResult ->
                     // Capture scanResult in HooksLoader field to not pass it through
                     // all internal hook loading methods.
-                    val loader = HooksLoader(scanResult)
+                    val loader = HooksLoader(scanResult, excludeHookClassNames)
                     hookClassNames.map(loader::load)
                 }
         }
 
-        private class HooksLoader(private val scanResult: ScanResult) {
+        private class HooksLoader(private val scanResult: ScanResult, val excludeHookClassNames: List<String>) {
+
             fun load(hookClassNames: Set<String>): Hooks {
                 val hooksWithHookClasses = hookClassNames.flatMap(::loadHooks)
                 val hooks = hooksWithHookClasses.map { it.first }
                 val hookClasses = hooksWithHookClasses.map { it.second }.toSet()
                 val additionalHookClassNameGlobber = ClassNameGlobber(
                     hooks.flatMap(Hook::additionalClassesToHook),
-                    emptyList(),
+                    excludeHookClassNames,
                 )
                 return Hooks(hooks, hookClasses, additionalHookClassNameGlobber)
             }

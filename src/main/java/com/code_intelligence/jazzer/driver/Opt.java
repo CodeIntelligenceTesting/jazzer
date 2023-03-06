@@ -55,7 +55,6 @@ public final class Opt {
     ignoreSetting("valueprofile");
     // The following arguments are interpreted by the native launcher only. They do appear in the
     // help text, but aren't read by the driver.
-    stringListSetting("cp", "The class path to use for fuzzing (native launcher only)");
     stringListSetting("jvm_args",
         "Arguments to pass to the JVM (separator can be escaped with '\\', native launcher only)");
     stringListSetting("additional_jvm_args",
@@ -73,6 +72,8 @@ public final class Opt {
         "Allow fuzzing of native libraries compiled with '-fsanitize=fuzzer' (implied by --asan and --ubsan)");
   }
 
+  public static final List<String> cp =
+      stringListSetting("cp", "The class path to use for fuzzing (native launcher only)");
   public static final String autofuzz = stringSetting("autofuzz", "",
       "Fully qualified reference (optionally with a Javadoc-style signature) to a "
           + "method on the class path to be fuzzed with automatically generated arguments "
@@ -104,6 +105,10 @@ public final class Opt {
   public static final List<String> instrumentationExcludes =
       stringListSetting("instrumentation_excludes",
           "Glob patterns matching names of classes that should not be instrumented for fuzzing");
+  public static final List<String> additionalClassesExcludes =
+      stringListSetting("additional_classes_excludes",
+          "Glob patterns matching names of classes from Java that are not in your jar file, "
+              + "but may be included in your program");
   public static final Set<Long> ignore =
       unmodifiableSet(stringListSetting("ignore", ',',
           "Hex strings representing deduplication tokens of findings that should be ignored")
@@ -141,6 +146,10 @@ public final class Opt {
   public static final boolean conditionalHooks =
       boolSetting("internal.conditional_hooks", false, null);
 
+  // Some scenarios require instrumenting the jar before fuzzing begins
+  public static final boolean instrumentOnly =
+      boolSetting("instrument_only", false, "Instrument jar file. No fuzzing is performed.");
+
   static final boolean mergeInner = boolSetting("internal.merge_inner", false, null);
 
   private static final boolean help =
@@ -172,6 +181,10 @@ public final class Opt {
     }
     if ((!ignore.isEmpty() || keepGoing > 1) && !dedup) {
       Log.error("--nodedup is not supported with --ignore or --keep_going");
+      exit(1);
+    }
+    if (instrumentOnly && dumpClassesDir.isEmpty()) {
+      Log.error("--dump_classes_dir must be set with --instrument_only");
       exit(1);
     }
   }

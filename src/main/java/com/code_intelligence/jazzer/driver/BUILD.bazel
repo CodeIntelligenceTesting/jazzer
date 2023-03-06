@@ -17,10 +17,25 @@ java_library(
         ":fuzz_target_finder",
         ":fuzz_target_holder",
         ":fuzz_target_runner",
+        ":offline_instrumentor",
         ":opt",
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
         "//src/main/java/com/code_intelligence/jazzer/driver/junit:junit_runner",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
+    ],
+)
+
+java_library(
+    name = "offline_instrumentor",
+    srcs = ["OfflineInstrumentor.java"],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer:__pkg__",
+    ],
+    deps = [
+        ":opt",
+        "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
+        "//src/main/java/com/code_intelligence/jazzer/utils:zip_utils",
     ],
 )
 

@@ -47,3 +47,9 @@ java_library(
         "//:__subpackages__",
     ],
 )
+
+java_library(
+    name = "zip_utils",
+    srcs = ["ZipUtils.java"],
+    visibility = ["//visibility:public"],
+)

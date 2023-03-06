@@ -22,7 +22,7 @@ import kotlin.test.assertFailsWith
 class HookValidationTest {
     @Test
     fun testValidHooks() {
-        val hooks = Hooks.loadHooks(setOf(ValidHookMocks::class.java.name)).first().hooks
+        val hooks = Hooks.loadHooks(emptyList(), setOf(ValidHookMocks::class.java.name)).first().hooks
         assertEquals(5, hooks.size)
     }
 
