@@ -23,6 +23,6 @@ public final class CollectionMutators {
   private CollectionMutators() {}
 
   public static MutatorFactory newFactory() {
-    return new ChainedMutatorFactory(new ListMutatorFactory());
+    return new ChainedMutatorFactory(new ListMutatorFactory(), new MapMutatorFactory());
   }
 }
