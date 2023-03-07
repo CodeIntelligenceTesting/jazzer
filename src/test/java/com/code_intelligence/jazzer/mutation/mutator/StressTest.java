@@ -33,6 +33,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -54,8 +55,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -67,9 +70,9 @@ public class StressTest {
   private static final int NUM_MUTATE_PER_INIT = 100;
   private static final double MANY_DISTINCT_ELEMENTS_RATIO = 0.5;
 
-  private static enum TestEnumTwo { A, B }
+  private enum TestEnumTwo { A, B }
 
-  private static enum TestEnumThree { A, B, C }
+  private enum TestEnumThree { A, B, C }
 
   public static Stream<Arguments> stressTestCases() {
     return Stream.of(arguments(asAnnotatedType(boolean.class), "Boolean", exactly(false, true),
@@ -94,6 +97,17 @@ public class StressTest {
             exactly(
                 null, emptyList(), singletonList(null), singletonList(false), singletonList(true)),
             distinctElementsRatio(0.30)),
+        arguments(
+            new TypeHolder<@NotNull Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
+            "Map<String,String>", manyDistinctElements(), manyDistinctElements()),
+        arguments(new TypeHolder<Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
+            "Nullable<Map<String,String>>", manyDistinctElements(), manyDistinctElements()),
+        arguments(
+            new TypeHolder<@WithSize(
+                min = 1, max = 3) @NotNull Map<@NotNull Integer, @NotNull Integer>>() {
+            }.annotatedType(),
+            "Map<Integer,Integer>", all(mapSizeInClosedRange(1, 3), manyDistinctElements()),
+            all(mapSizeInClosedRange(1, 3), manyDistinctElements())),
         arguments(asAnnotatedType(byte.class), "Byte",
             // init is heavily biased towards special values and only returns a uniformly random
             // value in 1 out of 5 calls.
@@ -189,8 +203,7 @@ public class StressTest {
             "{Builder.byte[] -> ByteString} -> Message", manyDistinctElements(),
             manyDistinctElements()),
         arguments(new TypeHolder<@NotNull StringField3>() {}.annotatedType(),
-            "{Builder.byte[] -> String} -> Message", manyDistinctElements(),
-            manyDistinctElements()),
+            "{Builder.String} -> Message", manyDistinctElements(), manyDistinctElements()),
         arguments(new TypeHolder<@NotNull EnumField3>() {}.annotatedType(),
             "{Builder.Enum<TestEnum>} -> Message",
             exactly(EnumField3.getDefaultInstance(),
@@ -274,6 +287,20 @@ public class StressTest {
     return list -> assertThat(new HashSet<>(list)).containsAtLeastElementsIn(expected);
   }
 
+  private static Consumer<List<Object>> mapSizeInClosedRange(int min, int max) {
+    return list -> {
+      list.forEach(map -> {
+        if (map instanceof Map) {
+          assertThat(((Map) map).size()).isAtLeast(min);
+          assertThat(((Map) map).size()).isAtMost(max);
+        } else {
+          throw new IllegalArgumentException(
+              "Expected a list of maps, got list of" + map.getClass().getName());
+        }
+      });
+    };
+  }
+
   @ParameterizedTest(name = "{0}")
   @MethodSource({"stressTestCases", "protoStressTestCases"})
   void genericMutatorStressTest(AnnotatedType type, String mutatorTree,
@@ -326,5 +353,13 @@ public class StressTest {
     T newValue = serializer.read(
         new DataInputStream(extendWithZeros(new ByteArrayInputStream(out.toByteArray()))));
     assertThat(newValue).isEqualTo(value);
+  }
+
+  private static <K, V> Map<K, V> toMap(Object... objs) {
+    Map<K, V> map = new HashMap<>();
+    for (int i = 0; i < objs.length; i += 2) {
+      map.put((K) objs[i], (V) objs[i + 1]);
+    }
+    return map;
   }
 }

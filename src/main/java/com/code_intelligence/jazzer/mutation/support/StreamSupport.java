@@ -55,4 +55,13 @@ public final class StreamSupport {
       return Optional.empty();
     }
   }
+
+  /**
+   * Return a stream containing the optional value if present, otherwise an empty stream.
+   *
+   * @return stream containing the optional value
+   */
+  public static <T> Stream<T> getOrEmpty(Optional<T> optional) {
+    return optional.isPresent() ? Stream.of(optional.get()) : Stream.empty();
+  }
 }

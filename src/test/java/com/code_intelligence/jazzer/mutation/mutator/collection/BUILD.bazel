@@ -1,16 +1,17 @@
-load("@contrib_rules_jvm//java:defs.bzl", "java_junit5_test")
+load("@contrib_rules_jvm//java:defs.bzl", "java_test_suite")
 
-java_junit5_test(
-    name = "StressTest",
-    size = "large",
-    srcs = ["StressTest.java"],
+java_test_suite(
+    name = "CollectionTests",
+    size = "small",
+    srcs = glob(["*.java"]),
     env = {"JAZZER_MOCK_LIBFUZZER_MUTATOR": "true"},
+    runner = "junit5",
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
-        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator/proto:proto3_java_proto",
         "//src/test/java/com/code_intelligence/jazzer/mutation/support:test_support",
+        "@com_google_protobuf//java/core",
     ],
 )

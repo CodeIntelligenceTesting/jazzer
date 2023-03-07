@@ -22,10 +22,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.List;
+import java.util.Map;
 
 @Target(TYPE_USE)
 @Retention(RUNTIME)
-@AppliesTo(List.class)
+@AppliesTo({List.class, Map.class})
 public @interface WithSize {
   int min() default 0;
 
