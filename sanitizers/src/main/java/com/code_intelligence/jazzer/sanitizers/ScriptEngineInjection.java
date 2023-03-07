@@ -115,7 +115,7 @@ public final class ScriptEngineInjection {
 
     if (script.equals(PAYLOAD)) {
       Jazzer.reportFindingFromHook(
-          new FuzzerSecurityIssueCritical(String.format("Possible script execution")));
+          new FuzzerSecurityIssueCritical("Possible script execution"));
     }
   }
 }
