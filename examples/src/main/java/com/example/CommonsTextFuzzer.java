@@ -15,14 +15,15 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import org.apache.commons.text.StringSubstitutor;
 import com.code_intelligence.jazzer.api.Jazzer;
+import org.apache.commons.text.StringSubstitutor;
 
 public class CommonsTextFuzzer {
-    public static void fuzzerTestOneInput(FuzzedDataProvider data) {
-        try {
-            StringSubstitutor.createInterpolator().replace(data.consumeAsciiString(20));
-        } catch (java.lang.IllegalArgumentException | java.lang.ArrayIndexOutOfBoundsException ignored) {
-        }
+  public static void fuzzerTestOneInput(FuzzedDataProvider data) {
+    try {
+      StringSubstitutor.createInterpolator().replace(data.consumeAsciiString(20));
+    } catch (
+        java.lang.IllegalArgumentException | java.lang.ArrayIndexOutOfBoundsException ignored) {
     }
+  }
 }
