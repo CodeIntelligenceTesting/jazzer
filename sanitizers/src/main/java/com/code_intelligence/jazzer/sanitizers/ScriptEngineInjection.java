@@ -18,18 +18,16 @@ import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toSet;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical;
-import com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh;
 import com.code_intelligence.jazzer.api.HookType;
 import com.code_intelligence.jazzer.api.Jazzer;
 import com.code_intelligence.jazzer.api.MethodHook;
 import com.code_intelligence.jazzer.api.MethodHooks;
+import java.io.IOException;
+import java.io.Reader;
 import java.lang.invoke.MethodHandle;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Stream;
-import java.io.IOException;
-import java.io.Reader;
-
 import javax.script.ScriptEngineManager;
 
 /**
@@ -53,7 +51,8 @@ public final class ScriptEngineInjection {
   private static final String ENGINE = "js";
   private static final String PAYLOAD = "1+1";
 
-  private static char[] guideMarkableReaderTowardsEquality(Reader reader, String target, int id) throws IOException {
+  private static char[] guideMarkableReaderTowardsEquality(Reader reader, String target, int id)
+      throws IOException {
     final int size = target.length();
     char[] current = new char[size];
     int n = 0;
@@ -78,31 +77,35 @@ public final class ScriptEngineInjection {
   }
 
   @MethodHook(type = HookType.REPLACE, targetClassName = "javax.script.ScriptEngineManager",
-    targetMethod = "registerEngineName")
-  public static Object ensureScriptEngine(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
+      targetMethod = "registerEngineName")
+  public static Object
+  ensureScriptEngine(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
       throws Throwable {
-    return method.invokeWithArguments(Stream.concat(Stream.of(thisObject),
-        Stream.concat(Stream.of((Object) ENGINE), Arrays.stream(arguments, 1, arguments.length))).toArray());
+    return method.invokeWithArguments(Stream
+                                          .concat(Stream.of(thisObject),
+                                              Stream.concat(Stream.of((Object) ENGINE),
+                                                  Arrays.stream(arguments, 1, arguments.length)))
+                                          .toArray());
   }
 
-  @MethodHook(type = HookType.REPLACE,
-    targetClassName = "javax.script.ScriptEngineManager",
-    targetMethod = "getEngineByName",
-    targetMethodDescriptor = "(Ljava/lang/String;)Ljavax/script/ScriptEngine;")
-  public static Object hookEngineName(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
+  @MethodHook(type = HookType.REPLACE, targetClassName = "javax.script.ScriptEngineManager",
+      targetMethod = "getEngineByName",
+      targetMethodDescriptor = "(Ljava/lang/String;)Ljavax/script/ScriptEngine;")
+  public static Object
+  hookEngineName(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
       throws Throwable {
     String engine = (String) arguments[0];
     Jazzer.guideTowardsEquality(engine, ENGINE, hookId);
-    return method.invokeWithArguments(Stream.concat(Stream.of(thisObject), Arrays.stream(arguments)).toArray());
+    return method.invokeWithArguments(
+        Stream.concat(Stream.of(thisObject), Arrays.stream(arguments)).toArray());
   }
 
   @MethodHook(type = HookType.BEFORE, targetClassName = "javax.script.ScriptEngine",
-    targetMethod = "eval",
-    targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;")
+      targetMethod = "eval", targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;")
   @MethodHook(type = HookType.BEFORE, targetClassName = "javax.script.ScriptEngine",
-    targetMethod = "eval",
-    targetMethodDescriptor = "(Ljava/io/Reader;)Ljava/lang/Object;")
-  public static void checkScriptEngineExecute(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
+      targetMethod = "eval", targetMethodDescriptor = "(Ljava/io/Reader;)Ljava/lang/Object;")
+  public static void
+  checkScriptEngineExecute(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
       throws Throwable {
     String script = null;
 
@@ -110,12 +113,12 @@ public final class ScriptEngineInjection {
       script = (String) arguments[0];
       Jazzer.guideTowardsEquality(script, PAYLOAD, hookId);
     } else {
-      script = new String(guideMarkableReaderTowardsEquality((Reader) arguments[0], PAYLOAD, hookId));
+      script =
+          new String(guideMarkableReaderTowardsEquality((Reader) arguments[0], PAYLOAD, hookId));
     }
 
     if (script.equals(PAYLOAD)) {
-      Jazzer.reportFindingFromHook(
-          new FuzzerSecurityIssueCritical("Possible script execution"));
+      Jazzer.reportFindingFromHook(new FuzzerSecurityIssueCritical("Possible script execution"));
     }
   }
 }

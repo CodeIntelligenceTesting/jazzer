@@ -16,10 +16,8 @@ package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical;
-
 import java.io.Reader;
 import java.io.StringReader;
-
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -84,19 +82,15 @@ class DummyScriptEngine implements ScriptEngine {
   }
 
   @Override
-  public void put(String key, Object value) {
-  }
+  public void put(String key, Object value) {}
 
   @Override
-  public void setBindings(Bindings bindings, int scope) {
-  }
+  public void setBindings(Bindings bindings, int scope) {}
 
   @Override
-  public void setContext(ScriptContext context) {
-  }
+  public void setContext(ScriptContext context) {}
 
-  public DummyScriptEngine() {
-  }
+  public DummyScriptEngine() {}
 }
 
 public class ScriptEngineInjection {
@@ -109,7 +103,7 @@ public class ScriptEngineInjection {
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Exception {
     try {
       insecureScriptEval(data.consumeRemainingAsAsciiString());
-    } catch(Exception ignored) {
+    } catch (Exception ignored) {
     }
   }
 }
