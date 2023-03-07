@@ -40,7 +40,7 @@ import javax.script.ScriptEngineManager;
  * Before JDK 15, the Nashorn Engine
  * was registered by default with ScriptEngineManager under several aliases,
  * including "js". Nashorn allows
- * access to JVM classes, for exmaple {@link java.lang.Runtime} allowing the
+ * access to JVM classes, for example {@link java.lang.Runtime} allowing the
  * execution of arbitrary OS commands.
  * Several other scripting engines can be embedded to the JVM (they must follow
  * the <a href="https://www.jcp.org/en/jsr/detail?id=223">JSR-223</a>
