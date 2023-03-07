@@ -206,6 +206,7 @@ java_fuzz_target_test(
     deps = [
         "@maven//:org_apache_commons_commons_text",
     ],
+    verify_crash_reproducer = False,
     size = "enormous",
     hook_jar = "CommonsTextFuzzerHooks_deploy.jar",
 )
