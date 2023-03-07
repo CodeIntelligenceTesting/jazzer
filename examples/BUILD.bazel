@@ -179,17 +179,6 @@ java_fuzz_target_test(
     ],
 )
 
-java_binary(
-    name = "CommonsTextFuzzerHooks",
-    srcs = ["src/main/java/com/example/CommonsTextFuzzerHooks.java"],
-    create_executable = False,
-    deploy_manifest_lines = ["Jazzer-Hook-Classes: com.example.CommonsTextFuzzerHooks"],
-    deps = [
-        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
-        #"@maven//:org_apache_commons_commons_text"
-    ],
-)
-
 # WARNING: This fuzz target uses a vulnerable version of Apache Commons Text, which could result in the execution
 # of arbitrary code during fuzzing if executed with an older JDK. Use at your own risk.
 java_fuzz_target_test(
@@ -208,7 +197,6 @@ java_fuzz_target_test(
     ],
     verify_crash_reproducer = False,
     size = "enormous",
-    hook_jar = "CommonsTextFuzzerHooks_deploy.jar",
 )
 
 java_fuzz_target_test(
