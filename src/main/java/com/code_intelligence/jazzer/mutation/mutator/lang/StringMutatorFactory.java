@@ -22,11 +22,13 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirs
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 
 import com.code_intelligence.jazzer.mutation.annotation.Ascii;
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import java.lang.reflect.AnnotatedType;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 final class StringMutatorFactory extends MutatorFactory {
   private static final int HEADER_MASK = 0b1100_0000;
@@ -142,14 +144,19 @@ final class StringMutatorFactory extends MutatorFactory {
         .flatMap(parent -> factory.tryCreate(notNull(asAnnotatedType(byte[].class))))
         .map(byteArrayMutator -> {
           boolean fixUpAscii = type.getDeclaredAnnotation(Ascii.class) != null;
-          return mutateThenMapToImmutable((SerializingMutator<byte[]>) byteArrayMutator, bytes -> {
-            if (fixUpAscii) {
-              fixUpAscii(bytes);
-            } else {
-              fixUpUtf8(bytes);
-            }
-            return new String(bytes, StandardCharsets.UTF_8);
-          }, string -> string.getBytes(StandardCharsets.UTF_8));
+          return mutateThenMapToImmutable((SerializingMutator<byte[]>) byteArrayMutator,
+              bytes
+              -> {
+                if (fixUpAscii) {
+                  fixUpAscii(bytes);
+                } else {
+                  fixUpUtf8(bytes);
+                }
+                return new String(bytes, StandardCharsets.UTF_8);
+              },
+              string
+              -> string.getBytes(StandardCharsets.UTF_8),
+              (Predicate<Debuggable> inCycle) -> "String");
         });
   }
 }
