@@ -70,3 +70,16 @@ message BytesField3 {
 message StringField3 {
   string some_field = 1;
 }
+
+message UnsupportedFields3 {
+  float unsupported_1 = 1;
+  double unsupported_2 = 2;
+  oneof all_unsupported {
+    float unsupported_3 = 3;
+  }
+  oneof some_unsupported {
+    float unsupported_4 = 4;
+    string supported = 5;
+  }
+  map<string, string> unsupported_5 = 6;
+}

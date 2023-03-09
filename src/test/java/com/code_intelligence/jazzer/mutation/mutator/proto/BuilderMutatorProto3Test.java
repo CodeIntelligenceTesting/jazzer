@@ -35,6 +35,7 @@ import com.code_intelligence.jazzer.protobuf.Proto3.PrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RecursiveMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedPrimitiveField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.UnsupportedFields3;
 import org.junit.jupiter.api.Test;
 
 class BuilderMutatorProto3Test {
@@ -390,5 +391,13 @@ class BuilderMutatorProto3Test {
     assertThat(builder.build())
         .isEqualTo(OneOfField3.newBuilder().setOtherField(true).setYetAnotherField(true).build());
     assertThat(builder.build().hasMessageField()).isFalse();
+  }
+
+  @Test
+  void testUnsupportedFieldsHandledGracefully() {
+    InPlaceMutator<UnsupportedFields3.Builder> mutator =
+        (InPlaceMutator<UnsupportedFields3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<UnsupportedFields3.@NotNull Builder>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<byte[] -> String>}");
   }
 }

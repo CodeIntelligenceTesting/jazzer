@@ -27,6 +27,10 @@ import java.util.stream.Stream;
 public final class StreamSupport {
   private StreamSupport() {}
 
+  public static <T> Stream<T> stream(Optional<T> optional) {
+    return optional.map(Stream::of).orElse(Stream.empty());
+  }
+
   public static boolean[] toBooleanArray(Stream<Boolean> stream) {
     List<Boolean> list = stream.collect(toList());
     boolean[] array = new boolean[list.size()];

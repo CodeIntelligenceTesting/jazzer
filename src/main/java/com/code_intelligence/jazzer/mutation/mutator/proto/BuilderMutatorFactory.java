@@ -29,9 +29,9 @@ import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapter
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setMessageField;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
+import static com.code_intelligence.jazzer.mutation.support.StreamSupport.stream;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
@@ -81,11 +81,14 @@ public final class BuilderMutatorFactory extends MutatorFactory {
     return descriptor;
   }
 
-  private static <T extends Builder, U> InPlaceMutator<T> mutatorForField(
+  private static <T extends Builder, U> Optional<InPlaceMutator<T>> mutatorForField(
       FieldDescriptor field, T builderInstance, MutatorFactory factory) {
-    AnnotatedType typeToMutate = TypeLibrary.getTypeToMutate(field, builderInstance);
-    requireNonNull(typeToMutate, () -> "Java class not specified for " + field);
+    return TypeLibrary.getTypeToMutate(field, builderInstance)
+        .map(typeToMutate -> mutatorForSupportedField(field, typeToMutate, factory));
+  }
 
+  private static <T extends Builder, U> InPlaceMutator<T> mutatorForSupportedField(
+      FieldDescriptor field, AnnotatedType typeToMutate, MutatorFactory factory) {
     if (field.isRepeated()) {
       if (field.getType() == Type.MESSAGE) {
         InPlaceMutator<List<Builder>> underlyingMutator =
@@ -122,31 +125,35 @@ public final class BuilderMutatorFactory extends MutatorFactory {
   private static <T extends Builder> Stream<InPlaceMutator<T>> mutatorsForFields(
       Optional<OneofDescriptor> oneofField, List<FieldDescriptor> fields, T builderInstance,
       MutatorFactory factory) {
+    // Mutating to the unset (-1) state is handled by the individual field mutators, which
+    // are created nullable as oneof fields report that they track presence.
     if (oneofField.isPresent()) {
+      InPlaceMutator<T>[] individualMutators =
+          fields.stream()
+              .flatMap(field -> stream(mutatorForField(field, builderInstance, factory)))
+              .toArray(InPlaceMutator[] ::new);
+      if (individualMutators.length == 0) {
+        // The oneof does not contain any supported fields, do not mutate it at all.
+        return Stream.empty();
+      }
       // oneof fields are mutated as one as mutating them independently would cause the mutator to
       // erratically switch between the different states. The individual fields are kept in the
       // order in which they are defined in the .proto file.
-      return Stream.of(mutateSumInPlace(
-          (T builder)
-              -> {
-            FieldDescriptor setField = builder.getOneofFieldDescriptor(oneofField.get());
-            if (setField == null) {
-              return -1;
-            } else {
-              // The index of the field within the oneof is 1-based otherwise, so we need to
-              // subtract 1 to fulfill the contract of mutateSumInPlace.
-              return setField.getIndex() - 1;
-            }
-          },
-          // Mutating to the unset (-1) state is handled by the individual field mutators, which
-          // are created nullable as oneof fields report that they track presence.
-          fields.stream()
-              .map(field -> mutatorForField(field, builderInstance, factory))
-              .toArray(InPlaceMutator[] ::new)));
+      return Stream.of(mutateSumInPlace((T builder) -> {
+        FieldDescriptor setField = builder.getOneofFieldDescriptor(oneofField.get());
+        if (setField == null) {
+          return -1;
+        } else {
+          // The index of the field within the oneof is 1-based otherwise, so we need to
+          // subtract 1 to fulfill the contract of mutateSumInPlace.
+          return setField.getIndex() - 1;
+        }
+      }, individualMutators));
     } else {
       // All non-oneof fields are mutated independently, using the order in which they are declared
       // in the .proto file (which may not coincide with the order by field number).
-      return fields.stream().map(field -> mutatorForField(field, builderInstance, factory));
+      return fields.stream().flatMap(
+          field -> stream(mutatorForField(field, builderInstance, factory)));
     }
   }
 
