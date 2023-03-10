@@ -84,6 +84,27 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "KeepGoingFuzzTest",
+    srcs = ["KeepGoingFuzzTest.java"],
+    allowed_findings = ["java.lang.IllegalArgumentException"],
+    expect_crash = False,
+    fuzzer_args = [
+        "--instrumentation_includes=com.example.**",
+        "--custom_hook_includes=com.example.**",
+        "--keep_going=3",
+        "-runs=10",
+    ],
+    target_class = "com.example.KeepGoingFuzzTest",
+    runtime_deps = [
+        ":junit_runtime",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
 # Verifies that fuzzer command-line arguments are honored for @FuzzTests.
 java_fuzz_target_test(
     name = "CommandLineFuzzTest",

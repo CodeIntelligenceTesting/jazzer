@@ -18,6 +18,7 @@ import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -115,5 +116,15 @@ class Utils {
    */
   static boolean permissivelyParseBoolean(String value) {
     return value.equalsIgnoreCase("true") || value.equals("1") || value.equalsIgnoreCase("yes");
+  }
+
+  /**
+   * Convert the string to ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601#Durations).
+   * We do not allow for duration units longer than hours, so we can always prepend PT.
+   */
+  static long durationStringToSeconds(String duration) {
+    String isoDuration =
+        "PT" + duration.replace("sec", "s").replace("min", "m").replace("hr", "h").replace(" ", "");
+    return Duration.parse(isoDuration).getSeconds();
   }
 }
