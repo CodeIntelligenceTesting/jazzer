@@ -14,12 +14,12 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import static com.code_intelligence.jazzer.junit.FuzzTestExecutor.durationStringToSeconds;
+import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.Test;
 
-public class FuzzTestExecutorTest {
+public class UtilsTest {
   @Test
   public void testDurationStringToSeconds() {
     assertThat(durationStringToSeconds("1m")).isEqualTo(60);

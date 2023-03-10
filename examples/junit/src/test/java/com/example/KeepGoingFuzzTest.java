@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,13 +14,21 @@
  * limitations under the License.
  */
 
-package com.code_intelligence.jazzer.driver.junit;
+package com.example;
 
-public final class ExitCodeException extends Exception {
-  public final int exitCode;
+import com.code_intelligence.jazzer.junit.FuzzTest;
 
-  public ExitCodeException(String message, int exitCode) {
-    super(message);
-    this.exitCode = exitCode;
+public class KeepGoingFuzzTest {
+  private static int counter = 0;
+
+  @FuzzTest
+  public void keepGoingFuzzTest(byte[] ignored) {
+    counter++;
+    if (counter == 1) {
+      throw new IllegalArgumentException("error1");
+    }
+    if (counter == 2) {
+      throw new IllegalArgumentException("error2");
+    }
   }
 }

@@ -14,12 +14,11 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
-import static com.code_intelligence.jazzer.junit.Utils.runFromCommandLine;
 import static com.code_intelligence.jazzer.utils.Utils.getReadableDescriptor;
-import static java.util.Collections.unmodifiableList;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
@@ -33,7 +32,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -42,8 +40,16 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 
-abstract class FuzzTestExecutor {
+class FuzzTestExecutor {
   private static final AtomicBoolean hasBeenPrepared = new AtomicBoolean();
+
+  private final List<String> libFuzzerArgs;
+  private final boolean isRunFromCommandLine;
+
+  private FuzzTestExecutor(List<String> libFuzzerArgs, boolean isRunFromCommandLine) {
+    this.libFuzzerArgs = libFuzzerArgs;
+    this.isRunFromCommandLine = isRunFromCommandLine;
+  }
 
   public static FuzzTestExecutor prepare(ExtensionContext context, String maxDuration)
       throws IOException {
@@ -52,6 +58,7 @@ abstract class FuzzTestExecutor {
           "FuzzTestExecutor#prepare can only be called once per test run");
     }
 
+    Class<?> fuzzTestClass = context.getRequiredTestClass();
     Method fuzzTestMethod = context.getRequiredTestMethod();
 
     if (fuzzTestMethod.getParameterCount() == 0) {
@@ -65,27 +72,15 @@ abstract class FuzzTestExecutor {
               fuzzTestMethod.getName(), getReadableDescriptor(fuzzTestMethod)));
     }
 
-    if (runFromCommandLine(context)) {
-      return prepareForCommandLine(context);
-    } else {
-      return prepareForTestRunner(context, maxDuration);
-    }
-  }
-
-  private static FuzzTestExecutor prepareForCommandLine(ExtensionContext context) {
-    return new CommandLineFuzzTestExecutor(context);
-  }
-
-  private static FuzzTestExecutor prepareForTestRunner(ExtensionContext context, String maxDuration)
-      throws IOException {
     Path baseDir =
         Paths.get(context.getConfigurationParameter("jazzer.internal.basedir").orElse(""))
             .toAbsolutePath();
 
-    final Class<?> fuzzTestClass = context.getRequiredTestClass();
+    List<String> originalLibFuzzerArgs = getLibFuzzerArgs(context);
+    String argv0 = originalLibFuzzerArgs.isEmpty() ? "fake_argv0" : originalLibFuzzerArgs.remove(0);
 
     ArrayList<String> libFuzzerArgs = new ArrayList<>();
-    libFuzzerArgs.add("fake_argv0");
+    libFuzzerArgs.add(argv0);
 
     // Store the generated corpus in a per-class directory under the project root, just like cifuzz:
     // https://github.com/CodeIntelligenceTesting/cifuzz/blob/bf410dcfbafbae2a73cf6c5fbed031cdfe234f2f/internal/cmd/run/run.go#L381
@@ -146,15 +141,25 @@ abstract class FuzzTestExecutor {
       libFuzzerArgs.add("-use_value_profile=1");
     }
 
-    return new TestRunnerFuzzTestExecutor(libFuzzerArgs);
+    // Prefer original libFuzzerArgs set via command line by appending them last.
+    libFuzzerArgs.addAll(originalLibFuzzerArgs);
+
+    return new FuzzTestExecutor(libFuzzerArgs, Utils.runFromCommandLine(context));
   }
 
-  static long durationStringToSeconds(String duration) {
-    // Convert the string to ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601#Durations). We do not
-    // allow for duration units longer than hours, so we can always prepend PT.
-    String isoDuration =
-        "PT" + duration.replace("sec", "s").replace("min", "m").replace("hr", "h").replace(" ", "");
-    return Duration.parse(isoDuration).getSeconds();
+  /**
+   * Returns the list of arguments set on the command line.
+   */
+  private static List<String> getLibFuzzerArgs(ExtensionContext extensionContext) {
+    List<String> args = new ArrayList<>();
+    for (int i = 0;; i++) {
+      Optional<String> arg = extensionContext.getConfigurationParameter("jazzer.internal.arg." + i);
+      if (!arg.isPresent()) {
+        break;
+      }
+      args.add(arg.get());
+    }
+    return args;
   }
 
   private static boolean useAutofuzz(Method fuzzTestMethod) {
@@ -162,9 +167,6 @@ abstract class FuzzTestExecutor {
         || (fuzzTestMethod.getParameterTypes()[0] != byte[].class
             && fuzzTestMethod.getParameterTypes()[0] != FuzzedDataProvider.class);
   }
-
-  abstract public Optional<Throwable> executeInternal(
-      ReflectiveInvocationContext<Method> invocationContext);
 
   public Optional<Throwable> execute(ReflectiveInvocationContext<Method> invocationContext) {
     if (FuzzTestExecutor.useAutofuzz(invocationContext.getExecutable())) {
@@ -174,67 +176,27 @@ abstract class FuzzTestExecutor {
           new FuzzTargetHolder.FuzzTarget(invocationContext.getExecutable(),
               () -> invocationContext.getTarget().get(), Optional.empty());
     }
-    return executeInternal(invocationContext);
-  }
 
-  private static final class CommandLineFuzzTestExecutor extends FuzzTestExecutor {
-    private final List<String> libFuzzerArgs;
-
-    private CommandLineFuzzTestExecutor(ExtensionContext extensionContext) {
-      this.libFuzzerArgs = getLibFuzzerArgs(extensionContext);
-    }
-
-    /**
-     * Returns the list of arguments set on the command line.
-     */
-    private static List<String> getLibFuzzerArgs(ExtensionContext extensionContext) {
-      ArrayList<String> args = new ArrayList<>();
-      for (int i = 0;; i++) {
-        Optional<String> arg =
-            extensionContext.getConfigurationParameter("jazzer.internal.arg." + i);
-        if (!arg.isPresent()) {
-          break;
-        }
-        args.add(arg.get());
-      }
-      return unmodifiableList(args);
-    }
-
-    public Optional<Throwable> executeInternal(
-        ReflectiveInvocationContext<Method> invocationContext) {
-      int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
-      if (exitCode != 0) {
-        return Optional.of(new ExitCodeException(exitCode));
-      } else {
-        return Optional.empty();
-      }
-    }
-  }
-
-  private static final class TestRunnerFuzzTestExecutor extends FuzzTestExecutor {
-    private final List<String> libFuzzerArgs;
-
-    private TestRunnerFuzzTestExecutor(List<String> libFuzzerArgs) {
-      this.libFuzzerArgs = libFuzzerArgs;
-    }
-
-    @Override
-    public Optional<Throwable> executeInternal(
-        ReflectiveInvocationContext<Method> invocationContext) {
-      AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
+    // Only register a finding handler in case the fuzz test is executed by JUnit.
+    // It short-circuits the handling in FuzzTargetRunner and prevents settings
+    // like --keep_going.
+    AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
+    if (!isRunFromCommandLine) {
       FuzzTargetRunner.registerFindingHandler(t -> {
         atomicFinding.set(t);
         return false;
       });
-      int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
-      Throwable finding = atomicFinding.get();
-      if (finding != null) {
-        return Optional.of(finding);
-      } else if (exitCode != 0) {
-        return Optional.of(new IllegalStateException("Jazzer exited with exit code " + exitCode));
-      } else {
-        return Optional.empty();
-      }
+    }
+
+    int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
+    Throwable finding = atomicFinding.get();
+    if (finding != null) {
+      return Optional.of(finding);
+    } else if (exitCode != 0) {
+      return Optional.of(
+          new ExitCodeException("Jazzer exited with exit code " + exitCode, exitCode));
+    } else {
+      return Optional.empty();
     }
   }
 }
