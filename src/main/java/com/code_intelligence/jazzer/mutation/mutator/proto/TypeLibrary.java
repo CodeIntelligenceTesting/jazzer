@@ -18,16 +18,14 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withTypeArguments;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
-import com.google.protobuf.Descriptors.FieldDescriptor.Type;
 import com.google.protobuf.Message.Builder;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.util.List;
 
@@ -69,9 +67,10 @@ final class TypeLibrary {
         return new TypeHolder<ByteString>() {}.annotatedType();
       case STRING:
         return new TypeHolder<String>() {}.annotatedType();
+      case ENUM:
+        return new TypeHolder<EnumValueDescriptor>() {}.annotatedType();
       case FLOAT:
       case DOUBLE:
-      case ENUM:
         throw new UnsupportedOperationException(field.getType() + " has not been implemented");
       default:
         throw new IllegalStateException("Unexpected type: " + field.getType());
