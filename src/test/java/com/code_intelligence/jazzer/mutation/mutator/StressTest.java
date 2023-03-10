@@ -38,6 +38,10 @@ import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.code_intelligence.jazzer.protobuf.Proto3.BytesField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3.TestEnum;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldRepeated3;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldRepeated3.TestEnumRepeated;
 import com.code_intelligence.jazzer.protobuf.Proto3.IntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedIntegralField3;
@@ -186,6 +190,19 @@ public class StressTest {
             manyDistinctElements()),
         arguments(new TypeHolder<@NotNull StringField3>() {}.annotatedType(),
             "{Builder.byte[] -> String} -> Message", manyDistinctElements(),
+            manyDistinctElements()),
+        arguments(new TypeHolder<@NotNull EnumField3>() {}.annotatedType(),
+            "{Builder.Enum<TestEnum>} -> Message",
+            exactly(EnumField3.getDefaultInstance(),
+                EnumField3.newBuilder().setSomeField(TestEnum.VAL2).build()),
+            exactly(EnumField3.getDefaultInstance(),
+                EnumField3.newBuilder().setSomeField(TestEnum.VAL2).build())),
+        arguments(new TypeHolder<@NotNull EnumFieldRepeated3>() {}.annotatedType(),
+            "{Builder via List<Enum<TestEnumRepeated>>} -> Message",
+            exactly(EnumFieldRepeated3.getDefaultInstance(),
+                EnumFieldRepeated3.newBuilder().addSomeField(TestEnumRepeated.UNASSIGNED).build(),
+                EnumFieldRepeated3.newBuilder().addSomeField(TestEnumRepeated.VAL1).build(),
+                EnumFieldRepeated3.newBuilder().addSomeField(TestEnumRepeated.VAL2).build()),
             manyDistinctElements()));
   }
 

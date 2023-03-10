@@ -18,8 +18,11 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.assemble;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.combine;
+import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.fixedValue;
+import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateIndices;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateProperty;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateSumInPlace;
+import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateViaView;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getMessageField;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getPresentFieldOrNull;
@@ -30,18 +33,23 @@ import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapter
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
+import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.api.ValueMutator;
 import com.google.protobuf.Descriptors.Descriptor;
+import com.google.protobuf.Descriptors.EnumDescriptor;
+import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
 import com.google.protobuf.Descriptors.FieldDescriptor.Type;
 import com.google.protobuf.Descriptors.OneofDescriptor;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -83,6 +91,7 @@ public final class BuilderMutatorFactory extends MutatorFactory {
 
   private static <T extends Builder, U> InPlaceMutator<T> mutatorForField(
       FieldDescriptor field, T builderInstance, MutatorFactory factory) {
+    factory = withEnumValueDescriptorMutatorFactoryIfNeeded(factory, field);
     AnnotatedType typeToMutate = TypeLibrary.getTypeToMutate(field, builderInstance);
     requireNonNull(typeToMutate, () -> "Java class not specified for " + field);
 
@@ -117,6 +126,35 @@ public final class BuilderMutatorFactory extends MutatorFactory {
           -> (U) builder.getField(field),
           underlyingMutator, (builder, value) -> builder.setField(field, value));
     }
+  }
+
+  private static MutatorFactory withEnumValueDescriptorMutatorFactoryIfNeeded(
+      MutatorFactory factory, FieldDescriptor field) {
+    if (field.getJavaType() != JavaType.ENUM) {
+      return factory;
+    }
+    // Proto enum fields are special as their type (EnumValueDescriptor) does not encode their
+    // domain - we need the actual EnumDescriptor instance.
+    return new ChainedMutatorFactory(factory, new MutatorFactory() {
+      @Override
+      public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+        return findFirstParentIfClass(type, EnumValueDescriptor.class).map(parent -> {
+          EnumDescriptor enumType = field.getEnumType();
+          List<EnumValueDescriptor> values = enumType.getValues();
+          String name = enumType.getName();
+          if (values.size() == 1) {
+            // While we generally prefer to error out instead of creating a mutator that can't
+            // actually mutate its domain, we can't do that for proto enum fields as the user
+            // creating the fuzz test may not be in a position to modify the existing proto
+            // definition.
+            return fixedValue(values.get(0));
+          } else {
+            return mutateThenMapToImmutable(mutateIndices(values.size()), values::get,
+                EnumValueDescriptor::getIndex, unused -> "Enum<" + name + ">");
+          }
+        });
+      }
+    });
   }
 
   private static <T extends Builder> Stream<InPlaceMutator<T>> mutatorsForFields(

@@ -292,6 +292,44 @@ public final class MutatorCombinators {
     };
   }
 
+  /**
+   * Constructs a mutator that always returns the provided fixed value.
+   *
+   * <p>Note: This mutator explicitly breaks the contract of the init and mutate methods. Use
+   * sparingly as it may harm the overall effectivity of the mutator.
+   */
+  public static <@ImmutableTypeParameter T> SerializingMutator<T> fixedValue(T value) {
+    return new SerializingMutator<T>() {
+      @Override
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return "FixedValue(" + value + ")";
+      }
+
+      @Override
+      public T read(DataInputStream in) {
+        return value;
+      }
+
+      @Override
+      public void write(T value, DataOutputStream out) {}
+
+      @Override
+      public T detach(T value) {
+        return value;
+      }
+
+      @Override
+      public T init(PseudoRandom prng) {
+        return value;
+      }
+
+      @Override
+      public T mutate(T value, PseudoRandom prng) {
+        return value;
+      }
+    };
+  }
+
   private static class DelegatingSerializingInPlaceMutator<T> extends SerializingInPlaceMutator<T> {
     private final Supplier<T> makeDefaultInstance;
     private final Serializer<T> serializer;

@@ -70,3 +70,38 @@ message BytesField3 {
 message StringField3 {
   string some_field = 1;
 }
+
+
+message EnumField3 {
+  enum TestEnum {
+    VAL1 = 0;
+    VAL2 = 1;
+  }
+  TestEnum some_field = 1;
+}
+
+enum TestEnumOutside3 {
+  VAL1 = 0;
+  VAL2 = 1;
+  VAL3 = 3;
+}
+
+message EnumFieldOutside3 {
+  TestEnumOutside3 some_field = 1;
+}
+
+message EnumFieldOne3 {
+  enum TestEnumOne {
+    ONE = 0;
+  }
+  TestEnumOne some_field = 1;
+}
+
+message EnumFieldRepeated3 {
+  enum TestEnumRepeated {
+    UNASSIGNED = 0;
+    VAL1 = 1;
+    VAL2 = 2;
+  }
+  repeated TestEnumRepeated some_field = 1;
+}
