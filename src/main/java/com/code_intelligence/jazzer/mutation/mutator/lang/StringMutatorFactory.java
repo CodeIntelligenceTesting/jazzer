@@ -19,13 +19,16 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 
 import com.code_intelligence.jazzer.mutation.annotation.Ascii;
+import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+
 import java.lang.reflect.AnnotatedType;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Optional;
 
 final class StringMutatorFactory extends MutatorFactory {
@@ -138,8 +141,28 @@ final class StringMutatorFactory extends MutatorFactory {
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+    // String data is internally manipulated as a byte[] via the ByteArrayMutator which should also be given
+    // this type's annotations to ensure relative annotations are passed along
+    // note: this previously called `notNull` to add the NotNull annotation. I believe this is no longer necessary as
+    // `type` should always have a NotNull annotation by the time it gets here due to the NullableMutator
+    AnnotatedType internalByteType = withExtraAnnotations(asAnnotatedType(byte[].class), type.getAnnotations());
+
+    // TODO: this is a bit of a hack to deal with the fact that Strings are backed by byte[]s.
+    //   The underlying byte array will be given the WithLength annotation which limits the number of _bytes_ but,
+    //   if the string isn't marked @Ascii, those bytes are then put through fixUpUtf8 which can result in
+    //   a string that has fewer characters than the number of bytes.
+    //   Ideally, we'll replace this with a special byte array mutator that's aware it needs to be valid utf8
+    //   In the meantime, we pull the length here and ensure that the fixed string is at least min length. If not
+    //   we extend it with space characters to the minimum
+    Optional<WithLength> withLength = Arrays.stream(type.getAnnotations())
+            .filter(annotation -> annotation instanceof WithLength)
+            .findFirst()
+            .map(annotation -> (WithLength) annotation);
+    final int minLength;
+    minLength = withLength.map(WithLength::min).orElse(0);
+
     return findFirstParentIfClass(type, String.class)
-        .flatMap(parent -> factory.tryCreate(notNull(asAnnotatedType(byte[].class))))
+        .flatMap(parent -> factory.tryCreate(internalByteType))
         .map(byteArrayMutator -> {
           boolean fixUpAscii = type.getDeclaredAnnotation(Ascii.class) != null;
           return mutateThenMapToImmutable((SerializingMutator<byte[]>) byteArrayMutator, bytes -> {
@@ -148,7 +171,11 @@ final class StringMutatorFactory extends MutatorFactory {
             } else {
               fixUpUtf8(bytes);
             }
-            return new String(bytes, StandardCharsets.UTF_8);
+            String fixed = new String(bytes, StandardCharsets.UTF_8);
+            if (fixed.length() < minLength) {
+              fixed = fixed + " ".repeat(minLength - fixed.length());
+            }
+            return fixed;
           }, string -> string.getBytes(StandardCharsets.UTF_8));
         });
   }
