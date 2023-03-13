@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 
 @Target({PARAMETER, TYPE_USE})
 @Retention(RUNTIME)
-@AppliesTo({String.class, byte[].class})
+@AppliesTo(byte[].class)
 public @interface WithLength {
     int min() default 0;
 
