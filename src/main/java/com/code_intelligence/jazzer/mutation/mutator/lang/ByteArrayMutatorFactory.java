@@ -39,10 +39,7 @@ import java.util.function.Predicate;
 final class ByteArrayMutatorFactory extends MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
-    Optional<WithLength> withLength = Arrays.stream(type.getAnnotations())
-                                      .filter((annotation) -> annotation instanceof WithLength)
-                                      .findFirst()
-                                      .map((annotation) -> (WithLength) annotation);
+    Optional<WithLength> withLength = Optional.ofNullable(type.getAnnotation(WithLength.class));
     int minLength = withLength.map(WithLength::min).orElse(ByteArrayMutator.DEFAULT_MIN_LENGTH);
     int maxLength = withLength.map(WithLength::max).orElse(ByteArrayMutator.DEFAULT_MAX_LENGTH);
 
