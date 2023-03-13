@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @AppliesTo(byte[].class)
 public @interface WithLength {
-    int min() default 0;
+  int min() default 0;
 
-    int max() default 1000;
+  int max() default 1000;
 }

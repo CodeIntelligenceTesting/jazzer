@@ -111,8 +111,8 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
       //  benchmarked.
       byte[] mutated = LibFuzzerMutator.mutateDefault(value, Math.max(8, value.length / 16));
 
-      // if the mutated array libfuzzer returns is too long or short, we truncate or extend it respectively.
-      // if we extend it, then copyOf will fill leftover bytes with 0
+      // if the mutated array libfuzzer returns is too long or short, we truncate or extend it
+      // respectively. if we extend it, then copyOf will fill leftover bytes with 0
       if (mutated.length > maxLength) {
         return Arrays.copyOf(mutated, maxLength);
       } else if (mutated.length < minLength) {
