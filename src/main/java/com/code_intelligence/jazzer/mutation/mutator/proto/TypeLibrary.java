@@ -58,7 +58,8 @@ final class TypeLibrary {
       case BOOLEAN:
         return new TypeHolder<Boolean>() {}.annotatedType();
       case MESSAGE:
-        return asAnnotatedType(builder.newBuilderForField(field).getClass());
+        return asAnnotatedType(
+            builder.newBuilderForField(field).getDefaultInstanceForType().getClass());
       case INT:
         return new TypeHolder<Integer>() {}.annotatedType();
       case LONG:

@@ -153,7 +153,7 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<MessageField2.Builder> mutator =
         (InPlaceMutator<MessageField2.Builder>) FACTORY.createInPlaceOrThrow(
             new TypeHolder<MessageField2.@NotNull Builder>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<{Builder.Boolean}>}");
+    assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<{Builder.Boolean} -> Message>}");
 
     MessageField2.Builder builder = MessageField2.newBuilder();
 
@@ -197,7 +197,8 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<RepeatedOptionalMessageField2.Builder> mutator =
         (InPlaceMutator<RepeatedOptionalMessageField2.Builder>) FACTORY.createInPlaceOrThrow(
             new TypeHolder<RepeatedOptionalMessageField2.@NotNull Builder>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("{Builder via List<{Builder.Nullable<Boolean>}>}");
+    assertThat(mutator.toString())
+        .isEqualTo("{Builder via List<{Builder.Nullable<Boolean>} -> Message>}");
 
     RepeatedOptionalMessageField2.Builder builder = RepeatedOptionalMessageField2.newBuilder();
 
@@ -225,7 +226,7 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<RepeatedMessageField2.Builder> mutator =
         (InPlaceMutator<RepeatedMessageField2.Builder>) FACTORY.createInPlaceOrThrow(
             new TypeHolder<RepeatedMessageField2.@NotNull Builder>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("{Builder via List<{Builder.Boolean}>}");
+    assertThat(mutator.toString()).isEqualTo("{Builder via List<{Builder.Boolean} -> Message>}");
 
     RepeatedMessageField2.Builder builder = RepeatedMessageField2.newBuilder();
 
@@ -274,7 +275,8 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<RecursiveMessageField2.Builder> mutator =
         (InPlaceMutator<RecursiveMessageField2.Builder>) FACTORY.createInPlaceOrThrow(
             new TypeHolder<RecursiveMessageField2.@NotNull Builder>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("{Builder.Boolean, Builder.Nullable<(cycle)>}");
+    assertThat(mutator.toString())
+        .isEqualTo("{Builder.Boolean, Builder.Nullable<(cycle) -> Message>}");
     RecursiveMessageField2.Builder builder = RecursiveMessageField2.newBuilder();
 
     try (MockPseudoRandom prng = mockPseudoRandom(
@@ -330,7 +332,7 @@ class BuilderMutatorProto2Test {
             new TypeHolder<OneOfField2.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
         .isEqualTo(
-            "{Builder.Boolean, Builder.Nullable<Boolean>, Builder.Nullable<Boolean> | Builder.Nullable<{Builder.Boolean}>}");
+            "{Builder.Boolean, Builder.Nullable<Boolean>, Builder.Nullable<Boolean> | Builder.Nullable<{Builder.Boolean} -> Message>}");
     OneOfField2.Builder builder = OneOfField2.newBuilder();
 
     try (MockPseudoRandom prng = mockPseudoRandom(
