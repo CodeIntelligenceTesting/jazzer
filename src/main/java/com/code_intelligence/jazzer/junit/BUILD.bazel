@@ -29,6 +29,12 @@ java_library(
     visibility = [
         "//examples/junit/src/test/java/com/example:__pkg__",
     ],
+    runtime_deps = [
+        # The JUnit launcher that is part of the Jazzer driver needs this on the classpath
+        # to run an @FuzzTest with JUnit. This will also result in a transitive dependency
+        # in the generated pom file.
+        "@maven//:org_junit_platform_junit_platform_launcher",
+    ],
     deps = [
         ":agent_configurator",
         ":fuzz_test_executor",
