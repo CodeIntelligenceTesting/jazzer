@@ -24,9 +24,11 @@ import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinator
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateSumInPlace;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateViaView;
+import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getMapField;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.getPresentFieldOrNull;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.makeMutableRepeatedFieldView;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setFieldWithPresence;
+import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setMapField;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
@@ -63,6 +65,7 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -73,7 +76,13 @@ public final class BuilderMutatorFactory extends MutatorFactory {
     AnnotatedType typeToMutate = TypeLibrary.getTypeToMutate(field, builderInstance);
     requireNonNull(typeToMutate, () -> "Java class not specified for " + field);
 
-    if (field.isRepeated()) {
+    if (field.isMapField()) {
+      ValueMutator<Map> underlyingMutator =
+          (ValueMutator<Map>) factory.createInPlaceOrThrow(typeToMutate);
+      return mutateProperty(builder
+          -> getMapField(builder, field),
+          underlyingMutator, (builder, value) -> setMapField(builder, field, value));
+    } else if (field.isRepeated()) {
       InPlaceMutator<List<U>> underlyingMutator =
           (InPlaceMutator<List<U>>) factory.createInPlaceOrThrow(typeToMutate);
       return mutateViaView(

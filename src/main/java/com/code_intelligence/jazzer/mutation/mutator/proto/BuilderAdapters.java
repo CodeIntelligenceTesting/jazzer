@@ -19,10 +19,14 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 import static java.lang.String.format;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.MapEntry;
 import com.google.protobuf.Message.Builder;
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 final class BuilderAdapters {
   static <T extends Builder, U> List<U> makeMutableRepeatedFieldView(
@@ -88,6 +92,27 @@ final class BuilderAdapters {
       builder.clearField(field);
     } else {
       builder.setField(field, value);
+    }
+  }
+
+  static <T extends Builder, K, V> Map<K, V> getMapField(T builder, FieldDescriptor field) {
+    int size = builder.getRepeatedFieldCount(field);
+    HashMap<K, V> map = new HashMap<>(size);
+    for (int i = 0; i < size; i++) {
+      MapEntry<K, V> entry = (MapEntry) builder.getRepeatedField(field, i);
+      map.put(entry.getKey(), entry.getValue());
+    }
+    return map;
+  }
+
+  static <T extends Builder, K, V> void setMapField(
+      Builder builder, FieldDescriptor field, Map<K, V> map) {
+    builder.clearField(field);
+    for (Entry<K, V> entry : map.entrySet()) {
+      MapEntry.Builder<K, V> entryBuilder = (MapEntry.Builder) builder.newBuilderForField(field);
+      entryBuilder.setKey(entry.getKey());
+      entryBuilder.setValue(entry.getValue());
+      builder.addRepeatedField(field, entryBuilder.build());
     }
   }
 
