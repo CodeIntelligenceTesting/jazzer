@@ -15,6 +15,7 @@ java_binary(
         "//examples/junit/src/main/java/com/example:parser",
         "//examples/junit/src/test/resources:example_seed_corpora",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_mockito_mockito_core",
     ],
 )
 
@@ -103,6 +104,28 @@ java_fuzz_target_test(
         "//examples/junit/src/main/java/com/example:parser",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+# Verify that Mockito is properly ignored.
+# Using version 5+ could otherwise introduce cyclic instrumentation.
+java_fuzz_target_test(
+    name = "MockitoFuzzTest",
+    srcs = ["MockitoFuzzTest.java"],
+    fuzzer_args = [
+        "-runs=1",
+    ],
+    tags = ["no-jdk8"],
+    target_class = "com.example.MockitoFuzzTest",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        ":junit_runtime",
+    ],
+    deps = [
+        "//examples/junit/src/main/java/com/example:parser",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_mockito_mockito_core",
     ],
 )
 
