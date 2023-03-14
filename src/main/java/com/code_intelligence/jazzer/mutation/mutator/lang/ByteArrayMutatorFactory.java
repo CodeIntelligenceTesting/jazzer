@@ -93,8 +93,6 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
 
     @Override
     public byte[] init(PseudoRandom prng) {
-      // TODO: Improve the way the upper bound is determined, e.g. grow it over time and/or add
-      //  support for the WithSize annotation.
       int len = prng.closedRange(minLength, maxLength);
       byte[] bytes = new byte[len];
       prng.bytes(bytes);
@@ -103,10 +101,6 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
 
     @Override
     public byte[] mutate(byte[] value, PseudoRandom prng) {
-      if (value.length == 0) {
-        return init(prng);
-      }
-
       // TODO: The way maxSizeIncrease is determined is just a heuristic and hasn't been
       //  benchmarked.
       byte[] mutated = LibFuzzerMutator.mutateDefault(value, Math.max(8, value.length / 16));
