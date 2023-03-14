@@ -243,7 +243,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<MessageField3.Builder> mutator =
         (InPlaceMutator<MessageField3.Builder>) FACTORY.createInPlaceOrThrow(
             new TypeHolder<MessageField3.@NotNull Builder>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<{Builder.Boolean}>}");
+    assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<{Builder.Boolean} -> Message>}");
 
     MessageField3.Builder builder = MessageField3.newBuilder();
 
@@ -286,7 +286,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<RepeatedMessageField3.Builder> mutator =
         (InPlaceMutator<RepeatedMessageField3.Builder>) FACTORY.createInPlaceOrThrow(
             new TypeHolder<RepeatedMessageField3.@NotNull Builder>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("{Builder via List<{Builder.Boolean}>}");
+    assertThat(mutator.toString()).isEqualTo("{Builder via List<{Builder.Boolean} -> Message>}");
 
     RepeatedMessageField3.Builder builder = RepeatedMessageField3.newBuilder();
 
@@ -335,7 +335,8 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<RecursiveMessageField3.Builder> mutator =
         (InPlaceMutator<RecursiveMessageField3.Builder>) FACTORY.createInPlaceOrThrow(
             new TypeHolder<RecursiveMessageField3.@NotNull Builder>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("{Builder.Boolean, Builder.Nullable<(cycle)>}");
+    assertThat(mutator.toString())
+        .isEqualTo("{Builder.Boolean, Builder.Nullable<(cycle) -> Message>}");
     RecursiveMessageField3.Builder builder = RecursiveMessageField3.newBuilder();
 
     try (MockPseudoRandom prng = mockPseudoRandom(
@@ -387,7 +388,7 @@ class BuilderMutatorProto3Test {
             new TypeHolder<OneOfField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
         .isEqualTo(
-            "{Builder.Boolean, Builder.Boolean, Builder.Nullable<Boolean> | Builder.Nullable<{Builder.Boolean}>}");
+            "{Builder.Boolean, Builder.Boolean, Builder.Nullable<Boolean> | Builder.Nullable<{Builder.Boolean} -> Message>}");
     OneOfField3.Builder builder = OneOfField3.newBuilder();
 
     try (MockPseudoRandom prng = mockPseudoRandom(

@@ -36,11 +36,7 @@ import java.lang.reflect.AnnotatedWildcardType;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -350,6 +346,23 @@ public final class TypeSupport {
 
   public static Optional<AnnotatedType> parameterTypeIfParameterized(
       AnnotatedType type, Class<?> expectedParent) {
+    return parameterTypesIfParameterized(type, expectedParent).flatMap(typeArguments -> {
+      if (typeArguments.size() != 1) {
+        return Optional.empty();
+      } else {
+        AnnotatedType elementType = typeArguments.get(0);
+        if (!(elementType.getType() instanceof ParameterizedType)
+            && !(elementType.getType() instanceof Class)) {
+          return Optional.empty();
+        } else {
+          return Optional.of(elementType);
+        }
+      }
+    });
+  }
+
+  public static Optional<List<AnnotatedType>> parameterTypesIfParameterized(
+      AnnotatedType type, Class<?> expectedParent) {
     if (!(type instanceof AnnotatedParameterizedType)) {
       return Optional.empty();
     }
@@ -360,16 +373,10 @@ public final class TypeSupport {
 
     AnnotatedType[] typeArguments =
         ((AnnotatedParameterizedType) type).getAnnotatedActualTypeArguments();
-    if (typeArguments.length != 1) {
+    if (typeArguments.length == 0) {
       return Optional.empty();
     }
-    AnnotatedType elementType = typeArguments[0];
-    if (!(elementType.getType() instanceof ParameterizedType)
-        && !(elementType.getType() instanceof Class)) {
-      return Optional.empty();
-    }
-
-    return Optional.of(elementType);
+    return Optional.of(Collections.unmodifiableList(Arrays.asList(typeArguments)));
   }
 
   private static class AugmentedArrayType

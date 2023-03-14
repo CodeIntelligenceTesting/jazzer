@@ -106,7 +106,7 @@ final class ListMutatorFactory extends MutatorFactory {
         int i = prng.indexIn(list);
         list.set(i, elementMutator.mutate(list.get(i), prng));
       } else if (list.size() < maxSize) {
-        list.add(list.get(list.size() - 1));
+        list.add(list.get(list.size() - 1)); // TODO: Create deep copy or init new entry.
       } else if (list.size() > minSize) {
         list.remove(list.size() - 1);
       }
