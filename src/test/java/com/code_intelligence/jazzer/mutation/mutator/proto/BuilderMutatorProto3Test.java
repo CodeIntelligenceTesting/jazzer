@@ -28,6 +28,13 @@ import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutato
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3.TestEnum;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldOne3;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldOne3.TestEnumOne;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldOutside3;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldRepeated3;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldRepeated3.TestEnumRepeated;
 import com.code_intelligence.jazzer.protobuf.Proto3.MessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OneOfField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
@@ -35,6 +42,8 @@ import com.code_intelligence.jazzer.protobuf.Proto3.PrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RecursiveMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedPrimitiveField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.TestEnumOutside3;
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 class BuilderMutatorProto3Test {
@@ -59,6 +68,87 @@ class BuilderMutatorProto3Test {
       mutator.mutateInPlace(builder, prng);
     }
     assertThat(builder.getSomeField()).isFalse();
+  }
+
+  @Test
+  void testEnumField() {
+    InPlaceMutator<EnumField3.Builder> mutator =
+        (InPlaceMutator<EnumField3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<EnumField3.@NotNull Builder>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("{Builder.Enum<TestEnum>}");
+    EnumField3.Builder builder = EnumField3.newBuilder();
+    try (MockPseudoRandom prng = mockPseudoRandom(0)) {
+      mutator.initInPlace(builder, prng);
+    }
+    assertThat(builder.getSomeField()).isEqualTo(TestEnum.VAL1);
+    try (MockPseudoRandom prng = mockPseudoRandom(0, 1)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.getSomeField()).isEqualTo(TestEnum.VAL2);
+  }
+
+  @Test
+  void testEnumFieldOutside() {
+    InPlaceMutator<EnumFieldOutside3.Builder> mutator =
+        (InPlaceMutator<EnumFieldOutside3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<EnumFieldOutside3.@NotNull Builder>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("{Builder.Enum<TestEnumOutside3>}");
+    EnumFieldOutside3.Builder builder = EnumFieldOutside3.newBuilder();
+    try (MockPseudoRandom prng = mockPseudoRandom(0)) {
+      mutator.initInPlace(builder, prng);
+    }
+    assertThat(builder.getSomeField()).isEqualTo(TestEnumOutside3.VAL1);
+    try (MockPseudoRandom prng = mockPseudoRandom(0, 2)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.getSomeField()).isEqualTo(TestEnumOutside3.VAL3);
+  }
+
+  @Test
+  void testEnumFieldWithOneValue() {
+    InPlaceMutator<EnumFieldOne3.Builder> mutator =
+        (InPlaceMutator<EnumFieldOne3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<EnumFieldOne3.@NotNull Builder>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("{Builder.FixedValue(ONE)}");
+    EnumFieldOne3.Builder builder = EnumFieldOne3.newBuilder();
+    try (MockPseudoRandom prng = mockPseudoRandom()) {
+      mutator.initInPlace(builder, prng);
+    }
+    assertThat(builder.getSomeField()).isEqualTo(TestEnumOne.ONE);
+    try (MockPseudoRandom prng = mockPseudoRandom(0)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.getSomeField()).isEqualTo(TestEnumOne.ONE);
+  }
+
+  @Test
+  void testRepeatedEnumField() {
+    InPlaceMutator<EnumFieldRepeated3.Builder> mutator =
+        (InPlaceMutator<EnumFieldRepeated3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<EnumFieldRepeated3.@NotNull Builder>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("{Builder via List<Enum<TestEnumRepeated>>}");
+    EnumFieldRepeated3.Builder builder = EnumFieldRepeated3.newBuilder();
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // list size
+             1, // Only possible start value
+             // enum values
+             2)) {
+      mutator.initInPlace(builder, prng);
+    }
+    assertThat(builder.getSomeFieldList()).isEqualTo(Arrays.asList(TestEnumRepeated.VAL2));
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate first field
+             0,
+             // mutate operation
+             false,
+             // mutate to first enum field
+             0,
+             // mutate to first enum value
+             1)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.getSomeFieldList()).isEqualTo(Arrays.asList(TestEnumRepeated.VAL1));
   }
 
   @Test

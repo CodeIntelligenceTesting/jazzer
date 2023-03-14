@@ -24,6 +24,8 @@ build:ci --features=layering_check
 # Java
 build --java_language_version=8
 build --tool_java_language_version=8
+# Speed up Java compilation by removing indirect deps from the compile classpath.
+build --experimental_java_classpath=bazel
 
 # Android
 build:android_arm --incompatible_enable_android_toolchain_resolution
