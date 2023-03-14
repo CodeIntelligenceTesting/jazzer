@@ -166,7 +166,7 @@ public class StressTest {
                 OptionalPrimitiveField3.newBuilder().setSomeField(false).build(),
                 OptionalPrimitiveField3.newBuilder().setSomeField(true).build())),
         arguments(new TypeHolder<@NotNull RepeatedRecursiveMessageField3>() {}.annotatedType(),
-            "{Builder.Boolean, Builder via List<(cycle)>} -> Message",
+            "{Builder.Boolean, Builder via List<(cycle) -> Message>} -> Message",
             contains(RepeatedRecursiveMessageField3.getDefaultInstance(),
                 RepeatedRecursiveMessageField3.newBuilder().setSomeField(true).build(),
                 RepeatedRecursiveMessageField3.newBuilder()
