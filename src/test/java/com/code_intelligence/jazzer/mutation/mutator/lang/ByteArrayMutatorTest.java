@@ -1,4 +1,3 @@
-package com.code_intelligence.jazzer.mutation.mutator.lang;
 /*
  * Copyright 2023 Code Intelligence GmbH
  *
@@ -14,6 +13,7 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
