@@ -45,7 +45,6 @@ import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.api.ValueMutator;
-import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -69,26 +68,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public final class BuilderMutatorFactory extends MutatorFactory {
-  private static <T extends Builder> Descriptor getDescriptor(Class<T> builderClass) {
-    Method getDescriptor;
-    try {
-      getDescriptor = builderClass.getMethod("getDescriptor");
-    } catch (NoSuchMethodException e) {
-      throw new IllegalStateException(e);
-    }
-    Descriptor descriptor;
-    try {
-      descriptor = (Descriptor) getDescriptor.invoke(null);
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new IllegalStateException(e);
-    }
-    return descriptor;
-  }
-
   private static <T extends Builder, U> InPlaceMutator<T> mutatorForField(
       FieldDescriptor field, T builderInstance, MutatorFactory factory) {
     factory = withEnumValueDescriptorMutatorFactoryIfNeeded(factory, field);
@@ -188,29 +170,27 @@ public final class BuilderMutatorFactory extends MutatorFactory {
     }
   }
 
-  private static <T extends Builder> Supplier<T> makeBuilderSupplier(Class<T> builderClass) {
+  private static <T extends Builder> Message getDefaultInstance(Class<T> builderClass) {
     Class<?> messageClass = builderClass.getEnclosingClass();
-    Method newBuilder;
+    Method getDefaultInstance;
     try {
-      newBuilder = messageClass.getMethod("newBuilder");
-      check(Modifier.isStatic(newBuilder.getModifiers()));
+      getDefaultInstance = messageClass.getMethod("getDefaultInstance");
+      check(Modifier.isStatic(getDefaultInstance.getModifiers()));
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException(
-          format(
-              "Message class for builder type %s does not have a newBuilder method", builderClass),
+          format("Message class for builder type %s does not have a getDefaultInstance method",
+              builderClass),
           e);
     }
-    return () -> {
-      try {
-        return (T) newBuilder.invoke(null);
-      } catch (IllegalAccessException | InvocationTargetException e) {
-        throw new IllegalStateException(
-            format(newBuilder + " isn't accessible or threw an exception"), e);
-      }
-    };
+    try {
+      return (Message) getDefaultInstance.invoke(null);
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      throw new IllegalStateException(
+          format(getDefaultInstance + " isn't accessible or threw an exception"), e);
+    }
   }
 
-  private static Serializer<Builder> makeBuilderSerializer(Supplier<Builder> supplier) {
+  private static Serializer<Builder> makeBuilderSerializer(Message defaultInstance) {
     return new Serializer<Builder>() {
       @Override
       public Builder read(DataInputStream in) throws IOException {
@@ -224,7 +204,7 @@ public final class BuilderMutatorFactory extends MutatorFactory {
       }
 
       private Builder parseLeniently(InputStream in) throws IOException {
-        Builder builder = supplier.get();
+        Builder builder = defaultInstance.toBuilder();
         try {
           builder.mergeFrom(in);
         } catch (InvalidProtocolBufferException ignored) {
@@ -274,17 +254,17 @@ public final class BuilderMutatorFactory extends MutatorFactory {
       if (internedMutators.containsKey(builderClass)) {
         return internedMutators.get(builderClass);
       }
-      Supplier<Builder> builderSupplier = makeBuilderSupplier(builderClass);
+      Message defaultInstance = getDefaultInstance(builderClass);
       // assemble inserts the instance of the newly created builder mutator into the
       // internedMutators map *before* recursively creating the mutators for its fields, which
       // ensures that the recursion is finite (bounded by the total number of distinct message types
       // that transitively occur as field types on the current message type).
       return assemble(mutator
           -> internedMutators.put(builderClass, mutator),
-          builderSupplier, makeBuilderSerializer(builderSupplier),
+          defaultInstance::toBuilder, makeBuilderSerializer(defaultInstance),
           ()
               -> combine(
-                  getDescriptor(builderClass)
+                  defaultInstance.getDescriptorForType()
                       .getFields()
                       .stream()
                       // Keep oneofs sorted by the first appearance of their fields in the
@@ -299,8 +279,8 @@ public final class BuilderMutatorFactory extends MutatorFactory {
                       .entrySet()
                       .stream()
                       .flatMap(entry
-                          -> mutatorsForFields(
-                              entry.getKey(), entry.getValue(), builderSupplier.get(), factory))
+                          -> mutatorsForFields(entry.getKey(), entry.getValue(),
+                              defaultInstance.toBuilder(), factory))
                       .toArray(InPlaceMutator[] ::new)));
     });
   }
