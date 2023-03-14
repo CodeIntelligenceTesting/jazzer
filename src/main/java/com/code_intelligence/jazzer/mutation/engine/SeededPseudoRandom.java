@@ -118,6 +118,16 @@ public final class SeededPseudoRandom implements PseudoRandom {
     }
   }
 
+  public float closedRange(float lowerInclusive, float upperInclusive) {
+    require(lowerInclusive <= upperInclusive);
+    return (float) random.nextDouble(lowerInclusive, upperInclusive);
+  }
+
+  public double closedRange(double lowerInclusive, double upperInclusive) {
+    require(lowerInclusive <= upperInclusive);
+    return random.nextDouble(lowerInclusive, upperInclusive);
+  }
+
   @Override
   public void bytes(byte[] bytes) {
     RandomSupport.nextBytes(random, bytes);

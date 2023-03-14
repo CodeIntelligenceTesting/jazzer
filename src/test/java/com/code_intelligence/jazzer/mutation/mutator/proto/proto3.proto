@@ -110,5 +110,21 @@ message MapField3 {
 }
 
 message MessageMapField3 {
-  map<string, MapField3> some_field =1;
+  map<string, MapField3> some_field = 1;
+}
+
+message FloatField3 {
+  float some_field = 1;
+}
+
+message RepeatedFloatField3 {
+  repeated float some_field = 1;
+}
+
+message DoubleField3 {
+  double some_field = 1;
+}
+
+message RepeatedDoubleField3 {
+  repeated double some_field = 1;
 }

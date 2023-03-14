@@ -82,8 +82,9 @@ final class TypeLibrary {
       case ENUM:
         return new TypeHolder<EnumValueDescriptor>() {}.annotatedType();
       case FLOAT:
+        return new TypeHolder<Float>() {}.annotatedType();
       case DOUBLE:
-        throw new UnsupportedOperationException(field.getType() + " has not been implemented");
+        return new TypeHolder<Double>() {}.annotatedType();
       default:
         throw new IllegalStateException("Unexpected type: " + field.getType());
     }
