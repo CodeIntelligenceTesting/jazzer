@@ -71,7 +71,6 @@ message StringField3 {
   string some_field = 1;
 }
 
-
 message EnumField3 {
   enum TestEnum {
     VAL1 = 0;
@@ -104,4 +103,12 @@ message EnumFieldRepeated3 {
     VAL2 = 2;
   }
   repeated TestEnumRepeated some_field = 1;
+}
+
+message MapField3 {
+  map<int32, string> some_field = 1;
+}
+
+message MessageMapField3 {
+  map<string, MapField3> some_field =1;
 }

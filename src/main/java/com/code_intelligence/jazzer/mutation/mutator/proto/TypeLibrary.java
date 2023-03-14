@@ -28,16 +28,27 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message.Builder;
 import java.lang.reflect.AnnotatedType;
 import java.util.List;
+import java.util.Map;
 
 final class TypeLibrary {
   private static final AnnotatedType RAW_LIST = new TypeHolder<@NotNull List>() {}.annotatedType();
+  private static final AnnotatedType RAW_MAP = new TypeHolder<@NotNull Map>() {}.annotatedType();
 
   static <T extends Builder> AnnotatedType getTypeToMutate(FieldDescriptor field, T builder) {
-    if (field.isMapField()) {
-      throw new UnsupportedOperationException("Map fields haven't been implemented yet");
-    }
     if (field.isRequired()) {
       return getBaseType(field, builder);
+    } else if (field.isMapField()) {
+      // Map fields are represented as repeated message fields, so this check has to come before the
+      // one for regular repeated fields.
+      //
+      // Get a builder for the synthetic MapEntry message used to represent a single entry in the
+      // repeated message field representation of a map field.
+      Builder entryBuilder = builder.newBuilderForField(field);
+      FieldDescriptor keyField = field.getMessageType().getFields().get(0);
+      AnnotatedType keyType = getBaseType(keyField, entryBuilder);
+      FieldDescriptor valueField = field.getMessageType().getFields().get(1);
+      AnnotatedType valueType = getBaseType(valueField, entryBuilder);
+      return withTypeArguments(RAW_MAP, keyType, valueType);
     } else if (field.isRepeated()) {
       return withTypeArguments(RAW_LIST, getBaseType(field, builder));
     } else if (field.hasPresence()) {

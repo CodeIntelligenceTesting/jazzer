@@ -44,6 +44,8 @@ import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3.TestEnum;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldRepeated3;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldRepeated3.TestEnumRepeated;
 import com.code_intelligence.jazzer.protobuf.Proto3.IntegralField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.MapField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.MessageMapField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedIntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageField3;
@@ -216,7 +218,13 @@ public class StressTest {
                 EnumFieldRepeated3.newBuilder().addSomeField(TestEnumRepeated.UNASSIGNED).build(),
                 EnumFieldRepeated3.newBuilder().addSomeField(TestEnumRepeated.VAL1).build(),
                 EnumFieldRepeated3.newBuilder().addSomeField(TestEnumRepeated.VAL2).build()),
-            manyDistinctElements()));
+            manyDistinctElements()),
+        arguments(new TypeHolder<@NotNull MapField3>() {}.annotatedType(),
+            "{Builder.Map<Integer,String>} -> Message", distinctElementsRatio(0.49),
+            manyDistinctElements()),
+        arguments(new TypeHolder<@NotNull MessageMapField3>() {}.annotatedType(),
+            "{Builder.Map<String,{Builder.Map<Integer,String>} -> Message>} -> Message",
+            manyDistinctElements(), manyDistinctElements()));
   }
 
   @SafeVarargs
