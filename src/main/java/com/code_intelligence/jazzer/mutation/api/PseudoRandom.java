@@ -79,6 +79,18 @@ public interface PseudoRandom {
   long closedRange(long lowerInclusive, long upperInclusive);
 
   /**
+   * @return a uniformly random {@code float} in the closed range
+   * {@code [lowerInclusive, upperInclusive]}.
+   */
+  float closedRange(float lowerInclusive, float upperInclusive);
+
+  /**
+   * @return a uniformly random {@code double} in the closed range
+   * {@code [lowerInclusive, upperInclusive]}.
+   */
+  double closedRange(double lowerInclusive, double upperInclusive);
+
+  /**
    * Fills the given array with random bytes.
    */
   void bytes(byte[] bytes);
