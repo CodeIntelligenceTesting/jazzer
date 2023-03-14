@@ -21,11 +21,22 @@ import static com.google.common.truth.Truth.assertThat;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 public class ByteArrayMutatorTest {
+  /**
+   * Some tests may set {@link LibFuzzerMutator#MOCK_SIZE_KEY} which can interfere with other tests
+   * unless cleared.
+   */
+  @AfterEach
+  void CleanMockSize() {
+    System.clearProperty(LibFuzzerMutator.MOCK_SIZE_KEY);
+  }
+
   @Test
   void testBasicFunction() {
     SerializingMutator<byte @NotNull[]> mutator =
@@ -79,9 +90,12 @@ public class ByteArrayMutatorTest {
     assertThat(mutator.toString()).isEqualTo("byte[]");
 
     byte[] arr;
-    try (MockPseudoRandom prng = mockPseudoRandom(10, new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})) {
+    try (MockPseudoRandom prng = mockPseudoRandom(10)) {
       arr = mutator.init(prng);
     } catch (AssertionError e) {
+      // init will call closedrange(min, max) and the mock prng will assert that the given value
+      // above is between those values which we want to fail here to show that we're properly
+      // clamping the range
       assertThat(e).isNotNull();
     }
   }
@@ -93,18 +107,36 @@ public class ByteArrayMutatorTest {
             new TypeHolder<byte @NotNull @WithLength(min = 5)[]>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("byte[]");
 
-    // The mock libfuzzer mutator doesn't currently support outputting less data than it's given, so
-    // it's impossible to init an array with enough elements and then mutate it into one that has
-    // too few elements.
-
-    // This only tests that init will properly clamp to the minimum length by checking that the mock
-    // prng has a failed assertion that it's asking for 5 elements in the init array rather than the
-    // 3 we've provided
     byte[] arr;
-    try (MockPseudoRandom prng = mockPseudoRandom(3, new byte[] {1, 2, 3})) {
+    try (MockPseudoRandom prng = mockPseudoRandom(3)) {
       arr = mutator.init(prng);
     } catch (AssertionError e) {
+      // init will call closedrange(min, max) and the mock prng will assert that the given value
+      // above is between those values which we want to fail here to show that we're properly
+      // clamping the range
       assertThat(e).isNotNull();
     }
+  }
+
+  @Test
+  void testMinLength() {
+    SerializingMutator<byte[]> mutator =
+        (SerializingMutator<byte[]>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<byte @NotNull @WithLength(min = 5)[]>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("byte[]");
+
+    byte[] arr;
+    try (MockPseudoRandom prng = mockPseudoRandom(10, new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})) {
+      arr = mutator.init(prng);
+    }
+    assertThat(arr).hasLength(10);
+
+    System.setProperty(LibFuzzerMutator.MOCK_SIZE_KEY, "3");
+
+    try (MockPseudoRandom prng = mockPseudoRandom()) {
+      arr = mutator.mutate(arr, prng);
+    }
+    assertThat(arr).hasLength(5);
+    assertThat(arr).isEqualTo(new byte[] {2, 4, 6, 0, 0});
   }
 }
