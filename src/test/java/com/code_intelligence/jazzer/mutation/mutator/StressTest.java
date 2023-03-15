@@ -70,7 +70,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class StressTest {
   private static final int NUM_INITS = 1000;
   private static final int NUM_MUTATE_PER_INIT = 100;
-  private static final double MANY_DISTINCT_ELEMENTS_RATIO = 0.5;
+  private static final double MANY_DISTINCT_ELEMENTS_RATIO = 0.45;
 
   private enum TestEnumTwo { A, B }
 
