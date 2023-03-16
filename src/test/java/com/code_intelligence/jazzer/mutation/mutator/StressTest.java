@@ -31,6 +31,8 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.IntStream.rangeClosed;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
+import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
@@ -60,6 +62,10 @@ import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedIntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.StringField3;
 import com.google.protobuf.Any;
+import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
+import com.google.protobuf.Message;
+import com.google.protobuf.Message.Builder;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -71,7 +77,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -165,7 +173,44 @@ public class StressTest {
             exactly(null, TestEnumTwo.A, TestEnumTwo.B)),
         arguments(asAnnotatedType(TestEnumThree.class), "Nullable<Enum<TestEnumThree>>",
             exactly(null, TestEnumThree.A, TestEnumThree.B, TestEnumThree.C),
-            exactly(null, TestEnumThree.A, TestEnumThree.B, TestEnumThree.C)));
+            exactly(null, TestEnumThree.A, TestEnumThree.B, TestEnumThree.C)),
+        arguments(new TypeHolder<@NotNull @FloatInRange(min = 0f) Float>() {}.annotatedType(),
+            "Float",
+            all(distinctElementsRatio(0.45),
+                doesNotContain(Float.NEGATIVE_INFINITY, -Float.MAX_VALUE, -Float.MIN_VALUE),
+                contains(Float.NaN, Float.POSITIVE_INFINITY, Float.MAX_VALUE, Float.MIN_VALUE, 0.0f,
+                    -0.0f)),
+            all(distinctElementsRatio(0.75),
+                doesNotContain(Float.NEGATIVE_INFINITY, -Float.MAX_VALUE, -Float.MIN_VALUE))),
+        arguments(new TypeHolder<@NotNull Float>() {}.annotatedType(), "Float",
+            all(distinctElementsRatio(0.45),
+                contains(Float.NaN, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY,
+                    -Float.MAX_VALUE, Float.MAX_VALUE, -Float.MIN_VALUE, Float.MIN_VALUE, 0.0f,
+                    -0.0f)),
+            distinctElementsRatio(0.76)),
+        arguments(
+            new TypeHolder<@NotNull @FloatInRange(
+                min = -1.0f, max = 1.0f, allowNaN = false) Float>() {
+            }.annotatedType(),
+            "Float",
+            all(distinctElementsRatio(0.45),
+                doesNotContain(Float.NaN, -Float.MAX_VALUE, Float.MAX_VALUE,
+                    Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY),
+                contains(-Float.MIN_VALUE, Float.MIN_VALUE, 0.0f, -0.0f)),
+            all(distinctElementsRatio(0.525),
+                doesNotContain(Float.NaN, -Float.MAX_VALUE, Float.MAX_VALUE,
+                    Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY),
+                contains(-Float.MIN_VALUE, Float.MIN_VALUE, 0.0f, -0.0f))),
+        arguments(new TypeHolder<@NotNull Double>() {}.annotatedType(), "Double",
+            all(distinctElementsRatio(0.45),
+                contains(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY)),
+            distinctElementsRatio(0.75)),
+        arguments(
+            new TypeHolder<@NotNull @DoubleInRange(
+                min = -1.0, max = 1.0, allowNaN = false) Double>() {
+            }.annotatedType(),
+            "Double", all(distinctElementsRatio(0.45), doesNotContain(Double.NaN)),
+            all(distinctElementsRatio(0.55), doesNotContain(Double.NaN))));
   }
 
   public static Stream<Arguments> protoStressTestCases() {
@@ -237,15 +282,15 @@ public class StressTest {
             "{Builder.Map<String,{Builder.Map<Integer,String>} -> Message>} -> Message",
             distinctElementsRatio(0.45), distinctElementsRatio(0.45)),
         arguments(new TypeHolder<@NotNull DoubleField3>() {}.annotatedType(),
-            "{Builder.Double} -> Message", manyDistinctElements(), distinctElementsRatio(0.99)),
+            "{Builder.Double} -> Message", distinctElementsRatio(0.45), distinctElementsRatio(0.7)),
         arguments(new TypeHolder<@NotNull RepeatedDoubleField3>() {}.annotatedType(),
-            "{Builder via List<Double>} -> Message", manyDistinctElements(),
-            distinctElementsRatio(0.99)),
+            "{Builder via List<Double>} -> Message", distinctElementsRatio(0.2),
+            distinctElementsRatio(0.9)),
         arguments(new TypeHolder<@NotNull FloatField3>() {}.annotatedType(),
-            "{Builder.Float} -> Message", manyDistinctElements(), distinctElementsRatio(0.99)),
+            "{Builder.Float} -> Message", distinctElementsRatio(0.45), distinctElementsRatio(0.7)),
         arguments(new TypeHolder<@NotNull RepeatedFloatField3>() {}.annotatedType(),
-            "{Builder via List<Float>} -> Message", manyDistinctElements(),
-            distinctElementsRatio(0.99), emptyList()),
+            "{Builder via List<Float>} -> Message", distinctElementsRatio(0.20),
+            distinctElementsRatio(0.9), emptyList()),
         arguments(new TypeHolder<@NotNull TestProtobuf>() {}.annotatedType(),
             "{Builder.Nullable<Boolean>, Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>, Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>, Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>, Builder.Nullable<{Builder.Nullable<Integer>, Builder via List<Integer>} -> Message>, Builder via List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>, Builder via List<(cycle) -> Message>, Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
             manyDistinctElements(), manyDistinctElements()),
@@ -368,6 +413,10 @@ public class StressTest {
     return list -> assertThat(new HashSet<>(list)).containsAtLeastElementsIn(expected);
   }
 
+  private static Consumer<List<Object>> doesNotContain(Object... expected) {
+    return list -> assertThat(new HashSet<>(list)).containsNoneIn(expected);
+  }
+
   private static Consumer<List<Object>> mapSizeInClosedRange(int min, int max) {
     return list -> {
       list.forEach(map -> {
@@ -400,8 +449,11 @@ public class StressTest {
     for (int i = 0; i < NUM_INITS; i++) {
       Object value = mutator.init(rng);
 
-      testReadWriteRoundtrip(mutator, value);
-      testReadWriteExclusiveRoundtrip(mutator, value);
+      // For proto messages, each float field with value -0.0f, and double field with value -0.0
+      // will be converted to 0.0f and 0.0, respectively.
+      Object fixedValue = fixFloatingPointsForProtos(value);
+      testReadWriteRoundtrip(mutator, fixedValue);
+      testReadWriteExclusiveRoundtrip(mutator, fixedValue);
 
       initValues.add(mutator.detach(value));
 
@@ -409,13 +461,27 @@ public class StressTest {
         Object detachedOldValue = mutator.detach(value);
         value = mutator.mutate(value, rng);
         if (!mayPerformNoopMutations) {
-          assertThat(value).isNotEqualTo(detachedOldValue);
+          if (value instanceof Double) {
+            assertThat(Double.compare((Double) value, (Double) detachedOldValue)).isNotEqualTo(0);
+          } else if (value instanceof Float) {
+            assertThat(Float.compare((Float) value, (Float) detachedOldValue)).isNotEqualTo(0);
+          } else {
+            assertThat(detachedOldValue).isNotEqualTo(value);
+          }
         }
 
-        testReadWriteRoundtrip(mutator, value);
-        testReadWriteExclusiveRoundtrip(mutator, value);
-
         mutatedValues.add(mutator.detach(value));
+
+        // For proto messages, each float field with value -0.0f, and double field with value -0.0
+        // will be converted to 0.0f and 0.0, respectively. This is because the values -0f and 0f
+        // and their double counterparts are serialized as default values (0f, and 0.0), which is
+        // relevant for mutation and the round trip tests. This means that the protos with float or
+        // double fields that equal to negative zero, will start mutation from positive zeros, and
+        // cause the assertion above to fail from time to time. To avoid this, we convert all
+        // negative zeros to positive zeros for float and double proto fields.
+        value = fixFloatingPointsForProtos(value);
+        testReadWriteRoundtrip(mutator, fixedValue);
+        testReadWriteExclusiveRoundtrip(mutator, fixedValue);
       }
     }
 
@@ -446,5 +512,50 @@ public class StressTest {
       map.put((K) objs[i], (V) objs[i + 1]);
     }
     return map;
+  }
+
+  // Filter out floating point values -0.0f and -0.0 and replace them
+  // by 0.0f and 0.0 respectively.
+  // This is a workaround for a bug in the protobuf library that causes
+  // our "...RoundTrip" tests to fail for negative zero in floats and doubles.
+  private static <T> T fixFloatingPointsForProtos(T value) {
+    if (!(value instanceof Message)) {
+      return value;
+    }
+    Message.Builder builder = ((Message) value).toBuilder();
+    walkFields(builder, oldValue -> {
+      if (Objects.equals(oldValue, -0.0)) {
+        return 0.0;
+      } else if (Objects.equals(oldValue, -0.0f)) {
+        return 0.0f;
+      } else {
+        return oldValue;
+      }
+    });
+    return (T) builder.build();
+  }
+
+  private static void walkFields(Builder builder, Function<Object, Object> transform) {
+    for (FieldDescriptor field : builder.getDescriptorForType().getFields()) {
+      if (field.isRepeated()) {
+        int bound = builder.getRepeatedFieldCount(field);
+        for (int i = 0; i < bound; i++) {
+          if (field.getJavaType() == JavaType.MESSAGE) {
+            Builder repeatedFieldBuilder =
+                ((Message) builder.getRepeatedField(field, i)).toBuilder();
+            walkFields(repeatedFieldBuilder, transform);
+            builder.setRepeatedField(field, i, repeatedFieldBuilder.build());
+          } else {
+            builder.setRepeatedField(field, i, transform.apply(builder.getRepeatedField(field, i)));
+          }
+        }
+      } else if (field.getJavaType() == JavaType.MESSAGE) {
+        Builder fieldBuilder = ((Message) builder.getField(field)).toBuilder();
+        walkFields(fieldBuilder, transform);
+        builder.setField(field, fieldBuilder.build());
+      } else {
+        builder.setField(field, transform.apply(builder.getField(field)));
+      }
+    }
   }
 }

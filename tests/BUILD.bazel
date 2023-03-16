@@ -456,6 +456,7 @@ java_fuzz_target_test(
         "--experimental_mutator",
         "--instrumentation_includes=com.example.**",
         "--custom_hook_includes=com.example.**",
+        "-seed=1",
     ] + select({
         # Limit runs to catch regressions in mutator efficiency and speed up test runs.
         "@platforms//os:linux": ["-runs=40000"],

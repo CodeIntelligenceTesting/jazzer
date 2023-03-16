@@ -33,6 +33,18 @@ public interface PseudoRandom {
 
   /**
    * @throws IllegalArgumentException if {@code array.length == 0}
+   * @return an element from the given array at uniformly random index
+   */
+  <T> T pickIn(T[] array);
+
+  /**
+   * @throws IllegalArgumentException if {@code array.length == 0}
+   * @return an element from the given List at uniformly random index
+   */
+  <T> T pickIn(List<T> array);
+
+  /**
+   * @throws IllegalArgumentException if {@code array.length == 0}
    * @return a uniformly random index valid for the given array
    */
   <T> int indexIn(T[] array);
@@ -41,7 +53,6 @@ public interface PseudoRandom {
    * @throws IllegalArgumentException if {@code list.size() == 0}
    * @return a uniformly random index valid for the given list
    */
-
   <T> int indexIn(List<T> list);
 
   /**
