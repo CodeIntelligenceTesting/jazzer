@@ -70,7 +70,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class StressTest {
   private static final int NUM_INITS = 1000;
   private static final int NUM_MUTATE_PER_INIT = 100;
-  private static final double MANY_DISTINCT_ELEMENTS_RATIO = 0.45;
+  private static final double MANY_DISTINCT_ELEMENTS_RATIO = 0.5;
 
   private enum TestEnumTwo { A, B }
 
@@ -101,7 +101,7 @@ public class StressTest {
             distinctElementsRatio(0.30)),
         arguments(
             new TypeHolder<@NotNull Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
-            "Map<String,String>", manyDistinctElements(), manyDistinctElements()),
+            "Map<String,String>", distinctElementsRatio(0.45), distinctElementsRatio(0.45)),
         arguments(new TypeHolder<Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
             "Nullable<Map<String,String>>", manyDistinctElements(), manyDistinctElements()),
         arguments(
@@ -224,7 +224,7 @@ public class StressTest {
             manyDistinctElements()),
         arguments(new TypeHolder<@NotNull MessageMapField3>() {}.annotatedType(),
             "{Builder.Map<String,{Builder.Map<Integer,String>} -> Message>} -> Message",
-            manyDistinctElements(), manyDistinctElements()));
+            distinctElementsRatio(0.45), distinctElementsRatio(0.45)));
   }
 
   @SafeVarargs
@@ -309,7 +309,7 @@ public class StressTest {
     };
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest(name = "{index} {0}, {1}")
   @MethodSource({"stressTestCases", "protoStressTestCases"})
   void genericMutatorStressTest(AnnotatedType type, String mutatorTree,
       Consumer<List<Object>> expectedInitValues, Consumer<List<Object>> expectedMutatedValues)

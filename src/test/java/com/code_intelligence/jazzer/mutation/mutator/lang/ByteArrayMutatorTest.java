@@ -25,6 +25,7 @@ import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class ByteArrayMutatorTest {
@@ -33,24 +34,24 @@ public class ByteArrayMutatorTest {
    * unless cleared.
    */
   @AfterEach
-  void CleanMockSize() {
+  void cleanMockSize() {
     System.clearProperty(LibFuzzerMutator.MOCK_SIZE_KEY);
   }
 
   @Test
   void testBasicFunction() {
-    SerializingMutator<byte @NotNull[]> mutator =
+    SerializingMutator<byte[]> mutator =
         (SerializingMutator<byte[]>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<byte @NotNull[]>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("byte[]");
+            new TypeHolder<byte[]>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("Nullable<byte[]>");
 
     byte[] arr;
-    try (MockPseudoRandom prng = mockPseudoRandom(5, new byte[] {1, 2, 3, 4, 5})) {
+    try (MockPseudoRandom prng = mockPseudoRandom(false, 5, new byte[] {1, 2, 3, 4, 5})) {
       arr = mutator.init(prng);
     }
     assertThat(arr).isEqualTo(new byte[] {1, 2, 3, 4, 5});
 
-    try (MockPseudoRandom prng = mockPseudoRandom()) {
+    try (MockPseudoRandom prng = mockPseudoRandom(false)) {
       arr = mutator.mutate(arr, prng);
     }
     assertThat(arr).isEqualTo(new byte[] {2, 4, 6, 8, 10, 6, 7, 8, 9});
@@ -89,15 +90,15 @@ public class ByteArrayMutatorTest {
             new TypeHolder<byte @NotNull @WithLength(max = 5)[]>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("byte[]");
 
-    byte[] arr;
-    try (MockPseudoRandom prng = mockPseudoRandom(10)) {
-      arr = mutator.init(prng);
-    } catch (AssertionError e) {
-      // init will call closedrange(min, max) and the mock prng will assert that the given value
-      // above is between those values which we want to fail here to show that we're properly
-      // clamping the range
-      assertThat(e).isNotNull();
-    }
+    // init will call closedrange(min, max) and the mock prng will assert that the given value
+    // above is between those values which we want to fail here to show that we're properly
+    // clamping the range
+    Assertions.assertThrows(AssertionError.class, () -> {
+      byte[] arr;
+      try (MockPseudoRandom prng = mockPseudoRandom(10)) {
+        arr = mutator.init(prng);
+      }
+    });
   }
 
   @Test
@@ -107,15 +108,15 @@ public class ByteArrayMutatorTest {
             new TypeHolder<byte @NotNull @WithLength(min = 5)[]>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("byte[]");
 
-    byte[] arr;
-    try (MockPseudoRandom prng = mockPseudoRandom(3)) {
-      arr = mutator.init(prng);
-    } catch (AssertionError e) {
-      // init will call closedrange(min, max) and the mock prng will assert that the given value
-      // above is between those values which we want to fail here to show that we're properly
-      // clamping the range
-      assertThat(e).isNotNull();
-    }
+    // init will call closedrange(min, max) and the mock prng will assert that the given value
+    // above is between those values which we want to fail here to show that we're properly
+    // clamping the range
+    Assertions.assertThrows(AssertionError.class, () -> {
+      byte[] arr;
+      try (MockPseudoRandom prng = mockPseudoRandom(3)) {
+        arr = mutator.init(prng);
+      }
+    });
   }
 
   @Test

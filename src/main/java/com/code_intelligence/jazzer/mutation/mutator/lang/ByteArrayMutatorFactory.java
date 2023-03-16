@@ -25,6 +25,7 @@ import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
+import com.code_intelligence.jazzer.mutation.support.TypeSupport;
 import com.google.errorprone.annotations.Immutable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -64,7 +65,7 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
     @Override
     public byte[] read(DataInputStream in) throws IOException {
       // clamp the length to within min and max length
-      int length = Math.min(Math.max(in.readInt(), minLength), maxLength);
+      int length = TypeSupport.clamp(in.readInt(), minLength, maxLength);
       byte[] bytes = new byte[length];
       in.readFully(bytes);
       return bytes;
