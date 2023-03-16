@@ -44,7 +44,10 @@ private val BASE_EXCLUDED_CLASS_NAME_GLOBS = listOf(
     "com.code_intelligence.jazzer.**",
     "jaz.Ter", // safe companion of the honeypot class used by sanitizers
     "jaz.Zer", // honeypot class used by sanitizers
-    "org.junit.jupiter.**", // Dependency of @FuzzTest
+    // Test and instrumentation tools
+    "org.junit.**", // dependency of @FuzzTest
+    "org.mockito.**", // can cause instrumentation cycles
+    "net.bytebuddy.**", // ignore Byte Buddy, though it's probably shaded
 ) + if (IS_BAZEL_COVERAGE_RUN) ADDITIONAL_EXCLUDED_NAME_GLOBS_FOR_BAZEL_COVERAGE else listOf()
 
 class ClassNameGlobber(includes: List<String>, excludes: List<String>) {

@@ -60,6 +60,6 @@ class AgentConfigurator {
         String.join(File.pathSeparator, "com.google.testing.junit.**", "com.intellij.**",
             "io.github.classgraph.**", "junit.framework.**", "net.bytebuddy.**",
             "org.apiguardian.**", "org.assertj.core.**", "org.hamcrest.**", "org.junit.**",
-            "org.opentest4j.**", "org.apache.maven.**", "org.gradle.**"));
+            "org.opentest4j.**", "org.mockito.**", "org.apache.maven.**", "org.gradle.**"));
   }
 }

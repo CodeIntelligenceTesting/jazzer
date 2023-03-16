@@ -190,6 +190,26 @@ public final class TestSupport {
     }
 
     @Override
+    public float closedRange(float lowerInclusive, float upperInclusive) {
+      assertThat(lowerInclusive).isLessThan(upperInclusive);
+      assertThat(elements).isNotEmpty();
+      float result = (float) elements.poll();
+      assertThat(result).isAtLeast(lowerInclusive);
+      assertThat(result).isAtMost(upperInclusive);
+      return result;
+    }
+
+    @Override
+    public double closedRange(double lowerInclusive, double upperInclusive) {
+      assertThat(lowerInclusive).isLessThan(upperInclusive);
+      assertThat(elements).isNotEmpty();
+      double result = (double) elements.poll();
+      assertThat(result).isAtLeast(lowerInclusive);
+      assertThat(result).isAtMost(upperInclusive);
+      return result;
+    }
+
+    @Override
     public void bytes(byte[] bytes) {
       assertThat(elements).isNotEmpty();
       byte[] result = (byte[]) elements.poll();

@@ -39,14 +39,18 @@ import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.code_intelligence.jazzer.protobuf.Proto3.BytesField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.DoubleField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3.TestEnum;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldRepeated3;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldRepeated3.TestEnumRepeated;
+import com.code_intelligence.jazzer.protobuf.Proto3.FloatField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.IntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.MapField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.MessageMapField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.OptionalPrimitiveField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedDoubleField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedFloatField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedIntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.StringField3;
@@ -62,6 +66,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -224,7 +229,17 @@ public class StressTest {
             manyDistinctElements()),
         arguments(new TypeHolder<@NotNull MessageMapField3>() {}.annotatedType(),
             "{Builder.Map<String,{Builder.Map<Integer,String>} -> Message>} -> Message",
-            distinctElementsRatio(0.45), distinctElementsRatio(0.45)));
+            distinctElementsRatio(0.45), distinctElementsRatio(0.45)),
+        arguments(new TypeHolder<@NotNull DoubleField3>() {}.annotatedType(),
+            "{Builder.Double} -> Message", manyDistinctElements(), distinctElementsRatio(0.99)),
+        arguments(new TypeHolder<@NotNull RepeatedDoubleField3>() {}.annotatedType(),
+            "{Builder via List<Double>} -> Message", manyDistinctElements(),
+            distinctElementsRatio(0.99)),
+        arguments(new TypeHolder<@NotNull FloatField3>() {}.annotatedType(),
+            "{Builder.Float} -> Message", manyDistinctElements(), distinctElementsRatio(0.99)),
+        arguments(new TypeHolder<@NotNull RepeatedFloatField3>() {}.annotatedType(),
+            "{Builder via List<Float>} -> Message", manyDistinctElements(),
+            distinctElementsRatio(0.99)));
   }
 
   @SafeVarargs
