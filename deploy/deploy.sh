@@ -32,12 +32,6 @@ JAZZER_COORDINATES=$1
   fail "Set JAZZER_JAR_PATH to the absolute path of jazzer.jar obtained from the release GitHub Actions workflow"
 [ ! -f "${JAZZER_JAR_PATH}" ] && \
   fail "JAZZER_JAR_PATH does not exist at '$JAZZER_JAR_PATH'"
-[ -z "${JAVA_HOME+x}" ] && \
-  fail "Set JAVA_HOME to a JDK 8"
-JAVA_VERSION=$("$JAVA_HOME"/bin/java -version 2>&1 | head -1 | cut -d'"' -f2)
-[ "1" -eq "$(echo "$JAVA_VERSION" | cut -d'.' -f1)" ] &&
-  [ "8" -eq "$(echo "$JAVA_VERSION" | cut -d'.' -f2)" ] || \
-  fail "JAVA_HOME ('$JAVA_HOME') must point to a JDK 8, is: $JAVA_VERSION"
 
 MAVEN_REPO=https://oss.sonatype.org/service/local/staging/deploy/maven2
 

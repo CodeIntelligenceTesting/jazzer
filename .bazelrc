@@ -22,8 +22,17 @@ build --incompatible_enable_cc_toolchain_resolution
 build:ci --features=layering_check
 
 # Java
+# Always build for Java 8, even with a newer JDK. This ensures that all
+# artifacts we release are compatible with Java 8 runtimes.
+# Note: We would like to use --release, but can't due to
+#  https://bugs.openjdk.org/browse/JDK-8214165.
+build --javacopt=-target --javacopt=8
 build --java_language_version=8
 build --tool_java_language_version=8
+# Use a hermetic JDK to compile Java code, which also means that contributors
+# don't need to install a JDK to compile Jazzer.
+build --java_runtime_version=remotejdk_17
+build --tool_java_runtime_version=remotejdk_17
 # Speed up Java compilation by removing indirect deps from the compile classpath.
 build --experimental_java_classpath=bazel
 
@@ -46,8 +55,6 @@ run:windows --noincompatible_strict_action_env
 # Workaround for https://github.com/bazelbuild/bazel/issues/13944, which breaks external Java
 # dependencies on M1 Macs without Rosetta.
 build:macos --extra_toolchains=//bazel/toolchains:java_non_prebuilt_definition
-build:macos --java_runtime_version=11
-build:macos --tool_java_runtime_version=11
 
 # Toolchain
 # Since the toolchain is conditional on OS and architecture, set it on the particular GitHub Action.
@@ -68,7 +75,6 @@ build:ci --repo_env=BAZEL_USE_XCODE_TOOLCHAIN=1
 
 # Maven publishing (local only, requires GPG signature)
 build:maven --stamp
-build:maven --java_runtime_version=local_jdk_8
 
 # Docker images
 common:docker --config=toolchain
