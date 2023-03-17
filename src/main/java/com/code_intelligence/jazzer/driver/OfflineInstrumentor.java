@@ -25,6 +25,8 @@ import java.lang.UnsupportedClassVersionError;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -36,8 +38,8 @@ import java.util.zip.ZipOutputStream;
 
 public class OfflineInstrumentor {
   /**
-   * Create a new jar file at <Opt.dumpClassesDir + ".instrumented.jar">
-   * with classes that have Jazzer instrumentation.
+   * Create a new jar file at <jazzer_path>/<jarBaseName>.instrumented.jar
+   * for each jar in passed in, with classes that have Jazzer instrumentation.
    *
    * @param jarLists list of jars to instrument
    * @return a boolean representing the success status
@@ -45,7 +47,7 @@ public class OfflineInstrumentor {
   public static boolean instrumentJars(List<String> jarLists) {
     AgentInstaller.install(Opt.hooks);
 
-    // Clear Opt.dumpClassesDir before adding new instrumented classes there
+    // Clear Opt.dumpClassesDir before adding new instrumented classes
     File dumpClassesDir = new File(Opt.dumpClassesDir);
     if (dumpClassesDir.exists()) {
       for (String fn : dumpClassesDir.list()) {
@@ -55,11 +57,29 @@ public class OfflineInstrumentor {
 
     List<String> errorMessages = new ArrayList<>();
     for (String jarPath : jarLists) {
+      String outputBaseName = jarPath;
+      if (outputBaseName.contains(File.separator)) {
+        outputBaseName = outputBaseName.substring(
+            outputBaseName.lastIndexOf(File.separator) + 1, outputBaseName.length());
+      }
+
+      if (outputBaseName.contains(".jar")) {
+        outputBaseName = outputBaseName.substring(0, outputBaseName.lastIndexOf(".jar"));
+      }
+
+      Log.info("Instrumenting jar file: " + jarPath);
+
       try {
-        Log.info("Instrumenting jar file: " + jarPath);
         errorMessages = createInstrumentedClasses(jarPath);
-        createInstrumentedJar(
-            jarPath, Opt.dumpClassesDir, Opt.dumpClassesDir + ".instrumented.jar");
+      } catch (IOException e) {
+        errorMessages.add("Failed to instrument jar: " + jarPath
+            + ". Please ensure the file at this location is a jar file. Error Message: " + e);
+        continue;
+      }
+
+      try {
+        createInstrumentedJar(jarPath, Opt.dumpClassesDir + File.separator + outputBaseName,
+            outputBaseName + ".instrumented.jar");
       } catch (Exception e) {
         errorMessages.add("Failed to instrument jar: " + jarPath + ". Error: " + e);
       }

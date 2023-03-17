@@ -147,8 +147,8 @@ public final class Opt {
       boolSetting("internal.conditional_hooks", false, null);
 
   // Some scenarios require instrumenting the jar before fuzzing begins
-  public static final boolean instrumentOnly =
-      boolSetting("instrument_only", false, "Instrument jar file. No fuzzing is performed.");
+  public static final List<String> instrumentOnly = stringListSetting("instrument_only", ',',
+      "Comma separated list of jar files to instrument. No fuzzing is performed.");
 
   static final boolean mergeInner = boolSetting("internal.merge_inner", false, null);
 
@@ -183,7 +183,7 @@ public final class Opt {
       Log.error("--nodedup is not supported with --ignore or --keep_going");
       exit(1);
     }
-    if (instrumentOnly && dumpClassesDir.isEmpty()) {
+    if (!instrumentOnly.isEmpty() && dumpClassesDir.isEmpty()) {
       Log.error("--dump_classes_dir must be set with --instrument_only");
       exit(1);
     }
