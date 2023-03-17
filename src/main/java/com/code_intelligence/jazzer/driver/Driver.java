@@ -109,8 +109,8 @@ public class Driver {
     }
 
     // Do not modify properties beyond this point, loading Opt locks in their values.
-    if (Opt.instrumentOnly) {
-      boolean instrumentationSuccess = OfflineInstrumentor.instrumentJars(Opt.cp);
+    if (!Opt.instrumentOnly.isEmpty()) {
+      boolean instrumentationSuccess = OfflineInstrumentor.instrumentJars(Opt.instrumentOnly);
       if (!instrumentationSuccess) {
         exit(1);
       }
