@@ -5,7 +5,6 @@
 Jazzer has the following dependencies when being built from source:
 
 * [Bazelisk](https://github.com/bazelbuild/bazelisk) or the version of Bazel specified in [`.bazelversion`](.bazelversion)
-* JDK 8 to 19 (e.g. [OpenJDK](https://openjdk.java.net/))
 * One of the following C++ compilers:
   * [Clang](https://clang.llvm.org/) 9.0+ (clang-cl on Windows)
   * Xcode (Xcode.app is required, not just the developer tools)
@@ -71,7 +70,6 @@ Requires an account on [Sonatype](https://issues.sonatype.org) with access to th
 4. Create a GitHub release and upload the contents of the `jazzer_releases` artifact from the workflow run.
 5. Check out the tag locally and, with the YubiKey plugged in, run `bazel run //deploy` with the following environment variables to upload the Maven artifacts:
     * `JAZZER_JAR_PATH`: local path of the multi-architecture `jazzer.jar` contained in the `jazzer` artifact of the "Release" workflow
-    * `JAVA_HOME`: path to a JDK 8
     * `MAVEN_USER`: username on https://oss.sonatype.org
     * `MAVEN_PASSWORD`: password on https://oss.sonatype.org
 
