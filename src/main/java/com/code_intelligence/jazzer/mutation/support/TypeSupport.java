@@ -62,14 +62,6 @@ public final class TypeSupport {
     return annotation.annotationType().getDeclaredAnnotation(Inherited.class) != null;
   }
 
-  public static int clamp(int value, int min, int max) {
-    return Math.min(Math.max(value, min), max);
-  }
-
-  public static long clamp(long value, long min, long max) {
-    return Math.min(Math.max(value, min), max);
-  }
-
   /**
    * Returns {@code type} as a {@code Class<T>} if it is a subclass of T, otherwise empty.
    *

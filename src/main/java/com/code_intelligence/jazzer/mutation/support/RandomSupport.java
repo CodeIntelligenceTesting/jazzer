@@ -37,4 +37,30 @@ public final class RandomSupport {
     if (i < len)
       for (long rnd = random.nextLong(); i<len; rnd>>>= Byte.SIZE) bytes[i++] = (byte) rnd;
   }
+
+
+  /**
+   * Clamp function for integers, which Java does not yet have
+   *
+   * @param value the value you want to clamp
+   * @param min the minimum allowable value (inclusive)
+   * @param max the maximum allowable value (inclusive)
+   * @return Closest number to {@code value} within the range {@code [min, max]}
+   */
+  public static int clamp(int value, int min, int max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  /**
+   * Clamp function for longs, which Java does not yet have
+   *
+   * @param value the value you want to clamp
+   * @param min the minimum allowable value (inclusive)
+   * @param max the maximum allowable value (inclusive)
+   * @return Closest number to {@code value} within the range {@code [min, max]}
+   */
+  public static long clamp(long value, long min, long max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
 }

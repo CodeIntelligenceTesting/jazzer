@@ -90,15 +90,14 @@ public class ByteArrayMutatorTest {
             new TypeHolder<byte @NotNull @WithLength(max = 5)[]>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("byte[]");
 
-    // init will call closedrange(min, max) and the mock prng will assert that the given value
-    // above is between those values which we want to fail here to show that we're properly
-    // clamping the range
-    Assertions.assertThrows(AssertionError.class, () -> {
-      byte[] arr;
-      try (MockPseudoRandom prng = mockPseudoRandom(10)) {
-        arr = mutator.init(prng);
-      }
-    });
+    try (MockPseudoRandom prng = mockPseudoRandom(10)) {
+      // init will call closedrange(min, max) and the mock prng will assert that the given value
+      // above is between those values which we want to fail here to show that we're properly
+      // clamping the range
+      Assertions.assertThrows(AssertionError.class, () -> {
+        byte[] arr = mutator.init(prng);
+      });
+    }
   }
 
   @Test
@@ -108,15 +107,14 @@ public class ByteArrayMutatorTest {
             new TypeHolder<byte @NotNull @WithLength(min = 5)[]>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("byte[]");
 
-    // init will call closedrange(min, max) and the mock prng will assert that the given value
-    // above is between those values which we want to fail here to show that we're properly
-    // clamping the range
-    Assertions.assertThrows(AssertionError.class, () -> {
-      byte[] arr;
-      try (MockPseudoRandom prng = mockPseudoRandom(3)) {
-        arr = mutator.init(prng);
-      }
-    });
+    try (MockPseudoRandom prng = mockPseudoRandom(3)) {
+      // init will call closedrange(min, max) and the mock prng will assert that the given value
+      // above is between those values which we want to fail here to show that we're properly
+      // clamping the range
+      Assertions.assertThrows(AssertionError.class, () -> {
+        byte[] arr = mutator.init(prng);
+      });
+    }
   }
 
   @Test

@@ -25,7 +25,7 @@ import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
-import com.code_intelligence.jazzer.mutation.support.TypeSupport;
+import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import com.google.errorprone.annotations.Immutable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -64,8 +64,7 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
 
     @Override
     public byte[] read(DataInputStream in) throws IOException {
-      // clamp the length to within min and max length
-      int length = TypeSupport.clamp(in.readInt(), minLength, maxLength);
+      int length = RandomSupport.clamp(in.readInt(), minLength, maxLength);
       byte[] bytes = new byte[length];
       in.readFully(bytes);
       return bytes;
@@ -102,9 +101,8 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
 
     @Override
     public byte[] mutate(byte[] value, PseudoRandom prng) {
-      // TODO: The way maxSizeIncrease is determined is just a heuristic and hasn't been
-      //  benchmarked.
-      byte[] mutated = LibFuzzerMutator.mutateDefault(value, Math.max(8, value.length / 16));
+      int maxLengthIncrease = maxLength - value.length;
+      byte[] mutated = LibFuzzerMutator.mutateDefault(value, maxLengthIncrease);
 
       // if the mutated array libfuzzer returns is too long or short, we truncate or extend it
       // respectively. if we extend it, then copyOf will fill leftover bytes with 0
