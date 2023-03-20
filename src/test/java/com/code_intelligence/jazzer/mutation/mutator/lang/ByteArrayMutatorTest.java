@@ -94,9 +94,7 @@ public class ByteArrayMutatorTest {
       // init will call closedrange(min, max) and the mock prng will assert that the given value
       // above is between those values which we want to fail here to show that we're properly
       // clamping the range
-      Assertions.assertThrows(AssertionError.class, () -> {
-        byte[] arr = mutator.init(prng);
-      });
+      Assertions.assertThrows(AssertionError.class, () -> { byte[] arr = mutator.init(prng); });
     }
   }
 
@@ -111,9 +109,7 @@ public class ByteArrayMutatorTest {
       // init will call closedrange(min, max) and the mock prng will assert that the given value
       // above is between those values which we want to fail here to show that we're properly
       // clamping the range
-      Assertions.assertThrows(AssertionError.class, () -> {
-        byte[] arr = mutator.init(prng);
-      });
+      Assertions.assertThrows(AssertionError.class, () -> { byte[] arr = mutator.init(prng); });
     }
   }
 

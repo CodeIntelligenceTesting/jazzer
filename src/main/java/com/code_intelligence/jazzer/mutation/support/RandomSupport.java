@@ -38,7 +38,6 @@ public final class RandomSupport {
       for (long rnd = random.nextLong(); i<len; rnd>>>= Byte.SIZE) bytes[i++] = (byte) rnd;
   }
 
-
   /**
    * Clamp function for integers, which Java does not yet have
    *
@@ -62,5 +61,4 @@ public final class RandomSupport {
   public static long clamp(long value, long min, long max) {
     return Math.min(Math.max(value, min), max);
   }
-
 }
