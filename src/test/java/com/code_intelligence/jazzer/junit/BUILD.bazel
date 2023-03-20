@@ -1,8 +1,8 @@
 java_test(
-    name = "FuzzTestExecutorTest",
-    srcs = ["FuzzTestExecutorTest.java"],
+    name = "UtilsTest",
+    srcs = ["UtilsTest.java"],
     deps = [
-        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test_executor",
+        "//src/main/java/com/code_intelligence/jazzer/junit:utils",
         "@maven//:com_google_truth_truth",
     ],
 )

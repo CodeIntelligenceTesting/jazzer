@@ -117,12 +117,10 @@ public class Driver {
       exit(0);
     }
 
-    if (!isAndroid) {
-      AgentInstaller.install(Opt.hooks);
-    }
     Driver.class.getClassLoader().setDefaultAssertionStatus(true);
 
     if (!Opt.autofuzz.isEmpty()) {
+      AgentInstaller.install(Opt.hooks);
       FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.AUTOFUZZ_FUZZ_TARGET;
       return FuzzTargetRunner.startLibFuzzer(args);
     }
@@ -140,6 +138,9 @@ public class Driver {
       }
     }
 
+    // Installing the agent after the following "findFuzzTarget" leads to an asan error
+    // in it on "Class.forName(targetClassName)", but only during native fuzzing.
+    AgentInstaller.install(Opt.hooks);
     FuzzTargetHolder.fuzzTarget = FuzzTargetFinder.findFuzzTarget(targetClassName);
     return FuzzTargetRunner.startLibFuzzer(args);
   }

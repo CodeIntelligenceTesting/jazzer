@@ -31,7 +31,6 @@ sed -i "/<artifactId>jazzer-junit<\/artifactId>/ {n;s/<version>.*<\/version>/<ve
 ./mvnw install:install-file -Dfile=../../bazel-bin/deploy/jazzer-project.jar       -DpomFile=../../bazel-bin/deploy/jazzer-pom.xml
 ./mvnw install:install-file -Dfile=../../bazel-bin/deploy/jazzer-api-project.jar   -DpomFile=../../bazel-bin/deploy/jazzer-api-pom.xml
 
-
 ## Regression and unit tests
 echo "[SPRINGBOOT-JUNIT]: These unit and regression fuzz tests should pass"
 ./mvnw test -Dtest="JunitSpringWebApplicationTests#unitTestShouldPass+fuzzTestShouldPass"
@@ -52,7 +51,6 @@ else
   exit 1
 fi
 
-
 ## Fuzz tests
 echo "[SPRINGBOOT-JUNIT]: This fuzz test should pass"
 JAZZER_FUZZ=1 ./mvnw test -Dtest="JunitSpringWebApplicationTests#fuzzTestShouldPass"
@@ -70,5 +68,38 @@ else
   echo "[SPRINGBOOT-JUNIT]: Expected exit code 1, but got $exit_code"
   exit 1
 fi
+
+## CLI tests
+## Assert transitive JUnit dependencies are specified
+assertDependency() {
+  if ./mvnw dependency:tree | grep -q "$1"
+  then
+    echo "[SPRINGBOOT-JUNIT]: Found $1 dependency in project"
+  else
+    echo "[SPRINGBOOT-JUNIT]: Did not find $1 dependency in project"
+    exit 1
+  fi
+}
+assertDependency "org.junit.jupiter:junit-jupiter-api"
+assertDependency "org.junit.jupiter:junit-jupiter-params"
+assertDependency "org.junit.platform:junit-platform-launcher"
+
+# Only build project and test jars, no need for a fat-jar or test execution
+./mvnw jar:jar
+./mvnw jar:test-jar
+
+# Extract dependency locations
+out=$(./mvnw dependency:build-classpath -DforceStdout)
+deps=$(echo "$out" | sed '/^\[/d')
+
+# Directly execute Jazzer without Maven
+echo "[SPRINGBOOT-JUNIT]: Direct Jazzer execution of fuzz test should pass"
+java -cp "target/*:${deps}" \
+  com.code_intelligence.jazzer.Jazzer \
+  --target_class=com.example.JunitSpringWebApplicationTests \
+  --target_method=fuzzTestShouldPass \
+  --instrumentation_includes=com.example.* \
+  --custom_hook_includes=com.example.*
+
 
 echo "[SPRINGBOOT-JUNIT]: All tests passed"
