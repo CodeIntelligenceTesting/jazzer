@@ -51,10 +51,11 @@ public class ByteArrayMutatorTest {
     }
     assertThat(arr).isEqualTo(new byte[] {1, 2, 3, 4, 5});
 
+    System.setProperty(LibFuzzerMutator.MOCK_SIZE_KEY, "10");
     try (MockPseudoRandom prng = mockPseudoRandom(false)) {
       arr = mutator.mutate(arr, prng);
     }
-    assertThat(arr).isEqualTo(new byte[] {2, 4, 6, 8, 10, 6, 7, 8, 9});
+    assertThat(arr).isEqualTo(new byte[] {2, 4, 6, 8, 10, 6, 7, 8, 9, 10});
   }
 
   @Test
@@ -70,17 +71,14 @@ public class ByteArrayMutatorTest {
     }
     assertThat(arr).isEqualTo(new byte[] {1, 2, 3, 4, 5, 6, 7, 8});
 
+    System.setProperty(LibFuzzerMutator.MOCK_SIZE_KEY, "11");
     try (MockPseudoRandom prng = mockPseudoRandom()) {
-      arr = mutator.mutate(arr, prng);
+      // the ByteArrayMutator will limit the maximum size of the data requested from libfuzzer to WithLength::max so
+      // setting the mock mutator to make it bigger will cause an exception
+      Assertions.assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
+        byte[] arr2 = mutator.mutate(arr, prng);
+      });
     }
-    assertThat(arr).hasLength(10);
-    assertThat(arr).isEqualTo(new byte[] {2, 4, 6, 8, 10, 12, 14, 16, 9, 10});
-
-    try (MockPseudoRandom prng = mockPseudoRandom()) {
-      arr = mutator.mutate(arr, prng);
-    }
-    assertThat(arr).hasLength(10);
-    assertThat(arr).isEqualTo(new byte[] {3, 6, 9, 12, 15, 18, 21, 24, 18, 20});
   }
 
   @Test
