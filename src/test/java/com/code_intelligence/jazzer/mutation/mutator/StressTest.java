@@ -106,7 +106,7 @@ public class StressTest {
             distinctElementsRatio(0.30)),
         arguments(
             new TypeHolder<@NotNull Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
-            "Map<String,String>", manyDistinctElements(), manyDistinctElements()),
+            "Map<String,String>", distinctElementsRatio(0.45), distinctElementsRatio(0.45)),
         arguments(new TypeHolder<Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
             "Nullable<Map<String,String>>", manyDistinctElements(), manyDistinctElements()),
         arguments(
@@ -229,7 +229,7 @@ public class StressTest {
             manyDistinctElements()),
         arguments(new TypeHolder<@NotNull MessageMapField3>() {}.annotatedType(),
             "{Builder.Map<String,{Builder.Map<Integer,String>} -> Message>} -> Message",
-            manyDistinctElements(), manyDistinctElements()),
+            distinctElementsRatio(0.45), distinctElementsRatio(0.45)),
         arguments(new TypeHolder<@NotNull DoubleField3>() {}.annotatedType(),
             "{Builder.Double} -> Message", manyDistinctElements(), distinctElementsRatio(0.99)),
         arguments(new TypeHolder<@NotNull RepeatedDoubleField3>() {}.annotatedType(),
@@ -324,7 +324,7 @@ public class StressTest {
     };
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest(name = "{index} {0}, {1}")
   @MethodSource({"stressTestCases", "protoStressTestCases"})
   void genericMutatorStressTest(AnnotatedType type, String mutatorTree,
       Consumer<List<Object>> expectedInitValues, Consumer<List<Object>> expectedMutatedValues)

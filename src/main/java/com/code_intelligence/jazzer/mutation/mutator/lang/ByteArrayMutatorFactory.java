@@ -19,11 +19,13 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.readAllBytes;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
 
+import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
+import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import com.google.errorprone.annotations.Immutable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -38,18 +40,31 @@ import java.util.function.Predicate;
 final class ByteArrayMutatorFactory extends MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
-    return findFirstParentIfClass(type, byte[].class).map(parent -> ByteArrayMutator.INSTANCE);
+    Optional<WithLength> withLength = Optional.ofNullable(type.getAnnotation(WithLength.class));
+    int minLength = withLength.map(WithLength::min).orElse(ByteArrayMutator.DEFAULT_MIN_LENGTH);
+    int maxLength = withLength.map(WithLength::max).orElse(ByteArrayMutator.DEFAULT_MAX_LENGTH);
+
+    return findFirstParentIfClass(type, byte[].class)
+        .map(parent -> new ByteArrayMutator(minLength, maxLength));
   }
 
   @Immutable
   private static final class ByteArrayMutator extends SerializingMutator<byte[]> {
-    private static final ByteArrayMutator INSTANCE = new ByteArrayMutator();
+    private static final int DEFAULT_MIN_LENGTH = 0;
+    private static final int DEFAULT_MAX_LENGTH = 1000;
 
-    private ByteArrayMutator() {}
+    private final int minLength;
+
+    private final int maxLength;
+
+    private ByteArrayMutator(int min, int max) {
+      this.minLength = min;
+      this.maxLength = max;
+    }
 
     @Override
     public byte[] read(DataInputStream in) throws IOException {
-      int length = Math.max(in.readInt(), 0);
+      int length = RandomSupport.clamp(in.readInt(), minLength, maxLength);
       byte[] bytes = new byte[length];
       in.readFully(bytes);
       return bytes;
@@ -78,18 +93,26 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
 
     @Override
     public byte[] init(PseudoRandom prng) {
-      // TODO: Improve the way the upper bound is determined, e.g. grow it over time and/or add
-      //  support for the WithSize annotation.
-      byte[] bytes = new byte[prng.indexIn(1000)];
+      int len = prng.closedRange(minLength, maxLength);
+      byte[] bytes = new byte[len];
       prng.bytes(bytes);
       return bytes;
     }
 
     @Override
     public byte[] mutate(byte[] value, PseudoRandom prng) {
-      // TODO: The way maxSizeIncrease is determined is just a heuristic and hasn't been
-      //  benchmarked.
-      return LibFuzzerMutator.mutateDefault(value, Math.max(8, value.length / 16));
+      int maxLengthIncrease = maxLength - value.length;
+      byte[] mutated = LibFuzzerMutator.mutateDefault(value, maxLengthIncrease);
+
+      // if the mutated array libfuzzer returns is too long or short, we truncate or extend it
+      // respectively. if we extend it, then copyOf will fill leftover bytes with 0
+      if (mutated.length > maxLength) {
+        return Arrays.copyOf(mutated, maxLength);
+      } else if (mutated.length < minLength) {
+        return Arrays.copyOf(mutated, minLength);
+      } else {
+        return mutated;
+      }
     }
 
     @Override

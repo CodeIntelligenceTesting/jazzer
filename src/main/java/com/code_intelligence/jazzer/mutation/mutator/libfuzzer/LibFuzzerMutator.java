@@ -26,6 +26,12 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public final class LibFuzzerMutator {
+  /**
+   * Key name to give to {@link System#setProperty(String, String)} to control the size of the
+   * returned array for {@link #defaultMutateMock(byte[], int)}. Only used for testing purposes.
+   */
+  public static final String MOCK_SIZE_KEY = "libfuzzermutator.mock.newsize";
+
   public static byte[] mutateDefault(byte[] data, int maxSizeIncrease) {
     byte[] mutatedBytes;
     if (maxSizeIncrease == 0) {
@@ -70,7 +76,12 @@ public final class LibFuzzerMutator {
   }
 
   private static int defaultMutateMock(byte[] buffer, int size) {
+    String newSizeProp = System.getProperty(MOCK_SIZE_KEY);
     int newSize = (buffer.length + size) / 2;
+    if (newSizeProp != null) {
+      newSize = Integer.parseUnsignedInt(newSizeProp);
+    }
+
     for (int i = 0; i < newSize; i++) {
       buffer[i] += i + 1;
     }
