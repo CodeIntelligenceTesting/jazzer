@@ -37,18 +37,18 @@ MAVEN_REPO=https://oss.sonatype.org/service/local/staging/deploy/maven2
 
 # The Jazzer jar itself bundles native libraries for multiple architectures and thus can't be built
 # on the local machine. It is obtained from CI and passed in via JAZZER_JAR_PATH.
-bazel build --config=maven //deploy:jazzer-docs //deploy:jazzer-sources //deploy:jazzer-pom
+bazel build //deploy:jazzer-docs //deploy:jazzer-sources //deploy:jazzer-pom
 
-JAZZER_DOCS_PATH=$PWD/$(bazel cquery --config=maven --output=files //deploy:jazzer-docs)
-JAZZER_SOURCES_PATH=$PWD/$(bazel cquery --config=maven --output=files //deploy:jazzer-sources)
-JAZZER_POM_PATH=$PWD/$(bazel cquery --config=maven --output=files //deploy:jazzer-pom)
+JAZZER_DOCS_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-docs)
+JAZZER_SOURCES_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-sources)
+JAZZER_POM_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-pom)
 
-bazel run --config=maven --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}" \
+bazel run --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}" \
   --define "maven_password=${MAVEN_PASSWORD}" --define gpg_sign=true \
   //deploy:jazzer-api.publish
-bazel run --config=maven @rules_jvm_external//private/tools/java/rules/jvm/external/maven:MavenPublisher -- \
+bazel run @rules_jvm_external//private/tools/java/rules/jvm/external/maven:MavenPublisher -- \
   "$MAVEN_REPO" true "$MAVEN_USER" "$MAVEN_PASSWORD" "$JAZZER_COORDINATES" \
   "$JAZZER_POM_PATH" "$JAZZER_JAR_PATH" "$JAZZER_SOURCES_PATH" "$JAZZER_DOCS_PATH"
-bazel run --config=maven --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}" \
+bazel run --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}" \
   --define "maven_password=${MAVEN_PASSWORD}" --define gpg_sign=true \
   //deploy:jazzer-junit.publish
