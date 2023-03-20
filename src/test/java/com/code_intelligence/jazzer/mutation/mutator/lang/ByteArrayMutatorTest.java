@@ -73,11 +73,10 @@ public class ByteArrayMutatorTest {
 
     System.setProperty(LibFuzzerMutator.MOCK_SIZE_KEY, "11");
     try (MockPseudoRandom prng = mockPseudoRandom()) {
-      // the ByteArrayMutator will limit the maximum size of the data requested from libfuzzer to WithLength::max so
-      // setting the mock mutator to make it bigger will cause an exception
-      Assertions.assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
-        byte[] arr2 = mutator.mutate(arr, prng);
-      });
+      // the ByteArrayMutator will limit the maximum size of the data requested from libfuzzer to
+      // WithLength::max so setting the mock mutator to make it bigger will cause an exception
+      Assertions.assertThrows(
+          ArrayIndexOutOfBoundsException.class, () -> { byte[] arr2 = mutator.mutate(arr, prng); });
     }
   }
 
