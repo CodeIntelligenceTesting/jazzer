@@ -73,9 +73,6 @@ build:ci --remote_timeout=3600
 # fail when requested to cross-compile.
 build:ci --repo_env=BAZEL_USE_XCODE_TOOLCHAIN=1
 
-# Maven publishing (local only, requires GPG signature)
-build:maven --stamp
-
 # Docker images
 common:docker --config=toolchain
 common:docker --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux
