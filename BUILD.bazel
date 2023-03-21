@@ -18,6 +18,7 @@ pkg_tar(
         "@platforms//os:windows": ".\\",
         "//conditions:default": "./",
     }),
+    visibility = ["//tests:__pkg__"],
 )
 
 alias(

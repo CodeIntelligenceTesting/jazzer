@@ -39,7 +39,7 @@ class FuzzedDataProviderTest : public ::testing::Test {
     FLAGS_cp = Runfiles::CreateForTest()->Rlocation(
         "jazzer/launcher/testdata/fuzz_target_mocks_deploy.jar");
 
-    jvm_ = std::make_unique<JVM>("test_executable");
+    jvm_ = std::make_unique<JVM>();
   }
 
   static void TearDownTestCase() { jvm_.reset(nullptr); }

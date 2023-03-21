@@ -104,6 +104,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  StartLibFuzzer(std::unique_ptr<jazzer::JVM>(new jazzer::JVM(argv[0])),
+  StartLibFuzzer(std::unique_ptr<jazzer::JVM>(new jazzer::JVM()),
                  std::vector<std::string>(argv + 1, argv + argc));
 }
