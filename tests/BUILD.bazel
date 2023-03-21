@@ -445,3 +445,13 @@ java_fuzz_target_test(
         "//tests/src/test/proto:simple_java_proto",
     ],
 )
+
+sh_test(
+    name = "jazzer_from_path_test",
+    srcs = ["src/test/shell/jazzer_from_path_test.sh"],
+    args = ["$(rlocationpath //:jazzer_release)"],
+    data = [
+        "//:jazzer_release",
+        "@bazel_tools//tools/bash/runfiles",
+    ],
+)

@@ -16,6 +16,13 @@
 
 #if defined(_ANDROID)
 #include <dlfcn.h>
+#elif defined(__APPLE__)
+#include <mach-o/dyld.h>
+#elif defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else  // Assume Linux
+#include <unistd.h>
 #endif
 
 #include <cstdlib>
@@ -50,6 +57,24 @@ constexpr auto kJazzerBazelRunfilesPath =
     "jazzer_standalone_deploy.jar";
 constexpr auto kJazzerFileName = "jazzer_standalone.jar";
 
+// Returns the absolute path to the current executable. Compared to argv[0],
+// this path can always be used to locate the Jazzer JAR next to it, even when
+// Jazzer is executed from PATH.
+std::string getExecutablePath() {
+  char buf[655536];
+#if defined(__APPLE__)
+  uint32_t buf_size = sizeof(buf);
+  if (_NSGetExecutablePath(buf, &buf_size) != 0) {
+#elif defined(_WIN32)
+  if (GetModuleFileNameA(NULL, buf, sizeof(buf)) == 0) {
+#else  // Assume Linux
+  if (readlink("/proc/self/exe", buf, sizeof(buf)) == -1) {
+#endif
+    return "";
+  }
+  return {buf};
+}
+
 std::string dirFromFullPath(const std::string &path) {
   const auto pos = path.rfind(kPathSeparator);
   if (pos != std::string::npos) {
@@ -60,7 +85,7 @@ std::string dirFromFullPath(const std::string &path) {
 
 // getInstrumentorAgentPath searches for the fuzzing instrumentation agent and
 // returns the location if it is found. Otherwise it calls exit(0).
-std::string getInstrumentorAgentPath(const std::string &executable_path) {
+std::string getInstrumentorAgentPath() {
   // User provided agent location takes precedence.
   if (!FLAGS_agent_path.empty()) {
     if (std::ifstream(FLAGS_agent_path).good()) return FLAGS_agent_path;
@@ -68,9 +93,12 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
               << FLAGS_agent_path << "\"" << std::endl;
     exit(1);
   }
-  // First check if we are running inside the Bazel tree and use the agent
-  // runfile.
-  {
+
+  auto executable_path = getExecutablePath();
+
+  if (!executable_path.empty()) {
+    // First check if we are running inside the Bazel tree and use the agent
+    // runfile.
     using bazel::tools::cpp::runfiles::Runfiles;
     std::string error;
     std::unique_ptr<Runfiles> runfiles(Runfiles::Create(
@@ -80,13 +108,14 @@ std::string getInstrumentorAgentPath(const std::string &executable_path) {
       if (!bazel_path.empty() && std::ifstream(bazel_path).good())
         return bazel_path;
     }
+
+    // If the agent is not in the bazel path we look next to the jazzer binary.
+    const auto dir = dirFromFullPath(executable_path);
+    auto agent_path =
+        absl::StrFormat("%s%c%s", dir, kPathSeparator, kJazzerFileName);
+    if (std::ifstream(agent_path).good()) return agent_path;
   }
 
-  // If the agent is not in the bazel path we look next to the jazzer binary.
-  const auto dir = dirFromFullPath(executable_path);
-  auto agent_path =
-      absl::StrFormat("%s%c%s", dir, kPathSeparator, kJazzerFileName);
-  if (std::ifstream(agent_path).good()) return agent_path;
   std::cerr << "ERROR: Could not find " << kJazzerFileName
             << ". Please provide the pathname via the --agent_path flag."
             << std::endl;
@@ -170,7 +199,7 @@ JNI_CreateJavaVM_t LoadAndroidVMLibs() {
 }
 #endif
 
-std::string GetClassPath(const std::string &executable_path) {
+std::string GetClassPath() {
   // combine class path from command line flags and JAVA_FUZZER_CLASSPATH env
   // variable
   std::string class_path = absl::StrFormat("-Djava.class.path=%s", FLAGS_cp);
@@ -179,13 +208,12 @@ std::string GetClassPath(const std::string &executable_path) {
     class_path += absl::StrCat(ARG_SEPARATOR, class_path_from_env);
   }
 
-  class_path +=
-      absl::StrCat(ARG_SEPARATOR, getInstrumentorAgentPath(executable_path));
+  class_path += absl::StrCat(ARG_SEPARATOR, getInstrumentorAgentPath());
   return class_path;
 }
 
-JVM::JVM(const std::string &executable_path) {
-  std::string class_path = GetClassPath(executable_path);
+JVM::JVM() {
+  std::string class_path = GetClassPath();
 
   std::vector<JavaVMOption> options;
   options.push_back(

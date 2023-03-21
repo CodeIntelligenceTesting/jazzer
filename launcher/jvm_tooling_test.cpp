@@ -39,7 +39,7 @@ class JvmToolingTest : public ::testing::Test {
     FLAGS_cp = Runfiles::CreateForTest()->Rlocation(
         "jazzer/launcher/testdata/fuzz_target_mocks_deploy.jar");
 
-    jvm_ = std::unique_ptr<JVM>(new JVM("test_executable"));
+    jvm_ = std::unique_ptr<JVM>(new JVM());
   }
 
   static void TearDownTestCase() { jvm_.reset(nullptr); }
