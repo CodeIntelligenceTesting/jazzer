@@ -55,7 +55,7 @@ public class FuzzerCallbacksBenchmark {
   }
 
   @Benchmark
-  @Fork(jvmArgsAppend = {"-XX:+CriticalJNINatives"})
+  @Fork(jvmArgsAppend = {"-XX:+IgnoreUnrecognizedVMOptions", "-XX:+CriticalJNINatives"})
   public void traceCmpIntOptimizedCritical(TraceCmpIntState state) {
     FuzzerCallbacksOptimizedCritical.traceCmpInt(state.arg1, state.arg2, state.pc);
   }
@@ -107,7 +107,7 @@ public class FuzzerCallbacksBenchmark {
   }
 
   @Benchmark
-  @Fork(jvmArgsAppend = {"-XX:+CriticalJNINatives"})
+  @Fork(jvmArgsAppend = {"-XX:+IgnoreUnrecognizedVMOptions", "-XX:+CriticalJNINatives"})
   public void traceSwitchOptimizedCritical(TraceSwitchState state) {
     FuzzerCallbacksOptimizedCritical.traceSwitch(state.val, state.cases, state.pc);
   }
@@ -154,7 +154,7 @@ public class FuzzerCallbacksBenchmark {
   }
 
   @Benchmark
-  @Fork(jvmArgsAppend = {"-XX:+CriticalJNINatives"})
+  @Fork(jvmArgsAppend = {"-XX:+IgnoreUnrecognizedVMOptions", "-XX:+CriticalJNINatives"})
   public void traceMemcmpOptimizedCritical(TraceMemcmpState state) {
     FuzzerCallbacksOptimizedCritical.traceMemcmp(state.array1, state.array2, 1, state.pc);
   }
@@ -205,7 +205,7 @@ public class FuzzerCallbacksBenchmark {
   }
 
   @Benchmark
-  @Fork(jvmArgsAppend = {"-XX:+CriticalJNINatives"})
+  @Fork(jvmArgsAppend = {"-XX:+IgnoreUnrecognizedVMOptions", "-XX:+CriticalJNINatives"})
   public void traceStrstrOptimizedJavaCritical(TraceStrstrState state)
       throws UnsupportedEncodingException {
     FuzzerCallbacksOptimizedCritical.traceStrstrJava(state.haystack, state.needle, state.pc);
