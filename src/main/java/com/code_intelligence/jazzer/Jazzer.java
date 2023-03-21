@@ -98,8 +98,8 @@ public class Jazzer {
       // is an unnecessary overhead.
       final boolean spawnsSubprocesses = args.stream().anyMatch(
           arg -> arg.startsWith("-fork=") || arg.startsWith("-jobs=") || arg.startsWith("-merge="));
-      String arg0 = spawnsSubprocesses ? prepareArgv0(new HashMap<>())
-                                       : "unused_report_a_bug_if_you_see_this";
+      // argv0 is printed by libFuzzer during reproduction, so have it contain "jazzer".
+      String arg0 = spawnsSubprocesses ? prepareArgv0(new HashMap<>()) : "jazzer";
       args = Stream.concat(Stream.of(arg0), args.stream()).collect(toList());
       exit(Driver.start(args, spawnsSubprocesses));
     }
@@ -234,6 +234,8 @@ public class Jazzer {
     String invocation = env.isEmpty() ? command : env + " " + command;
     String launcherContent = String.format(launcherTemplate, invocation);
 
+    // argv0 is printed by libFuzzer during reproduction, so have the launcher basename contain
+    // "jazzer".
     Path launcher;
     if (isAndroid()) {
       launcher = Files.createTempFile(
