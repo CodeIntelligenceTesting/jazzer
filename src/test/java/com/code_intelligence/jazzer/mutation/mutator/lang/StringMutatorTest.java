@@ -178,7 +178,7 @@ class StringMutatorTest {
     assertThat(mutator.toString()).isEqualTo("String");
 
     String s;
-    try (MockPseudoRandom prng = mockPseudoRandom(10, "foobarÖÖ".getBytes())) {
+    try (MockPseudoRandom prng = mockPseudoRandom(10, "foobarÖÖ".getBytes(StandardCharsets.UTF_8))) {
       s = mutator.init(prng);
     }
     assertThat(s).hasLength(8);
