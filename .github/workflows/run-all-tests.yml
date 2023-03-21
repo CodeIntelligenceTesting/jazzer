@@ -40,7 +40,7 @@ jobs:
             cache: "/home/runner/.cache/bazel-disk"
             bazel_args: "//launcher/android:jazzer_android"
           - os: ubuntu-20.04
-            jdk: 19
+            jdk: 20
             # Workaround for https://github.com/bazelbuild/bazel/issues/14502
             bazel_args: "--jvmopt=-Djava.security.manager=allow"
             arch: "linux"
