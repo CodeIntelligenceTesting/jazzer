@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.combinator;
 
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.getShortName;
 import static java.util.Objects.requireNonNull;
 
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
