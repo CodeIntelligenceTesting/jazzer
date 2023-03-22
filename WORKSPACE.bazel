@@ -79,11 +79,10 @@ http_archive(
 
 http_archive(
     name = "contrib_rules_jvm",
-    # TODO: Return to the next release after https://github.com/bazel-contrib/rules_jvm/pull/134 has
-    #       been merged.
-    sha256 = "b96f5af09d2a67f494f3eb63ea8d3b1444676e5707530d21b40e68ea4e84a2ba",
-    strip_prefix = "rules_jvm-java-8",
-    url = "https://github.com/CodeIntelligenceTesting/rules_jvm/archive/refs/tags/java-8.tar.gz",
+    # TODO: Return to the next release.
+    sha256 = "e58393f87ae1c040180c9520474a2161a15d13e20cfc13e56dd70a82d6c3bcd5",
+    strip_prefix = "rules_jvm-c6d6a68fd6ea65508d8f1a2f1642b46e8437c51c",
+    url = "https://github.com/bazel-contrib/rules_jvm/archive/c6d6a68fd6ea65508d8f1a2f1642b46e8437c51c.tar.gz",
 )
 
 http_archive(

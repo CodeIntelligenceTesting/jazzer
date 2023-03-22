@@ -1,10 +1,19 @@
 load("@contrib_rules_jvm//java:defs.bzl", "java_junit5_test")
 
+TEST_PARALLELISM = 4
+
 java_junit5_test(
     name = "StressTest",
     size = "large",
     srcs = ["StressTest.java"],
     env = {"JAZZER_MOCK_LIBFUZZER_MUTATOR": "true"},
+    jvm_flags = [
+        "-Djunit.jupiter.execution.parallel.enabled=true",
+        "-Djunit.jupiter.execution.parallel.mode.default=concurrent",
+        "-Djunit.jupiter.execution.parallel.config.strategy=fixed",
+        "-Djunit.jupiter.execution.parallel.config.fixed.parallelism=" + str(TEST_PARALLELISM),
+    ],
+    tags = ["cpu:" + str(TEST_PARALLELISM)],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
