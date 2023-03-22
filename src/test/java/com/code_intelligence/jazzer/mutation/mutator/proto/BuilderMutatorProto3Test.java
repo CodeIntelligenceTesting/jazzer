@@ -489,7 +489,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<EmptyMessage3.Builder> mutator =
         (InPlaceMutator<EmptyMessage3.Builder>) FACTORY.createInPlaceOrThrow(
             new TypeHolder<EmptyMessage3.@NotNull Builder>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("FixedValue()");
+    assertThat(mutator.toString()).isEqualTo("FixedValue(EmptyMessage3.Builder())");
     EmptyMessage3.Builder builder = EmptyMessage3.newBuilder();
 
     try (MockPseudoRandom prng = mockPseudoRandom()) {
