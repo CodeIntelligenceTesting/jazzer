@@ -119,7 +119,7 @@ public final class BuilderMutatorFactory extends MutatorFactory {
             // actually mutate its domain, we can't do that for proto enum fields as the user
             // creating the fuzz test may not be in a position to modify the existing proto
             // definition.
-            return fixedValue(values.get(0));
+            return fixedValue(() -> values.get(0));
           } else {
             return mutateThenMapToImmutable(mutateIndices(values.size()), values::get,
                 EnumValueDescriptor::getIndex, unused -> "Enum<" + name + ">");
