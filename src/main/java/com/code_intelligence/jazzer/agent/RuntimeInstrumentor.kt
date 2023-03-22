@@ -22,6 +22,7 @@ import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import com.code_intelligence.jazzer.utils.Log
 import io.github.classgraph.ClassGraph
+import java.io.File
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
 import java.nio.file.Path
@@ -57,6 +58,24 @@ class RuntimeInstrumentor(
         protectionDomain: ProtectionDomain?,
         classfileBuffer: ByteArray,
     ): ByteArray? {
+        var pathPrefix = ""
+        if (!Opt.instrumentOnly.isEmpty() && protectionDomain != null) {
+            var outputPathPrefix = protectionDomain.getCodeSource().getLocation().getFile().toString()
+            if (outputPathPrefix.isNotEmpty()) {
+                if (outputPathPrefix.contains(File.separator)) {
+                    outputPathPrefix = outputPathPrefix.substring(outputPathPrefix.lastIndexOf(File.separator) + 1, outputPathPrefix.length)
+                }
+
+                if (outputPathPrefix.endsWith(".jar")) {
+                    outputPathPrefix = outputPathPrefix.substring(0, outputPathPrefix.lastIndexOf(".jar"))
+                }
+
+                if (outputPathPrefix.isNotEmpty()) {
+                    pathPrefix = outputPathPrefix + File.separator
+                }
+            }
+        }
+
         return try {
             // Bail out early if we would instrument ourselves. This prevents ClassCircularityErrors as we might need to
             // load additional Jazzer classes until we reach the full exclusion logic.
@@ -81,21 +100,21 @@ class RuntimeInstrumentor(
             // failures. The docs advise to use a top-level try-catch.
             // https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/ClassFileTransformer.html
             if (dumpClassesDir != null) {
-                dumpToClassFile(internalClassName, classfileBuffer, basenameSuffix = ".failed")
+                dumpToClassFile(internalClassName, classfileBuffer, basenameSuffix = ".failed", pathPrefix = pathPrefix)
             }
             Log.warn("Failed to instrument $internalClassName:", t)
             throw t
         }.also { instrumentedByteCode ->
             // Only dump classes that were instrumented.
             if (instrumentedByteCode != null && dumpClassesDir != null) {
-                dumpToClassFile(internalClassName, instrumentedByteCode)
-                dumpToClassFile(internalClassName, classfileBuffer, basenameSuffix = ".original")
+                dumpToClassFile(internalClassName, instrumentedByteCode, pathPrefix = pathPrefix)
+                dumpToClassFile(internalClassName, classfileBuffer, basenameSuffix = ".original", pathPrefix = pathPrefix)
             }
         }
     }
 
-    private fun dumpToClassFile(internalClassName: String, bytecode: ByteArray, basenameSuffix: String = "") {
-        val relativePath = "$internalClassName$basenameSuffix.class"
+    private fun dumpToClassFile(internalClassName: String, bytecode: ByteArray, basenameSuffix: String = "", pathPrefix: String = "") {
+        val relativePath = "$pathPrefix$internalClassName$basenameSuffix.class"
         val absolutePath = dumpClassesDir!!.resolve(relativePath)
         val dumpFile = absolutePath.toFile()
         dumpFile.parentFile.mkdirs()
