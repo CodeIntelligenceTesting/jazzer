@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.mutation.combinator;
 
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.requireNonNullElements;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.getShortName;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -303,7 +304,12 @@ public final class MutatorCombinators {
     return new SerializingInPlaceMutator<T>() {
       @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
-        return "FixedValue(" + supplier.get() + ")";
+        T value = supplier.get();
+        if (value.toString().isEmpty()) {
+          return "FixedValue(" + getShortName(value.getClass()) + "())";
+        } else {
+          return "FixedValue(" + value + ")";
+        }
       }
 
       @Override
