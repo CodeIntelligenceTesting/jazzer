@@ -17,11 +17,10 @@
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.*;
 
 import com.code_intelligence.jazzer.mutation.annotation.Ascii;
+import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -34,6 +33,10 @@ final class StringMutatorFactory extends MutatorFactory {
   private static final int HEADER_MASK = 0b1100_0000;
   private static final int BODY_MASK = 0b0011_1111;
   private static final int CONTINUATION_HEADER = 0b1000_0000;
+
+  private static final int DEFAULT_MIN_BYTES = 0;
+
+  private static final int DEFAULT_MAX_BYTES = 1000;
 
   static void fixUpAscii(byte[] bytes) {
     for (int i = 0; i < bytes.length; i++) {
@@ -140,8 +143,15 @@ final class StringMutatorFactory extends MutatorFactory {
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+    Optional<WithUtf8Length> utf8Length =
+        Optional.ofNullable(type.getAnnotation(WithUtf8Length.class));
+    int min = utf8Length.map(WithUtf8Length::min).orElse(DEFAULT_MIN_BYTES);
+    int max = utf8Length.map(WithUtf8Length::max).orElse(DEFAULT_MAX_BYTES);
+
+    AnnotatedType innerByteArray = notNull(withLength(asAnnotatedType(byte[].class), min, max));
+
     return findFirstParentIfClass(type, String.class)
-        .flatMap(parent -> factory.tryCreate(notNull(asAnnotatedType(byte[].class))))
+        .flatMap(parent -> factory.tryCreate(innerByteArray))
         .map(byteArrayMutator -> {
           boolean fixUpAscii = type.getDeclaredAnnotation(Ascii.class) != null;
           return mutateThenMapToImmutable((SerializingMutator<byte[]>) byteArrayMutator,

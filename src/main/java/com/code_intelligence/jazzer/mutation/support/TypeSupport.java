@@ -25,6 +25,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Inherited;
 import java.lang.reflect.AnnotatedArrayType;
@@ -194,6 +195,56 @@ public final class TypeSupport {
 
   public static AnnotatedType notNull(AnnotatedType type) {
     return withExtraAnnotations(type, NOT_NULL);
+  }
+
+  /**
+   * Constructs an anonymous WithLength class that can be applied as an annotation to {@code type}
+   * with the given
+   * {@code min} and {@code max} values.
+   * @param type
+   * @param min
+   * @param max
+   * @return {@code type} with a `WithLength` annotation applied to it
+   */
+  public static AnnotatedType withLength(AnnotatedType type, int min, int max) {
+    WithLength withLength = withLengthImplementation(min, max);
+    return withExtraAnnotations(type, withLength);
+  }
+
+  private static WithLength withLengthImplementation(int min, int max) {
+    return new WithLength() {
+      @Override
+      public int min() {
+        return min;
+      }
+
+      @Override
+      public int max() {
+        return max;
+      }
+
+      @Override
+      public Class<? extends Annotation> annotationType() {
+        return WithLength.class;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+        if (!(o instanceof WithLength)) {
+          return false;
+        }
+        WithLength other = (WithLength) o;
+        return this.min() == other.min() && this.max() == other.max();
+      }
+
+      @Override
+      public int hashCode() {
+        int hash = 0;
+        hash += ("min".hashCode() * 127) ^ Integer.valueOf(this.min()).hashCode();
+        hash += ("max".hashCode() * 127) ^ Integer.valueOf(this.max()).hashCode();
+        return hash;
+      }
+    };
   }
 
   public static AnnotatedParameterizedType withTypeArguments(

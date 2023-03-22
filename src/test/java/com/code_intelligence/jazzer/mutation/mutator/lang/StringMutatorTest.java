@@ -18,17 +18,32 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.mutator.lang.StringMutatorFactory.fixUpAscii;
 import static com.code_intelligence.jazzer.mutation.mutator.lang.StringMutatorFactory.fixUpUtf8;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
+import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
+import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
+import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.google.protobuf.ByteString;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.SplittableRandom;
-import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.RepetitionInfo;
+import org.junit.jupiter.api.*;
 
 class StringMutatorTest {
+  /**
+   * Some tests may set {@link LibFuzzerMutator#MOCK_SIZE_KEY} which can interfere with other tests
+   * unless cleared.
+   */
+  @AfterEach
+  void cleanMockSize() {
+    System.clearProperty(LibFuzzerMutator.MOCK_SIZE_KEY);
+  }
+
   @RepeatedTest(10)
   void testFixAscii_randomInputFixed(RepetitionInfo info) {
     SplittableRandom random = new SplittableRandom(
@@ -87,6 +102,88 @@ class StringMutatorTest {
       fixUpUtf8(copy);
       assertThat(copy).isEqualTo(validUtf8);
     }
+  }
+
+  @Test
+  void testMinLengthInit() {
+    SerializingMutator<String> mutator =
+        (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("String");
+
+    try (MockPseudoRandom prng = mockPseudoRandom(5)) {
+      // mock prng should throw an assert error when given a lower value than min
+      Assertions.assertThrows(AssertionError.class, () -> { String s = mutator.init(prng); });
+    }
+  }
+
+  @Test
+  void testMaxLengthInit() {
+    SerializingMutator<String> mutator =
+        (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull @WithUtf8Length(max = 50) String>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("String");
+
+    try (MockPseudoRandom prng = mockPseudoRandom(60)) {
+      // mock prng should throw an assert error when given a value higher than max
+      Assertions.assertThrows(AssertionError.class, () -> { String s = mutator.init(prng); });
+    }
+  }
+
+  @Test
+  void testMinLengthMutate() {
+    SerializingMutator<String> mutator =
+        (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("String");
+
+    String s;
+    try (MockPseudoRandom prng = mockPseudoRandom(10, "foobarbazf".getBytes())) {
+      s = mutator.init(prng);
+    }
+    assertThat(s).isEqualTo("foobarbazf");
+
+    System.setProperty(LibFuzzerMutator.MOCK_SIZE_KEY, "5");
+    try (MockPseudoRandom prng = mockPseudoRandom()) {
+      s = mutator.mutate(s, prng);
+    }
+    assertThat(s).isEqualTo("gqrff\0\0\0\0\0");
+  }
+
+  @Test
+  void testMaxLengthMutate() {
+    SerializingMutator<String> mutator =
+        (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull @WithUtf8Length(max = 15) String>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("String");
+
+    String s;
+    try (MockPseudoRandom prng = mockPseudoRandom(10, "foobarbazf".getBytes())) {
+      s = mutator.init(prng);
+    }
+    assertThat(s).isEqualTo("foobarbazf");
+
+    System.setProperty(LibFuzzerMutator.MOCK_SIZE_KEY, "20");
+    try (MockPseudoRandom prng = mockPseudoRandom()) {
+      Assertions.assertThrows(
+          ArrayIndexOutOfBoundsException.class, () -> { String s2 = mutator.mutate(s, prng); });
+    }
+  }
+
+  @Test
+  void testMultibyteCharacters() {
+    SerializingMutator<String> mutator =
+        (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("String");
+
+    String s;
+    try (
+        MockPseudoRandom prng = mockPseudoRandom(10, "foobarÖÖ".getBytes(StandardCharsets.UTF_8))) {
+      s = mutator.init(prng);
+    }
+    assertThat(s).hasLength(8);
+    assertThat(s).isEqualTo("foobarÖÖ");
   }
 
   private static boolean isValidUtf8(byte[] data) {
