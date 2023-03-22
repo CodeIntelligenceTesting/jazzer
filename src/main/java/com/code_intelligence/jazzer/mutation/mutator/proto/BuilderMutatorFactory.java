@@ -42,6 +42,7 @@ import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
+import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.api.ValueMutator;
 import com.google.protobuf.Descriptors.EnumDescriptor;
@@ -245,6 +246,15 @@ public final class BuilderMutatorFactory extends MutatorFactory {
         return internedMutators.get(builderClass);
       }
       Message defaultInstance = getDefaultInstance(builderClass);
+      List<FieldDescriptor> fields = defaultInstance.getDescriptorForType().getFields();
+      if (fields.isEmpty()) {
+        // Users generally can't change the definition of a proto for fuzzing and thus can't remove
+        // empty messages. This means that we must support them even if they may decrease fuzzing
+        // performance.
+        SerializingInPlaceMutator<Builder> mutator = fixedValue(defaultInstance::toBuilder);
+        internedMutators.put(builderClass, mutator);
+        return mutator;
+      }
       // assemble inserts the instance of the newly created builder mutator into the
       // internedMutators map *before* recursively creating the mutators for its fields, which
       // ensures that the recursion is finite (bounded by the total number of distinct message types
@@ -254,8 +264,7 @@ public final class BuilderMutatorFactory extends MutatorFactory {
           defaultInstance::toBuilder, makeBuilderSerializer(defaultInstance),
           ()
               -> combine(
-                  defaultInstance.getDescriptorForType()
-                      .getFields()
+                  fields
                       .stream()
                       // Keep oneofs sorted by the first appearance of their fields in the
                       // .proto file.
