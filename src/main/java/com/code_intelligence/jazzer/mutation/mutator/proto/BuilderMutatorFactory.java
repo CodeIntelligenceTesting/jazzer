@@ -63,10 +63,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class BuilderMutatorFactory extends MutatorFactory {
@@ -136,16 +138,22 @@ public final class BuilderMutatorFactory extends MutatorFactory {
       // oneof fields are mutated as one as mutating them independently would cause the mutator to
       // erratically switch between the different states. The individual fields are kept in the
       // order in which they are defined in the .proto file.
+      OneofDescriptor oneofDescriptor = oneofField.get();
+
+      IdentityHashMap<FieldDescriptor, Integer> indexInOneof =
+          new IdentityHashMap<>(oneofDescriptor.getFieldCount());
+      for (int i = 0; i < oneofDescriptor.getFieldCount(); i++) {
+        indexInOneof.put(oneofDescriptor.getField(i), i);
+      }
+
       return Stream.of(mutateSumInPlace(
           (T builder)
               -> {
-            FieldDescriptor setField = builder.getOneofFieldDescriptor(oneofField.get());
+            FieldDescriptor setField = builder.getOneofFieldDescriptor(oneofDescriptor);
             if (setField == null) {
               return -1;
             } else {
-              // The index of the field within the oneof is 1-based otherwise, so we need to
-              // subtract 1 to fulfill the contract of mutateSumInPlace.
-              return setField.getIndex() - 1;
+              return indexInOneof.get(setField);
             }
           },
           // Mutating to the unset (-1) state is handled by the individual field mutators, which
