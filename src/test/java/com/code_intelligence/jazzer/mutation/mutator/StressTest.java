@@ -38,6 +38,7 @@ import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.protobuf.Proto2.TestProtobuf;
 import com.code_intelligence.jazzer.protobuf.Proto3.BytesField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.DoubleField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3;
@@ -66,7 +67,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -239,7 +239,10 @@ public class StressTest {
             "{Builder.Float} -> Message", manyDistinctElements(), distinctElementsRatio(0.99)),
         arguments(new TypeHolder<@NotNull RepeatedFloatField3>() {}.annotatedType(),
             "{Builder via List<Float>} -> Message", manyDistinctElements(),
-            distinctElementsRatio(0.99)));
+            distinctElementsRatio(0.99), emptyList()),
+        arguments(new TypeHolder<@NotNull TestProtobuf>() {}.annotatedType(),
+            "{Builder.Nullable<Boolean>, Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>, Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>, Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>, Builder.Nullable<{Builder.Nullable<Integer>, Builder via List<Integer>} -> Message>, Builder via List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>, Builder via List<(cycle) -> Message>, Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
+            manyDistinctElements(), manyDistinctElements()));
   }
 
   @SafeVarargs
@@ -333,6 +336,8 @@ public class StressTest {
     SerializingMutator mutator = Mutators.newFactory().createOrThrow(type);
     assertThat(mutator.toString()).isEqualTo(mutatorTree);
 
+    boolean mayPerformNoopMutations = mutatorTree.contains("FixedValue(");
+
     PseudoRandom rng = anyPseudoRandom();
 
     List<Object> initValues = new ArrayList<>();
@@ -348,7 +353,9 @@ public class StressTest {
       for (int mutation = 0; mutation < NUM_MUTATE_PER_INIT; mutation++) {
         Object detachedOldValue = mutator.detach(value);
         value = mutator.mutate(value, rng);
-        assertThat(value).isNotEqualTo(detachedOldValue);
+        if (!mayPerformNoopMutations) {
+          assertThat(value).isNotEqualTo(detachedOldValue);
+        }
 
         testReadWriteRoundtrip(mutator, value);
         testReadWriteExclusiveRoundtrip(mutator, value);
