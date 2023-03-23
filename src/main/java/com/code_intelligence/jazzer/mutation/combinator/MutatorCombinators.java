@@ -108,11 +108,33 @@ public final class MutatorCombinators {
   /**
    * Combines multiple in-place mutators for different parts of a {@code T} into one that picks one
    * at random whenever it mutates.
+   *
+   * <p>Calling this method with no arguments returns a no-op mutator that may decrease fuzzing
+   * efficiency.
    */
   @SafeVarargs
   public static <T> InPlaceMutator<T> combine(InPlaceMutator<T>... partialMutators) {
     requireNonNullElements(partialMutators);
-    require(partialMutators.length > 0, "mutators must not be empty");
+    if (partialMutators.length == 0) {
+      return new InPlaceMutator<T>() {
+        @Override
+        public void initInPlace(T reference, PseudoRandom prng) {}
+
+        @Override
+        public void mutateInPlace(T reference, PseudoRandom prng) {}
+
+        @Override
+        public String toDebugString(Predicate<Debuggable> isInCycle) {
+          return "{<empty>}";
+        }
+
+        @Override
+        public String toString() {
+          return Debuggable.getDebugString(this);
+        }
+      };
+    }
+
     return new InPlaceMutator<T>() {
       private final InPlaceMutator<T>[] mutators =
           Arrays.copyOf(partialMutators, partialMutators.length);
