@@ -48,16 +48,6 @@ public final class TypeSupport {
 
   private TypeSupport() {}
 
-  public static String getShortName(Class<?> clazz) {
-    // The simple name of Builder classes for custom message types lacks any information about the
-    // message type itself.
-    if ("Builder".equals(clazz.getSimpleName()) && clazz.getEnclosingClass() != null) {
-      return clazz.getEnclosingClass().getSimpleName() + "." + clazz.getSimpleName();
-    } else {
-      return clazz.getSimpleName();
-    }
-  }
-
   public static boolean isPrimitive(AnnotatedType type) {
     return isPrimitive(type.getType());
   }

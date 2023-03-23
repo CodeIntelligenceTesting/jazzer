@@ -18,7 +18,6 @@ package com.code_intelligence.jazzer.mutation.combinator;
 
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.requireNonNullElements;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.getShortName;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -294,27 +293,21 @@ public final class MutatorCombinators {
   }
 
   /**
-   * Constructs a mutator that always returns a new instance of a fixed value provided by a
-   * {@link Supplier<T>}.
+   * Constructs a mutator that always returns the provided fixed value.
    *
    * <p>Note: This mutator explicitly breaks the contract of the init and mutate methods. Use
    * sparingly as it may harm the overall effectivity of the mutator.
    */
-  public static <T> SerializingInPlaceMutator<T> fixedValue(Supplier<T> supplier) {
-    return new SerializingInPlaceMutator<T>() {
+  public static <@ImmutableTypeParameter T> SerializingMutator<T> fixedValue(T value) {
+    return new SerializingMutator<T>() {
       @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
-        T value = supplier.get();
-        if (value.toString().isEmpty()) {
-          return "FixedValue(" + getShortName(value.getClass()) + "())";
-        } else {
-          return "FixedValue(" + value + ")";
-        }
+        return "FixedValue(" + value + ")";
       }
 
       @Override
       public T read(DataInputStream in) {
-        return supplier.get();
+        return value;
       }
 
       @Override
@@ -322,19 +315,18 @@ public final class MutatorCombinators {
 
       @Override
       public T detach(T value) {
-        return supplier.get();
+        return value;
       }
 
       @Override
-      protected T makeDefaultInstance() {
-        return supplier.get();
+      public T init(PseudoRandom prng) {
+        return value;
       }
 
       @Override
-      public void initInPlace(T reference, PseudoRandom prng) {}
-
-      @Override
-      public void mutateInPlace(T reference, PseudoRandom prng) {}
+      public T mutate(T value, PseudoRandom prng) {
+        return value;
+      }
     };
   }
 
