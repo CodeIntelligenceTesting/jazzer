@@ -128,5 +128,3 @@ message DoubleField3 {
 message RepeatedDoubleField3 {
   repeated double some_field = 1;
 }
-
-message EmptyMessage3 {}

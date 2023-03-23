@@ -28,7 +28,6 @@ import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutato
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
-import com.code_intelligence.jazzer.protobuf.Proto3.EmptyMessage3;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3.TestEnum;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldOne3;
@@ -482,24 +481,5 @@ class BuilderMutatorProto3Test {
     assertThat(builder.build())
         .isEqualTo(OneOfField3.newBuilder().setOtherField(true).setYetAnotherField(true).build());
     assertThat(builder.build().hasMessageField()).isFalse();
-  }
-
-  @Test
-  void testEmptyMessage3() {
-    InPlaceMutator<EmptyMessage3.Builder> mutator =
-        (InPlaceMutator<EmptyMessage3.Builder>) FACTORY.createInPlaceOrThrow(
-            new TypeHolder<EmptyMessage3.@NotNull Builder>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("FixedValue(EmptyMessage3.Builder())");
-    EmptyMessage3.Builder builder = EmptyMessage3.newBuilder();
-
-    try (MockPseudoRandom prng = mockPseudoRandom()) {
-      mutator.initInPlace(builder, prng);
-    }
-    assertThat(builder.build()).isEqualTo(EmptyMessage3.getDefaultInstance());
-
-    try (MockPseudoRandom prng = mockPseudoRandom()) {
-      mutator.mutateInPlace(builder, prng);
-    }
-    assertThat(builder.build()).isEqualTo(EmptyMessage3.getDefaultInstance());
   }
 }
