@@ -1,4 +1,4 @@
-// Copyright 2022 Code Intelligence GmbH
+// Copyright 2023 Code Intelligence GmbH
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
-import static com.code_intelligence.jazzer.utils.Utils.getReadableDescriptor;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
@@ -26,6 +25,7 @@ import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import com.code_intelligence.jazzer.driver.junit.ExitCodeException;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -33,7 +33,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -168,9 +171,22 @@ class FuzzTestExecutor {
             && fuzzTestMethod.getParameterTypes()[0] != FuzzedDataProvider.class);
   }
 
+  @SuppressWarnings("OptionalGetWithoutIsPresent")
   public Optional<Throwable> execute(ReflectiveInvocationContext<Method> invocationContext) {
     if (FuzzTestExecutor.useAutofuzz(invocationContext.getExecutable())) {
-      FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.AUTOFUZZ_FUZZ_TARGET;
+      FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.autofuzzFuzzTarget(() -> {
+        // Provide empty throws declarations to prevent the autofuzz from
+        // ignoring the defined test exceptions. All exceptions in tests should
+        // cause a test to fail.
+        Map<Executable, Class<?>[]> throwsDeclarations = new HashMap<>(1);
+        throwsDeclarations.put(invocationContext.getExecutable(), new Class[0]);
+
+        com.code_intelligence.jazzer.autofuzz.FuzzTarget.setTarget(
+            new Executable[] {invocationContext.getExecutable()},
+            invocationContext.getTarget().get(), invocationContext.getExecutable().toString(),
+            Collections.emptySet(), throwsDeclarations);
+        return null;
+      });
     } else {
       FuzzTargetHolder.fuzzTarget =
           new FuzzTargetHolder.FuzzTarget(invocationContext.getExecutable(),
