@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-package com.code_intelligence.jazzer.runtime;
+package com.example;
 
-import com.github.fmeum.rules_jni.RulesJni;
+import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
+import com.code_intelligence.jazzer.mutation.annotation.InRange;
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.protobuf.Proto2.TestProtobuf;
 
-public final class Mutator {
-  public static final boolean SHOULD_MOCK =
-      Boolean.parseBoolean(System.getenv("JAZZER_MOCK_LIBFUZZER_MUTATOR"));
-
-  static {
-    if (!SHOULD_MOCK) {
-      RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
+public class ExperimentalMutatorComplexProtoFuzzer {
+  public static void fuzzerTestOneInput(@NotNull TestProtobuf proto) {
+    if (proto.getI32() == 1234 && proto.getStr().equals("abcd")) {
+      throw new FuzzerSecurityIssueMedium("Secret proto is found!");
     }
   }
-
-  public static native int defaultMutateNative(byte[] buffer, int size);
-  public static native int defaultMutateKnownValuesNative(byte[] buffer, int size);
-
-  private Mutator() {}
 }

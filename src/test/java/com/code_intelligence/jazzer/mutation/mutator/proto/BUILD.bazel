@@ -20,7 +20,19 @@ proto_library(
 java_proto_library(
     name = "proto2_java_proto",
     testonly = True,
-    visibility = ["//src/test/java/com/code_intelligence/jazzer/mutation/mutator:__pkg__"],
+    visibility = [
+        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator:__pkg__",
+        "//tests:__pkg__",
+    ],
+    deps = [":proto2_proto"],
+)
+
+cc_proto_library(
+    name = "proto2_cc_proto",
+    testonly = True,
+    visibility = [
+        "//tests:__pkg__",
+    ],
     deps = [":proto2_proto"],
 )
 

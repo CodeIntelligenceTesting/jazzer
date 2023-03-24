@@ -207,3 +207,27 @@ android_configure(name = "configure_android_rules")
 load("@configure_android_rules//:android_configure.bzl", "android_workspace")
 
 android_workspace()
+
+http_archive(
+    name = "libprotobuf-mutator",
+    build_file_content = """
+cc_library(
+    name = "libprotobuf-mutator",
+    srcs = glob([
+        "src/*.cc",
+        "src/*.h",
+        "src/libfuzzer/*.cc",
+        "src/libfuzzer/*.h",
+        "port/protobuf.h",
+    ], exclude = [
+        "**/*_test.cc",
+    ]),
+    includes = ["src/libfuzzer/libfuzzer_macro.h"],
+    deps = ["@com_google_protobuf//:protobuf"],
+    visibility = ["//visibility:public"],
+)
+""",
+    sha256 = "fd299fd72c5cf664259d9bd43a72cb74dc6a8b9604d107fe2d2e90885aeb7c16",
+    strip_prefix = "libprotobuf-mutator-1.1",
+    urls = ["https://github.com/google/libprotobuf-mutator/archive/refs/tags/v1.1.tar.gz"],
+)

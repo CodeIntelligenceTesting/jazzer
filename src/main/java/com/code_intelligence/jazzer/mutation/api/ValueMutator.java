@@ -60,4 +60,6 @@ public interface ValueMutator<T> extends Debuggable {
    * </ul>
    */
   @CheckReturnValue T mutate(T value, PseudoRandom prng);
+
+  @CheckReturnValue T crossOver(T value, T otherValue, PseudoRandom prng);
 }

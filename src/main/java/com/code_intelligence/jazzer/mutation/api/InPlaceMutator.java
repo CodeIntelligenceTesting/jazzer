@@ -59,4 +59,6 @@ public interface InPlaceMutator<T> extends Debuggable {
    * </ul>
    */
   void mutateInPlace(T reference, PseudoRandom prng);
+
+  void crossOverInPlace(T reference, T otherReference, PseudoRandom prng);
 }

@@ -57,6 +57,11 @@ abstract class PostComposedMutator<T, R> extends SerializingMutator<R> {
   }
 
   @Override
+  public R crossOver(R value, R otherValue, PseudoRandom prng) {
+    return map.apply(mutator.crossOver(inverse.apply(value), inverse.apply(otherValue), prng));
+  }
+
+  @Override
   public final R read(DataInputStream in) throws IOException {
     return map.apply(mutator.read(in));
   }

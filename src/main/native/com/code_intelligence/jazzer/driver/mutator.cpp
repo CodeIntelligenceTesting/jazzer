@@ -18,6 +18,7 @@
 #include "com_code_intelligence_jazzer_runtime_Mutator.h"
 
 extern "C" size_t LLVMFuzzerMutate(uint8_t *Data, size_t Size, size_t MaxSize);
+extern "C" size_t LLVMFuzzerMutateKnownValues(uint8_t *Data, size_t Size, size_t MaxSize);
 
 [[maybe_unused]] jint
 Java_com_code_1intelligence_jazzer_runtime_Mutator_defaultMutateNative(
@@ -26,6 +27,17 @@ Java_com_code_1intelligence_jazzer_runtime_Mutator_defaultMutateNative(
   uint8_t *data =
       static_cast<uint8_t *>(env->GetPrimitiveArrayCritical(jni_data, nullptr));
   jint res = LLVMFuzzerMutate(data, size, maxSize);
+  env->ReleasePrimitiveArrayCritical(jni_data, data, 0);
+  return res;
+}
+
+[[maybe_unused]] jint
+Java_com_code_1intelligence_jazzer_runtime_Mutator_defaultMutateKnownValuesNative(
+    JNIEnv *env, jclass, jbyteArray jni_data, jint size) {
+  jint maxSize = env->GetArrayLength(jni_data);
+  uint8_t *data =
+      static_cast<uint8_t *>(env->GetPrimitiveArrayCritical(jni_data, nullptr));
+  jint res = LLVMFuzzerMutateKnownValues(data, size, maxSize);
   env->ReleasePrimitiveArrayCritical(jni_data, data, 0);
   return res;
 }

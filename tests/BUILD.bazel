@@ -446,6 +446,35 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "ExperimentalMutatorComplexProtoFuzzer",
+    srcs = ["src/test/java/com/example/ExperimentalMutatorComplexProtoFuzzer.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
+    fuzzer_args = [
+        "--experimental_mutator",
+        "--instrumentation_includes=com.example.**",
+        "--custom_hook_includes=com.example.**",
+    ],
+    target_class = "com.example.ExperimentalMutatorComplexProtoFuzzer",
+    verify_crash_reproducer = False,
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator/proto:proto2_java_proto",
+    ],
+)
+
+cc_binary(
+    name = "complex_proto_fuzzer",
+    testonly = True,
+    srcs = ["src/test/cc/complex_proto_fuzzer.cc"],
+    copts = ["-fsanitize=fuzzer"],
+    linkopts = ["-fsanitize=fuzzer"],
+    deps = [
+        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator/proto:proto2_cc_proto",
+        "@libprotobuf-mutator",
+    ],
+)
+
 sh_test(
     name = "jazzer_from_path_test",
     srcs = ["src/test/shell/jazzer_from_path_test.sh"],

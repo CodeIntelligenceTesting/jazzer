@@ -47,7 +47,22 @@ public final class LibFuzzerMutator {
     return Arrays.copyOf(mutatedBytes, newSize);
   }
 
-  public static <T> T mutateDefault(T value, Serializer<T> serializer, int maxSizeIncrease) {
+  public static byte[] mutateDefaultKnownValues(byte[] data, int maxSizeIncrease) {
+    byte[] mutatedBytes;
+    if (maxSizeIncrease == 0) {
+      mutatedBytes = data;
+    } else {
+      mutatedBytes = Arrays.copyOf(data, data.length + maxSizeIncrease);
+    }
+    int newSize = Mutator.defaultMutateKnownValuesNative(mutatedBytes, data.length);
+    if (newSize == 0) {
+      // Mutation failed. This should happen very rarely.
+      return data;
+    }
+    return Arrays.copyOf(mutatedBytes, newSize);
+  }
+
+  public static <T> T mutateKnownValues(T value, Serializer<T> serializer, int maxSizeIncrease) {
     require(maxSizeIncrease >= 0);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     try {
@@ -57,7 +72,7 @@ public final class LibFuzzerMutator {
           "writeExclusive is not expected to throw if the underlying stream doesn't", e);
     }
 
-    byte[] mutatedBytes = mutateDefault(out.toByteArray(), maxSizeIncrease);
+    byte[] mutatedBytes = mutateDefaultKnownValues(out.toByteArray(), maxSizeIncrease);
 
     try {
       return serializer.readExclusive(new ByteArrayInputStream(mutatedBytes));

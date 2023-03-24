@@ -52,7 +52,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     FloatMutator(AnnotatedType type, Float defaultMinValueForType, Float defaultMaxValueForType) {}
 
     public Float mutateWithLibFuzzer(Float value) {
-      return LibFuzzerMutator.mutateDefault(value, this, 0);
+      return LibFuzzerMutator.mutateKnownValues(value, this, 0);
     }
 
     // TODO: randomly init to special values like NaN, -0, +0, +Inf, -Inf
@@ -64,6 +64,11 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     // TODO: consider current value when mutating
     @Override
     public Float mutate(Float value, PseudoRandom prng) {
+      return prng.closedRange(-Float.MAX_VALUE, Float.MAX_VALUE);
+    }
+
+    @Override
+    public Float crossOver(Float value, Float otherValue, PseudoRandom prng) {
       return prng.closedRange(-Float.MAX_VALUE, Float.MAX_VALUE);
     }
 
@@ -93,7 +98,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
         AnnotatedType type, Double defaultMinValueForType, Double defaultMaxValueForType) {}
 
     public Double mutateWithLibFuzzer(Double value) {
-      return LibFuzzerMutator.mutateDefault(value, this, 0);
+      return LibFuzzerMutator.mutateKnownValues(value, this, 0);
     }
 
     // TODO: mix in special values like NaN, -0, +0, +Inf, -Inf
@@ -109,6 +114,11 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     public Double mutate(Double value, PseudoRandom prng) {
       // using "random.nextDouble(-Double.MAX_VALUE, Double.MAX_VALUE);" is not possible.
       // TODO: find out why
+      return prng.closedRange(-1e100, 1e100);
+    }
+
+    @Override
+    public Double crossOver(Double value, Double otherValue, PseudoRandom prng) {
       return prng.closedRange(-1e100, 1e100);
     }
 

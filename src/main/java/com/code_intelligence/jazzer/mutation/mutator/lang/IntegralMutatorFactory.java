@@ -48,7 +48,7 @@ final class IntegralMutatorFactory extends MutatorFactory {
       return Optional.of(new AbstractIntegralMutator<Byte>(type, Byte.MIN_VALUE, Byte.MAX_VALUE) {
         @Override
         protected long mutateWithLibFuzzer(long value) {
-          return LibFuzzerMutator.mutateDefault((byte) value, this, 0);
+          return LibFuzzerMutator.mutateKnownValues((byte) value, this, 0);
         }
 
         @Override
@@ -59,6 +59,11 @@ final class IntegralMutatorFactory extends MutatorFactory {
         @Override
         public Byte mutate(Byte value, PseudoRandom prng) {
           return (byte) mutateImpl(value, prng);
+        }
+
+        @Override
+        public Byte crossOver(Byte value, Byte otherValue, PseudoRandom prng) {
+          return (byte) crossOverImpl(value, otherValue, prng);
         }
 
         @Override
@@ -76,7 +81,7 @@ final class IntegralMutatorFactory extends MutatorFactory {
           new AbstractIntegralMutator<Short>(type, Short.MIN_VALUE, Short.MAX_VALUE) {
             @Override
             protected long mutateWithLibFuzzer(long value) {
-              return LibFuzzerMutator.mutateDefault((short) value, this, 0);
+              return LibFuzzerMutator.mutateKnownValues((short) value, this, 0);
             }
 
             @Override
@@ -87,6 +92,11 @@ final class IntegralMutatorFactory extends MutatorFactory {
             @Override
             public Short mutate(Short value, PseudoRandom prng) {
               return (short) mutateImpl(value, prng);
+            }
+
+            @Override
+            public Short crossOver(Short value, Short otherValue, PseudoRandom prng) {
+              return (short) crossOverImpl(value, otherValue, prng);
             }
 
             @Override
@@ -104,7 +114,7 @@ final class IntegralMutatorFactory extends MutatorFactory {
           new AbstractIntegralMutator<Integer>(type, Integer.MIN_VALUE, Integer.MAX_VALUE) {
             @Override
             protected long mutateWithLibFuzzer(long value) {
-              return LibFuzzerMutator.mutateDefault((int) value, this, 0);
+              return LibFuzzerMutator.mutateKnownValues((int) value, this, 0);
             }
 
             @Override
@@ -115,6 +125,11 @@ final class IntegralMutatorFactory extends MutatorFactory {
             @Override
             public Integer mutate(Integer value, PseudoRandom prng) {
               return (int) mutateImpl(value, prng);
+            }
+
+            @Override
+            public Integer crossOver(Integer value, Integer otherValue, PseudoRandom prng) {
+              return (int) crossOverImpl(value, otherValue, prng);
             }
 
             @Override
@@ -131,7 +146,7 @@ final class IntegralMutatorFactory extends MutatorFactory {
       return Optional.of(new AbstractIntegralMutator<Long>(type, Long.MIN_VALUE, Long.MAX_VALUE) {
         @Override
         protected long mutateWithLibFuzzer(long value) {
-          return LibFuzzerMutator.mutateDefault(value, this, 0);
+          return LibFuzzerMutator.mutateKnownValues(value, this, 0);
         }
 
         @Override
@@ -142,6 +157,11 @@ final class IntegralMutatorFactory extends MutatorFactory {
         @Override
         public Long mutate(Long value, PseudoRandom prng) {
           return mutateImpl(value, prng);
+        }
+
+        @Override
+        public Long crossOver(Long value, Long otherValue, PseudoRandom prng) {
+          return crossOverImpl(value, otherValue, prng);
         }
 
         @Override
@@ -267,6 +287,19 @@ final class IntegralMutatorFactory extends MutatorFactory {
         }
       } while (value == previousValue);
       return value;
+    }
+
+    protected final long crossOverImpl(long value, long otherValue, PseudoRandom prng) {
+      switch (prng.indexIn(3)) {
+        case 0:
+          return value / 2 + otherValue / 2;
+        case 1:
+          return value ^ otherValue;
+        case 2:
+          return otherValue;
+        default:
+          return value;
+      }
     }
 
     @ForOverride protected abstract long mutateWithLibFuzzer(long value);

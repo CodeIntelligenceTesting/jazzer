@@ -174,11 +174,16 @@ def jazzer_dependencies():
         url = "https://github.com/jacoco/jacoco/archive/refs/tags/v0.8.8.tar.gz",
     )
 
-    maybe(
-        http_archive,
+    native.local_repository(
         name = "jazzer_libfuzzer",
-        build_file = Label("//third_party:libFuzzer.BUILD"),
-        sha256 = "cfb91ee60ff03cec204e387f4af4fd4f031eb1257fd6481aa69ac748deecd1d1",
-        strip_prefix = "llvm-project-jazzer-2022-12-07/compiler-rt/lib/fuzzer",
-        url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/refs/tags/2022-12-07.tar.gz",
+        path = "../llvm-project-jazzer/compiler-rt/lib/fuzzer",
     )
+
+#    maybe(
+#        http_archive,
+#        name = "jazzer_libfuzzer",
+#        build_file = Label("//third_party:libFuzzer.BUILD"),
+#        sha256 = "cfb91ee60ff03cec204e387f4af4fd4f031eb1257fd6481aa69ac748deecd1d1",
+#        strip_prefix = "llvm-project-jazzer-2022-12-07/compiler-rt/lib/fuzzer",
+#        url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/refs/tags/2022-12-07.tar.gz",
+#    )

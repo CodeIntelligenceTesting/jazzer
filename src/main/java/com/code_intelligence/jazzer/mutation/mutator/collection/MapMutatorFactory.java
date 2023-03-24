@@ -155,6 +155,11 @@ final class MapMutatorFactory extends MutatorFactory {
       }
     }
 
+    @Override
+    public void crossOverInPlace(Map<K, V> reference, Map<K, V> otherReference, PseudoRandom prng) {
+
+    }
+
     private void initElement(Map<K, V> map, PseudoRandom prng) {
       // Lookup an unused key first, as the map may already contain and
       // deduplicate it. Keys are solely based on the prng so that an

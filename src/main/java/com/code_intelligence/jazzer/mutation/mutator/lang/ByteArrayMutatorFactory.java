@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.readAllBytes;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
+import static java.lang.Math.min;
 
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
@@ -93,7 +94,7 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
 
     @Override
     public byte[] init(PseudoRandom prng) {
-      int len = prng.closedRange(minLength, maxLength);
+      int len = prng.closedRange(minLength, min(maxLength, minLength + 1));
       byte[] bytes = new byte[len];
       prng.bytes(bytes);
       return bytes;
@@ -113,6 +114,11 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
       } else {
         return mutated;
       }
+    }
+
+    @Override
+    public byte[] crossOver(byte[] value, byte[] otherValue, PseudoRandom prng) {
+      return value;
     }
 
     @Override

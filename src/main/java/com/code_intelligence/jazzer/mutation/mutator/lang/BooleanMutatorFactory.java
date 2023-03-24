@@ -62,6 +62,15 @@ final class BooleanMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public Boolean crossOver(Boolean value, Boolean otherValue, PseudoRandom prng) {
+      if (prng.choice()) {
+        return value;
+      } else {
+        return otherValue;
+      }
+    }
+
+    @Override
     public String toDebugString(Predicate<Debuggable> isInLoop) {
       return "Boolean";
     }

@@ -95,6 +95,15 @@ final class NullableMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public T crossOver(T value, T otherValue, PseudoRandom prng) {
+      if (value != null && otherValue != null) {
+        return mutator.crossOver(value, otherValue, prng);
+      } else {
+        return value;
+      }
+    }
+
+    @Override
     public T detach(T value) {
       if (value == null) {
         return null;
