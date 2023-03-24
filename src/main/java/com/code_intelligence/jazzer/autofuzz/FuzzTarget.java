@@ -1,4 +1,4 @@
-// Copyright 2021 Code Intelligence GmbH
+// Copyright 2023 Code Intelligence GmbH
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ public final class FuzzTarget {
   private static Meta meta;
   private static String methodReference;
   private static Executable[] targetExecutables;
+  private static Object targetInstance;
   private static Map<Executable, Class<?>[]> throwsDeclarations;
   private static Set<SimpleGlobMatcher> ignoredExceptionMatchers;
   private static long executionsSinceLastInvocation = 0;
@@ -61,8 +62,8 @@ public final class FuzzTarget {
           "Expected the argument to --autofuzz to be a method reference (e.g. System.out::println)");
       System.exit(1);
     }
-    methodReference = args[0];
-    String[] parts = methodReference.split("::", 2);
+    String methodSignature = args[0];
+    String[] parts = methodSignature.split("::", 2);
     String className = parts[0];
     String methodNameAndOptionalDescriptor = parts[1];
     String methodName;
@@ -108,8 +109,8 @@ public final class FuzzTarget {
     final Class<?> targetClass = targetClassTemp;
 
     AccessibleObjectLookup lookup = new AccessibleObjectLookup(targetClass);
-    meta = new Meta(targetClass);
 
+    Executable[] executables;
     boolean isConstructor = methodName.equals("new");
     // We filter out inherited methods, which can lead to unexpected results when autofuzzing a
     // method by name without a descriptor. If desired, these can be autofuzzed explicitly by
@@ -117,24 +118,22 @@ public final class FuzzTarget {
     // methods. This is necessary e.g. when using Autofuzz on a package-private JUnit @FuzzTest
     // method.
     if (isConstructor) {
-      targetExecutables =
-          Arrays.stream(lookup.getAccessibleConstructors(targetClass))
-              .filter(constructor -> constructor.getDeclaringClass().equals(targetClass))
-              .filter(constructor
-                  -> (descriptor == null && Modifier.isPublic(constructor.getModifiers()))
-                      || Utils.getReadableDescriptor(constructor).equals(descriptor))
-              .toArray(Executable[] ::new);
+      executables = Arrays.stream(lookup.getAccessibleConstructors(targetClass))
+                        .filter(constructor -> constructor.getDeclaringClass().equals(targetClass))
+                        .filter(constructor
+                            -> (descriptor == null && Modifier.isPublic(constructor.getModifiers()))
+                                || Utils.getReadableDescriptor(constructor).equals(descriptor))
+                        .toArray(Executable[] ::new);
     } else {
-      targetExecutables =
-          Arrays.stream(lookup.getAccessibleMethods(targetClass))
-              .filter(method -> method.getDeclaringClass().equals(targetClass))
-              .filter(method
-                  -> method.getName().equals(methodName)
-                      && ((descriptor == null && Modifier.isPublic(method.getModifiers()))
-                          || Utils.getReadableDescriptor(method).equals(descriptor)))
-              .toArray(Executable[] ::new);
+      executables = Arrays.stream(lookup.getAccessibleMethods(targetClass))
+                        .filter(method -> method.getDeclaringClass().equals(targetClass))
+                        .filter(method
+                            -> method.getName().equals(methodName)
+                                && ((descriptor == null && Modifier.isPublic(method.getModifiers()))
+                                    || Utils.getReadableDescriptor(method).equals(descriptor)))
+                        .toArray(Executable[] ::new);
     }
-    if (targetExecutables.length == 0) {
+    if (executables.length == 0) {
       if (isConstructor) {
         if (descriptor == null) {
           Log.error(
@@ -185,15 +184,11 @@ public final class FuzzTarget {
       System.exit(1);
     }
 
-    for (Executable executable : targetExecutables) {
-      executable.setAccessible(true);
-    }
-
-    ignoredExceptionMatchers = Arrays.stream(args)
-                                   .skip(1)
-                                   .filter(s -> s.contains("*"))
-                                   .map(SimpleGlobMatcher::new)
-                                   .collect(Collectors.toSet());
+    Set<SimpleGlobMatcher> ignoredExceptionGlobMatchers = Arrays.stream(args)
+                                                              .skip(1)
+                                                              .filter(s -> s.contains("*"))
+                                                              .map(SimpleGlobMatcher::new)
+                                                              .collect(Collectors.toSet());
 
     List<Class<?>> alwaysIgnore =
         Arrays.stream(args)
@@ -210,13 +205,42 @@ public final class FuzzTarget {
               throw new Error("Not reached");
             })
             .collect(Collectors.toList());
-    throwsDeclarations =
-        Arrays.stream(targetExecutables)
+
+    Map<Executable, Class<?>[]> ignoredExceptionClasses =
+        Arrays.stream(executables)
             .collect(Collectors.toMap(method
                 -> method,
                 method
                 -> Stream.concat(Arrays.stream(method.getExceptionTypes()), alwaysIgnore.stream())
                        .toArray(Class[] ::new)));
+
+    setTarget(
+        executables, null, methodSignature, ignoredExceptionGlobMatchers, ignoredExceptionClasses);
+  }
+
+  /**
+   * Set the target executables to (auto-)fuzz. This method is primarily used by the JUnit
+   * integration to set the target class and method passed in by the test framework.
+   */
+  public static void setTarget(Executable[] targetExecutables, Object targetInstance,
+      String methodReference, Set<SimpleGlobMatcher> ignoredExceptionMatchers,
+      Map<Executable, Class<?>[]> throwsDeclarations) {
+    Class<?> targetClass = null;
+    for (Executable executable : targetExecutables) {
+      if (targetClass != null && !targetClass.equals(executable.getDeclaringClass())) {
+        throw new IllegalStateException(
+            "All target executables must be declared in the same class");
+      }
+      targetClass = executable.getDeclaringClass();
+      executable.setAccessible(true);
+    }
+
+    FuzzTarget.meta = new Meta(targetClass);
+    FuzzTarget.targetExecutables = targetExecutables;
+    FuzzTarget.targetInstance = targetInstance;
+    FuzzTarget.methodReference = methodReference;
+    FuzzTarget.ignoredExceptionMatchers = ignoredExceptionMatchers;
+    FuzzTarget.throwsDeclarations = throwsDeclarations;
   }
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Throwable {
@@ -258,8 +282,14 @@ public final class FuzzTarget {
     Object returnValue = null;
     try {
       if (targetExecutable instanceof Method) {
-        returnValue = meta.autofuzz(data, (Method) targetExecutable, codegenVisitor);
+        if (targetInstance != null) {
+          returnValue =
+              meta.autofuzz(data, (Method) targetExecutable, targetInstance, codegenVisitor);
+        } else {
+          returnValue = meta.autofuzz(data, (Method) targetExecutable, codegenVisitor);
+        }
       } else {
+        // No targetInstance for constructors possible.
         returnValue = meta.autofuzz(data, (Constructor<?>) targetExecutable, codegenVisitor);
       }
       executionsSinceLastInvocation = 0;
@@ -288,7 +318,8 @@ public final class FuzzTarget {
       Throwable cause = e.getCause();
       Class<?> causeClass = cause.getClass();
       // Do not report exceptions declared to be thrown by the method under test.
-      for (Class<?> declaredThrow : throwsDeclarations.get(targetExecutable)) {
+      for (Class<?> declaredThrow :
+          throwsDeclarations.getOrDefault(targetExecutable, new Class[0])) {
         if (declaredThrow.isAssignableFrom(causeClass)) {
           return;
         }

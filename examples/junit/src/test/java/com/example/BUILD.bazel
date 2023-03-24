@@ -150,6 +150,25 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "AutofuzzLifecycleFuzzTest",
+    srcs = ["AutofuzzLifecycleFuzzTest.java"],
+    fuzzer_args = [
+        "--instrumentation_includes=com.example.**",
+        "--custom_hook_includes=com.example.**",
+        "-runs=0",
+    ],
+    target_class = "com.example.AutofuzzLifecycleFuzzTest",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        ":junit_runtime",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
 java_library(
     name = "junit_runtime",
     runtime_deps = [
