@@ -348,4 +348,14 @@ public class Zer
     reportFindingIfEnabled();
     return this;
   }
+
+  // readObject calls can directly result in RCE, see https://github.com/frohoff/ysoserial for
+  // examples. Since deserialization doesn't call constructors (see
+  // https://docs.oracle.com/javase/7/docs/platform/serialization/spec/input.html#2971), we emit a
+  // finding right in the readObject method.
+  private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+    // Need to read in ourselves to initialize the sanitizer field.
+    stream.defaultReadObject();
+    reportFindingIfEnabled();
+  }
 }
