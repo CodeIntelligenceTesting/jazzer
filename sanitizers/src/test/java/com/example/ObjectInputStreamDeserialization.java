@@ -22,7 +22,7 @@ public class ObjectInputStreamDeserialization {
   public static void fuzzerTestOneInput(byte[] data) {
     try {
       ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-      ois.readObject().toString();
+      ois.readObject();
     } catch (IOException | ClassNotFoundException ignored) {
       // Ignored checked exception.
     } catch (NullPointerException | NegativeArraySizeException ignored) {
