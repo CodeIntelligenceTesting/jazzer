@@ -69,6 +69,20 @@ else
   exit 1
 fi
 
+echo "[SPRINGBOOT-JUNIT]: This fuzz test using autofuzz should fail"
+set +e
+JAZZER_FUZZ=1 ./mvnw test -Dtest="JunitSpringWebApplicationTests#fuzzTestWithDtoShouldFail"
+declare -i exit_code=$?
+set -e
+
+if [ $exit_code -eq 1 ]
+then
+  echo "[SPRINGBOOT-JUNIT]: Expected failing fuzz tests: continuing"
+else
+  echo "[SPRINGBOOT-JUNIT]: Expected exit code 1, but got $exit_code"
+  exit 1
+fi
+
 ## CLI tests
 ## Assert transitive JUnit dependencies are specified
 assertDependency() {
@@ -101,5 +115,24 @@ java -cp "target/*:${deps}" \
   --instrumentation_includes=com.example.* \
   --custom_hook_includes=com.example.*
 
+
+echo "[SPRINGBOOT-JUNIT]: Direct Jazzer execution of fuzz test using autofuzz should fail"
+set +e
+JAZZER_FUZZ=1 java -cp "target/*:${deps}" \
+  com.code_intelligence.jazzer.Jazzer \
+  --target_class=com.example.JunitSpringWebApplicationTests \
+  --target_method=fuzzTestWithDtoShouldFail \
+  --instrumentation_includes=com.example.* \
+  --custom_hook_includes=com.example.*
+declare -i exit_code=$?
+set -e
+
+if [ $exit_code -eq 77 ]
+then
+  echo "[SPRINGBOOT-JUNIT]: Expected failing fuzz tests: continuing"
+else
+  echo "[SPRINGBOOT-JUNIT]: Expected exit code 77, but got $exit_code"
+  exit 1
+fi
 
 echo "[SPRINGBOOT-JUNIT]: All tests passed"

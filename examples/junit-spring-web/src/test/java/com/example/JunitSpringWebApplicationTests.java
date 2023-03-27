@@ -16,21 +16,30 @@
 
 package com.example;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import com.example.JunitSpringWebApplication.HelloRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest()
+@WebMvcTest
 public class JunitSpringWebApplicationTests {
-  @Autowired private MockMvc mockMvc;
+  private static final ObjectMapper mapper = new ObjectMapper();
 
+  @Autowired private MockMvc mockMvc;
   private boolean beforeCalled = false;
 
   @BeforeEach
@@ -70,6 +79,19 @@ public class JunitSpringWebApplicationTests {
     }
 
     String name = data.consumeRemainingAsString();
-    mockMvc.perform(get("/buggy-hello").param("name", name));
+    mockMvc.perform(get("/buggy-hello").param("name", name))
+        .andExpect(content().string(containsString(name)));
+  }
+
+  @FuzzTest(maxDuration = "10s")
+  public void fuzzTestWithDtoShouldFail(HelloRequest helloRequest) throws Exception {
+    Assumptions.assumeTrue(
+        helloRequest != null && helloRequest.name != null && !helloRequest.name.isBlank());
+
+    mockMvc
+        .perform(post("/hello")
+                     .contentType(MediaType.APPLICATION_JSON)
+                     .content(mapper.writeValueAsString(helloRequest)))
+        .andExpect(content().string(containsString(helloRequest.name)));
   }
 }
