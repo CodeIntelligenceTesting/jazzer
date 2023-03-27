@@ -69,12 +69,6 @@ class FuzzTestExecutor {
           "Methods annotated with @FuzzTest must take at least one parameter");
     }
 
-    if (useAutofuzz(fuzzTestMethod)) {
-      System.setProperty("jazzer.autofuzz",
-          String.format("%s::%s%s", fuzzTestMethod.getDeclaringClass().getName(),
-              fuzzTestMethod.getName(), getReadableDescriptor(fuzzTestMethod)));
-    }
-
     Path baseDir =
         Paths.get(context.getConfigurationParameter("jazzer.internal.basedir").orElse(""))
             .toAbsolutePath();
