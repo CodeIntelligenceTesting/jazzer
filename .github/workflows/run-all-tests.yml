@@ -19,10 +19,11 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: zulu
-          java-version: 11
+          java-version: 17
       - name: Build and run tests
         # The Spring Boot example project is built with Maven. The shell script builds the project
         # against the local version of Jazzer and runs its unit and fuzz tests.
+        # Spring version 6 requires JDK 17.
         run: |
           cd examples/junit-spring-web
           ./build-and-run-tests.sh
