@@ -93,10 +93,23 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
 
     @Override
     public byte[] init(PseudoRandom prng) {
-      int len = prng.closedRange(minLength, maxLength);
+      int len = prng.closedRange(minInitialSize(), maxInitialSize());
       byte[] bytes = new byte[len];
       prng.bytes(bytes);
       return bytes;
+    }
+
+    private int minInitialSize() {
+      return minLength;
+    }
+
+    private int maxInitialSize() {
+      // Allow some variation in length, but keep the initial elements well within reach of each
+      // other via a single mutation based on a Table of Recent Compares (ToRC) entry, which is
+      // currently limited to 64 bytes.
+      // Compared to List<T>, byte arrays can't result in recursive type hierarchies and thus don't
+      // to limit their expected initial size to be <= 1.
+      return Math.min(minLength + 16, maxLength);
     }
 
     @Override

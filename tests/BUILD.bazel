@@ -437,12 +437,37 @@ java_fuzz_target_test(
         # TODO: Investigate whether we can automatically exclude protos.
         "--instrumentation_excludes=com.example.SimpleProto*",
         "--custom_hook_excludes=com.example.SimpleProto*",
+        # Limit runs to catch regressions in mutator efficiency and speed up test runs.
+        "-runs=40000",
     ],
     target_class = "com.example.ExperimentalMutatorFuzzer",
     verify_crash_reproducer = False,
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
         "//tests/src/test/proto:simple_java_proto",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "ExperimentalMutatorComplexProtoFuzzer",
+    srcs = ["src/test/java/com/example/ExperimentalMutatorComplexProtoFuzzer.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
+    fuzzer_args = [
+        "--experimental_mutator",
+        "--instrumentation_includes=com.example.**",
+        "--custom_hook_includes=com.example.**",
+    ] + select({
+        # Limit runs to catch regressions in mutator efficiency and speed up test runs.
+        "@platforms//os:linux": ["-runs=40000"],
+        # TODO: Investigate why this test takes far more runs on macOS, with Windows also being
+        #       significantly worse than Linux.
+        "//conditions:default": ["-runs=1200000"],
+    }),
+    target_class = "com.example.ExperimentalMutatorComplexProtoFuzzer",
+    verify_crash_reproducer = False,
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator/proto:proto2_java_proto",
     ],
 )
 
