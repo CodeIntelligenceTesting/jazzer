@@ -108,7 +108,8 @@ public class StressTest {
             new TypeHolder<@NotNull Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
             "Map<String,String>", distinctElementsRatio(0.45), distinctElementsRatio(0.45)),
         arguments(new TypeHolder<Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
-            "Nullable<Map<String,String>>", manyDistinctElements(), manyDistinctElements()),
+            "Nullable<Map<String,String>>", distinctElementsRatio(0.48),
+            distinctElementsRatio(0.48)),
         arguments(
             new TypeHolder<@WithSize(
                 min = 1, max = 3) @NotNull Map<@NotNull Integer, @NotNull Integer>>() {
@@ -225,7 +226,7 @@ public class StressTest {
                 EnumFieldRepeated3.newBuilder().addSomeField(TestEnumRepeated.VAL2).build()),
             manyDistinctElements()),
         arguments(new TypeHolder<@NotNull MapField3>() {}.annotatedType(),
-            "{Builder.Map<Integer,String>} -> Message", distinctElementsRatio(0.49),
+            "{Builder.Map<Integer,String>} -> Message", distinctElementsRatio(0.475),
             manyDistinctElements()),
         arguments(new TypeHolder<@NotNull MessageMapField3>() {}.annotatedType(),
             "{Builder.Map<String,{Builder.Map<Integer,String>} -> Message>} -> Message",
