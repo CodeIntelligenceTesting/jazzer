@@ -25,6 +25,7 @@ import static java.util.stream.Collectors.toMap;
 
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.api.*;
+import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import com.code_intelligence.jazzer.mutation.support.StreamSupport;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -90,7 +91,7 @@ final class MapMutatorFactory extends MutatorFactory {
 
     @Override
     public Map<K, V> read(DataInputStream in) throws IOException {
-      int size = Math.min(Math.max(in.readInt(), minSize), maxSize);
+      int size = RandomSupport.clamp(in.readInt(), minSize, maxSize);
       Map<K, V> map = new HashMap<>(size);
       for (int i = 0; i < size; i++) {
         map.put(keyMutator.read(in), valueMutator.read(in));
