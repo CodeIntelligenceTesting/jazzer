@@ -16,11 +16,13 @@ java_junit5_test(
     tags = ["cpu:" + str(TEST_PARALLELISM)],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation/proto",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
         "//src/test/java/com/code_intelligence/jazzer/mutation/mutator/proto:proto2_java_proto",
         "//src/test/java/com/code_intelligence/jazzer/mutation/mutator/proto:proto3_java_proto",
         "//src/test/java/com/code_intelligence/jazzer/mutation/support:test_support",
+        "@com_google_protobuf_protobuf_java//jar",
     ],
 )

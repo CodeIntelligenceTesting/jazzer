@@ -14,6 +14,8 @@
 
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
+
 option java_package = "com.code_intelligence.jazzer.protobuf";
 
 message PrimitiveField3 {
@@ -130,3 +132,7 @@ message RepeatedDoubleField3 {
 }
 
 message EmptyMessage3 {}
+
+message AnyField3 {
+  google.protobuf.Any some_field = 1;
+}
