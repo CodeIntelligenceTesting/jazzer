@@ -16,17 +16,23 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
+import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withTypeArguments;
+import static java.lang.String.format;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 
@@ -90,5 +96,25 @@ final class TypeLibrary {
     }
   }
 
-  private TypeLibrary() {}
+  private TypeLibrary() {
+  }
+
+  static Message getDefaultInstance(Class<? extends Message> messageClass) {
+    Method getDefaultInstance;
+    try {
+      getDefaultInstance = messageClass.getMethod("getDefaultInstance");
+      check(Modifier.isStatic(getDefaultInstance.getModifiers()));
+    } catch (NoSuchMethodException e) {
+      throw new IllegalStateException(
+          format("Message class for builder type %s does not have a getDefaultInstance method",
+              messageClass.getName()),
+          e);
+    }
+    try {
+      return (Message) getDefaultInstance.invoke(null);
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      throw new IllegalStateException(
+          format(getDefaultInstance + " isn't accessible or threw an exception"), e);
+    }
+  }
 }

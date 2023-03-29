@@ -168,26 +168,6 @@ public final class BuilderMutatorFactory extends MutatorFactory {
     }
   }
 
-  private static <T extends Builder> Message getDefaultInstance(Class<T> builderClass) {
-    Class<?> messageClass = builderClass.getEnclosingClass();
-    Method getDefaultInstance;
-    try {
-      getDefaultInstance = messageClass.getMethod("getDefaultInstance");
-      check(Modifier.isStatic(getDefaultInstance.getModifiers()));
-    } catch (NoSuchMethodException e) {
-      throw new IllegalStateException(
-          format("Message class for builder type %s does not have a getDefaultInstance method",
-              builderClass),
-          e);
-    }
-    try {
-      return (Message) getDefaultInstance.invoke(null);
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new IllegalStateException(
-          format(getDefaultInstance + " isn't accessible or threw an exception"), e);
-    }
-  }
-
   private static Serializer<Builder> makeBuilderSerializer(Message defaultInstance) {
     return new Serializer<Builder>() {
       @Override
