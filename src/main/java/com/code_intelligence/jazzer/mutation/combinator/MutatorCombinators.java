@@ -232,7 +232,7 @@ public final class MutatorCombinators {
     return new SerializingMutator<Integer>() {
       @Override
       public Integer read(DataInputStream in) throws IOException {
-        return in.readInt() % length;
+        return Math.floorMod(in.readInt(), length);
       }
 
       @Override
