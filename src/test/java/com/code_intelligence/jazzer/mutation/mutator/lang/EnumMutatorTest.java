@@ -24,7 +24,11 @@ import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
-import com.google.errorprone.annotations.Immutable;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 class EnumMutatorTest {
@@ -68,9 +72,32 @@ class EnumMutatorTest {
   @Test
   void testEnumWithOneElementShouldThrow() {
     assertThrows(IllegalArgumentException.class, () -> {
-      SerializingMutator<TestEnumOne> mutator =
-          (SerializingMutator<TestEnumOne>) LangMutators.newFactory().createOrThrow(
-              new TypeHolder<@NotNull TestEnumOne>() {}.annotatedType());
+      LangMutators.newFactory().createOrThrow(
+          new TypeHolder<@NotNull TestEnumOne>() {}.annotatedType());
     }, "When trying to build mutators for Enum with one value, an Exception should be thrown.");
+  }
+
+  @Test
+  void testEnumBasedOnInvalidInput() throws IOException {
+    SerializingMutator<TestEnum> mutator =
+        (SerializingMutator<TestEnum>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
+    ByteArrayOutputStream bo = new ByteArrayOutputStream();
+    DataOutputStream os = new DataOutputStream(bo);
+    // Valid values
+    os.writeInt(0);
+    os.writeInt(1);
+    os.writeInt(2);
+    // Too high indices wrap around
+    os.writeInt(3);
+    // Abs. value is used to calculate the index
+    os.writeInt(-3);
+
+    DataInputStream is = new DataInputStream(new ByteArrayInputStream(bo.toByteArray()));
+    assertThat(mutator.read(is)).isEqualTo(TestEnum.A);
+    assertThat(mutator.read(is)).isEqualTo(TestEnum.B);
+    assertThat(mutator.read(is)).isEqualTo(TestEnum.C);
+    assertThat(mutator.read(is)).isEqualTo(TestEnum.A);
+    assertThat(mutator.read(is)).isEqualTo(TestEnum.A);
   }
 }
