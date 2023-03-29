@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.proto.AnySource;
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
@@ -28,6 +29,8 @@ import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutato
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.protobuf.Proto3.AnyField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.AnyField3.Builder;
 import com.code_intelligence.jazzer.protobuf.Proto3.EmptyMessage3;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3.TestEnum;
@@ -44,6 +47,7 @@ import com.code_intelligence.jazzer.protobuf.Proto3.RecursiveMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedPrimitiveField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.TestEnumOutside3;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
@@ -501,5 +505,73 @@ class BuilderMutatorProto3Test {
       mutator.mutateInPlace(builder, prng);
     }
     assertThat(builder.build()).isEqualTo(EmptyMessage3.getDefaultInstance());
+  }
+
+  @Test
+  void testAnyField3() throws InvalidProtocolBufferException {
+    InPlaceMutator<AnyField3.Builder> mutator =
+        (InPlaceMutator<AnyField3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<@NotNull @AnySource(
+                {PrimitiveField3.class, MessageField3.class}) Builder>() {
+            }.annotatedType());
+    assertThat(mutator.toString())
+        .isEqualTo(
+            "{Builder.Nullable<Builder.{Builder.Boolean} -> Message | Builder.{Builder.Nullable<(cycle) -> Message>} -> Message -> Message>}");
+    AnyField3.Builder builder = AnyField3.newBuilder();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // initialize message field
+             false,
+             // PrimitiveField3
+             0,
+             // boolean field
+             true)) {
+      mutator.initInPlace(builder, prng);
+    }
+    assertThat(builder.build().getSomeField().unpack(PrimitiveField3.class))
+        .isEqualTo(PrimitiveField3.newBuilder().setSomeField(true).build());
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate Any field
+             0,
+             // keep non-null message field
+             false,
+             // keep Any state,
+             false,
+             // mutate boolean field
+             0)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.build().getSomeField().unpack(PrimitiveField3.class))
+        .isEqualTo(PrimitiveField3.newBuilder().setSomeField(false).build());
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate Any field
+             0,
+             // keep non-null message field
+             false,
+             // switch Any state
+             true,
+             // new Any state
+             1,
+             // non-null message
+             false,
+             // boolean field,
+             true)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.build().getSomeField().unpack(MessageField3.class))
+        .isEqualTo(MessageField3.newBuilder()
+                       .setMessageField(PrimitiveField3.newBuilder().setSomeField(true))
+                       .build());
+  }
+
+  @Test
+  void testAnyField3WithoutAnySourceDoesNotCrash() throws InvalidProtocolBufferException {
+    InPlaceMutator<AnyField3.Builder> mutator =
+        (InPlaceMutator<AnyField3.Builder>) FACTORY.createInPlaceOrThrow(
+            new TypeHolder<@NotNull Builder>() {}.annotatedType());
+    assertThat(mutator.toString())
+        .isEqualTo("{Builder.Nullable<{Builder.String, Builder.byte[] -> ByteString} -> Message>}");
   }
 }

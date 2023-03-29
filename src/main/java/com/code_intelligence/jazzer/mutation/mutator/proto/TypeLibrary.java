@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withTypeArguments;
 import static java.lang.String.format;
 
@@ -29,6 +30,7 @@ import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -40,9 +42,10 @@ final class TypeLibrary {
   private static final AnnotatedType RAW_LIST = new TypeHolder<@NotNull List>() {}.annotatedType();
   private static final AnnotatedType RAW_MAP = new TypeHolder<@NotNull Map>() {}.annotatedType();
 
-  static <T extends Builder> AnnotatedType getTypeToMutate(FieldDescriptor field, T builder) {
+  static <T extends Builder> AnnotatedType getTypeToMutate(
+      FieldDescriptor field, T builder, Annotation[] messageFieldAnnotations) {
     if (field.isRequired()) {
-      return getBaseType(field, builder);
+      return getBaseType(field, builder, messageFieldAnnotations);
     } else if (field.isMapField()) {
       // Map fields are represented as repeated message fields, so this check has to come before the
       // one for regular repeated fields.
@@ -51,32 +54,35 @@ final class TypeLibrary {
       // repeated message field representation of a map field.
       Builder entryBuilder = builder.newBuilderForField(field);
       FieldDescriptor keyField = field.getMessageType().getFields().get(0);
-      AnnotatedType keyType = getBaseType(keyField, entryBuilder);
+      AnnotatedType keyType = getBaseType(keyField, entryBuilder, messageFieldAnnotations);
       FieldDescriptor valueField = field.getMessageType().getFields().get(1);
-      AnnotatedType valueType = getBaseType(valueField, entryBuilder);
+      AnnotatedType valueType = getBaseType(valueField, entryBuilder, messageFieldAnnotations);
       return withTypeArguments(RAW_MAP, keyType, valueType);
     } else if (field.isRepeated()) {
-      return withTypeArguments(RAW_LIST, getBaseType(field, builder));
+      return withTypeArguments(RAW_LIST, getBaseType(field, builder, messageFieldAnnotations));
     } else if (field.hasPresence()) {
-      return getBaseTypeWithPresence(field, builder);
+      return getBaseTypeWithPresence(field, builder, messageFieldAnnotations);
     } else {
-      return getBaseType(field, builder);
+      return getBaseType(field, builder, messageFieldAnnotations);
     }
   }
 
-  private static <T extends Builder> AnnotatedType getBaseType(FieldDescriptor field, T builder) {
-    return notNull(getBaseTypeWithPresence(field, builder));
+  private static <T extends Builder> AnnotatedType getBaseType(
+      FieldDescriptor field, T builder, Annotation[] messageFieldAnnotations) {
+    return notNull(getBaseTypeWithPresence(field, builder, messageFieldAnnotations));
   }
 
   @SuppressWarnings("DuplicateBranchesInSwitch") /* False positives caused by TypeHolder */
   private static <T extends Builder> AnnotatedType getBaseTypeWithPresence(
-      FieldDescriptor field, T builder) {
+      FieldDescriptor field, T builder, Annotation[] messageFieldAnnotations) {
     switch (field.getJavaType()) {
       case BOOLEAN:
         return new TypeHolder<Boolean>() {}.annotatedType();
       case MESSAGE:
-        return asAnnotatedType(
-            builder.newBuilderForField(field).getDefaultInstanceForType().getClass());
+        return withExtraAnnotations(
+            asAnnotatedType(
+                builder.newBuilderForField(field).getDefaultInstanceForType().getClass()),
+            messageFieldAnnotations);
       case INT:
         return new TypeHolder<Integer>() {}.annotatedType();
       case LONG:
@@ -96,8 +102,7 @@ final class TypeLibrary {
     }
   }
 
-  private TypeLibrary() {
-  }
+  private TypeLibrary() {}
 
   static Message getDefaultInstance(Class<? extends Message> messageClass) {
     Method getDefaultInstance;

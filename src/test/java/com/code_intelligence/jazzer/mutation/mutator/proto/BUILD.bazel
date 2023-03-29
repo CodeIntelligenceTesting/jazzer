@@ -3,6 +3,9 @@ load("@contrib_rules_jvm//java:defs.bzl", "java_test_suite")
 proto_library(
     name = "proto3_proto",
     srcs = ["proto3.proto"],
+    deps = [
+        "@com_google_protobuf//:any_proto",
+    ],
 )
 
 java_proto_library(
@@ -36,6 +39,7 @@ java_test_suite(
         ":proto2_java_proto",
         ":proto3_java_proto",
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation/proto",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/collection",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/lang",
