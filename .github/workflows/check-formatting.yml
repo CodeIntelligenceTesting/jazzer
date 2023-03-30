@@ -24,10 +24,6 @@ jobs:
 
       - name: Install formatters
         run: |
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo apt-get install software-properties-common
-          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main'
-          sudo apt-get install clang-format-14
           go install github.com/google/addlicense@latest
 
       - name: Run format.sh and print changes
@@ -35,7 +31,6 @@ jobs:
           CI: 1
         run: |
           ./format.sh
-          clang-format --version
           git diff
 
       - name: Check for changes
