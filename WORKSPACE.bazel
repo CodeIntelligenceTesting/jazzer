@@ -227,3 +227,23 @@ bazel_skylib_workspace()
 load("@buildifier_prebuilt//:defs.bzl", "buildifier_prebuilt_register_toolchains")
 
 buildifier_prebuilt_register_toolchains()
+
+http_file(
+    name = "clang-format-15-darwin-x64",
+    downloaded_file_path = "clang-format",
+    executable = True,
+    sha256 = "97116f64d97fb2870b4aa29758bba8fb0fe7f3b1ed8a4bc12faa927ecfdec196",
+    urls = [
+        "https://github.com/angular/clang-format/raw/master/bin/darwin_x64/clang-format",
+    ],
+)
+
+http_file(
+    name = "clang-format-15-linux-x64",
+    downloaded_file_path = "clang-format",
+    executable = True,
+    sha256 = "050c600256e225eabe9608d28f492fe8673c6e7f5deac59c6da973223c764d6c",
+    urls = [
+        "https://github.com/angular/clang-format/raw/master/bin/linux_x64/clang-format",
+    ],
+)

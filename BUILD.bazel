@@ -51,6 +51,15 @@ buildifier_test(
     workspace = "//:WORKSPACE.bazel",
 )
 
+alias(
+    name = "clang-format",
+    actual = select({
+        "@platforms//os:macos": "@clang-format-15-darwin-x64//file:clang-format",
+        "@platforms//os:linux": "@clang-format-15-linux-x64//file:clang-format",
+    }),
+    tags = ["manual"],
+)
+
 platform(
     name = "android_arm64",
     constraint_values = [

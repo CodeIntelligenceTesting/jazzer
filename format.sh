@@ -19,7 +19,7 @@ set -euo pipefail
 THIS_DIR="$(pwd -P)"
 
 # C++ & Java
-find -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.java' | xargs clang-format-14 -i
+find "$THIS_DIR" \( -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.java' \) -print0 | xargs -0 bazel run --config=quiet //:clang-format -- -i
 
 # No need to run in CI as these formatters have corresponding Bazel tests.
 if [[ "${CI:-0}" == 0 ]]; then
