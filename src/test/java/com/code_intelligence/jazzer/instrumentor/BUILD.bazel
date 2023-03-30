@@ -1,4 +1,4 @@
-load("//bazel:kotlin.bzl", "wrapped_kt_jvm_test")
+load("//bazel:kotlin.bzl", "ktlint", "wrapped_kt_jvm_test")
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 kt_jvm_library(
@@ -148,3 +148,5 @@ wrapped_kt_jvm_test(
         "@maven//:junit_junit",
     ],
 )
+
+ktlint()

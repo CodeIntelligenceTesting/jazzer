@@ -1,0 +1,2 @@
+[*.kt]
+ktlint_standard_package-name=disabled

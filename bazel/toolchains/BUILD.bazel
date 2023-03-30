@@ -1,5 +1,6 @@
 load("@bazel_tools//tools/jdk:default_java_toolchain.bzl", "NONPREBUILT_TOOLCHAIN_CONFIGURATION", "default_java_toolchain")
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "define_kt_toolchain")
+load("@io_bazel_rules_kotlin//kotlin:lint.bzl", "ktlint_config")
 load("@io_bazel_rules_kotlin//kotlin/internal:opts.bzl", "kt_javac_options", "kt_kotlinc_options")
 
 default_java_toolchain(
@@ -22,4 +23,10 @@ define_kt_toolchain(
     jvm_target = "1.8",
     kotlinc_options = ":kotlinc_options",
     language_version = "1.5",
+)
+
+ktlint_config(
+    name = "ktlint_config",
+    editorconfig = "editorconfig.ktlint",
+    visibility = ["//visibility:public"],
 )

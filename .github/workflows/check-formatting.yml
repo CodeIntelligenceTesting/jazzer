@@ -28,11 +28,12 @@ jobs:
           sudo apt-get install software-properties-common
           sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main'
           sudo apt-get install clang-format-14
-          curl -sSLO https://github.com/pinterest/ktlint/releases/download/0.48.0/ktlint && chmod a+x ktlint && sudo mv ktlint /usr/bin/ktlint
           go install github.com/google/addlicense@latest
           go install github.com/bazelbuild/buildtools/buildifier@latest
 
       - name: Run format.sh and print changes
+        env:
+          CI: 1
         run: |
           ./format.sh
           clang-format --version

@@ -1,5 +1,6 @@
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("//bazel:kotlin.bzl", "ktlint")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
 java_library(
@@ -62,3 +63,5 @@ write_file(
         "}",
     ],
 )
+
+ktlint()
