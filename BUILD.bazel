@@ -28,6 +28,15 @@ alias(
     actual = "//launcher:jazzer",
 )
 
+alias(
+    name = "addlicense",
+    actual = select({
+        "@platforms//os:macos": "@addlicense-darwin-universal//file:addlicense",
+        "@platforms//os:linux": "@addlicense-linux-amd64//file:addlicense",
+    }),
+    tags = ["manual"],
+)
+
 BUILDIFIER_EXCLUDE_PATTERNS = [
     "./.git/*",
     "./.ijwb/*",

@@ -247,3 +247,23 @@ http_file(
         "https://github.com/angular/clang-format/raw/master/bin/linux_x64/clang-format",
     ],
 )
+
+http_file(
+    name = "addlicense-darwin-universal",
+    downloaded_file_path = "addlicense",
+    executable = True,
+    sha256 = "9c08964e15d6ed0568c4e8a5f861bcc2122498419586fbe87e08add56d18762d",
+    urls = [
+        "https://github.com/CodeIntelligenceTesting/addlicense/releases/download/v1.1.1/addlicense-darwin-universal",
+    ],
+)
+
+http_file(
+    name = "addlicense-linux-amd64",
+    downloaded_file_path = "addlicense",
+    executable = True,
+    sha256 = "521e680ff085f511d760aa139a0e869238ab4c936e89d258ac3432147d9e8be9",
+    urls = [
+        "https://github.com/CodeIntelligenceTesting/addlicense/releases/download/v1.1.1/addlicense-linux-amd64",
+    ],
+)

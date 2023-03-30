@@ -47,7 +47,6 @@ $ bazel test //...
 ### Formatting
 
 Run `./format.sh` to format all source files in the way enforced by the "Check formatting" CI job.
-See [check-formatting.yml](.github/workflows/check-formatting.yml) for how to obtain the particular versions of the required formatting tools.
 
 ## Releasing (CI employees only)
 
