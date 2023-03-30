@@ -18,6 +18,9 @@ set -euo pipefail
 
 THIS_DIR="$(pwd -P)"
 
+# Licence headers
+bazel run --config=quiet //:addlicense -- -c "Code Intelligence GmbH" -ignore '**/third_party/**' -ignore '**/.github/**' "$THIS_DIR"
+
 # C++ & Java
 find "$THIS_DIR" \( -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.java' \) -print0 | xargs -0 bazel run --config=quiet //:clang-format -- -i
 
@@ -35,7 +38,3 @@ if [[ "${CI:-0}" == 0 ]]; then
     # BUILD files
     bazel run --config=quiet //:buildifier -- -r "$THIS_DIR"
 fi
-
-# Licence headers
-# go install github.com/google/addlicense@latest
-addlicense -c "Code Intelligence GmbH" bazel/ deploy/ docker/ examples/ sanitizers/ src/ tests/ *.bzl

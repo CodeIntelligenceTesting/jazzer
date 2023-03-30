@@ -17,15 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Go environment
-        uses: actions/setup-go@v3
-        with:
-          go-version: 'stable'
-
-      - name: Install formatters
-        run: |
-          go install github.com/google/addlicense@latest
-
       - name: Run format.sh and print changes
         env:
           CI: 1
