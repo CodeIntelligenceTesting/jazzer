@@ -1,8 +1,11 @@
 cc_library(
     name = "libfuzzer_no_main",
-    srcs = glob([
-        "*.cpp",
-    ], exclude = ["FuzzerMain.cpp"]),
+    srcs = glob(
+        [
+            "*.cpp",
+        ],
+        exclude = ["FuzzerMain.cpp"],
+    ),
     hdrs = glob([
         "*.h",
         "*.def",
@@ -31,7 +34,7 @@ cc_library(
             "-std=c++17",
         ],
     }),
-    alwayslink = True,
     linkstatic = True,
     visibility = ["//visibility:public"],
+    alwayslink = True,
 )
