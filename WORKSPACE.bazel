@@ -206,3 +206,24 @@ android_configure(name = "configure_android_rules")
 load("@configure_android_rules//:android_configure.bzl", "android_workspace")
 
 android_workspace()
+
+http_archive(
+    name = "buildifier_prebuilt",
+    sha256 = "7015c623143084bbdb3d2bb955087deb7cbb8e4806df457f3340d64b6eda876e",
+    strip_prefix = "buildifier-prebuilt-5b6adef925e98f90305d69de6d7ad70dd512c4ee",
+    urls = [
+        "https://github.com/keith/buildifier-prebuilt/archive/5b6adef925e98f90305d69de6d7ad70dd512c4ee.tar.gz",
+    ],
+)
+
+load("@buildifier_prebuilt//:deps.bzl", "buildifier_prebuilt_deps")
+
+buildifier_prebuilt_deps()
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+load("@buildifier_prebuilt//:defs.bzl", "buildifier_prebuilt_register_toolchains")
+
+buildifier_prebuilt_register_toolchains()

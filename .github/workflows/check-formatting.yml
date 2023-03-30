@@ -29,7 +29,6 @@ jobs:
           sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main'
           sudo apt-get install clang-format-14
           go install github.com/google/addlicense@latest
-          go install github.com/bazelbuild/buildtools/buildifier@latest
 
       - name: Run format.sh and print changes
         env:

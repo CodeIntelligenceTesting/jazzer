@@ -1,4 +1,6 @@
+load("@buildifier_prebuilt//:rules.bzl", "buildifier", "buildifier_test")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 
 exports_files(["LICENSE"])
 
@@ -24,6 +26,29 @@ pkg_tar(
 alias(
     name = "jazzer",
     actual = "//launcher:jazzer",
+)
+
+BUILDIFIER_EXCLUDE_PATTERNS = [
+    "./.git/*",
+    "./.ijwb/*",
+    "./.clwb/*",
+]
+
+buildifier(
+    name = "buildifier",
+    diff_command = "diff -u",
+    exclude_patterns = BUILDIFIER_EXCLUDE_PATTERNS,
+    mode = "fix",
+    tags = ["manual"],
+)
+
+buildifier_test(
+    name = "buildifier_test",
+    diff_command = "diff -u",
+    exclude_patterns = BUILDIFIER_EXCLUDE_PATTERNS,
+    no_sandbox = True,
+    target_compatible_with = SKIP_ON_WINDOWS,
+    workspace = "//:WORKSPACE.bazel",
 )
 
 platform(
