@@ -20,8 +20,16 @@ set -euo pipefail
 find -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.java' | xargs clang-format-14 -i
 
 # Kotlin
-# curl -sSLO https://github.com/pinterest/ktlint/releases/download/0.48.0/ktlint && chmod a+x ktlint
-ktlint -F "examples/**/*.kt" "sanitizers/**/*.kt" "src/**/*.kt" "tests/**/*.kt" --disabled_rules=package-name
+# No need to run in CI as the ktlint_tests will fail if the formatting is wrong.
+if [[ "${CI:-0}" == 0 ]]; then
+    # Check which ktlint_tests failed and run the corresponding fix targets. This is much faster than
+    # running all ktlint_fix targets when e.g. only a few or no .kt files changed.
+    # shellcheck disable=SC2046
+    TARGETS_TO_RUN=$(bazel test --config=quiet $(bazel query --config=quiet 'kind(ktlint_test, //...)') | { grep FAILED || true; } | cut -f1 -d' ' | sed -e 's/:ktlint_test/:ktlint_fix/g')
+    if [[ -n "${TARGETS_TO_RUN}" ]]; then
+        echo "$TARGETS_TO_RUN" | xargs -n 1 bazel run --config=quiet
+    fi
+fi
 
 # BUILD files
 # go install github.com/bazelbuild/buildtools/buildifier@latest

@@ -1,4 +1,5 @@
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("//bazel:kotlin.bzl", "ktlint")
 
 java_library(
     name = "agent_installer",
@@ -32,3 +33,5 @@ kt_jvm_library(
         "@com_github_classgraph_classgraph//:classgraph",
     ],
 )
+
+ktlint()
