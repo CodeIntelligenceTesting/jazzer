@@ -16,9 +16,16 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.collection;
 
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.MutationAction.pickRandomAction;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.deleteRandomChunk;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.insertRandomChunk;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.mutateRandomChunk;
+import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.parameterTypeIfParameterized;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
+import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
@@ -38,11 +45,12 @@ import java.util.stream.Collectors;
 final class ListMutatorFactory extends MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+    Optional<WithSize> withSize = Optional.ofNullable(type.getAnnotation(WithSize.class));
+    int minSize = withSize.map(WithSize::min).orElse(ListMutator.DEFAULT_MIN_SIZE);
+    int maxSize = withSize.map(WithSize::max).orElse(ListMutator.DEFAULT_MAX_SIZE);
     return parameterTypeIfParameterized(type, List.class)
         .flatMap(factory::tryCreate)
-        .map(elementMutator
-            -> new ListMutator<>(
-                elementMutator, ListMutator.DEFAULT_MIN_SIZE, ListMutator.DEFAULT_MAX_SIZE));
+        .map(elementMutator -> new ListMutator<>(elementMutator, minSize, maxSize));
   }
 
   private static final class ListMutator<T> extends SerializingInPlaceMutator<List<T>> {
@@ -57,11 +65,15 @@ final class ListMutatorFactory extends MutatorFactory {
       this.elementMutator = elementMutator;
       this.minSize = minSize;
       this.maxSize = maxSize;
+      require(maxSize >= 1, "WithSize#max needs to be greater than 0");
+      require(minSize <= maxSize,
+          format("WithSize#min %d needs to be smaller or equal than WithSize#max %d", minSize,
+              maxSize));
     }
 
     @Override
     public List<T> read(DataInputStream in) throws IOException {
-      int size = RandomSupport.clamp(in.readInt(), 0, maxSize);
+      int size = RandomSupport.clamp(in.readInt(), minSize, maxSize);
       ArrayList<T> list = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
         list.add(elementMutator.read(in));
@@ -93,15 +105,18 @@ final class ListMutatorFactory extends MutatorFactory {
 
     @Override
     public void mutateInPlace(List<T> list, PseudoRandom prng) {
-      if (list.isEmpty()) {
-        list.add(elementMutator.init(prng));
-      } else if (!prng.trueInOneOutOf(4)) {
-        int i = prng.indexIn(list);
-        list.set(i, elementMutator.mutate(list.get(i), prng));
-      } else if (list.size() < maxSize) {
-        list.add(list.get(list.size() - 1)); // TODO: Create deep copy or init new entry.
-      } else if (list.size() > minSize) {
-        list.remove(list.size() - 1);
+      switch (pickRandomAction(list, minSize, maxSize, prng)) {
+        case DELETE_CHUNK:
+          deleteRandomChunk(list, minSize, prng);
+          break;
+        case INSERT_CHUNK:
+          insertRandomChunk(list, maxSize, elementMutator, prng);
+          break;
+        case MUTATE_CHUNK:
+          mutateRandomChunk(list, elementMutator, prng);
+          break;
+        default:
+          throw new IllegalStateException("unsupported action");
       }
     }
 

@@ -17,10 +17,16 @@
 package com.code_intelligence.jazzer.mutation.engine;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.google.common.truth.Correspondence;
+import java.util.Map;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -106,5 +112,32 @@ public class SeededPseudoRandomTest {
         assertThat(inClosedRange).isFinite();
       }
     }
+  }
+
+  @Test
+  void testClosedRangeBiasedTowardsSmall() {
+    SeededPseudoRandom prng = new SeededPseudoRandom(1337133371337L);
+
+    assertThrows(IllegalArgumentException.class, () -> prng.closedRangeBiasedTowardsSmall(-1));
+    assertThrows(IllegalArgumentException.class, () -> prng.closedRangeBiasedTowardsSmall(2, 1));
+    assertThat(prng.closedRangeBiasedTowardsSmall(0)).isEqualTo(0);
+    assertThat(prng.closedRangeBiasedTowardsSmall(5, 5)).isEqualTo(5);
+  }
+
+  @Test
+  void testClosedRangeBiasedTowardsSmall_distribution() {
+    int num = 5000000;
+    SeededPseudoRandom prng = new SeededPseudoRandom(1337133371337L);
+    Map<Integer, Double> frequencies =
+        Stream.generate(() -> prng.closedRangeBiasedTowardsSmall(9))
+            .limit(num)
+            .collect(
+                groupingBy(i -> i, collectingAndThen(counting(), count -> ((double) count) / num)));
+    // Reference values obtained from
+    // https://www.wolframalpha.com/input?i=N%5BTable%5BPDF%5BZipfDistribution%5B10%2C+1%5D%2C+i%5D%2C+%7Bi%2C+1%2C+10%7D%5D%5D
+    assertThat(frequencies)
+        .comparingValuesUsing(Correspondence.tolerance(0.0005))
+        .containsExactly(0, 0.645, 1, 0.161, 2, 0.072, 3, 0.040, 4, 0.026, 5, 0.018, 6, 0.013, 7,
+            0.01, 8, 0.008, 9, 0.006);
   }
 }

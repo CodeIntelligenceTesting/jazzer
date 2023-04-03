@@ -131,7 +131,13 @@ class BuilderMutatorProto2Test {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first field
              0,
-             // mutate the list itself by duplicating an entry
+             // mutate the list itself by adding an entry
+             1,
+             // add a single element
+             1,
+             // add the element at the end
+             1,
+             // value to add
              true)) {
       mutator.mutateInPlace(builder, prng);
     }
@@ -140,14 +146,17 @@ class BuilderMutatorProto2Test {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first field
              0,
-             // mutate a list element,
-             false,
-             // mutate the second element,
+             // mutate the list itself by changing an entry
+             2,
+             // mutate a single element
+             1,
+             // mutate the second element
              1)) {
       mutator.mutateInPlace(builder, prng);
     }
     assertThat(builder.getSomeFieldList()).containsExactly(true, false).inOrder();
   }
+
   @Test
   void testMessageField() {
     InPlaceMutator<MessageField2.Builder> mutator =
@@ -214,7 +223,15 @@ class BuilderMutatorProto2Test {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first field
              0,
-             // mutate the list itself by duplicating an entry
+             // mutate the list itself by adding an entry
+             1,
+             // add a single element
+             1,
+             // add the element at the end
+             1,
+             // Nullable mutator init
+             false,
+             // duplicate entry
              true)) {
       mutator.mutateInPlace(builder, prng);
     }
@@ -244,7 +261,13 @@ class BuilderMutatorProto2Test {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first field
              0,
-             // mutate the list itself by duplicating an entry
+             // mutate the list itself by adding an entry
+             1,
+             // add a single element
+             1,
+             // add the element at the end
+             1,
+             // value to add
              true)) {
       mutator.mutateInPlace(builder, prng);
     }
@@ -256,11 +279,13 @@ class BuilderMutatorProto2Test {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first field
              0,
-             // mutate a list element
-             false,
-             // mutate the second element
+             // change an entry
+             2,
+             // mutate a single element
              1,
-             // mutate the first field
+             // mutate the second element,
+             1,
+             // mutate the first element
              0)) {
       mutator.mutateInPlace(builder, prng);
     }
