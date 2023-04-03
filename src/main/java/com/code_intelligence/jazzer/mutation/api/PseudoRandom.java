@@ -102,6 +102,18 @@ public interface PseudoRandom {
   double closedRange(double lowerInclusive, double upperInclusive);
 
   /**
+   * @return a random value in the closed range [0, upperInclusive] that is heavily biased towards
+   *     being small
+   */
+  int closedRangeBiasedTowardsSmall(int upperInclusive);
+
+  /**
+   * @return a random value in the closed range [lowerInclusive, upperInclusive] that is heavily
+   *     biased towards being small
+   */
+  int closedRangeBiasedTowardsSmall(int lowerInclusive, int upperInclusive);
+
+  /**
    * Fills the given array with random bytes.
    */
   void bytes(byte[] bytes);

@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 public final class TestSupport {
   private static final DataOutputStream nullDataOutputStream =
@@ -69,19 +71,9 @@ public final class TestSupport {
 
   @CheckReturnValue
   public static <T> SerializingMutator<T> mockMutator(T initialValue, Function<T, T> mutate) {
-    return new SerializingMutator<T>() {
+    return new AbstractMockMutator<T>() {
       @Override
-      public T read(DataInputStream in) {
-        return initialValue;
-      }
-
-      @Override
-      public void write(T value, DataOutputStream out) {
-        throw new UnsupportedOperationException("mockMutator does not support write");
-      }
-
-      @Override
-      public T init(PseudoRandom prng) {
+      protected T nextInitialValue() {
         return initialValue;
       }
 
@@ -89,20 +81,61 @@ public final class TestSupport {
       public T mutate(T value, PseudoRandom prng) {
         return mutate.apply(value);
       }
+    };
+  }
+
+  @CheckReturnValue
+  public static <T> SerializingMutator<T> mockInitializer(
+      Supplier<T> getInitialValues, UnaryOperator<T> detach) {
+    return new AbstractMockMutator<T>() {
+      @Override
+      protected T nextInitialValue() {
+        return getInitialValues.get();
+      }
 
       @Override
-      public String toDebugString(Predicate<Debuggable> isInCycle) {
-        if (initialValue == null) {
-          return "null";
-        }
-        return initialValue.getClass().getSimpleName();
+      public T mutate(T value, PseudoRandom prng) {
+        throw new UnsupportedOperationException();
       }
 
       @Override
       public T detach(T value) {
-        return value;
+        return detach.apply(value);
       }
     };
+  }
+
+  private static abstract class AbstractMockMutator<T> extends SerializingMutator<T> {
+    abstract protected T nextInitialValue();
+
+    @Override
+    public T read(DataInputStream in) {
+      return nextInitialValue();
+    }
+
+    @Override
+    public void write(T value, DataOutputStream out) {
+      throw new UnsupportedOperationException("mockMutator does not support write");
+    }
+
+    @Override
+    public T init(PseudoRandom prng) {
+      return nextInitialValue();
+    }
+
+    @Override
+    public String toDebugString(Predicate<Debuggable> isInCycle) {
+      T initialValue = nextInitialValue();
+      if (initialValue == null) {
+        return "null";
+      }
+      return initialValue.getClass().getSimpleName();
+    }
+
+    @Override
+    public T detach(T value) {
+      return value;
+    }
   }
 
   public static final class MockPseudoRandom implements PseudoRandom, AutoCloseable {
@@ -161,7 +194,7 @@ public final class TestSupport {
 
     @Override
     public int indexIn(int range) {
-      assertThat(range).isAtLeast(2);
+      assertThat(range).isAtLeast(1);
 
       assertThat(elements).isNotEmpty();
       return (int) elements.poll();
@@ -185,7 +218,7 @@ public final class TestSupport {
 
     @Override
     public int closedRange(int lowerInclusive, int upperInclusive) {
-      assertThat(lowerInclusive).isLessThan(upperInclusive);
+      assertThat(lowerInclusive).isAtMost(upperInclusive);
 
       assertThat(elements).isNotEmpty();
       int result = (int) elements.poll();
@@ -196,7 +229,7 @@ public final class TestSupport {
 
     @Override
     public long closedRange(long lowerInclusive, long upperInclusive) {
-      assertThat(lowerInclusive).isLessThan(upperInclusive);
+      assertThat(lowerInclusive).isAtMost(upperInclusive);
 
       assertThat(elements).isNotEmpty();
       long result = (long) elements.poll();
@@ -220,6 +253,28 @@ public final class TestSupport {
       assertThat(lowerInclusive).isLessThan(upperInclusive);
       assertThat(elements).isNotEmpty();
       double result = (double) elements.poll();
+      assertThat(result).isAtLeast(lowerInclusive);
+      assertThat(result).isAtMost(upperInclusive);
+      return result;
+    }
+
+    @Override
+    public int closedRangeBiasedTowardsSmall(int upperInclusive) {
+      assertThat(upperInclusive).isAtLeast(0);
+
+      assertThat(elements).isNotEmpty();
+      int result = (int) elements.poll();
+      assertThat(result).isAtLeast(0);
+      assertThat(result).isAtMost(upperInclusive);
+      return result;
+    }
+
+    @Override
+    public int closedRangeBiasedTowardsSmall(int lowerInclusive, int upperInclusive) {
+      assertThat(lowerInclusive).isAtMost(upperInclusive);
+
+      assertThat(elements).isNotEmpty();
+      int result = (int) elements.poll();
       assertThat(result).isAtLeast(lowerInclusive);
       assertThat(result).isAtMost(upperInclusive);
       return result;
