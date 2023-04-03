@@ -261,7 +261,8 @@ final class IntegralMutatorFactory extends MutatorFactory {
             value = prng.closedRange(minValue, maxValue);
             break;
           case 3:
-            // TODO: Replace this with a structure-aware dictionary/TORC search similar to fuzztest.
+            // TODO: Replace this with a structure-aware dictionary/TORC search similar to
+            // fuzztest.
             value = forceInRange(mutateWithLibFuzzer(value));
             break;
         }
@@ -271,11 +272,9 @@ final class IntegralMutatorFactory extends MutatorFactory {
 
     @ForOverride protected abstract long mutateWithLibFuzzer(long value);
 
-    /**
-     * Force value into the closed interval [minValue, maxValue] while preserving as many of its
-     * bits as possible (e.g. so that mutations that apply to the raw byte representation still have
-     * a good chance to actually mutate the value). Clamping would not have this property.
-     */
+    // Force value into the closed interval [minValue, maxValue] while preserving as many of its
+    // bits as possible (e.g. so that mutations that apply to the raw byte representation still have
+    // a good chance to actually mutate the value). Clamping would not have this property.
     protected final long forceInRange(long value) {
       // Fast path for the common case.
       if (value >= minValue && value <= maxValue) {
@@ -315,11 +314,11 @@ final class IntegralMutatorFactory extends MutatorFactory {
       if (maxValue / 2 - minValue / 2 <= RANDOM_WALK_RANGE) {
         value = prng.closedRange(minValue, maxValue);
       } else {
-        // At this point we know that (using non-wrapping arithmetic):
-        // RANDOM_WALK_RANGE < maxValue/2 - minValue/2 <= Long.MAX_VALUE/2 - minValue/2, hence
-        // minValue/2 + RANDOM_WALK_RANGE < Long.MAX_VALUE/2, hence
-        // minValue + 2*RANDOM_WALK_RANGE < Long.MAX_VALUE.
-        // In particular, minValue + RANDOM_WALK_RANGE can't overflow, likewise for maxValue.
+        // At this point we know that (using non-wrapping arithmetic): RANDOM_WALK_RANGE <
+        // maxValue/2 - minValue/2 <= Long.MAX_VALUE/2 - minValue/2 hence minValue/2 +
+        // RANDOM_WALK_RANGE < Long.MAX_VALUE/2, hence minValue + 2*RANDOM_WALK_RANGE <
+        // Long.MAX_VALUE. In particular, minValue + RANDOM_WALK_RANGE can't overflow, likewise for
+        // maxValue.
         long lower = minValue;
         if (value > lower + RANDOM_WALK_RANGE) {
           lower = value - RANDOM_WALK_RANGE;

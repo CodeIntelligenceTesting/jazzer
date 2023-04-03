@@ -83,17 +83,17 @@ class ArgumentsMutatorTest {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first argument
              0,
-             // outer list not null
+             // Nullable mutator
              false,
-             // outer list mutate element
-             false,
-             // outer list mutate first element
+             // Action mutate in outer list
+             4,
+             // index to get to inner list
              0,
-             // inner list not null
+             // Nullable mutator
              false,
-             // inner list mutate element
-             false,
-             // inner list mutate first element
+             // Action mutate inner list
+             4,
+             // index to get boolean value
              0)) {
       mutator.mutate(prng);
     }
@@ -111,17 +111,17 @@ class ArgumentsMutatorTest {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first argument
              0,
-             // outer list not null
+             // Nullable mutator
              false,
-             // outer list mutate element
-             false,
-             // outer list mutate first element
+             // Action mutate in outer list
+             4,
+             // index to get to inner list
              0,
-             // inner list not null
+             // Nullable mutator
              false,
-             // inner list mutate element
-             false,
-             // inner list mutate first element
+             // Action mutate inner list
+             4,
+             // index to get boolean value
              0)) {
       mutator.mutate(prng);
     }
@@ -182,17 +182,17 @@ class ArgumentsMutatorTest {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first argument
              0,
-             // outer list not null
+             // Nullable mutator
              false,
-             // outer list mutate element
-             false,
-             // outer list mutate first element
+             // Action mutate in outer list
+             4,
+             // index to get to inner list
              0,
-             // inner list not null
+             // Nullable mutator
              false,
-             // inner list mutate element
-             false,
-             // inner list mutate first element
+             // Action mutate inner list
+             4,
+             // index to get boolean value
              0)) {
       mutator.mutate(prng);
     }
@@ -211,17 +211,17 @@ class ArgumentsMutatorTest {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first argument
              0,
-             // outer list not null
+             // Nullable mutator
              false,
-             // outer list mutate element
-             false,
-             // outer list mutate first element
+             // Action mutate in outer list
+             4,
+             // index to get to inner list
              0,
-             // inner list not null
+             // Nullable mutator
              false,
-             // inner list mutate element
-             false,
-             // inner list mutate first element
+             // Action mutate inner list
+             4,
+             // index to get boolean value
              0)) {
       mutator.mutate(prng);
     }

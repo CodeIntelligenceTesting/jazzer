@@ -141,8 +141,8 @@ class BuilderMutatorProto3Test {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first field
              0,
-             // mutate operation
-             false,
+             // change an entry
+             4,
              // mutate to first enum field
              0,
              // mutate to first enum value
@@ -221,7 +221,9 @@ class BuilderMutatorProto3Test {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first field
              0,
-             // mutate the list itself by duplicating an entry
+             // mutate the list itself by adding an element
+             2,
+             // value to add
              true)) {
       mutator.mutateInPlace(builder, prng);
     }
@@ -230,8 +232,8 @@ class BuilderMutatorProto3Test {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first field
              0,
-             // mutate a list element,
-             false,
+             // mutate the list itself by changing an entry
+             4,
              // mutate the second element,
              1)) {
       mutator.mutateInPlace(builder, prng);
@@ -305,7 +307,9 @@ class BuilderMutatorProto3Test {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first field
              0,
-             // mutate the list itself by duplicating an entry
+             // mutate the list itself by adding an entry
+             2,
+             // value to add
              true)) {
       mutator.mutateInPlace(builder, prng);
     }
@@ -317,11 +321,11 @@ class BuilderMutatorProto3Test {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first field
              0,
-             // mutate a list element
-             false,
-             // mutate the second element
+             // change an entry
+             4,
+             // mutate the second element,
              1,
-             // mutate the first field
+             // mutate the first element
              0)) {
       mutator.mutateInPlace(builder, prng);
     }
@@ -351,7 +355,8 @@ class BuilderMutatorProto3Test {
              true)) {
       mutator.initInPlace(builder, prng);
     }
-    // Nested message field is *not* set explicitly and implicitly equal to the default instance.
+    // Nested message field is *not* set explicitly and implicitly equal to the
+    // default instance.
     assertThat(builder.build())
         .isEqualTo(RecursiveMessageField3.newBuilder()
                        .setSomeField(true)
@@ -372,7 +377,8 @@ class BuilderMutatorProto3Test {
              true)) {
       mutator.mutateInPlace(builder, prng);
     }
-    // Nested message field *is* set explicitly and implicitly equal to the default instance.
+    // Nested message field *is* set explicitly and implicitly equal to the default
+    // instance.
     assertThat(builder.build())
         .isEqualTo(RecursiveMessageField3.newBuilder()
                        .setSomeField(true)

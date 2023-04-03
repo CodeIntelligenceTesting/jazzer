@@ -43,9 +43,17 @@ final class BuilderAdapters {
       }
 
       @Override
-      public boolean add(U u) {
-        builder.addRepeatedField(field, u);
+      public boolean add(U element) {
+        builder.addRepeatedField(field, element);
         return true;
+      }
+
+      @Override
+      public void add(int index, U element) {
+        // TODO: Simply appending and ignoring the index is not perfect
+        // but it works. A future revision should try making this a proper
+        // append at the given index.
+        builder.addRepeatedField(field, element);
       }
 
       @Override
