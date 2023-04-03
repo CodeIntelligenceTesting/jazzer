@@ -14,6 +14,12 @@ java_library(
 )
 
 java_library(
+    name = "server_side_request_forgery",
+    srcs = ["ServerSideRequestForgery.java"],
+    deps = ["//src/main/java/com/code_intelligence/jazzer/api:hooks"],
+)
+
+java_library(
     name = "sql_injection",
     srcs = ["SqlInjection.java"],
     deps = [
@@ -32,13 +38,13 @@ kt_jvm_library(
         "OsCommandInjection.kt",
         "ReflectiveCall.kt",
         "RegexInjection.kt",
-        "SsrfInjection.kt",
         "Utils.kt",
         "XPathInjection.kt",
     ],
     visibility = ["//sanitizers:__pkg__"],
     runtime_deps = [
         ":regex_roadblocks",
+        ":server_side_request_forgery",
         ":sql_injection",
     ],
     deps = [
