@@ -16,8 +16,8 @@
 
 package com.code_intelligence.jazzer.mutation;
 
+import static com.code_intelligence.jazzer.mutation.mutator.Mutators.newFactory;
 import static com.code_intelligence.jazzer.mutation.mutator.Mutators.validateAnnotationUsage;
-import static com.code_intelligence.jazzer.mutation.support.ExceptionSupport.asUnchecked;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toBooleanArray;
@@ -58,6 +58,10 @@ public final class ArgumentsMutator {
     this.method = method;
     this.productMutator = productMutator;
     this.shouldDetach = shouldDetach;
+  }
+
+  public static boolean canMutate(Method method) {
+    return stream(method.getAnnotatedParameterTypes()).allMatch(newFactory()::canMutate);
   }
 
   private static String prettyPrintMethod(Method method) {

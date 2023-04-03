@@ -169,6 +169,29 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "MutatorFuzzTest",
+    srcs = ["MutatorFuzzTest.java"],
+    allowed_findings = ["java.lang.AssertionError"],
+    fuzzer_args = [
+        "--instrumentation_includes=com.example.**",
+        "--custom_hook_includes=com.example.**",
+        "--experimental_mutator",
+        "$(rlocationpaths //examples/junit/src/test/resources:MutatorFuzzTestInputs)",
+    ],
+    target_class = "com.example.MutatorFuzzTest",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        ":junit_runtime",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
 java_library(
     name = "junit_runtime",
     runtime_deps = [
