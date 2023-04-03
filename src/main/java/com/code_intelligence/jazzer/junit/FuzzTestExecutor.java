@@ -22,7 +22,9 @@ import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
+import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.driver.junit.ExitCodeException;
+import com.code_intelligence.jazzer.mutation.ArgumentsMutator;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Executable;
@@ -160,18 +162,21 @@ class FuzzTestExecutor {
   }
 
   private static boolean useAutofuzz(Method fuzzTestMethod) {
-    return fuzzTestMethod.getParameterCount() != 1
-        || (fuzzTestMethod.getParameterTypes()[0] != byte[].class
-            && fuzzTestMethod.getParameterTypes()[0] != FuzzedDataProvider.class);
+    // Also check experimentalMutator here, as it's required in FuzzTargetRunner.
+    // Remove at both places once the mutator is stable.
+    return !(Opt.experimentalMutator && ArgumentsMutator.canMutate(fuzzTestMethod))
+        && (fuzzTestMethod.getParameterCount() != 1
+            || (fuzzTestMethod.getParameterTypes()[0] != byte[].class
+                && fuzzTestMethod.getParameterTypes()[0] != FuzzedDataProvider.class));
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")
   public Optional<Throwable> execute(ReflectiveInvocationContext<Method> invocationContext) {
     if (FuzzTestExecutor.useAutofuzz(invocationContext.getExecutable())) {
       FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.autofuzzFuzzTarget(() -> {
-        // Provide empty throws declarations to prevent the autofuzz from
-        // ignoring the defined test exceptions. All exceptions in tests should
-        // cause a test to fail.
+        // Provide an empty throws declaration to prevent autofuzz from
+        // ignoring the defined test exceptions. All exceptions in tests
+        // should cause them to fail.
         Map<Executable, Class<?>[]> throwsDeclarations = new HashMap<>(1);
         throwsDeclarations.put(invocationContext.getExecutable(), new Class[0]);
 

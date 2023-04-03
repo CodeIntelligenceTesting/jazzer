@@ -454,6 +454,14 @@ public final class FuzzTargetRunner {
   }
 
   /**
+   * Returns the debug string of the current mutator.
+   * If no mutator is used, returns null.
+   */
+  public static String mutatorDebugString() {
+    return mutator != null ? mutator.toString() : null;
+  }
+
+  /**
    * Disables libFuzzer's fuzz target exit detection until the next call to {@link #runOne}.
    *
    * <p>Calling {@link System#exit} after having called this method will not trigger libFuzzer's
