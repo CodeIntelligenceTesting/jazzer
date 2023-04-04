@@ -45,6 +45,7 @@ import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Optional;
 
 public final class ArgumentsMutator {
@@ -71,18 +72,37 @@ public final class ArgumentsMutator {
         stream(method.getAnnotatedParameterTypes()).map(Object::toString).collect(joining(", ")));
   }
 
-  public static ArgumentsMutator forInstanceMethod(Object instance, Method method) {
+  public static ArgumentsMutator forMethodOrThrow(Method method) {
+    return forMethod(Mutators.newFactory(), null, method)
+        .orElseThrow(()
+                         -> new IllegalArgumentException(
+                             "Failed to construct mutator for " + prettyPrintMethod(method)));
+  }
+
+  public static ArgumentsMutator forInstanceMethodOrThrow(Object instance, Method method) {
     return forInstanceMethod(Mutators.newFactory(), instance, method)
         .orElseThrow(()
                          -> new IllegalArgumentException(
                              "Failed to construct mutator for " + prettyPrintMethod(method)));
   }
 
-  public static ArgumentsMutator forStaticMethod(Method method) {
+  public static ArgumentsMutator forStaticMethodOrThrow(Method method) {
     return forStaticMethod(Mutators.newFactory(), method)
         .orElseThrow(()
                          -> new IllegalArgumentException(
                              "Failed to construct mutator for " + prettyPrintMethod(method)));
+  }
+
+  public static Optional<ArgumentsMutator> forMethod(Method method) {
+    return forMethod(Mutators.newFactory(), null, method);
+  }
+
+  public static Optional<ArgumentsMutator> forInstanceMethod(Object instance, Method method) {
+    return forInstanceMethod(Mutators.newFactory(), instance, method);
+  }
+
+  public static Optional<ArgumentsMutator> forStaticMethod(Method method) {
+    return forStaticMethod(Mutators.newFactory(), method);
   }
 
   public static Optional<ArgumentsMutator> forInstanceMethod(
@@ -100,7 +120,7 @@ public final class ArgumentsMutator {
     return forMethod(mutatorFactory, null, method);
   }
 
-  private static Optional<ArgumentsMutator> forMethod(
+  public static Optional<ArgumentsMutator> forMethod(
       MutatorFactory mutatorFactory, Object instance, Method method) {
     require(method.getParameterCount() > 0, "Can't fuzz method without parameters: " + method);
     for (AnnotatedType parameter : method.getAnnotatedParameterTypes()) {
@@ -187,6 +207,10 @@ public final class ArgumentsMutator {
     } catch (InvocationTargetException e) {
       throw e.getCause();
     }
+  }
+
+  public Object[] getArguments() {
+    return Arrays.copyOf(arguments, arguments.length);
   }
 
   @Override

@@ -116,9 +116,9 @@ public final class FuzzTargetRunner {
 
     if (Opt.experimentalMutator) {
       if (Modifier.isStatic(fuzzTarget.method.getModifiers())) {
-        mutator = ArgumentsMutator.forStaticMethod(fuzzTarget.method);
+        mutator = ArgumentsMutator.forStaticMethodOrThrow(fuzzTarget.method);
       } else {
-        mutator = ArgumentsMutator.forInstanceMethod(fuzzTargetInstance, fuzzTarget.method);
+        mutator = ArgumentsMutator.forInstanceMethodOrThrow(fuzzTargetInstance, fuzzTarget.method);
       }
       Log.info("Using experimental mutator: " + mutator);
     } else {
