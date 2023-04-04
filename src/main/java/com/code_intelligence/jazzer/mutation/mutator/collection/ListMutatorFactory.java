@@ -24,6 +24,7 @@ import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -62,7 +63,7 @@ final class ListMutatorFactory extends MutatorFactory {
 
     @Override
     public List<T> read(DataInputStream in) throws IOException {
-      int size = Math.max(in.readInt(), 0);
+      int size = RandomSupport.clamp(in.readInt(), 0, maxSize);
       ArrayList<T> list = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
         list.add(elementMutator.read(in));

@@ -173,6 +173,12 @@ java_fuzz_target_test(
     name = "MutatorFuzzTest",
     srcs = ["MutatorFuzzTest.java"],
     allowed_findings = ["java.lang.AssertionError"],
+    data = [
+        "//examples/junit/src/test/resources:MutatorFuzzTestInputs",
+    ],
+    env = {
+        "JAZZER_FUZZ": "1",
+    },
     fuzzer_args = [
         "--instrumentation_includes=com.example.**",
         "--custom_hook_includes=com.example.**",

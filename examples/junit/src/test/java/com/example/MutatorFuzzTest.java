@@ -17,18 +17,26 @@
 package com.example;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import java.util.List;
+import org.junit.jupiter.api.AfterAll;
 
 class MutatorFuzzTest {
   @FuzzTest
   void mutatorFuzz(List<@NotNull String> list) {
-    assertEquals(FuzzTargetRunner.mutatorDebugString(), "Arguments[Nullable<List<String>>]");
+    // Check that the mutator is actually doing something.
     if (list != null && list.size() > 3 && list.get(2).equals("mutator")) {
       throw new AssertionError("Found expected JUnit mutator test issue");
     }
+  }
+
+  @AfterAll
+  static void assertFuzzTargetRunner() {
+    assertTrue(FuzzTargetRunner.invalidCorpusFilesPresent());
+    assertEquals(FuzzTargetRunner.mutatorDebugString(), "Arguments[Nullable<List<String>>]");
   }
 }
