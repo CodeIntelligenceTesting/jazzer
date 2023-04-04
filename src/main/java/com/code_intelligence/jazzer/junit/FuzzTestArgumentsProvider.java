@@ -22,6 +22,8 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.autofuzz.Meta;
 import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
 import com.code_intelligence.jazzer.driver.Opt;
+import com.code_intelligence.jazzer.mutation.ArgumentsMutator;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -34,8 +36,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -116,20 +120,30 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
       return rawSeeds.map(
           e -> arguments(named(e.getKey(), FuzzedDataProviderImpl.withJavaData(e.getValue()))));
     } else {
-      // Use Autofuzz on the @FuzzTest method.
+      // Use Autofuzz or mutation framework on the @FuzzTest method.
+      Optional<ArgumentsMutator> argumentsMutator =
+          Opt.experimentalMutator ? ArgumentsMutator.forMethod(fuzzTestMethod) : Optional.empty();
+
       return rawSeeds.map(e -> {
-        try (FuzzedDataProviderImpl data = FuzzedDataProviderImpl.withJavaData(e.getValue())) {
-          // The Autofuzz FuzzTarget uses data to construct an instance of the test class before it
-          // constructs the fuzz test arguments. We don't need the instance here, but still generate
-          // it as that mutates the FuzzedDataProvider state.
-          Meta meta = new Meta(fuzzTestMethod.getDeclaringClass());
-          meta.consumeNonStatic(data, fuzzTestMethod.getDeclaringClass());
-          Object[] args = meta.consumeArguments(data, fuzzTestMethod, null);
-          // In order to name the subtest, we name the first argument. All other arguments are
-          // passed in unchanged.
-          args[0] = named(e.getKey(), args[0]);
-          return arguments(args);
+        Object[] args;
+        if (argumentsMutator.isPresent()) {
+          ArgumentsMutator mutator = argumentsMutator.get();
+          mutator.read(new ByteArrayInputStream(e.getValue()));
+          args = mutator.getArguments();
+        } else {
+          try (FuzzedDataProviderImpl data = FuzzedDataProviderImpl.withJavaData(e.getValue())) {
+            // The Autofuzz FuzzTarget uses data to construct an instance of the test class before
+            // it constructs the fuzz test arguments. We don't need the instance here, but still
+            // generate it as that mutates the FuzzedDataProvider state.
+            Meta meta = new Meta(fuzzTestMethod.getDeclaringClass());
+            meta.consumeNonStatic(data, fuzzTestMethod.getDeclaringClass());
+            args = meta.consumeArguments(data, fuzzTestMethod, null);
+          }
         }
+        // In order to name the subtest, we name the first argument. All other arguments are
+        // passed in unchanged.
+        args[0] = named(e.getKey(), args[0]);
+        return arguments(args);
       });
     }
   }
