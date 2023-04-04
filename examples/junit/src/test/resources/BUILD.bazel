@@ -3,3 +3,9 @@ java_library(
     resources = glob(["com/example/*Inputs/**"]),
     visibility = ["//examples/junit/src/test/java/com/example:__pkg__"],
 )
+
+filegroup(
+    name = "MutatorFuzzTestInputs",
+    srcs = ["com/example/MutatorFuzzTestInputs"],
+    visibility = ["//visibility:public"],
+)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Code Intelligence GmbH
+ * Copyright 2023 Code Intelligence GmbH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,6 +69,7 @@ public final class FuzzTargetRunner {
   private static final int LIBFUZZER_CONTINUE = 0;
   private static final int LIBFUZZER_RETURN_FROM_DRIVER = -2;
 
+  private static boolean invalidCorpusFileWarningShown = false;
   private static final Set<Long> ignoredTokens = new HashSet<>(Opt.ignore);
   private static final FuzzedDataProviderImpl fuzzedDataProvider =
       FuzzedDataProviderImpl.withNativeData();
@@ -166,7 +167,17 @@ public final class FuzzTargetRunner {
       //  1. Let libFuzzer pass in a null pointer if the byte array hasn't changed since the last
       //     call to our custom mutator and skip the read entirely.
       //  2. Implement a InputStream backed by Unsafe to avoid the copyToArray overhead.
-      mutator.read(new ByteArrayInputStream(copyToArray(dataPtr, dataLength)));
+      byte[] buf = copyToArray(dataPtr, dataLength);
+      boolean readExactly = mutator.read(new ByteArrayInputStream(buf));
+
+      // All inputs constructed by the mutator framework can be read exactly, existing corpus files
+      // may not be valid for the current fuzz target anymore, though. In this case, print a warning
+      // once.
+      if (!(invalidCorpusFileWarningShown || readExactly || isFixedLibFuzzerInput(buf))) {
+        invalidCorpusFileWarningShown = true;
+        Log.warn("Some files in the seed corpus do not match the fuzz target signature. "
+            + "This indicates that they were generated with a different signature and may cause issues reproducing previous findings.");
+      }
       data = null;
       argument = null;
     } else if (useFuzzedDataProvider) {
@@ -273,6 +284,13 @@ public final class FuzzTargetRunner {
       throw new IllegalStateException("Not reached");
     }
     return LIBFUZZER_CONTINUE;
+  }
+
+  private static boolean isFixedLibFuzzerInput(byte[] input) {
+    // Detect special libFuzzer inputs which can not be processed by the mutator framework.
+    // libFuzzer always uses an empty input, and one with a single line feed (10) to indicate
+    // end of initial corpus file processing.
+    return input.length == 0 || (input.length == 1 && input[0] == 10);
   }
 
   // Called via JNI, being passed data from LLVMFuzzerCustomMutator.
@@ -459,6 +477,14 @@ public final class FuzzTargetRunner {
    */
   public static String mutatorDebugString() {
     return mutator != null ? mutator.toString() : null;
+  }
+
+  /**
+   * Returns whether the current mutator has detected invalid corpus files.
+   * If no mutator is used, returns false.
+   */
+  public static boolean invalidCorpusFilesPresent() {
+    return mutator != null && invalidCorpusFileWarningShown;
   }
 
   /**

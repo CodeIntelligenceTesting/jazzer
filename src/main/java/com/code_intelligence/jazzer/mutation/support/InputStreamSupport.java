@@ -79,16 +79,7 @@ public final class InputStreamSupport {
     return new ExtendWithNullInputStream(requireNonNull(stream));
   }
 
-  /**
-   * @return a stream with the first {@code bytes} bytes of {@code stream}
-   */
-  public static InputStream cap(InputStream stream, long bytes) {
-    requireNonNull(stream);
-    require(bytes >= 0, "bytes must be non-negative");
-    return new CappedInputStream(stream, bytes);
-  }
-
-  private static final class ExtendWithNullInputStream extends InputStream {
+  public static final class ExtendWithNullInputStream extends InputStream {
     private static final InputStream ALWAYS_EOF = new ByteArrayInputStream(new byte[0]);
     private final InputStream stream;
     private boolean eof;
@@ -147,6 +138,15 @@ public final class InputStreamSupport {
     }
   }
 
+  /**
+   * @return a stream with the first {@code bytes} bytes of {@code stream}
+   */
+  public static InputStream cap(InputStream stream, long bytes) {
+    requireNonNull(stream);
+    require(bytes >= 0, "bytes must be non-negative");
+    return new CappedInputStream(stream, bytes);
+  }
+
   private static final class CappedInputStream extends InputStream {
     private final InputStream stream;
     private long remaining;
@@ -185,6 +185,65 @@ public final class InputStreamSupport {
     @Override
     public int available() throws IOException {
       return (int) min(stream.available(), remaining);
+    }
+
+    @Override
+    public void close() throws IOException {
+      stream.close();
+    }
+  }
+
+  /**
+   * Wraps a given stream with the functionality to detect if it was read exactly.
+   * To do so, the stream must provide an accurate implementation of {@link
+   * InputStream#available()}, hence it's restricted to {@link ByteArrayInputStream} for now.
+   *
+   * @return {@code stream} extended that detects if it was consumed exactly
+   */
+  public static ReadExactlyInputStream extendWithReadExactly(ByteArrayInputStream stream) {
+    return new ReadExactlyInputStream(requireNonNull(stream));
+  }
+
+  public static final class ReadExactlyInputStream extends InputStream {
+    private final InputStream stream;
+    private boolean eof;
+
+    private ReadExactlyInputStream(InputStream stream) {
+      this.stream = stream;
+      this.eof = false;
+    }
+
+    public boolean isConsumedExactly() {
+      try {
+        // Forwards availability check to the underlying ByteInputStream,
+        // which is accurate for the number of available bytes.
+        return !eof && available() == 0;
+      } catch (IOException e) {
+        return false;
+      }
+    }
+
+    @Override
+    public int read() throws IOException {
+      int res = stream.read();
+      if (res == -1) {
+        eof = true;
+      }
+      return res;
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+      int read = stream.read(b, off, len);
+      if (read < len) {
+        eof = true;
+      }
+      return read;
+    }
+
+    @Override
+    public int available() throws IOException {
+      return stream.available();
     }
 
     @Override
