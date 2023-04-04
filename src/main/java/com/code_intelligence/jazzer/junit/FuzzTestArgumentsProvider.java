@@ -36,7 +36,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +52,7 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
       "Methods annotated with @FuzzTest must take at least one parameter";
   private static final AtomicBoolean agentInstalled = new AtomicBoolean(false);
 
+  private boolean invalidCorpusFilesPresent = false;
   private FuzzTest annotation;
 
   @Override
@@ -97,16 +97,20 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
         rawSeeds = Stream.concat(rawSeeds, walkInputsInPath(Utils.generatedCorpusPath(testClass)));
       }
     }
-    return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds)
-        .onClose(() -> {
-          if (!Utils.isFuzzing(extensionContext)) {
-            extensionContext.publishReportEntry(
-                "No fuzzing has been performed, the fuzz test has only been executed on the fixed "
-                + "set of inputs in the seed corpus.\n"
-                + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a "
-                + "non-empty value.");
-          }
-        });
+    return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds).onClose(() -> {
+      if (!Utils.isFuzzing(extensionContext)) {
+        extensionContext.publishReportEntry(
+            "No fuzzing has been performed, the fuzz test has only been executed on the fixed "
+            + "set of inputs in the seed corpus.\n"
+            + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a "
+            + "non-empty value.");
+        if (invalidCorpusFilesPresent) {
+          extensionContext.publishReportEntry(
+              "Some files in the seed corpus do not match the fuzz target signature.\n"
+              + "This indicates that they were generated with a different signature and may cause issues reproducing previous findings.");
+        }
+      }
+    });
   }
 
   private Stream<? extends Arguments> adaptInputsForFuzzTest(
@@ -128,7 +132,10 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
         Object[] args;
         if (argumentsMutator.isPresent()) {
           ArgumentsMutator mutator = argumentsMutator.get();
-          mutator.read(new ByteArrayInputStream(e.getValue()));
+          boolean readExactly = mutator.read(new ByteArrayInputStream(e.getValue()));
+          if (!readExactly) {
+            invalidCorpusFilesPresent = true;
+          }
           args = mutator.getArguments();
         } else {
           try (FuzzedDataProviderImpl data = FuzzedDataProviderImpl.withJavaData(e.getValue())) {

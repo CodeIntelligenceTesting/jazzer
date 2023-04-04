@@ -103,6 +103,10 @@ public class MutatorTest {
     results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
         event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
         event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+        // Deactivated fuzzing warning
+        event(type(REPORTING_ENTRY_PUBLISHED),
+            container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+        // Invalid corpus input warning
         event(type(REPORTING_ENTRY_PUBLISHED),
             container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
         event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
