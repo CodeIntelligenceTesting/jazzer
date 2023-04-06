@@ -27,6 +27,7 @@ import com.code_intelligence.jazzer.api.Function3;
 import com.code_intelligence.jazzer.api.Function4;
 import com.code_intelligence.jazzer.api.Function5;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.runtime.HardToCatchError;
 import com.code_intelligence.jazzer.utils.Utils;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfoList;
@@ -286,6 +287,9 @@ public class Meta {
       // We should ensure that the arguments fed into the method are always valid.
       throw new AutofuzzError(getDebugSummary(method, thisObject, arguments), e);
     } catch (InvocationTargetException e) {
+      if (e.getCause() instanceof HardToCatchError) {
+        throw new AutofuzzInvocationException();
+      }
       throw new AutofuzzInvocationException(e.getCause());
     }
   }
@@ -344,6 +348,9 @@ public class Meta {
       // constructors of abstract classes or private constructors.
       throw new AutofuzzError(getDebugSummary(constructor, null, arguments), e);
     } catch (InvocationTargetException e) {
+      if (e.getCause() instanceof HardToCatchError) {
+        throw new AutofuzzInvocationException();
+      }
       throw new AutofuzzInvocationException(e.getCause());
     }
   }
