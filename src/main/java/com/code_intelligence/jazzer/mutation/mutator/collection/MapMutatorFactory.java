@@ -33,8 +33,12 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -96,7 +100,8 @@ final class MapMutatorFactory extends MutatorFactory {
       for (int i = 0; i < size; i++) {
         map.put(keyMutator.read(in), valueMutator.read(in));
       }
-      // Wrap in an immutable view for additional protection against accidental mutation in fuzz
+      // Wrap in an immutable view for additional protection against accidental
+      // mutation in fuzz
       // tests.
       return toImmutableMapView(map);
     }
@@ -112,7 +117,8 @@ final class MapMutatorFactory extends MutatorFactory {
 
     @Override
     protected Map<K, V> makeDefaultInstance() {
-      // Wrap in an immutable view for additional protection against accidental mutation in fuzz
+      // Wrap in an immutable view for additional protection against accidental
+      // mutation in fuzz
       // tests.
       return toImmutableMapView(new LinkedHashMap<>(maxInitialSize()));
     }
@@ -127,32 +133,108 @@ final class MapMutatorFactory extends MutatorFactory {
       }
     }
 
+    private void eraseRandomChunk(Map<K, V> map, PseudoRandom prng) {
+      int mapSize = map.size();
+      int upperLimit = Math.max(1, Math.min(mapSize - minSize, mapSize / 2));
+      int chunkSize = upperLimit == 1 ? 1 : prng.closedRange(1, upperLimit);
+      int chunkOffset = prng.closedRange(0, mapSize - chunkSize);
+
+      List<K> tmpRemStore = map.entrySet()
+                                .stream()
+                                .skip(chunkOffset)
+                                .limit(chunkSize)
+                                .map(Map.Entry::getKey)
+                                .collect(Collectors.toCollection(() -> new ArrayList<>(chunkSize)));
+
+      map.keySet().removeAll(tmpRemStore);
+    }
+
+    private void insertRandomChunk(Map<K, V> map, PseudoRandom prng) {
+      int mapSize = map.size();
+      int chunkSize = prng.closedRange(1, Math.min(maxSize - mapSize, mapSize));
+      for (int i = 0; i < chunkSize; i++) {
+        initElement(map, prng);
+      }
+    }
+
+    private void changeRandomChunk(Map<K, V> map, PseudoRandom prng) {
+      int mapSize = map.size();
+      int chunkOffset = prng.indexIn(mapSize);
+      int chunkSize =
+          Math.min(prng.closedRange(1, mapSize - chunkOffset), (int) Math.ceil(mapSize / 10.0));
+      List<K> keys =
+          map.keySet().stream().skip(chunkOffset).limit(chunkSize).collect(Collectors.toList());
+
+      for (int i = 0; i < keys.size(); i++) {
+        K key = keys.get(i);
+        V value = map.get(key);
+        Map.Entry<K, V> entry = new AbstractMap.SimpleEntry<>(key, value);
+        mutateElement(entry, map, prng);
+      }
+    }
+
+    private static enum Action {
+      SHRINK,
+      SHRINK_CHUNK,
+      GROW,
+      GROW_CHUNK,
+      CHANGE,
+      CHANGE_CHUNK,
+    }
+
     @Override
     public void mutateInPlace(Map<K, V> reference, PseudoRandom prng) {
       Map<K, V> map = underlyingMutableMap(reference);
       if (map.isEmpty()) {
         initElement(map, prng);
-      } else if (!prng.trueInOneOutOf(4)) {
-        // Choose a random entry, and then key or value, to mutate.
-        int i = prng.indexIn(map.size());
-        map.entrySet().stream().skip(i).findFirst().ifPresent(
-            entry -> mutateElement(entry, map, prng));
-      } else {
-        // This will increase the map size up to max and then oscillate around it.
-        // Smaller sizes are already used, so increasing the size should be a valid choice.
-        // FIXME: Think about a better strategy to change the size.
-        int currentSize = map.size();
-        if (currentSize < maxSize) {
-          // Create a new entry, as a deep copy could be expensive.
+        return;
+      }
+      int currentMapSize = map.size();
+      if (currentMapSize == 1) {
+        // One element map, mutate that one and return quicker
+        map.entrySet().stream().findFirst().ifPresent(entry -> mutateElement(entry, map, prng));
+        return;
+      }
+      List<Action> s = new ArrayList<>();
+      if (currentMapSize > minSize) {
+        s.add(Action.SHRINK);
+        s.add(Action.SHRINK_CHUNK);
+      }
+      if (currentMapSize < maxSize) {
+        s.add(Action.GROW);
+        s.add(Action.GROW_CHUNK);
+      }
+      if (!map.isEmpty()) {
+        s.add(Action.CHANGE);
+        s.add(Action.CHANGE_CHUNK);
+      }
+      switch (s.get(prng.indexIn(s))) {
+        case SHRINK:
+          map.keySet()
+              .stream()
+              .skip(prng.indexIn(currentMapSize))
+              .findFirst()
+              .ifPresent(entry -> map.remove(entry));
+          return;
+        case SHRINK_CHUNK:
+          eraseRandomChunk(map, prng);
+          return;
+        case GROW:
           initElement(map, prng);
-        } else if (currentSize > minSize) {
-          // Remove a random entry.
-          int i = prng.indexIn(currentSize);
-          map.keySet().stream().skip(i).findFirst().ifPresent(map::remove);
-        } else {
-          // One element map, mutate that one.
-          mutateElement(map.entrySet().iterator().next(), map, prng);
-        }
+          return;
+        case GROW_CHUNK:
+          insertRandomChunk(map, prng);
+          return;
+        case CHANGE:
+          map.entrySet()
+              .stream()
+              .skip(prng.indexIn(currentMapSize))
+              .findFirst()
+              .ifPresent(entry -> mutateElement(entry, map, prng));
+          return;
+        case CHANGE_CHUNK:
+          changeRandomChunk(map, prng);
+          return;
       }
     }
 
@@ -174,7 +256,8 @@ final class MapMutatorFactory extends MutatorFactory {
     }
 
     private void mutateElement(Map.Entry<K, V> entry, Map<K, V> map, PseudoRandom prng) {
-      if (prng.choice()) {
+      boolean mutateKeyOrValue = prng.choice();
+      if (mutateKeyOrValue) {
         // Try to mutate the key.
         K originalKey = entry.getKey();
 
@@ -192,7 +275,14 @@ final class MapMutatorFactory extends MutatorFactory {
       }
 
       // Mutate the value.
-      entry.setValue(valueMutator.mutate(entry.getValue(), prng));
+      if (!mutateKeyOrValue) {
+        V value = entry.getValue();
+        K key = entry.getKey();
+        value = valueMutator.mutate(value, prng);
+        map.put(key, value);
+      } else {
+        entry.setValue(valueMutator.mutate(entry.getValue(), prng));
+      }
     }
 
     @Override
@@ -218,10 +308,12 @@ final class MapMutatorFactory extends MutatorFactory {
 
     private Map<K, V> underlyingMutableMap(Map<K, V> value) {
       if (value instanceof ImmutableMapView<?, ?>) {
-        // An immutable map view created by us, so we know how to get back at the mutable list.
+        // An immutable map view created by us, so we know how to get back at the
+        // mutable list.
         return ((ImmutableMapView<K, V>) value).asMutableMap();
       } else {
-        // Any kind of map created by someone else (for example using us as a general purpose
+        // Any kind of map created by someone else (for example using us as a general
+        // purpose
         // InPlaceMutator), so assume it is mutable.
         return value;
       }
