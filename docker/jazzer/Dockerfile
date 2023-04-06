@@ -32,7 +32,7 @@ RUN curl -L https://github.com/bazelbuild/bazelisk/releases/download/v1.15.0/baz
 
 # :debug includes a busybox shell, which is needed for libFuzzer's use of system() for e.g. the
 # -fork and -minimize_crash commands.
-FROM gcr.io/distroless/java:debug
+FROM gcr.io/distroless/java17:debug
 
 COPY --from=builder /app/* /app/
 # system() expects the shell at /bin/sh, but the image has it at /busybox/sh. We create a symlink,
