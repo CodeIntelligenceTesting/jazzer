@@ -174,35 +174,25 @@ final class MapMutatorFactory extends MutatorFactory {
     }
 
     private void mutateElement(Map.Entry<K, V> entry, Map<K, V> map, PseudoRandom prng) {
-      K key = entry.getKey();
-      V value = entry.getValue();
-      boolean mutateKeyOrValue = prng.choice();
+      if (prng.choice()) {
+        // Try to mutate the key.
+        K originalKey = entry.getKey();
 
-      map.remove(key);
-
-      // Try to mutate the current key into an unused one.
-      // If that doesn't succeed after some attempts, mutate the value.
-      if (mutateKeyOrValue) {
-        int attempts = 0;
-        K mutated = key;
-        while (true) {
+        // Try to mutate the current key into an unused one.
+        // If that doesn't succeed after some attempts, mutate the value.
+        K mutated = originalKey;
+        for (int attempt = 0; attempt < DEFAULT_ATTEMPTS_COUNT; attempt++) {
           mutated = keyMutator.mutate(mutated, prng);
-          if (!mutated.equals(key) && !map.containsKey(mutated)) {
-            key = mutated;
-            break;
-          } else if (attempts++ > DEFAULT_ATTEMPTS_COUNT) {
-            // Give up, as no unused key could be found, and mutate the value instead.
-            mutateKeyOrValue = false;
-            break;
+          if (!map.containsKey(mutated)) {
+            map.put(mutated, entry.getValue());
+            map.remove(originalKey);
+            return;
           }
         }
       }
 
-      // The value mutator is responsible to produce different values, no need for a retry.
-      if (!mutateKeyOrValue) {
-        value = valueMutator.mutate(value, prng);
-      }
-      map.put(key, value);
+      // Mutate the value.
+      entry.setValue(valueMutator.mutate(entry.getValue(), prng));
     }
 
     @Override
