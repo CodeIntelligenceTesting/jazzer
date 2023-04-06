@@ -20,6 +20,10 @@ package com.code_intelligence.jazzer.api;
  * Only used internally.
  */
 public class AutofuzzInvocationException extends RuntimeException {
+  public AutofuzzInvocationException() {
+    super();
+  }
+
   public AutofuzzInvocationException(Throwable cause) {
     super(cause);
   }
