@@ -34,7 +34,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.util.AbstractMap;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -92,7 +92,7 @@ final class MapMutatorFactory extends MutatorFactory {
     @Override
     public Map<K, V> read(DataInputStream in) throws IOException {
       int size = RandomSupport.clamp(in.readInt(), minSize, maxSize);
-      Map<K, V> map = new HashMap<>(size);
+      Map<K, V> map = new LinkedHashMap<>(size);
       for (int i = 0; i < size; i++) {
         map.put(keyMutator.read(in), valueMutator.read(in));
       }
@@ -114,7 +114,7 @@ final class MapMutatorFactory extends MutatorFactory {
     protected Map<K, V> makeDefaultInstance() {
       // Wrap in an immutable view for additional protection against accidental mutation in fuzz
       // tests.
-      return toImmutableMapView(new HashMap<>(maxInitialSize()));
+      return toImmutableMapView(new LinkedHashMap<>(maxInitialSize()));
     }
 
     @Override
