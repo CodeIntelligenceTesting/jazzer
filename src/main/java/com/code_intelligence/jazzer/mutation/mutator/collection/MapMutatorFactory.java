@@ -120,7 +120,7 @@ final class MapMutatorFactory extends MutatorFactory {
     @Override
     public void initInPlace(Map<K, V> reference, PseudoRandom prng) {
       int targetSize = prng.closedRange(minInitialSize(), maxInitialSize());
-      Map<K, V> map = underlyingMutableList(reference);
+      Map<K, V> map = underlyingMutableMap(reference);
       map.clear();
       for (int i = 0; i < targetSize; i++) {
         initElement(map, prng);
@@ -129,7 +129,7 @@ final class MapMutatorFactory extends MutatorFactory {
 
     @Override
     public void mutateInPlace(Map<K, V> reference, PseudoRandom prng) {
-      Map<K, V> map = underlyingMutableList(reference);
+      Map<K, V> map = underlyingMutableMap(reference);
       if (map.isEmpty()) {
         initElement(map, prng);
       } else if (!prng.trueInOneOutOf(4)) {
@@ -216,7 +216,7 @@ final class MapMutatorFactory extends MutatorFactory {
       return min(maxSize, minSize + 1);
     }
 
-    private Map<K, V> underlyingMutableList(Map<K, V> value) {
+    private Map<K, V> underlyingMutableMap(Map<K, V> value) {
       if (value instanceof ImmutableMapView<?, ?>) {
         // An immutable map view created by us, so we know how to get back at the mutable list.
         return ((ImmutableMapView<K, V>) value).asMutableMap();
