@@ -83,7 +83,7 @@ class MapMutatorTest {
              // Mutate entry
              false,
              // Index
-             0,
+             1,
              // Mutate value
              false)) {
       map = mutator.mutate(map, prng);
@@ -154,7 +154,7 @@ class MapMutatorTest {
       map = mutator.mutate(map, prng);
     }
     assertThat(map).hasSize(2);
-    assertThat(map).containsKey("Key2");
+    assertThat(map).containsKey("Key1");
     assertThat(map).containsKey("New");
   }
 }
