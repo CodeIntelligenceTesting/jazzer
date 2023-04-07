@@ -57,8 +57,9 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "build_bazel_apple_support",
-        sha256 = "2e3dc4d0000e8c2f5782ea7bb53162f37c485b5d8dc62bb3d7d7fc7c276f0d00",
-        url = "https://github.com/bazelbuild/apple_support/releases/download/1.3.2/apple_support.1.3.2.tar.gz",
+        sha256 = "effa003b7bdb7c72b32f00092fe6deb7acf54c682c18ee1fd6bbbe9f8cf8c08b",
+        strip_prefix = "apple_support-40306d1599fdb7924c4bbd63a0cdb766f120ec69",
+        url = "https://github.com/bazelbuild/apple_support/archive/40306d1599fdb7924c4bbd63a0cdb766f120ec69.tar.gz",
     )
 
     maybe(

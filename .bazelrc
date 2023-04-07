@@ -5,11 +5,7 @@ build --sandbox_tmpfs_path=/tmp
 build --enable_platform_specific_config
 build -c opt
 # Ensure that paths of files printed by our examples are valid.
-# Enabling this on Windows leads to an error.
-# FIXME: Remove this workaround once
-#  https://github.com/bazelbuild/bazel/pull/16973 has been merged.
-build:linux --nozip_undeclared_test_outputs
-build:macos --nozip_undeclared_test_outputs
+build --nozip_undeclared_test_outputs
 # Improve caching for builds involving multiple configurations and work around
 # the Bazel issue fixed by https://github.com/bazelbuild/bazel/pull/17158.
 build --experimental_output_directory_naming_scheme=diff_against_baseline
@@ -20,6 +16,9 @@ common --repo_env=CC=clang
 build --incompatible_enable_cc_toolchain_resolution
 # Requires a relatively modern clang.
 build:ci --features=layering_check
+build:macos --apple_crosstool_top=@local_config_apple_cc//:toolchain
+build:macos --crosstool_top=@local_config_apple_cc//:toolchain
+build:macos --host_crosstool_top=@local_config_apple_cc//:toolchain
 
 # Java
 # Always build for Java 8, even with a newer JDK. This ensures that all
