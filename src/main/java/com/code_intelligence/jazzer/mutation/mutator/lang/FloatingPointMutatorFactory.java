@@ -272,7 +272,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
 
     @Override
     public Float read(DataInputStream in) throws IOException {
-      return in.readFloat();
+      return forceInRange(in.readFloat(), minValue, maxValue, allowNaN);
     }
 
     @Override
@@ -498,7 +498,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
 
     @Override
     public Double read(DataInputStream in) throws IOException {
-      return in.readDouble();
+      return forceInRange(in.readDouble(), minValue, maxValue, allowNaN);
     }
 
     @Override
