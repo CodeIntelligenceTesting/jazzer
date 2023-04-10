@@ -19,6 +19,7 @@ import com.example.ldap.MockLdapContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.LdapContext;
 
+@SuppressWarnings("BanJNDI")
 public class LdapSearchInjection {
   private static final LdapContext ctx = new MockLdapContext();
 
