@@ -22,6 +22,7 @@ import com.code_intelligence.jazzer.junit.FuzzTest;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("InvalidPatternSyntax")
 class ValidFuzzTests {
   @FuzzTest
   void dataFuzz(FuzzedDataProvider data) {

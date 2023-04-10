@@ -23,6 +23,7 @@ import java.lang.invoke.MethodHandle;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+@SuppressWarnings("InvalidPatternSyntax")
 public class DisabledHooksFuzzer {
   public static void fuzzerTestOneInput(byte[] data) {
     triggerCustomHook();
