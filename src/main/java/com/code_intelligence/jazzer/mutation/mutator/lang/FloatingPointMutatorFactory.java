@@ -40,11 +40,11 @@ import java.util.function.Predicate;
 import java.util.stream.DoubleStream;
 
 final class FloatingPointMutatorFactory extends MutatorFactory {
-  private ArrayList<DoubleFunction<Double>> mathFunctions = new ArrayList<>(
-      Arrays.asList(Math::acos, Math::asin, Math::atan, Math::cbrt, Math::ceil, Math::cos,
+  private static final DoubleFunction<Double>[] mathFunctions =
+      new DoubleFunction[] {Math::acos, Math::asin, Math::atan, Math::cbrt, Math::ceil, Math::cos,
           Math::cosh, Math::exp, Math::expm1, Math::floor, Math::log, Math::log10, Math::log1p,
           Math::rint, Math::sin, Math::sinh, Math::sqrt, Math::tan, Math::tanh, Math::toDegrees,
-          Math::toRadians, n -> n * 0.5, n -> n * 2.0, n -> n * 0.333333333333333, n -> n * 3.0));
+          Math::toRadians, n -> n * 0.5, n -> n * 2.0, n -> n * 0.333333333333333, n -> n * 3.0};
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
@@ -54,37 +54,36 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     Class<?> clazz = (Class<?>) type.getType();
 
     if (clazz == float.class || clazz == Float.class) {
-      return Optional.of(new FloatMutator(
-          type, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, true, mathFunctions));
+      return Optional.of(
+          new FloatMutator(type, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, true));
     } else if (clazz == double.class || clazz == Double.class) {
-      return Optional.of(new DoubleMutator(
-          type, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true, mathFunctions));
+      return Optional.of(
+          new DoubleMutator(type, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true));
     } else {
       return Optional.empty();
     }
   }
 
   static final class FloatMutator extends SerializingMutator<Float> {
-    public static final int EXPONENT_INITIAL_BIT = 23;
-    final int MANTISSA_MASK = 0x7fffff;
-    final int EXPONENT_MASK = 0xff;
+    private static final int EXPONENT_INITIAL_BIT = 23;
+    private static final int MANTISSA_MASK = 0x7fffff;
+    private static final int EXPONENT_MASK = 0xff;
     private static final int MANTISSA_RANDOM_WALK_RANGE = 1000;
     private static final int EXPONENT_RANDOM_WALK_RANGE = Float.MAX_EXPONENT;
     private static final int INVERSE_FREQUENCY_SPECIAL_VALUE = 1000;
-    // public constants are used in tests
-    public final float minValue;
-    public final float maxValue;
-    public final boolean allowNaN;
-    private final float[] specialValues;
-    private ArrayList<DoubleFunction<Double>> mathFunctions;
 
-    FloatMutator(AnnotatedType type, Float defaultMinValueForType, Float defaultMaxValueForType,
-        boolean defaultAllowNaN, ArrayList<DoubleFunction<Double>> mathFunctions) {
-      this.mathFunctions = mathFunctions;
+    // Visible for testing.
+    final float minValue;
+    final float maxValue;
+    final boolean allowNaN;
+    private final float[] specialValues;
+
+    FloatMutator(AnnotatedType type, float defaultMinValueForType, float defaultMaxValueForType,
+        boolean defaultAllowNaN) {
       float minValue = defaultMinValueForType;
       float maxValue = defaultMaxValueForType;
       boolean allowNaN = defaultAllowNaN;
-      // InRange is not repeatable, so the loop body will apply exactly once.
+      // InRange is not repeatable, so the loop body will apply at most once.
       for (Annotation annotation : type.getAnnotations()) {
         if (annotation instanceof FloatInRange) {
           FloatInRange floatInRange = (FloatInRange) annotation;
@@ -124,7 +123,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
       return specialValuesArray;
     }
 
-    public Float mutateWithLibFuzzer(Float value) {
+    public float mutateWithLibFuzzer(float value) {
       return LibFuzzerMutator.mutateDefault(value, this, 0);
     }
 
@@ -155,7 +154,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
             result = mutateMantissa(value, prng);
             break;
           case 3:
-            result = (float) mutateWithMathematicalFn(value, prng);
+            result = mutateWithMathematicalFn(value, prng);
             break;
           case 4:
             result = mutateWithLibFuzzer(value);
@@ -222,7 +221,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     }
 
     public float mutateWithMathematicalFn(float value, PseudoRandom prng) {
-      double result = prng.pickIn(mathFunctions).apply((double) value);
+      double result = prng.pickIn(mathFunctions).apply(value);
       return (float) result;
     }
 
@@ -296,22 +295,22 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     private static final long MANTISSA_RANDOM_WALK_RANGE = 1000;
     private static final int EXPONENT_RANDOM_WALK_RANGE = Double.MAX_EXPONENT;
     private static final int INVERSE_FREQUENCY_SPECIAL_VALUE = 1000;
-    public static final long MANTISSA_MASK = 0xfffffffffffffL;
-    public static final long EXPONENT_MASK = 0x7ffL;
-    public static final int EXPONENT_INITIAL_BIT = 52;
-    public final double minValue;
-    public final double maxValue;
-    public final boolean allowNaN;
-    private final double[] specialValues;
-    private ArrayList<DoubleFunction<Double>> mathFunctions;
+    private static final long MANTISSA_MASK = 0xfffffffffffffL;
+    private static final long EXPONENT_MASK = 0x7ffL;
+    private static final int EXPONENT_INITIAL_BIT = 52;
 
-    DoubleMutator(AnnotatedType type, Double defaultMinValueForType, Double defaultMaxValueForType,
-        boolean defaultAllowNaN, ArrayList<DoubleFunction<Double>> mathFunctions) {
-      this.mathFunctions = mathFunctions;
+    // Visible for testing
+    final double minValue;
+    final double maxValue;
+    final boolean allowNaN;
+    private final double[] specialValues;
+
+    DoubleMutator(AnnotatedType type, double defaultMinValueForType, double defaultMaxValueForType,
+        boolean defaultAllowNaN) {
       double minValue = defaultMinValueForType;
       double maxValue = defaultMaxValueForType;
       boolean allowNaN = defaultAllowNaN;
-      // InRange is not repeatable, so the loop body will apply exactly once.
+      // InRange is not repeatable, so the loop body will apply at most once.
       for (Annotation annotation : type.getAnnotations()) {
         if (annotation instanceof DoubleInRange) {
           DoubleInRange doubleInRange = (DoubleInRange) annotation;
@@ -347,7 +346,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
           .toArray();
     }
 
-    public Double mutateWithLibFuzzer(Double value) {
+    public double mutateWithLibFuzzer(double value) {
       return LibFuzzerMutator.mutateDefault(value, this, 0);
     }
 
