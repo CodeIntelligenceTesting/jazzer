@@ -128,6 +128,22 @@ public final class TestSupport {
     }
 
     @Override
+    public <T> T pickIn(T[] array) {
+      assertThat(array).isNotEmpty();
+
+      assertThat(elements).isNotEmpty();
+      return array[(int) elements.poll()];
+    }
+
+    @Override
+    public <T> T pickIn(List<T> list) {
+      assertThat(list).isNotEmpty();
+
+      assertThat(elements).isNotEmpty();
+      return list.get((int) elements.poll());
+    }
+
+    @Override
     public <T> int indexIn(T[] array) {
       assertThat(array).isNotEmpty();
 

@@ -45,6 +45,16 @@ public final class SeededPseudoRandom implements PseudoRandom {
   }
 
   @Override
+  public <T> T pickIn(T[] array) {
+    return array[indexIn(array.length)];
+  }
+
+  @Override
+  public <T> T pickIn(List<T> list) {
+    return list.get(indexIn(list.size()));
+  }
+
+  @Override
   public <T> int indexIn(T[] array) {
     return indexIn(array.length);
   }
@@ -118,14 +128,85 @@ public final class SeededPseudoRandom implements PseudoRandom {
     }
   }
 
+  // This function always returns a finite value
+  @Override
   public float closedRange(float lowerInclusive, float upperInclusive) {
     require(lowerInclusive <= upperInclusive);
-    return (float) random.nextDouble(lowerInclusive, upperInclusive);
+    if (lowerInclusive == upperInclusive) {
+      require(Double.isFinite(lowerInclusive));
+      return lowerInclusive;
+    }
+    // Special case: [Float.NEGATIVE_INFINITY, -Float.MAX_VALUE]
+    if (lowerInclusive == Float.NEGATIVE_INFINITY && upperInclusive == -Float.MAX_VALUE)
+      return -Float.MAX_VALUE;
+    // Special case: [Float.MAX_VALUE, Float.POSITIVE_INFINITY]
+    if (lowerInclusive == Float.MAX_VALUE && upperInclusive == Float.POSITIVE_INFINITY)
+      return Float.MAX_VALUE;
+    float limitedLower =
+        lowerInclusive == Float.NEGATIVE_INFINITY ? -Float.MAX_VALUE : lowerInclusive;
+    float limitedUpper =
+        upperInclusive == Float.POSITIVE_INFINITY ? Float.MAX_VALUE : upperInclusive;
+
+    // nextDouble(start, bound) is exclusive of bound, so we use Math.nextUp to extend the bound to
+    // the next representable double. The maximal possible range of a float is always finite when
+    // represented as a double. Therefore, we can safely use nextDouble and convert it to a float.
+    return (float) random.nextDouble((double) limitedLower, Math.nextUp((double) limitedUpper));
   }
 
+  // This function always returns a finite value
+  @Override
   public double closedRange(double lowerInclusive, double upperInclusive) {
     require(lowerInclusive <= upperInclusive);
-    return random.nextDouble(lowerInclusive, upperInclusive);
+    if (lowerInclusive == upperInclusive) {
+      require(Double.isFinite(lowerInclusive));
+      return lowerInclusive;
+    }
+    // Special case: [Double.NEGATIVE_INFINITY, -Double.MAX_VALUE]
+    if (lowerInclusive == Double.NEGATIVE_INFINITY && upperInclusive == -Double.MAX_VALUE)
+      return -Double.MAX_VALUE;
+    // Special case: [Double.MAX_VALUE, Double.POSITIVE_INFINITY)
+    if (lowerInclusive == Double.MAX_VALUE && upperInclusive == Double.POSITIVE_INFINITY)
+      return Double.MAX_VALUE;
+
+    // nextDouble(start, bound) cannot deal with infinite values, so we need to limit them
+    double limitedLower =
+        lowerInclusive == Double.NEGATIVE_INFINITY ? -Double.MAX_VALUE : lowerInclusive;
+    double limitedUpper =
+        upperInclusive == Double.POSITIVE_INFINITY ? Double.MAX_VALUE : upperInclusive;
+
+    // After limiting, the range may contain only a single value: return that
+    if (limitedLower == limitedUpper)
+      return limitedLower;
+
+    // random.nextDouble() is exclusive of the upper bound. To include the upper bound,
+    // we extend the bound to the next double value by using Math.nextUp(limitedUpper).
+    double nextUpper =
+        (limitedUpper == Double.MAX_VALUE) ? limitedUpper : Math.nextUp(limitedUpper);
+
+    // This, however, leads to a problem when the upper bound is Double.MAX_VALUE, because the next
+    // double after that is Double.POSITIVE_INFINITY. This case is treated the same as infinite
+    // range case, in the else branch.
+    boolean couldExtendRange = nextUpper != limitedUpper;
+
+    // nextDouble(start, bound) can only deal with finite ranges
+    if (Double.isFinite(nextUpper - limitedLower) && couldExtendRange) {
+      double result = random.nextDouble(limitedLower, nextUpper);
+      // Clamp random.nextDouble() to the upper bound.
+      // This is a workaround for RandomSupport.nextDouble() that causes it to
+      // return values greater than upper bound.
+      // See https://bugs.openjdk.org/browse/JDK-8281183 for a list of affected JDK versions.
+      if (result > limitedUpper)
+        result = limitedUpper;
+      return result;
+    } else {
+      // Ranges that exceeds the maximum representable double value, or ranges that could not be
+      // extended scale a random n from range [0; 1] onto the range [limitLower, limitUpper]
+      // limitedLower * (1 - n) + limitedUpper * n            - is the same as:
+      // limitedLower + (limitedUpper - limitedLower) * n
+      // limitedLower + range * n
+      double n = random.nextDouble(0.0, Math.nextUp(1.0));
+      return limitedLower * (1 - n) + limitedUpper * n;
+    }
   }
 
   @Override
