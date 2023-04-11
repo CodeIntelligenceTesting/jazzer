@@ -22,7 +22,9 @@ cc_jni_library(
             # executable to be defined by an import lib.
             "/wholearchive:clang_rt.asan_dll_thunk-x86_64.lib",
         ],
-        "//conditions:default": [],
+        "//conditions:default": [
+            "-fsanitize=fuzzer-no-link,address",
+        ],
     }),
     visibility = ["//examples:__pkg__"],
     deps = [
@@ -45,7 +47,9 @@ cc_jni_library(
             # UBSan and SanCov as well.
             "/wholearchive:clang_rt.asan_dll_thunk-x86_64.lib",
         ],
-        "//conditions:default": [],
+        "//conditions:default": [
+            "-fsanitize=fuzzer-no-link,undefined",
+        ],
     }),
     visibility = ["//examples:__pkg__"],
     deps = [

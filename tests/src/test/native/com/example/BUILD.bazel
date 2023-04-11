@@ -7,6 +7,9 @@ cc_jni_library(
     copts = [
         "-fsanitize=fuzzer-no-link",
     ],
+    linkopts = [
+        "-fsanitize=fuzzer-no-link",
+    ],
     target_compatible_with = SKIP_ON_WINDOWS,
     visibility = ["//tests:__pkg__"],
     deps = ["//tests:native_value_profile_fuzzer.hdrs"],
