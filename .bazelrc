@@ -72,6 +72,11 @@ build:ci --remote_timeout=3600
 # Fail if Bazel can't find Xcode. This improves error messages as the fallback toolchain will only
 # fail when requested to cross-compile.
 build:ci --repo_env=BAZEL_USE_XCODE_TOOLCHAIN=1
+# Suggested by BuildBuddy
+build:ci --noslim_profile
+build:ci --experimental_profile_include_target_label
+build:ci --experimental_profile_include_primary_output
+build:ci --nolegacy_important_outputs
 
 # Docker images
 common:docker --config=toolchain
