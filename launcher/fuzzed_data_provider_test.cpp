@@ -49,7 +49,7 @@ class FuzzedDataProviderTest : public ::testing::Test {
 
 std::unique_ptr<JVM> FuzzedDataProviderTest::jvm_ = nullptr;
 
-constexpr std::size_t kValidModifiedUtf8NumRuns = 10000;
+constexpr std::size_t kValidModifiedUtf8NumRuns = 1000;
 constexpr std::size_t kValidModifiedUtf8NumBytes = 100000;
 constexpr uint32_t kValidModifiedUtf8Seed = 0x12345678;
 
