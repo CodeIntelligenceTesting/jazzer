@@ -20,10 +20,8 @@ import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseu
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
 import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
-import com.code_intelligence.jazzer.mutation.annotation.SafeToMutate;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import java.lang.reflect.Method;
@@ -36,8 +34,7 @@ class ArgumentsMutatorTest {
   private static List<List<Boolean>> fuzzThisFunctionArgument1;
   private static List<Boolean> fuzzThisFunctionArgument2;
 
-  public static void fuzzThisFunction(
-      @SafeToMutate List<List<@NotNull Boolean>> list, List<Boolean> otherList) {
+  public static void fuzzThisFunction(List<List<@NotNull Boolean>> list, List<Boolean> otherList) {
     fuzzThisFunctionArgument1 = list;
     fuzzThisFunctionArgument2 = otherList;
   }
@@ -76,7 +73,7 @@ class ArgumentsMutatorTest {
 
     fuzzThisFunctionArgument1 = null;
     fuzzThisFunctionArgument2 = null;
-    mutator.invoke();
+    mutator.invoke(true);
     assertThat(fuzzThisFunctionArgument1).containsExactly(singletonList(true));
     assertThat(fuzzThisFunctionArgument2).containsExactly(false);
 
@@ -100,13 +97,13 @@ class ArgumentsMutatorTest {
 
     fuzzThisFunctionArgument1 = null;
     fuzzThisFunctionArgument2 = null;
-    mutator.invoke();
+    mutator.invoke(true);
     assertThat(fuzzThisFunctionArgument1).containsExactly(singletonList(false));
     assertThat(fuzzThisFunctionArgument2).containsExactly(false);
 
     // Modify the arguments passed to the function.
-    fuzzThisFunctionArgument1.clear();
-    assertThrows(UnsupportedOperationException.class, () -> fuzzThisFunctionArgument2.clear());
+    fuzzThisFunctionArgument1.get(0).clear();
+    fuzzThisFunctionArgument2.clear();
 
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first argument
@@ -128,7 +125,7 @@ class ArgumentsMutatorTest {
 
     fuzzThisFunctionArgument1 = null;
     fuzzThisFunctionArgument2 = null;
-    mutator.invoke();
+    mutator.invoke(false);
     assertThat(fuzzThisFunctionArgument1).containsExactly(singletonList(true));
     assertThat(fuzzThisFunctionArgument2).containsExactly(false);
   }
@@ -136,8 +133,7 @@ class ArgumentsMutatorTest {
   private List<List<Boolean>> mutableFuzzThisFunctionArgument1;
   private List<Boolean> mutableFuzzThisFunctionArgument2;
 
-  public void mutableFuzzThisFunction(
-      @SafeToMutate List<List<@NotNull Boolean>> list, List<Boolean> otherList) {
+  public void mutableFuzzThisFunction(List<List<@NotNull Boolean>> list, List<Boolean> otherList) {
     mutableFuzzThisFunctionArgument1 = list;
     mutableFuzzThisFunctionArgument2 = otherList;
   }
@@ -175,7 +171,7 @@ class ArgumentsMutatorTest {
 
     mutableFuzzThisFunctionArgument1 = null;
     mutableFuzzThisFunctionArgument2 = null;
-    mutator.invoke();
+    mutator.invoke(true);
     assertThat(mutableFuzzThisFunctionArgument1).containsExactly(singletonList(true));
     assertThat(mutableFuzzThisFunctionArgument2).containsExactly(false);
 
@@ -199,14 +195,13 @@ class ArgumentsMutatorTest {
 
     mutableFuzzThisFunctionArgument1 = null;
     mutableFuzzThisFunctionArgument2 = null;
-    mutator.invoke();
+    mutator.invoke(true);
     assertThat(mutableFuzzThisFunctionArgument1).containsExactly(singletonList(false));
     assertThat(mutableFuzzThisFunctionArgument2).containsExactly(false);
 
     // Modify the arguments passed to the function.
-    mutableFuzzThisFunctionArgument1.clear();
-    assertThrows(
-        UnsupportedOperationException.class, () -> mutableFuzzThisFunctionArgument2.clear());
+    mutableFuzzThisFunctionArgument1.get(0).clear();
+    mutableFuzzThisFunctionArgument2.clear();
 
     try (MockPseudoRandom prng = mockPseudoRandom(
              // mutate first argument
@@ -228,7 +223,7 @@ class ArgumentsMutatorTest {
 
     mutableFuzzThisFunctionArgument1 = null;
     mutableFuzzThisFunctionArgument2 = null;
-    mutator.invoke();
+    mutator.invoke(false);
     assertThat(mutableFuzzThisFunctionArgument1).containsExactly(singletonList(true));
     assertThat(mutableFuzzThisFunctionArgument2).containsExactly(false);
   }

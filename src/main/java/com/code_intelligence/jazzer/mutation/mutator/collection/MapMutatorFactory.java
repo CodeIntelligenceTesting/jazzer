@@ -24,7 +24,11 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
-import com.code_intelligence.jazzer.mutation.api.*;
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
+import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
+import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
+import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import com.code_intelligence.jazzer.mutation.support.StreamSupport;
 import java.io.DataInputStream;
@@ -34,14 +38,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -100,10 +100,7 @@ final class MapMutatorFactory extends MutatorFactory {
       for (int i = 0; i < size; i++) {
         map.put(keyMutator.read(in), valueMutator.read(in));
       }
-      // Wrap in an immutable view for additional protection against accidental
-      // mutation in fuzz
-      // tests.
-      return toImmutableMapView(map);
+      return map;
     }
 
     @Override
@@ -117,16 +114,14 @@ final class MapMutatorFactory extends MutatorFactory {
 
     @Override
     protected Map<K, V> makeDefaultInstance() {
-      // Wrap in an immutable view for additional protection against accidental
-      // mutation in fuzz
-      // tests.
-      return toImmutableMapView(new LinkedHashMap<>(maxInitialSize()));
+      // Use a LinkedHashMap to ensure deterministic iteration order, which makes chunk-based
+      // mutations deterministic. The additional overhead compared to HashMap should be minimal.
+      return new LinkedHashMap<>(maxInitialSize());
     }
 
     @Override
-    public void initInPlace(Map<K, V> reference, PseudoRandom prng) {
+    public void initInPlace(Map<K, V> map, PseudoRandom prng) {
       int targetSize = prng.closedRange(minInitialSize(), maxInitialSize());
-      Map<K, V> map = underlyingMutableMap(reference);
       map.clear();
       for (int i = 0; i < targetSize; i++) {
         initElement(map, prng);
@@ -183,8 +178,7 @@ final class MapMutatorFactory extends MutatorFactory {
     }
 
     @Override
-    public void mutateInPlace(Map<K, V> reference, PseudoRandom prng) {
-      Map<K, V> map = underlyingMutableMap(reference);
+    public void mutateInPlace(Map<K, V> map, PseudoRandom prng) {
       if (map.isEmpty()) {
         initElement(map, prng);
         return;
@@ -304,54 +298,6 @@ final class MapMutatorFactory extends MutatorFactory {
 
     private int maxInitialSize() {
       return min(maxSize, minSize + 1);
-    }
-
-    private Map<K, V> underlyingMutableMap(Map<K, V> value) {
-      if (value instanceof ImmutableMapView<?, ?>) {
-        // An immutable map view created by us, so we know how to get back at the
-        // mutable list.
-        return ((ImmutableMapView<K, V>) value).asMutableMap();
-      } else {
-        // Any kind of map created by someone else (for example using us as a general
-        // purpose
-        // InPlaceMutator), so assume it is mutable.
-        return value;
-      }
-    }
-
-    private Map<K, V> toImmutableMapView(Map<K, V> value) {
-      if (value instanceof ImmutableMapView) {
-        return value;
-      } else {
-        return new ImmutableMapView<>(value);
-      }
-    }
-  }
-
-  private static final class ImmutableMapView<K, V> extends AbstractMap<K, V> {
-    private final Map<K, V> mutableMap;
-
-    ImmutableMapView(Map<K, V> mutableMap) {
-      this.mutableMap = mutableMap;
-    }
-
-    Map<K, V> asMutableMap() {
-      return mutableMap;
-    }
-
-    @Override
-    public V get(Object i) {
-      return mutableMap.get(i);
-    }
-
-    @Override
-    public Set<Entry<K, V>> entrySet() {
-      return Collections.unmodifiableSet(mutableMap.entrySet());
-    }
-
-    @Override
-    public int size() {
-      return mutableMap.size();
     }
   }
 }

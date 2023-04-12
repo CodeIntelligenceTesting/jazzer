@@ -31,8 +31,9 @@ public interface Detacher<T> {
    *   <li>MUST return an instance that {@link Object#equals(Object)} the argument;
    *   <li>MUST return an instance that cannot be used to mutate the state of the argument through
    *   its API (ignoring uses of {@link sun.misc.Unsafe});
-   *   <li>SHOULD return an instance that is as mutable as its type allows (e.g. return a mutable
-   * implementation of {@code List});
+   *   <li>MUST return an instance that is not affected by any changes to the original value made
+   *   by any mutator;</li>
+   *   <li>MUST be accepted by mutator methods just like the original value;</li>
    *   <li>MAY return the argument itself if it is deeply immutable.
    * </ul>
    *
