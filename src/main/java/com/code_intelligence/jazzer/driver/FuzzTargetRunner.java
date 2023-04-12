@@ -190,7 +190,9 @@ public final class FuzzTargetRunner {
     }
     try {
       if (Opt.experimentalMutator) {
-        mutator.invoke();
+        // No need to detach as we are currently reading in the mutator state from bytes in every
+        // iteration.
+        mutator.invoke(false);
       } else if (fuzzTargetInstance == null) {
         fuzzTargetMethod.invoke(argument);
       } else {

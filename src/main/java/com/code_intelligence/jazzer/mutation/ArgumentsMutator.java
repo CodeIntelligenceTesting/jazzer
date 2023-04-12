@@ -21,13 +21,11 @@ import static com.code_intelligence.jazzer.mutation.mutator.Mutators.validateAnn
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithReadExactly;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
-import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toBooleanArray;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
-import com.code_intelligence.jazzer.mutation.annotation.SafeToMutate;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -36,31 +34,37 @@ import com.code_intelligence.jazzer.mutation.combinator.ProductMutator;
 import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.InputStreamSupport.ReadExactlyInputStream;
+import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.Optional;
 
 public final class ArgumentsMutator {
   private final Object instance;
   private final Method method;
   private final ProductMutator productMutator;
-  private final boolean[] shouldDetach;
   private Object[] arguments;
 
-  private ArgumentsMutator(
-      Object instance, Method method, ProductMutator productMutator, boolean[] shouldDetach) {
+  /**
+   * True if the arguments array has already been passed to a user-provided function or exposed
+   * via {@link #getArguments()} without going through {@link ProductMutator#detach(Object[])}.
+   * In this case the arguments may have been modified externally, which interferes with mutation,
+   * or could have been stored in static state that would be affected by future mutations.
+   * Arguments should either be detached or not be reused after being exposed, which is enforced by
+   * this variable.
+   */
+  private boolean argumentsExposed;
+
+  private ArgumentsMutator(Object instance, Method method, ProductMutator productMutator) {
     this.instance = instance;
     this.method = method;
     this.productMutator = productMutator;
-    this.shouldDetach = shouldDetach;
   }
 
   public static boolean canMutate(Method method) {
@@ -70,13 +74,6 @@ public final class ArgumentsMutator {
   private static String prettyPrintMethod(Method method) {
     return format("%s.%s(%s)", method.getDeclaringClass().getName(), method.getName(),
         stream(method.getAnnotatedParameterTypes()).map(Object::toString).collect(joining(", ")));
-  }
-
-  public static ArgumentsMutator forMethodOrThrow(Method method) {
-    return forMethod(Mutators.newFactory(), null, method)
-        .orElseThrow(()
-                         -> new IllegalArgumentException(
-                             "Failed to construct mutator for " + prettyPrintMethod(method)));
   }
 
   public static ArgumentsMutator forInstanceMethodOrThrow(Object instance, Method method) {
@@ -95,14 +92,6 @@ public final class ArgumentsMutator {
 
   public static Optional<ArgumentsMutator> forMethod(Method method) {
     return forMethod(Mutators.newFactory(), null, method);
-  }
-
-  public static Optional<ArgumentsMutator> forInstanceMethod(Object instance, Method method) {
-    return forInstanceMethod(Mutators.newFactory(), instance, method);
-  }
-
-  public static Optional<ArgumentsMutator> forStaticMethod(Method method) {
-    return forStaticMethod(Mutators.newFactory(), method);
   }
 
   public static Optional<ArgumentsMutator> forInstanceMethod(
@@ -137,14 +126,7 @@ public final class ArgumentsMutator {
       Object instance, Method method, ProductMutator productMutator) {
     method.setAccessible(true);
 
-    boolean[] shouldDetach = toBooleanArray(
-        stream(method.getParameterAnnotations()).map(ArgumentsMutator::isMutabilityRequested));
-
-    return new ArgumentsMutator(instance, method, productMutator, shouldDetach);
-  }
-
-  private static boolean isMutabilityRequested(Annotation[] annotations) {
-    return stream(annotations).anyMatch(annotation -> annotation instanceof SafeToMutate);
+    return new ArgumentsMutator(instance, method, productMutator);
   }
 
   private static boolean isStatic(Method method) {
@@ -159,6 +141,7 @@ public final class ArgumentsMutator {
     try {
       ReadExactlyInputStream is = extendWithReadExactly(data);
       arguments = productMutator.readExclusive(is);
+      argumentsExposed = false;
       return is.isConsumedExactly();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
@@ -169,6 +152,7 @@ public final class ArgumentsMutator {
    * @throws UncheckedIOException if the underlying OutputStream throws
    */
   public void write(OutputStream data) {
+    failIfArgumentsExposed();
     try {
       productMutator.writeExclusive(arguments, data);
     } catch (IOException e) {
@@ -182,6 +166,7 @@ public final class ArgumentsMutator {
 
   void init(PseudoRandom prng) {
     arguments = productMutator.init(prng);
+    argumentsExposed = false;
   }
 
   public void mutate(long seed) {
@@ -189,19 +174,22 @@ public final class ArgumentsMutator {
   }
 
   void mutate(PseudoRandom prng) {
+    failIfArgumentsExposed();
     // TODO: Sometimes mutate the entire byte representation of the current value with libFuzzer's
     //  dictionary and TORC mutations.
     productMutator.mutate(arguments, prng);
   }
 
-  public void invoke() throws Throwable {
-    // TODO: Sometimes hash the serialized value before and after the invocation and check that the
-    //  hashes match to catch fuzz tests that mutate mutable inputs (e.g. byte[]).
-    //  Alternatively, always detach arguments and instead of the SafeToMutate annotation have a
-    //  Mutable annotation that can be used to e.g. receive a mutable implementation of List. This
-    //  is always safe, but could incur additional overhead for arrays.
+  public void invoke(boolean detach) throws Throwable {
+    Object[] invokeArguments;
+    if (detach) {
+      invokeArguments = productMutator.detach(arguments);
+    } else {
+      invokeArguments = arguments;
+      argumentsExposed = true;
+    }
     try {
-      method.invoke(instance, productMutator.detachSelectively(arguments, shouldDetach));
+      method.invoke(instance, invokeArguments);
     } catch (IllegalAccessException e) {
       throw new IllegalStateException("method should have been made accessible", e);
     } catch (InvocationTargetException e) {
@@ -210,11 +198,17 @@ public final class ArgumentsMutator {
   }
 
   public Object[] getArguments() {
-    return Arrays.copyOf(arguments, arguments.length);
+    argumentsExposed = true;
+    return arguments;
   }
 
   @Override
   public String toString() {
     return "Arguments" + productMutator;
+  }
+
+  private void failIfArgumentsExposed() {
+    Preconditions.check(!argumentsExposed,
+        "Arguments have previously been exposed to user-provided code without calling #detach and may have been modified");
   }
 }

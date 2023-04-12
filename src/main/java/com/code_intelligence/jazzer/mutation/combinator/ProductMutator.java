@@ -108,18 +108,6 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
     return clone;
   }
 
-  public Object[] detachSelectively(Object[] value, boolean[] shouldDetach) {
-    Object[] clone = new Object[mutators.length];
-    for (int i = 0; i < mutators.length; i++) {
-      if (shouldDetach[i]) {
-        clone[i] = mutators[i].detach(value[i]);
-      } else {
-        clone[i] = value[i];
-      }
-    }
-    return clone;
-  }
-
   @Override
   public String toDebugString(Predicate<Debuggable> isInCycle) {
     return stream(mutators)

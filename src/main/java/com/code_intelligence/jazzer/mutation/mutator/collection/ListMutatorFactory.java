@@ -29,11 +29,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.RandomAccess;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -68,9 +66,7 @@ final class ListMutatorFactory extends MutatorFactory {
       for (int i = 0; i < size; i++) {
         list.add(elementMutator.read(in));
       }
-      // Wrap in an immutable view for additional protection against accidental mutation in fuzz
-      // tests.
-      return toImmutableListView(list);
+      return list;
     }
 
     @Override
@@ -83,15 +79,12 @@ final class ListMutatorFactory extends MutatorFactory {
 
     @Override
     protected List<T> makeDefaultInstance() {
-      // Wrap in an immutable view for additional protection against accidental mutation in fuzz
-      // tests.
-      return toImmutableListView(new ArrayList<>(maxInitialSize()));
+      return new ArrayList<>(maxInitialSize());
     }
 
     @Override
-    public void initInPlace(List<T> reference, PseudoRandom prng) {
+    public void initInPlace(List<T> list, PseudoRandom prng) {
       int targetSize = prng.closedRange(minInitialSize(), maxInitialSize());
-      List<T> list = underlyingMutableList(reference);
       list.clear();
       for (int i = 0; i < targetSize; i++) {
         list.add(elementMutator.init(prng));
@@ -99,8 +92,7 @@ final class ListMutatorFactory extends MutatorFactory {
     }
 
     @Override
-    public void mutateInPlace(List<T> reference, PseudoRandom prng) {
-      List<T> list = underlyingMutableList(reference);
+    public void mutateInPlace(List<T> list, PseudoRandom prng) {
       if (list.isEmpty()) {
         list.add(elementMutator.init(prng));
       } else if (!prng.trueInOneOutOf(4)) {
@@ -131,47 +123,6 @@ final class ListMutatorFactory extends MutatorFactory {
 
     private int maxInitialSize() {
       return min(maxSize, minSize + 1);
-    }
-
-    private List<T> underlyingMutableList(List<T> value) {
-      if (value instanceof ImmutableListView<?>) {
-        // An immutable list view created by us, so we know how to get back at the mutable list.
-        return ((ImmutableListView<T>) value).asMutableList();
-      } else {
-        // Any kind of list created by someone else (for example using us as a general purpose
-        // InPlaceMutator), so assume it is mutable.
-        return value;
-      }
-    }
-
-    private List<T> toImmutableListView(List<T> value) {
-      if (value instanceof ImmutableListView) {
-        return value;
-      } else {
-        return new ImmutableListView<>(value);
-      }
-    }
-  }
-
-  private static final class ImmutableListView<T> extends AbstractList<T> implements RandomAccess {
-    private final List<T> mutableList;
-
-    ImmutableListView(List<T> mutableList) {
-      this.mutableList = mutableList;
-    }
-
-    List<T> asMutableList() {
-      return mutableList;
-    }
-
-    @Override
-    public T get(int i) {
-      return mutableList.get(i);
-    }
-
-    @Override
-    public int size() {
-      return mutableList.size();
     }
   }
 }
