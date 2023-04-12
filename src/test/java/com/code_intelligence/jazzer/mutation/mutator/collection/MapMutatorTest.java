@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.collection;
 
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.asMap;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -37,12 +38,12 @@ class MapMutatorTest {
       new ChainedMutatorFactory(LangMutators.newFactory(), CollectionMutators.newFactory());
 
   @Test
-  void mapWithMutableKeysAndValues() {
+  void mapInitInsert() {
     AnnotatedType type =
-        new TypeHolder<@NotNull Map<@NotNull String, @NotNull String>>() {}.annotatedType();
+        new TypeHolder<@NotNull @WithSize(max = 3) Map<@NotNull String, @NotNull String>>(){}
+            .annotatedType();
     SerializingMutator<Map<String, String>> mutator =
         (SerializingMutator<Map<String, String>>) FACTORY.createOrThrow(type);
-
     assertThat(mutator.toString()).isEqualTo("Map<String,String>");
 
     // Initialize new map
@@ -50,52 +51,6 @@ class MapMutatorTest {
     try (MockPseudoRandom prng = mockPseudoRandom(
              // Initial map size
              1,
-             // Key size
-             3,
-             // Key value
-             "Key".getBytes(),
-             // Value size
-             5,
-             // Value value
-             "Value".getBytes())) {
-      map = mutator.init(prng);
-    }
-    assertThat(map).hasSize(1);
-    assertThat(map.get("Key")).isEqualTo("Value");
-
-    // Add new entry with a map size of 1
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // mutate entry, prng.choice()
-             true)) {
-      map = mutator.mutate(map, prng);
-    }
-    assertThat(map).hasSize(1);
-    assertThat(map.get("New")).isEqualTo(null);
-
-    // Mutate "New" entry
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // Mutate entry
-             true)) {
-      map = mutator.mutate(map, prng);
-    }
-    assertThat(map).hasSize(1);
-    assertThat(map.get("New")).isNotEqualTo("New");
-  }
-
-  @Test
-  void mapWithSize() {
-    AnnotatedType type = new TypeHolder<@NotNull @WithSize(
-        min = 2, max = 3) Map<@NotNull String, @NotNull String>>(){}
-                             .annotatedType();
-    SerializingMutator<Map<String, String>> mutator =
-        (SerializingMutator<Map<String, String>>) FACTORY.createOrThrow(type);
-    assertThat(mutator.toString()).isEqualTo("Map<String,String>");
-
-    // Initialize new map with min size
-    Map<String, String> map;
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // Initial map size
-             2,
              // Key 1 size
              4,
              // Key 1 value
@@ -103,86 +58,10 @@ class MapMutatorTest {
              // Value size
              6,
              // Value value
-             "Value1".getBytes(),
-             // Key 2 size
-             4,
-             // Key 2 value
-             "Key2".getBytes(),
-             // Value size
-             6,
-             // Value value
-             "Value2".getBytes())) {
+             "Value1".getBytes())) {
       map = mutator.init(prng);
     }
-    assertThat(map).hasSize(2);
-    assertThat(map).containsEntry("Key1", "Value1");
-    assertThat(map).containsEntry("Key2", "Value2");
-
-    // Add new entry
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // Add new entry
-             0,
-             // New key size
-             3,
-             // Key value
-             "New".getBytes(),
-             // New value size
-             3,
-             // Value value
-             "New".getBytes())) {
-      map = mutator.mutate(map, prng);
-    }
-    assertThat(map).hasSize(3);
-    assertThat(map).containsEntry("New", "New");
-
-    // Remove one as max size reached
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // Remove an entry
-             0,
-             // skip keys
-             1)) {
-      map = mutator.mutate(map, prng);
-    }
-    assertThat(map).hasSize(2);
-    assertThat(map).containsKey("Key1");
-    assertThat(map).containsKey("New");
-  }
-
-  @Test
-  void mapMutateChunks() {
-    AnnotatedType type = new TypeHolder<@NotNull @WithSize(
-        min = 2, max = 6) Map<@NotNull String, @NotNull String>>(){}
-                             .annotatedType();
-    SerializingMutator<Map<String, String>> mutator =
-        (SerializingMutator<Map<String, String>>) FACTORY.createOrThrow(type);
-    assertThat(mutator.toString()).isEqualTo("Map<String,String>");
-
-    // Initialize new map with min size
-    Map<String, String> map;
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // Initial map size
-             2,
-             // Key 1 size
-             4,
-             // Key 1 value
-             "Key1".getBytes(),
-             // Value size
-             6,
-             // Value value
-             "Value1".getBytes(),
-             // Key 2 size
-             4,
-             // Key 2 value
-             "Key2".getBytes(),
-             // Value size
-             6,
-             // Value value
-             "Value2".getBytes())) {
-      map = mutator.init(prng);
-    }
-    assertThat(map).hasSize(2);
-    assertThat(map).containsEntry("Key1", "Value1");
-    assertThat(map).containsEntry("Key2", "Value2");
+    assertThat(map).containsExactly("Key1", "Value1");
 
     // Add 2 new entries
     try (MockPseudoRandom prng = mockPseudoRandom(
@@ -190,6 +69,14 @@ class MapMutatorTest {
              1,
              // ChunkSize
              2,
+             // Key 2 size
+             4,
+             // Key 2 value
+             "Key2".getBytes(),
+             // Value size
+             6,
+             // Value value
+             "Value2".getBytes(),
              // Key 3 size
              4,
              // Key 3 value
@@ -197,50 +84,124 @@ class MapMutatorTest {
              // Value size
              6,
              // Value value
-             "Value3".getBytes(),
-             // Key 4 size
-             4,
-             // Key 4 value
-             "Key4".getBytes(),
-             // Value size
-             6,
-             // Value value
-             "Value4".getBytes())) {
+             "Value3".getBytes())) {
       map = mutator.mutate(map, prng);
     }
-    assertThat(map).hasSize(4);
-    assertThat(map).containsEntry("Key1", "Value1");
-    assertThat(map).containsEntry("Key2", "Value2");
-    assertThat(map).containsEntry("Key3", "Value3");
-    assertThat(map).containsEntry("Key4", "Value4");
+    assertThat(map).containsExactly("Key1", "Value1", "Key2", "Value2", "Key3", "Value3").inOrder();
+  }
 
-    // Mutate 2 entries
+  @Test
+  void mapDelete() {
+    AnnotatedType type =
+        new TypeHolder<@NotNull Map<@NotNull Integer, @NotNull Integer>>() {}.annotatedType();
+    SerializingMutator<Map<Integer, Integer>> mutator =
+        (SerializingMutator<Map<Integer, Integer>>) FACTORY.createOrThrow(type);
+    assertThat(mutator.toString()).isEqualTo("Map<Integer,Integer>");
+
+    Map<Integer, Integer> map = asMap(1, 10, 2, 20, 3, 30, 4, 40, 5, 50, 6, 60);
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // delete chunk
+             0,
+             // chunk size
+             2,
+             // chunk position
+             3)) {
+      map = mutator.mutate(map, prng);
+    }
+    assertThat(map).containsExactly(1, 10, 2, 20, 3, 30, 6, 60).inOrder();
+  }
+
+  @Test
+  void mapMutateValues() {
+    AnnotatedType type =
+        new TypeHolder<@NotNull Map<@NotNull Integer, @NotNull Integer>>() {}.annotatedType();
+    SerializingMutator<Map<Integer, Integer>> mutator =
+        (SerializingMutator<Map<Integer, Integer>>) FACTORY.createOrThrow(type);
+    assertThat(mutator.toString()).isEqualTo("Map<Integer,Integer>");
+
+    Map<Integer, Integer> map = asMap(1, 10, 2, 20, 3, 30, 4, 40, 5, 50, 6, 60);
+
     try (MockPseudoRandom prng = mockPseudoRandom(
              // change chunk
-             5,
-             // ChunkOffset
              2,
-             // ChunkSize (ignored)
+             // mutate values,
+             true,
+             // chunk size
              2,
-             // mutateElement
-             true)) {
+             // chunk position
+             3,
+             // uniform pick
+             2,
+             // random integer
+             41L,
+             // uniform pick
+             2,
+             // random integer
+             51L)) {
       map = mutator.mutate(map, prng);
     }
-    assertThat(map).hasSize(4);
-    assertThat(map).containsEntry("Key1", "Value1");
-    assertThat(map).containsEntry("Key2", "Value2");
-    assertThat(map.keySet().toArray()[3]).isNotEqualTo("Key4");
+    assertThat(map).containsExactly(1, 10, 2, 20, 3, 30, 4, 41, 5, 51, 6, 60).inOrder();
+  }
 
-    // Delete 2 entries
+  @Test
+  void mapMutateKeys() {
+    AnnotatedType type =
+        new TypeHolder<@NotNull Map<@NotNull Integer, @NotNull Integer>>() {}.annotatedType();
+    SerializingMutator<Map<Integer, Integer>> mutator =
+        (SerializingMutator<Map<Integer, Integer>>) FACTORY.createOrThrow(type);
+    assertThat(mutator.toString()).isEqualTo("Map<Integer,Integer>");
+
+    Map<Integer, Integer> map = asMap(1, 10, 2, 20, 3, 30, 4, 40, 5, 50, 6, 60);
+
     try (MockPseudoRandom prng = mockPseudoRandom(
-             // shrink chunk
-             1,
-             // ChunkSize
+             // change chunk
              2,
-             // ChunkOffset
-             1)) {
+             // mutate keys,
+             false,
+             // chunk size
+             2,
+             // chunk position
+             3,
+             // uniform pick
+             2,
+             // integer
+             7L,
+             // uniform pick
+             2,
+             // random integer
+             8L)) {
       map = mutator.mutate(map, prng);
     }
-    assertThat(map).hasSize(2);
+    assertThat(map).containsExactly(1, 10, 2, 20, 3, 30, 6, 60, 7, 40, 8, 50).inOrder();
+  }
+
+  @Test
+  void mapMutateKeysFallbackToValues() {
+    AnnotatedType type =
+        new TypeHolder<@NotNull Map<@NotNull Boolean, @NotNull Boolean>>() {}.annotatedType();
+    SerializingMutator<Map<Boolean, Boolean>> mutator =
+        (SerializingMutator<Map<Boolean, Boolean>>) FACTORY.createOrThrow(type);
+    assertThat(mutator.toString()).isEqualTo("Map<Boolean,Boolean>");
+
+    // No new keys can be generated for this map.
+    Map<Boolean, Boolean> map = asMap(false, false, true, false);
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // change chunk
+             2,
+             // mutate keys,
+             false,
+             // chunk size
+             1,
+             // chunk position
+             0,
+             // chunk size for fallback to mutate values
+             2,
+             // chunk position for fallback
+             0)) {
+      map = mutator.mutate(map, prng);
+    }
+    assertThat(map).containsExactly(false, true, true, true).inOrder();
   }
 }

@@ -18,21 +18,29 @@ package com.code_intelligence.jazzer.mutation.mutator.collection;
 
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.api.ValueMutator;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import java.util.AbstractList;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 // Based on (Apache-2.0)
 // https://github.com/google/fuzztest/blob/f81257ed70ec7b9c191b633588cb6e39c42da5e4/fuzztest/internal/domains/container_mutation_helpers.h
 final class ChunkMutations {
+  private static final int MAX_FAILED_INSERTION_ATTEMPTS = 100;
+
   private ChunkMutations() {}
 
   static <T> void deleteRandomChunk(List<T> list, int minSize, PseudoRandom prng) {
     int oldSize = list.size();
-    Preconditions.require(oldSize > minSize);
-
     int minFinalSize = Math.max(minSize, oldSize / 2);
     int chunkSize = prng.closedRangeBiasedTowardsSmall(1, oldSize - minFinalSize);
     int chunkOffset = prng.closedRange(0, oldSize - chunkSize);
@@ -40,11 +48,25 @@ final class ChunkMutations {
     list.subList(chunkOffset, chunkOffset + chunkSize).clear();
   }
 
+  static <T> void deleteRandomChunk(Collection<T> collection, int minSize, PseudoRandom prng) {
+    int oldSize = collection.size();
+    int minFinalSize = Math.max(minSize, oldSize / 2);
+    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, oldSize - minFinalSize);
+    int chunkOffset = prng.closedRange(0, oldSize - chunkSize);
+
+    Iterator<T> it = collection.iterator();
+    for (int i = 0; i < chunkOffset; i++) {
+      it.next();
+    }
+    for (int i = chunkOffset; i < chunkOffset + chunkSize; i++) {
+      it.next();
+      it.remove();
+    }
+  }
+
   static <T> void insertRandomChunk(
       List<T> list, int maxSize, SerializingMutator<T> elementMutator, PseudoRandom prng) {
     int oldSize = list.size();
-    Preconditions.require(oldSize < maxSize);
-
     int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxSize - oldSize);
     int chunkOffset = prng.closedRange(0, oldSize);
 
@@ -58,15 +80,120 @@ final class ChunkMutations {
     list.addAll(chunkOffset, new ArraySharingList<>(chunk));
   }
 
-  static <T> void mutateRandomChunk(
-      List<T> list, SerializingMutator<T> mutator, PseudoRandom prng) {
-    int oldSize = list.size();
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, oldSize);
-    int chunkOffset = prng.closedRange(0, oldSize - chunkSize);
+  static <T> boolean insertRandomChunk(Set<T> set, Consumer<T> addIfNew, int maxSize,
+      ValueMutator<T> elementMutator, PseudoRandom prng) {
+    int oldSize = set.size();
+    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxSize - oldSize);
+    return growBy(set, addIfNew, chunkSize, () -> elementMutator.init(prng));
+  }
+
+  static <T> void mutateRandomChunk(List<T> list, ValueMutator<T> mutator, PseudoRandom prng) {
+    int size = list.size();
+    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, size);
+    int chunkOffset = prng.closedRange(0, size - chunkSize);
 
     for (int i = chunkOffset; i < chunkOffset + chunkSize; i++) {
       list.set(i, mutator.mutate(list.get(i), prng));
     }
+  }
+
+  static <K, V, KW, VW> boolean mutateRandomKeysChunk(
+      Map<K, V> map, SerializingMutator<K> keyMutator, PseudoRandom prng) {
+    int originalSize = map.size();
+    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, originalSize);
+    int chunkOffset = prng.closedRange(0, originalSize - chunkSize);
+
+    // To ensure that mutating keys actually results in the set of keys changing and not just their
+    // values (which is what #mutateRandomValuesChunk is for), we keep the keys to mutate in the
+    // map, try to add new keys (that are therefore distinct from the keys to mutate) and only
+    // remove the successfully mutated keys in the end.
+    ArrayDeque<KW> keysToMutate = new ArrayDeque<>(chunkSize);
+    ArrayDeque<VW> values = new ArrayDeque<>(chunkSize);
+    ArrayList<K> keysToRemove = new ArrayList<>(chunkSize);
+    Iterator<Map.Entry<K, V>> it = map.entrySet().iterator();
+    for (int i = 0; i < chunkOffset; i++) {
+      it.next();
+    }
+    for (int i = chunkOffset; i < chunkOffset + chunkSize; i++) {
+      Map.Entry<K, V> entry = it.next();
+      // ArrayDeque cannot hold null elements, which requires us to replace null with a sentinel.
+      // Also detach the key as keys may be mutable and mutation could destroy them.
+      keysToMutate.add(boxNull(keyMutator.detach(entry.getKey())));
+      values.add(boxNull(entry.getValue()));
+      keysToRemove.add(entry.getKey());
+    }
+
+    Consumer<K> addIfNew = key -> {
+      int sizeBeforeAdd = map.size();
+      map.putIfAbsent(key, unboxNull(values.peekFirst()));
+      // The mutated key was new, try to mutate and add the next in line.
+      if (map.size() > sizeBeforeAdd) {
+        keysToMutate.removeFirst();
+        values.removeFirst();
+      }
+    };
+    Supplier<K> nextCandidate = () -> {
+      // Mutate the next candidate in the queue.
+      K candidate = keyMutator.mutate(unboxNull(keysToMutate.removeFirst()), prng);
+      keysToMutate.addFirst(boxNull(candidate));
+      return candidate;
+    };
+
+    growBy(map.keySet(), addIfNew, chunkSize, nextCandidate);
+    // Remove the original keys that were successfully mutated into new keys. Since the original
+    // keys have been kept in the map up to this point, all keys added were successfully mutated to
+    // be unequal to the original keys.
+    int grownBy = map.size() - originalSize;
+    keysToRemove.stream().limit(grownBy).forEach(map::remove);
+    return grownBy > 0;
+  }
+
+  public static <K, V> void mutateRandomValuesChunk(
+      Map<K, V> map, ValueMutator<V> valueMutator, PseudoRandom prng) {
+    Collection<Map.Entry<K, V>> collection = map.entrySet();
+    int oldSize = collection.size();
+    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, oldSize);
+    int chunkOffset = prng.closedRange(0, oldSize - chunkSize);
+
+    Iterator<Map.Entry<K, V>> it = collection.iterator();
+    for (int i = 0; i < chunkOffset; i++) {
+      it.next();
+    }
+    for (int i = chunkOffset; i < chunkOffset + chunkSize; i++) {
+      Entry<K, V> entry = it.next();
+      entry.setValue(valueMutator.mutate(entry.getValue(), prng));
+    }
+  }
+
+  static <T> boolean growBy(
+      Set<T> set, Consumer<T> addIfNew, int delta, Supplier<T> candidateSupplier) {
+    int oldSize = set.size();
+    Preconditions.require(delta >= 0);
+
+    final int targetSize = oldSize + delta;
+    int remainingAttempts = MAX_FAILED_INSERTION_ATTEMPTS;
+    int currentSize = set.size();
+    while (currentSize < targetSize) {
+      // If addIfNew fails, the size of set will not increase.
+      addIfNew.accept(candidateSupplier.get());
+      int newSize = set.size();
+      if (newSize == currentSize && remainingAttempts-- == 0) {
+        return false;
+      } else {
+        currentSize = newSize;
+      }
+    }
+    return true;
+  }
+
+  private static final Object BOXED_NULL = new Object();
+
+  private static <T, TW> TW boxNull(T object) {
+    return object != null ? (TW) object : (TW) BOXED_NULL;
+  }
+
+  private static <T, TW> T unboxNull(TW object) {
+    return object != BOXED_NULL ? (T) object : null;
   }
 
   public enum MutationAction {
