@@ -65,9 +65,10 @@ final class ListMutatorFactory extends MutatorFactory {
       this.elementMutator = elementMutator;
       this.minSize = minSize;
       this.maxSize = maxSize;
-      require(maxSize >= 1, "WithSize#max needs to be greater than 0");
+      require(maxSize >= 1, format("WithSize#max=%d needs to be greater than 0", maxSize));
+      require(minSize >= 0, format("WithSize#min=%d needs to be positive", minSize));
       require(minSize <= maxSize,
-          format("WithSize#min %d needs to be smaller or equal than WithSize#max %d", minSize,
+          format("WithSize#min=%d needs to be smaller or equal than WithSize#max=%d", minSize,
               maxSize));
     }
 

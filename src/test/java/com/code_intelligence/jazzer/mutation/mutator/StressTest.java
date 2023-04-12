@@ -20,6 +20,7 @@ import static com.code_intelligence.jazzer.mutation.mutator.Mutators.validateAnn
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithZeros;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.asMap;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -73,7 +74,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +86,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class StressTest {
-  private static final int NUM_INITS = 1000;
+  private static final int NUM_INITS = 500;
   private static final int NUM_MUTATE_PER_INIT = 100;
   private static final double MANY_DISTINCT_ELEMENTS_RATIO = 0.5;
 
@@ -121,14 +121,22 @@ public class StressTest {
             new TypeHolder<@NotNull Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
             "Map<String,String>", distinctElementsRatio(0.45), distinctElementsRatio(0.45)),
         arguments(new TypeHolder<Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
-            "Nullable<Map<String,String>>", distinctElementsRatio(0.48),
+            "Nullable<Map<String,String>>", distinctElementsRatio(0.46),
             distinctElementsRatio(0.48)),
         arguments(
-            new TypeHolder<@WithSize(
-                min = 1, max = 3) @NotNull Map<@NotNull Integer, @NotNull Integer>>() {
+            new TypeHolder<@WithSize(max = 3) @NotNull Map<@NotNull Integer, @NotNull Integer>>() {
             }.annotatedType(),
-            "Map<Integer,Integer>", all(mapSizeInClosedRange(1, 3), manyDistinctElements()),
-            all(mapSizeInClosedRange(1, 3), manyDistinctElements())),
+            "Map<Integer,Integer>",
+            // Half of all maps are empty, the other half is heavily biased towards special values.
+            all(mapSizeInClosedRange(0, 3), distinctElementsRatio(0.2)),
+            all(mapSizeInClosedRange(0, 3), manyDistinctElements())),
+        arguments(
+            new TypeHolder<@NotNull Map<@NotNull Boolean, @NotNull Boolean>>() {}.annotatedType(),
+            "Map<Boolean,Boolean>",
+            // 1 0-element map, 4 1-element maps
+            distinctElements(1 + 4),
+            // 1 0-element map, 4 1-element maps, 4 2-element maps
+            distinctElements(1 + 4 + 4)),
         arguments(asAnnotatedType(byte.class), "Byte",
             // init is heavily biased towards special values and only returns a uniformly random
             // value in 1 out of 5 calls.
@@ -276,7 +284,7 @@ public class StressTest {
                 EnumFieldRepeated3.newBuilder().addSomeField(TestEnumRepeated.VAL2).build()),
             manyDistinctElements()),
         arguments(new TypeHolder<@NotNull MapField3>() {}.annotatedType(),
-            "{Builder.Map<Integer,String>} -> Message", distinctElementsRatio(0.475),
+            "{Builder.Map<Integer,String>} -> Message", distinctElementsRatio(0.47),
             manyDistinctElements()),
         arguments(new TypeHolder<@NotNull MessageMapField3>() {}.annotatedType(),
             "{Builder.Map<String,{Builder.Map<Integer,String>} -> Message>} -> Message",
@@ -440,7 +448,11 @@ public class StressTest {
     SerializingMutator mutator = Mutators.newFactory().createOrThrow(type);
     assertThat(mutator.toString()).isEqualTo(mutatorTree);
 
-    boolean mayPerformNoopMutations = mutatorTree.contains("FixedValue(");
+    // Even with a fallback to mutating map values when no new key can be constructed, the map
+    // {false: true, true: false} will not change its equality class when the fallback picks both
+    // values to mutate.
+    boolean mayPerformNoopMutations =
+        mutatorTree.contains("FixedValue(") || mutatorTree.contains("Map<Boolean,Boolean>");
 
     PseudoRandom rng = anyPseudoRandom();
 
@@ -505,14 +517,6 @@ public class StressTest {
     T newValue = serializer.read(
         new DataInputStream(extendWithZeros(new ByteArrayInputStream(out.toByteArray()))));
     assertThat(newValue).isEqualTo(value);
-  }
-
-  private static <K, V> Map<K, V> toMap(Object... objs) {
-    Map<K, V> map = new HashMap<>();
-    for (int i = 0; i < objs.length; i += 2) {
-      map.put((K) objs[i], (V) objs[i + 1]);
-    }
-    return map;
   }
 
   // Filter out floating point values -0.0f and -0.0 and replace them

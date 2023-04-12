@@ -16,6 +16,12 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.collection;
 
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.MutationAction.pickRandomAction;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.deleteRandomChunk;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.growBy;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.insertRandomChunk;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.mutateRandomKeysChunk;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.mutateRandomValuesChunk;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.parameterTypesIfParameterized;
@@ -36,10 +42,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
-import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -70,7 +73,6 @@ final class MapMutatorFactory extends MutatorFactory {
   }
 
   private static final class MapMutator<K, V> extends SerializingInPlaceMutator<Map<K, V>> {
-    private static final int DEFAULT_ATTEMPTS_COUNT = 100;
     private static final int DEFAULT_MIN_SIZE = 0;
     private static final int DEFAULT_MAX_SIZE = 1000;
 
@@ -86,11 +88,12 @@ final class MapMutatorFactory extends MutatorFactory {
       this.minSize = Math.max(minSize, DEFAULT_MIN_SIZE);
       this.maxSize = Math.min(maxSize, DEFAULT_MAX_SIZE);
 
-      require(maxSize >= 1, "WithSize#max needs to be greater than 0");
-      require(minSize >= 0, "WithSize#min size needs to be greater or equal 0");
-      require(minSize <= maxSize,
-          format("WithSize#min %d needs to be smaller or equal than WithSize#max %d", minSize,
-              maxSize));
+      require(maxSize >= 1, format("WithSize#max=%d needs to be greater than 0", maxSize));
+      // TODO: Add support for min > 0 to map. If min > 0, then #read can fail to construct
+      //       sufficiently many distinct keys, but the mutation framework currently doesn't offer
+      //       a way to handle this situation gracefully. It is also not clear what behavior users
+      //       could reasonably expect in this situation in both regression test and fuzzing mode.
+      require(minSize == 0, "@WithSize#min != 0 is not yet supported for Map");
     }
 
     @Override
@@ -100,6 +103,8 @@ final class MapMutatorFactory extends MutatorFactory {
       for (int i = 0; i < size; i++) {
         map.put(keyMutator.read(in), valueMutator.read(in));
       }
+      // map may have less than size entries due to the potential for duplicates, but this is fine
+      // as we currently assert that minSize == 0.
       return map;
     }
 
@@ -123,159 +128,34 @@ final class MapMutatorFactory extends MutatorFactory {
     public void initInPlace(Map<K, V> map, PseudoRandom prng) {
       int targetSize = prng.closedRange(minInitialSize(), maxInitialSize());
       map.clear();
-      for (int i = 0; i < targetSize; i++) {
-        initElement(map, prng);
+      growBy(map.keySet(),
+          key
+          -> map.putIfAbsent(key, valueMutator.init(prng)),
+          targetSize, () -> keyMutator.init(prng));
+      if (map.size() < minSize) {
+        throw new IllegalStateException(String.format(
+            "Failed to create %d distinct elements of type %s to satisfy the @WithSize#minSize constraint on Map",
+            minSize, keyMutator));
       }
-    }
-
-    private void eraseRandomChunk(Map<K, V> map, PseudoRandom prng) {
-      int mapSize = map.size();
-      int upperLimit = Math.max(1, Math.min(mapSize - minSize, mapSize / 2));
-      int chunkSize = upperLimit == 1 ? 1 : prng.closedRange(1, upperLimit);
-      int chunkOffset = prng.closedRange(0, mapSize - chunkSize);
-
-      List<K> tmpRemStore = map.entrySet()
-                                .stream()
-                                .skip(chunkOffset)
-                                .limit(chunkSize)
-                                .map(Map.Entry::getKey)
-                                .collect(Collectors.toCollection(() -> new ArrayList<>(chunkSize)));
-
-      map.keySet().removeAll(tmpRemStore);
-    }
-
-    private void insertRandomChunk(Map<K, V> map, PseudoRandom prng) {
-      int mapSize = map.size();
-      int chunkSize = prng.closedRange(1, Math.min(maxSize - mapSize, mapSize));
-      for (int i = 0; i < chunkSize; i++) {
-        initElement(map, prng);
-      }
-    }
-
-    private void changeRandomChunk(Map<K, V> map, PseudoRandom prng) {
-      int mapSize = map.size();
-      int chunkOffset = prng.indexIn(mapSize);
-      int chunkSize =
-          Math.min(prng.closedRange(1, mapSize - chunkOffset), (int) Math.ceil(mapSize / 10.0));
-      List<K> keys =
-          map.keySet().stream().skip(chunkOffset).limit(chunkSize).collect(Collectors.toList());
-
-      for (int i = 0; i < keys.size(); i++) {
-        K key = keys.get(i);
-        V value = map.get(key);
-        Map.Entry<K, V> entry = new AbstractMap.SimpleEntry<>(key, value);
-        mutateElement(entry, map, prng);
-      }
-    }
-
-    private static enum Action {
-      SHRINK,
-      SHRINK_CHUNK,
-      GROW,
-      GROW_CHUNK,
-      CHANGE,
-      CHANGE_CHUNK,
     }
 
     @Override
     public void mutateInPlace(Map<K, V> map, PseudoRandom prng) {
-      if (map.isEmpty()) {
-        initElement(map, prng);
-        return;
-      }
-      int currentMapSize = map.size();
-      if (currentMapSize == 1) {
-        // One element map, mutate that one and return quicker
-        map.entrySet().stream().findFirst().ifPresent(entry -> mutateElement(entry, map, prng));
-        return;
-      }
-      List<Action> s = new ArrayList<>();
-      if (currentMapSize > minSize) {
-        s.add(Action.SHRINK);
-        s.add(Action.SHRINK_CHUNK);
-      }
-      if (currentMapSize < maxSize) {
-        s.add(Action.GROW);
-        s.add(Action.GROW_CHUNK);
-      }
-      if (!map.isEmpty()) {
-        s.add(Action.CHANGE);
-        s.add(Action.CHANGE_CHUNK);
-      }
-      switch (s.get(prng.indexIn(s))) {
-        case SHRINK:
-          map.keySet()
-              .stream()
-              .skip(prng.indexIn(currentMapSize))
-              .findFirst()
-              .ifPresent(entry -> map.remove(entry));
-          return;
-        case SHRINK_CHUNK:
-          eraseRandomChunk(map, prng);
-          return;
-        case GROW:
-          initElement(map, prng);
-          return;
-        case GROW_CHUNK:
-          insertRandomChunk(map, prng);
-          return;
-        case CHANGE:
-          map.entrySet()
-              .stream()
-              .skip(prng.indexIn(currentMapSize))
-              .findFirst()
-              .ifPresent(entry -> mutateElement(entry, map, prng));
-          return;
-        case CHANGE_CHUNK:
-          changeRandomChunk(map, prng);
-          return;
-      }
-    }
-
-    private void initElement(Map<K, V> map, PseudoRandom prng) {
-      // Lookup an unused key first, as the map may already contain and
-      // deduplicate it. Keys are solely based on the prng so that an
-      // unused one should eventually be found. In case all or most values
-      // of the given type are already used, give up after some attempts.
-      int attempts = 0;
-      K key;
-      do {
-        if (attempts++ > DEFAULT_ATTEMPTS_COUNT) {
-          // Give up, as no unused key could be found.
-          return;
-        }
-        key = keyMutator.init(prng);
-      } while (map.containsKey(key));
-      map.put(key, valueMutator.init(prng));
-    }
-
-    private void mutateElement(Map.Entry<K, V> entry, Map<K, V> map, PseudoRandom prng) {
-      boolean mutateKeyOrValue = prng.choice();
-      if (mutateKeyOrValue) {
-        // Try to mutate the key.
-        K originalKey = entry.getKey();
-
-        // Try to mutate the current key into an unused one.
-        // If that doesn't succeed after some attempts, mutate the value.
-        K mutated = originalKey;
-        for (int attempt = 0; attempt < DEFAULT_ATTEMPTS_COUNT; attempt++) {
-          mutated = keyMutator.mutate(mutated, prng);
-          if (!map.containsKey(mutated)) {
-            map.put(mutated, entry.getValue());
-            map.remove(originalKey);
-            return;
+      switch (pickRandomAction(map.keySet(), minSize, maxSize, prng)) {
+        case DELETE_CHUNK:
+          deleteRandomChunk(map.keySet(), minSize, prng);
+          break;
+        case INSERT_CHUNK:
+          insertRandomChunk(map.keySet(),
+              key -> map.putIfAbsent(key, valueMutator.init(prng)), maxSize, keyMutator, prng);
+          break;
+        case MUTATE_CHUNK:
+          if (prng.choice() || !mutateRandomKeysChunk(map, keyMutator, prng)) {
+            mutateRandomValuesChunk(map, valueMutator, prng);
           }
-        }
-      }
-
-      // Mutate the value.
-      if (!mutateKeyOrValue) {
-        V value = entry.getValue();
-        K key = entry.getKey();
-        value = valueMutator.mutate(value, prng);
-        map.put(key, value);
-      } else {
-        entry.setValue(valueMutator.mutate(entry.getValue(), prng));
+          break;
+        default:
+          throw new IllegalStateException("unsupported action");
       }
     }
 
