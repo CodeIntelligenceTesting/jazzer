@@ -16,38 +16,87 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
-import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.MapEntry;
 import com.google.protobuf.Message.Builder;
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 final class BuilderAdapters {
+  private BuilderAdapters() {}
+
   static <T extends Builder, U> List<U> makeMutableRepeatedFieldView(
       T builder, FieldDescriptor field) {
     return new AbstractList<U>() {
+      // O(1)
       @Override
       public U get(int index) {
         return (U) builder.getRepeatedField(field, index);
       }
 
+      // O(1)
       @Override
       public int size() {
         return builder.getRepeatedFieldCount(field);
       }
 
+      // O(1)
       @Override
-      public boolean add(U u) {
-        builder.addRepeatedField(field, u);
+      public boolean add(U element) {
+        builder.addRepeatedField(field, element);
         return true;
       }
 
+      // O(1)
+      @Override
+      public void add(int index, U element) {
+        addAll(index, singletonList(element));
+      }
+
+      // O(size() + other.size())
+      public boolean addAll(int index, Collection<? extends U> other) {
+        // This was benchmarked against the following implementation and found to be faster in all
+        // cases (up to 4x on lists of size 1000):
+        //
+        // for (U element : other) {
+        //   builder.addRepeatedField(field, element);
+        // }
+        // Collections.rotate(subList(index, size()), other.size());
+        int otherSize = other.size();
+        if (otherSize == 0) {
+          return false;
+        }
+
+        int originalSize = size();
+        if (index == originalSize) {
+          for (U element : other) {
+            builder.addRepeatedField(field, element);
+          }
+          return true;
+        }
+
+        int newSize = originalSize + otherSize;
+        ArrayList<U> temp = new ArrayList<>(newSize);
+        for (int i = 0; i < index; i++) {
+          temp.add((U) builder.getRepeatedField(field, i));
+        }
+        temp.addAll(other);
+        for (int i = index; i < originalSize; i++) {
+          temp.add((U) builder.getRepeatedField(field, i));
+        }
+
+        replaceWith(temp);
+        return true;
+      }
+
+      // O(1)
       @Override
       public U set(int index, U element) {
         U previous = get(index);
@@ -55,25 +104,42 @@ final class BuilderAdapters {
         return previous;
       }
 
+      // O(size())
       @Override
       public U remove(int index) {
-        int size = size();
-        if (index < 0 || index >= size) {
-          throw new IndexOutOfBoundsException(
-              format("index %d out of bounds for size %d", index, size));
-        }
-
-        ArrayList<U> temp = new ArrayList<>(this);
-        builder.clearField(field);
-
-        U removed = temp.get(index);
-        for (int i = 0; i < size; i++) {
-          if (i != index) {
-            builder.addRepeatedField(field, temp.get(i));
-          }
-        }
-
+        U removed = get(index);
+        removeRange(index, index + 1);
         return removed;
+      }
+
+      // O(size() - (toIndex - fromIndex))
+      @Override
+      protected void removeRange(int fromIndex, int toIndex) {
+        int originalSize = size();
+        int newSize = originalSize - (toIndex - fromIndex);
+        if (newSize == 0) {
+          builder.clearField(field);
+          return;
+        }
+
+        // There is no way to remove individual repeated field entries without clearing the entire
+        // field, so we have to iterate over all entries and keep them in a temporary list.
+        ArrayList<U> temp = new ArrayList<>(newSize);
+        for (int i = 0; i < fromIndex; i++) {
+          temp.add((U) builder.getRepeatedField(field, i));
+        }
+        for (int i = toIndex; i < originalSize; i++) {
+          temp.add((U) builder.getRepeatedField(field, i));
+        }
+
+        replaceWith(temp);
+      }
+
+      private void replaceWith(ArrayList<U> temp) {
+        builder.clearField(field);
+        for (U element : temp) {
+          builder.addRepeatedField(field, element);
+        }
       }
     };
   }
@@ -115,6 +181,4 @@ final class BuilderAdapters {
       builder.addRepeatedField(field, entryBuilder.build());
     }
   }
-
-  private BuilderAdapters() {}
 }
