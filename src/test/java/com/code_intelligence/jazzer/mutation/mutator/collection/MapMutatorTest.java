@@ -21,9 +21,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
+import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.jazzer.mutation.mutator.Mutators;
+import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.lang.reflect.AnnotatedType;
@@ -32,7 +33,8 @@ import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("unchecked")
 class MapMutatorTest {
-  public static final MutatorFactory FACTORY = Mutators.newFactory();
+  public static final MutatorFactory FACTORY =
+      new ChainedMutatorFactory(LangMutators.newFactory(), CollectionMutators.newFactory());
 
   @Test
   void mapWithMutableKeysAndValues() {
