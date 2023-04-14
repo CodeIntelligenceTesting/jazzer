@@ -215,7 +215,7 @@ class RuntimeInstrumentor(
         return ClassInstrumentor(internalClassName, bytecode).run {
             if (fullInstrumentation) {
                 // Coverage instrumentation must be performed before any other code updates
-                // or there will be additional coverage points injected if there are any call is inserted
+                // or there will be additional coverage points injected if any calls are inserted
                 // and JaCoCo will produce a broken coverage report.
                 coverageIdSynchronizer.withIdForClass(internalClassName) { firstId ->
                     coverage(firstId).also { actualNumEdgeIds ->
