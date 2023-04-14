@@ -68,8 +68,8 @@ public class DirectoryInputsTest {
 
     // Create a fake test resource directory structure with an inputs directory to verify that
     // Jazzer uses it and emits a crash file into it.
-    Path inputsDirectory = baseDir.resolve(
-        Paths.get("src", "test", "resources", "com", "example", "DirectoryInputsFuzzTestInputs"));
+    Path inputsDirectory = baseDir.resolve(Paths.get("src", "test", "resources", "com", "example",
+        "DirectoryInputsFuzzTestInputs", "inputsFuzz"));
     Files.createDirectories(inputsDirectory);
 
     EngineExecutionResults results =
@@ -110,8 +110,8 @@ public class DirectoryInputsTest {
 
     // Verify that the engine created the generated corpus directory. Since the crash was found on a
     // seed, it should be empty.
-    Path generatedCorpus =
-        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.DirectoryInputsFuzzTest"));
+    Path generatedCorpus = baseDir.resolve(
+        Paths.get(".cifuzz-corpus", "com.example.DirectoryInputsFuzzTest", "inputsFuzz"));
     assertThat(Files.isDirectory(generatedCorpus)).isTrue();
     try (Stream<Path> entries = Files.list(generatedCorpus)) {
       assertThat(entries).isEmpty();

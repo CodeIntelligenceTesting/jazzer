@@ -1,3 +1,12 @@
+java_library(
+    name = "test-method",
+    srcs = ["TestMethod.java"],
+    visibility = ["//src/test/java/com/code_intelligence/jazzer/junit:__pkg__"],
+    deps = [
+        "@maven//:org_junit_platform_junit_platform_engine",
+    ],
+)
+
 java_test(
     name = "UtilsTest",
     srcs = ["UtilsTest.java"],
@@ -41,6 +50,7 @@ java_test(
         ],
         deps = [
             "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+            "//src/test/java/com/code_intelligence/jazzer/junit:test-method",
             "@maven//:com_google_truth_extensions_truth_java8_extension",
             "@maven//:com_google_truth_truth",
             "@maven//:junit_junit",

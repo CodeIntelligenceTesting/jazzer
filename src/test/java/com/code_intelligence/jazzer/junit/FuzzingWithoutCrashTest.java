@@ -106,7 +106,7 @@ public class FuzzingWithoutCrashTest {
     // Verify that the engine created the generated corpus directory. As the fuzz test produces
     // coverage (but no crash), it should not be empty.
     Path generatedCorpus =
-        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.ValidFuzzTests"));
+        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.ValidFuzzTests", "noCrashFuzz"));
     assertThat(Files.isDirectory(generatedCorpus)).isTrue();
     try (Stream<Path> entries = Files.list(generatedCorpus)) {
       assertThat(entries).isNotEmpty();
@@ -143,7 +143,7 @@ public class FuzzingWithoutCrashTest {
 
     // Verify that the generated corpus directory hasn't been created.
     Path generatedCorpus =
-        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.ValidFuzzTests"));
+        baseDir.resolve(Paths.get(".cifuzz-corpus", "com.example.ValidFuzzTests", "noCrashFuzz"));
     assertThat(Files.notExists(generatedCorpus)).isTrue();
   }
 }

@@ -39,6 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,8 +61,10 @@ public class AutofuzzTest {
     // crash file into it.
     Path testResourceDir = baseDir.resolve("src").resolve("test").resolve("resources");
     Files.createDirectories(testResourceDir);
-    Path inputsDirectory =
-        testResourceDir.resolve("com").resolve("example").resolve("AutofuzzFuzzTestInputs");
+    Path inputsDirectory = testResourceDir.resolve("com")
+                               .resolve("example")
+                               .resolve("AutofuzzFuzzTestInputs")
+                               .resolve("autofuzz");
 
     EngineExecutionResults results =
         EngineTestKit.engine("junit-jupiter")

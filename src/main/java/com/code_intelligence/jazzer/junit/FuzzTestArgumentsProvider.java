@@ -91,10 +91,12 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
     } else {
       rawSeeds = Stream.of(new SimpleEntry<>("<empty input>", new byte[] {}));
       Class<?> testClass = extensionContext.getRequiredTestClass();
-      rawSeeds = Stream.concat(rawSeeds, walkInputs(testClass));
+      Method testMethod = extensionContext.getRequiredTestMethod();
+      rawSeeds = Stream.concat(rawSeeds, walkInputs(testClass, testMethod));
       if (Utils.isCoverageAgentPresent()
-          && Files.isDirectory(Utils.generatedCorpusPath(testClass))) {
-        rawSeeds = Stream.concat(rawSeeds, walkInputsInPath(Utils.generatedCorpusPath(testClass)));
+          && Files.isDirectory(Utils.generatedCorpusPath(testClass, testMethod))) {
+        rawSeeds = Stream.concat(
+            rawSeeds, walkInputsInPath(Utils.generatedCorpusPath(testClass, testMethod)));
       }
     }
     return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds).onClose(() -> {
@@ -155,8 +157,10 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
     }
   }
 
-  private Stream<Map.Entry<String, byte[]>> walkInputs(Class<?> testClass) throws IOException {
-    URL inputsDirUrl = testClass.getResource(Utils.inputsDirectoryResourcePath(testClass));
+  private Stream<Map.Entry<String, byte[]>> walkInputs(Class<?> testClass, Method testMethod)
+      throws IOException {
+    URL inputsDirUrl =
+        testClass.getResource(Utils.inputsDirectoryResourcePath(testClass, testMethod));
     if (inputsDirUrl == null) {
       return Stream.empty();
     }

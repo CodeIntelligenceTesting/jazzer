@@ -15,6 +15,7 @@
 package com.code_intelligence.jazzer.junit;
 
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,19 +29,22 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 class Utils {
   /**
-   * Returns the resource path of the inputs directory, which is either absolute or relative to
-   * {@code testClass}.
+   * Returns the resource path of the inputs directory for a given test class and method. The path
+   * will have the form
+   * {@code <class name>Inputs/<method name>}
    */
-  static String inputsDirectoryResourcePath(Class<?> testClass) {
-    return testClass.getSimpleName() + "Inputs";
+  static String inputsDirectoryResourcePath(Class<?> testClass, Method testMethod) {
+    return testClass.getSimpleName() + "Inputs"
+        + "/" + testMethod.getName();
   }
 
   /**
    * Returns the file system path of the inputs corpus directory in the source tree, if it exists.
    * The directory is created if it does not exist, but the test resource directory itself exists.
    */
-  static Optional<Path> inputsDirectorySourcePath(Class<?> testClass, Path baseDir) {
-    String inputsResourcePath = Utils.inputsDirectoryResourcePath(testClass);
+  static Optional<Path> inputsDirectorySourcePath(
+      Class<?> testClass, Method testMethod, Path baseDir) {
+    String inputsResourcePath = Utils.inputsDirectoryResourcePath(testClass, testMethod);
     // Make the inputs resource path absolute.
     if (!inputsResourcePath.startsWith("/")) {
       String inputsPackage = testClass.getPackage().getName().replace('.', '/');
@@ -69,8 +73,8 @@ class Utils {
     }
   }
 
-  static Path generatedCorpusPath(Class<?> testClass) {
-    return Paths.get(".cifuzz-corpus", testClass.getName());
+  static Path generatedCorpusPath(Class<?> testClass, Method testMethod) {
+    return Paths.get(".cifuzz-corpus", testClass.getName(), testMethod.getName());
   }
 
   static String defaultInstrumentationFilter(Class<?> testClass) {
