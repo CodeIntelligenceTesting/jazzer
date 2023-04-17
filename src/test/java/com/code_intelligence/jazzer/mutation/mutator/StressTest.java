@@ -456,6 +456,7 @@ public class StressTest {
       testReadWriteExclusiveRoundtrip(mutator, fixedValue);
 
       initValues.add(mutator.detach(value));
+      value = fixFloatingPointsForProtos(value);
 
       for (int mutation = 0; mutation < NUM_MUTATE_PER_INIT; mutation++) {
         Object detachedOldValue = mutator.detach(value);
