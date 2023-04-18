@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.mutation.support;
 
 import static java.util.stream.Collectors.toList;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -63,5 +64,9 @@ public final class StreamSupport {
    */
   public static <T> Stream<T> getOrEmpty(Optional<T> optional) {
     return optional.isPresent() ? Stream.of(optional.get()) : Stream.empty();
+  }
+
+  public static <K, V> SimpleEntry<K, V> entry(K key, V value) {
+    return new SimpleEntry<>(key, value);
   }
 }

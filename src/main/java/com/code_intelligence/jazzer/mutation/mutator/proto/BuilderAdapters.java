@@ -174,10 +174,12 @@ final class BuilderAdapters {
   static <T extends Builder, K, V> void setMapField(
       Builder builder, FieldDescriptor field, Map<K, V> map) {
     builder.clearField(field);
+    FieldDescriptor keyField = field.getMessageType().getFields().get(0);
+    FieldDescriptor valueField = field.getMessageType().getFields().get(1);
+    Builder entryBuilder = builder.newBuilderForField(field);
     for (Entry<K, V> entry : map.entrySet()) {
-      MapEntry.Builder<K, V> entryBuilder = (MapEntry.Builder) builder.newBuilderForField(field);
-      entryBuilder.setKey(entry.getKey());
-      entryBuilder.setValue(entry.getValue());
+      entryBuilder.setField(keyField, entry.getKey());
+      entryBuilder.setField(valueField, entry.getValue());
       builder.addRepeatedField(field, entryBuilder.build());
     }
   }
