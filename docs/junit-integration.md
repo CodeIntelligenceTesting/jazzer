@@ -20,7 +20,7 @@ with `@FuzzTest` looking for at least one method to return that it should be run
 will short circuit at the first that says it's enabled. In fuzzing mode, Jazzer will only run a single test so this will
 save this first test and later calls to this function will return enabled for only this test.
 
-## `provideArugments`
+## `provideArguments`
 
 This will configure the fuzzing agent to set up code instrumentation, instantiate a `FuzzTestExecutor` and put it into
 JUnit's `extensionContext`, then create a stream of a single empty argument set. As the comment mentions, this is so
@@ -62,17 +62,23 @@ files into the actual types to be given to the tested function.
 
 ### Resources Tests
 
-The tests from the resources directory are gathered by `walkInputs`. Which will look
-under `resources/<package>/<test class name>Inputs/<test method name>` for tests. It will search for all files
-recursively under that directory and use them as test cases, using the file's name as the name of that parameter set and
-accepting the file contents as raw bytes. It also accepts .jar files where it will search with the given directory in
-the jar.
+The tests from the resources directory are gathered by `walkInputs`. This will look for inputs in two places:
+- `resources/<package>/<test class name>Inputs` - files found directly within in directory will be used as inputs for 
+  any tests within this class. This allows for easy sharing of corpus entries. Jazzer does not automatically put entries
+  here, instead a human will need to decide a finding should be shared and manually move it.
+- `resources/<package>/<test class name>Inputs/<test method name>` - files found in this directory and any directory
+  under it are used as inputs for only the test of the same name.
+
+JUnit will use the file's name as the name of the test case for its reporting. It also accepts .jar files where it will
+search with the given directory in the jar.
 
 ### CIFuzz Corpus
 
 The corpus kept in `.cifuzz-corpus/<test class name>/<test method name>` holds any inputs that libfuzzer found worth
 saving and not necessarily just inputs that caused a crash. I'm not entirely sure what the criteria for this are but
-this appears to be something that's entirely managed by libfuzzer's code and not Jazzer.
+this appears to be something that's entirely managed by libfuzzer's code and not Jazzer. Unlike with the resources test
+inputs above, this will not look in `.cifuzz-corpus/<test class name>` for shared test cases. This is a limitation of
+libfuzzer.
 
 ## `evaluateExecutionCondition`
 

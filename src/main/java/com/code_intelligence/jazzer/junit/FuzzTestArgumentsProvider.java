@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
@@ -95,8 +96,8 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
       rawSeeds = Stream.concat(rawSeeds, walkInputs(testClass, testMethod));
       if (Utils.isCoverageAgentPresent()
           && Files.isDirectory(Utils.generatedCorpusPath(testClass, testMethod))) {
-        rawSeeds = Stream.concat(
-            rawSeeds, walkInputsInPath(Utils.generatedCorpusPath(testClass, testMethod)));
+        rawSeeds = Stream.concat(rawSeeds,
+            walkInputsInPath(Utils.generatedCorpusPath(testClass, testMethod), Integer.MAX_VALUE));
       }
     }
     return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds).onClose(() -> {
@@ -115,6 +116,19 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
     });
   }
 
+  /**
+   * Maps the input file stream into a stream of {@link Arguments} objects, transforming the raw
+   * bytes into the correct data type for the method. <p> Supported types are: <ul> <li>{@code
+   * byte[]}</li> <li>{@code FuzzDataProvider}</li> <li>Any other types will attempt to be created
+   * using either Autofuzz or the experimental mutator framework if
+   *     {@link Opt}'s {@code experimentalMutator} is set</li>
+   * </ul>
+   * @param fuzzTestMethod the method being tested
+   * @param rawSeeds a stream of file names -> file contents to use as test cases for {@code
+   *     fuzzTestMethod}
+   * @return a stream of {@link Arguments} containing the file name as the name of the test case and
+   *     the transformed arguments
+   */
   private Stream<? extends Arguments> adaptInputsForFuzzTest(
       Method fuzzTestMethod, Stream<Map.Entry<String, byte[]>> rawSeeds) {
     if (fuzzTestMethod.getParameterCount() == 0) {
@@ -157,44 +171,122 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
     }
   }
 
+  /**
+   * Used in regression mode to get test cases for the associated {@code testMethod}
+   * This will return a stream of files consisting of:
+   * <ul>
+   * <li>{@code resources/<classpath>/<testClass name>Inputs/*}</li>
+   * <li>{@code resources/<classpath>/<testClass name>Inputs/<testMethod name>/**}</li>
+   * </ul>
+   * Or the equivalent behavior on resources inside a jar file.
+   * <p>
+   * Note that the first {@code <testClass name>Inputs} path will not recursively search all
+   * directories but only gives files in that directory whereas the {@code <testMethod name>}
+   * directory is searched recursively. This allows for multiple tests to share inputs without
+   * needing to explicitly copy them into each test's directory.
+   *
+   * @param testClass the class of the test being run
+   * @param testMethod the test function being run
+   * @return a stream of findings files to use as inputs for the test function
+   */
   private Stream<Map.Entry<String, byte[]>> walkInputs(Class<?> testClass, Method testMethod)
       throws IOException {
-    URL inputsDirUrl =
-        testClass.getResource(Utils.inputsDirectoryResourcePath(testClass, testMethod));
-    if (inputsDirUrl == null) {
+    URL classInputsDirUrl = testClass.getResource(Utils.inputsDirectoryResourcePath(testClass));
+
+    if (classInputsDirUrl == null) {
       return Stream.empty();
     }
-    URI inputsDirUri;
+    URI classInputsDirUri;
     try {
-      inputsDirUri = inputsDirUrl.toURI();
+      classInputsDirUri = classInputsDirUrl.toURI();
     } catch (URISyntaxException e) {
-      throw new IOException("Failed to open inputs resource directory: " + inputsDirUrl, e);
+      throw new IOException("Failed to open inputs resource directory: " + classInputsDirUrl, e);
     }
-    if (inputsDirUri.getScheme().equals("file")) {
+    if (classInputsDirUri.getScheme().equals("file")) {
       // The test is executed from class files, which usually happens when run from inside an IDE.
-      return walkInputsInPath(Paths.get(inputsDirUri));
-    } else if (inputsDirUri.getScheme().equals("jar")) {
-      FileSystem jar = FileSystems.newFileSystem(inputsDirUri, new HashMap<>());
+      Path classInputsPath = Paths.get(classInputsDirUri);
+
+      return Stream.concat(
+          walkClassInputs(classInputsPath), walkTestInputs(classInputsPath, testMethod));
+
+    } else if (classInputsDirUri.getScheme().equals("jar")) {
+      FileSystem jar = FileSystems.newFileSystem(classInputsDirUri, new HashMap<>());
       // inputsDirUrl looks like this:
       // file:/tmp/testdata/ExampleFuzzTest_deploy.jar!/com/code_intelligence/jazzer/junit/testdata/ExampleFuzzTestInputs
-      String pathInJar = inputsDirUrl.getFile().substring(inputsDirUrl.getFile().indexOf('!') + 1);
-      return walkInputsInPath(jar.getPath(pathInJar)).onClose(() -> {
-        try {
-          jar.close();
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      });
+      String pathInJar =
+          classInputsDirUrl.getFile().substring(classInputsDirUrl.getFile().indexOf('!') + 1);
+
+      Path classPathInJar = jar.getPath(pathInJar);
+
+      return Stream
+          .concat(walkClassInputs(classPathInJar), walkTestInputs(classPathInJar, testMethod))
+          .onClose(() -> {
+            try {
+              jar.close();
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
+          });
     } else {
-      throw new IOException("Unsupported protocol for inputs resource directory: " + inputsDirUrl);
+      throw new IOException(
+          "Unsupported protocol for inputs resource directory: " + classInputsDirUrl);
     }
   }
 
-  private static Stream<Map.Entry<String, byte[]>> walkInputsInPath(Path path) throws IOException {
+  /**
+   * Walks over the inputs for the method being tested, recurses into subdirectories
+   * @param classInputsPath the path of the class being tested, used as the base path where the test
+   *     method's directory
+   *                        should be
+   * @param testMethod the method being tested
+   * @return a stream of all files under {@code <classInputsPath>/<testMethod name>}
+   * @throws IOException can be thrown by the underlying call to {@link Files#find}
+   */
+  private static Stream<Map.Entry<String, byte[]>> walkTestInputs(
+      Path classInputsPath, Method testMethod) throws IOException {
+    Path testInputsPath = classInputsPath.resolve(testMethod.getName());
+    if (!Files.exists(testInputsPath)) {
+      return Stream.empty();
+    }
+    return walkInputsInPath(testInputsPath, Integer.MAX_VALUE);
+  }
+
+  /**
+   * Walks over the inputs for the class being tested. Does not recurse into subdirectories
+   * @param path the path to search to files
+   * @return a stream of all files (without directories) within {@code path}. If {@code path} is
+   *     {@code null}, then an
+   * empty stream is returned.
+   * @throws IOException can be thrown by the underlying call to {@link Files#find}
+   */
+  private static Stream<Map.Entry<String, byte[]>> walkClassInputs(Path path) throws IOException {
+    // this check is technically redundant thanks to the null check near the start of `walkInputs`
+    // however since these are only run once per tested method, I think it shouldn't degrade
+    // performance too much
+    if (!Files.exists(path)) {
+      return Stream.empty();
+    }
+    // using a depth of 1 will get all files within the given path but does not recurse into
+    // subdirectories
+    return walkInputsInPath(path, 1);
+  }
+
+  /**
+   * Gets a sorted stream of all files (without directories) within under the given {@code path}
+   * @param path the path to walk
+   * @param depth the maximum depth of subdirectories to search from within {@code path}. 1
+   *     indicates it should return
+   *              only the files directly in {@code path} and not search any of its subdirectories
+   * @return a stream of file name -> file contents as a raw byte array
+   * @throws IOException can be thrown by the call to {@link Files#find(Path, int, BiPredicate,
+   *     FileVisitOption...)}
+   */
+  private static Stream<Map.Entry<String, byte[]>> walkInputsInPath(Path path, int depth)
+      throws IOException {
     // @ParameterTest automatically closes Streams and AutoCloseable instances.
     // noinspection resource
     return Files
-        .find(path, Integer.MAX_VALUE,
+        .find(path, depth,
             (fileOrDir, basicFileAttributes)
                 -> !basicFileAttributes.isDirectory(),
             FileVisitOption.FOLLOW_LINKS)

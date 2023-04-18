@@ -36,10 +36,16 @@ public class TestMethod {
     method = selectMethod(className + "#" + methodName).getJavaMethod();
   }
 
+  /**
+   * Returns the {@link org.junit.platform.engine.TestDescriptor} ID for this method
+   */
   String getDescriptorId() {
     return "test-template:" + nameWithParams;
   }
 
+  /**
+   * Returns just the name of the method without parameters
+   */
   String getName() {
     return method.getName();
   }

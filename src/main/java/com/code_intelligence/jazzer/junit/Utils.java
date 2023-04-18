@@ -38,6 +38,10 @@ class Utils {
         + "/" + testMethod.getName();
   }
 
+  static String inputsDirectoryResourcePath(Class<?> testClass) {
+    return testClass.getSimpleName() + "Inputs";
+  }
+
   /**
    * Returns the file system path of the inputs corpus directory in the source tree, if it exists.
    * The directory is created if it does not exist, but the test resource directory itself exists.
