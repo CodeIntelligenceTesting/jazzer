@@ -77,7 +77,7 @@ public final class LibFuzzerMutator {
 
   private static int defaultMutateMock(byte[] buffer, int size) {
     String newSizeProp = System.getProperty(MOCK_SIZE_KEY);
-    int newSize = (buffer.length + size) / 2;
+    int newSize = Math.min(buffer.length, size + 1);
     if (newSizeProp != null) {
       newSize = Integer.parseUnsignedInt(newSizeProp);
     }
