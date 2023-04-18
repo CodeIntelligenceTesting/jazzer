@@ -118,10 +118,14 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
 
   /**
    * Maps the input file stream into a stream of {@link Arguments} objects, transforming the raw
-   * bytes into the correct data type for the method. <p> Supported types are: <ul> <li>{@code
-   * byte[]}</li> <li>{@code FuzzDataProvider}</li> <li>Any other types will attempt to be created
-   * using either Autofuzz or the experimental mutator framework if
-   *     {@link Opt}'s {@code experimentalMutator} is set</li>
+   * bytes into the correct data type for the method.
+   * <p>
+   * Supported types are:
+   * <ul>
+   *   <li>{@code byte[]}</li>
+   *   <li>{@code FuzzDataProvider}</li>
+   *   <li>Any other types will attempt to be created using either Autofuzz or the experimental
+   * mutator framework if {@link Opt}'s {@code experimentalMutator} is set</li>
    * </ul>
    * @param fuzzTestMethod the method being tested
    * @param rawSeeds a stream of file names -> file contents to use as test cases for {@code
