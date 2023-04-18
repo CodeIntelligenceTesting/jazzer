@@ -29,6 +29,7 @@ import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapter
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.makeMutableRepeatedFieldView;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setFieldWithPresence;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setMapField;
+import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.getDefaultInstance;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
@@ -45,10 +46,12 @@ import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
+import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.api.ValueMutator;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import com.google.protobuf.Any;
+import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -237,12 +240,12 @@ public final class BuilderMutatorFactory extends MutatorFactory {
       AnySource anySource, MutatorFactory factory) {
     HashMap<String, Integer> typeUrlToIndex = new HashMap<>(anySource.value().length);
     for (int i = 0; i < anySource.value().length; i++) {
-      Message defaultInstance = TypeLibrary.getDefaultInstance(anySource.value()[i]);
+      Message defaultInstance = getDefaultInstance(anySource.value()[i]);
       typeUrlToIndex.put(getTypeUrl(defaultInstance), i);
     }
 
     return assemble(mutator
-        -> internedMutators.put(new CacheKey(Any.Builder.class, anySource), mutator),
+        -> internedMutators.put(new CacheKey(Any.getDescriptor(), anySource), mutator),
         Any.getDefaultInstance()::toBuilder, makeBuilderSerializer(Any.getDefaultInstance()),
         ()
             -> mutateSumInPlace(
@@ -262,7 +265,7 @@ public final class BuilderMutatorFactory extends MutatorFactory {
                               return anyBuilder.build().unpack(messageClass);
                             } catch (InvalidProtocolBufferException e) {
                               // This can only happen if the corpus contains an invalid Any.
-                              return TypeLibrary.getDefaultInstance(messageClass);
+                              return getDefaultInstance(messageClass);
                             }
                           },
                           messageMutator,
@@ -282,62 +285,75 @@ public final class BuilderMutatorFactory extends MutatorFactory {
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
-    return asSubclassOrEmpty(type, Builder.class).map(builderClass -> {
-      AnySource anySource = type.getDeclaredAnnotation(AnySource.class);
-      Preconditions.require(anySource == null || anySource.value().length > 0,
-          "@AnySource must list a non-empty list of classes");
-
-      // If there is no @AnySource, mutate the Any.Builder fields just like a regular message.
-      // TODO: Determine whether we should show a warning in this case.
-      if (builderClass.equals(Any.Builder.class) && anySource != null) {
-        return mutatorForAny(anySource, factory);
+    return asSubclassOrEmpty(type, Builder.class).flatMap(builderClass -> {
+      if (builderClass == Message.Builder.class) {
+        return Optional.empty();
       }
 
-      CacheKey cacheKey = new CacheKey(builderClass, anySource);
-      if (internedMutators.containsKey(cacheKey)) {
-        return internedMutators.get(cacheKey);
-      }
-
-      Message defaultInstance = TypeLibrary.getDefaultInstance(
-          (Class<? extends Message>) builderClass.getEnclosingClass());
-      // assemble inserts the instance of the newly created builder mutator into the
-      // internedMutators map *before* recursively creating the mutators for its fields, which
-      // ensures that the recursion is finite (bounded by the total number of distinct message types
-      // that transitively occur as field types on the current message type).
-      return assemble(mutator
-          -> internedMutators.put(cacheKey, mutator),
-          defaultInstance::toBuilder, makeBuilderSerializer(defaultInstance),
-          ()
-              -> combine(
-                  defaultInstance.getDescriptorForType()
-                      .getFields()
-                      .stream()
-                      // Keep oneofs sorted by the first appearance of their fields in the
-                      // .proto file.
-                      .collect(groupingBy(
-                          // groupingBy does not support null keys. We use getRealContainingOneof()
-                          // instead of getContainingOneof() as the latter also reports oneofs for
-                          // proto3 optional fields, which we handle separately.
-                          fieldDescriptor
-                          -> Optional.ofNullable(fieldDescriptor.getRealContainingOneof()),
-                          LinkedHashMap::new, toList()))
-                      .entrySet()
-                      .stream()
-                      .flatMap(entry
-                          -> mutatorsForFields(entry.getKey(), entry.getValue(),
-                              defaultInstance.toBuilder(),
-                              anySource == null ? new Annotation[0] : new Annotation[] {anySource},
-                              factory))
-                      .toArray(InPlaceMutator[] ::new)));
+      Message defaultInstance =
+          getDefaultInstance((Class<? extends Message>) builderClass.getEnclosingClass());
+      return Optional.of(
+          makeBuilderMutator(factory, defaultInstance, type.getDeclaredAnnotations()));
     });
   }
 
+  private SerializingMutator<?> makeBuilderMutator(
+      MutatorFactory factory, Message defaultInstance, Annotation[] annotations) {
+    AnySource anySource = (AnySource) stream(annotations)
+                              .filter(annotation -> annotation.annotationType() == AnySource.class)
+                              .findFirst()
+                              .orElse(null);
+    Preconditions.require(anySource == null || anySource.value().length > 0,
+        "@AnySource must list a non-empty list of classes");
+    Descriptor descriptor = defaultInstance.getDescriptorForType();
+
+    CacheKey cacheKey = new CacheKey(descriptor, anySource);
+    if (internedMutators.containsKey(cacheKey)) {
+      return internedMutators.get(cacheKey);
+    }
+
+    // If there is no @AnySource, mutate the Any.Builder fields just like a regular message.
+    // TODO: Determine whether we should show a warning in this case.
+    if (descriptor.equals(Any.getDescriptor()) && anySource != null) {
+      return mutatorForAny(anySource, factory);
+    }
+
+    // assemble inserts the instance of the newly created builder mutator into the
+    // internedMutators map *before* recursively creating the mutators for its fields, which
+    // ensures that the recursion is finite (bounded by the total number of distinct message types
+    // that transitively occur as field types on the current message type).
+    return assemble(mutator
+        -> internedMutators.put(cacheKey, mutator),
+        defaultInstance::toBuilder, makeBuilderSerializer(defaultInstance),
+        ()
+            -> combine(
+                descriptor.getFields()
+                    .stream()
+                    // Keep oneofs sorted by the first appearance of their fields in the
+                    // .proto file.
+                    .collect(groupingBy(
+                        // groupingBy does not support null keys. We use getRealContainingOneof()
+                        // instead of getContainingOneof() as the latter also reports oneofs for
+                        // proto3 optional fields, which we handle separately.
+                        fieldDescriptor
+                        -> Optional.ofNullable(fieldDescriptor.getRealContainingOneof()),
+                        LinkedHashMap::new, toList()))
+                    .entrySet()
+                    .stream()
+                    .flatMap(entry
+                        -> mutatorsForFields(entry.getKey(), entry.getValue(),
+                            defaultInstance.toBuilder(),
+                            anySource == null ? new Annotation[0] : new Annotation[] {anySource},
+                            factory))
+                    .toArray(InPlaceMutator[] ::new)));
+  }
+
   private static final class CacheKey {
-    private final Class<? extends Builder> clazz;
+    private final Descriptor descriptor;
     private final AnySource anySource;
 
-    private CacheKey(Class<? extends Builder> clazz, AnySource anySource) {
-      this.clazz = clazz;
+    private CacheKey(Descriptor descriptor, AnySource anySource) {
+      this.descriptor = descriptor;
       this.anySource = anySource;
     }
 
@@ -350,12 +366,13 @@ public final class BuilderMutatorFactory extends MutatorFactory {
         return false;
       }
       CacheKey cacheKey = (CacheKey) o;
-      return Objects.equals(clazz, cacheKey.clazz) && Objects.equals(anySource, cacheKey.anySource);
+      return Objects.equals(descriptor, cacheKey.descriptor)
+          && Objects.equals(anySource, cacheKey.anySource);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(clazz, anySource);
+      return Objects.hash(descriptor, anySource);
     }
   }
 }
