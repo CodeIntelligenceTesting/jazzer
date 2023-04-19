@@ -122,6 +122,9 @@ final class ListMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public void crossOverInPlace(List<T> reference, List<T> otherReference, PseudoRandom prng) {}
+
+    @Override
     public List<T> detach(List<T> value) {
       return value.stream()
           .map(elementMutator::detach)

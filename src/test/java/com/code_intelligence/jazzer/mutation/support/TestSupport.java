@@ -136,6 +136,11 @@ public final class TestSupport {
     }
 
     @Override
+    public T crossOver(T value, T otherValue, PseudoRandom prng) {
+      return value;
+    }
+
+    @Override
     public String toDebugString(Predicate<Debuggable> isInCycle) {
       T initialValue = nextInitialValue();
       if (initialValue == null) {

@@ -462,7 +462,7 @@ java_fuzz_target_test(
         "@platforms//os:linux": ["-runs=400000"],
         # TODO: Investigate why this test takes far more runs on macOS, with Windows also being
         #       significantly worse than Linux.
-        "//conditions:default": ["-runs=1200000"],
+        "//conditions:default": ["-runs=2200000"],
     }),
     target_class = "com.example.ExperimentalMutatorComplexProtoFuzzer",
     verify_crash_reproducer = False,

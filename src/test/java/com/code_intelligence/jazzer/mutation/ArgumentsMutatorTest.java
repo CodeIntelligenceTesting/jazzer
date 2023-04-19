@@ -24,12 +24,15 @@ import static java.util.Collections.singletonList;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
 
+@SuppressWarnings("OptionalGetWithoutIsPresent")
 class ArgumentsMutatorTest {
   private static List<List<Boolean>> fuzzThisFunctionArgument1;
   private static List<Boolean> fuzzThisFunctionArgument2;
@@ -242,5 +245,54 @@ class ArgumentsMutatorTest {
     mutator.invoke(false);
     assertThat(mutableFuzzThisFunctionArgument1).containsExactly(singletonList(true));
     assertThat(mutableFuzzThisFunctionArgument2).containsExactly(false);
+  }
+
+  @SuppressWarnings("unused")
+  public void crossOverFunction(List<Boolean> list) {}
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void testCrossOver() throws Throwable {
+    Method method = ArgumentsMutatorTest.class.getMethod("crossOverFunction", List.class);
+    Optional<ArgumentsMutator> maybeMutator =
+        ArgumentsMutator.forInstanceMethod(Mutators.newFactory(), this, method);
+    assertThat(maybeMutator).isPresent();
+    ArgumentsMutator mutator = maybeMutator.get();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // list not null
+             false,
+             // list size 1
+             1,
+             // not null,
+             false,
+             // boolean
+             true)) {
+      mutator.init(prng);
+    }
+    ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
+    mutator.write(baos1);
+    byte[] out1 = baos1.toByteArray();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // list not null
+             false,
+             // list size 1
+             1,
+             // not null
+             false,
+             // boolean
+             false)) {
+      mutator.init(prng);
+    }
+    ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
+    mutator.write(baos2);
+    byte[] out2 = baos1.toByteArray();
+
+    mutator.crossOver(new ByteArrayInputStream(out1), new ByteArrayInputStream(out2), 12345);
+    Object[] arguments = mutator.getArguments();
+
+    assertThat(arguments).isNotEmpty();
+    assertThat((List<Boolean>) arguments[0]).isNotEmpty();
   }
 }

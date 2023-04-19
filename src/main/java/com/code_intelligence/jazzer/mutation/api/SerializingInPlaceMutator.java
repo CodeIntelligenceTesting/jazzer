@@ -67,4 +67,10 @@ public abstract class SerializingInPlaceMutator<T>
     mutateInPlace(value, prng);
     return value;
   }
+
+  @Override
+  public final T crossOver(T value, T otherValue, PseudoRandom prng) {
+    crossOverInPlace(value, otherValue, prng);
+    return value;
+  }
 }

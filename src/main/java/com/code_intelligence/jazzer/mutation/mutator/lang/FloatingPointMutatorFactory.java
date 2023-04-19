@@ -271,6 +271,11 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public Float crossOver(Float value, Float otherValue, PseudoRandom prng) {
+      return value;
+    }
+
+    @Override
     public Float read(DataInputStream in) throws IOException {
       return forceInRange(in.readFloat(), minValue, maxValue, allowNaN);
     }
@@ -494,6 +499,11 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
       }
       bits = (bits & ~MANTISSA_MASK) | mantissa;
       return Double.longBitsToDouble(bits);
+    }
+
+    @Override
+    public Double crossOver(Double value, Double otherValue, PseudoRandom prng) {
+      return prng.closedRange(-1e100, 1e100);
     }
 
     @Override

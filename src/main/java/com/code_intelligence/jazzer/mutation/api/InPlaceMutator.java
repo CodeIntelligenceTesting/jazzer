@@ -17,7 +17,8 @@
 package com.code_intelligence.jazzer.mutation.api;
 
 /**
- * Knows how to initialize and mutate (parts of) an existing object of type {@code T} in place.
+ * Knows how to initialize and mutate (parts of) an existing object of type {@code T} in place and
+ * how to incorporate (cross over) parts of another object of the same type.
  *
  * <p>Certain types, such as immutable and primitive types, can not be mutated in place. For
  * example, {@link java.util.List} can be mutated in place whereas {@link String} and {@code int}
@@ -59,4 +60,14 @@ public interface InPlaceMutator<T> extends Debuggable {
    * </ul>
    */
   void mutateInPlace(T reference, PseudoRandom prng);
+
+  /**
+   * Implementations
+   * <ul>
+   *   <li>MUST ensure that {@code reference} does not {@link Object#equals(Object)} the state it
+   * had prior to the call (if possible);
+   *   <li>MUST accept any mutable instance of {@code T}, not just those it creates itself.
+   * </ul>
+   */
+  void crossOverInPlace(T reference, T otherReference, PseudoRandom prng);
 }

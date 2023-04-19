@@ -40,6 +40,7 @@ namespace {
 jclass gRunner;
 jmethodID gRunOneId;
 jmethodID gMutateOneId;
+jmethodID gCrossOverId;
 JavaVM *gJavaVm;
 JNIEnv *gEnv;
 jboolean gUseExperimentalMutator;
@@ -82,6 +83,34 @@ extern "C" size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
   }
 }
 
+extern "C" size_t LLVMFuzzerCustomCrossOver(const uint8_t *Data1, size_t Size1,
+                                            const uint8_t *Data2, size_t Size2,
+                                            uint8_t *Out, size_t MaxOutSize,
+                                            unsigned int Seed) {
+  if (gUseExperimentalMutator) {
+    JNIEnv &env = *gEnv;
+    jint jsize1 =
+        std::min(Size1, static_cast<size_t>(std::numeric_limits<jint>::max()));
+    jint jsize2 =
+        std::min(Size2, static_cast<size_t>(std::numeric_limits<jint>::max()));
+    jint jMaxOutSize = std::min(
+        MaxOutSize, static_cast<size_t>(std::numeric_limits<jint>::max()));
+    jint jseed = static_cast<jint>(Seed);
+
+    jint newSize =
+        env.CallStaticLongMethod(gRunner, gCrossOverId, Data1, jsize1, Data2,
+                                 jsize2, Out, jMaxOutSize, jseed);
+    if (env.ExceptionCheck()) {
+      env.ExceptionDescribe();
+      _Exit(1);
+    }
+    return static_cast<uint32_t>(newSize);
+  } else {
+    // No custom cross over supported.
+    return 0;
+  }
+}
+
 namespace jazzer {
 void DumpJvmStackTraces() {
   JNIEnv *env = nullptr;
@@ -114,6 +143,7 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_startLibFuzze
   gRunner = reinterpret_cast<jclass>(env->NewGlobalRef(runner));
   gRunOneId = env->GetStaticMethodID(runner, "runOne", "(JI)I");
   gMutateOneId = env->GetStaticMethodID(runner, "mutateOne", "(JIII)I");
+  gCrossOverId = env->GetStaticMethodID(runner, "crossOver", "(JIJIJII)I");
   if (gRunOneId == nullptr) {
     env->ExceptionDescribe();
     _Exit(1);

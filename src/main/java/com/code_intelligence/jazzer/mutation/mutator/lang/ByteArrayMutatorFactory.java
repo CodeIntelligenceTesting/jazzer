@@ -129,6 +129,11 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public byte[] crossOver(byte[] value, byte[] otherValue, PseudoRandom prng) {
+      return value;
+    }
+
+    @Override
     public String toDebugString(Predicate<Debuggable> isInCycle) {
       return "byte[]";
     }

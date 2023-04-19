@@ -79,6 +79,10 @@ class MutatorCombinatorsTest {
       }
 
       @Override
+      public void crossOverInPlace(
+          List<Integer> reference, List<Integer> otherReference, PseudoRandom prng) {}
+
+      @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
         return "List<Integer>";
       }
@@ -120,6 +124,10 @@ class MutatorCombinatorsTest {
           public void mutateInPlace(List<Integer> reference, PseudoRandom prng) {
             reference.add(reference.get(reference.size() - 1) + 1);
           }
+
+          @Override
+          public void crossOverInPlace(
+              List<Integer> reference, List<Integer> otherReference, PseudoRandom prng) {}
 
           @Override
           public String toDebugString(Predicate<Debuggable> isInCycle) {
