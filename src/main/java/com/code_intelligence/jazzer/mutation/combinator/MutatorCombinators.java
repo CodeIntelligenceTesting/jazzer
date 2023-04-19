@@ -64,6 +64,9 @@ public final class MutatorCombinators {
       }
 
       @Override
+      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
+
+      @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
         Class<?> owningType =
             TypeResolver.resolveRawArguments(Function.class, getter.getClass())[0];
@@ -91,6 +94,9 @@ public final class MutatorCombinators {
       public void mutateInPlace(T reference, PseudoRandom prng) {
         mutator.mutateInPlace(map.apply(reference), prng);
       }
+
+      @Override
+      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
 
       @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
@@ -124,6 +130,9 @@ public final class MutatorCombinators {
         public void mutateInPlace(T reference, PseudoRandom prng) {}
 
         @Override
+        public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
+
+        @Override
         public String toDebugString(Predicate<Debuggable> isInCycle) {
           return "{<empty>}";
         }
@@ -148,6 +157,9 @@ public final class MutatorCombinators {
       public void mutateInPlace(T reference, PseudoRandom prng) {
         mutators[prng.indexIn(mutators)].mutateInPlace(reference, prng);
       }
+
+      @Override
+      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
 
       @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
@@ -254,6 +266,11 @@ public final class MutatorCombinators {
       }
 
       @Override
+      public Integer crossOver(Integer value, Integer otherValue, PseudoRandom prng) {
+        return value;
+      }
+
+      @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
         return "mutateIndices(" + length + ")";
       }
@@ -302,6 +319,9 @@ public final class MutatorCombinators {
       }
 
       @Override
+      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
+
+      @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
         return stream(mutators)
             .map(mutator -> mutator.toDebugString(isInCycle))
@@ -329,6 +349,11 @@ public final class MutatorCombinators {
       @Override
       public void mutateInPlace(T reference, PseudoRandom prng) {
         mutator.mutateInPlace(reference, prng);
+      }
+
+      @Override
+      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
+        mutator.crossOverInPlace(reference, otherReference, prng);
       }
     };
   }
@@ -368,6 +393,11 @@ public final class MutatorCombinators {
       public T mutate(T value, PseudoRandom prng) {
         return value;
       }
+
+      @Override
+      public T crossOver(T value, T otherValue, PseudoRandom prng) {
+        return value;
+      }
     };
   }
 
@@ -397,6 +427,9 @@ public final class MutatorCombinators {
     public void mutateInPlace(T reference, PseudoRandom prng) {
       mutator.mutateInPlace(reference, prng);
     }
+
+    @Override
+    public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
 
     @Override
     protected T makeDefaultInstance() {

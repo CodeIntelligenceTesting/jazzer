@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.mutation.api;
 
 import com.google.errorprone.annotations.DoNotMock;
 import java.util.List;
+import java.util.function.Supplier;
 
 @DoNotMock("Use TestSupport#mockPseudoRandom instead")
 public interface PseudoRandom {
@@ -117,4 +118,19 @@ public interface PseudoRandom {
    * Fills the given array with random bytes.
    */
   void bytes(byte[] bytes);
+
+  /**
+   * Use the given supplier to produce a value with probability {@code 1/inverseSupplierFrequency},
+   * otherwise randomly return one of the given values.
+   *
+   * @return value produced by the supplier or one of the given values
+   */
+  <T> T pickValue(T value, T otherValue, Supplier<T> supplier, int inverseSupplierFrequency);
+
+  /**
+   * Returns a pseudorandom {@code long} value.
+   *
+   * @return a pseudorandom {@code long} value
+   */
+  long nextLong();
 }

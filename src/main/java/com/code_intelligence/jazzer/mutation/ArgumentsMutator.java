@@ -37,6 +37,7 @@ import com.code_intelligence.jazzer.mutation.support.InputStreamSupport.ReadExac
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.AnnotatedType;
@@ -131,6 +132,21 @@ public final class ArgumentsMutator {
 
   private static boolean isStatic(Method method) {
     return Modifier.isStatic(method.getModifiers());
+  }
+
+  /**
+   * @throws UncheckedIOException if the underlying InputStream throws
+   */
+  public void crossOver(InputStream data1, InputStream data2, long seed) {
+    try {
+      Object[] objects1 = productMutator.readExclusive(data1);
+      Object[] objects2 = productMutator.readExclusive(data2);
+      PseudoRandom prng = new SeededPseudoRandom(seed);
+      arguments = productMutator.crossOver(objects1, objects2, prng);
+      argumentsExposed = false;
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   /**
