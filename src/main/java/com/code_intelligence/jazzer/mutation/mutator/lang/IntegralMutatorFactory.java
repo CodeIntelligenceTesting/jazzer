@@ -62,6 +62,11 @@ final class IntegralMutatorFactory extends MutatorFactory {
         }
 
         @Override
+        public Byte crossOver(Byte value, Byte otherValue, PseudoRandom prng) {
+          return (byte) crossOverImpl(value, otherValue, prng);
+        }
+
+        @Override
         public Byte read(DataInputStream in) throws IOException {
           return (byte) forceInRange(in.readByte());
         }
@@ -87,6 +92,11 @@ final class IntegralMutatorFactory extends MutatorFactory {
             @Override
             public Short mutate(Short value, PseudoRandom prng) {
               return (short) mutateImpl(value, prng);
+            }
+
+            @Override
+            public Short crossOver(Short value, Short otherValue, PseudoRandom prng) {
+              return (short) crossOverImpl(value, otherValue, prng);
             }
 
             @Override
@@ -118,6 +128,11 @@ final class IntegralMutatorFactory extends MutatorFactory {
             }
 
             @Override
+            public Integer crossOver(Integer value, Integer otherValue, PseudoRandom prng) {
+              return (int) crossOverImpl(value, otherValue, prng);
+            }
+
+            @Override
             public Integer read(DataInputStream in) throws IOException {
               return (int) forceInRange(in.readInt());
             }
@@ -142,6 +157,11 @@ final class IntegralMutatorFactory extends MutatorFactory {
         @Override
         public Long mutate(Long value, PseudoRandom prng) {
           return mutateImpl(value, prng);
+        }
+
+        @Override
+        public Long crossOver(Long value, Long otherValue, PseudoRandom prng) {
+          return crossOverImpl(value, otherValue, prng);
         }
 
         @Override
@@ -266,6 +286,10 @@ final class IntegralMutatorFactory extends MutatorFactory {
             break;
         }
       } while (value == previousValue);
+      return value;
+    }
+
+    protected final long crossOverImpl(long value, long otherValue, PseudoRandom prng) {
       return value;
     }
 

@@ -23,6 +23,7 @@ import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import java.util.List;
 import java.util.SplittableRandom;
+import java.util.function.Supplier;
 
 public final class SeededPseudoRandom implements PseudoRandom {
   // We use SplittableRandom instead of Random since it doesn't incur unnecessary synchronization
@@ -266,5 +267,22 @@ public final class SeededPseudoRandom implements PseudoRandom {
 
   private static double zipf_pow_negative_q(double x) {
     return 1.0 / (x * x);
+  }
+
+  @Override
+  public <T> T pickValue(
+      T value, T otherValue, Supplier<T> supplier, int inverseSupplierFrequency) {
+    if (trueInOneOutOf(inverseSupplierFrequency)) {
+      return supplier.get();
+    } else if (choice()) {
+      return value;
+    } else {
+      return otherValue;
+    }
+  }
+
+  @Override
+  public long nextLong() {
+    return random.nextLong();
   }
 }

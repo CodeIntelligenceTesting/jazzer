@@ -19,7 +19,8 @@ package com.code_intelligence.jazzer.mutation.api;
 import com.google.errorprone.annotations.CheckReturnValue;
 
 /**
- * Knows how to initialize and mutate objects of type {@code T}.
+ * Knows how to initialize and mutate objects of type {@code T} and how to incorporate
+ * (cross over) parts of another object of the same type.
  *
  * <p>Certain types can be mutated fully in place. In such cases, prefer implementing the more
  * versatile {@link InPlaceMutator} instead.
@@ -60,4 +61,15 @@ public interface ValueMutator<T> extends Debuggable {
    * </ul>
    */
   @CheckReturnValue T mutate(T value, PseudoRandom prng);
+
+  /**
+   * Implementations
+   * <ul>
+   *   <li>MUST return a value that does not {@link Object#equals(Object)} the arguments (if
+   * possible);
+   *   <li>MAY mutate {@code value}.
+   *   <li>MUST NOT mutate {@code otherValue}.
+   * </ul>
+   */
+  @CheckReturnValue T crossOver(T value, T otherValue, PseudoRandom prng);
 }

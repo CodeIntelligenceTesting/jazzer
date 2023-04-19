@@ -100,6 +100,9 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
   }
 
   @Override
+  public void crossOverInPlace(Object[] reference, Object[] otherReference, PseudoRandom prng) {}
+
+  @Override
   public Object[] detach(Object[] value) {
     Object[] clone = new Object[mutators.length];
     for (int i = 0; i < mutators.length; i++) {

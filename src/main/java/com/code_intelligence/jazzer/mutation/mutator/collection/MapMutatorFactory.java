@@ -160,6 +160,10 @@ final class MapMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public void crossOverInPlace(Map<K, V> reference, Map<K, V> otherReference, PseudoRandom prng) {
+    }
+
+    @Override
     public Map<K, V> detach(Map<K, V> value) {
       return value.entrySet().stream().collect(toMap(entry
           -> keyMutator.detach(entry.getKey()),

@@ -136,6 +136,11 @@ public final class TestSupport {
     }
 
     @Override
+    public T crossOver(T value, T otherValue, PseudoRandom prng) {
+      return value;
+    }
+
+    @Override
     public String toDebugString(Predicate<Debuggable> isInCycle) {
       T initialValue = nextInitialValue();
       if (initialValue == null) {
@@ -298,6 +303,28 @@ public final class TestSupport {
       byte[] result = (byte[]) elements.poll();
       assertThat(result).hasLength(bytes.length);
       System.arraycopy(result, 0, bytes, 0, bytes.length);
+    }
+
+    @Override
+    public <T> T pickValue(
+        T value, T otherValue, Supplier<T> supplier, int inverseSupplierFrequency) {
+      assertThat(elements).isNotEmpty();
+      switch ((int) elements.poll()) {
+        case 0:
+          return value;
+        case 1:
+          return otherValue;
+        case 2:
+          return producer.get();
+        default:
+          throw new AssertionError("Invalid pickValue element");
+      }
+    }
+
+    @Override
+    public long nextLong() {
+      assertThat(elements).isNotEmpty();
+      return (long) elements.poll();
     }
 
     @Override
