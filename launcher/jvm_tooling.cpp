@@ -67,6 +67,8 @@ std::string getExecutablePath() {
   if (_NSGetExecutablePath(buf, &buf_size) != 0) {
 #elif defined(_WIN32)
   if (GetModuleFileNameA(NULL, buf, sizeof(buf)) == 0) {
+#elif defined(_ANDROID)
+  if (true) {
 #else  // Assume Linux
   if (readlink("/proc/self/exe", buf, sizeof(buf)) == -1) {
 #endif
