@@ -29,12 +29,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.Map;
@@ -249,30 +244,28 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
   private static Stream<Map.Entry<String, byte[]>> walkTestInputs(
       Path classInputsPath, Method testMethod) throws IOException {
     Path testInputsPath = classInputsPath.resolve(testMethod.getName());
-    if (!Files.exists(testInputsPath)) {
+    try {
+      return walkInputsInPath(testInputsPath, Integer.MAX_VALUE);
+    } catch (NoSuchFileException e) {
       return Stream.empty();
     }
-    return walkInputsInPath(testInputsPath, Integer.MAX_VALUE);
   }
 
   /**
    * Walks over the inputs for the class being tested. Does not recurse into subdirectories
    * @param path the path to search to files
-   * @return a stream of all files (without directories) within {@code path}. If {@code path} is
-   *     {@code null}, then an
-   * empty stream is returned.
+   * @return a stream of all files (without directories) within {@code path}. If {@code path} is not found, an empty
+   *    stream is returned.
    * @throws IOException can be thrown by the underlying call to {@link Files#find}
    */
   private static Stream<Map.Entry<String, byte[]>> walkClassInputs(Path path) throws IOException {
-    // this check is technically redundant thanks to the null check near the start of `walkInputs`
-    // however since these are only run once per tested method, I think it shouldn't degrade
-    // performance too much
-    if (!Files.exists(path)) {
+    try {
+      // using a depth of 1 will get all files within the given path but does not recurse into
+      // subdirectories
+      return walkInputsInPath(path, 1);
+    } catch (NoSuchFileException e) {
       return Stream.empty();
     }
-    // using a depth of 1 will get all files within the given path but does not recurse into
-    // subdirectories
-    return walkInputsInPath(path, 1);
   }
 
   /**
