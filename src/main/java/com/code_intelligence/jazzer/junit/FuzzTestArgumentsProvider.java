@@ -254,7 +254,8 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
   /**
    * Walks over the inputs for the class being tested. Does not recurse into subdirectories
    * @param path the path to search to files
-   * @return a stream of all files (without directories) within {@code path}. If {@code path} is not found, an empty
+   * @return a stream of all files (without directories) within {@code path}. If {@code path} is not
+   *     found, an empty
    *    stream is returned.
    * @throws IOException can be thrown by the underlying call to {@link Files#find}
    */
