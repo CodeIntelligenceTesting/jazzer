@@ -69,21 +69,21 @@ jobs:
         if: contains(matrix.os, 'mac')
         run: codesign --remove-signature "$JAVA_HOME"/bin/java
 
-      - name: Mount Bazel disk cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ matrix.cache }}
-          key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
-
+#      - name: Mount Bazel disk cache
+#        uses: actions/cache@v3
+#        with:
+#          path: ${{ matrix.cache }}
+#          key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
+#
       - name: Set Build Buddy config
         run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
         shell: bash
 
       - name: Build
-        run: bazelisk build ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} --build_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
+        run: bazelisk build ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} --build_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
 
       - name: Test
-        run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} --test_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
+        run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} --test_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
 
       - name: Copy Bazel log
         if: always()
