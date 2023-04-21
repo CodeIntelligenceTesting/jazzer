@@ -31,9 +31,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Queue;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -70,7 +71,13 @@ public final class TestSupport {
   }
 
   @CheckReturnValue
-  public static <T> SerializingMutator<T> mockMutator(T initialValue, Function<T, T> mutate) {
+  public static <T> SerializingMutator<T> mockMutator(T initialValue, UnaryOperator<T> mutate) {
+    return mockMutator(initialValue, mutate, value -> value);
+  }
+
+  @CheckReturnValue
+  public static <T> SerializingMutator<T> mockMutator(
+      T initialValue, UnaryOperator<T> mutate, UnaryOperator<T> detach) {
     return new AbstractMockMutator<T>() {
       @Override
       protected T nextInitialValue() {
@@ -80,6 +87,11 @@ public final class TestSupport {
       @Override
       public T mutate(T value, PseudoRandom prng) {
         return mutate.apply(value);
+      }
+
+      @Override
+      public T detach(T value) {
+        return detach.apply(value);
       }
     };
   }
@@ -292,5 +304,18 @@ public final class TestSupport {
     public void close() {
       assertThat(elements).isEmpty();
     }
+  }
+
+  public static <K, V> LinkedHashMap<K, V> asMap(Object... objs) {
+    LinkedHashMap<K, V> map = new LinkedHashMap<>();
+    for (int i = 0; i < objs.length; i += 2) {
+      map.put((K) objs[i], (V) objs[i + 1]);
+    }
+    return map;
+  }
+
+  @SafeVarargs
+  public static <T> ArrayList<T> asMutableList(T... objs) {
+    return stream(objs).collect(toCollection(ArrayList::new));
   }
 }

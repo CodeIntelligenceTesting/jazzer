@@ -31,10 +31,10 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "bazel_skylib",
-        sha256 = "74d544d96f4a5bb630d465ca8bbcfe231e3594e5aae57e1edbf17a6eb3ca2506",
+        sha256 = "b8a1527901774180afc798aeb28c4634bdccf19c4d98e7bdd1ce79d1fe9aaad7",
         urls = [
-            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz",
-            "https://github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz",
+            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.4.1/bazel-skylib-1.4.1.tar.gz",
+            "https://github.com/bazelbuild/bazel-skylib/releases/download/1.4.1/bazel-skylib-1.4.1.tar.gz",
         ],
     )
 
@@ -48,10 +48,9 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "rules_jvm_external",
-        sha256 = "6ebe13d95fc5549cc32b27d41c907426b16464c5aae893a163c7fe0c9051ec1d",
-        # TODO: Return to the next release.
-        strip_prefix = "rules_jvm_external-90280783fa4e74439b88191acafd99232ada61aa",
-        url = "https://github.com/bazelbuild/rules_jvm_external/archive/90280783fa4e74439b88191acafd99232ada61aa.tar.gz",
+        sha256 = "f86fd42a809e1871ca0aabe89db0d440451219c3ce46c58da240c7dcdc00125f",
+        strip_prefix = "rules_jvm_external-5.2",
+        url = "https://github.com/bazelbuild/rules_jvm_external/releases/download/5.2/rules_jvm_external-5.2.tar.gz",
     )
 
     maybe(
@@ -73,9 +72,9 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "com_github_johnynek_bazel_jar_jar",
-        sha256 = "c6410314975a86b454a822f9b2647879bf521483e5f2f0d480eb165f70844a39",
-        strip_prefix = "bazel_jar_jar-commit-55e3d3bf454641c496e592d77537cf8e65b241c0",
-        url = "https://github.com/CodeIntelligenceTesting/bazel_jar_jar/archive/refs/tags/commit-55e3d3bf454641c496e592d77537cf8e65b241c0.tar.gz",
+        sha256 = "85260ebdaf86cf0ce6d0d0f0a3268a09f628c815513141a6b99a023116523f96",
+        strip_prefix = "bazel_jar_jar-78c8c13ff437e8397ffe80c9a4c905376720a339",
+        url = "https://github.com/bazeltools/bazel_jar_jar/archive/78c8c13ff437e8397ffe80c9a4c905376720a339.tar.gz",
     )
 
     maybe(
@@ -107,36 +106,36 @@ def jazzer_dependencies():
     maybe(
         http_jar,
         name = "net_bytebuddy_byte_buddy_agent",
-        sha256 = "1bd4b7bc71001c3a4e1d6160e2f87784fba4f8c265e30b48a6beaeea1a2e29e1",
-        url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.12.17/byte-buddy-agent-1.12.17.jar",
+        sha256 = "fbd1ab3db43c6c78b8804908cb95b656517f5c82e7fde8d255d8bdceef412d70",
+        url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.4/byte-buddy-agent-1.14.4.jar",
     )
 
     maybe(
         http_jar,
         name = "org_ow2_asm_asm",
-        sha256 = "39d0e2b3dc45af65a09b097945750a94a126e052e124f93468443a1d0e15f381",
-        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm/9.4/asm-9.4.jar",
+        sha256 = "b62e84b5980729751b0458c534cf1366f727542bb8d158621335682a460f0353",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm/9.5/asm-9.5.jar",
     )
 
     maybe(
         http_jar,
         name = "org_ow2_asm_asm_commons",
-        sha256 = "0c128a9ec3f33c98959272f6d16cf14247b508f58951574bcdbd2b56d6326364",
-        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-commons/9.4/asm-commons-9.4.jar",
+        sha256 = "72eee9fbafb9de8d9463f20dd584a48ceeb7e5152ad4c987bfbe17dd4811c9ae",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-commons/9.5/asm-commons-9.5.jar",
     )
 
     maybe(
         http_jar,
         name = "org_ow2_asm_asm_tree",
-        sha256 = "c42d479cf24566a21eb20af7eeaeef4e86bdb4a886306cf72f483b65e75b2acf",
-        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-tree/9.4/asm-tree-9.4.jar",
+        sha256 = "3c33a648191079aeaeaeb7c19a49b153952f9e40fe86fbac5205554ddd9acd94",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-tree/9.5/asm-tree-9.5.jar",
     )
 
     maybe(
         http_jar,
         name = "com_github_jsqlparser_jsqlparser",
-        sha256 = "aed9ce32d0b35ea2a61c0fc418ba472a8e7d9789f026782310c9788a061fa9dc",
-        url = "https://repo1.maven.org/maven2/com/github/jsqlparser/jsqlparser/4.5/jsqlparser-4.5.jar",
+        sha256 = "61b02b8520fda987b7bc12878833b223234450e505de83c36e78abe6d69c0184",
+        url = "https://repo1.maven.org/maven2/com/github/jsqlparser/jsqlparser/4.6/jsqlparser-4.6.jar",
     )
 
     maybe(
@@ -170,9 +169,9 @@ def jazzer_dependencies():
             Label("//third_party:jacoco-make-probe-inserter-subclassable.patch"),
             Label("//third_party:jacoco-ignore-offline-instrumentation.patch"),
         ],
-        sha256 = "c603cfcc5f3d95ecda46fb369dc54c82a453bb6b640a605c3970607d10896725",
-        strip_prefix = "jacoco-0.8.8",
-        url = "https://github.com/jacoco/jacoco/archive/refs/tags/v0.8.8.tar.gz",
+        sha256 = "b6b90469db034dff01a8577d8e91da51bc40f328a988359028652771f20abf1d",
+        strip_prefix = "jacoco-0.8.9",
+        url = "https://github.com/jacoco/jacoco/archive/refs/tags/v0.8.9.tar.gz",
     )
 
     maybe(

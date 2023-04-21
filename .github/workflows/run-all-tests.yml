@@ -85,10 +85,17 @@ jobs:
       - name: Test
         run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} --test_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
 
+      - name: Copy Bazel log
+        if: always()
+        shell: bash
+        run: cp "$(readlink bazel-out)"/../../../java.log* .
+
       - name: Upload test logs
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: testlogs-${{ matrix.arch }}-${{ matrix.jdk }}
           # https://github.com/actions/upload-artifact/issues/92#issuecomment-711107236
-          path: bazel-testlogs*/**/test.log
+          path: |
+            bazel-testlogs*/**/test.log
+            java.log*
