@@ -82,6 +82,9 @@ jobs:
       - name: Build
         run: bazelisk build ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} --build_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
 
+      - name: Shutdown
+        run: bazelisk shutdown
+
       - name: Test
         run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} --test_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
 
