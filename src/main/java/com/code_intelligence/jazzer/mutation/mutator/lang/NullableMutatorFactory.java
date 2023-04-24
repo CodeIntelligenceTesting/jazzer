@@ -96,7 +96,17 @@ final class NullableMutatorFactory extends MutatorFactory {
 
     @Override
     public T crossOver(T value, T otherValue, PseudoRandom prng) {
-      return value;
+      // Prefer to cross over actual values and only return null if
+      // both are null or at INVERSE_FREQUENCY_NULL probability.
+      if (value != null && otherValue != null) {
+        return mutator.crossOver(value, otherValue, prng);
+      } else if (value == null && otherValue == null) {
+        return null;
+      } else if (prng.trueInOneOutOf(INVERSE_FREQUENCY_NULL)) {
+        return null;
+      } else {
+        return value != null ? value : otherValue;
+      }
     }
 
     @Override
