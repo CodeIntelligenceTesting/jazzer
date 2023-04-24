@@ -25,6 +25,7 @@ import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRando
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("unchecked")
 class BooleanMutatorTest {
   @Test
   void testPrimitive() {
@@ -60,5 +61,14 @@ class BooleanMutatorTest {
       bool = mutator.mutate(bool, prng);
     }
     assertThat(bool).isTrue();
+  }
+
+  @Test
+  void testCrossOver() {
+    SerializingMutator<Boolean> mutator = LangMutators.newFactory().createOrThrow(boolean.class);
+    try (MockPseudoRandom prng = mockPseudoRandom(true, false)) {
+      assertThat(mutator.crossOver(true, false, prng)).isTrue();
+      assertThat(mutator.crossOver(true, false, prng)).isFalse();
+    }
   }
 }

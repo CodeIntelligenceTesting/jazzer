@@ -63,7 +63,7 @@ final class BooleanMutatorFactory extends MutatorFactory {
 
     @Override
     public Boolean crossOver(Boolean value, Boolean otherValue, PseudoRandom prng) {
-      return value;
+      return prng.choice() ? value : otherValue;
     }
 
     @Override
