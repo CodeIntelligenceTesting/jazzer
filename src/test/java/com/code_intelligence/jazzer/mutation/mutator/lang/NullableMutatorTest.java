@@ -74,4 +74,27 @@ class NullableMutatorTest {
     SerializingMutator<Boolean> mutator = factory.createOrThrow(boolean.class);
     assertThat(mutator.toString()).isEqualTo("Boolean");
   }
+
+  @Test
+  void testCrossOver() {
+    SerializingMutator<Boolean> mutator =
+        new ChainedMutatorFactory(new NullableMutatorFactory(), new BooleanMutatorFactory())
+            .createOrThrow(Boolean.class);
+    try (MockPseudoRandom prng = mockPseudoRandom(true)) {
+      Boolean valueCrossedOver = mutator.crossOver(Boolean.TRUE, Boolean.TRUE, prng);
+      assertThat(valueCrossedOver).isNotNull();
+    }
+    try (MockPseudoRandom prng = mockPseudoRandom()) {
+      Boolean bothNull = mutator.crossOver(null, null, prng);
+      assertThat(bothNull).isNull();
+    }
+    try (MockPseudoRandom prng = mockPseudoRandom(false)) {
+      Boolean oneNotNull = mutator.crossOver(null, Boolean.TRUE, prng);
+      assertThat(oneNotNull).isNotNull();
+    }
+    try (MockPseudoRandom prng = mockPseudoRandom(true)) {
+      Boolean nullFrequency = mutator.crossOver(null, Boolean.TRUE, prng);
+      assertThat(nullFrequency).isNull();
+    }
+  }
 }
