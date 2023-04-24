@@ -61,4 +61,13 @@ class BooleanMutatorTest {
     }
     assertThat(bool).isTrue();
   }
+
+  @Test
+  void testCrossOver() {
+    SerializingMutator<Boolean> mutator = LangMutators.newFactory().createOrThrow(boolean.class);
+    try (MockPseudoRandom prng = mockPseudoRandom(true, false)) {
+      assertThat(mutator.crossOver(true, false, prng)).isTrue();
+      assertThat(mutator.crossOver(true, false, prng)).isFalse();
+    }
+  }
 }
