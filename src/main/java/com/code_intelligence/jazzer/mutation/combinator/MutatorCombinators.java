@@ -135,10 +135,8 @@ public final class MutatorCombinators {
       };
     }
 
+    final InPlaceMutator<T>[] mutators = Arrays.copyOf(partialMutators, partialMutators.length);
     return new InPlaceMutator<T>() {
-      private final InPlaceMutator<T>[] mutators =
-          Arrays.copyOf(partialMutators, partialMutators.length);
-
       @Override
       public void initInPlace(T reference, PseudoRandom prng) {
         for (InPlaceMutator<T> mutator : mutators) {
@@ -281,10 +279,8 @@ public final class MutatorCombinators {
   @SafeVarargs
   public static <T> InPlaceMutator<T> mutateSumInPlace(
       ToIntFunction<T> getState, InPlaceMutator<T>... perStateMutators) {
+    final InPlaceMutator<T>[] mutators = Arrays.copyOf(perStateMutators, perStateMutators.length);
     return new InPlaceMutator<T>() {
-      private final InPlaceMutator<T>[] mutators =
-          Arrays.copyOf(perStateMutators, perStateMutators.length);
-
       @Override
       public void initInPlace(T reference, PseudoRandom prng) {
         mutators[prng.indexIn(mutators)].initInPlace(reference, prng);
