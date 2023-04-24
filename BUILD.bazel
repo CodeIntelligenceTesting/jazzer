@@ -14,8 +14,10 @@ pkg_tar(
     mode = "0777",
     remap_paths = {
         "src/main/java/com/code_intelligence/jazzer/jazzer_standalone_deploy.jar": "jazzer_standalone.jar",
-        "launcher/jazzer": "jazzer",
-    },
+    } | select({
+        "@platforms//os:windows": {"launcher/jazzer": "jazzer.exe"},
+        "//conditions:default": {"launcher/jazzer": "jazzer"},
+    }),
     strip_prefix = select({
         "@platforms//os:windows": ".\\",
         "//conditions:default": "./",
