@@ -15,6 +15,7 @@
 #include "coverage_tracker.h"
 
 #include <jni.h>
+#include <stdint.h>
 
 #include <iostream>
 #include <vector>

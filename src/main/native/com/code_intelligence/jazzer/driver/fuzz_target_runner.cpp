@@ -23,6 +23,7 @@
 #include <dlfcn.h>
 #endif
 #include <jni.h>
+#include <stdint.h>
 
 #include <iostream>
 #include <limits>
