@@ -17,6 +17,7 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
@@ -25,9 +26,9 @@ import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored"})
 public class ByteArrayMutatorTest {
   /**
    * Some tests may set {@link LibFuzzerMutator#MOCK_SIZE_KEY} which can interfere with other tests
@@ -75,8 +76,7 @@ public class ByteArrayMutatorTest {
     try (MockPseudoRandom prng = mockPseudoRandom()) {
       // the ByteArrayMutator will limit the maximum size of the data requested from libfuzzer to
       // WithLength::max so setting the mock mutator to make it bigger will cause an exception
-      Assertions.assertThrows(
-          ArrayIndexOutOfBoundsException.class, () -> { byte[] arr2 = mutator.mutate(arr, prng); });
+      assertThrows(ArrayIndexOutOfBoundsException.class, () -> { mutator.mutate(arr, prng); });
     }
   }
 
@@ -88,10 +88,10 @@ public class ByteArrayMutatorTest {
     assertThat(mutator.toString()).isEqualTo("byte[]");
 
     try (MockPseudoRandom prng = mockPseudoRandom(10)) {
-      // init will call closedrange(min, max) and the mock prng will assert that the given value
+      // init will call closedRange(min, max) and the mock prng will assert that the given value
       // above is between those values which we want to fail here to show that we're properly
       // clamping the range
-      Assertions.assertThrows(AssertionError.class, () -> { byte[] arr = mutator.init(prng); });
+      assertThrows(AssertionError.class, () -> { mutator.init(prng); });
     }
   }
 
@@ -106,7 +106,7 @@ public class ByteArrayMutatorTest {
       // init will call closedrange(min, max) and the mock prng will assert that the given value
       // above is between those values which we want to fail here to show that we're properly
       // clamping the range
-      Assertions.assertThrows(AssertionError.class, () -> { byte[] arr = mutator.init(prng); });
+      assertThrows(AssertionError.class, () -> { mutator.init(prng); });
     }
   }
 
@@ -130,5 +130,60 @@ public class ByteArrayMutatorTest {
     }
     assertThat(arr).hasLength(5);
     assertThat(arr).isEqualTo(new byte[] {2, 4, 6, 0, 0});
+  }
+
+  @Test
+  void testCrossOver() {
+    SerializingMutator<byte[]> mutator =
+        (SerializingMutator<byte[]>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<byte @NotNull[]>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("byte[]");
+
+    byte[] value = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    byte[] otherValue = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+
+    byte[] crossedOver;
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // intersect arrays
+             0,
+             // out length
+             8,
+             // copy 3 from first
+             3,
+             // copy 1 from second
+             1,
+             // copy 1 from first,
+             1,
+             // copy 3 from second
+             3)) {
+      crossedOver = mutator.crossOver(value, otherValue, prng);
+      assertThat(crossedOver).isEqualTo(new byte[] {0, 1, 2, 10, 3, 11, 12, 13});
+    }
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // insert into action
+             1,
+             // copy size
+             3,
+             // from position
+             5,
+             // to position
+             2)) {
+      crossedOver = mutator.crossOver(value, otherValue, prng);
+      assertThat(crossedOver).isEqualTo(new byte[] {0, 1, 15, 16, 17, 2, 3, 4, 5, 6, 7, 8, 9});
+    }
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // overwrite action
+             2,
+             // to position
+             3,
+             // copy size
+             3,
+             // from position
+             4)) {
+      crossedOver = mutator.crossOver(value, otherValue, prng);
+      assertThat(crossedOver).isEqualTo(new byte[] {0, 1, 2, 14, 15, 16, 6, 7, 8, 9});
+    }
   }
 }
