@@ -22,7 +22,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import java.util.Arrays;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.example.JunitSpringWebApplication.HelloRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
