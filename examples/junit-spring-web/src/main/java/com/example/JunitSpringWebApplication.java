@@ -75,9 +75,7 @@ public class JunitSpringWebApplication {
 
   @PostMapping("/hello")
   public String postHello(@RequestBody HelloRequest request) {
-    if ("error".equals(request.name)) {
-      throw new Error("Error found!");
-    }
+    System.out.printf("RECEIVED NAME: %s\n", request.name);
     return request.prefix + request.name + request.suffix;
   }
 

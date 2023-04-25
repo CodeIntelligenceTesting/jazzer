@@ -22,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import java.util.Arrays;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.example.JunitSpringWebApplication.HelloRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -85,6 +86,15 @@ public class JunitSpringWebApplicationTests {
 
   @FuzzTest(maxDuration = "10s")
   public void fuzzTestWithDtoShouldFail(HelloRequest helloRequest) throws Exception {
+    if (!beforeCalled) {
+      throw new RuntimeException("BeforeEach was not called");
+    }
+    if (helloRequest == null || helloRequest.name == null) {
+      System.out.println("NULL");
+    }
+    else {
+      System.out.println(Arrays.toString(helloRequest.name.getBytes()));
+    }
     Assumptions.assumeTrue(
         helloRequest != null && helloRequest.name != null && !helloRequest.name.isBlank());
 
