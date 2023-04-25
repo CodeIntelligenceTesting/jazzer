@@ -472,6 +472,30 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "ExperimentalMutatorDynamicProtoFuzzer",
+    srcs = ["src/test/java/com/example/ExperimentalMutatorDynamicProtoFuzzer.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
+    fuzzer_args = [
+        "--experimental_mutator",
+        "--instrumentation_includes=com.example.**",
+        "--custom_hook_includes=com.example.**",
+    ] + select({
+        # Limit runs to catch regressions in mutator efficiency and speed up test runs.
+        "@platforms//os:linux": ["-runs=400000"],
+        # TODO: Investigate why this test takes far more runs on macOS, with Windows also being
+        #       significantly worse than Linux.
+        "//conditions:default": ["-runs=1200000"],
+    }),
+    target_class = "com.example.ExperimentalMutatorDynamicProtoFuzzer",
+    verify_crash_reproducer = False,
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation/proto",
+        "@com_google_protobuf//java/core",
+    ],
+)
+
 sh_test(
     name = "jazzer_from_path_test",
     srcs = ["src/test/shell/jazzer_from_path_test.sh"],

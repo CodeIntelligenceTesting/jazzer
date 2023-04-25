@@ -27,14 +27,18 @@ import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toMap;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.proto.DescriptorSource;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
+import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -98,5 +102,62 @@ final class TypeLibrary {
       throw new IllegalStateException(
           format(getDefaultInstance + " isn't accessible or threw an exception"), e);
     }
+  }
+
+  static DynamicMessage getDefaultInstance(DescriptorSource descriptorSource) {
+    String[] parts = descriptorSource.value().split("#");
+    if (parts.length != 2) {
+      throw new IllegalArgumentException(format(
+          "Expected @DescriptorSource(\"%s\") to specify a fully-qualified field name (e.g. com.example.MyClass#MY_FIELD)",
+          descriptorSource.value()));
+    }
+
+    Class<?> clazz;
+    try {
+      clazz = Class.forName(parts[0]);
+    } catch (ClassNotFoundException e) {
+      throw new IllegalArgumentException(
+          format("Failed to find class '%s' specified by @DescriptorSource(\"%s\")", parts[0],
+              descriptorSource.value()),
+          e);
+    }
+
+    Field field;
+    try {
+      field = clazz.getDeclaredField(parts[1]);
+      field.setAccessible(true);
+    } catch (NoSuchFieldException e) {
+      throw new IllegalArgumentException(
+          format("Failed to find field specified by @DescriptorSource(\"%s\")",
+              descriptorSource.value()),
+          e);
+    }
+    if (!Modifier.isStatic(field.getModifiers())) {
+      throw new IllegalArgumentException(
+          format("Expected field specified by @DescriptorSource(\"%s\") to be static",
+              descriptorSource.value()));
+    }
+    if (!Modifier.isFinal(field.getModifiers())) {
+      throw new IllegalArgumentException(
+          format("Expected field specified by @DescriptorSource(\"%s\") to be final",
+              descriptorSource.value()));
+    }
+    if (field.getType() != Descriptor.class) {
+      throw new IllegalArgumentException(
+          format("Expected field specified by @DescriptorSource(\"%s\") to have type %s, got %s",
+              descriptorSource.value(), Descriptor.class.getName(), field.getType().getName()));
+    }
+
+    Descriptor descriptor;
+    try {
+      descriptor = (Descriptor) field.get(null);
+    } catch (IllegalAccessException e) {
+      throw new IllegalArgumentException(
+          format("Failed to access field specified by @DescriptorSource(\"%s\")",
+              descriptorSource.value()),
+          e);
+    }
+
+    return DynamicMessage.getDefaultInstance(descriptor);
   }
 }
