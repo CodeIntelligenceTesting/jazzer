@@ -116,7 +116,10 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
     public byte[] mutate(byte[] value, PseudoRandom prng) {
       int maxLengthIncrease = maxLength - value.length;
       byte[] mutated = LibFuzzerMutator.mutateDefault(value, maxLengthIncrease);
+      return enforceLength(mutated);
+    }
 
+    private byte[] enforceLength(byte[] mutated) {
       // if the mutated array libfuzzer returns is too long or short, we truncate or extend it
       // respectively. if we extend it, then copyOf will fill leftover bytes with 0
       if (mutated.length > maxLength) {
@@ -130,6 +133,89 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
 
     @Override
     public byte[] crossOver(byte[] value, byte[] otherValue, PseudoRandom prng) {
+      // Passed in values are expected to already honor the min/max length constraints.
+      // As there does not seem to be an easy way to call libFuzzer's internal cross over
+      // algorithm, it is re-implemented in native Java. The algorithm is based on:
+      // https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/fuzzer/FuzzerMutate.cpp#L440
+      // https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/fuzzer/FuzzerCrossOver.cpp#L19
+      //
+
+      if (value.length == 0 || otherValue.length == 0) {
+        return value;
+      }
+
+      // TODO: Measure if this is fast enough.
+      byte[] out = null;
+      while (out == null) {
+        switch (prng.indexIn(3)) {
+          case 0:
+            out = intersect(value, otherValue, prng);
+            break;
+          case 1:
+            out = insertPart(value, otherValue, prng);
+            break;
+          case 2:
+            out = overwritePart(value, otherValue, prng);
+            break;
+          default:
+            throw new AssertionError("Invalid cross over function.");
+        }
+      }
+      return enforceLength(out);
+    }
+
+    private static byte[] intersect(byte[] value, byte[] otherValue, PseudoRandom prng) {
+      int maxOutSize = prng.closedRange(0, Math.min(value.length, otherValue.length));
+      byte[] out = new byte[maxOutSize];
+      int outPos = 0;
+      int valuePos = 0;
+      int otherValuePos = 0;
+      boolean usingFirstValue = true;
+      while (outPos < out.length) {
+        if (usingFirstValue && valuePos < value.length) {
+          int extraSize = rndArraycopy(value, valuePos, out, outPos, prng);
+          outPos += extraSize;
+          valuePos += extraSize;
+        } else if (!usingFirstValue && otherValuePos < otherValue.length) {
+          int extraSize = rndArraycopy(otherValue, otherValuePos, out, outPos, prng);
+          outPos += extraSize;
+          otherValuePos += extraSize;
+        }
+        usingFirstValue = !usingFirstValue;
+      }
+      return out;
+    }
+
+    private static int rndArraycopy(
+        byte[] val, int valPos, byte[] out, int outPos, PseudoRandom prng) {
+      int outSizeLeft = out.length - outPos;
+      int inSizeLeft = val.length - valPos;
+      int maxExtraSize = Math.min(outSizeLeft, inSizeLeft);
+      int extraSize = prng.closedRange(0, maxExtraSize);
+      System.arraycopy(val, valPos, out, outPos, extraSize);
+      return extraSize;
+    }
+
+    private static byte[] insertPart(byte[] value, byte[] otherValue, PseudoRandom prng) {
+      int copySize = prng.closedRange(1, otherValue.length);
+      int f = otherValue.length - copySize;
+      int fromPos = f == 0 ? 0 : prng.indexIn(f);
+      int toPos = prng.indexIn(value.length);
+      int tailSize = value.length - toPos;
+
+      byte[] out = new byte[value.length + copySize];
+      System.arraycopy(value, 0, out, 0, toPos);
+      System.arraycopy(otherValue, fromPos, out, toPos, copySize);
+      System.arraycopy(value, toPos, out, toPos + copySize, tailSize);
+      return out;
+    }
+
+    private static byte[] overwritePart(byte[] value, byte[] otherValue, PseudoRandom prng) {
+      int toPos = prng.indexIn(value.length);
+      int copySize = Math.min(prng.closedRange(1, value.length - toPos), otherValue.length);
+      int f = otherValue.length - copySize;
+      int fromPos = f == 0 ? 0 : prng.indexIn(f);
+      System.arraycopy(otherValue, fromPos, value, toPos, copySize);
       return value;
     }
 
