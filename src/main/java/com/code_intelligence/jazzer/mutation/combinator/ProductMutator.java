@@ -34,7 +34,11 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.function.Predicate;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
+  // Inverse frequency in which product type mutators should be used in cross over.
+  private final static int INVERSE_PICK_VALUE_SUPPLIER_FREQUENCY = 100;
+
   private final SerializingMutator[] mutators;
 
   ProductMutator(SerializingMutator[] mutators) {
@@ -100,7 +104,21 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
   }
 
   @Override
-  public void crossOverInPlace(Object[] reference, Object[] otherReference, PseudoRandom prng) {}
+  public void crossOverInPlace(Object[] reference, Object[] otherReference, PseudoRandom prng) {
+    for (int i = 0; i < mutators.length; i++) {
+      SerializingMutator mutator = mutators[i];
+      Object value = reference[i];
+      Object otherValue = otherReference[i];
+      Object crossedOver = prng.pickValue(value, otherValue,
+          () -> mutator.crossOver(value, otherValue, prng), INVERSE_PICK_VALUE_SUPPLIER_FREQUENCY);
+      if (crossedOver == otherReference) {
+        // If otherReference was picked, it needs to be detached as mutating
+        // it is prohibited in cross over.
+        crossedOver = mutator.detach(crossedOver);
+      }
+      reference[i] = crossedOver;
+    }
+  }
 
   @Override
   public Object[] detach(Object[] value) {
