@@ -38,6 +38,7 @@ import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.annotation.proto.AnySource;
+import com.code_intelligence.jazzer.mutation.annotation.proto.DescriptorSource;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -63,8 +64,10 @@ import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedIntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.StringField3;
 import com.google.protobuf.Any;
+import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
+import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import java.io.ByteArrayInputStream;
@@ -89,6 +92,9 @@ public class StressTest {
   private static final int NUM_INITS = 500;
   private static final int NUM_MUTATE_PER_INIT = 100;
   private static final double MANY_DISTINCT_ELEMENTS_RATIO = 0.5;
+
+  @SuppressWarnings("unused")
+  static final Descriptor TEST_PROTOBUF_DESCRIPTOR = TestProtobuf.getDescriptor();
 
   private enum TestEnumTwo { A, B }
 
@@ -300,6 +306,13 @@ public class StressTest {
             "{Builder via List<Float>} -> Message", distinctElementsRatio(0.20),
             distinctElementsRatio(0.9), emptyList()),
         arguments(new TypeHolder<@NotNull TestProtobuf>() {}.annotatedType(),
+            "{Builder.Nullable<Boolean>, Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>, Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>, Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>, Builder.Nullable<{Builder.Nullable<Integer>, Builder via List<Integer>} -> Message>, Builder via List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>, Builder via List<(cycle) -> Message>, Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
+            manyDistinctElements(), manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull @DescriptorSource(
+                "com.code_intelligence.jazzer.mutation.mutator.StressTest#TEST_PROTOBUF_DESCRIPTOR")
+                DynamicMessage>() {
+            }.annotatedType(),
             "{Builder.Nullable<Boolean>, Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>, Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>, Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>, Builder.Nullable<{Builder.Nullable<Integer>, Builder via List<Integer>} -> Message>, Builder via List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>, Builder via List<(cycle) -> Message>, Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
             manyDistinctElements(), manyDistinctElements()),
         arguments(

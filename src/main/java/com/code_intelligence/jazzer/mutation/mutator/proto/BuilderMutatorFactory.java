@@ -44,6 +44,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 import com.code_intelligence.jazzer.mutation.annotation.proto.AnySource;
+import com.code_intelligence.jazzer.mutation.annotation.proto.DescriptorSource;
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
@@ -325,8 +326,19 @@ public final class BuilderMutatorFactory extends MutatorFactory {
         return Optional.empty();
       }
 
-      Message defaultInstance =
-          getDefaultInstance((Class<? extends Message>) builderClass.getEnclosingClass());
+      Message defaultInstance;
+      if (builderClass == DynamicMessage.Builder.class) {
+        DescriptorSource descriptorSource = type.getAnnotation(DescriptorSource.class);
+        if (descriptorSource == null) {
+          throw new IllegalArgumentException(
+              "To mutate a dynamic message, add a @DescriptorSource annotation specifying the fully qualified method name of a static method returning a Descriptor");
+        }
+        defaultInstance = getDefaultInstance(descriptorSource);
+      } else {
+        defaultInstance =
+            getDefaultInstance((Class<? extends Message>) builderClass.getEnclosingClass());
+      }
+
       return Optional.of(
           makeBuilderMutator(factory, defaultInstance, type.getDeclaredAnnotations()));
     });
@@ -400,13 +412,12 @@ public final class BuilderMutatorFactory extends MutatorFactory {
         return false;
       }
       CacheKey cacheKey = (CacheKey) o;
-      return Objects.equals(descriptor, cacheKey.descriptor)
-          && Objects.equals(anySource, cacheKey.anySource);
+      return descriptor == cacheKey.descriptor && Objects.equals(anySource, cacheKey.anySource);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(descriptor, anySource);
+      return 31 * System.identityHashCode(descriptor) + Objects.hashCode(anySource);
     }
   }
 }
