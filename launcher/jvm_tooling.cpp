@@ -64,16 +64,21 @@ std::string getExecutablePath() {
   char buf[655536];
 #if defined(__APPLE__)
   uint32_t buf_size = sizeof(buf);
-  if (_NSGetExecutablePath(buf, &buf_size) != 0) {
+  uint32_t read_bytes = buf_size - 1;
+  bool failed = (_NSGetExecutablePath(buf, &buf_size) != 0);
 #elif defined(_WIN32)
-  if (GetModuleFileNameA(NULL, buf, sizeof(buf)) == 0) {
+  DWORD read_bytes = GetModuleFileNameA(NULL, buf, sizeof(buf));
+  bool failed = (read_bytes == 0);
 #elif defined(_ANDROID)
-  if (true) {
+  bool failed = true;
 #else  // Assume Linux
-  if (readlink("/proc/self/exe", buf, sizeof(buf)) == -1) {
+  ssize_t read_bytes = readlink("/proc/self/exe", buf, sizeof(buf));
+  bool failed = (read_bytes == -1);
 #endif
+  if (failed) {
     return "";
   }
+  buf[read_bytes] = '\0';
   return {buf};
 }
 
