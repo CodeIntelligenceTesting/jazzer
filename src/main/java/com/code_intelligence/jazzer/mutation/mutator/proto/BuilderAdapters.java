@@ -19,7 +19,7 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 import static java.util.Collections.singletonList;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
-import com.google.protobuf.MapEntry;
+import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -163,10 +163,12 @@ final class BuilderAdapters {
 
   static <T extends Builder, K, V> Map<K, V> getMapField(T builder, FieldDescriptor field) {
     int size = builder.getRepeatedFieldCount(field);
+    FieldDescriptor keyField = field.getMessageType().getFields().get(0);
+    FieldDescriptor valueField = field.getMessageType().getFields().get(1);
     HashMap<K, V> map = new HashMap<>(size);
     for (int i = 0; i < size; i++) {
-      MapEntry<K, V> entry = (MapEntry) builder.getRepeatedField(field, i);
-      map.put(entry.getKey(), entry.getValue());
+      Message entry = (Message) builder.getRepeatedField(field, i);
+      map.put((K) entry.getField(keyField), (V) entry.getField(valueField));
     }
     return map;
   }
