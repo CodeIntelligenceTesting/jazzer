@@ -58,7 +58,7 @@ abstract class PostComposedMutator<T, R> extends SerializingMutator<R> {
 
   @Override
   public R crossOver(R value, R otherValue, PseudoRandom prng) {
-    return value;
+    return map.apply(mutator.crossOver(inverse.apply(value), inverse.apply(otherValue), prng));
   }
 
   @Override

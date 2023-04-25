@@ -50,8 +50,8 @@ import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
+import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.jazzer.mutation.api.ValueMutator;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors.Descriptor;
@@ -91,23 +91,25 @@ public final class BuilderMutatorFactory extends MutatorFactory {
 
     InPlaceMutator<T> mutator;
     if (field.isMapField()) {
-      ValueMutator<Map> underlyingMutator =
-          (ValueMutator<Map>) factory.createInPlaceOrThrow(typeToMutate);
+      SerializingInPlaceMutator<Map> underlyingMutator =
+          (SerializingInPlaceMutator<Map>) factory.createInPlaceOrThrow(typeToMutate);
       mutator = mutateProperty(builder
           -> getMapField(builder, field),
           underlyingMutator, (builder, value) -> setMapField(builder, field, value));
     } else if (field.isRepeated()) {
-      InPlaceMutator<List<U>> underlyingMutator =
-          (InPlaceMutator<List<U>>) factory.createInPlaceOrThrow(typeToMutate);
+      SerializingInPlaceMutator<List<U>> underlyingMutator =
+          (SerializingInPlaceMutator<List<U>>) factory.createInPlaceOrThrow(typeToMutate);
       mutator =
           mutateViaView(builder -> makeMutableRepeatedFieldView(builder, field), underlyingMutator);
     } else if (field.hasPresence()) {
-      ValueMutator<U> underlyingMutator = (ValueMutator<U>) factory.createOrThrow(typeToMutate);
+      SerializingMutator<U> underlyingMutator =
+          (SerializingMutator<U>) factory.createOrThrow(typeToMutate);
       mutator = mutateProperty(builder
           -> getPresentFieldOrNull(builder, field),
           underlyingMutator, (builder, value) -> setFieldWithPresence(builder, field, value));
     } else {
-      ValueMutator<U> underlyingMutator = (ValueMutator<U>) factory.createOrThrow(typeToMutate);
+      SerializingMutator<U> underlyingMutator =
+          (SerializingMutator<U>) factory.createOrThrow(typeToMutate);
       mutator = mutateProperty(builder
           -> (U) builder.getField(field),
           underlyingMutator, (builder, value) -> builder.setField(field, value));

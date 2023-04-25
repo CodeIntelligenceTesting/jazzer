@@ -22,6 +22,7 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toCollection;
 
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
+import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
@@ -35,6 +36,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Queue;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -115,6 +119,78 @@ public final class TestSupport {
         return detach.apply(value);
       }
     };
+  }
+
+  @CheckReturnValue
+  public static <T> SerializingMutator<T> mockCrossOver(BiFunction<T, T, T> getCrossOverValue) {
+    return new AbstractMockMutator<T>() {
+      @Override
+      protected T nextInitialValue() {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public T mutate(T value, PseudoRandom prng) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public T crossOver(T value, T otherValue, PseudoRandom prng) {
+        return getCrossOverValue.apply(value, otherValue);
+      }
+
+      @Override
+      public T detach(T value) {
+        return value;
+      }
+    };
+  }
+
+  @CheckReturnValue
+  public static <T> InPlaceMutator<T> mockCrossOverInPlace(BiConsumer<T, T> crossOverInPlace) {
+    return new AbstractMockInPlaceMutator<T>() {
+      @Override
+      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
+        crossOverInPlace.accept(reference, otherReference);
+      }
+
+      @Override
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return "CrossOverInPlaceMockMutator";
+      }
+    };
+  }
+
+  @CheckReturnValue
+  public static <T> InPlaceMutator<T> mockInitInPlace(Consumer<T> setInitialValues) {
+    return new AbstractMockInPlaceMutator<T>() {
+      @Override
+      public void initInPlace(T reference, PseudoRandom prng) {
+        setInitialValues.accept(reference);
+      }
+
+      @Override
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return "InitInPlaceMockMutator";
+      }
+    };
+  }
+
+  private static abstract class AbstractMockInPlaceMutator<T> implements InPlaceMutator<T> {
+    @Override
+    public void initInPlace(T reference, PseudoRandom prng) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void mutateInPlace(T reference, PseudoRandom prng) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
+      throw new UnsupportedOperationException();
+    }
   }
 
   private static abstract class AbstractMockMutator<T> extends SerializingMutator<T> {
@@ -315,7 +391,7 @@ public final class TestSupport {
         case 1:
           return otherValue;
         case 2:
-          return producer.get();
+          return supplier.get();
         default:
           throw new AssertionError("Invalid pickValue element");
       }
@@ -333,6 +409,7 @@ public final class TestSupport {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public static <K, V> LinkedHashMap<K, V> asMap(Object... objs) {
     LinkedHashMap<K, V> map = new LinkedHashMap<>();
     for (int i = 0; i < objs.length; i += 2) {

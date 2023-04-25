@@ -28,7 +28,6 @@ import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.jazzer.mutation.api.ValueMutator;
 import com.google.errorprone.annotations.ImmutableTypeParameter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -45,10 +44,13 @@ import java.util.function.ToIntFunction;
 import net.jodah.typetools.TypeResolver;
 
 public final class MutatorCombinators {
+  // Inverse frequency in which value mutator should be used in cross over.
+  private final static int INVERSE_PICK_VALUE_SUPPLIER_FREQUENCY = 100;
+
   private MutatorCombinators() {}
 
   public static <T, R> InPlaceMutator<T> mutateProperty(
-      Function<T, R> getter, ValueMutator<R> mutator, BiConsumer<T, R> setter) {
+      Function<T, R> getter, SerializingMutator<R> mutator, BiConsumer<T, R> setter) {
     requireNonNull(getter);
     requireNonNull(mutator);
     requireNonNull(setter);
@@ -64,7 +66,24 @@ public final class MutatorCombinators {
       }
 
       @Override
-      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
+      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
+        // Most of the time cross over of properties should use one of the
+        // given values and only seldom use the property type specific cross
+        // over function. Other mutator combinators delegate to this one and
+        // don't cross over values themselves.
+        R referenceValue = getter.apply(reference);
+        R otherReferenceValue = getter.apply(otherReference);
+        R crossedOver = prng.pickValue(referenceValue, otherReferenceValue,
+            ()
+                -> mutator.crossOver(referenceValue, otherReferenceValue, prng),
+            INVERSE_PICK_VALUE_SUPPLIER_FREQUENCY);
+        if (crossedOver == otherReferenceValue) {
+          // If otherReference was picked, it needs to be detached as mutating
+          // it is prohibited in cross over.
+          crossedOver = mutator.detach(crossedOver);
+        }
+        setter.accept(reference, crossedOver);
+      }
 
       @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
@@ -96,7 +115,9 @@ public final class MutatorCombinators {
       }
 
       @Override
-      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
+      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
+        mutator.crossOverInPlace(map.apply(reference), map.apply(otherReference), prng);
+      }
 
       @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
@@ -159,7 +180,11 @@ public final class MutatorCombinators {
       }
 
       @Override
-      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
+      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
+        for (InPlaceMutator<T> mutator : mutators) {
+          mutator.crossOverInPlace(reference, otherReference, prng);
+        }
+      }
 
       @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
@@ -173,27 +198,6 @@ public final class MutatorCombinators {
         return Debuggable.getDebugString(this);
       }
     };
-  }
-
-  /**
-   * Assembles the parameters into a full implementation of {@link SerializingInPlaceMutator<T>}:
-   *
-   * @param registerSelf        a callback that will receive the uninitialized mutator instance
-   *                            before {@code lazyMutator} is invoked. For simple cases this can
-   *                            just do nothing, but it is needed to implement mutators for
-   *                            structures that are self-referential (e.g. Protobuf message A having
-   *                            a field of type A).
-   * @param makeDefaultInstance constructs a mutable default instance of {@code T}
-   * @param serializer          implementation of the {@link Serializer<T>} part
-   * @param lazyMutator         supplies the implementation of the {@link InPlaceMutator<T>} part.
-   *                            This is guaranteed to be invoked exactly once and only after
-   *                            {@code registerSelf}.
-   */
-  public static <T> SerializingInPlaceMutator<T> assemble(
-      Consumer<SerializingInPlaceMutator<T>> registerSelf, Supplier<T> makeDefaultInstance,
-      Serializer<T> serializer, Supplier<InPlaceMutator<T>> lazyMutator) {
-    return new DelegatingSerializingInPlaceMutator<>(
-        registerSelf, makeDefaultInstance, serializer, lazyMutator);
   }
 
   public static <T, R> SerializingMutator<R> mutateThenMap(
@@ -267,7 +271,7 @@ public final class MutatorCombinators {
 
       @Override
       public Integer crossOver(Integer value, Integer otherValue, PseudoRandom prng) {
-        return value;
+        return prng.choice() ? value : otherValue;
       }
 
       @Override
@@ -281,6 +285,7 @@ public final class MutatorCombinators {
    * Combines multiple mutators for potentially different types into one that mutates an
    * {@code Object[]} containing one instance per mutator.
    */
+  @SuppressWarnings("rawtypes")
   public static ProductMutator mutateProduct(SerializingMutator... mutators) {
     return new ProductMutator(mutators);
   }
@@ -319,7 +324,22 @@ public final class MutatorCombinators {
       }
 
       @Override
-      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
+      public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
+        // Try to cross over in current state and leave state changes to the mutate step.
+        int currentState = getState.applyAsInt(reference);
+        int otherState = getState.applyAsInt(otherReference);
+        if (currentState == -1) {
+          // If reference is not initialized to a concrete state yet, try to do so in
+          // the state of other reference, as that's at least some progress.
+          if (otherState == -1) {
+            // If both states are indeterminate, cross over can not be performed.
+            return;
+          }
+          mutators[otherState].initInPlace(reference, prng);
+        } else if (currentState == otherState) {
+          mutators[currentState].crossOverInPlace(reference, otherReference, prng);
+        }
+      }
 
       @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
@@ -401,6 +421,27 @@ public final class MutatorCombinators {
     };
   }
 
+  /**
+   * Assembles the parameters into a full implementation of {@link SerializingInPlaceMutator<T>}:
+   *
+   * @param registerSelf        a callback that will receive the uninitialized mutator instance
+   *                            before {@code lazyMutator} is invoked. For simple cases this can
+   *                            just do nothing, but it is needed to implement mutators for
+   *                            structures that are self-referential (e.g. Protobuf message A having
+   *                            a field of type A).
+   * @param makeDefaultInstance constructs a mutable default instance of {@code T}
+   * @param serializer          implementation of the {@link Serializer<T>} part
+   * @param lazyMutator         supplies the implementation of the {@link InPlaceMutator<T>} part.
+   *                            This is guaranteed to be invoked exactly once and only after
+   *                            {@code registerSelf}.
+   */
+  public static <T> SerializingInPlaceMutator<T> assemble(
+      Consumer<SerializingInPlaceMutator<T>> registerSelf, Supplier<T> makeDefaultInstance,
+      Serializer<T> serializer, Supplier<InPlaceMutator<T>> lazyMutator) {
+    return new DelegatingSerializingInPlaceMutator<>(
+        registerSelf, makeDefaultInstance, serializer, lazyMutator);
+  }
+
   private static class DelegatingSerializingInPlaceMutator<T> extends SerializingInPlaceMutator<T> {
     private final Supplier<T> makeDefaultInstance;
     private final Serializer<T> serializer;
@@ -429,7 +470,9 @@ public final class MutatorCombinators {
     }
 
     @Override
-    public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
+    public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
+      mutator.crossOverInPlace(reference, otherReference, prng);
+    }
 
     @Override
     protected T makeDefaultInstance() {
