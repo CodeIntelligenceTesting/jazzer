@@ -65,7 +65,7 @@ std::string getExecutablePath() {
 #if defined(__APPLE__)
   uint32_t buf_size = sizeof(buf);
   ssize_t read_bytes = buf_size - 1;
-  bool failed _NSGetExecutablePath(buf, &buf_size) != 0;
+  bool failed = (_NSGetExecutablePath(buf, &buf_size) != 0);
 #elif defined(_WIN32)
   ssize_t read_bytes = GetModuleFileNameA(NULL, buf, sizeof(buf));
   bool failed = (read_bytes == 0);
