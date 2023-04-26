@@ -214,12 +214,9 @@ class RuntimeInstrumentor(
         }
         return ClassInstrumentor(internalClassName, bytecode).run {
             if (fullInstrumentation) {
-                // Hook instrumentation must be performed after data flow tracing as the injected
-                // bytecode would trigger the GEP callbacks for byte[]. Coverage instrumentation
-                // must be performed after hook instrumentation as the injected bytecode would
-                // trigger the GEP callbacks for ByteBuffer.
-                traceDataFlow(instrumentationTypes)
-                hooks(includedHooks + customHooks, classWithHooksEnabledField)
+                // Coverage instrumentation must be performed before any other code updates
+                // or there will be additional coverage points injected if any calls are inserted
+                // and JaCoCo will produce a broken coverage report.
                 coverageIdSynchronizer.withIdForClass(internalClassName) { firstId ->
                     coverage(firstId).also { actualNumEdgeIds ->
                         CoverageRecorder.recordInstrumentedClass(
@@ -230,6 +227,10 @@ class RuntimeInstrumentor(
                         )
                     }
                 }
+                // Hook instrumentation must be performed after data flow tracing as the injected
+                // bytecode would trigger the GEP callbacks for byte[].
+                traceDataFlow(instrumentationTypes)
+                hooks(includedHooks + customHooks, classWithHooksEnabledField)
             } else {
                 hooks(customHooks, classWithHooksEnabledField)
             }
