@@ -14,6 +14,9 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import static com.code_intelligence.jazzer.junit.Utils.getClassPathBasedInstrumentationFilter;
+import static com.code_intelligence.jazzer.junit.Utils.getLegacyInstrumentationFilter;
+
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -48,7 +51,11 @@ class AgentConfigurator {
     String instrumentationFilter =
         executionRequest.getConfigurationParameter("jazzer.instrument")
             .orElseGet(
-                () -> Utils.defaultInstrumentationFilter(executionRequest.getRequiredTestClass()));
+                ()
+                    -> getClassPathBasedInstrumentationFilter(System.getProperty("java.class.path"))
+                           .orElseGet(()
+                                          -> getLegacyInstrumentationFilter(
+                                              executionRequest.getRequiredTestClass())));
     String filter = String.join(File.pathSeparator, instrumentationFilter.split(","));
     System.setProperty("jazzer.custom_hook_includes", filter);
     System.setProperty("jazzer.instrumentation_includes", filter);

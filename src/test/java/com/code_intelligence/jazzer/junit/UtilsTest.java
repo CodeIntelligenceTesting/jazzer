@@ -20,11 +20,18 @@ import static com.code_intelligence.jazzer.junit.Utils.getMarkedInstance;
 import static com.code_intelligence.jazzer.junit.Utils.isMarkedInstance;
 import static com.code_intelligence.jazzer.junit.Utils.isMarkedInvocation;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth8.assertThat;
+import static java.nio.file.Files.createDirectories;
+import static java.nio.file.Files.createFile;
 import static java.util.Arrays.stream;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.AbstractList;
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -38,12 +45,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public class UtilsTest implements InvocationInterceptor {
+  @TempDir Path temp;
+
   @Test
   void testDurationStringToSeconds() {
     assertThat(durationStringToSeconds("1m")).isEqualTo(60);
@@ -97,5 +107,45 @@ public class UtilsTest implements InvocationInterceptor {
     assertThat(isMarkedInvocation(invocationContext)).isEqualTo(argumentsExpectedToBeMarked);
     argumentsExpectedToBeMarked = !argumentsExpectedToBeMarked;
     invocation.proceed();
+  }
+
+  @Test
+  public void testGetClassPathBasedInstrumentationFilter() throws IOException {
+    Path firstDir = createDirectories(temp.resolve("first_dir"));
+    Path orgExample = createDirectories(firstDir.resolve("org").resolve("example"));
+    createFile(orgExample.resolve("Application.class"));
+
+    Path nonExistentDir = temp.resolve("does not exist");
+
+    Path secondDir = createDirectories(temp.resolve("second").resolve("dir"));
+    createFile(secondDir.resolve("Root.class"));
+    Path comExampleProject =
+        createDirectories(secondDir.resolve("com").resolve("example").resolve("project"));
+    createFile(comExampleProject.resolve("Main.class"));
+    Path comExampleOtherProject =
+        createDirectories(secondDir.resolve("com").resolve("example").resolve("other_project"));
+    createFile(comExampleOtherProject.resolve("Lib.class"));
+
+    Path emptyDir = createDirectories(temp.resolve("some").resolve("empty").resolve("dir"));
+
+    Path firstJar = createFile(temp.resolve("first.jar"));
+    Path secondJar = createFile(temp.resolve("second.jar"));
+
+    assertThat(Utils.getClassPathBasedInstrumentationFilter(makeClassPath(
+                   firstDir, firstJar, nonExistentDir, secondDir, secondJar, emptyDir)))
+        .hasValue("*,com.example.other_project.**,com.example.project.**,org.example.**");
+  }
+
+  @Test
+  public void testGetClassPathBasedInstrumentationFilter_noDirs() throws IOException {
+    Path firstJar = createFile(temp.resolve("first.jar"));
+    Path secondJar = createFile(temp.resolve("second.jar"));
+
+    assertThat(Utils.getClassPathBasedInstrumentationFilter(makeClassPath(firstJar, secondJar)))
+        .isEmpty();
+  }
+
+  private static String makeClassPath(Path... paths) {
+    return Arrays.stream(paths).map(Path::toString).collect(joining(File.pathSeparator));
   }
 }
