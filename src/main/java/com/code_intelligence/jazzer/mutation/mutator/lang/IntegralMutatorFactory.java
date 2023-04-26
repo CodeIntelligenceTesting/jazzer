@@ -289,8 +289,34 @@ final class IntegralMutatorFactory extends MutatorFactory {
       return value;
     }
 
-    protected final long crossOverImpl(long value, long otherValue, PseudoRandom prng) {
-      return value;
+    protected final long crossOverImpl(long x, long y, PseudoRandom prng) {
+      switch (prng.indexIn(3)) {
+        case 0:
+          return mean(x, y);
+        case 1:
+          return forceInRange(x ^ y);
+        case 2:
+          return bitmask(x, y, prng);
+        default:
+          throw new AssertionError("Invalid cross over function.");
+      }
+    }
+
+    private long bitmask(long x, long y, PseudoRandom prng) {
+      long mask = prng.nextLong();
+      return forceInRange((x & mask) | (y & ~mask));
+    }
+
+    private static long mean(long x, long y) {
+      // Add the common set bits (x & y) and the half of the sum of the
+      // differing bits together ((x ^ y) >> 1), the result will never exceed
+      // the sum of x and y as both parts of the calculation are guaranteed to
+      // be smaller than or equal to x and y.
+      long xor = x ^ y;
+      long mean = (x & y) + (xor >> 1);
+      // Round towards zero (add 1) if rounding is not exact (last xor bit is
+      // set) and result is negative (sign bit is set).
+      return mean + (1 & xor & (mean >>> 31));
     }
 
     @ForOverride protected abstract long mutateWithLibFuzzer(long value);

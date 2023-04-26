@@ -17,14 +17,21 @@
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.mutator.lang.IntegralMutatorFactory.AbstractIntegralMutator.forceInRange;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
+import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("unchecked")
 class IntegralMutatorTest {
   static Stream<Arguments> forceInRangeCases() {
     return Stream.of(arguments(0, 0, 1), arguments(5, 0, 1), arguments(-5, -10, -1),
@@ -49,6 +56,30 @@ class IntegralMutatorTest {
     assertThat(inRange).isAtMost(maxValue);
     if (value >= minValue && value <= maxValue) {
       assertThat(inRange).isEqualTo(value);
+    }
+  }
+
+  @Test
+  void testCrossOver() {
+    SerializingMutator<Long> mutator =
+        (SerializingMutator<Long>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull Long>() {}.annotatedType());
+    // cross over mean values
+    try (MockPseudoRandom prng = mockPseudoRandom(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
+      assertThat(mutator.crossOver(0L, 0L, prng)).isEqualTo(0);
+      assertThat(mutator.crossOver(0L, 2L, prng)).isEqualTo(1);
+      assertThat(mutator.crossOver(1L, 2L, prng)).isEqualTo(1);
+      assertThat(mutator.crossOver(1L, 3L, prng)).isEqualTo(2);
+      assertThat(mutator.crossOver(Long.MAX_VALUE, Long.MAX_VALUE, prng)).isEqualTo(Long.MAX_VALUE);
+
+      assertThat(mutator.crossOver(0L, -2L, prng)).isEqualTo(-1);
+      assertThat(mutator.crossOver(-1L, -2L, prng)).isEqualTo(-1);
+      assertThat(mutator.crossOver(-1L, -3L, prng)).isEqualTo(-2);
+      assertThat(mutator.crossOver(Long.MIN_VALUE, Long.MIN_VALUE, prng)).isEqualTo(Long.MIN_VALUE);
+
+      assertThat(mutator.crossOver(-100L, 200L, prng)).isEqualTo(50);
+      assertThat(mutator.crossOver(100L, -200L, prng)).isEqualTo(-50);
+      assertThat(mutator.crossOver(Long.MIN_VALUE, Long.MAX_VALUE, prng)).isEqualTo(0);
     }
   }
 }
