@@ -19,13 +19,9 @@ import java.net.Socket;
 
 public class SsrfSocketConnect {
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Exception {
-    // Does not check if the fuzzer is guided correctly, only if the hook is invoked correctly.
-    // Opening actual connections takes far too long.
     String hostname = data.consumeString(15);
-    if ("jazzer.invalid".equals(hostname)) {
-      try (Socket s = new Socket(hostname, 80)) {
-        s.getInetAddress();
-      }
+    try (Socket s = new Socket(hostname, 80)) {
+      s.getInetAddress();
     }
   }
 }

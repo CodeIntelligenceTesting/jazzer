@@ -219,9 +219,6 @@ java_fuzz_target_test(
     allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
     ],
-    fuzzer_args = [
-        "-use_value_profile=1",
-    ],
     target_class = "com.example.SsrfSocketConnect",
     verify_crash_reproducer = False,
 )

@@ -14,18 +14,31 @@
 
 package com.example;
 
+import com.code_intelligence.jazzer.api.BugDetectors;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public class SsrfSocketConnectToHost {
+  // We don't actually care about establishing a connection and thus choose the lowest possible
+  // timeout.
+  private static final int CONNECTION_TIMEOUT_MS = 1;
+
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Exception {
-    // Does not check if the fuzzer is guided correctly, only if the hook is invoked correctly.
-    // Opening actual connections takes far too long.
-    String hostname = data.consumeString(15);
-    if ("jazzer.invalid".equals(hostname)) {
-      try (Socket s = new Socket()) {
-        s.connect(new InetSocketAddress(hostname, 80), 10);
+    String host = data.consumeAsciiString(15);
+    int port = data.consumeInt(1, 65535);
+
+    try (AutoCloseable ignored = BugDetectors.allowNetworkConnections()) {
+      // Verify that policies nest properly.
+      try (AutoCloseable ignored1 =
+               BugDetectors.allowNetworkConnections((h, p) -> !h.equals("jazzer.invalid"))) {
+        try (AutoCloseable ignored2 = BugDetectors.allowNetworkConnections()) {
+        }
+        try (Socket s = new Socket()) {
+          s.connect(new InetSocketAddress(host, port), CONNECTION_TIMEOUT_MS);
+        } catch (IOException ignored3) {
+        }
       }
     }
   }

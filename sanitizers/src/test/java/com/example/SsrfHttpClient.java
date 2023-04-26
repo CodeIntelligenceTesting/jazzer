@@ -15,6 +15,7 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import java.io.IOException;
 import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -24,14 +25,15 @@ public class SsrfHttpClient {
   private static final HttpClient CLIENT =
       HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
 
-  public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Exception {
-    // Does not check if the fuzzer is guided correctly, only if the hook is invoked correctly.
-    // Opening actual connections takes far too long.
+  public static void fuzzerTestOneInput(FuzzedDataProvider data)
+      throws IOException, InterruptedException {
     String hostname = data.consumeString(15);
-    if ("jazzer.invalid".equals(hostname)) {
-      HttpRequest request =
-          HttpRequest.newBuilder().uri(URI.create("https://" + hostname)).GET().build();
+    URI uri;
+    try {
+      uri = URI.create("https://" + hostname);
+      HttpRequest request = HttpRequest.newBuilder().uri(uri).GET().build();
       CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+    } catch (IllegalArgumentException ignored) {
     }
   }
 }

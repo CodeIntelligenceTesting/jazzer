@@ -23,15 +23,13 @@ import com.code_intelligence.jazzer.api.MethodHook;
 import java.lang.invoke.MethodHandle;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiPredicate;
 
 public class ServerSideRequestForgery {
-  /**
-   * Honeypot host name targeting an invalid address. RFC 2606 defines such names at
-   * https://www.rfc-editor.org/rfc/rfc2606#section-2
-   */
-  private static final String HONEYPOT_HOST = "jazzer.invalid";
+  // Set via reflection by Jazzer's BugDetectors API.
+  public static final AtomicReference<BiPredicate<String, Integer>> connectionPermitted =
+      new AtomicReference<>((host, port) -> false);
 
   /**
    * {@link java.net.Socket} is used in many JDK classes to open network connections. Internally it
@@ -60,7 +58,7 @@ public class ServerSideRequestForgery {
           })
   public static void
   checkSsrfSocket(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
-    checkSsrf(arguments, hookId);
+    checkSsrf(arguments);
   }
 
   /**
@@ -80,51 +78,49 @@ public class ServerSideRequestForgery {
           })
   public static void
   checkSsrfHttpConnection(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
-    checkSsrf(arguments, hookId);
+    checkSsrf(arguments);
   }
 
-  private static void checkSsrf(Object[] arguments, int hookId) {
+  private static void checkSsrf(Object[] arguments) {
     if (arguments.length == 0) {
       return;
     }
 
     String host;
-    if (arguments[0] instanceof String) {
-      try {
-        host = new URL((String) arguments[0]).getHost();
-      } catch (MalformedURLException e) {
+    int port;
+    if (arguments[0] instanceof InetSocketAddress) {
+      // Only implementation of java.net.SocketAddress.
+      InetSocketAddress address = (InetSocketAddress) arguments[0];
+      host = address.getHostName();
+      port = address.getPort();
+    } else if (arguments.length >= 2 && arguments[1] instanceof Integer) {
+      if (arguments[0] instanceof InetAddress) {
+        host = ((InetAddress) arguments[0]).getHostName();
+      } else if (arguments[0] instanceof String) {
+        host = (String) arguments[0];
+      } else {
         return;
       }
-    } else if (arguments[0] instanceof InetAddress) {
-      host = ((InetAddress) arguments[0]).getHostName();
-    } else if (arguments[0] instanceof InetSocketAddress) {
-      // Only implementation of java.net.SocketAddress.
-      host = ((InetSocketAddress) arguments[0]).getHostName();
+      port = (int) arguments[1];
     } else {
       return;
     }
 
-    // Any connection attempt to the honeypot host is considered an SSRF.
-    if (HONEYPOT_HOST.equals(host)) {
-      Jazzer.reportFindingFromHook(new FuzzerSecurityIssueHigh(
-          "Server Side Request Forgery (SSRF)\nRequests to destinations based on untrusted data "
-          + "could lead to exfiltration of sensitive data or exposure of internal services."));
-    }
-
-    // Along the way the given input is cleaned up and often results
-    // in localhost. As this is not the honeypot host and not related to the
-    // input anymore, return.
-    if ("localhost".equals(host)) {
+    if (port < 0 || port > 65535) {
       return;
     }
 
-    // Some invalid characters are converted to whitespace. This seems to happen
-    // mainly to linebreaks, so convert them back to better guide the fuzzer.
-    // Hooking all places where the conversion happens leads to a more complex
-    // solution and did not improve the fuzzer's performance to come up
-    // with the honeypot host name noticeably.
-    String hostname = host.replace(' ', '\n');
-
-    Jazzer.guideTowardsEquality(hostname, HONEYPOT_HOST, 31 * hookId);
+    if (!connectionPermitted.get().test(host, port)) {
+      Jazzer.reportFindingFromHook(new FuzzerSecurityIssueHigh(String.format(
+          "Server Side Request Forgery (SSRF)\n"
+              + "Attempted connection to: %s:%d\n"
+              + "Requests to destinations based on untrusted data could lead to exfiltration of "
+              + "sensitive data or exposure of internal services.\n\n"
+              + "If the fuzz test is expected to perform network connections, call "
+              + "com.code_intelligence.jazzer.api.BugDetectors#allowNetworkConnections at the "
+              + "beginning of your fuzz test and optionally provide a predicate matching the "
+              + "expected hosts.",
+          host, port)));
+    }
   }
 }

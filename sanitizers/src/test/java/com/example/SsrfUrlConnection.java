@@ -15,19 +15,19 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class SsrfUrlConnection {
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Exception {
-    // Does not check if the fuzzer is guided correctly, only if the hook is invoked correctly.
-    // Opening actual connections takes far too long.
     String hostname = data.consumeString(15);
-    if ("jazzer.invalid".equals(hostname)) {
-      URL url = new URL("https://" + hostname);
-      HttpURLConnection con = (HttpURLConnection) url.openConnection();
-      con.setRequestMethod("GET");
+    URL url = new URL("https://" + hostname);
+    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+    con.setRequestMethod("GET");
+    try {
       con.getInputStream();
+    } catch (IOException ignored) {
     }
   }
 }
