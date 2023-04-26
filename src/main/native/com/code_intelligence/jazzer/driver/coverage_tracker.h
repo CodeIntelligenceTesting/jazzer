@@ -17,6 +17,7 @@
 #pragma once
 
 #include <jni.h>
+#include <stdint.h>
 
 #include <string>
 

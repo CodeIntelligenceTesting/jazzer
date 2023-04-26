@@ -64,12 +64,14 @@ public final class TypeSupport {
   }
 
   /**
-   * Returns {@code type} as a {@code Class<T>} if it is a subclass of T, otherwise empty.
+   * Returns {@code type} as a {@code Class<? extends T>} if it is a subclass of T, otherwise
+   * empty.
    *
    * <p>This function also returns an empty {@link Optional} for more complex (e.g. parameterized)
    * types.
    */
-  public static <T> Optional<Class<T>> asSubclassOrEmpty(AnnotatedType type, Class<T> superclass) {
+  public static <T> Optional<Class<? extends T>> asSubclassOrEmpty(
+      AnnotatedType type, Class<T> superclass) {
     if (!(type.getType() instanceof Class<?>) ) {
       return Optional.empty();
     }

@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <jni.h>
-
 namespace jazzer {
 /*
  * Print the stack traces of all active JVM threads.

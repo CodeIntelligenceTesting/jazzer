@@ -38,7 +38,7 @@ cc_binary(
 )
 
 # On macOS, builds a binary that supports both x86_64 and arm64.
-# On all other platforms, is just symlinks the input binary.
+# On all other platforms, it just symlinks the input binary.
 universal_binary(
     name = "jazzer",
     binary = ":jazzer_single_arch",
