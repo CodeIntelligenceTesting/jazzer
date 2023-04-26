@@ -16,27 +16,35 @@ package com.code_intelligence.jazzer.junit;
 
 import static java.util.Arrays.stream;
 import static java.util.Collections.newSetFromMap;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import com.code_intelligence.jazzer.utils.UnsafeUtils;
+import java.io.File;
+import java.io.IOException;
 import java.lang.invoke.MethodType;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
@@ -96,7 +104,10 @@ class Utils {
     return Paths.get(".cifuzz-corpus", testClass.getName(), testMethod.getName());
   }
 
-  static String defaultInstrumentationFilter(Class<?> testClass) {
+  /**
+   * Returns a heuristic default value for jazzer.instrument based on the test class.
+   */
+  static String getLegacyInstrumentationFilter(Class<?> testClass) {
     // This is an extremely rough "implementation" of the public suffix list algorithm
     // (https://publicsuffix.org/): It tries to guess the shortest prefix of the package name that
     // isn't public. It doesn't use the actual list, but instead assumes that every root segment as
@@ -112,7 +123,71 @@ class Utils {
       numSegments = 3;
     }
     return Stream.concat(Arrays.stream(packageSegments).limit(numSegments), Stream.of("**"))
-        .collect(Collectors.joining("."));
+        .collect(joining("."));
+  }
+
+  private static final Pattern CLASSPATH_SPLITTER =
+      Pattern.compile(Pattern.quote(File.pathSeparator));
+
+  /**
+   * Returns a heuristic default value for jazzer.instrument based on the files on the provided
+   * classpath.
+   */
+  static Optional<String> getClassPathBasedInstrumentationFilter(String classPath) {
+    List<Path> includes =
+        CLASSPATH_SPLITTER.splitAsStream(classPath)
+            .map(Paths::get)
+            // We consider classpath entries that are directories rather than jar files to contain
+            // the classes of the current project rather than external dependencies. This is just a
+            // heuristic and breaks with build systems that package all classes in jar files, e.g.
+            // with Bazel.
+            .filter(Files::isDirectory)
+            .flatMap(root -> {
+              HashSet<Path> pkgs = new HashSet<>();
+              try {
+                Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
+                  @Override
+                  public FileVisitResult preVisitDirectory(
+                      Path dir, BasicFileAttributes basicFileAttributes) throws IOException {
+                    try (Stream<Path> entries = Files.list(dir)) {
+                      // If a directory contains a .class file, we add an include filter matching it
+                      // and all subdirectories.
+                      // Special case: If there is a class defined at the root, only the unnamed
+                      // package is included, so continue with the traversal of subdirectories
+                      // to discover additional includes.
+                      if (entries.filter(path -> path.toString().endsWith(".class"))
+                              .anyMatch(Files::isRegularFile)) {
+                        Path pkgPath = root.relativize(dir);
+                        pkgs.add(pkgPath);
+                        if (pkgPath.toString().isEmpty()) {
+                          return FileVisitResult.CONTINUE;
+                        } else {
+                          return FileVisitResult.SKIP_SUBTREE;
+                        }
+                      }
+                    }
+                    return FileVisitResult.CONTINUE;
+                  }
+                });
+              } catch (IOException e) {
+                // This is only a best-effort heuristic anyway, ignore this directory.
+                return Stream.of();
+              }
+              return pkgs.stream();
+            })
+            .distinct()
+            .collect(toList());
+    if (includes.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        includes.stream()
+            .map(Path::toString)
+            // For classes without a package, only include the unnamed package.
+            .map(path -> path.isEmpty() ? "*" : path.replace(File.separator, ".") + ".**")
+            .sorted()
+            // jazzer.instrument uses ',' as the separator.
+            .collect(joining(",")));
   }
 
   private static final Pattern COVERAGE_AGENT_ARG =
