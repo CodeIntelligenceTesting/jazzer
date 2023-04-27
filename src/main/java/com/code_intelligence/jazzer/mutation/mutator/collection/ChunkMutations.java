@@ -34,6 +34,7 @@ import java.util.function.Supplier;
 
 // Based on (Apache-2.0)
 // https://github.com/google/fuzztest/blob/f81257ed70ec7b9c191b633588cb6e39c42da5e4/fuzztest/internal/domains/container_mutation_helpers.h
+@SuppressWarnings("unchecked")
 final class ChunkMutations {
   private static final int MAX_FAILED_INSERTION_ATTEMPTS = 100;
 
@@ -201,7 +202,7 @@ final class ChunkMutations {
     INSERT_CHUNK,
     MUTATE_CHUNK;
 
-    public static MutationAction pickRandomAction(
+    public static MutationAction pickRandomMutationAction(
         Collection<?> c, int minSize, int maxSize, PseudoRandom prng) {
       List<MutationAction> actions = new ArrayList<>();
       if (c.size() > minSize) {

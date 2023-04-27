@@ -16,7 +16,11 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.collection;
 
-import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.MutationAction.pickRandomAction;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkCrossOvers.CrossOverAction.pickRandomCrossOverAction;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkCrossOvers.crossOverChunk;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkCrossOvers.insertChunk;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkCrossOvers.overwriteChunk;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.MutationAction.pickRandomMutationAction;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.deleteRandomChunk;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.insertRandomChunk;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.mutateRandomChunk;
@@ -106,7 +110,7 @@ final class ListMutatorFactory extends MutatorFactory {
 
     @Override
     public void mutateInPlace(List<T> list, PseudoRandom prng) {
-      switch (pickRandomAction(list, minSize, maxSize, prng)) {
+      switch (pickRandomMutationAction(list, minSize, maxSize, prng)) {
         case DELETE_CHUNK:
           deleteRandomChunk(list, minSize, prng);
           break;
@@ -122,7 +126,23 @@ final class ListMutatorFactory extends MutatorFactory {
     }
 
     @Override
-    public void crossOverInPlace(List<T> reference, List<T> otherReference, PseudoRandom prng) {}
+    public void crossOverInPlace(List<T> reference, List<T> otherReference, PseudoRandom prng) {
+      // These cross-over functions don't remove entries, that is handled by
+      // the appropriate mutations on the result.
+      switch (pickRandomCrossOverAction(reference, otherReference, maxSize, prng)) {
+        case INSERT_CHUNK:
+          insertChunk(reference, otherReference, maxSize, prng);
+          break;
+        case OVERWRITE_CHUNK:
+          overwriteChunk(reference, otherReference, prng);
+          break;
+        case CROSS_OVER_CHUNK:
+          crossOverChunk(reference, otherReference, elementMutator, prng);
+          break;
+        default:
+          // Both lists are empty or could otherwise not be crossed over.
+      }
+    }
 
     @Override
     public List<T> detach(List<T> value) {
