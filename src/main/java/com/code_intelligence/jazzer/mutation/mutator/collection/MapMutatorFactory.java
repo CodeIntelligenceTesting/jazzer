@@ -16,7 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.collection;
 
-import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.MutationAction.pickRandomAction;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.MutationAction.pickRandomMutationAction;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.deleteRandomChunk;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.growBy;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.insertRandomChunk;
@@ -141,7 +141,7 @@ final class MapMutatorFactory extends MutatorFactory {
 
     @Override
     public void mutateInPlace(Map<K, V> map, PseudoRandom prng) {
-      switch (pickRandomAction(map.keySet(), minSize, maxSize, prng)) {
+      switch (pickRandomMutationAction(map.keySet(), minSize, maxSize, prng)) {
         case DELETE_CHUNK:
           deleteRandomChunk(map.keySet(), minSize, prng);
           break;
