@@ -292,7 +292,7 @@ public final class MutatorCombinators {
         if (currentState == -1) {
           // The value is in an indeterminate state, initialize it.
           initInPlace(reference, prng);
-        } else if (prng.trueInOneOutOf(100)) {
+        } else if (prng.trueInOneOutOf(100) && mutators.length > 1) {
           // Initialize to a different state.
           mutators[prng.otherIndexIn(mutators, currentState)].initInPlace(reference, prng);
         } else {
