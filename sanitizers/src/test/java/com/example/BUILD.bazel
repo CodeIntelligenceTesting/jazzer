@@ -217,7 +217,7 @@ java_fuzz_target_test(
         "SsrfSocketConnect.java",
     ],
     allowed_findings = [
-        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
     ],
     target_class = "com.example.SsrfSocketConnect",
     verify_crash_reproducer = False,
@@ -229,7 +229,7 @@ java_fuzz_target_test(
         "SsrfSocketConnectToHost.java",
     ],
     allowed_findings = [
-        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
     ],
     target_class = "com.example.SsrfSocketConnectToHost",
     verify_crash_reproducer = False,
@@ -241,7 +241,7 @@ java_fuzz_target_test(
         "SsrfUrlConnection.java",
     ],
     allowed_findings = [
-        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
     ],
     target_class = "com.example.SsrfUrlConnection",
     verify_crash_reproducer = False,
@@ -253,7 +253,7 @@ java_fuzz_target_test(
         "SsrfHttpClient.java",
     ],
     allowed_findings = [
-        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
     ],
     tags = ["no-jdk8"],
     target_class = "com.example.SsrfHttpClient",

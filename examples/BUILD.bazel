@@ -423,7 +423,7 @@ java_fuzz_target_test(
         "src/main/java/com/example/BatikTranscoderFuzzer.java",
     ],
     allowed_findings = [
-        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
     ],
     target_class = "com.example.BatikTranscoderFuzzer",
     verify_crash_reproducer = False,

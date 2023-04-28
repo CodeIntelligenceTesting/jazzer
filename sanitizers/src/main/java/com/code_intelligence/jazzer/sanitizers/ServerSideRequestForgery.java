@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.sanitizers;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh;
+import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
 import com.code_intelligence.jazzer.api.HookType;
 import com.code_intelligence.jazzer.api.Jazzer;
 import com.code_intelligence.jazzer.api.MethodHook;
@@ -111,7 +112,7 @@ public class ServerSideRequestForgery {
     }
 
     if (!connectionPermitted.get().test(host, port)) {
-      Jazzer.reportFindingFromHook(new FuzzerSecurityIssueHigh(String.format(
+      Jazzer.reportFindingFromHook(new FuzzerSecurityIssueMedium(String.format(
           "Server Side Request Forgery (SSRF)\n"
               + "Attempted connection to: %s:%d\n"
               + "Requests to destinations based on untrusted data could lead to exfiltration of "
