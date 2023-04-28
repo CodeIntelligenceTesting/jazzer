@@ -62,6 +62,7 @@ import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedDoubleField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedFloatField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedIntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageField3;
+import com.code_intelligence.jazzer.protobuf.Proto3.SingleOptionOneOfField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.StringField3;
 import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors.Descriptor;
@@ -363,7 +364,15 @@ public class StressTest {
                         MessageField3.newBuilder()
                             .setMessageField(PrimitiveField3.newBuilder().setSomeField(true))
                             .build()))
-                    .build())));
+                    .build())),
+        arguments(new TypeHolder<@NotNull SingleOptionOneOfField3>() {}.annotatedType(),
+            "{Builder.Nullable<Boolean>} -> Message",
+            exactly(SingleOptionOneOfField3.getDefaultInstance(),
+                SingleOptionOneOfField3.newBuilder().setBoolField(false).build(),
+                SingleOptionOneOfField3.newBuilder().setBoolField(true).build()),
+            exactly(SingleOptionOneOfField3.getDefaultInstance(),
+                SingleOptionOneOfField3.newBuilder().setBoolField(false).build(),
+                SingleOptionOneOfField3.newBuilder().setBoolField(true).build())));
   }
 
   @SafeVarargs

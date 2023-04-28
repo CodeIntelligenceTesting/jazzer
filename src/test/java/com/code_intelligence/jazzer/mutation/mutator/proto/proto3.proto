@@ -136,3 +136,9 @@ message EmptyMessage3 {}
 message AnyField3 {
   google.protobuf.Any some_field = 1;
 }
+
+message SingleOptionOneOfField3 {
+  oneof oneof_field {
+    bool bool_field = 1;
+  }
+}
