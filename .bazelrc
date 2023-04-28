@@ -43,7 +43,7 @@ build --experimental_java_classpath=bazel
 build:android_arm --incompatible_enable_android_toolchain_resolution
 build:android_arm --android_platforms=//:android_arm64
 build:android_arm --copt=-D_ANDROID
-build:android_arm --java_runtime_version=8
+build:android_arm --java_runtime_version=local_jdk
 
 # Windows
 # Only compiles with clang on Windows.
