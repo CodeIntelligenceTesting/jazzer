@@ -57,6 +57,7 @@ def java_fuzz_target_test(
         deps = deps,
         runtime_deps = runtime_deps,
         testonly = True,
+        tags = tags,
         **kwargs
     )
 
@@ -68,6 +69,7 @@ def java_fuzz_target_test(
             name = target_name + "_import",
             jars = [target_deploy_jar],
             testonly = True,
+            tags = tags,
         )
         target_with_driver_name = target_name + "_driver"
         native.java_binary(
@@ -78,6 +80,7 @@ def java_fuzz_target_test(
             ],
             main_class = "com.code_intelligence.jazzer.Jazzer",
             testonly = True,
+            tags = tags,
         )
 
     if launcher_variant == "native":
