@@ -210,3 +210,52 @@ java_fuzz_target_test(
     # Fuzz target catches the syntax exception triggered by the reproducer without the sanitizer.
     verify_crash_reproducer = False,
 )
+
+java_fuzz_target_test(
+    name = "SsrfSocketConnect",
+    srcs = [
+        "SsrfSocketConnect.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
+    ],
+    target_class = "com.example.SsrfSocketConnect",
+    verify_crash_reproducer = False,
+)
+
+java_fuzz_target_test(
+    name = "SsrfSocketConnectToHost",
+    srcs = [
+        "SsrfSocketConnectToHost.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
+    ],
+    target_class = "com.example.SsrfSocketConnectToHost",
+    verify_crash_reproducer = False,
+)
+
+java_fuzz_target_test(
+    name = "SsrfUrlConnection",
+    srcs = [
+        "SsrfUrlConnection.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
+    ],
+    target_class = "com.example.SsrfUrlConnection",
+    verify_crash_reproducer = False,
+)
+
+java_fuzz_target_test(
+    name = "SsrfHttpClient",
+    srcs = [
+        "SsrfHttpClient.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
+    ],
+    tags = ["no-jdk8"],
+    target_class = "com.example.SsrfHttpClient",
+    verify_crash_reproducer = False,
+)
