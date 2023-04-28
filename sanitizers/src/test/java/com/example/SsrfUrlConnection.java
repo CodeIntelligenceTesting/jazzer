@@ -22,12 +22,12 @@ import java.net.URL;
 public class SsrfUrlConnection {
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Exception {
     String hostname = data.consumeString(15);
-    URL url = new URL("https://" + hostname);
-    HttpURLConnection con = (HttpURLConnection) url.openConnection();
-    con.setRequestMethod("GET");
     try {
+      URL url = new URL("https://" + hostname);
+      HttpURLConnection con = (HttpURLConnection) url.openConnection();
+      con.setRequestMethod("GET");
       con.getInputStream();
-    } catch (IOException ignored) {
+    } catch (IOException | IllegalArgumentException ignored) {
     }
   }
 }
