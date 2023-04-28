@@ -6,6 +6,7 @@ java_library(
         "Autofuzz.java",
         "AutofuzzConstructionException.java",
         "AutofuzzInvocationException.java",
+        "BugDetectors.java",
         "CannedFuzzedDataProvider.java",
         "Consumer1.java",
         "Consumer2.java",
@@ -18,6 +19,7 @@ java_library(
         "Function4.java",
         "Function5.java",
         "FuzzedDataProvider.java",
+        "SilentCloseable.java",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [

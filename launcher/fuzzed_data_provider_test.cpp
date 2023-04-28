@@ -36,7 +36,8 @@ class FuzzedDataProviderTest : public ::testing::Test {
   // destroyed after all tests in this test suite have finished.
   static void SetUpTestCase() {
     using ::bazel::tools::cpp::runfiles::Runfiles;
-    FLAGS_cp = Runfiles::CreateForTest()->Rlocation(
+    std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
+    FLAGS_cp = runfiles->Rlocation(
         "jazzer/launcher/testdata/fuzz_target_mocks_deploy.jar");
 
     jvm_ = std::make_unique<JVM>();

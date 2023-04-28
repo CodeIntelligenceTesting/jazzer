@@ -417,11 +417,31 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "BatikTranscoderFuzzer",
+    srcs = [
+        "src/main/java/com/example/BatikTranscoderFuzzer.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
+    ],
+    target_class = "com.example.BatikTranscoderFuzzer",
+    verify_crash_reproducer = False,
+    deps = [
+        "@maven//:org_apache_xmlgraphics_batik_anim",
+        "@maven//:org_apache_xmlgraphics_batik_bridge",
+        "@maven//:org_apache_xmlgraphics_batik_css",
+        "@maven//:org_apache_xmlgraphics_batik_transcoder",
+        "@maven//:org_apache_xmlgraphics_batik_util",
+    ],
+)
+
 java_binary(
     name = "examples",
     create_executable = False,
     visibility = ["//visibility:public"],
     runtime_deps = [
+        ":BatikTranscoderFuzzer_target_deploy.jar",
         ":ExampleFuzzer_target_deploy.jar",
         ":ExampleValueProfileFuzzer_target_deploy.jar",
         ":FastJsonFuzzer_target_deploy.jar",

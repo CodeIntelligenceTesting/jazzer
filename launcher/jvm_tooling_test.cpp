@@ -36,7 +36,8 @@ class JvmToolingTest : public ::testing::Test {
     FLAGS_jvm_args =
         "-Denv1=va\\" ARG_SEPARATOR "l1\\\\" ARG_SEPARATOR "-Denv2=val2";
     using ::bazel::tools::cpp::runfiles::Runfiles;
-    FLAGS_cp = Runfiles::CreateForTest()->Rlocation(
+    std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
+    FLAGS_cp = runfiles->Rlocation(
         "jazzer/launcher/testdata/fuzz_target_mocks_deploy.jar");
 
     jvm_ = std::unique_ptr<JVM>(new JVM());
