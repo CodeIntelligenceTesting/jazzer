@@ -71,6 +71,7 @@ std::string getExecutablePath() {
   bool failed = (read_bytes == 0);
 #elif defined(_ANDROID)
   bool failed = true;
+  uint32_t read_bytes = 0;
 #else  // Assume Linux
   ssize_t read_bytes = readlink("/proc/self/exe", buf, sizeof(buf));
   bool failed = (read_bytes == -1);
