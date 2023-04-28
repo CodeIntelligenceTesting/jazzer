@@ -56,8 +56,8 @@ public class MutatorTest {
   @Before
   public void setup() throws IOException {
     baseDir = temp.getRoot().toPath();
-    Path inputsDirectory = baseDir.resolve(
-        Paths.get("src", "test", "resources", "com", "example", "MutatorFuzzTestInputs"));
+    Path inputsDirectory = baseDir.resolve(Paths.get(
+        "src", "test", "resources", "com", "example", "MutatorFuzzTestInputs", "mutatorFuzz"));
     Files.createDirectories(inputsDirectory);
     Files.write(inputsDirectory.resolve("invalid"), "invalid input".getBytes());
   }

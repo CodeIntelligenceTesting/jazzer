@@ -85,27 +85,30 @@ class FuzzTestExecutor {
     // https://github.com/CodeIntelligenceTesting/cifuzz/blob/bf410dcfbafbae2a73cf6c5fbed031cdfe234f2f/internal/cmd/run/run.go#L381
     // The path is specified relative to the current working directory, which with JUnit is the
     // project directory.
-    Path generatedCorpusDir = baseDir.resolve(generatedCorpusPath(fuzzTestClass));
+    Path generatedCorpusDir = baseDir.resolve(generatedCorpusPath(fuzzTestClass, fuzzTestMethod));
     Files.createDirectories(generatedCorpusDir);
     libFuzzerArgs.add(generatedCorpusDir.toAbsolutePath().toString());
 
     // We can only emit findings into the source tree version of the inputs directory, not e.g. the
     // copy under Maven's target directory. If it doesn't exist, collect the inputs in the current
     // working directory, which is usually the project's source root.
-    Optional<Path> findingsDirectory = inputsDirectorySourcePath(fuzzTestClass, baseDir);
+    Optional<Path> findingsDirectory =
+        inputsDirectorySourcePath(fuzzTestClass, fuzzTestMethod, baseDir);
     if (!findingsDirectory.isPresent()) {
       context.publishReportEntry(String.format(
           "Collecting crashing inputs in the project root directory.\nIf you want to keep them "
               + "organized by fuzz test and automatically run them as regression tests with "
               + "JUnit Jupiter, create a test resource directory called '%s' in package '%s' "
               + "and move the files there.",
-          inputsDirectoryResourcePath(fuzzTestClass), fuzzTestClass.getPackage().getName()));
+          inputsDirectoryResourcePath(fuzzTestClass, fuzzTestMethod),
+          fuzzTestClass.getPackage().getName()));
     }
 
     // We prefer the inputs directory on the classpath, if it exists, as that is more reliable than
     // heuristically looking into the source tree based on the current working directory.
     Optional<Path> inputsDirectory;
-    URL inputsDirectoryUrl = fuzzTestClass.getResource(inputsDirectoryResourcePath(fuzzTestClass));
+    URL inputsDirectoryUrl =
+        fuzzTestClass.getResource(inputsDirectoryResourcePath(fuzzTestClass, fuzzTestMethod));
     if (inputsDirectoryUrl != null && "file".equals(inputsDirectoryUrl.getProtocol())) {
       // The inputs directory is a regular directory on disk (i.e., the test is not run from a
       // JAR).

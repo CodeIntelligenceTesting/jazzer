@@ -66,8 +66,8 @@ public class ValueProfileTest {
     baseDir = temp.getRoot().toPath();
     // Create a fake test resource directory structure with an input directory to verify that
     // Jazzer uses it and emits a crash file into it.
-    inputsDirectories = baseDir.resolve(
-        Paths.get("src", "test", "resources", "com", "example", "ValueProfileFuzzTestInputs"));
+    inputsDirectories = baseDir.resolve(Paths.get("src", "test", "resources", "com", "example",
+        "ValueProfileFuzzTestInputs", "valueProfileFuzz"));
     Files.createDirectories(inputsDirectories);
   }
 

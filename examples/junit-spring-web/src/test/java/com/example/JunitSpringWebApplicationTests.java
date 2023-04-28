@@ -85,6 +85,9 @@ public class JunitSpringWebApplicationTests {
 
   @FuzzTest(maxDuration = "10s")
   public void fuzzTestWithDtoShouldFail(HelloRequest helloRequest) throws Exception {
+    if (!beforeCalled) {
+      throw new RuntimeException("BeforeEach was not called");
+    }
     Assumptions.assumeTrue(
         helloRequest != null && helloRequest.name != null && !helloRequest.name.isBlank());
 
