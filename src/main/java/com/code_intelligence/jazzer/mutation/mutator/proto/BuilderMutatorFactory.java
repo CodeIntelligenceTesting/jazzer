@@ -30,6 +30,7 @@ import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapter
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setFieldWithPresence;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setMapField;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.getDefaultInstance;
+import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.withoutInitIfRecursive;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
@@ -88,28 +89,35 @@ public final class BuilderMutatorFactory extends MutatorFactory {
     AnnotatedType typeToMutate = TypeLibrary.getTypeToMutate(field);
     requireNonNull(typeToMutate, () -> "Java class not specified for " + field);
 
+    InPlaceMutator<T> mutator;
     if (field.isMapField()) {
       ValueMutator<Map> underlyingMutator =
           (ValueMutator<Map>) factory.createInPlaceOrThrow(typeToMutate);
-      return mutateProperty(builder
+      mutator = mutateProperty(builder
           -> getMapField(builder, field),
           underlyingMutator, (builder, value) -> setMapField(builder, field, value));
     } else if (field.isRepeated()) {
       InPlaceMutator<List<U>> underlyingMutator =
           (InPlaceMutator<List<U>>) factory.createInPlaceOrThrow(typeToMutate);
-      return mutateViaView(
-          builder -> makeMutableRepeatedFieldView(builder, field), underlyingMutator);
+      mutator =
+          mutateViaView(builder -> makeMutableRepeatedFieldView(builder, field), underlyingMutator);
     } else if (field.hasPresence()) {
       ValueMutator<U> underlyingMutator = (ValueMutator<U>) factory.createOrThrow(typeToMutate);
-      return mutateProperty(builder
+      mutator = mutateProperty(builder
           -> getPresentFieldOrNull(builder, field),
           underlyingMutator, (builder, value) -> setFieldWithPresence(builder, field, value));
     } else {
       ValueMutator<U> underlyingMutator = (ValueMutator<U>) factory.createOrThrow(typeToMutate);
-      return mutateProperty(builder
+      mutator = mutateProperty(builder
           -> (U) builder.getField(field),
           underlyingMutator, (builder, value) -> builder.setField(field, value));
     }
+
+    // If recursive message fields (i.e. those that have themselves as transitive subfields) are
+    // initialized eagerly, they tend to nest very deeply, which easily results in stack overflows.
+    // We guard against that by making their init a no-op and instead initialize them layer by layer
+    // in mutations.
+    return withoutInitIfRecursive(mutator, field);
   }
 
   private MutatorFactory withDescriptorDependentMutatorFactoryIfNeeded(

@@ -239,15 +239,10 @@ public class StressTest {
                 OptionalPrimitiveField3.newBuilder().setSomeField(false).build(),
                 OptionalPrimitiveField3.newBuilder().setSomeField(true).build())),
         arguments(new TypeHolder<@NotNull RepeatedRecursiveMessageField3>() {}.annotatedType(),
-            "{Builder.Boolean, Builder via List<(cycle) -> Message>} -> Message",
-            contains(RepeatedRecursiveMessageField3.getDefaultInstance(),
-                RepeatedRecursiveMessageField3.newBuilder().setSomeField(true).build(),
-                RepeatedRecursiveMessageField3.newBuilder()
-                    .addMessageField(RepeatedRecursiveMessageField3.getDefaultInstance())
-                    .build(),
-                RepeatedRecursiveMessageField3.newBuilder()
-                    .addMessageField(RepeatedRecursiveMessageField3.newBuilder().setSomeField(true))
-                    .build()),
+            "{Builder.Boolean, WithoutInit(Builder via List<(cycle) -> Message>)} -> Message",
+            // The message field is recursive and thus not initialized.
+            exactly(RepeatedRecursiveMessageField3.getDefaultInstance(),
+                RepeatedRecursiveMessageField3.newBuilder().setSomeField(true).build()),
             manyDistinctElements()),
         arguments(new TypeHolder<@NotNull IntegralField3>() {}.annotatedType(),
             "{Builder.Integer} -> Message",
@@ -307,14 +302,14 @@ public class StressTest {
             "{Builder via List<Float>} -> Message", distinctElementsRatio(0.20),
             distinctElementsRatio(0.9), emptyList()),
         arguments(new TypeHolder<@NotNull TestProtobuf>() {}.annotatedType(),
-            "{Builder.Nullable<Boolean>, Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>, Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>, Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>, Builder.Nullable<{Builder.Nullable<Integer>, Builder via List<Integer>} -> Message>, Builder via List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>, Builder via List<(cycle) -> Message>, Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
+            "{Builder.Nullable<Boolean>, Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>, Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>, Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>, WithoutInit(Builder.Nullable<{Builder.Nullable<Integer>, Builder via List<Integer>, WithoutInit(Builder.Nullable<(cycle) -> Message>)} -> Message>), Builder via List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>, WithoutInit(Builder via List<(cycle) -> Message>), Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
             manyDistinctElements(), manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull @DescriptorSource(
                 "com.code_intelligence.jazzer.mutation.mutator.StressTest#TEST_PROTOBUF_DESCRIPTOR")
                 DynamicMessage>() {
             }.annotatedType(),
-            "{Builder.Nullable<Boolean>, Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>, Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>, Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>, Builder.Nullable<{Builder.Nullable<Integer>, Builder via List<Integer>} -> Message>, Builder via List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>, Builder via List<(cycle) -> Message>, Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
+            "{Builder.Nullable<Boolean>, Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>, Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>, Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>, WithoutInit(Builder.Nullable<{Builder.Nullable<Integer>, Builder via List<Integer>, WithoutInit(Builder.Nullable<(cycle) -> Message>)} -> Message>), Builder via List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>, WithoutInit(Builder via List<(cycle) -> Message>), Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
             manyDistinctElements(), manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull @AnySource(
@@ -577,6 +572,10 @@ public class StressTest {
           }
         }
       } else if (field.getJavaType() == JavaType.MESSAGE) {
+        // Break up unbounded recursion.
+        if (!builder.hasField(field)) {
+          continue;
+        }
         Builder fieldBuilder = ((Message) builder.getField(field)).toBuilder();
         walkFields(fieldBuilder, transform);
         builder.setField(field, fieldBuilder.build());

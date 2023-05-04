@@ -75,11 +75,20 @@ message StringField2 {
 optional string some_field = 1;
 }
 
+message Parent {
+  optional Child child = 1;
+}
+
+message Child {
+  optional Parent parent = 1;
+}
+
 // Taken from
 // https://github.com/google/fuzztest/blob/c5fde4baee6134c84d4f2b618def9f60c7505151/fuzztest/internal/test_protobuf.proto#L24
 message TestSubProtobuf {
   optional int32 subproto_i32 = 1;
   repeated int32 subproto_rep_i32 = 2 [packed = true];
+  optional TestProtobuf parent = 3;
 }
 
 message TestProtobuf {
