@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.mutation.support;
 
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.containedInDirectedCycle;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.visitAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withTypeArguments;
 import static com.google.common.truth.Truth.assertThat;
@@ -36,6 +37,8 @@ import java.lang.reflect.ParameterizedType;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
@@ -236,5 +239,31 @@ class TypeSupportTest {
         .containsExactly(1, List.class, 7, Map[][].class, 8, Map[].class, 2, Map.class, 4,
             byte[][].class, 5, byte[].class, 3, byte.class, 6, Byte.class)
         .inOrder();
+  }
+
+  @Test
+  void testContainedInDirectedCycle() {
+    Function<Integer, Stream<Integer>> successors = integer -> {
+      switch (integer) {
+        case 1:
+          return Stream.of(2);
+        case 2:
+          return Stream.of(3);
+        case 3:
+          return Stream.of(4, 5);
+        case 4:
+          return Stream.of(2);
+        case 5:
+          return Stream.empty();
+        default:
+          throw new IllegalStateException();
+      }
+    };
+
+    assertThat(containedInDirectedCycle(1, successors)).isFalse();
+    assertThat(containedInDirectedCycle(2, successors)).isTrue();
+    assertThat(containedInDirectedCycle(3, successors)).isTrue();
+    assertThat(containedInDirectedCycle(4, successors)).isTrue();
+    assertThat(containedInDirectedCycle(5, successors)).isFalse();
   }
 }

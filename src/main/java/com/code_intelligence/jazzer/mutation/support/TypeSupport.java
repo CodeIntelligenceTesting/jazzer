@@ -39,6 +39,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -430,6 +431,25 @@ public final class TypeSupport {
       return Optional.empty();
     }
     return Optional.of(Collections.unmodifiableList(Arrays.asList(typeArguments)));
+  }
+
+  /**
+   * Whether {@code root} is contained in a directed cycle in the directed graph rooted at it and
+   * defined by the given {@code successors} function.
+   */
+  public static <T> boolean containedInDirectedCycle(T root, Function<T, Stream<T>> successors) {
+    HashSet<T> traversed = new HashSet<>();
+    ArrayDeque<T> toTraverse = new ArrayDeque<>();
+    toTraverse.addLast(root);
+    T currentNode;
+    while ((currentNode = toTraverse.pollLast()) != null) {
+      if (traversed.add(currentNode)) {
+        successors.apply(currentNode).forEachOrdered(toTraverse::addLast);
+      } else if (currentNode.equals(root)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static class AugmentedArrayType

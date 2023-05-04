@@ -311,6 +311,29 @@ public final class MutatorCombinators {
   }
 
   /**
+   * @return a mutator that behaves identically to the provided one except that its {@link
+   * InPlaceMutator#initInPlace(Object, PseudoRandom)} is a no-op
+   */
+  public static <T> InPlaceMutator<T> withoutInit(InPlaceMutator<T> mutator) {
+    return new InPlaceMutator<T>() {
+      @Override
+      public void initInPlace(T reference, PseudoRandom prng) {
+        // Intentionally left empty.
+      }
+
+      @Override
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return "WithoutInit(" + mutator.toDebugString(isInCycle) + ")";
+      }
+
+      @Override
+      public void mutateInPlace(T reference, PseudoRandom prng) {
+        mutator.mutateInPlace(reference, prng);
+      }
+    };
+  }
+
+  /**
    * Constructs a mutator that always returns the provided fixed value.
    *
    * <p>Note: This mutator explicitly breaks the contract of the init and mutate methods. Use

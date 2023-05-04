@@ -16,9 +16,11 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
+import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.withoutInit;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.entry;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.containedInDirectedCycle;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withTypeArguments;
 import static java.lang.String.format;
@@ -28,6 +30,7 @@ import static java.util.stream.Collectors.toMap;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.proto.DescriptorSource;
+import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.Descriptor;
@@ -61,6 +64,8 @@ final class TypeLibrary {
           .collect(collectingAndThen(toMap(Entry::getKey, e -> asAnnotatedType(e.getValue())),
               map -> unmodifiableMap(new EnumMap<>(map))));
 
+  private TypeLibrary() {}
+
   static <T extends Builder> AnnotatedType getTypeToMutate(FieldDescriptor field) {
     if (field.isRequired()) {
       return getBaseType(field);
@@ -83,7 +88,24 @@ final class TypeLibrary {
     return notNull(BASE_TYPE_WITH_PRESENCE.get(field.getJavaType()));
   }
 
-  private TypeLibrary() {}
+  static <T> InPlaceMutator<T> withoutInitIfRecursive(
+      InPlaceMutator<T> mutator, FieldDescriptor field) {
+    if (field.isRequired() || !isRecursiveField(field)) {
+      return mutator;
+    }
+    return withoutInit(mutator);
+  }
+
+  private static boolean isRecursiveField(FieldDescriptor field) {
+    return containedInDirectedCycle(field, f -> {
+      // For map fields, only the value can be a message.
+      FieldDescriptor realField = f.isMapField() ? f.getMessageType().getFields().get(1) : f;
+      if (realField.getJavaType() != JavaType.MESSAGE) {
+        return Stream.empty();
+      }
+      return realField.getMessageType().getFields().stream();
+    });
+  }
 
   static Message getDefaultInstance(Class<? extends Message> messageClass) {
     Method getDefaultInstance;

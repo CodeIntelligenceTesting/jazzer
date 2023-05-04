@@ -359,40 +359,24 @@ class BuilderMutatorProto3Test {
         (InPlaceMutator<RecursiveMessageField3.Builder>) FACTORY.createInPlaceOrThrow(
             new TypeHolder<RecursiveMessageField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
-        .isEqualTo("{Builder.Boolean, Builder.Nullable<(cycle) -> Message>}");
+        .isEqualTo("{Builder.Boolean, WithoutInit(Builder.Nullable<(cycle) -> Message>)}");
     RecursiveMessageField3.Builder builder = RecursiveMessageField3.newBuilder();
 
     try (MockPseudoRandom prng = mockPseudoRandom(
              // boolean
-             true,
-             // message field is not null
-             false,
-             // nested boolean,
-             false,
-             // nested message field is not set
              true)) {
       mutator.initInPlace(builder, prng);
     }
-    // Nested message field is *not* set explicitly and implicitly equal to the
-    // default instance.
+
     assertThat(builder.build())
-        .isEqualTo(RecursiveMessageField3.newBuilder()
-                       .setSomeField(true)
-                       .setMessageField(RecursiveMessageField3.newBuilder())
-                       .build());
-    assertThat(builder.getMessageFieldBuilder().hasMessageField()).isFalse();
+        .isEqualTo(RecursiveMessageField3.newBuilder().setSomeField(true).build());
+    assertThat(builder.hasMessageField()).isFalse();
 
     try (MockPseudoRandom prng = mockPseudoRandom(
-             // mutate message field
+             // mutate message field (causes init to non-null)
              1,
-             // mutate message field as not null
-             false,
-             // mutate message field
-             1,
-             // nested boolean,
-             false,
-             // nested message field is null
-             true)) {
+             // bool field in message field
+             false)) {
       mutator.mutateInPlace(builder, prng);
     }
     // Nested message field *is* set explicitly and implicitly equal to the default
@@ -400,10 +384,32 @@ class BuilderMutatorProto3Test {
     assertThat(builder.build())
         .isEqualTo(RecursiveMessageField3.newBuilder()
                        .setSomeField(true)
-                       .setMessageField(RecursiveMessageField3.newBuilder().setMessageField(
-                           RecursiveMessageField3.newBuilder()))
+                       .setMessageField(RecursiveMessageField3.newBuilder().setSomeField(false))
                        .build());
+    assertThat(builder.hasMessageField()).isTrue();
+    assertThat(builder.getMessageField().hasMessageField()).isFalse();
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // mutate message field
+             1,
+             //  message field as not null
+             false,
+             // mutate message field
+             1,
+             // nested boolean,
+             true)) {
+      mutator.mutateInPlace(builder, prng);
+    }
+    assertThat(builder.build())
+        .isEqualTo(RecursiveMessageField3.newBuilder()
+                       .setSomeField(true)
+                       .setMessageField(
+                           RecursiveMessageField3.newBuilder().setSomeField(false).setMessageField(
+                               RecursiveMessageField3.newBuilder().setSomeField(true)))
+                       .build());
+    assertThat(builder.hasMessageField()).isTrue();
     assertThat(builder.getMessageField().hasMessageField()).isTrue();
+    assertThat(builder.getMessageField().getMessageField().hasMessageField()).isFalse();
   }
 
   @Test
