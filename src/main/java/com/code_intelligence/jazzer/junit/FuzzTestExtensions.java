@@ -36,49 +36,51 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
   public void interceptTestTemplateMethod(Invocation<Void> invocation,
       ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext)
       throws Throwable {
-    if (Utils.isFuzzing(extensionContext)) {
-      // Skip the invocation of the test method with the trivial arguments provided by
-      // FuzzTestArgumentsProvider and start fuzzing instead.
+    // Skip the invocation of the test method with the special arguments provided by
+    // FuzzTestArgumentsProvider and start fuzzing instead.
+    if (Utils.isMarkedInvocation(invocationContext)) {
       invocation.skip();
       Optional<Throwable> throwable = extensionContext.getStore(Namespace.GLOBAL)
                                           .get(FuzzTestExecutor.class, FuzzTestExecutor.class)
                                           .execute(invocationContext);
       if (throwable.isPresent()) {
         throw throwable.get();
+      } else {
+        return;
       }
-    } else {
-      // Mimics the logic of Jazzer's FuzzTargetRunner, which reports findings in the following way:
-      // 1. If a hook used Jazzer#reportFindingFromHook to explicitly report a finding, the last
-      //    such finding, as stored in JazzerInternal#lastFinding, is reported.
-      // 2. Otherwise, if the fuzz target method threw a Throwable, that is reported.
-      // 3. Otherwise, nothing is reported.
-      Throwable thrown = null;
-      getLastFindingField().set(null, null);
-      // When running in regression test mode, the agent emits additional bytecode logic in front of
-      // method hook invocations that enables them only while a global variable managed by
-      // withHooksEnabled is true.
-      //
-      // Alternatives considered:
-      // * Using a dedicated class loader for @FuzzTests: First-class support for this isn't
-      //   available in JUnit 5 (https://github.com/junit-team/junit5/issues/201), but
-      //   third-party extensions have done it:
-      //   https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-tools/spring-boot-test-support/src/main/java/org/springframework/boot/testsupport/classpath/ModifiedClassPathExtension.java
-      //   However, as this involves launching a new test run as part of running a test, this
-      //   introduces a number of inconsistencies if applied on the test method rather than test
-      //   class level. For example, @BeforeAll methods will have to be run twice in different class
-      //   loaders, which may not be safe if they are using global resources not separated by class
-      //   loaders (e.g. files).
-      try (AutoCloseable ignored = withHooksEnabled()) {
-        invocation.proceed();
-      } catch (Throwable t) {
-        thrown = t;
-      }
-      Throwable stored = (Throwable) getLastFindingField().get(null);
-      if (stored != null) {
-        throw stored;
-      } else if (thrown != null) {
-        throw thrown;
-      }
+    }
+
+    // Mimics the logic of Jazzer's FuzzTargetRunner, which reports findings in the following way:
+    // 1. If a hook used Jazzer#reportFindingFromHook to explicitly report a finding, the last
+    //    such finding, as stored in JazzerInternal#lastFinding, is reported.
+    // 2. Otherwise, if the fuzz target method threw a Throwable, that is reported.
+    // 3. Otherwise, nothing is reported.
+    Throwable thrown = null;
+    getLastFindingField().set(null, null);
+    // When running in regression test mode, the agent emits additional bytecode logic in front of
+    // method hook invocations that enables them only while a global variable managed by
+    // withHooksEnabled is true.
+    //
+    // Alternatives considered:
+    // * Using a dedicated class loader for @FuzzTests: First-class support for this isn't
+    //   available in JUnit 5 (https://github.com/junit-team/junit5/issues/201), but
+    //   third-party extensions have done it:
+    //   https://github.com/spring-projects/spring-boot/blob/main/spring-boot-project/spring-boot-tools/spring-boot-test-support/src/main/java/org/springframework/boot/testsupport/classpath/ModifiedClassPathExtension.java
+    //   However, as this involves launching a new test run as part of running a test, this
+    //   introduces a number of inconsistencies if applied on the test method rather than test
+    //   class level. For example, @BeforeAll methods will have to be run twice in different class
+    //   loaders, which may not be safe if they are using global resources not separated by class
+    //   loaders (e.g. files).
+    try (AutoCloseable ignored = withHooksEnabled()) {
+      invocation.proceed();
+    } catch (Throwable t) {
+      thrown = t;
+    }
+    Throwable stored = (Throwable) getLastFindingField().get(null);
+    if (stored != null) {
+      throw stored;
+    } else if (thrown != null) {
+      throw thrown;
     }
   }
 
