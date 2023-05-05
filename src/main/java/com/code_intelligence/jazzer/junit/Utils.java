@@ -21,7 +21,6 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import com.code_intelligence.jazzer.utils.UnsafeUtils;
-import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Array;

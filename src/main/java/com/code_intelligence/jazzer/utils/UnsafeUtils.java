@@ -56,6 +56,8 @@ public final class UnsafeUtils {
           Arrays.stream(Lookup.class.getClasses())
               .filter(clazz -> clazz.getSimpleName().equals("ClassOption"))
               .findFirst();
+      // MethodHandles.Lookup#defineHiddenClass is available as of Java 15.
+      // Unsafe#defineAnonymousClass has been removed in Java 17.
       if (defineHiddenClass.isPresent() && classOption.isPresent()) {
         return ((MethodHandles.Lookup) defineHiddenClass.get().invoke(MethodHandles.lookup(),
                     cw.toByteArray(), true, Array.newInstance(classOption.get(), 0)))
