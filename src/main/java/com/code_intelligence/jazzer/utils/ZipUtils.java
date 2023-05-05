@@ -16,12 +16,16 @@
 
 package com.code_intelligence.jazzer.utils;
 
+import java.util.zip.ZipInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.IllegalArgumentException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -95,5 +99,30 @@ public final class ZipUtils {
     });
 
     return filesAdded;
+  }
+
+  public static void extractFile(String srcZip, String targetFile, String outputFilePath) throws IOException{
+    OutputStream out = new FileOutputStream(outputFilePath);
+    
+    FileInputStream fis = new FileInputStream(srcZip);
+    BufferedInputStream bis = new BufferedInputStream(fis);
+    ZipInputStream zin = new ZipInputStream(bis);
+
+    ZipEntry ze = zin.getNextEntry();
+    while(ze != null){
+      if(ze.getName().equals(targetFile)) {
+        byte[] buf = new byte[1024];
+        int read = 0;
+
+        while((read = zin.read(buf)) > -1){
+          out.write(buf, 0, read);
+        }
+
+        out.close();
+        break;
+      }
+
+      ze = zin.getNextEntry();
+    }
   }
 }

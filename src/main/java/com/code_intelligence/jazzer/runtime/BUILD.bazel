@@ -53,6 +53,7 @@ strip_jar(
     ],
     visibility = [
         "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/android:__pkg__",
     ],
 )
 
@@ -103,6 +104,10 @@ java_jni_library(
         "//src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
         "//src/test:__subpackages__",
     ],
+    native_libs = select ({
+        "@platforms//os:android": ["//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver"],
+        "//conditions:default": [],
+    }),
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],

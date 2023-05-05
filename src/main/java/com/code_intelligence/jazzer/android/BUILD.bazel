@@ -1,4 +1,44 @@
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("//bazel:jar.bzl", "strip_jar")
+
+java_import(
+    name = "jazzer_bootstrap_android_import",
+    jars = [
+        "//src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap",
+    ],
+)
+
+android_library(
+    name = "jazzer_bootstrap_android_lib",
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    exports = [
+        ":jazzer_bootstrap_android_import",
+    ],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+    ],
+)
+
+android_binary(
+    name = "jazzer_bootstrap_android_bin",
+    manifest = "//launcher/android:android_manifest",
+    min_sdk_version = 26,
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    deps = [
+        ":jazzer_bootstrap_android_lib",
+    ],
+)
+
+strip_jar(
+    name = "jazzer_bootstrap_android",
+    out = "jazzer_bootstrap_android.jar",
+    jar = "jazzer_bootstrap_android_bin.apk",
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+    ],
+)
 
 android_library(
     name = "jazzer_standalone_library",
@@ -6,10 +46,8 @@ android_library(
     target_compatible_with = SKIP_ON_WINDOWS,
     exports = [
         "//deploy:jazzer-api",
-        "//sanitizers:offline_only_sanitizers",
         "//src/main/java/com/code_intelligence/jazzer:jazzer_import",
-        "//src/main/java/com/code_intelligence/jazzer/runtime",
-        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
+        "//src/main/native/com/code_intelligence/jazzer/android:native_agent_android_wrapper",
     ],
 )
 
@@ -19,6 +57,9 @@ android_binary(
     min_sdk_version = 26,
     tags = ["manual"],
     target_compatible_with = SKIP_ON_WINDOWS,
+    srcs = [
+        "DexFileManager.java",
+    ],
     visibility = [
         "//:__pkg__",
         "//launcher/android:__pkg__",

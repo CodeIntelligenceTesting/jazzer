@@ -16,6 +16,8 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_jar")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository", "git_repository")
+
 
 def jazzer_dependencies():
     maybe(
@@ -181,4 +183,12 @@ def jazzer_dependencies():
         sha256 = "200b32c897b1171824462706f577d7f1d6175da602eccfe570d2dceeac11d490",
         strip_prefix = "llvm-project-jazzer-2023-04-25/compiler-rt/lib/fuzzer",
         url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/refs/tags/2023-04-25.tar.gz",
+    )
+
+    maybe(
+        new_git_repository,
+        name = "jazzer_slicer",
+        remote = "https://android.googlesource.com/platform/tools/dexter",
+        build_file = "//third_party:slicer.BUILD",
+        commit = "0c668ec22ced35c715587bd95138b011afcd1558",
     )

@@ -45,7 +45,7 @@ strip_jar = rule(
         "out": attr.output(),
         "jar": attr.label(
             mandatory = True,
-            allow_single_file = [".jar"],
+            allow_single_file = [".jar", ".apk"],
         ),
         "paths_to_strip": attr.string_list(),
         "paths_to_keep": attr.string_list(),

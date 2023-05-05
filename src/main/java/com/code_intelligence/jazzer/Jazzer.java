@@ -23,9 +23,9 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-
 import com.code_intelligence.jazzer.driver.Driver;
 import com.code_intelligence.jazzer.utils.Log;
+import com.code_intelligence.jazzer.utils.ZipUtils;
 import com.github.fmeum.rules_jni.RulesJni;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -266,6 +266,41 @@ public class Jazzer {
   }
 
   private static Stream<String> javaBinaryArgs() {
+
+    if (IS_ANDROID) {
+      // Add Android specific args
+      String jazzer_agent_path = System.getProperty("jazzer.agent_path");
+      String bootclass_class_overrides = System.getProperty("jazzer.android_bootpath_classes_overrides");
+
+      String srcFile = "com/code_intelligence/jazzer/android/jazzer_bootstrap_android.jar";
+      String outputPath = "/data/local/tmp/jazzer_bootstrap_android.jar";
+
+      try {
+        ZipUtils.extractFile(jazzer_agent_path, srcFile, outputPath);
+      }
+      catch(IOException ioe){
+        Log.error(ioe);
+        exit(1);
+      }
+
+      String nativeAgentOptions = "injectJars="+outputPath;
+      if(bootclass_class_overrides != null && bootclass_class_overrides != ""){
+        nativeAgentOptions += ",bootstrapClassOverrides="+bootclass_class_overrides;
+      }
+
+      // ManagementFactory wont work with Android
+      Stream<String> stream = Stream.of(
+          "-cp", System.getProperty("java.class.path"),
+          "-Xplugin:libopenjdkjvmti.so",
+          "-agentpath:/data/fuzz/libnative_agent.so="+nativeAgentOptions,
+          "-Xcompiler-option",
+          "--debuggable",
+          "-Djdk.attach.allowAttachSelf=true", 
+          Jazzer.class.getName());
+
+      return stream;
+    }
+
     Stream<String> stream = Stream.of("-cp", System.getProperty("java.class.path"),
         // Make ByteBuddyAgent's job simpler by allowing it to attach directly to the JVM
         // rather than relying on an external helper. The latter fails on macOS 12 with JDK 11+
@@ -276,11 +311,6 @@ public class Jazzer {
         // Presumably, this issue is caused by codesigning and the exec helper missing the
         // entitlements required for library insertion.
         "-Djdk.attach.allowAttachSelf=true", Jazzer.class.getName());
-
-    if (IS_ANDROID) {
-      // ManagementFactory wont work with Android
-      return stream;
-    }
 
     return Stream.concat(ManagementFactory.getRuntimeMXBean().getInputArguments().stream(), stream);
   }

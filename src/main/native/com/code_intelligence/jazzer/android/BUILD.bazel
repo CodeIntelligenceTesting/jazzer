@@ -1,0 +1,64 @@
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+
+genrule(
+    name = "android_jvmti_h_gen",
+    outs = ["jvmti.h"],
+    cmd = "curl --silent https://android.googlesource.com/platform/art/+/1cff8449bac0fdab6e84dc9255c3cccd504c1705/openjdkjvmti/include/jvmti.h?format=TEXT | base64 --decode > $(OUTS)",
+    target_compatible_with = SKIP_ON_WINDOWS,
+)
+
+cc_library(
+    name = "genrule_builder",
+    data = [":android_jvmti_h_gen"],
+    linkstatic = 1,
+)
+
+cc_binary(
+    name = "native_agent",
+    srcs = [
+        "dex_file_manager.cpp",
+        "dex_file_manager.h",
+        "jazzer_jvmti_allocator.h",
+        "native_agent.cpp",
+        "jvmti.h",
+    ],
+    deps = [
+        "@jazzer_slicer//:jazzer_slicer",
+        #"//third_party/dexter:jazzer_slicer", TODO(Cobark) delete
+        ":genrule_builder",
+        "@com_google_absl//absl/strings",
+    ],
+    includes = [
+        ".",
+    ],
+    linkopts = [
+        "-lz",
+    ],
+    copts = [
+        "-Wno-unused-variable",
+    ],
+    linkshared = True,
+)
+
+android_library(
+    name = "native_agent_android_wrapper",
+    data = [
+        ":native_agent",
+        ":android_jvmti_h_gen",
+    ],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/android:__pkg__",
+    ],
+)
+
+android_binary(
+    name = "android_native_agent",
+    manifest = "//launcher/android:android_manifest",
+    min_sdk_version = 26,
+    deps = [
+        ":native_agent_android_wrapper",
+    ],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/android:__pkg__",
+    ],
+)

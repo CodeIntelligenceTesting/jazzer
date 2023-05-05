@@ -153,6 +153,15 @@ public final class Opt {
   public static final boolean dedup =
       boolSetting("dedup", hooks, "Compute and print a deduplication token for every finding");
 
+  public static final String androidBootclassJarPath = 
+      stringSetting("android_bootclass_jar_path", null, "Full path to booclass jar path that will be used on Android runs. If you are using the launcher this will be set for you.");
+
+  public static final String androidNativeAgentPath = 
+      stringSetting("android_native_agent_path", null, "Full path to the native agent that will be used for instrumentation on Android.");
+
+  public static final String androidBootclassClassesOverrides = 
+      stringSetting("android_bootpath_classes_overrides", null, "Used for fuzzing classes loaded in through the bootstrap class loader on Android. Full path to jar file with the instrumented versions of the classes you want to override.");
+  
   // Whether hook instrumentation should add a check for JazzerInternal#hooksEnabled before
   // executing hooks. Used to disable hooks during non-fuzz JUnit tests.
   public static final boolean conditionalHooks =

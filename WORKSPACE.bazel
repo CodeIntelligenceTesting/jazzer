@@ -199,6 +199,12 @@ http_file(
     urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.cli/0.8.8/org.jacoco.cli-0.8.8-nodeps.jar"],
 )
 
+http_file(
+    name = "android_jvmti",
+    downloaded_file_path = "jvmti.h",
+    url = "https://android.googlesource.com/platform/art/+/1cff8449bac0fdab6e84dc9255c3cccd504c1705/openjdkjvmti/include/jvmti.h",
+)
+
 load("//third_party/android:android_configure.bzl", "android_configure")
 
 android_configure(name = "configure_android_rules")
