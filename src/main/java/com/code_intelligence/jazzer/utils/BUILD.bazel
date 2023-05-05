@@ -50,6 +50,18 @@ java_library(
 )
 
 java_library(
+    name = "unsafe_utils",
+    srcs = ["UnsafeUtils.java"],
+    visibility = [
+        "//:__subpackages__",
+    ],
+    deps = [
+        ":unsafe_provider",
+        "@org_ow2_asm_asm//jar",
+    ],
+)
+
+java_library(
     name = "zip_utils",
     srcs = ["ZipUtils.java"],
     visibility = ["//visibility:public"],

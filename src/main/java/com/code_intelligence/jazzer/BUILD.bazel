@@ -110,7 +110,11 @@ java_library(
     runtime_deps = select({
         "@platforms//os:windows": [],
         "//conditions:default": ["//src/main/native/com/code_intelligence/jazzer:jazzer_preload"],
-    }),
+    }) + [
+        # Only used by JUnit, but including it here means we don't need to shade ASM in
+        # jazzer-junit.
+        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_utils",
+    ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/driver",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",

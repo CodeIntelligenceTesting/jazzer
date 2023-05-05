@@ -14,18 +14,34 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import static java.util.Arrays.stream;
+import static java.util.Collections.newSetFromMap;
+import static org.junit.jupiter.api.Named.named;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+
+import com.code_intelligence.jazzer.utils.UnsafeProvider;
+import com.code_intelligence.jazzer.utils.UnsafeUtils;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.IdentityHashMap;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
+import org.junit.jupiter.params.provider.Arguments;
 
 class Utils {
   /**
@@ -127,12 +143,89 @@ class Utils {
   }
 
   /**
-   * Convert the string to ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601#Durations).
-   * We do not allow for duration units longer than hours, so we can always prepend PT.
+   * Convert the string to ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601#Durations). We do not
+   * allow for duration units longer than hours, so we can always prepend PT.
    */
   static long durationStringToSeconds(String duration) {
     String isoDuration =
         "PT" + duration.replace("sec", "s").replace("min", "m").replace("hr", "h").replace(" ", "");
     return Duration.parse(isoDuration).getSeconds();
+  }
+
+  /**
+   * Creates {@link Arguments} for a single invocation of a parameterized test that can be
+   * identified as having been created in this way by {@link #isMarkedInvocation}.
+   *
+   * @param displayName the display name to assign to every argument
+   */
+  static Arguments getMarkedArguments(Method method, String displayName) {
+    return arguments(stream(method.getParameterTypes())
+                         .map(Utils::getMarkedInstance)
+                         // Wrap in named as toString may crash on marked instances.
+                         .map(arg -> named(displayName, arg))
+                         .toArray(Object[] ::new));
+  }
+
+  /**
+   * @return {@code true} if and only if the arguments for this test method invocation were created
+   * with {@link #getMarkedArguments}
+   */
+  static boolean isMarkedInvocation(ReflectiveInvocationContext<Method> invocationContext) {
+    if (invocationContext.getArguments().stream().anyMatch(Utils::isMarkedInstance)) {
+      if (invocationContext.getArguments().stream().allMatch(Utils::isMarkedInstance)) {
+        return true;
+      }
+      throw new IllegalStateException(
+          "Some, but not all arguments were marked in invocation of " + invocationContext);
+    } else {
+      return false;
+    }
+  }
+
+  private static final ClassValue<Object> uniqueInstanceCache = new ClassValue<Object>() {
+    @Override
+    protected Object computeValue(Class<?> clazz) {
+      return makeMarkedInstance(clazz);
+    }
+  };
+  private static final Set<Object> uniqueInstances = newSetFromMap(new IdentityHashMap<>());
+
+  // Visible for testing.
+  static <T> T getMarkedInstance(Class<T> clazz) {
+    // makeMarkedInstance creates new classes, which is expensive and can cause the JVM to run out
+    // of metaspace. We thus cache the marked instances per class.
+    Object instance = uniqueInstanceCache.get(clazz);
+    uniqueInstances.add(instance);
+    return (T) instance;
+  }
+
+  // Visible for testing.
+  static boolean isMarkedInstance(Object instance) {
+    return uniqueInstances.contains(instance);
+  }
+
+  private static Object makeMarkedInstance(Class<?> clazz) {
+    if (clazz == Class.class) {
+      return new Object() {}.getClass();
+    }
+    if (clazz.isArray()) {
+      return Array.newInstance(clazz.getComponentType(), 0);
+    }
+    if (clazz.isInterface()) {
+      return Proxy.newProxyInstance(
+          Utils.class.getClassLoader(), new Class[] {clazz}, (o, method, objects) -> null);
+    }
+
+    if (clazz.isPrimitive()) {
+      clazz = MethodType.methodType(clazz).wrap().returnType();
+    } else if (Modifier.isAbstract(clazz.getModifiers())) {
+      clazz = UnsafeUtils.defineAnonymousConcreteSubclass(clazz);
+    }
+
+    try {
+      return clazz.cast(UnsafeProvider.getUnsafe().allocateInstance(clazz));
+    } catch (InstantiationException e) {
+      throw new IllegalStateException(e);
+    }
   }
 }

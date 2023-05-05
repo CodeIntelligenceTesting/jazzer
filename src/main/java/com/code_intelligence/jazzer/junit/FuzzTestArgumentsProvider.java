@@ -29,8 +29,15 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.*;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -78,35 +85,41 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
     //  before the argument discovery for a ParameterizedTest is kicked off, but I haven't found
     //  one.
     configureAndInstallAgent(extensionContext);
-    Stream<Map.Entry<String, byte[]>> rawSeeds;
+
+    Class<?> testClass = extensionContext.getRequiredTestClass();
+    Method testMethod = extensionContext.getRequiredTestMethod();
+
     if (Utils.isFuzzing(extensionContext)) {
-      // When fuzzing, supply a single set of arguments to trigger an invocation of the test method.
-      // An InvocationInterceptor is used to skip the actual invocation and instead start the
-      // fuzzer.
-      rawSeeds = Stream.of(new SimpleEntry<>("Fuzzing...", new byte[] {}));
-    } else {
-      rawSeeds = Stream.of(new SimpleEntry<>("<empty input>", new byte[] {}));
-      Class<?> testClass = extensionContext.getRequiredTestClass();
-      Method testMethod = extensionContext.getRequiredTestMethod();
-      rawSeeds = Stream.concat(rawSeeds, walkInputs(testClass, testMethod));
-      if (Utils.isCoverageAgentPresent()
-          && Files.isDirectory(Utils.generatedCorpusPath(testClass, testMethod))) {
-        rawSeeds = Stream.concat(rawSeeds,
-            walkInputsInPath(Utils.generatedCorpusPath(testClass, testMethod), Integer.MAX_VALUE));
-      }
+      // When fuzzing, supply a special set of arguments that our InvocationInterceptor uses as a
+      // sign to start fuzzing.
+      // FIXME: This is a hack that is needed only because there does not seem to be a way to
+      //  communicate out of band that a certain invocation was triggered by a particular argument
+      //  provider. We should get rid of this hack as soon as
+      //  https://github.com/junit-team/junit5/issues/3282 has been addressed.
+      return Stream.of(Utils.getMarkedArguments(testMethod, "Fuzzing..."));
     }
+
+    Stream<Map.Entry<String, byte[]>> rawSeeds =
+        Stream.of(new SimpleImmutableEntry<>("<empty input>", new byte[0]));
+    rawSeeds = Stream.concat(rawSeeds, walkInputs(testClass, testMethod));
+
+    if (Utils.isCoverageAgentPresent()
+        && Files.isDirectory(Utils.generatedCorpusPath(testClass, testMethod))) {
+      rawSeeds = Stream.concat(rawSeeds,
+          walkInputsInPath(Utils.generatedCorpusPath(testClass, testMethod), Integer.MAX_VALUE));
+    }
+
     return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds).onClose(() -> {
-      if (!Utils.isFuzzing(extensionContext)) {
+      extensionContext.publishReportEntry(
+          "No fuzzing has been performed, the fuzz test has only been executed on the fixed "
+          + "set of inputs in the seed corpus.\n"
+          + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a "
+          + "non-empty value.");
+      if (invalidCorpusFilesPresent) {
         extensionContext.publishReportEntry(
-            "No fuzzing has been performed, the fuzz test has only been executed on the fixed "
-            + "set of inputs in the seed corpus.\n"
-            + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a "
-            + "non-empty value.");
-        if (invalidCorpusFilesPresent) {
-          extensionContext.publishReportEntry(
-              "Some files in the seed corpus do not match the fuzz target signature.\n"
-              + "This indicates that they were generated with a different signature and may cause issues reproducing previous findings.");
-        }
+            "Some files in the seed corpus do not match the fuzz target signature.\n"
+            + "This indicates that they were generated with a different signature and may cause "
+            + "issues reproducing previous findings.");
       }
     });
   }

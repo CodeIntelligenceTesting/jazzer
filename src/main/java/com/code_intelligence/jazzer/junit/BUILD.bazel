@@ -77,6 +77,9 @@ java_library(
     srcs = ["Utils.java"],
     visibility = ["//src/test/java/com/code_intelligence/jazzer/junit:__pkg__"],
     deps = [
+        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
+        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_utils",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
     ],
 )
