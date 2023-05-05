@@ -99,16 +99,17 @@ java_library(
 java_jni_library(
     name = "coverage_map",
     srcs = ["CoverageMap.java"],
+    native_libs = select({
+        "@platforms//os:android": ["//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver"],
+        "//conditions:default": [],
+    }),
     visibility = [
         "//src/jmh/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
         "//src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
         "//src/test:__subpackages__",
     ],
-    native_libs = select ({
-        "@platforms//os:android": ["//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver"],
-        "//conditions:default": [],
-    }),
     deps = [
+        "//src/main/java/com/code_intelligence/jazzer/runtime:constants",
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
 )

@@ -14,7 +14,8 @@
 
 package com.code_intelligence.jazzer.runtime;
 
-import com.code_intelligence.jazzer.driver.Opt;
+import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
+
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import com.github.fmeum.rules_jni.RulesJni;
 import java.lang.invoke.MethodHandle;
@@ -111,10 +112,10 @@ final public class CoverageMap {
   // Called by the coverage instrumentation.
   @SuppressWarnings("unused")
   public static void recordCoverage(final int id) {
-    if(Opt.isAndroid){
+    if (IS_ANDROID) {
       enlargeIfNeeded(id);
     }
-    
+
     final long address = countersAddress + id;
     final byte counter = UNSAFE.getByte(address);
     UNSAFE.putByte(address, (byte) (counter == -1 ? 1 : counter + 1));

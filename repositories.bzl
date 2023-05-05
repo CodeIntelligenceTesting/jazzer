@@ -16,10 +16,9 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_jar")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository", "git_repository")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
-
-def jazzer_dependencies():
+def jazzer_dependencies(android = False):
     maybe(
         http_archive,
         name = "platforms",
@@ -185,10 +184,11 @@ def jazzer_dependencies():
         url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/refs/tags/2023-04-25.tar.gz",
     )
 
-    maybe(
-        new_git_repository,
-        name = "jazzer_slicer",
-        remote = "https://android.googlesource.com/platform/tools/dexter",
-        build_file = "//third_party:slicer.BUILD",
-        commit = "0c668ec22ced35c715587bd95138b011afcd1558",
-    )
+    if android:
+        maybe(
+            git_repository,
+            name = "jazzer_slicer",
+            remote = "https://android.googlesource.com/platform/tools/dexter",
+            build_file = "//third_party:slicer.BUILD",
+            commit = "0fe35538da107ff48da6e9f9b92b55b014973bf8",
+        )

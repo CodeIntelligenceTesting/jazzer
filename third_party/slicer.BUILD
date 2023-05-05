@@ -1,7 +1,5 @@
-
-cc_library (
+cc_library(
     name = "jazzer_slicer",
-
     srcs = [
         "slicer/bytecode_encoder.cc",
         "slicer/code_ir.cc",
@@ -17,12 +15,8 @@ cc_library (
         "slicer/reader.cc",
         "slicer/tryblocks_encoder.cc",
         "slicer/writer.cc",
-
     ],
     hdrs = glob(["slicer/export/slicer/*.h"]),
-
-    includes = ["slicer/export"],
-
     copts = [
         "-Wall",
         "-Wno-sign-compare",
@@ -30,10 +24,8 @@ cc_library (
         "-Wno-shift-count-overflow",
         "-Wno-missing-braces",
     ],
-    
+    includes = ["slicer/export"],
     visibility = [
         "//visibility:public",
     ],
 )
-
-

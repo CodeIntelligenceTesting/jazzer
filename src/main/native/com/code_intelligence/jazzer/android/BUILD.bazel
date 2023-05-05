@@ -1,32 +1,35 @@
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 
-genrule(
-    name = "android_jvmti_h_gen",
-    outs = ["jvmti.h"],
-    cmd = "curl --silent https://android.googlesource.com/platform/art/+/1cff8449bac0fdab6e84dc9255c3cccd504c1705/openjdkjvmti/include/jvmti.h?format=TEXT | base64 --decode > $(OUTS)",
+copy_file(
+    name = "jvmti_h_encoded",
+    src = "@android_jvmti//file",
+    out = "jvmti.encoded",
+    is_executable = False,
+    tags = ["manual"],
     target_compatible_with = SKIP_ON_WINDOWS,
 )
 
-cc_library(
-    name = "genrule_builder",
-    data = [":android_jvmti_h_gen"],
-    linkstatic = 1,
+genrule(
+    name = "jvmti_h",
+    srcs = [
+        "jvmti.encoded",
+    ],
+    outs = ["jvmti.h"],
+    cmd = "base64 --decode $< > $(OUTS)",
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
 )
 
-cc_binary(
-    name = "native_agent",
+cc_jni_library(
+    name = "android_native_agent",
     srcs = [
         "dex_file_manager.cpp",
         "dex_file_manager.h",
         "jazzer_jvmti_allocator.h",
         "native_agent.cpp",
-        "jvmti.h",
-    ],
-    deps = [
-        "@jazzer_slicer//:jazzer_slicer",
-        #"//third_party/dexter:jazzer_slicer", TODO(Cobark) delete
-        ":genrule_builder",
-        "@com_google_absl//absl/strings",
+        ":jvmti_h",
     ],
     includes = [
         ".",
@@ -34,31 +37,11 @@ cc_binary(
     linkopts = [
         "-lz",
     ],
-    copts = [
-        "-Wno-unused-variable",
-    ],
-    linkshared = True,
-)
-
-android_library(
-    name = "native_agent_android_wrapper",
-    data = [
-        ":native_agent",
-        ":android_jvmti_h_gen",
-    ],
-    visibility = [
-        "//src/main/java/com/code_intelligence/jazzer/android:__pkg__",
-    ],
-)
-
-android_binary(
-    name = "android_native_agent",
-    manifest = "//launcher/android:android_manifest",
-    min_sdk_version = 26,
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    visibility = ["//visibility:public"],
     deps = [
-        ":native_agent_android_wrapper",
-    ],
-    visibility = [
-        "//src/main/java/com/code_intelligence/jazzer/android:__pkg__",
+        "@com_google_absl//absl/strings",
+        "@jazzer_slicer",
     ],
 )

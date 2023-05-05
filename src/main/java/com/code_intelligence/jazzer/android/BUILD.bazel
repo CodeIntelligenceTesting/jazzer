@@ -1,22 +1,25 @@
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
-load("//bazel:jar.bzl", "strip_jar")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
 
 java_import(
     name = "jazzer_bootstrap_android_import",
     jars = [
         "//src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap",
     ],
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
 )
 
 android_library(
     name = "jazzer_bootstrap_android_lib",
     tags = ["manual"],
     target_compatible_with = SKIP_ON_WINDOWS,
-    exports = [
-        ":jazzer_bootstrap_android_import",
-    ],
     visibility = [
         "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+    ],
+    exports = [
+        ":jazzer_bootstrap_android_import",
     ],
 )
 
@@ -31,12 +34,22 @@ android_binary(
     ],
 )
 
-strip_jar(
+copy_file(
     name = "jazzer_bootstrap_android",
+    src = "jazzer_bootstrap_android_bin.apk",
     out = "jazzer_bootstrap_android.jar",
-    jar = "jazzer_bootstrap_android_bin.apk",
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
     visibility = [
         "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+    ],
+)
+
+java_jni_library(
+    name = "dex_file_manager",
+    srcs = ["DexFileManager.java"],
+    native_libs = [
+        "//src/main/native/com/code_intelligence/jazzer/android:android_native_agent",
     ],
 )
 
@@ -47,7 +60,6 @@ android_library(
     exports = [
         "//deploy:jazzer-api",
         "//src/main/java/com/code_intelligence/jazzer:jazzer_import",
-        "//src/main/native/com/code_intelligence/jazzer/android:native_agent_android_wrapper",
     ],
 )
 
@@ -57,14 +69,12 @@ android_binary(
     min_sdk_version = 26,
     tags = ["manual"],
     target_compatible_with = SKIP_ON_WINDOWS,
-    srcs = [
-        "DexFileManager.java",
-    ],
     visibility = [
         "//:__pkg__",
         "//launcher/android:__pkg__",
     ],
     deps = [
+        ":dex_file_manager",
         ":jazzer_standalone_library",
     ],
 )

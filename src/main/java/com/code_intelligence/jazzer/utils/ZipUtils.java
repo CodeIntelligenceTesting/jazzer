@@ -16,9 +16,8 @@
 
 package com.code_intelligence.jazzer.utils;
 
-import java.util.zip.ZipInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -42,6 +41,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public final class ZipUtils {
@@ -101,28 +101,26 @@ public final class ZipUtils {
     return filesAdded;
   }
 
-  public static void extractFile(String srcZip, String targetFile, String outputFilePath) throws IOException{
-    OutputStream out = new FileOutputStream(outputFilePath);
-    
-    FileInputStream fis = new FileInputStream(srcZip);
-    BufferedInputStream bis = new BufferedInputStream(fis);
-    ZipInputStream zin = new ZipInputStream(bis);
+  public static void extractFile(String srcZip, String targetFile, String outputFilePath)
+      throws IOException {
+    try (OutputStream out = new FileOutputStream(outputFilePath);
+         ZipInputStream zis = new ZipInputStream(new FileInputStream(srcZip));) {
+      ZipEntry ze = zis.getNextEntry();
+      while (ze != null) {
+        if (ze.getName().equals(targetFile)) {
+          byte[] buf = new byte[1024];
+          int read = 0;
 
-    ZipEntry ze = zin.getNextEntry();
-    while(ze != null){
-      if(ze.getName().equals(targetFile)) {
-        byte[] buf = new byte[1024];
-        int read = 0;
+          while ((read = zis.read(buf)) > -1) {
+            out.write(buf, 0, read);
+          }
 
-        while((read = zin.read(buf)) > -1){
-          out.write(buf, 0, read);
+          out.close();
+          break;
         }
 
-        out.close();
-        break;
+        ze = zis.getNextEntry();
       }
-
-      ze = zin.getNextEntry();
     }
   }
 }

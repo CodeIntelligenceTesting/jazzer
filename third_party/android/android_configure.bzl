@@ -20,13 +20,18 @@ def _is_windows(repository_ctx):
     """Returns true if the current platform is Windows"""
     return repository_ctx.os.name.lower().startswith("windows")
 
+def _supports_android(repository_ctx):
+    sdk_home = repository_ctx.os.environ.get(_ANDROID_SDK_HOME)
+    ndk_home = repository_ctx.os.environ.get(_ANDROID_NDK_HOME)
+    return sdk_home and ndk_home and not _is_windows(repository_ctx)
+
 def _android_autoconf_impl(repository_ctx):
     """Implementation of the android_autoconf repo rule"""
     sdk_home = repository_ctx.os.environ.get(_ANDROID_SDK_HOME)
     ndk_home = repository_ctx.os.environ.get(_ANDROID_NDK_HOME)
 
     # rules_android_ndk does not support Windows yet.
-    if sdk_home and ndk_home and not _is_windows(repository_ctx):
+    if _supports_android(repository_ctx):
         repos = _ANDROID_REPOS_TEMPLATE.format(
             sdk_home = repr(sdk_home),
             ndk_home = repr(ndk_home),

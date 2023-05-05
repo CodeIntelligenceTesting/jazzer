@@ -4,7 +4,7 @@ load("//bazel:kotlin.bzl", "ktlint")
 java_library(
     name = "agent_installer",
     srcs = ["AgentInstaller.java"],
-    resources = select ({
+    resources = select({
         "@platforms//os:android": [
             "//src/main/java/com/code_intelligence/jazzer/android:jazzer_bootstrap_android",
         ],

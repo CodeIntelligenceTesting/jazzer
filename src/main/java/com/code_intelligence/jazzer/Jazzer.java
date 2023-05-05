@@ -23,6 +23,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+
 import com.code_intelligence.jazzer.driver.Driver;
 import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.ZipUtils;
@@ -265,38 +266,38 @@ public class Jazzer {
     return Paths.get(System.getProperty("java.home"), "bin", javaBinaryName);
   }
 
-  private static Stream<String> javaBinaryArgs() {
-
+  private static Stream<String> javaBinaryArgs() throws IOException {
     if (IS_ANDROID) {
       // Add Android specific args
-      String jazzer_agent_path = System.getProperty("jazzer.agent_path");
-      String bootclass_class_overrides = System.getProperty("jazzer.android_bootpath_classes_overrides");
+      Path agentPath =
+          RulesJni.extractLibrary("android_native_agent", "/com/code_intelligence/jazzer/android");
 
-      String srcFile = "com/code_intelligence/jazzer/android/jazzer_bootstrap_android.jar";
-      String outputPath = "/data/local/tmp/jazzer_bootstrap_android.jar";
+      String jazzerAgentPath = System.getProperty("jazzer.agent_path");
+      String bootclassClassOverrides =
+          System.getProperty("jazzer.android_bootpath_classes_overrides");
+
+      String jazzerBootstrapJarPath =
+          "com/code_intelligence/jazzer/android/jazzer_bootstrap_android.jar";
+      String jazzerBootstrapJarOut = "/data/local/tmp/jazzer_bootstrap_android.jar";
 
       try {
-        ZipUtils.extractFile(jazzer_agent_path, srcFile, outputPath);
-      }
-      catch(IOException ioe){
-        Log.error(ioe);
+        ZipUtils.extractFile(jazzerAgentPath, jazzerBootstrapJarPath, jazzerBootstrapJarOut);
+      } catch (IOException ioe) {
+        Log.error(
+            "Could not extract jazzer_bootstrap_android.jar from Jazzer standalone agent", ioe);
         exit(1);
       }
 
-      String nativeAgentOptions = "injectJars="+outputPath;
-      if(bootclass_class_overrides != null && bootclass_class_overrides != ""){
-        nativeAgentOptions += ",bootstrapClassOverrides="+bootclass_class_overrides;
+      String nativeAgentOptions = "injectJars=" + jazzerBootstrapJarOut;
+      if (bootclassClassOverrides != null && !bootclassClassOverrides.isEmpty()) {
+        nativeAgentOptions += ",bootstrapClassOverrides=" + bootclassClassOverrides;
       }
 
       // ManagementFactory wont work with Android
-      Stream<String> stream = Stream.of(
-          "-cp", System.getProperty("java.class.path"),
-          "-Xplugin:libopenjdkjvmti.so",
-          "-agentpath:/data/fuzz/libnative_agent.so="+nativeAgentOptions,
-          "-Xcompiler-option",
-          "--debuggable",
-          "-Djdk.attach.allowAttachSelf=true", 
-          Jazzer.class.getName());
+      Stream<String> stream =
+          Stream.of("-cp", System.getProperty("java.class.path"), "-Xplugin:libopenjdkjvmti.so",
+              "-agentpath:" + agentPath.toString() + "=" + nativeAgentOptions, "-Xcompiler-option",
+              "--debuggable", "-Djdk.attach.allowAttachSelf=true", Jazzer.class.getName());
 
       return stream;
     }
