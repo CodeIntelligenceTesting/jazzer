@@ -16,6 +16,10 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.collection;
 
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkCrossOvers.CrossOverAction.pickRandomCrossOverAction;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkCrossOvers.crossOverChunk;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkCrossOvers.insertChunk;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkCrossOvers.overwriteChunk;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.MutationAction.pickRandomMutationAction;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.deleteRandomChunk;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.growBy;
@@ -161,6 +165,20 @@ final class MapMutatorFactory extends MutatorFactory {
 
     @Override
     public void crossOverInPlace(Map<K, V> reference, Map<K, V> otherReference, PseudoRandom prng) {
+      switch (
+          pickRandomCrossOverAction(reference.keySet(), otherReference.keySet(), maxSize, prng)) {
+        case INSERT_CHUNK:
+          insertChunk(reference, otherReference, maxSize, prng);
+          break;
+        case OVERWRITE_CHUNK:
+          overwriteChunk(reference, otherReference, prng);
+          break;
+        case CROSS_OVER_CHUNK:
+          crossOverChunk(reference, otherReference, keyMutator, valueMutator, prng);
+          break;
+        default:
+          // Both maps are empty or could otherwise not be crossed over.
+      }
     }
 
     @Override
