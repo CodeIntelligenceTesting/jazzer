@@ -31,6 +31,7 @@ import com.code_intelligence.jazzer.mutation.support.TestSupport;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -431,6 +432,69 @@ class FloatingPointMutatorTest {
     }
   }
 
+  @Test
+  void testFloatCrossOverMean() {
+    SerializingMutator<Float> mutator =
+        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull Float>() {}.annotatedType());
+    try (TestSupport.MockPseudoRandom prng =
+             mockPseudoRandom(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
+      assertThat(mutator.crossOver(0f, 0f, prng)).isWithin(0).of(0f);
+      assertThat(mutator.crossOver(-0f, 0f, prng)).isWithin(0).of(0f);
+      assertThat(mutator.crossOver(0f, 2f, prng)).isWithin(1e-10f).of(1.0f);
+      assertThat(mutator.crossOver(1f, 2f, prng)).isWithin(1e-10f).of(1.5f);
+      assertThat(mutator.crossOver(1f, 3f, prng)).isWithin(1e-10f).of(2f);
+      assertThat(mutator.crossOver(Float.MAX_VALUE, Float.MAX_VALUE, prng))
+          .isWithin(1e-10f)
+          .of(Float.MAX_VALUE);
+
+      assertThat(mutator.crossOver(0f, -2f, prng)).isWithin(1e-10f).of(-1.0f);
+      assertThat(mutator.crossOver(-1f, -2f, prng)).isWithin(1e-10f).of(-1.5f);
+      assertThat(mutator.crossOver(-1f, -3f, prng)).isWithin(1e-10f).of(-2f);
+      assertThat(mutator.crossOver(-Float.MAX_VALUE, -Float.MAX_VALUE, prng))
+          .isWithin(1e-10f)
+          .of(-Float.MAX_VALUE);
+
+      assertThat(mutator.crossOver(-100f, 200f, prng)).isWithin(1e-10f).of(50.0f);
+      assertThat(mutator.crossOver(100f, -200f, prng)).isWithin(1e-10f).of(-50f);
+      assertThat(mutator.crossOver(-Float.MAX_VALUE, Float.MAX_VALUE, prng))
+          .isWithin(1e-10f)
+          .of(0f);
+
+      assertThat(mutator.crossOver(Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, prng)).isNaN();
+      assertThat(mutator.crossOver(Float.POSITIVE_INFINITY, 0f, prng)).isPositiveInfinity();
+      assertThat(mutator.crossOver(0f, Float.POSITIVE_INFINITY, prng)).isPositiveInfinity();
+      assertThat(mutator.crossOver(Float.NEGATIVE_INFINITY, 0f, prng)).isNegativeInfinity();
+      assertThat(mutator.crossOver(0f, Float.NEGATIVE_INFINITY, prng)).isNegativeInfinity();
+      assertThat(mutator.crossOver(Float.NaN, 0f, prng)).isNaN();
+      assertThat(mutator.crossOver(0f, Float.NaN, prng)).isNaN();
+    }
+  }
+
+  @Test
+  void testFloatCrossOverExponent() {
+    SerializingMutator<Float> mutator =
+        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull Float>() {}.annotatedType());
+    try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(1, 1, 1)) {
+      assertThat(mutator.crossOver(2.0f, -1.5f, prng)).isWithin(1e-10f).of(1.0f);
+      assertThat(mutator.crossOver(2.0f, Float.POSITIVE_INFINITY, prng)).isPositiveInfinity();
+      assertThat(mutator.crossOver(-1.5f, Float.NEGATIVE_INFINITY, prng)).isNaN();
+    }
+  }
+
+  @Test
+  void testFloatCrossOverMantissa() {
+    SerializingMutator<Float> mutator =
+        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull Float>() {}.annotatedType());
+    try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(2, 2, 2)) {
+      assertThat(mutator.crossOver(4.0f, 3.5f, prng)).isWithin(1e-10f).of(7.0f);
+      assertThat(mutator.crossOver(Float.POSITIVE_INFINITY, 3.0f, prng)).isNaN();
+      assertThat(mutator.crossOver(Float.MAX_VALUE, 0.0f, prng)).isWithin(1e-10f).of(1.7014118e38f);
+    }
+  }
+
   static Stream<Arguments> doubleInitCasesFullRange() {
     SerializingMutator<Double> mutator =
         (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
@@ -650,6 +714,72 @@ class FloatingPointMutatorTest {
           mutator.mutate(UNUSED_DOUBLE, prng);
         }
       });
+    }
+  }
+
+  @Test
+  void testDoubleCrossOverMean() {
+    SerializingMutator<Double> mutator =
+        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull Double>() {}.annotatedType());
+    try (TestSupport.MockPseudoRandom prng =
+             mockPseudoRandom(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
+      assertThat(mutator.crossOver(0.0, 0.0, prng)).isWithin(0).of(0f);
+      assertThat(mutator.crossOver(-0.0, 0.0, prng)).isWithin(0).of(0f);
+      assertThat(mutator.crossOver(0.0, 2.0, prng)).isWithin(1e-10f).of(1.0f);
+      assertThat(mutator.crossOver(1.0, 2.0, prng)).isWithin(1e-10f).of(1.5f);
+      assertThat(mutator.crossOver(1.0, 3.0, prng)).isWithin(1e-10f).of(2f);
+      assertThat(mutator.crossOver(Double.MAX_VALUE, Double.MAX_VALUE, prng))
+          .isWithin(1e-10f)
+          .of(Double.MAX_VALUE);
+
+      assertThat(mutator.crossOver(0.0, -2.0, prng)).isWithin(1e-10f).of(-1.0f);
+      assertThat(mutator.crossOver(-1.0, -2.0, prng)).isWithin(1e-10f).of(-1.5f);
+      assertThat(mutator.crossOver(-1.0, -3.0, prng)).isWithin(1e-10f).of(-2f);
+      assertThat(mutator.crossOver(-Double.MAX_VALUE, -Double.MAX_VALUE, prng))
+          .isWithin(1e-10f)
+          .of(-Double.MAX_VALUE);
+
+      assertThat(mutator.crossOver(-100.0, 200.0, prng)).isWithin(1e-10f).of(50.0f);
+      assertThat(mutator.crossOver(100.0, -200.0, prng)).isWithin(1e-10f).of(-50f);
+      assertThat(mutator.crossOver(-Double.MAX_VALUE, Double.MAX_VALUE, prng))
+          .isWithin(1e-10f)
+          .of(0f);
+
+      assertThat(mutator.crossOver(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, prng))
+          .isNaN();
+      assertThat(mutator.crossOver(Double.POSITIVE_INFINITY, 0.0, prng)).isPositiveInfinity();
+      assertThat(mutator.crossOver(0.0, Double.POSITIVE_INFINITY, prng)).isPositiveInfinity();
+      assertThat(mutator.crossOver(Double.NEGATIVE_INFINITY, 0.0, prng)).isNegativeInfinity();
+      assertThat(mutator.crossOver(0.0, Double.NEGATIVE_INFINITY, prng)).isNegativeInfinity();
+      assertThat(mutator.crossOver(Double.NaN, 0.0, prng)).isNaN();
+      assertThat(mutator.crossOver(0.0, Double.NaN, prng)).isNaN();
+    }
+  }
+
+  @Test
+  void testDoubleCrossOverExponent() {
+    SerializingMutator<Double> mutator =
+        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull Double>() {}.annotatedType());
+    try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(1, 1, 1)) {
+      assertThat(mutator.crossOver(2.0, -1.5, prng)).isWithin(1e-10f).of(1.0f);
+      assertThat(mutator.crossOver(2.0, Double.POSITIVE_INFINITY, prng)).isPositiveInfinity();
+      assertThat(mutator.crossOver(-1.5, Double.NEGATIVE_INFINITY, prng)).isNaN();
+    }
+  }
+
+  @Test
+  void testDoubleCrossOverMantissa() {
+    SerializingMutator<Double> mutator =
+        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
+            new TypeHolder<@NotNull Double>() {}.annotatedType());
+    try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(2, 2, 2)) {
+      assertThat(mutator.crossOver(4.0, 3.5, prng)).isWithin(1e-10f).of(7.0f);
+      assertThat(mutator.crossOver(Double.POSITIVE_INFINITY, 3.0, prng)).isNaN();
+      assertThat(mutator.crossOver(Double.MAX_VALUE, 0.0, prng))
+          .isWithin(1e-10f)
+          .of(8.98846567431158e307);
     }
   }
 }

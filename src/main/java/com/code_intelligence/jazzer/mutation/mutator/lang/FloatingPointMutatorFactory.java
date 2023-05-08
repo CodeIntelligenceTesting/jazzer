@@ -40,6 +40,7 @@ import java.util.function.Predicate;
 import java.util.stream.DoubleStream;
 
 final class FloatingPointMutatorFactory extends MutatorFactory {
+  @SuppressWarnings("unchecked")
   private static final DoubleFunction<Double>[] mathFunctions =
       new DoubleFunction[] {Math::acos, Math::asin, Math::atan, Math::cbrt, Math::ceil, Math::cos,
           Math::cosh, Math::exp, Math::expm1, Math::floor, Math::log, Math::log10, Math::log1p,
@@ -272,7 +273,40 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
 
     @Override
     public Float crossOver(Float value, Float otherValue, PseudoRandom prng) {
-      return value;
+      float result;
+      switch (prng.closedRange(0, 2)) {
+        case 0:
+          result = crossOverMean(value, otherValue);
+          break;
+        case 1:
+          result = crossOverExponent(value, otherValue);
+          break;
+        case 2:
+          result = crossOverMantissa(value, otherValue);
+          break;
+        default:
+          throw new IllegalStateException("Unknown mutation case");
+      }
+      return forceInRange(result, minValue, maxValue, allowNaN);
+    }
+
+    private float crossOverMean(float value, float otherValue) {
+      return (float) ((((double) value) + ((double) otherValue)) / 2.0);
+    }
+
+    private float crossOverExponent(float value, float otherValue) {
+      int bits = Float.floatToRawIntBits(value);
+      int otherExponent =
+          Float.floatToRawIntBits(otherValue) & (EXPONENT_MASK << EXPONENT_INITIAL_BIT);
+      int bitsWithOtherExponent = (bits & ~(EXPONENT_MASK << EXPONENT_INITIAL_BIT)) | otherExponent;
+      return Float.intBitsToFloat(bitsWithOtherExponent);
+    }
+
+    private float crossOverMantissa(float value, float otherValue) {
+      int bits = Float.floatToRawIntBits(value);
+      int otherMantissa = Float.floatToRawIntBits(otherValue) & MANTISSA_MASK;
+      int bitsWithOtherMantissa = (bits & ~MANTISSA_MASK) | otherMantissa;
+      return Float.intBitsToFloat(bitsWithOtherMantissa);
     }
 
     @Override
@@ -503,7 +537,41 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
 
     @Override
     public Double crossOver(Double value, Double otherValue, PseudoRandom prng) {
-      return value;
+      double result;
+      switch (prng.closedRange(0, 2)) {
+        case 0:
+          result = crossOverMean(value, otherValue);
+          break;
+        case 1:
+          result = crossOverExponent(value, otherValue);
+          break;
+        case 2:
+          result = crossOverMantissa(value, otherValue);
+          break;
+        default:
+          throw new IllegalStateException("Unknown mutation case");
+      }
+      return forceInRange(result, minValue, maxValue, allowNaN);
+    }
+
+    private double crossOverMean(double value, double otherValue) {
+      return (value * 0.5) + (otherValue * 0.5);
+    }
+
+    private double crossOverExponent(double value, double otherValue) {
+      long bits = Double.doubleToRawLongBits(value);
+      long otherExponent =
+          Double.doubleToRawLongBits(otherValue) & (EXPONENT_MASK << EXPONENT_INITIAL_BIT);
+      long bitsWithOtherExponent =
+          (bits & ~(EXPONENT_MASK << EXPONENT_INITIAL_BIT)) | otherExponent;
+      return Double.longBitsToDouble(bitsWithOtherExponent);
+    }
+
+    private double crossOverMantissa(double value, double otherValue) {
+      long bits = Double.doubleToRawLongBits(value);
+      long otherMantissa = Double.doubleToRawLongBits(otherValue) & MANTISSA_MASK;
+      long bitsWithOtherMantissa = (bits & ~MANTISSA_MASK) | otherMantissa;
+      return Double.longBitsToDouble(bitsWithOtherMantissa);
     }
 
     @Override
