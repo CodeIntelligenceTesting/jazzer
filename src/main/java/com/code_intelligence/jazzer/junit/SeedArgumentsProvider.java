@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import static com.code_intelligence.jazzer.junit.Utils.isFuzzing;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -45,40 +46,16 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.support.AnnotationConsumer;
 
-class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer<FuzzTest> {
+class SeedArgumentsProvider implements ArgumentsProvider {
   private static final String INCORRECT_PARAMETERS_MESSAGE =
       "Methods annotated with @FuzzTest must take at least one parameter";
 
   private boolean invalidCorpusFilesPresent = false;
-  private FuzzTest fuzzTest;
-
-  @Override
-  public void accept(FuzzTest annotation) {
-    this.fuzzTest = annotation;
-  }
-
   @Override
   public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext)
       throws IOException {
-    // FIXME(fmeum): Calling this here feels like a hack. There should be a lifecycle hook that runs
-    //  before the argument discovery for a ParameterizedTest is kicked off, but I haven't found
-    //  one.
-    FuzzTestExecutor.configureAndInstallAgent(extensionContext, fuzzTest.maxDuration());
-
-    if (Utils.isFuzzing(extensionContext)) {
-      // When fuzzing, supply a special set of arguments that our InvocationInterceptor uses as a
-      // sign to start fuzzing.
-      // FIXME: This is a hack that is needed only because there does not seem to be a way to
-      //  communicate out of band that a certain invocation was triggered by a particular argument
-      //  provider. We should get rid of this hack as soon as
-      //  https://github.com/junit-team/junit5/issues/3282 has been addressed.
-      return Stream.of(
-          Utils.getMarkedArguments(extensionContext.getRequiredTestMethod(), "Fuzzing..."));
-    } else {
-      return provideSeedArguments(extensionContext);
-    }
+    return isFuzzing(extensionContext) ? Stream.empty() : provideSeedArguments(extensionContext);
   }
 
   private Stream<? extends Arguments> provideSeedArguments(ExtensionContext extensionContext)

@@ -22,9 +22,11 @@ java_library(
 java_library(
     name = "fuzz_test",
     srcs = [
+        "AgentConfiguringArgumentsProvider.java",
         "FuzzTest.java",
-        "FuzzTestArgumentsProvider.java",
         "FuzzTestExtensions.java",
+        "FuzzingArgumentsProvider.java",
+        "SeedArgumentsProvider.java",
     ],
     visibility = [
         "//examples/junit/src/test/java/com/example:__pkg__",

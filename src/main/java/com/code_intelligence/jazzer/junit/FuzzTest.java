@@ -86,7 +86,9 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-@ArgumentsSource(FuzzTestArgumentsProvider.class)
+@AgentConfiguringArgumentsProviderArgumentsSource
+@ArgumentsSource(SeedArgumentsProvider.class)
+@FuzzingArgumentsProviderArgumentsSource
 @ExtendWith(FuzzTestExtensions.class)
 // {0} is expanded to the basename of the seed by the ArgumentProvider.
 @ParameterizedTest(name = "{0}")
@@ -105,3 +107,16 @@ public @interface FuzzTest {
    */
   String maxDuration() default "5m";
 }
+
+// Internal use only.
+// These wrappers are needed only because the container annotation for @ArgumentsSource,
+// @ArgumentsSources, can't be applied to annotations.
+@Target({ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@ArgumentsSource(AgentConfiguringArgumentsProvider.class)
+@interface AgentConfiguringArgumentsProviderArgumentsSource {}
+
+@Target({ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@ArgumentsSource(FuzzingArgumentsProvider.class)
+@interface FuzzingArgumentsProviderArgumentsSource {}
