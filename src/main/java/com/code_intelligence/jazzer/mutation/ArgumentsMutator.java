@@ -68,10 +68,6 @@ public final class ArgumentsMutator {
     this.productMutator = productMutator;
   }
 
-  public static boolean canMutate(Method method) {
-    return stream(method.getAnnotatedParameterTypes()).allMatch(newFactory()::canMutate);
-  }
-
   private static String prettyPrintMethod(Method method) {
     return format("%s.%s(%s)", method.getDeclaringClass().getName(), method.getName(),
         stream(method.getAnnotatedParameterTypes()).map(Object::toString).collect(joining(", ")));

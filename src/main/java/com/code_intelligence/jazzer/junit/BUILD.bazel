@@ -39,12 +39,8 @@ java_library(
     ],
     deps = [
         ":fuzz_test_executor",
+        ":seed_serializer",
         ":utils",
-        "//src/main/java/com/code_intelligence/jazzer/api",
-        "//src/main/java/com/code_intelligence/jazzer/autofuzz",
-        "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
-        "//src/main/java/com/code_intelligence/jazzer/mutation",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
     ],
@@ -60,6 +56,7 @@ java_jni_library(
     ],
     deps = [
         ":agent_configurator",
+        ":seed_serializer",
         ":utils",
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
         "//src/main/java/com/code_intelligence/jazzer/api",
@@ -71,6 +68,18 @@ java_jni_library(
         "//src/main/java/com/code_intelligence/jazzer/mutation",
         "//src/main/java/com/code_intelligence/jazzer/utils",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+java_library(
+    name = "seed_serializer",
+    srcs = ["SeedSerializer.java"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/autofuzz",
+        "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
+        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "//src/main/java/com/code_intelligence/jazzer/mutation",
     ],
 )
 

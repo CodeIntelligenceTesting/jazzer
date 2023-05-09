@@ -20,12 +20,10 @@ import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePa
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.driver.junit.ExitCodeException;
-import com.code_intelligence.jazzer.mutation.ArgumentsMutator;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Executable;
@@ -68,11 +66,6 @@ class FuzzTestExecutor {
 
     Class<?> fuzzTestClass = context.getRequiredTestClass();
     Method fuzzTestMethod = context.getRequiredTestMethod();
-
-    if (fuzzTestMethod.getParameterCount() == 0) {
-      throw new IllegalArgumentException(
-          "Methods annotated with @FuzzTest must take at least one parameter");
-    }
 
     Path baseDir =
         Paths.get(context.getConfigurationParameter("jazzer.internal.basedir").orElse(""))
@@ -167,15 +160,6 @@ class FuzzTestExecutor {
     return args;
   }
 
-  private static boolean useAutofuzz(Method fuzzTestMethod) {
-    // Also check experimentalMutator here, as it's required in FuzzTargetRunner.
-    // Remove at both places once the mutator is stable.
-    return !(Opt.experimentalMutator && ArgumentsMutator.canMutate(fuzzTestMethod))
-        && (fuzzTestMethod.getParameterCount() != 1
-            || (fuzzTestMethod.getParameterTypes()[0] != byte[].class
-                && fuzzTestMethod.getParameterTypes()[0] != FuzzedDataProvider.class));
-  }
-
   static void configureAndInstallAgent(ExtensionContext extensionContext, String maxDuration)
       throws IOException {
     if (!agentInstalled.compareAndSet(false, true)) {
@@ -198,8 +182,9 @@ class FuzzTestExecutor {
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")
-  public Optional<Throwable> execute(ReflectiveInvocationContext<Method> invocationContext) {
-    if (FuzzTestExecutor.useAutofuzz(invocationContext.getExecutable())) {
+  public Optional<Throwable> execute(
+      ReflectiveInvocationContext<Method> invocationContext, SeedSerializer seedSerializer) {
+    if (seedSerializer instanceof AutofuzzSeedSerializer) {
       FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.autofuzzFuzzTarget(() -> {
         // Provide an empty throws declaration to prevent autofuzz from
         // ignoring the defined test exceptions. All exceptions in tests
