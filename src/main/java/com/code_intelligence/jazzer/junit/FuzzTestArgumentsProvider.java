@@ -17,7 +17,6 @@ package com.code_intelligence.jazzer.junit;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.autofuzz.Meta;
 import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
@@ -41,11 +40,9 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.support.AnnotationConsumer;
@@ -53,29 +50,13 @@ import org.junit.jupiter.params.support.AnnotationConsumer;
 class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer<FuzzTest> {
   private static final String INCORRECT_PARAMETERS_MESSAGE =
       "Methods annotated with @FuzzTest must take at least one parameter";
-  private static final AtomicBoolean agentInstalled = new AtomicBoolean(false);
 
   private boolean invalidCorpusFilesPresent = false;
-  private FuzzTest annotation;
+  private FuzzTest fuzzTest;
 
   @Override
   public void accept(FuzzTest annotation) {
-    this.annotation = annotation;
-  }
-
-  private void configureAndInstallAgent(ExtensionContext extensionContext) throws IOException {
-    if (!agentInstalled.compareAndSet(false, true)) {
-      return;
-    }
-    if (Utils.isFuzzing(extensionContext)) {
-      FuzzTestExecutor executor =
-          FuzzTestExecutor.prepare(extensionContext, annotation.maxDuration());
-      extensionContext.getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
-      AgentConfigurator.forFuzzing(extensionContext);
-    } else {
-      AgentConfigurator.forRegressionTest(extensionContext);
-    }
-    AgentInstaller.install(Opt.hooks);
+    this.fuzzTest = annotation;
   }
 
   @Override
@@ -84,10 +65,7 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
     // FIXME(fmeum): Calling this here feels like a hack. There should be a lifecycle hook that runs
     //  before the argument discovery for a ParameterizedTest is kicked off, but I haven't found
     //  one.
-    configureAndInstallAgent(extensionContext);
-
-    Class<?> testClass = extensionContext.getRequiredTestClass();
-    Method testMethod = extensionContext.getRequiredTestMethod();
+    FuzzTestExecutor.configureAndInstallAgent(extensionContext, fuzzTest.maxDuration());
 
     if (Utils.isFuzzing(extensionContext)) {
       // When fuzzing, supply a special set of arguments that our InvocationInterceptor uses as a
@@ -96,8 +74,17 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
       //  communicate out of band that a certain invocation was triggered by a particular argument
       //  provider. We should get rid of this hack as soon as
       //  https://github.com/junit-team/junit5/issues/3282 has been addressed.
-      return Stream.of(Utils.getMarkedArguments(testMethod, "Fuzzing..."));
+      return Stream.of(
+          Utils.getMarkedArguments(extensionContext.getRequiredTestMethod(), "Fuzzing..."));
+    } else {
+      return provideSeedArguments(extensionContext);
     }
+  }
+
+  private Stream<? extends Arguments> provideSeedArguments(ExtensionContext extensionContext)
+      throws IOException {
+    Class<?> testClass = extensionContext.getRequiredTestClass();
+    Method testMethod = extensionContext.getRequiredTestMethod();
 
     Stream<Map.Entry<String, byte[]>> rawSeeds =
         Stream.of(new SimpleImmutableEntry<>("<empty input>", new byte[0]));
