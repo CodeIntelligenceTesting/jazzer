@@ -27,11 +27,12 @@ public class DirectoryInputsFuzzTest {
     if (data.remainingBytes() == 0) {
       return;
     }
-    if (!firstSeed) {
+    String input = data.consumeRemainingAsString();
+    if (!firstSeed && !input.equals("directory")) {
       throw new IllegalStateException("Should have crashed on the first non-empty input");
     }
     firstSeed = false;
-    if (data.consumeRemainingAsString().equals("directory")) {
+    if (input.equals("directory")) {
       throw new FuzzerSecurityIssueMedium();
     }
   }

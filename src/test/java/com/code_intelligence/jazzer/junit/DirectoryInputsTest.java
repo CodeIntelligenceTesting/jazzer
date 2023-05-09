@@ -88,9 +88,17 @@ public class DirectoryInputsTest {
 
     results.testEvents().assertEventsMatchExactly(
         event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
-        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION)),
+        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 1))),
+        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 1)),
+            displayName("<empty input>"), finishedSuccessfully()),
+        event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
+        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 2))),
+        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 2)),
+            displayName("seed"), finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))),
+        event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
+        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 3)),
             displayName("Fuzzing...")),
-        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION)),
+        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 3)),
             displayName("Fuzzing..."),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
 
@@ -140,7 +148,7 @@ public class DirectoryInputsTest {
         event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
         event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 1))),
         event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 1)),
-            finishedSuccessfully()),
+            displayName("<empty input>"), finishedSuccessfully()),
         event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
         event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 2))),
         event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 2)),

@@ -187,6 +187,7 @@ java_test(
             "@maven//:junit_junit",
             "@maven//:org_junit_platform_junit_platform_engine",
             "@maven//:org_junit_platform_junit_platform_testkit",
+            "@maven//:org_opentest4j_opentest4j",
         ],
     )
     for JAZZER_FUZZ in [
@@ -273,6 +274,7 @@ java_test(
         deps = [
             "//src/main/java/com/code_intelligence/jazzer/api:hooks",
             "@maven//:junit_junit",
+            "@maven//:org_assertj_assertj_core",
             "@maven//:org_junit_platform_junit_platform_engine",
             "@maven//:org_junit_platform_junit_platform_testkit",
         ],

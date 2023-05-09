@@ -55,7 +55,7 @@ public class ValueProfileTest {
   private static final String ENGINE = "engine:junit-jupiter";
   private static final String CLAZZ = "class:com.example.ValueProfileFuzzTest";
   private static final String VALUE_PROFILE_FUZZ = "test-template:valueProfileFuzz([B)";
-  private static final String INVOCATION = "test-template-invocation:#1";
+  private static final String INVOCATION = "test-template-invocation:#";
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   Path baseDir;
@@ -99,10 +99,26 @@ public class ValueProfileTest {
         event(type(DYNAMIC_TEST_REGISTERED),
             test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
         event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION)),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
+            displayName("<empty input>")),
+        event(type(FINISHED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
+            displayName("<empty input>"), finishedSuccessfully()),
+        event(type(DYNAMIC_TEST_REGISTERED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+        event(type(STARTED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
+            displayName("empty_seed")),
+        event(type(FINISHED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
+            displayName("empty_seed"), finishedSuccessfully()),
+        event(type(DYNAMIC_TEST_REGISTERED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+        event(type(STARTED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
             displayName("Fuzzing...")),
         event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION)),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
             displayName("Fuzzing..."),
             finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
 
@@ -146,10 +162,26 @@ public class ValueProfileTest {
         event(type(DYNAMIC_TEST_REGISTERED),
             test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
         event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION)),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
+            displayName("<empty input>")),
+        event(type(FINISHED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
+            displayName("<empty input>"), finishedSuccessfully()),
+        event(type(DYNAMIC_TEST_REGISTERED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+        event(type(STARTED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
+            displayName("empty_seed")),
+        event(type(FINISHED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
+            displayName("empty_seed"), finishedSuccessfully()),
+        event(type(DYNAMIC_TEST_REGISTERED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+        event(type(STARTED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
             displayName("Fuzzing...")),
         event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION)),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
             displayName("Fuzzing..."), finishedSuccessfully()));
 
     // No crash means no crashing input is emitted anywhere.

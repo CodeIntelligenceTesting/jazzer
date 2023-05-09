@@ -46,7 +46,7 @@ public class LifecycleTest {
   private static final String CLAZZ = "class:com.example.LifecycleFuzzTest";
   private static final String DISABLED_FUZZ = "test-template:disabledFuzz([B)";
   private static final String LIFECYCLE_FUZZ = "test-template:lifecycleFuzz([B)";
-  private static final String INVOCATION = "test-template-invocation:#1";
+  private static final String INVOCATION = "test-template-invocation:#";
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   Path baseDir;
 
@@ -86,9 +86,19 @@ public class LifecycleTest {
     results.testEvents().assertEventsMatchExactly(
         event(
             type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION)),
+        event(type(STARTED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
+            displayName("<empty input>")),
+        event(type(FINISHED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
+            displayName("<empty input>"), finishedSuccessfully()),
+        event(
+            type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+        event(type(STARTED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 2)),
             displayName("Fuzzing...")),
-        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION)),
+        event(type(FINISHED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 2)),
             displayName("Fuzzing..."), finishedSuccessfully()));
   }
 
@@ -112,9 +122,11 @@ public class LifecycleTest {
     results.testEvents().assertEventsMatchExactly(
         event(
             type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION)),
+        event(type(STARTED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
             displayName("<empty input>")),
-        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION)),
+        event(type(FINISHED),
+            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
             displayName("<empty input>"), finishedSuccessfully()));
   }
 }

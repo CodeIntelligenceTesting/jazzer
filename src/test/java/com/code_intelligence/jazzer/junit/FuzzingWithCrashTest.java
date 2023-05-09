@@ -55,7 +55,7 @@ public class FuzzingWithCrashTest {
   private static final byte[] CRASHING_SEED_CONTENT = new byte[] {'b', 'a', 'c'};
   private static final String CRASHING_SEED_DIGEST = "5e4dec23c9afa48bd5bee3daa2a0ab66e147012b";
   private static final String ENGINE = "engine:junit-jupiter";
-  private static final String INVOCATION = "test-template-invocation:#1";
+  private static final String INVOCATION = "test-template-invocation:#";
 
   private static final String CLAZZ_NAME = "com.example.ValidFuzzTests";
 
@@ -115,7 +115,7 @@ public class FuzzingWithCrashTest {
         event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
         event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
-    results.testEvents().assertEventsMatchExactly(
+    results.testEvents().assertEventsMatchLooselyInOrder(
         event(type(DYNAMIC_TEST_REGISTERED),
             test(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId()))),
         event(type(STARTED),
