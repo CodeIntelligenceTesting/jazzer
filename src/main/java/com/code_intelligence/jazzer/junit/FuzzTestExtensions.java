@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 
@@ -87,7 +88,8 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
       throws Throwable {
     invocation.skip();
     Optional<Throwable> throwable =
-        FuzzTestExecutor.fromContext(extensionContext).execute(invocationContext);
+        FuzzTestExecutor.fromContext(extensionContext)
+            .execute(invocationContext, getOrCreateSeedSerializer(extensionContext));
     if (throwable.isPresent()) {
       throw throwable.get();
     }

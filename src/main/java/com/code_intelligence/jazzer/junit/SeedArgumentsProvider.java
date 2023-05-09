@@ -19,12 +19,6 @@ import static com.code_intelligence.jazzer.junit.Utils.runFromCommandLine;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.code_intelligence.jazzer.autofuzz.Meta;
-import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
-import com.code_intelligence.jazzer.driver.Opt;
-import com.code_intelligence.jazzer.mutation.ArgumentsMutator;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -37,11 +31,9 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -49,10 +41,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 
 class SeedArgumentsProvider implements ArgumentsProvider {
-  private static final String INCORRECT_PARAMETERS_MESSAGE =
-      "Methods annotated with @FuzzTest must take at least one parameter";
-
-  private boolean invalidCorpusFilesPresent = false;
   @Override
   public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext)
       throws IOException {
@@ -76,80 +64,28 @@ class SeedArgumentsProvider implements ArgumentsProvider {
           walkInputsInPath(Utils.generatedCorpusPath(testClass, testMethod), Integer.MAX_VALUE));
     }
 
-    return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds).onClose(() -> {
-      if (!isFuzzing(extensionContext)) {
-        extensionContext.publishReportEntry(
-            "No fuzzing has been performed, the fuzz test has only been executed on the fixed "
-            + "set of inputs in the seed corpus.\n"
-            + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a "
-            + "non-empty value.");
-      }
-      if (invalidCorpusFilesPresent) {
-        extensionContext.publishReportEntry(
-            "Some files in the seed corpus do not match the fuzz target signature.\n"
-            + "This indicates that they were generated with a different signature and may cause "
-            + "issues reproducing previous findings.");
-      }
-    });
-  }
-
-  /**
-   * Maps the input file stream into a stream of {@link Arguments} objects, transforming the raw
-   * bytes into the correct data type for the method.
-   * <p>
-   * Supported types are:
-   * <ul>
-   *   <li>{@code byte[]}</li>
-   *   <li>{@code FuzzDataProvider}</li>
-   *   <li>Any other types will attempt to be created using either Autofuzz or the experimental
-   * mutator framework if {@link Opt}'s {@code experimentalMutator} is set</li>
-   * </ul>
-   * @param fuzzTestMethod the method being tested
-   * @param rawSeeds a stream of file names -> file contents to use as test cases for {@code
-   *     fuzzTestMethod}
-   * @return a stream of {@link Arguments} containing the file name as the name of the test case and
-   *     the transformed arguments
-   */
-  private Stream<? extends Arguments> adaptInputsForFuzzTest(
-      Method fuzzTestMethod, Stream<Map.Entry<String, byte[]>> rawSeeds) {
-    if (fuzzTestMethod.getParameterCount() == 0) {
-      throw new IllegalArgumentException(INCORRECT_PARAMETERS_MESSAGE);
-    }
-    if (fuzzTestMethod.getParameterTypes()[0] == byte[].class) {
-      return rawSeeds.map(e -> arguments(named(e.getKey(), e.getValue())));
-    } else if (fuzzTestMethod.getParameterTypes()[0] == FuzzedDataProvider.class) {
-      return rawSeeds.map(
-          e -> arguments(named(e.getKey(), FuzzedDataProviderImpl.withJavaData(e.getValue()))));
-    } else {
-      // Use Autofuzz or mutation framework on the @FuzzTest method.
-      Optional<ArgumentsMutator> argumentsMutator =
-          Opt.experimentalMutator ? ArgumentsMutator.forMethod(fuzzTestMethod) : Optional.empty();
-
-      return rawSeeds.map(e -> {
-        Object[] args;
-        if (argumentsMutator.isPresent()) {
-          ArgumentsMutator mutator = argumentsMutator.get();
-          boolean readExactly = mutator.read(new ByteArrayInputStream(e.getValue()));
-          if (!readExactly) {
-            invalidCorpusFilesPresent = true;
+    SeedSerializer serializer = SeedSerializer.of(testMethod);
+    return rawSeeds
+        .map(entry -> {
+          Object[] args = serializer.read(entry.getValue());
+          args[0] = named(entry.getKey(), args[0]);
+          return arguments(args);
+        })
+        .onClose(() -> {
+          if (!isFuzzing(extensionContext)) {
+            extensionContext.publishReportEntry(
+                "No fuzzing has been performed, the fuzz test has only been executed on the fixed "
+                + "set of inputs in the seed corpus.\n"
+                + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a "
+                + "non-empty value.");
           }
-          args = mutator.getArguments();
-        } else {
-          try (FuzzedDataProviderImpl data = FuzzedDataProviderImpl.withJavaData(e.getValue())) {
-            // The Autofuzz FuzzTarget uses data to construct an instance of the test class before
-            // it constructs the fuzz test arguments. We don't need the instance here, but still
-            // generate it as that mutates the FuzzedDataProvider state.
-            Meta meta = new Meta(fuzzTestMethod.getDeclaringClass());
-            meta.consumeNonStatic(data, fuzzTestMethod.getDeclaringClass());
-            args = meta.consumeArguments(data, fuzzTestMethod, null);
+          if (!serializer.allReadsValid()) {
+            extensionContext.publishReportEntry(
+                "Some files in the seed corpus do not match the fuzz target signature.\n"
+                + "This indicates that they were generated with a different signature and may cause "
+                + "issues reproducing previous findings.");
           }
-        }
-        // In order to name the subtest, we name the first argument. All other arguments are
-        // passed in unchanged.
-        args[0] = named(e.getKey(), args[0]);
-        return arguments(args);
-      });
-    }
+        });
   }
 
   /**
@@ -274,7 +210,9 @@ class SeedArgumentsProvider implements ArgumentsProvider {
         // In order to get reproducible behavior e.g. when trying to debug a particular input, all
         // inputs thus have to be provided in deterministic order.
         .sorted()
-        .map(file -> new SimpleEntry<>(file.getFileName().toString(), readAllBytesUnchecked(file)));
+        .map(file
+            -> new SimpleImmutableEntry<>(
+                file.getFileName().toString(), readAllBytesUnchecked(file)));
   }
 
   private static byte[] readAllBytesUnchecked(Path path) {
