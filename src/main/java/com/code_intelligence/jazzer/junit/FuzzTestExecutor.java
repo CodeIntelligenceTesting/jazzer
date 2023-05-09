@@ -19,6 +19,7 @@ import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
 
+import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
@@ -43,10 +44,12 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 
 class FuzzTestExecutor {
   private static final AtomicBoolean hasBeenPrepared = new AtomicBoolean();
+  private static final AtomicBoolean agentInstalled = new AtomicBoolean(false);
 
   private final List<String> libFuzzerArgs;
   private final boolean isRunFromCommandLine;
@@ -171,6 +174,21 @@ class FuzzTestExecutor {
         && (fuzzTestMethod.getParameterCount() != 1
             || (fuzzTestMethod.getParameterTypes()[0] != byte[].class
                 && fuzzTestMethod.getParameterTypes()[0] != FuzzedDataProvider.class));
+  }
+
+  static void configureAndInstallAgent(ExtensionContext extensionContext, String maxDuration)
+      throws IOException {
+    if (!agentInstalled.compareAndSet(false, true)) {
+      return;
+    }
+    if (Utils.isFuzzing(extensionContext)) {
+      FuzzTestExecutor executor = prepare(extensionContext, maxDuration);
+      extensionContext.getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
+      AgentConfigurator.forFuzzing(extensionContext);
+    } else {
+      AgentConfigurator.forRegressionTest(extensionContext);
+    }
+    AgentInstaller.install(Opt.hooks);
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")
