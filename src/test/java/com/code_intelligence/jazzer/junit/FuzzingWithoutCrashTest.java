@@ -95,7 +95,7 @@ public class FuzzingWithoutCrashTest {
         event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
         event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
-    results.testEvents().assertEventsMatchExactly(
+    results.testEvents().assertEventsMatchLooselyInOrder(
         event(
             type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
         event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION)),

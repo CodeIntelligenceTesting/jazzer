@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth8.assertThat;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
+import static org.junit.platform.testkit.engine.EventConditions.abortedWithReason;
 import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.displayName;
 import static org.junit.platform.testkit.engine.EventConditions.event;
@@ -48,6 +49,7 @@ import org.junit.Test;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.junit.rules.TemporaryFolder;
+import org.opentest4j.TestAbortedException;
 
 public class AutofuzzTest {
   @Rule public TemporaryFolder temp = new TemporaryFolder();
@@ -77,7 +79,7 @@ public class AutofuzzTest {
     final String clazz = "class:com.example.AutofuzzFuzzTest";
     final String autofuzz =
         "test-template:autofuzz(java.lang.String, com.example.AutofuzzFuzzTest$IntHolder)";
-    final String invocation = "test-template-invocation:#1";
+    final String invocation = "test-template-invocation:#";
 
     results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(engine)),
         event(type(STARTED), container(uniqueIdSubstrings(engine, clazz))),
@@ -87,11 +89,15 @@ public class AutofuzzTest {
         event(type(FINISHED), container(uniqueIdSubstrings(engine, clazz)), finishedSuccessfully()),
         event(type(FINISHED), container(engine), finishedSuccessfully()));
 
-    results.testEvents().assertEventsMatchExactly(
+    results.testEvents().assertEventsMatchExactly(event(type(DYNAMIC_TEST_REGISTERED)),
+        event(type(STARTED)),
+        event(test(uniqueIdSubstrings(engine, clazz, autofuzz, invocation + 1)),
+            displayName("<empty input>"),
+            abortedWithReason(instanceOf(TestAbortedException.class))),
         event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(engine, clazz, autofuzz))),
-        event(type(STARTED), test(uniqueIdSubstrings(engine, clazz, autofuzz, invocation)),
+        event(type(STARTED), test(uniqueIdSubstrings(engine, clazz, autofuzz, invocation + 2)),
             displayName("Fuzzing...")),
-        event(type(FINISHED), test(uniqueIdSubstrings(engine, clazz, autofuzz, invocation)),
+        event(type(FINISHED), test(uniqueIdSubstrings(engine, clazz, autofuzz, invocation + 2)),
             displayName("Fuzzing..."), finishedWithFailure(instanceOf(RuntimeException.class))));
 
     // Should crash on an input that contains "jazzer", with the crash emitted into the

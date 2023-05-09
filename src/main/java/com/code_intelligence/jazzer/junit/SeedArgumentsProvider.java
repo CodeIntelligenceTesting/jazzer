@@ -15,6 +15,7 @@
 package com.code_intelligence.jazzer.junit;
 
 import static com.code_intelligence.jazzer.junit.Utils.isFuzzing;
+import static com.code_intelligence.jazzer.junit.Utils.runFromCommandLine;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -55,11 +56,13 @@ class SeedArgumentsProvider implements ArgumentsProvider {
   @Override
   public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext)
       throws IOException {
-    return isFuzzing(extensionContext) ? Stream.empty() : provideSeedArguments(extensionContext);
-  }
+    if (runFromCommandLine(extensionContext)) {
+      // libFuzzer always runs on the file-based seeds first anyway and the additional visual
+      // indication provided by test invocations for seeds isn't effective on the command line, so
+      // we skip these invocations.
+      return Stream.empty();
+    }
 
-  private Stream<? extends Arguments> provideSeedArguments(ExtensionContext extensionContext)
-      throws IOException {
     Class<?> testClass = extensionContext.getRequiredTestClass();
     Method testMethod = extensionContext.getRequiredTestMethod();
 
@@ -74,11 +77,13 @@ class SeedArgumentsProvider implements ArgumentsProvider {
     }
 
     return adaptInputsForFuzzTest(extensionContext.getRequiredTestMethod(), rawSeeds).onClose(() -> {
-      extensionContext.publishReportEntry(
-          "No fuzzing has been performed, the fuzz test has only been executed on the fixed "
-          + "set of inputs in the seed corpus.\n"
-          + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a "
-          + "non-empty value.");
+      if (!isFuzzing(extensionContext)) {
+        extensionContext.publishReportEntry(
+            "No fuzzing has been performed, the fuzz test has only been executed on the fixed "
+            + "set of inputs in the seed corpus.\n"
+            + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a "
+            + "non-empty value.");
+      }
       if (invalidCorpusFilesPresent) {
         extensionContext.publishReportEntry(
             "Some files in the seed corpus do not match the fuzz target signature.\n"

@@ -33,6 +33,10 @@ import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @ExtendWith(LifecycleFuzzTest.LifecycleInstancePostProcessor.class)
 class LifecycleFuzzTest {
+  // In fuzzing mode, the test is invoked once on the empty input and once with Jazzer.
+  private static final int EXPECTED_EACH_COUNT =
+      System.getenv().getOrDefault("JAZZER_FUZZ", "").isEmpty() ? 1 : 2;
+
   private static int beforeAllCount = 0;
   private static int beforeEachGlobalCount = 0;
   private static int afterEachGlobalCount = 0;
@@ -61,8 +65,7 @@ class LifecycleFuzzTest {
   @FuzzTest(maxDuration = "1s")
   void lifecycleFuzz(byte[] data) {
     Assertions.assertEquals(1, beforeAllCount);
-    Assertions.assertEquals(1, beforeEachGlobalCount);
-    Assertions.assertEquals(0, afterEachGlobalCount);
+    Assertions.assertEquals(beforeEachGlobalCount, afterEachGlobalCount + 1);
     Assertions.assertTrue(beforeEachCalledOnInstance);
     Assertions.assertTrue(testInstancePostProcessorCalledOnInstance);
   }
@@ -76,8 +79,8 @@ class LifecycleFuzzTest {
   static void afterAll() throws IOException {
     afterAllCount++;
     Assertions.assertEquals(1, beforeAllCount);
-    Assertions.assertEquals(1, beforeEachGlobalCount);
-    Assertions.assertEquals(1, afterEachGlobalCount);
+    Assertions.assertEquals(EXPECTED_EACH_COUNT, beforeEachGlobalCount);
+    Assertions.assertEquals(EXPECTED_EACH_COUNT, afterEachGlobalCount);
     Assertions.assertEquals(1, afterAllCount);
     throw new IOException();
   }
