@@ -68,6 +68,15 @@ common:toolchain --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 build --test_env=JAZZER_AUTOFUZZ_DEBUG
 build --test_env=JAZZER_REFLECTION_DEBUG
 
+# Interactively debug Jazzer integration tests by passing --config=debug and attaching to port 5005.
+# This is different from --java_debug: It affects the actual inner Jazzer process rather than the
+# outer FuzzTargetTestWrapper.
+test:debug --test_env=JAZZER_DEBUG=1
+test:debug --test_output=streamed
+test:debug --test_strategy=exclusive
+test:debug --test_timeout=9999
+test:debug --nocache_test_results
+
 # CI tests (not using the toolchain to test OSS-Fuzz & local compatibility)
 build:ci --bes_results_url=https://app.buildbuddy.io/invocation/
 build:ci --bes_backend=grpcs://remote.buildbuddy.io
