@@ -108,6 +108,9 @@ public class FuzzTargetTestWrapper {
       if (hookJarActualPath != null) {
         command.add(String.format("--main_advice_classpath=%s", hookJarActualPath));
       }
+      if (System.getenv("JAZZER_DEBUG") != null) {
+        command.add("--debug");
+      }
     } else {
       command.add(String.format("--cp=%s",
           hookJarActualPath == null

@@ -44,6 +44,11 @@ To run the tests, execute the following command:
 $ bazel test //...
 ```
 
+#### Debugging
+
+If you need to debug an issue that can only be reproduced by an integration test (`java_fuzz_target_test`), you can start Jazzer in debug mode via `--config=debug`.
+The JVM running Jazzer will suspend until a debugger connects on port 5005 (or the port specified via `DEFAULT_JVM_DEBUG_PORT`).
+
 ### Formatting
 
 Run `./format.sh` to format all source files in the way enforced by the "Check formatting" CI job.
