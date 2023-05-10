@@ -16,7 +16,6 @@
 
 package com.code_intelligence.jazzer.mutation;
 
-import static com.code_intelligence.jazzer.mutation.mutator.Mutators.newFactory;
 import static com.code_intelligence.jazzer.mutation.mutator.Mutators.validateAnnotationUsage;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithReadExactly;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
@@ -165,8 +164,15 @@ public final class ArgumentsMutator {
    */
   public void write(OutputStream data) {
     failIfArgumentsExposed();
+    writeAny(data, arguments);
+  }
+
+  /**
+   * @throws UncheckedIOException if the underlying OutputStream throws
+   */
+  public void writeAny(OutputStream data, Object[] args) throws UncheckedIOException {
     try {
-      productMutator.writeExclusive(arguments, data);
+      productMutator.writeExclusive(args, data);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }

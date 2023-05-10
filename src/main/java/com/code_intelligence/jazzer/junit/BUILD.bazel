@@ -43,6 +43,7 @@ java_library(
         ":utils",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
+        "@maven//:org_junit_platform_junit_platform_commons",
     ],
 )
 
@@ -68,6 +69,8 @@ java_jni_library(
         "//src/main/java/com/code_intelligence/jazzer/mutation",
         "//src/main/java/com/code_intelligence/jazzer/utils",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+        "@maven//:org_junit_platform_junit_platform_commons",
     ],
 )
 

@@ -14,8 +14,10 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
+import org.junit.platform.commons.support.AnnotationSupport;
 
 class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
   private static final String JAZZER_INTERNAL =
@@ -36,11 +39,23 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
   public void interceptTestTemplateMethod(Invocation<Void> invocation,
       ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext)
       throws Throwable {
+    FuzzTest fuzzTest =
+        AnnotationSupport.findAnnotation(invocationContext.getExecutable(), FuzzTest.class).get();
+    FuzzTestExecutor.configureAndInstallAgent(extensionContext, fuzzTest.maxDuration());
     // Skip the invocation of the test method with the special arguments provided by
     // FuzzTestArgumentsProvider and start fuzzing instead.
     if (Utils.isMarkedInvocation(invocationContext)) {
       startFuzzing(invocation, invocationContext, extensionContext);
     } else {
+      // Blocked by https://github.com/junit-team/junit5/issues/3282:
+      // TODO: The seeds from the input directory are duplicated here as there is no way to
+      //  recognize them.
+      // TODO: Error out if there is a non-Jazzer ArgumentsProvider and the SeedSerializer does not
+      //  support write.
+      if (Utils.isFuzzing(extensionContext)) {
+        // JUnit verifies that the arguments for this invocation are valid.
+        recordSeedForFuzzing(invocationContext.getArguments(), extensionContext);
+      }
       runWithHooks(invocation);
     }
   }
@@ -92,6 +107,16 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
             .execute(invocationContext, getOrCreateSeedSerializer(extensionContext));
     if (throwable.isPresent()) {
       throw throwable.get();
+    }
+  }
+
+  private void recordSeedForFuzzing(List<Object> arguments, ExtensionContext extensionContext)
+      throws IOException {
+    SeedSerializer seedSerializer = getOrCreateSeedSerializer(extensionContext);
+    try {
+      FuzzTestExecutor.fromContext(extensionContext)
+          .addSeed(seedSerializer.write(arguments.toArray()));
+    } catch (UnsupportedOperationException ignored) {
     }
   }
 

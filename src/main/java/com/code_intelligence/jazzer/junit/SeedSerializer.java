@@ -22,6 +22,7 @@ import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
 import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.mutation.ArgumentsMutator;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
@@ -30,6 +31,10 @@ interface SeedSerializer {
   default boolean allReadsValid() {
     return true;
   }
+
+  // Implementations can assume that the argument array contains valid arguments for the method that
+  // this instance has been constructed for.
+  byte[] write(Object[] args) throws UnsupportedOperationException;
 
   /**
    * Creates specialized {@link SeedSerializer} instances for the following method parameters:
@@ -64,12 +69,24 @@ final class ByteArraySeedSerializer implements SeedSerializer {
   public Object[] read(byte[] bytes) {
     return new Object[] {bytes};
   }
+
+  @Override
+  public byte[] write(Object[] args) {
+    return (byte[]) args[0];
+  }
 }
 
 final class FuzzedDataProviderSeedSerializer implements SeedSerializer {
   @Override
   public Object[] read(byte[] bytes) {
     return new Object[] {FuzzedDataProviderImpl.withJavaData(bytes)};
+  }
+
+  @Override
+  public byte[] write(Object[] args) throws UnsupportedOperationException {
+    // While we could get the underlying bytes, it's not possible to provide Java seeds for fuzz
+    // tests with a FuzzedDataProvider parameter.
+    throw new UnsupportedOperationException();
   }
 }
 
@@ -91,6 +108,13 @@ final class ArgumentsMutatorSeedSerializer implements SeedSerializer {
   public boolean allReadsValid() {
     return allReadsValid;
   }
+
+  @Override
+  public byte[] write(Object[] args) {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    mutator.writeAny(out, args);
+    return out.toByteArray();
+  }
 }
 
 final class AutofuzzSeedSerializer implements SeedSerializer {
@@ -111,5 +135,10 @@ final class AutofuzzSeedSerializer implements SeedSerializer {
       meta.consumeNonStatic(data, method.getDeclaringClass());
       return meta.consumeArguments(data, method, null);
     }
+  }
+
+  @Override
+  public byte[] write(Object[] args) throws UnsupportedOperationException {
+    throw new UnsupportedOperationException();
   }
 }
