@@ -183,12 +183,18 @@ class FuzzTestExecutor {
     }
     if (Utils.isFuzzing(extensionContext)) {
       FuzzTestExecutor executor = prepare(extensionContext, maxDuration);
-      extensionContext.getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
+      extensionContext.getRoot().getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
       AgentConfigurator.forFuzzing(extensionContext);
     } else {
       AgentConfigurator.forRegressionTest(extensionContext);
     }
     AgentInstaller.install(Opt.hooks);
+  }
+
+  static FuzzTestExecutor fromContext(ExtensionContext extensionContext) {
+    return extensionContext.getRoot()
+        .getStore(Namespace.GLOBAL)
+        .get(FuzzTestExecutor.class, FuzzTestExecutor.class);
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")

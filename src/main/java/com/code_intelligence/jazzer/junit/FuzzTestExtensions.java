@@ -21,7 +21,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 
@@ -39,22 +38,21 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
     // Skip the invocation of the test method with the special arguments provided by
     // FuzzTestArgumentsProvider and start fuzzing instead.
     if (Utils.isMarkedInvocation(invocationContext)) {
-      invocation.skip();
-      Optional<Throwable> throwable = extensionContext.getStore(Namespace.GLOBAL)
-                                          .get(FuzzTestExecutor.class, FuzzTestExecutor.class)
-                                          .execute(invocationContext);
-      if (throwable.isPresent()) {
-        throw throwable.get();
-      } else {
-        return;
-      }
+      startFuzzing(invocation, invocationContext, extensionContext);
+    } else {
+      runWithHooks(invocation);
     }
+  }
 
-    // Mimics the logic of Jazzer's FuzzTargetRunner, which reports findings in the following way:
-    // 1. If a hook used Jazzer#reportFindingFromHook to explicitly report a finding, the last
-    //    such finding, as stored in JazzerInternal#lastFinding, is reported.
-    // 2. Otherwise, if the fuzz target method threw a Throwable, that is reported.
-    // 3. Otherwise, nothing is reported.
+  /**
+   * Mimics the logic of Jazzer's FuzzTargetRunner, which reports findings in the following way:
+   * <ol>
+   *   <li>If a hook used Jazzer#reportFindingFromHook to explicitly report a finding, the last such
+   * finding, as stored in JazzerInternal#lastFinding, is reported. <li>If the fuzz target method
+   * threw a Throwable, that is reported. <li>3. Otherwise, nothing is reported.
+   * </ol>
+   */
+  private static void runWithHooks(Invocation<Void> invocation) throws Throwable {
     Throwable thrown = null;
     getLastFindingField().set(null, null);
     // When running in regression test mode, the agent emits additional bytecode logic in front of
@@ -84,6 +82,17 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
     }
   }
 
+  private static void startFuzzing(Invocation<Void> invocation,
+      ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext)
+      throws Throwable {
+    invocation.skip();
+    Optional<Throwable> throwable =
+        FuzzTestExecutor.fromContext(extensionContext).execute(invocationContext);
+    if (throwable.isPresent()) {
+      throw throwable.get();
+    }
+  }
+
   @Override
   public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext extensionContext) {
     if (!Utils.isFuzzing(extensionContext)) {
@@ -100,6 +109,13 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
     }
     return ConditionEvaluationResult.disabled(
         "Only one fuzz test can be run at a time, but multiple tests have been annotated with @FuzzTest");
+  }
+
+  private static SeedSerializer getOrCreateSeedSerializer(ExtensionContext extensionContext) {
+    Method method = extensionContext.getRequiredTestMethod();
+    return extensionContext.getStore(Namespace.create(FuzzTestExtensions.class, method))
+        .getOrComputeIfAbsent(
+            SeedSerializer.class, unused -> SeedSerializer.of(method), SeedSerializer.class);
   }
 
   private static Field getLastFindingField() throws ClassNotFoundException, NoSuchFieldException {
