@@ -1,0 +1,10 @@
+java_test(
+    name = "ConfigItemTest",
+    srcs = [
+        "ConfigItemTest.java",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/utils:config",
+        "@maven//:junit_junit",
+    ],
+)
