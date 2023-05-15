@@ -30,6 +30,16 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * `OptParser` will parse settings from various sources.
+ * <p>
+ * This will pull from these sources with earlier ones overriding later ones:
+ * <ol>
+ *     <ul>Command line arguments</ul>
+ *     <ul>Environment variables</ul>
+ *     <ul>Manifest entries</ul>
+ * </ol>
+ */
 final class OptParser {
   private static final String[] HELP_HEADER = new String[] {
       "A coverage-guided, in-process fuzzer for the JVM",

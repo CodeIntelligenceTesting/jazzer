@@ -16,11 +16,15 @@
 
 package com.code_intelligence.jazzer.utils;
 
+import static java.util.Collections.unmodifiableSet;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.assertj.core.util.Arrays;
 
 /**
  * Defines a configuration item which holds its value in Java's system properties to ensure that
@@ -38,7 +42,8 @@ public abstract class ConfigItem<T> {
   final String description;
   final boolean hidden;
 
-  ConfigItem(String rootNamespace, List<String> nameSegments, String rawDefaultValue, String description, boolean hidden) {
+  ConfigItem(String rootNamespace, List<String> nameSegments, String rawDefaultValue,
+      String description, boolean hidden) {
     this.namespace = rootNamespace;
     this.nameSegments = nameSegments;
     this.defaultValue = rawDefaultValue;
@@ -53,8 +58,8 @@ public abstract class ConfigItem<T> {
     }
   }
 
-  ConfigItem(String rootNamespace, List<String> nameSegments, String rawDefaultValue ) {
-    this(rootNamespace, nameSegments, rawDefaultValue, "", false);
+  ConfigItem(String rootNamespace, List<String> nameSegments, String rawDefaultValue) {
+    this(rootNamespace, nameSegments, rawDefaultValue, "", true);
   }
 
   Optional<String> description() {
@@ -92,7 +97,8 @@ public abstract class ConfigItem<T> {
   }
 
   /**
-   * Unlike the other possible names for config items, we don't want to type the namespace in each CLI flag
+   * Unlike the other possible names for config items, we don't want to type the namespace in each
+   * CLI flag
    * @return
    */
   public String getCliArgName() {
@@ -119,6 +125,11 @@ public abstract class ConfigItem<T> {
       super(namespace, segments, defaultValue.toString());
     }
 
+    public Int(String namespace, List<String> segments, Integer defaultValue, String description,
+        boolean hidden) {
+      super(namespace, segments, defaultValue.toString(), description, hidden);
+    }
+
     @Override
     void set(Integer value) {
       super.setRawValue(value.toString());
@@ -133,6 +144,11 @@ public abstract class ConfigItem<T> {
   static class Str extends ConfigItem<String> {
     public Str(String namespace, List<String> segments, String defaultValue) {
       super(namespace, segments, defaultValue);
+    }
+
+    public Str(String namespace, List<String> segments, String defaultValue, String description,
+        boolean hidden) {
+      super(namespace, segments, defaultValue, description, hidden);
     }
 
     @Override
@@ -151,6 +167,11 @@ public abstract class ConfigItem<T> {
       super(namespace, segments, Boolean.toString(defaultValue));
     }
 
+    public Bool(String namespace, List<String> segments, boolean defaultValue, String description,
+        boolean hidden) {
+      super(namespace, segments, Boolean.toString(defaultValue), description, hidden);
+    }
+
     @Override
     void set(Boolean value) {
       String raw = value.toString();
@@ -164,27 +185,80 @@ public abstract class ConfigItem<T> {
   }
 
   static class StrList extends ConfigItem<List<String>> {
-    public StrList(String namespace, List<String> segments) {
+    final String delimiter;
+
+    public StrList(String namespace, List<String> segments, char delimiter) {
       super(namespace, segments, "");
+      this.delimiter = String.valueOf(delimiter);
     }
 
-    public StrList(String namespace, List<String> segments, List<String> defaultValue) {
-      // TODO: this toString doesn't do what I want but it'll compile for now which is all I need
-      // atm
-      super(namespace, segments, defaultValue.toString());
-    }
-
-    @Override
-    List<String> get() {
-      return null;
+    public StrList(String namespace, List<String> segments, char delimiter, String description,
+        boolean hidden) {
+      super(namespace, segments, "", description, hidden);
+      this.delimiter = String.valueOf(delimiter);
     }
 
     @Override
-    void set(List<String> value) {}
+    void set(List<String> value) {
+      String raw = String.join(delimiter, value);
+      setRawValue(raw);
+    }
 
     @Override
     protected List<String> parse(String value) {
-      return null;
+      String[] parts = value.split(delimiter);
+      return Stream.of(parts).collect(Collectors.toList());
+    }
+  }
+
+  static class HexSet extends ConfigItem<Set<Long>> {
+    final String delimiter;
+
+    public HexSet(String namespace, List<String> segments, char delimiter) {
+      super(namespace, segments, "");
+      this.delimiter = String.valueOf(delimiter);
+    }
+
+    public HexSet(String namespace, List<String> segments, char delimiter, String description,
+        boolean hidden) {
+      super(namespace, segments, "", description, hidden);
+      this.delimiter = String.valueOf(delimiter);
+    }
+
+    @Override
+    void set(Set<Long> value) {
+      String raw =
+          value.stream().map(v -> Long.toString(v, 16)).collect(Collectors.joining(delimiter));
+      setRawValue(raw);
+    }
+
+    @Override
+    protected Set<Long> parse(String value) {
+      String[] parts = value.split(delimiter);
+      return unmodifiableSet(Stream.of(parts)
+                                 .map(token -> Long.parseUnsignedLong(token, 16))
+                                 .collect(Collectors.toSet()));
+    }
+  }
+
+  static class Uint64 extends ConfigItem<Long> {
+    public Uint64(String namespace, List<String> segments, Long defaultValue) {
+      super(namespace, segments, Long.toString(defaultValue, 10));
+    }
+
+    public Uint64(String namespace, List<String> segments, Long defaultValue, String description, boolean hidden) {
+      super(namespace, segments, Long.toString(defaultValue, 10), description, hidden);
+    }
+
+    @Override
+    void set(Long value) {
+      String raw = value.toString();
+      setRawValue(raw);
+    }
+
+    @Override
+    protected Long parse(String value) {
+      return Long.parseUnsignedLong(value, 10);
     }
   }
 }
