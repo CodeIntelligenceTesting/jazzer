@@ -298,6 +298,11 @@ public final class FuzzTargetRunner {
   // Called via JNI, being passed data from LLVMFuzzerCustomMutator.
   @SuppressWarnings("unused")
   private static int mutateOne(long data, int size, int maxSize, int seed) {
+    mutate(data, size, seed);
+    return writeToMemory(mutator, data, maxSize);
+  }
+
+  private static void mutate(long data, int size, int seed) {
     // libFuzzer sends the input "\n" when there are no corpus entries. We use that as a signal to
     // initialize the mutator instead of just reading that trivial input to produce a more
     // interesting value.
@@ -308,25 +313,37 @@ public final class FuzzTargetRunner {
       mutator.read(new ByteArrayInputStream(copyToArray(data, size)));
       mutator.mutate(seed);
     }
-    return writeToMemory(mutator, data, maxSize);
   }
+
+  private static long crossOverCount = 0;
 
   // Called via JNI, being passed data from LLVMFuzzerCustomCrossOver.
   @SuppressWarnings("unused")
   private static int crossOver(
       long data1, int size1, long data2, int size2, long out, int maxOutSize, int seed) {
-    mutator.crossOver(new ByteArrayInputStream(copyToArray(data1, size1)),
-        new ByteArrayInputStream(copyToArray(data2, size2)), seed);
+    // Custom cross over and custom mutate are the only mutators registered in
+    // libFuzzer, hence cross over is picked as often as mutate, which is way
+    // too frequently. Without custom mutate, cross over would be picked from
+    // the list of default mutators, so ~1/12 of the time. This also seems too
+    // much and is reduced to a configurable frequency, default 1/100, here,
+    // mutate is used in the other cases.
+    if (Opt.experimentalCrossOverFrequency != 0
+        && crossOverCount++ % Opt.experimentalCrossOverFrequency == 0) {
+      mutator.crossOver(new ByteArrayInputStream(copyToArray(data1, size1)),
+          new ByteArrayInputStream(copyToArray(data2, size2)), seed);
+    } else {
+      mutate(data1, size1, seed);
+    }
     return writeToMemory(mutator, out, maxOutSize);
   }
 
+  @SuppressWarnings("SameParameterValue")
   private static int writeToMemory(ArgumentsMutator mutator, long out, int maxOutSize) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     // TODO: Instead of writing to a byte array and then copying that array's contents into
     //  memory, consider introducing an OutputStream backed by Unsafe.
     mutator.write(baos);
     byte[] mutatedBytes = baos.toByteArray();
-
     int newSize = Math.min(mutatedBytes.length, maxOutSize);
     UNSAFE.copyMemory(mutatedBytes, BYTE_ARRAY_OFFSET, null, out, newSize);
     return newSize;

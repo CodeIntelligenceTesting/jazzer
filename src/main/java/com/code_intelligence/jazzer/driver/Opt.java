@@ -96,6 +96,12 @@ public final class Opt {
       "dump_classes_dir", "", "Directory to dump instrumented .class files into (if non-empty)");
   public static final boolean experimentalMutator =
       boolSetting("experimental_mutator", false, "Use an experimental structured mutator");
+  public static final long experimentalCrossOverFrequency = uint64Setting(
+      "experimental_cross_over_frequency", 100,
+      "(Used in experimental mutator) Frequency of cross-over mutations actually being executed "
+          + "when the cross-over function is picked by the underlying fuzzing engine (~1/2 of all mutations), "
+          + "other invocations perform type specific mutations via the experimental mutator. "
+          + "(0 = disabled, 1 = every call, 2 = every other call, etc.).");
   public static final boolean hooks = boolSetting(
       "hooks", true, "Apply fuzzing instrumentation (use 'trace' for finer-grained control)");
   public static final String idSyncFile = stringSetting("id_sync_file", null, null);
