@@ -8,3 +8,14 @@ java_test(
         "@maven//:junit_junit",
     ],
 )
+
+java_test(
+    name = "ConfigTest",
+    srcs = [
+        "ConfigTest.java",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/utils:config",
+        "@maven//:junit_junit",
+    ],
+)

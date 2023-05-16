@@ -104,17 +104,30 @@ public class Config {
       strListItem("additional_classes_excludes", File.pathSeparatorChar,
           "Glob patterns matching names of classes from Java that are not in your jar file, "
               + "but may be included in your program");
-  public static final ConfigItem.HexSet ignore = hexSetItem("ignore", ',', "Hex strings representing deduplication tokens of findings that should be ignored");
-  public static final ConfigItem.Uint64 keepGoing = uint64Item("keep_going", 1, "Number of distinct findings after which the fuzzer should stop");
-  public static final ConfigItem.Str reproducerPath = strItem("reproducer_path", ".", "Directory in which stand-alone Java reproducers are stored for each finding");
-  public static final ConfigItem.Str targetClass = strItem("target_class", "", "Fully qualified name of the fuzz target class (required unless --autofuzz is specified)");
-  public static final ConfigItem.Str targetMethod = strItem("target_method", "", "Used to disambiguate between multiple methods annotated with @FuzzTest in the target class");
-  public static final ConfigItem.StrList trace = strListItem("trace", File.pathSeparatorChar, "Types of instrumentation to apply: cmp, cov, div, gep (disabled by default), indir, native");
+  public static final ConfigItem.HexSet ignore = hexSetItem("ignore", ',',
+      "Hex strings representing deduplication tokens of findings that should be ignored");
+  public static final ConfigItem.Uint64 keepGoing =
+      uint64Item("keep_going", 1, "Number of distinct findings after which the fuzzer should stop");
+  public static final ConfigItem.Str reproducerPath = strItem("reproducer_path", ".",
+      "Directory in which stand-alone Java reproducers are stored for each finding");
+  public static final ConfigItem.Str targetClass = strItem("target_class", "",
+      "Fully qualified name of the fuzz target class (required unless --autofuzz is specified)");
+  public static final ConfigItem.Str targetMethod = strItem("target_method", "",
+      "Used to disambiguate between multiple methods annotated with @FuzzTest in the target class");
+  public static final ConfigItem.StrList trace = strListItem("trace", File.pathSeparatorChar,
+      "Types of instrumentation to apply: cmp, cov, div, gep (disabled by default), indir, native");
 
   // The values of this setting depends on autofuzz.
   // TODO: If autofuzz is set, this will be overriden by the autofuzz setting in `loadConfig`
-  public static final ConfigItem.StrList targetArgs = strListItem("target_args", ' ', "Arguments to pass to the fuzz target's fuzzerInitialize method");
+  public static final ConfigItem.StrList targetArgs = strListItem(
+      "target_args", ' ', "Arguments to pass to the fuzz target's fuzzerInitialize method");
 
+  // TODO: this defaults to whatever `hooks` is set to
+  public static final ConfigItem.Bool dedup =
+      boolItem("dedup", false, "Compute and print a deduplication token for every finding");
+
+  public static final ConfigItem.Bool isAndroid =
+      boolItem("android", false, "Jazzer is running on Android");
 
   /**
    * Loads the config variables from the passed in command line args, environment variables, and
@@ -217,7 +230,7 @@ public class Config {
   }
 
   private static ConfigItem.Str hiddenStrItem(String name, String defaultValue) {
-    ConfigItem.Str i = new ConfigItem.Str(NAMESPACE_ROOT, Arrays.asList(name), defaultValue);
+    ConfigItem.Str i = new ConfigItem.Str(NAMESPACE_ROOT, Collections.singletonList(name), defaultValue);
     knownOptions.add(i);
     return i;
   }
@@ -230,38 +243,41 @@ public class Config {
   }
 
   private static ConfigItem.Bool hiddenBoolItem(String name, boolean defaultValue) {
-    ConfigItem.Bool i = new ConfigItem.Bool(NAMESPACE_ROOT, Arrays.asList(name), defaultValue);
+    ConfigItem.Bool i = new ConfigItem.Bool(NAMESPACE_ROOT, Collections.singletonList(name), defaultValue);
     knownOptions.add(i);
     return i;
   }
 
   private static ConfigItem.StrList strListItem(String name, char delimiter, String description) {
     ConfigItem.StrList i =
-        new ConfigItem.StrList(NAMESPACE_ROOT, Arrays.asList(name), delimiter, description, false);
+        new ConfigItem.StrList(NAMESPACE_ROOT, Collections.singletonList(name), delimiter, description, false);
     knownOptions.add(i);
     return i;
   }
 
   private static ConfigItem.StrList hiddenStrListItem(String name, char delimiter) {
-    ConfigItem.StrList i = new ConfigItem.StrList(NAMESPACE_ROOT, Arrays.asList(name), delimiter);
+    ConfigItem.StrList i = new ConfigItem.StrList(NAMESPACE_ROOT, Collections.singletonList(name), delimiter);
     knownOptions.add(i);
     return i;
   }
 
   private static ConfigItem.HexSet hexSetItem(String name, char delimiter, String description) {
-    ConfigItem.HexSet i = new ConfigItem.HexSet(NAMESPACE_ROOT, Collections.singletonList(name), delimiter, description, false);
+    ConfigItem.HexSet i = new ConfigItem.HexSet(
+        NAMESPACE_ROOT, Collections.singletonList(name), delimiter, description, false);
     knownOptions.add(i);
     return i;
   }
 
   private static ConfigItem.Uint64 uint64Item(String name, Long defaultValue, String description) {
-    ConfigItem.Uint64 i = new ConfigItem.Uint64(NAMESPACE_ROOT, Collections.singletonList(name), defaultValue, description, false);
+    ConfigItem.Uint64 i = new ConfigItem.Uint64(
+        NAMESPACE_ROOT, Collections.singletonList(name), defaultValue, description, false);
     knownOptions.add(i);
     return i;
   }
 
   private static ConfigItem.Uint64 uint64Item(String name, int defaultValue, String description) {
-    ConfigItem.Uint64 i = new ConfigItem.Uint64(NAMESPACE_ROOT, Collections.singletonList(name), Long.valueOf(defaultValue), description, false);
+    ConfigItem.Uint64 i = new ConfigItem.Uint64(NAMESPACE_ROOT, Collections.singletonList(name),
+            (long) defaultValue, description, false);
     knownOptions.add(i);
     return i;
   }

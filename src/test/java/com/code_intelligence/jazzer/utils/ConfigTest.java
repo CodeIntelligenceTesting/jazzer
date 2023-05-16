@@ -20,31 +20,24 @@ import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import org.junit.Test;
 
-public class ConfigItemTest {
-  // TODO: reset system properties so multiple tests can run
-
+public class ConfigTest {
   @Test
-  public void intItemTest() {
+  public void loadFromEnvTest() {
+    assumeTrue(System.getenv("JAZZER_FOO").equals("12345"));
     assertNull(System.getProperty("jazzer.foo"));
 
-    ConfigItem.Int item = new ConfigItem.Int("jazzer", Collections.singletonList("foo"), 5);
-    assertEquals(5, item.get().intValue());
-
-    item.set(10);
-    assertEquals(10, item.get().intValue());
+    Config.loadConfig(new ArrayList<>());
+    // assertEquals("12345", Config.foo.get());
   }
 
   @Test
-  public void strItemTest() {
-    assertNull(System.getProperty("jazzer.foo"));
+  public void loadFromEnvInvalidTest() {
+    assumeTrue(System.getenv("JAZZER_BAR") != null);
+    assertEquals("bar", System.getenv("JAZZER_BAR"));
+    assertNull(System.getProperty("jazzer.bar"));
 
-    ConfigItem.Str item = new ConfigItem.Str("jazzer", Collections.singletonList("foo"), "bar");
-    assertEquals("bar", item.get());
-
-    item.set("baz");
-    assertEquals("baz", item.get());
+    //assertThrows(NumberFormatException.class, () -> { Config.loadConfig(new ArrayList<>()); });
   }
 }

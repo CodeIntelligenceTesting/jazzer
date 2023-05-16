@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.assertj.core.util.Arrays;
 
 /**
  * Defines a configuration item which holds its value in Java's system properties to ensure that
@@ -246,7 +245,8 @@ public abstract class ConfigItem<T> {
       super(namespace, segments, Long.toString(defaultValue, 10));
     }
 
-    public Uint64(String namespace, List<String> segments, Long defaultValue, String description, boolean hidden) {
+    public Uint64(String namespace, List<String> segments, Long defaultValue, String description,
+        boolean hidden) {
       super(namespace, segments, Long.toString(defaultValue, 10), description, hidden);
     }
 
