@@ -16,12 +16,10 @@
 
 package com.code_intelligence.jazzer.utils;
 
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,12 +32,15 @@ import java.util.stream.Stream;
  */
 public abstract class ConfigItem<T> {
   private final String namespace;
-
   private final List<String> nameSegments;
-
   final String defaultValue;
   final String description;
   final boolean hidden;
+  /**
+   * This tracks if a has been explicitly set rather than having its default value. Used for handling invariants between
+   * config items
+   */
+  private boolean set;
 
   ConfigItem(String rootNamespace, List<String> nameSegments, String rawDefaultValue,
       String description, boolean hidden) {
@@ -48,10 +49,11 @@ public abstract class ConfigItem<T> {
     this.defaultValue = rawDefaultValue;
     this.description = description;
     this.hidden = hidden;
+    this.set = false;
 
     String propName = getPropertyName();
     String value = System.getProperty(propName);
-    // only override the value if it wasn't already set
+    // only set the value if it wasn't there already
     if (value == null) {
       System.setProperty(propName, rawDefaultValue);
     }
@@ -74,6 +76,7 @@ public abstract class ConfigItem<T> {
   }
 
   protected void setRawValue(String value) {
+    set = true;
     System.setProperty(getPropertyName(), value);
   }
 
@@ -106,10 +109,14 @@ public abstract class ConfigItem<T> {
         .collect(Collectors.joining("-"));
   }
 
-  T get() {
+  public T get() {
     String raw = getRawValue();
     return parse(raw);
-  };
+  }
+
+  boolean isSet() {
+    return set;
+  }
 
   abstract void set(T value);
 
@@ -119,7 +126,7 @@ public abstract class ConfigItem<T> {
     set(parse(value));
   }
 
-  static class Int extends ConfigItem<Integer> {
+  public static class Int extends ConfigItem<Integer> {
     public Int(String namespace, List<String> segments, Integer defaultValue) {
       super(namespace, segments, defaultValue.toString());
     }
@@ -140,7 +147,7 @@ public abstract class ConfigItem<T> {
     }
   }
 
-  static class Str extends ConfigItem<String> {
+  public static class Str extends ConfigItem<String> {
     public Str(String namespace, List<String> segments, String defaultValue) {
       super(namespace, segments, defaultValue);
     }
@@ -161,7 +168,7 @@ public abstract class ConfigItem<T> {
     }
   }
 
-  static class Bool extends ConfigItem<Boolean> {
+  public static class Bool extends ConfigItem<Boolean> {
     public Bool(String namespace, List<String> segments, boolean defaultValue) {
       super(namespace, segments, Boolean.toString(defaultValue));
     }
@@ -183,7 +190,7 @@ public abstract class ConfigItem<T> {
     }
   }
 
-  static class StrList extends ConfigItem<List<String>> {
+  public static class StrList extends ConfigItem<List<String>> {
     final String delimiter;
 
     public StrList(String namespace, List<String> segments, char delimiter) {
@@ -205,12 +212,15 @@ public abstract class ConfigItem<T> {
 
     @Override
     protected List<String> parse(String value) {
+      if (value.isEmpty()) {
+        return new ArrayList<>();
+      }
       String[] parts = value.split(delimiter);
       return Stream.of(parts).collect(Collectors.toList());
     }
   }
 
-  static class HexSet extends ConfigItem<Set<Long>> {
+  public static class HexSet extends ConfigItem<Set<Long>> {
     final String delimiter;
 
     public HexSet(String namespace, List<String> segments, char delimiter) {
@@ -233,6 +243,9 @@ public abstract class ConfigItem<T> {
 
     @Override
     protected Set<Long> parse(String value) {
+      if (value.isEmpty()) {
+        return emptySet();
+      }
       String[] parts = value.split(delimiter);
       return unmodifiableSet(Stream.of(parts)
                                  .map(token -> Long.parseUnsignedLong(token, 16))
@@ -240,7 +253,7 @@ public abstract class ConfigItem<T> {
     }
   }
 
-  static class Uint64 extends ConfigItem<Long> {
+  public static class Uint64 extends ConfigItem<Long> {
     public Uint64(String namespace, List<String> segments, Long defaultValue) {
       super(namespace, segments, Long.toString(defaultValue, 10));
     }

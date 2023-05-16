@@ -156,6 +156,7 @@ public final class Opt {
       boolSetting("help", false, "Show this list of all available arguments");
   private static final boolean version = boolSetting("version", false, "Print version information");
 
+  /*
   static {
     OptParser.failOnUnknownArgument();
 
@@ -188,4 +189,5 @@ public final class Opt {
       exit(1);
     }
   }
+   */
 }

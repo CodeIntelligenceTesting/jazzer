@@ -38,6 +38,6 @@ public class ConfigTest {
     assertEquals("bar", System.getenv("JAZZER_BAR"));
     assertNull(System.getProperty("jazzer.bar"));
 
-    //assertThrows(NumberFormatException.class, () -> { Config.loadConfig(new ArrayList<>()); });
+    // assertThrows(NumberFormatException.class, () -> { Config.loadConfig(new ArrayList<>()); });
   }
 }

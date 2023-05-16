@@ -62,8 +62,13 @@ java_library(
         "ConfigItem.java",
     ],
     visibility = [
+        "//src/main/java/com/code_intelligence/jazzer:__pkg__",
         "//src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
         "//src/test/java/com/code_intelligence/jazzer/utils:__pkg__",
+    ],
+    deps = [
+        "log",
+        "//src/main/java/com/code_intelligence/jazzer:constants",
     ],
 )
 

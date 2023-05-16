@@ -17,10 +17,11 @@
 package com.code_intelligence.jazzer.utils;
 
 import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+
 import org.junit.Test;
 
 public class ConfigItemTest {
@@ -46,5 +47,17 @@ public class ConfigItemTest {
 
     item.set("baz");
     assertEquals("baz", item.get());
+  }
+
+  @Test
+  public void strListTest() {
+    assertNull(System.getProperty("jazzer.foo"));
+
+    ConfigItem.StrList item = new ConfigItem.StrList("jazzer", Collections.singletonList("foo"), ',');
+    assertFalse(item.isSet());
+    assertTrue(item.get().isEmpty());
+
+    item.set(Arrays.asList("bar", "baz"));
+    assertEquals(Arrays.asList("bar", "baz"), item.get());
   }
 }

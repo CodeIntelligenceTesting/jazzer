@@ -24,6 +24,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import com.code_intelligence.jazzer.driver.Driver;
+import com.code_intelligence.jazzer.utils.Config;
 import com.code_intelligence.jazzer.utils.Log;
 import com.github.fmeum.rules_jni.RulesJni;
 import java.io.ByteArrayOutputStream;
@@ -39,7 +40,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -77,19 +77,16 @@ public class Jazzer {
     // itself is "silenced" by redirecting System.out and/or System.err.
     Log.fixOutErr(System.out, System.err);
 
-    parseJazzerArgsToProperties(args);
+    Config.loadConfig(args);
+    //parseJazzerArgsToProperties(args);
 
     // --asan and --ubsan imply --native by default, but --native can also be used by itself to fuzz
     // native libraries without sanitizers (e.g. to quickly grow a corpus).
-    final boolean loadASan = Boolean.parseBoolean(System.getProperty("jazzer.asan", "false"));
-    final boolean loadUBSan = Boolean.parseBoolean(System.getProperty("jazzer.ubsan", "false"));
-    final boolean loadHWASan = Boolean.parseBoolean(System.getProperty("jazzer.hwasan", "false"));
-    final boolean fuzzNative = Boolean.parseBoolean(
-        System.getProperty("jazzer.native", Boolean.toString(loadASan || loadUBSan || loadHWASan)));
-    if ((loadASan || loadUBSan || loadHWASan) && !fuzzNative) {
-      Log.error("--asan, --hwasan and --ubsan cannot be used without --native");
-      exit(1);
-    }
+    final boolean loadASan = Config.asan.get();
+    final boolean loadUBSan = Config.ubsan.get();
+    final boolean loadHWASan = Config.hwasan.get();
+    final boolean fuzzNative = Config.fuzzNative.get();
+
     // No native fuzzing has been requested, fuzz in the current process.
     if (!fuzzNative) {
       // We only create a wrapper script if libFuzzer runs in a mode that creates subprocesses.
@@ -171,31 +168,6 @@ public class Jazzer {
     processBuilder.inheritIO();
 
     exit(processBuilder.start().waitFor());
-  }
-
-  private static void parseJazzerArgsToProperties(List<String> args) {
-    args.stream()
-        .filter(arg -> arg.startsWith("--"))
-        .map(arg -> arg.substring("--".length()))
-        // Filter out "--", which can be used to declare that all further arguments aren't libFuzzer
-        // arguments.
-        .filter(arg -> !arg.isEmpty())
-        .map(Jazzer::parseSingleArg)
-        .forEach(e -> System.setProperty("jazzer." + e.getKey(), e.getValue()));
-  }
-
-  private static SimpleEntry<String, String> parseSingleArg(String arg) {
-    String[] nameAndValue = arg.split("=", 2);
-    if (nameAndValue.length == 2) {
-      // Example: --keep_going=10 --> (keep_going, 10)
-      return new SimpleEntry<>(nameAndValue[0], nameAndValue[1]);
-    } else if (nameAndValue[0].startsWith("no")) {
-      // Example: --nohooks --> (hooks, "false")
-      return new SimpleEntry<>(nameAndValue[0].substring("no".length()), "false");
-    } else {
-      // Example: --dedup --> (dedup, "true")
-      return new SimpleEntry<>(nameAndValue[0], "true");
-    }
   }
 
   // Create a wrapper script that faithfully recreates the current JVM. By using this script as
@@ -441,7 +413,7 @@ public class Jazzer {
   }
 
   private static boolean isAndroid() {
-    return Boolean.parseBoolean(System.getProperty("jazzer.android", "false"));
+    return Config.isAndroid.get();
   }
 
   private static boolean isPosixOrAndroid() {

@@ -16,6 +16,9 @@
 
 package com.code_intelligence.jazzer.utils;
 
+import static com.code_intelligence.jazzer.Constants.JAZZER_VERSION;
+import static java.lang.System.exit;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +53,7 @@ public class Config {
       File.pathSeparatorChar,
       "Additional arguments to pass to the JVM (separator can be escaped with '\\', native launcher only)");
   public static final ConfigItem.Str agentPath =
-      strItem("agent_path", null, "Custom path to jazzer_agent_deploy.jar (native launcher only)");
+      strItem("agent_path", "", "Custom path to jazzer_agent_deploy.jar (native launcher only)");
   // The following arguments are interpreted by the Jazzer main class directly as they require
   // starting Jazzer as a subprocess.
   public static final ConfigItem.Bool asan = boolItem(
@@ -59,7 +62,7 @@ public class Config {
       "ubsan", false, "Allow fuzzing of native libraries compiled with '-fsanitize=undefined'");
   public static final ConfigItem.Bool hwasan =
       boolItem("hwasan", false, "Allow fuzzing of native libraries compiled with hwasan");
-  public static final ConfigItem.Bool nativeLib = boolItem("native", false,
+  public static final ConfigItem.Bool fuzzNative = boolItem("native", false,
       "Allow fuzzing of native libraries compiled with '-fsanitize=fuzzer' (implied by --asan and --ubsan)");
 
   public static final ConfigItem.StrList cp = strListItem(
@@ -93,7 +96,7 @@ public class Config {
       "hooks", true, "Apply fuzzing instrumentation (use 'trace' for finer-grained control)");
   // TODO: this has no description in the original but it would be good to either give it one or
   // have it be hidden
-  public static final ConfigItem.Str idSyncFile = strItem("id_sync_file", null, null);
+  public static final ConfigItem.Str idSyncFile = strItem("id_sync_file", "", "");
   public static final ConfigItem.StrList instrumentationIncludes =
       strListItem("instrumentation_includes", File.pathSeparatorChar,
           "Glob patterns matching names of classes to instrument for fuzzing");
@@ -129,6 +132,23 @@ public class Config {
   public static final ConfigItem.Bool isAndroid =
       boolItem("android", false, "Jazzer is running on Android");
 
+  public static final ConfigItem.Bool conditionalHooks = boolItem(
+      Arrays.asList("internal", "conditional_hooks"), false,
+      "whether hook instrumentation should check JazzerInternal#hooksEnabled before executing hooks. "
+          + "Used to disable hooks during non-fuzz JUnit tests");
+
+  public static final ConfigItem.StrList instrumentOnly = strListItem("instrument_only", ',',
+      "Comma separated list of jar files to instrument. No fuzzing is performed.");
+
+  public static final ConfigItem.Bool mergeInner =
+      boolItem(Arrays.asList("internal", "merge_inner"), false, "");
+
+  private static final ConfigItem.Bool help =
+      boolItem("help", false, "Show this list of all available arguments");
+
+  private static final ConfigItem.Bool version =
+      boolItem("version", false, "Print version information");
+
   /**
    * Loads the config variables from the passed in command line args, environment variables, and
    * manifest file entries. {@code Config} assumes that this is only called once and is the only way
@@ -154,7 +174,47 @@ public class Config {
       }
     });
 
+    // --asan and --ubsan imply --native by default, but --native can also be used by itself to fuzz
+    // native libraries without sanitizers (e.g. to quickly grow a corpus).
+    if (!fuzzNative.isSet()) {
+      fuzzNative.set(asan.get() || ubsan.get() || hwasan.get());
+    }
+
     System.setProperty("jazzer.config-loaded", "true");
+
+    if (help.get()) {
+      Log.println(getHelpText());
+      exit(0);
+    }
+    if (version.get()) {
+      Log.println("Jazzer v" + JAZZER_VERSION);
+      exit(0);
+    }
+    if (!targetClass.get().isEmpty() && !autofuzz.get().isEmpty()) {
+      Log.error("--target_class and --autofuzz cannot be specified together");
+      exit(1);
+    }
+    if (!targetArgs.get().isEmpty() && !autofuzz.get().isEmpty()) {
+      Log.error("--target_args and --autofuzz cannot be specified together");
+      exit(1);
+    }
+    if (autofuzz.get().isEmpty() && !autofuzzIgnore.get().isEmpty()) {
+      Log.error("--autofuzz_ignore requires --autofuzz");
+      exit(1);
+    }
+    if ((!ignore.get().isEmpty() || keepGoing.get() > 1) && !dedup.get()) {
+      Log.error("--nodedup is not supported with --ignore or --keep_going");
+      exit(1);
+    }
+    if (!instrumentOnly.get().isEmpty() && dumpClassesDir.get().isEmpty()) {
+      Log.error("--dump_classes_dir must be set with --instrument_only");
+      exit(1);
+    }
+    // this case will only happen if any of the `*san`s are true and native was not set by anything
+    if ((asan.get() || ubsan.get() || hwasan.get()) && !fuzzNative.get()) {
+      Log.error("--asan, --hwasan and --ubsan cannot be used without --native");
+      exit(1);
+    }
   }
 
   private static void loadFromManifest() {
@@ -187,6 +247,14 @@ public class Config {
         item.setFromString(value);
       }
     });
+  }
+
+  private static String getHelpText() {
+    return knownOptions.stream()
+        .map(ConfigItem::description)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(Collectors.joining("\n"));
   }
 
   private static Map<String, String> processJazzerCli(List<String> args) {
@@ -230,33 +298,41 @@ public class Config {
   }
 
   private static ConfigItem.Str hiddenStrItem(String name, String defaultValue) {
-    ConfigItem.Str i = new ConfigItem.Str(NAMESPACE_ROOT, Collections.singletonList(name), defaultValue);
+    ConfigItem.Str i =
+        new ConfigItem.Str(NAMESPACE_ROOT, Collections.singletonList(name), defaultValue);
     knownOptions.add(i);
     return i;
   }
 
   private static ConfigItem.Bool boolItem(String name, boolean defaultValue, String description) {
-    ConfigItem.Bool i = new ConfigItem.Bool(
-        NAMESPACE_ROOT, Collections.singletonList(name), defaultValue, description, false);
+    return boolItem(Collections.singletonList(name), defaultValue, description);
+  }
+
+  private static ConfigItem.Bool boolItem(
+      List<String> nameSegments, boolean defaultValue, String description) {
+    ConfigItem.Bool i =
+        new ConfigItem.Bool(NAMESPACE_ROOT, nameSegments, defaultValue, description, false);
     knownOptions.add(i);
     return i;
   }
 
   private static ConfigItem.Bool hiddenBoolItem(String name, boolean defaultValue) {
-    ConfigItem.Bool i = new ConfigItem.Bool(NAMESPACE_ROOT, Collections.singletonList(name), defaultValue);
+    ConfigItem.Bool i =
+        new ConfigItem.Bool(NAMESPACE_ROOT, Collections.singletonList(name), defaultValue);
     knownOptions.add(i);
     return i;
   }
 
   private static ConfigItem.StrList strListItem(String name, char delimiter, String description) {
-    ConfigItem.StrList i =
-        new ConfigItem.StrList(NAMESPACE_ROOT, Collections.singletonList(name), delimiter, description, false);
+    ConfigItem.StrList i = new ConfigItem.StrList(
+        NAMESPACE_ROOT, Collections.singletonList(name), delimiter, description, false);
     knownOptions.add(i);
     return i;
   }
 
   private static ConfigItem.StrList hiddenStrListItem(String name, char delimiter) {
-    ConfigItem.StrList i = new ConfigItem.StrList(NAMESPACE_ROOT, Collections.singletonList(name), delimiter);
+    ConfigItem.StrList i =
+        new ConfigItem.StrList(NAMESPACE_ROOT, Collections.singletonList(name), delimiter);
     knownOptions.add(i);
     return i;
   }
@@ -276,8 +352,8 @@ public class Config {
   }
 
   private static ConfigItem.Uint64 uint64Item(String name, int defaultValue, String description) {
-    ConfigItem.Uint64 i = new ConfigItem.Uint64(NAMESPACE_ROOT, Collections.singletonList(name),
-            (long) defaultValue, description, false);
+    ConfigItem.Uint64 i = new ConfigItem.Uint64(
+        NAMESPACE_ROOT, Collections.singletonList(name), (long) defaultValue, description, false);
     knownOptions.add(i);
     return i;
   }
