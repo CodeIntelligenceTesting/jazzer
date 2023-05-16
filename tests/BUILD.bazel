@@ -472,6 +472,20 @@ java_fuzz_target_test(
     ],
 )
 
+cc_binary(
+    name = "complex_proto_fuzzer",
+    testonly = True,
+    srcs = ["src/test/cc/complex_proto_fuzzer.cc"],
+    copts = ["-fsanitize=fuzzer"],
+    linkopts = ["-fsanitize=fuzzer"],
+    # libfuzzer not shipped on macOS.
+    target_compatible_with = LINUX_ONLY,
+    deps = [
+        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator/proto:proto2_cc_proto",
+        "@libprotobuf-mutator",
+    ],
+)
+
 java_fuzz_target_test(
     name = "ExperimentalMutatorDynamicProtoFuzzer",
     srcs = ["src/test/java/com/example/ExperimentalMutatorDynamicProtoFuzzer.java"],
