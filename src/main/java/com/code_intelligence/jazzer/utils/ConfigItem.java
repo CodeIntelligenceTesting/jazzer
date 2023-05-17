@@ -118,7 +118,11 @@ public abstract class ConfigItem<T> {
     return set;
   }
 
-  abstract void set(T value);
+  public void reset() {
+    System.setProperty(getPropertyName(), defaultValue);
+  }
+
+  public abstract void set(T value);
 
   protected abstract T parse(String value);
 
@@ -137,7 +141,7 @@ public abstract class ConfigItem<T> {
     }
 
     @Override
-    void set(Integer value) {
+    public void set(Integer value) {
       super.setRawValue(value.toString());
     }
 
@@ -158,7 +162,7 @@ public abstract class ConfigItem<T> {
     }
 
     @Override
-    void set(String value) {
+    public void set(String value) {
       this.setRawValue(value);
     }
 
@@ -179,7 +183,7 @@ public abstract class ConfigItem<T> {
     }
 
     @Override
-    void set(Boolean value) {
+    public void set(Boolean value) {
       String raw = value.toString();
       this.setRawValue(raw);
     }
@@ -205,7 +209,7 @@ public abstract class ConfigItem<T> {
     }
 
     @Override
-    void set(List<String> value) {
+    public void set(List<String> value) {
       String raw = String.join(delimiter, value);
       setRawValue(raw);
     }
@@ -235,7 +239,7 @@ public abstract class ConfigItem<T> {
     }
 
     @Override
-    void set(Set<Long> value) {
+    public void set(Set<Long> value) {
       String raw =
           value.stream().map(v -> Long.toString(v, 16)).collect(Collectors.joining(delimiter));
       setRawValue(raw);
@@ -264,7 +268,7 @@ public abstract class ConfigItem<T> {
     }
 
     @Override
-    void set(Long value) {
+    public void set(Long value) {
       String raw = value.toString();
       setRawValue(raw);
     }

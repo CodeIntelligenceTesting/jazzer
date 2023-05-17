@@ -20,6 +20,7 @@ import static java.lang.System.exit;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.junit.JUnitRunner;
+import com.code_intelligence.jazzer.utils.Config;
 import com.code_intelligence.jazzer.utils.Log;
 import java.io.File;
 import java.io.IOException;
@@ -32,33 +33,33 @@ import java.util.Optional;
 
 public class Driver {
   public static int start(List<String> args, boolean spawnsSubprocesses) throws IOException {
-    boolean isAndroid = Boolean.parseBoolean(System.getProperty("jazzer.android", "false"));
+    boolean isAndroid = Config.isAndroid.get();
     if (isAndroid) {
-      if (!System.getProperty("jazzer.autofuzz", "").isEmpty()) {
+      if (!Config.autofuzz.get().isEmpty()) {
         Log.error("--autofuzz is not supported for Android");
         return 1;
       }
-      if (!System.getProperty("jazzer.coverage_report", "").isEmpty()) {
+      if (!Config.coverageReport.get().isEmpty()) {
         Log.warn("--coverage_report is not supported for Android and has been disabled");
-        System.clearProperty("jazzer.coverage_report");
+        Config.coverageReport.reset();
       }
-      if (!System.getProperty("jazzer.coverage_dump", "").isEmpty()) {
+      if (!Config.coverageDump.get().isEmpty()) {
         Log.warn("--coverage_dump is not supported for Android and has been disabled");
-        System.clearProperty("jazzer.coverage_dump");
+        Config.coverageDump.reset();
       }
     }
 
     if (spawnsSubprocesses) {
-      if (!System.getProperty("jazzer.coverage_report", "").isEmpty()) {
+      if (!Config.coverageReport.get().isEmpty()) {
         Log.warn("--coverage_report does not support parallel fuzzing and has been disabled");
-        System.clearProperty("jazzer.coverage_report");
+        Config.coverageReport.reset();
       }
-      if (!System.getProperty("jazzer.coverage_dump", "").isEmpty()) {
+      if (!Config.coverageDump.get().isEmpty()) {
         Log.warn("--coverage_dump does not support parallel fuzzing and has been disabled");
-        System.clearProperty("jazzer.coverage_dump");
+        Config.coverageDump.reset();
       }
 
-      String idSyncFileArg = System.getProperty("jazzer.id_sync_file", "");
+      String idSyncFileArg = Config.idSyncFile.get();
       Path idSyncFile;
       if (idSyncFileArg.isEmpty()) {
         // Create an empty temporary file used for coverage ID synchronization and
@@ -84,7 +85,7 @@ public class Driver {
     }
 
     if (args.stream().anyMatch("-merge_inner=1" ::equals)) {
-      System.setProperty("jazzer.internal.merge_inner", "true");
+      Config.mergeInner.set(true);
     }
 
     // Jazzer's hooks use deterministic randomness and thus require a seed. Search for the last
@@ -102,7 +103,7 @@ public class Driver {
         args.add("-seed=" + seed);
       }
     }
-    System.setProperty("jazzer.internal.seed", seed);
+    Config.fuzzSeed.set(seed);
 
     if (args.stream().noneMatch(arg -> arg.startsWith("-rss_limit_mb="))) {
       args.add(getDefaultRssLimitMbArg());
@@ -111,10 +112,10 @@ public class Driver {
     // Do not modify properties beyond this point, loading Opt locks in their values. The agent will
     // cause Opt to be loaded again, this time in the bootstrap class loader, but since all its
     // fields are immutable that should not cause confusion.
-    AgentInstaller.install(Opt.hooks);
+    AgentInstaller.install(Config.hooks.get());
 
-    if (!Opt.instrumentOnly.isEmpty()) {
-      boolean instrumentationSuccess = OfflineInstrumentor.instrumentJars(Opt.instrumentOnly);
+    if (!Config.instrumentOnly.get().isEmpty()) {
+      boolean instrumentationSuccess = OfflineInstrumentor.instrumentJars(Config.instrumentOnly.get());
       if (!instrumentationSuccess) {
         exit(1);
       }
@@ -123,7 +124,7 @@ public class Driver {
 
     Driver.class.getClassLoader().setDefaultAssertionStatus(true);
 
-    if (!Opt.autofuzz.isEmpty()) {
+    if (!Config.autofuzz.get().isEmpty()) {
       FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.AUTOFUZZ_FUZZ_TARGET;
       return FuzzTargetRunner.startLibFuzzer(args);
     }

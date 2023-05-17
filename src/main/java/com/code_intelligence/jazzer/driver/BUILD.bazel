@@ -22,6 +22,7 @@ java_library(
         ":opt",
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
         "//src/main/java/com/code_intelligence/jazzer/driver/junit:junit_runner",
+        "//src/main/java/com/code_intelligence/jazzer/utils:config",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
     ],
 )
