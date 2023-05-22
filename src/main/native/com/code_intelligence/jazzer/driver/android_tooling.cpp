@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <dlfcn.h>
+#include <jni.h>
+
 #include <cstdlib>
 #include <cstring>
-
-#include <jni.h>
-#include <dlfcn.h>
 #include <iostream>
 
 #include "com_code_intelligence_jazzer_android_AndroidRuntime.h"
@@ -25,20 +25,18 @@ const char *RUNTIME_LIBRARY = "libandroid_runtime.so";
 const char *EMBEDDED_DIR = "/data/fuzz:/system/lib64";
 const char *USE_EMBEDDED = "use_embedded";
 
-std::string getNativeString(JNIEnv* env, jbyteArray javaString) {
+std::string getNativeString(JNIEnv *env, jbyteArray javaString) {
   jsize num_bytes = env->GetArrayLength(javaString);
-  jbyte* elements = env->GetByteArrayElements(javaString, NULL);
+  jbyte *elements = env->GetByteArrayElements(javaString, NULL);
 
   if (!elements) {
-    std::cerr
-        << "ERROR: Passed a invalid runtime_libs string."
-        << std::endl;
+    std::cerr << "ERROR: Passed a invalid runtime_libs string." << std::endl;
     exit(1);
   }
-  std::string nativeString(reinterpret_cast<char*>(elements), num_bytes);
+  std::string nativeString(reinterpret_cast<char *>(elements), num_bytes);
 
   // Release the element array provided by JNI
-  env->ReleaseByteArrayElements(javaString, elements, JNI_ABORT); 
+  env->ReleaseByteArrayElements(javaString, elements, JNI_ABORT);
 
   return nativeString;
 }
@@ -46,9 +44,9 @@ std::string getNativeString(JNIEnv* env, jbyteArray javaString) {
 // Register native methods from the Android Runtime (ART) framework.
 [[maybe_unused]] jint
 Java_com_code_1intelligence_jazzer_android_AndroidRuntime_registerNatives(
-    JNIEnv* env, jclass clazz, jbyteArray runtimeLibs) {
+    JNIEnv *env, jclass clazz, jbyteArray runtimeLibs) {
   if (runtimeLibs == nullptr) {
-    exit(1); 
+    exit(1);
   }
 
   std::string nativeString = getNativeString(env, runtimeLibs);
@@ -56,14 +54,13 @@ Java_com_code_1intelligence_jazzer_android_AndroidRuntime_registerNatives(
   if (strcmp(USE_EMBEDDED, nativeString.c_str()) == 0) {
     setenv("LD_LIBRARY_PATH", EMBEDDED_DIR, true);
   }
-       
+
   void *handle = nullptr;
   handle = dlopen(RUNTIME_LIBRARY, RTLD_LAZY);
 
   if (handle == nullptr) {
-    std::cerr
-        << "ERROR: Unable to locate runtime libs. Check LD_LIBRARY_PATH."
-        << std::endl;
+    std::cerr << "ERROR: Unable to locate runtime libs. Check LD_LIBRARY_PATH."
+              << std::endl;
     exit(1);
   }
   // reset errors
@@ -74,8 +71,8 @@ Java_com_code_1intelligence_jazzer_android_AndroidRuntime_registerNatives(
   Register_Frameworks_t Register_Frameworks;
 
   Register_Frameworks = reinterpret_cast<Register_Frameworks_t>(
-    dlsym(handle, "registerFrameworkNatives"));
-  const char* dlsym_error = dlerror();
+      dlsym(handle, "registerFrameworkNatives"));
+  const char *dlsym_error = dlerror();
   if (dlsym_error) {
     exit(1);
   }

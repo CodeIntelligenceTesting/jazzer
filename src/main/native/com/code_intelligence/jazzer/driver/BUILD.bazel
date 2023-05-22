@@ -49,7 +49,6 @@ cc_jni_library(
 #     alwayslink = True,
 # )
 
-
 cc_library(
     name = "coverage_tracker",
     srcs = ["coverage_tracker.cpp"],

@@ -29,12 +29,12 @@ public class AndroidRuntime {
     if (runtimeLibs == null) {
       return;
     }
-    
+
     if (Opt.isAndroid) {
       RulesJni.loadLibrary("jazzer_android_tooling", "/com/code_intelligence/jazzer/driver");
-    //   RulesJni.loadLibrary("jazzer_android_tooling", AndroidRuntime.class);
+      //   RulesJni.loadLibrary("jazzer_android_tooling", AndroidRuntime.class);
       if (!runtimeLibs.equals(doNotInitialize)) {
-        byte[] bytes = runtimeLibs.getBytes("UTF-8"); 
+        byte[] bytes = runtimeLibs.getBytes("UTF-8");
         registerNatives(bytes);
       } else {
         Log.warn("Android Runtime (ART) is not being initialized for this fuzzer.");
@@ -43,13 +43,13 @@ public class AndroidRuntime {
   };
 
   /**
-  * Returns a command to set the classpath for fuzzing.
-  *
-  * @return The classpath command.
-  */
+   * Returns a command to set the classpath for fuzzing.
+   *
+   * @return The classpath command.
+   */
   public static String getClassPathsCommand() {
     String template = "export CLASSPATH=%s";
-    return String.format(template,  System.getProperty("java.class.path"));
+    return String.format(template, System.getProperty("java.class.path"));
   }
 
   private static native int registerNatives(byte[] runtimeLibs);
