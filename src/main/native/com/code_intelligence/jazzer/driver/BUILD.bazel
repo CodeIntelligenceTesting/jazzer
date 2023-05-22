@@ -37,17 +37,11 @@ cc_jni_library(
     srcs = ["android_tooling.cpp"],
     platforms = MULTI_PLATFORM,
     visibility = ["//src/main/java/com/code_intelligence/jazzer/android:__pkg__"],
+    target_compatible_with = SKIP_ON_WINDOWS,
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/android:android_runtime.hdrs",
     ],
 )
-
-# cc_library(
-#     name = "android_tooling",
-#     srcs = ["android_tooling.cpp"],
-#     # Symbols are referenced dynamically by libFuzzer.
-#     alwayslink = True,
-# )
 
 cc_library(
     name = "coverage_tracker",
