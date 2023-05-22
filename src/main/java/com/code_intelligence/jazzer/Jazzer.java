@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import com.code_intelligence.jazzer.android.AndroidRuntime;
 import com.code_intelligence.jazzer.driver.Driver;
 import com.code_intelligence.jazzer.utils.Log;
 import com.github.fmeum.rules_jni.RulesJni;
@@ -92,6 +93,10 @@ public class Jazzer {
     }
     // No native fuzzing has been requested, fuzz in the current process.
     if (!fuzzNative) {
+      if (isAndroid()) {
+        final String useEmbeddedNativeLibs = getAndroidRuntimeOptions();
+        AndroidRuntime.initialize(useEmbeddedNativeLibs);
+      }
       // We only create a wrapper script if libFuzzer runs in a mode that creates subprocesses.
       // In LibFuzzer's fork mode, the subprocesses created continuously by the main libFuzzer
       // process do not create further subprocesses. Creating a wrapper script for each subprocess
@@ -209,7 +214,7 @@ public class Jazzer {
     char shellQuote = isPosixOrAndroid() ? '\'' : '"';
     String launcherTemplate;
     if (isAndroid()) {
-      launcherTemplate = "#!/system/bin/env sh\n%s $@\n";
+      launcherTemplate = "#!/system/bin/env sh\n%s \n%s $@\n";
     } else if (isPosix()) {
       launcherTemplate = "#!/usr/bin/env sh\n%s $@\n";
     } else {
@@ -226,21 +231,24 @@ public class Jazzer {
                      .map(e -> e.getKey() + "='" + e.getValue() + "'")
                      .collect(joining(" "));
     String command = Stream
-                         .concat(Stream.of(javaBinary().toString()), javaBinaryArgs())
+                         .concat(Stream.of(javaBinary()), javaBinaryArgs())
                          // Escape individual arguments for the shell.
                          .map(str -> shellQuote + str + shellQuote)
                          .collect(joining(" "));
 
     String invocation = env.isEmpty() ? command : env + " " + command;
-    String launcherContent = String.format(launcherTemplate, invocation);
 
     // argv0 is printed by libFuzzer during reproduction, so have the launcher basename contain
     // "jazzer".
     Path launcher;
+    String launcherContent;
     if (isAndroid()) {
+      String exportCommand = AndroidRuntime.getClassPathsCommand();
+      launcherContent = String.format(launcherTemplate, exportCommand, invocation);
       launcher = Files.createTempFile(
           Paths.get("/data/local/tmp/"), "jazzer-", launcherExtension, launcherScriptAttributes);
     } else {
+      launcherContent = String.format(launcherTemplate, invocation);
       launcher = Files.createTempFile("jazzer-", launcherExtension, launcherScriptAttributes);
     }
 
@@ -249,36 +257,38 @@ public class Jazzer {
     return launcher.toAbsolutePath().toString();
   }
 
-  private static Path javaBinary() {
+  private static String javaBinary() {
     String javaBinaryName;
     if (isAndroid()) {
-      javaBinaryName = "dalvikvm";
+      javaBinaryName = "exec";
+      return javaBinaryName;
     } else if (isPosix()) {
       javaBinaryName = "java";
     } else {
       javaBinaryName = "java.exe";
     }
 
-    return Paths.get(System.getProperty("java.home"), "bin", javaBinaryName);
+    Path path = Paths.get(System.getProperty("java.home"), "bin", javaBinaryName);
+    return path.toString();
   }
 
   private static Stream<String> javaBinaryArgs() {
-    Stream<String> stream = Stream.of("-cp", System.getProperty("java.class.path"),
-        // Make ByteBuddyAgent's job simpler by allowing it to attach directly to the JVM
-        // rather than relying on an external helper. The latter fails on macOS 12 with JDK 11+
-        // (but not 8) and UBSan preloaded with:
-        // Caused by: java.io.IOException: Cannot run program
-        // "/Users/runner/hostedtoolcache/Java_Zulu_jdk/17.0.4-8/x64/bin/java": error=0, Failed
-        // to exec spawn helper: pid: 8227, signal: 9
-        // Presumably, this issue is caused by codesigning and the exec helper missing the
-        // entitlements required for library insertion.
-        "-Djdk.attach.allowAttachSelf=true", Jazzer.class.getName());
-
+    Stream<String> stream;
     if (isAndroid()) {
+      stream = Stream.of("app_process", "-Djdk.attach.allowAttachSelf=true", "/system/bin", Jazzer.class.getName());
       // ManagementFactory wont work with Android
       return stream;
     }
-
+    stream = Stream.of("-cp", System.getProperty("java.class.path"),
+      // Make ByteBuddyAgent's job simpler by allowing it to attach directly to the JVM
+      // rather than relying on an external helper. The latter fails on macOS 12 with JDK 11+
+      // (but not 8) and UBSan preloaded with:
+      // Caused by: java.io.IOException: Cannot run program
+      // "/Users/runner/hostedtoolcache/Java_Zulu_jdk/17.0.4-8/x64/bin/java": error=0, Failed
+      // to exec spawn helper: pid: 8227, signal: 9
+      // Presumably, this issue is caused by codesigning and the exec helper missing the
+      // entitlements required for library insertion.
+      "-Djdk.attach.allowAttachSelf=true", Jazzer.class.getName());
     return Stream.concat(ManagementFactory.getRuntimeMXBean().getInputArguments().stream(), stream);
   }
 
@@ -442,6 +452,10 @@ public class Jazzer {
 
   private static boolean isAndroid() {
     return Boolean.parseBoolean(System.getProperty("jazzer.android", "false"));
+  }
+
+  private static String getAndroidRuntimeOptions() {
+    return System.getProperty("jazzer.runtime_libs");
   }
 
   private static boolean isPosixOrAndroid() {

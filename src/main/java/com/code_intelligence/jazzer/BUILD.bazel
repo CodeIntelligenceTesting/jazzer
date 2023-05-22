@@ -116,6 +116,7 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_utils",
     ],
     deps = [
+        "//src/main/java/com/code_intelligence/jazzer/android:android_runtime",
         "//src/main/java/com/code_intelligence/jazzer/driver",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
         "@fmeum_rules_jni//jni/tools/native_loader",

@@ -61,6 +61,8 @@ public final class Opt {
         "Additional arguments to pass to the JVM (separator can be escaped with '\\', native launcher only)");
     stringSetting(
         "agent_path", null, "Custom path to jazzer_agent_deploy.jar (native launcher only)");
+    stringSetting(
+        "runtime_libs", null, "Which libraries to use when initializing ART (native launcher only)");
     // The following arguments are interpreted by the Jazzer main class directly as they require
     // starting Jazzer as a subprocess.
     boolSetting(

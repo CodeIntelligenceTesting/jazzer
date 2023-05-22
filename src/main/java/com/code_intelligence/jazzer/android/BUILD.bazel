@@ -1,4 +1,5 @@
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
 
 android_library(
     name = "jazzer_standalone_library",
@@ -25,5 +26,20 @@ android_binary(
     ],
     deps = [
         ":jazzer_standalone_library",
+    ],
+)
+
+java_jni_library(
+    name = "android_runtime",
+    srcs = ["AndroidRuntime.java"],
+    native_libs = ["//src/main/native/com/code_intelligence/jazzer/driver:jazzer_android_tooling"],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/driver:__subpackages__",
+        "//src/main/native/com/code_intelligence/jazzer/driver:__subpackages__",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
     ],
 )
