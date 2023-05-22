@@ -34,14 +34,20 @@ cc_library(
 
 cc_jni_library(
     name = "jazzer_android_tooling",
-    srcs = [
-        "android_tooling.cpp",
-        "android_tooling.h",
-    ],
+    srcs = ["android_tooling.cpp"],
     platforms = MULTI_PLATFORM,
     visibility = ["//src/main/java/com/code_intelligence/jazzer/android:__pkg__"],
-    deps = ["//src/main/java/com/code_intelligence/jazzer/android:android_runtime.hdrs"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/android:android_runtime.hdrs",
+    ],
 )
+
+# cc_library(
+#     name = "android_tooling",
+#     srcs = ["android_tooling.cpp"],
+#     # Symbols are referenced dynamically by libFuzzer.
+#     alwayslink = True,
+# )
 
 
 cc_library(

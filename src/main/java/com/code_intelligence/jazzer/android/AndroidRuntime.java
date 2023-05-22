@@ -16,42 +16,41 @@ package com.code_intelligence.jazzer.android;
 
 import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.utils.Log;
-
 import com.github.fmeum.rules_jni.RulesJni;
-
 import java.io.UnsupportedEncodingException;
 
 /**
  * Loads Android tooling library and registers native functions.
  */
 public class AndroidRuntime {
-    private static final String doNotInitialize = "use_none";
-    
-    public static void initialize(String runtimeLibs) throws UnsupportedEncodingException {
-        if (runtimeLibs == null) {
-            return;
-        }
-        
-        if (Opt.isAndroid) {
-            RulesJni.loadLibrary("jazzer_android_tooling", "/com/code_intelligence/jazzer/driver");
-            if (!runtimeLibs.equals(doNotInitialize)) {
-                byte[] bytes = runtimeLibs.getBytes("UTF-8"); 
-                registerNatives(bytes);
-            } else {
-                Log.warn("Android Runtime (ART) is not being initialized for this fuzzer.");
-            }
-        }
-    };
+  private static final String doNotInitialize = "use_none";
 
-    /**
-     * Returns a command to set the classpath for fuzzing.
-     *
-     * @return The classpath command.
-     */
-    public static String getClassPathsCommand() {
-        String template = "export CLASSPATH=%s";
-        return String.format(template,  System.getProperty("java.class.path"));
+  public static void initialize(String runtimeLibs) throws UnsupportedEncodingException {
+    if (runtimeLibs == null) {
+      return;
     }
+    
+    if (Opt.isAndroid) {
+      RulesJni.loadLibrary("jazzer_android_tooling", "/com/code_intelligence/jazzer/driver");
+    //   RulesJni.loadLibrary("jazzer_android_tooling", AndroidRuntime.class);
+      if (!runtimeLibs.equals(doNotInitialize)) {
+        byte[] bytes = runtimeLibs.getBytes("UTF-8"); 
+        registerNatives(bytes);
+      } else {
+        Log.warn("Android Runtime (ART) is not being initialized for this fuzzer.");
+      }
+    }
+  };
 
-    private static native void registerNatives(byte[] runtimeLibs);
+  /**
+  * Returns a command to set the classpath for fuzzing.
+  *
+  * @return The classpath command.
+  */
+  public static String getClassPathsCommand() {
+    String template = "export CLASSPATH=%s";
+    return String.format(template,  System.getProperty("java.class.path"));
+  }
+
+  private static native int registerNatives(byte[] runtimeLibs);
 }
