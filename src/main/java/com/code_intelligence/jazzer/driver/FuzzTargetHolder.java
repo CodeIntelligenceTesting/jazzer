@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.driver;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.utils.Config;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -34,7 +35,7 @@ public class FuzzTargetHolder {
 
   public static final FuzzTarget AUTOFUZZ_FUZZ_TARGET = autofuzzFuzzTarget(() -> {
     com.code_intelligence.jazzer.autofuzz.FuzzTarget.fuzzerInitialize(
-        Opt.targetArgs.toArray(new String[0]));
+        Config.targetArgs.get().toArray(new String[0]));
     return null;
   });
 

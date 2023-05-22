@@ -115,7 +115,8 @@ public class Driver {
     AgentInstaller.install(Config.hooks.get());
 
     if (!Config.instrumentOnly.get().isEmpty()) {
-      boolean instrumentationSuccess = OfflineInstrumentor.instrumentJars(Config.instrumentOnly.get());
+      boolean instrumentationSuccess =
+          OfflineInstrumentor.instrumentJars(Config.instrumentOnly.get());
       if (!instrumentationSuccess) {
         exit(1);
       }

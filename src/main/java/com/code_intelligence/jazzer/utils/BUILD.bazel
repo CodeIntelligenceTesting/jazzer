@@ -63,7 +63,11 @@ java_library(
     ],
     visibility = [
         "//src/main/java/com/code_intelligence/jazzer:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
         "//src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/driver/junit:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/junit:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:__pkg__",
         "//src/test/java/com/code_intelligence/jazzer/utils:__pkg__",
     ],
     deps = [

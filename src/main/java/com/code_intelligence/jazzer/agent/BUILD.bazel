@@ -10,7 +10,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         ":agent_lib",
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "//src/main/java/com/code_intelligence/jazzer/utils:config",
         "@net_bytebuddy_byte_buddy_agent//jar",
     ],
 )
@@ -25,9 +25,9 @@ kt_jvm_library(
     ],
     deps = [
         "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers:constants",
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
         "//src/main/java/com/code_intelligence/jazzer/instrumentor",
         "//src/main/java/com/code_intelligence/jazzer/utils:class_name_globber",
+        "//src/main/java/com/code_intelligence/jazzer/utils:config",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
         "//src/main/java/com/code_intelligence/jazzer/utils:manifest_utils",
         "@com_github_classgraph_classgraph//:classgraph",

@@ -21,7 +21,6 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-
 import org.junit.Test;
 
 public class ConfigItemTest {
@@ -53,7 +52,8 @@ public class ConfigItemTest {
   public void strListTest() {
     assertNull(System.getProperty("jazzer.foo"));
 
-    ConfigItem.StrList item = new ConfigItem.StrList("jazzer", Collections.singletonList("foo"), ',');
+    ConfigItem.StrList item =
+        new ConfigItem.StrList("jazzer", Collections.singletonList("foo"), ',');
     assertFalse(item.isSet());
     assertTrue(item.get().isEmpty());
 

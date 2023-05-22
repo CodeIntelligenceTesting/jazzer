@@ -20,6 +20,7 @@ import static java.lang.System.exit;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder.FuzzTarget;
+import com.code_intelligence.jazzer.utils.Config;
 import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.ManifestUtils;
 import java.lang.reflect.Method;
@@ -37,10 +38,10 @@ class FuzzTargetFinder {
   private static final String FUZZER_TEAR_DOWN = "fuzzerTearDown";
 
   static String findFuzzTargetClassName() {
-    if (!Opt.targetClass.isEmpty()) {
-      return Opt.targetClass;
+    if (!Config.targetClass.get().isEmpty()) {
+      return Config.targetClass.get();
     }
-    if (Opt.isAndroid) {
+    if (Config.isAndroid.get()) {
       // Fuzz target detection tools aren't supported on android
       return null;
     }
@@ -55,7 +56,7 @@ class FuzzTargetFinder {
   static FuzzTarget findFuzzTarget(String targetClassName) {
     Class<?> fuzzTargetClass;
     try {
-      if (Opt.isAndroid) {
+      if (Config.isAndroid.get()) {
         fuzzTargetClass =
             Class.forName(targetClassName, false, FuzzTargetFinder.class.getClassLoader());
       } else {
@@ -75,7 +76,7 @@ class FuzzTargetFinder {
   // Finds the traditional static fuzzerTestOneInput fuzz target method.
   private static FuzzTarget findFuzzTargetByMethodName(Class<?> clazz) {
     Method fuzzTargetMethod;
-    if (Opt.experimentalMutator) {
+    if (Config.experimentalMutator.get()) {
       List<Method> fuzzTargetMethods =
           Arrays.stream(clazz.getMethods())
               .filter(method -> "fuzzerTestOneInput".equals(method.getName()))
@@ -108,7 +109,7 @@ class FuzzTargetFinder {
         Stream
             .of(targetPublicStaticMethod(clazz, FUZZER_INITIALIZE, String[].class)
                     .map(init -> (Callable<Object>) () -> {
-                      init.invoke(null, (Object) Opt.targetArgs.toArray(new String[] {}));
+                      init.invoke(null, (Object) Config.targetArgs.get().toArray(new String[] {}));
                       return null;
                     }),
                 targetPublicStaticMethod(clazz, FUZZER_INITIALIZE)

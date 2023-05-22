@@ -16,12 +16,12 @@
 
 package com.code_intelligence.jazzer.agent
 
-import com.code_intelligence.jazzer.driver.Opt
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hooks
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.sanitizers.Constants
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
+import com.code_intelligence.jazzer.utils.Config
 import com.code_intelligence.jazzer.utils.Log
 import com.code_intelligence.jazzer.utils.ManifestUtils
 import java.lang.instrument.Instrumentation
@@ -30,22 +30,33 @@ import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
 fun install(instrumentation: Instrumentation) {
-    installInternal(instrumentation)
+    installInternal(instrumentation,
+            userHookNames = findManifestCustomHookNames() + Config.customHooks.get(),
+            disabledHookNames = Config.disabledHooks.get(),
+            instrumentationIncludes = Config.instrumentationIncludes.get(),
+            instrumentationExcludes = Config.instrumentationExcludes.get(),
+            customHookIncludes = Config.customHookIncludes.get(),
+            customHookExcludes = Config.customHookExcludes.get(),
+            trace = Config.trace.get(),
+            idSyncFile = Config.idSyncFile.get(),
+            dumpClassesDir = Config.dumpClassesDir.get(),
+            additionalClassesExcludes = Config.additionalClassesExcludes.get())
 }
 
 fun installInternal(
     instrumentation: Instrumentation,
-    userHookNames: List<String> = findManifestCustomHookNames() + Opt.customHooks,
-    disabledHookNames: List<String> = Opt.disabledHooks,
-    instrumentationIncludes: List<String> = Opt.instrumentationIncludes,
-    instrumentationExcludes: List<String> = Opt.instrumentationExcludes,
-    customHookIncludes: List<String> = Opt.customHookIncludes,
-    customHookExcludes: List<String> = Opt.customHookExcludes,
-    trace: List<String> = Opt.trace,
-    idSyncFile: String? = Opt.idSyncFile,
-    dumpClassesDir: String = Opt.dumpClassesDir,
-    additionalClassesExcludes: List<String> = Opt.additionalClassesExcludes,
+    userHookNames: List<String>,
+    disabledHookNames: List<String>,
+    instrumentationIncludes: List<String>,
+    instrumentationExcludes: List<String>,
+    customHookIncludes: List<String>,
+    customHookExcludes: List<String>,
+    trace: List<String>,
+    idSyncFile: String?,
+    dumpClassesDir: String,
+    additionalClassesExcludes: List<String>,
 ) {
+
     val allCustomHookNames = (Constants.SANITIZER_HOOK_NAMES + userHookNames).toSet()
     check(allCustomHookNames.isNotEmpty()) { "No hooks registered; expected at least the built-in hooks" }
     val customHookNames = allCustomHookNames - disabledHookNames.toSet()

@@ -15,6 +15,7 @@
 package com.code_intelligence.jazzer.driver;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
+import com.code_intelligence.jazzer.utils.Config;
 import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.ZipUtils;
 import java.io.File;
@@ -46,10 +47,10 @@ public class OfflineInstrumentor {
    */
   public static boolean instrumentJars(List<String> jarLists) {
     // Clear Opt.dumpClassesDir before adding new instrumented classes
-    File dumpClassesDir = new File(Opt.dumpClassesDir);
+    File dumpClassesDir = new File(Config.dumpClassesDir.get());
     if (dumpClassesDir.exists()) {
       for (String fn : dumpClassesDir.list()) {
-        new File(Opt.dumpClassesDir, fn).delete();
+        new File(Config.dumpClassesDir.get(), fn).delete();
       }
     }
 
@@ -76,7 +77,8 @@ public class OfflineInstrumentor {
       }
 
       try {
-        createInstrumentedJar(jarPath, Opt.dumpClassesDir + File.separator + outputBaseName,
+        createInstrumentedJar(jarPath,
+            Config.dumpClassesDir.get() + File.separator + outputBaseName,
             outputBaseName + ".instrumented.jar");
       } catch (Exception e) {
         errorMessages.add("Failed to instrument jar: " + jarPath + ". Error: " + e);

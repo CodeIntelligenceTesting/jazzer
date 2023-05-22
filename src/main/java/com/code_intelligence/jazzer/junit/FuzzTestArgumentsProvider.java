@@ -21,8 +21,8 @@ import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.autofuzz.Meta;
 import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
-import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.mutation.ArgumentsMutator;
+import com.code_intelligence.jazzer.utils.Config;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -68,7 +68,7 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
     } else {
       AgentConfigurator.forRegressionTest(extensionContext);
     }
-    AgentInstaller.install(Opt.hooks);
+    AgentInstaller.install(Config.hooks.get());
   }
 
   @Override
@@ -120,7 +120,7 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
    *   <li>{@code byte[]}</li>
    *   <li>{@code FuzzDataProvider}</li>
    *   <li>Any other types will attempt to be created using either Autofuzz or the experimental
-   * mutator framework if {@link Opt}'s {@code experimentalMutator} is set</li>
+   * mutator framework if {@link Config}'s {@code experimentalMutator} is set</li>
    * </ul>
    * @param fuzzTestMethod the method being tested
    * @param rawSeeds a stream of file names -> file contents to use as test cases for {@code
@@ -140,8 +140,9 @@ class FuzzTestArgumentsProvider implements ArgumentsProvider, AnnotationConsumer
           e -> arguments(named(e.getKey(), FuzzedDataProviderImpl.withJavaData(e.getValue()))));
     } else {
       // Use Autofuzz or mutation framework on the @FuzzTest method.
-      Optional<ArgumentsMutator> argumentsMutator =
-          Opt.experimentalMutator ? ArgumentsMutator.forMethod(fuzzTestMethod) : Optional.empty();
+      Optional<ArgumentsMutator> argumentsMutator = Config.experimentalMutator.get()
+          ? ArgumentsMutator.forMethod(fuzzTestMethod)
+          : Optional.empty();
 
       return rawSeeds.map(e -> {
         Object[] args;

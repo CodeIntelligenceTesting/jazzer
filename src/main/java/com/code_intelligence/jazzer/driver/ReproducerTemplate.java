@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import com.code_intelligence.jazzer.utils.Config;
 import com.code_intelligence.jazzer.utils.Log;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -60,15 +61,15 @@ final class ReproducerTemplate {
                           .collect(Collectors.joining("\n"));
     String chunkedData = chunkStringLiteral(data);
     String javaSource = String.format(template, sha, chunkedData, targetClass, targetArg);
-    Path javaPath = Paths.get(Opt.reproducerPath, String.format("Crash_%s.java", sha));
+    Path javaPath = Paths.get(Config.reproducerPath.get(), String.format("Crash_%s.java", sha));
     try {
       Files.write(javaPath, javaSource.getBytes(StandardCharsets.UTF_8));
     } catch (IOException e) {
       Log.error(String.format("Failed to write Java reproducer to %s%n", javaPath));
       e.printStackTrace();
     }
-    Log.println(String.format(
-        "reproducer_path='%s'; Java reproducer written to %s%n", Opt.reproducerPath, javaPath));
+    Log.println(String.format("reproducer_path='%s'; Java reproducer written to %s%n",
+        Config.reproducerPath.get(), javaPath));
   }
 
   // The serialization of recorded FuzzedDataProvider invocations can get too long to be emitted

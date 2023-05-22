@@ -14,12 +14,13 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import com.code_intelligence.jazzer.utils.Config;
 import com.github.fmeum.rules_jni.RulesJni;
 import sun.misc.Signal;
 
 public final class SignalHandler {
   static {
-    if (!Opt.isAndroid) {
+    if (!Config.isAndroid.get()) {
       RulesJni.loadLibrary("jazzer_signal_handler", SignalHandler.class);
       Signal.handle(new Signal("INT"), sig -> handleInterrupt());
     }

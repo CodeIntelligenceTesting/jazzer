@@ -92,6 +92,7 @@ public class FuzzTargetRunnerTest {
     System.setOut(recordingOut);
 
     // Do not instrument any classes.
+    // TODO remove calls to setProperty (I think, make sure this doesn't put a dependency on junit)
     System.setProperty("jazzer.instrumentation_excludes", "**");
     System.setProperty("jazzer.custom_hook_excludes", "**");
     System.setProperty("jazzer.target_class", FuzzTargetRunnerTest.class.getName());

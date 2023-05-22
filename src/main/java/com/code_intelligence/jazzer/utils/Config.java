@@ -143,7 +143,8 @@ public class Config {
   public static final ConfigItem.Bool mergeInner =
       boolItem(Arrays.asList("internal", "merge_inner"), false, "");
 
-  public static final ConfigItem.Str fuzzSeed = strItem(Arrays.asList("internal", "seed"), "", "Seed given to libfuzzer for reproducability of results");
+  public static final ConfigItem.Str fuzzSeed = strItem(Arrays.asList("internal", "seed"), "",
+      "Seed given to libfuzzer for reproducability of results");
 
   private static final ConfigItem.Bool help =
       boolItem("help", false, "Show this list of all available arguments");
@@ -296,9 +297,9 @@ public class Config {
     return strItem(Collections.singletonList(name), defaultValue, description);
   }
 
-  private static ConfigItem.Str strItem(List<String> name, String defaultValue, String description) {
-    ConfigItem.Str i = new ConfigItem.Str(
-            NAMESPACE_ROOT, name, defaultValue, description, false);
+  private static ConfigItem.Str strItem(
+      List<String> name, String defaultValue, String description) {
+    ConfigItem.Str i = new ConfigItem.Str(NAMESPACE_ROOT, name, defaultValue, description, false);
     knownOptions.add(i);
     return i;
   }

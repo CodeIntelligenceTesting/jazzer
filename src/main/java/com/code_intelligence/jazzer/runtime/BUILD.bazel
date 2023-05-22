@@ -104,7 +104,7 @@ java_jni_library(
         "//src/test:__subpackages__",
     ],
     deps = [
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "//src/main/java/com/code_intelligence/jazzer/utils:config",
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
 )
@@ -123,7 +123,7 @@ java_jni_library(
     srcs = ["FuzzTargetRunnerNatives.java"],
     visibility = ["//src/main/native/com/code_intelligence/jazzer/driver:__pkg__"],
     deps = [
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "//src/main/java/com/code_intelligence/jazzer/utils:config",
     ],
 )
 
@@ -162,6 +162,6 @@ java_library(
         ":coverage_map",
         ":trace_data_flow_native_callbacks",
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "//src/main/java/com/code_intelligence/jazzer/utils:config",
     ],
 )

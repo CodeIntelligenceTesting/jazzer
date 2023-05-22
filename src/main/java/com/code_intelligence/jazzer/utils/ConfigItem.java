@@ -37,8 +37,8 @@ public abstract class ConfigItem<T> {
   final String description;
   final boolean hidden;
   /**
-   * This tracks if a has been explicitly set rather than having its default value. Used for handling invariants between
-   * config items
+   * This tracks if a has been explicitly set rather than having its default value. Used for
+   * handling invariants between config items
    */
   private boolean set;
 

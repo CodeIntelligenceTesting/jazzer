@@ -78,7 +78,7 @@ public class Jazzer {
     Log.fixOutErr(System.out, System.err);
 
     Config.loadConfig(args);
-    //parseJazzerArgsToProperties(args);
+    // parseJazzerArgsToProperties(args);
 
     // --asan and --ubsan imply --native by default, but --native can also be used by itself to fuzz
     // native libraries without sanitizers (e.g. to quickly grow a corpus).

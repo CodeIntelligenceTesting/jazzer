@@ -25,7 +25,7 @@ import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass
 import static org.junit.platform.launcher.TagFilter.includeTags;
 
 import com.code_intelligence.jazzer.driver.ExceptionUtils;
-import com.code_intelligence.jazzer.driver.Opt;
+import com.code_intelligence.jazzer.utils.Config;
 import com.code_intelligence.jazzer.utils.Log;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +90,7 @@ public final class JUnitRunner {
             .configurationParameters(indexedArgs)
             .selectors(selectClass(testClassName))
             .filters(includeTags("jazzer"));
-    if (!Opt.targetMethod.isEmpty()) {
+    if (!Config.targetMethod.get().isEmpty()) {
       // HACK: This depends on JUnit internals as we need to filter by method name without having to
       // specify the parameter types of the method.
       requestBuilder.filters((PostDiscoveryFilter) testDescriptor
@@ -98,7 +98,7 @@ public final class JUnitRunner {
               || ((MethodBasedTestDescriptor) testDescriptor)
                      .getTestMethod()
                      .getName()
-                     .equals(Opt.targetMethod)));
+                     .equals(Config.targetMethod.get())));
     }
     LauncherDiscoveryRequest request = requestBuilder.build();
     Launcher launcher = LauncherFactory.create(config);
