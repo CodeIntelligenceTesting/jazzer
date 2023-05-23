@@ -33,6 +33,7 @@ java_jni_library(
     name = "android_runtime",
     srcs = ["AndroidRuntime.java"],
     native_libs = ["//src/main/native/com/code_intelligence/jazzer/driver:jazzer_android_tooling"],
+    target_compatible_with = SKIP_ON_WINDOWS,
     visibility = [
         "//src/main/java/com/code_intelligence/jazzer:__pkg__",
         "//src/main/java/com/code_intelligence/jazzer/driver:__subpackages__",
