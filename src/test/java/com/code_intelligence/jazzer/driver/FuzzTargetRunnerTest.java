@@ -19,10 +19,12 @@ package com.code_intelligence.jazzer.driver;
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.api.Jazzer;
 import com.code_intelligence.jazzer.runtime.CoverageMap;
+import com.code_intelligence.jazzer.utils.Config;
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -47,16 +49,20 @@ public class FuzzTargetRunnerTest {
   public static void fuzzerTestOneInput(byte[] data) {
     switch (new String(data, StandardCharsets.UTF_8)) {
       case "no crash":
+        //System.err.println("INFO: no crash");
         CoverageMap.recordCoverage(0);
         return;
       case "first finding":
+        //System.err.println("INFO: first finding");
         CoverageMap.recordCoverage(1);
         throw new IllegalArgumentException("first finding");
       case "second finding":
+        // System.err.println("INFO: second finding");
         CoverageMap.recordCoverage(2);
         Jazzer.reportFindingFromHook(new StackOverflowError("second finding"));
         throw new IllegalArgumentException("not reported");
       case "crash":
+        // System.err.println("INFO: crash");
         CoverageMap.recordCoverage(3);
         throw new RuntimeException("crash");
     }
@@ -92,12 +98,13 @@ public class FuzzTargetRunnerTest {
     System.setOut(recordingOut);
 
     // Do not instrument any classes.
-    // TODO remove calls to setProperty (I think, make sure this doesn't put a dependency on junit)
     System.setProperty("jazzer.instrumentation_excludes", "**");
     System.setProperty("jazzer.custom_hook_excludes", "**");
     System.setProperty("jazzer.target_class", FuzzTargetRunnerTest.class.getName());
     // Keep going past all "no crash", "first finding" and "second finding" runs, then crash.
     System.setProperty("jazzer.keep_going", "3");
+
+    Config.loadConfig(new ArrayList<>());
 
     AgentInstaller.install(true);
     FuzzTargetHolder.fuzzTarget =

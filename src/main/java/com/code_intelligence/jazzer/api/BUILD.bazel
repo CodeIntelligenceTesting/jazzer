@@ -48,4 +48,7 @@ java_library(
         "//src/main/java/jaz",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/utils:config",
+    ],
 )

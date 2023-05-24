@@ -80,7 +80,7 @@ public abstract class ConfigItem<T> {
     System.setProperty(getPropertyName(), value);
   }
 
-  private String getPropertyName() {
+  protected String getPropertyName() {
     return Stream.concat(Stream.of(namespace), nameSegments.stream())
         .map(segment -> segment.toLowerCase(Locale.ROOT))
         .collect(Collectors.joining("."));
@@ -163,6 +163,7 @@ public abstract class ConfigItem<T> {
 
     @Override
     public void set(String value) {
+      // System.out.printf("SETTING %s to %s%n", getPropertyName(), value);
       this.setRawValue(value);
     }
 
@@ -240,8 +241,7 @@ public abstract class ConfigItem<T> {
 
     @Override
     public void set(Set<Long> value) {
-      String raw =
-          value.stream().map(v -> Long.toString(v, 16)).collect(Collectors.joining(delimiter));
+      String raw = value.stream().map(Long::toHexString).collect(Collectors.joining(delimiter));
       setRawValue(raw);
     }
 
@@ -259,17 +259,17 @@ public abstract class ConfigItem<T> {
 
   public static class Uint64 extends ConfigItem<Long> {
     public Uint64(String namespace, List<String> segments, Long defaultValue) {
-      super(namespace, segments, Long.toString(defaultValue, 10));
+      super(namespace, segments, Long.toUnsignedString(defaultValue, 10));
     }
 
     public Uint64(String namespace, List<String> segments, Long defaultValue, String description,
         boolean hidden) {
-      super(namespace, segments, Long.toString(defaultValue, 10), description, hidden);
+      super(namespace, segments, Long.toUnsignedString(defaultValue, 10), description, hidden);
     }
 
     @Override
     public void set(Long value) {
-      String raw = value.toString();
+      String raw = Long.toUnsignedString(value, 10);
       setRawValue(raw);
     }
 

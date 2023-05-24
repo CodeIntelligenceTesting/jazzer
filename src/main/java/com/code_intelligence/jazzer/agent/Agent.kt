@@ -30,17 +30,19 @@ import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
 fun install(instrumentation: Instrumentation) {
-    installInternal(instrumentation,
-            userHookNames = findManifestCustomHookNames() + Config.customHooks.get(),
-            disabledHookNames = Config.disabledHooks.get(),
-            instrumentationIncludes = Config.instrumentationIncludes.get(),
-            instrumentationExcludes = Config.instrumentationExcludes.get(),
-            customHookIncludes = Config.customHookIncludes.get(),
-            customHookExcludes = Config.customHookExcludes.get(),
-            trace = Config.trace.get(),
-            idSyncFile = Config.idSyncFile.get(),
-            dumpClassesDir = Config.dumpClassesDir.get(),
-            additionalClassesExcludes = Config.additionalClassesExcludes.get())
+    installInternal(
+        instrumentation,
+        userHookNames = findManifestCustomHookNames() + Config.customHooks.get(),
+        disabledHookNames = Config.disabledHooks.get(),
+        instrumentationIncludes = Config.instrumentationIncludes.get(),
+        instrumentationExcludes = Config.instrumentationExcludes.get(),
+        customHookIncludes = Config.customHookIncludes.get(),
+        customHookExcludes = Config.customHookExcludes.get(),
+        trace = Config.trace.get(),
+        idSyncFile = Config.idSyncFile.get(),
+        dumpClassesDir = Config.dumpClassesDir.get(),
+        additionalClassesExcludes = Config.additionalClassesExcludes.get(),
+    )
 }
 
 fun installInternal(
@@ -56,7 +58,6 @@ fun installInternal(
     dumpClassesDir: String,
     additionalClassesExcludes: List<String>,
 ) {
-
     val allCustomHookNames = (Constants.SANITIZER_HOOK_NAMES + userHookNames).toSet()
     check(allCustomHookNames.isNotEmpty()) { "No hooks registered; expected at least the built-in hooks" }
     val customHookNames = allCustomHookNames - disabledHookNames.toSet()

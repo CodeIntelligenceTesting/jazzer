@@ -19,13 +19,13 @@ package com.code_intelligence.jazzer.utils;
 import static com.code_intelligence.jazzer.Constants.JAZZER_VERSION;
 import static java.lang.System.exit;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Config holds all configuration options for jazzer and handles loading them on startup.
@@ -127,7 +127,7 @@ public class Config {
 
   // TODO: this defaults to whatever `hooks` is set to
   public static final ConfigItem.Bool dedup =
-      boolItem("dedup", false, "Compute and print a deduplication token for every finding");
+      boolItem("dedup", true, "Compute and print a deduplication token for every finding");
 
   public static final ConfigItem.Bool isAndroid =
       boolItem("android", false, "Jazzer is running on Android");
@@ -144,7 +144,7 @@ public class Config {
       boolItem(Arrays.asList("internal", "merge_inner"), false, "");
 
   public static final ConfigItem.Str fuzzSeed = strItem(Arrays.asList("internal", "seed"), "",
-      "Seed given to libfuzzer for reproducability of results");
+      "Seed given to libfuzzer for reproducibility of results");
 
   private static final ConfigItem.Bool help =
       boolItem("help", false, "Show this list of all available arguments");
@@ -171,11 +171,15 @@ public class Config {
     loadFromEnv();
     Map<String, String> cliArgs = processJazzerCli(args);
     knownOptions.forEach(item -> {
-      String value = cliArgs.get(item.getManifestName());
+      String value = cliArgs.get(item.getCliArgName());
       if (value != null) {
         item.setFromString(value);
       }
     });
+
+    if (!dedup.isSet()) {
+      dedup.set(hooks.get());
+    }
 
     // --asan and --ubsan imply --native by default, but --native can also be used by itself to fuzz
     // native libraries without sanitizers (e.g. to quickly grow a corpus).
@@ -183,7 +187,15 @@ public class Config {
       fuzzNative.set(asan.get() || ubsan.get() || hwasan.get());
     }
 
-    System.setProperty("jazzer.config-loaded", "true");
+    if (targetArgs.isSet() && autofuzz.isSet()) {
+      Log.error("--target_args and --autofuzz cannot be specified together");
+      exit(1);
+    }
+    if (autofuzz.isSet()) {
+      // if only autofuzz is set, we use it to create a default value for targetArgs
+      targetArgs.set(Stream.concat(Stream.of(autofuzz.get()), autofuzzIgnore.get().stream())
+                         .collect(Collectors.toList()));
+    }
 
     if (help.get()) {
       Log.println(getHelpText());
@@ -195,10 +207,6 @@ public class Config {
     }
     if (!targetClass.get().isEmpty() && !autofuzz.get().isEmpty()) {
       Log.error("--target_class and --autofuzz cannot be specified together");
-      exit(1);
-    }
-    if (!targetArgs.get().isEmpty() && !autofuzz.get().isEmpty()) {
-      Log.error("--target_args and --autofuzz cannot be specified together");
       exit(1);
     }
     if (autofuzz.get().isEmpty() && !autofuzzIgnore.get().isEmpty()) {
@@ -218,6 +226,8 @@ public class Config {
       Log.error("--asan, --hwasan and --ubsan cannot be used without --native");
       exit(1);
     }
+
+    System.setProperty("jazzer.config-loaded", "true");
   }
 
   private static void loadFromManifest() {
@@ -229,6 +239,8 @@ public class Config {
         try (InputStream inputStream = manifestUrl.openStream()) {
           Manifest manifest = new Manifest(inputStream);
 
+          manifest.getEntries().forEach(
+              (key, value) -> { System.out.printf("FOUND %s: %s%n", key, value); });
           knownOptions.forEach(item -> {
             String value = manifest.getMainAttributes().getValue(item.getManifestName());
             if (value != null) {

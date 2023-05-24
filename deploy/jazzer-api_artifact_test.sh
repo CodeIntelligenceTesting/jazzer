@@ -22,7 +22,9 @@
     -e '^com/$' \
     -e '^com/code_intelligence/$' \
     -e '^com/code_intelligence/jazzer/$' \
+    -e '^com/code_intelligence/jazzer/Constants.class' \
     -e '^com/code_intelligence/jazzer/api/' \
+    -e '^com/code_intelligence/jazzer/utils/' \
     -e '^jaz/' \
     -e '^META-INF/$' \
     -e '^META-INF/MANIFEST.MF$'

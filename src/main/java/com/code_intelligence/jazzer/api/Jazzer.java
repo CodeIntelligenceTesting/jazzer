@@ -14,6 +14,8 @@
 
 package com.code_intelligence.jazzer.api;
 
+import com.code_intelligence.jazzer.utils.Config;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -252,11 +254,13 @@ public final class Jazzer {
     // The Jazzer driver sets this property based on the value of libFuzzer's -seed command-line
     // option, which allows for fully reproducible fuzzing runs if set. If not running in the
     // context of the driver, fall back to a random number instead.
-    String rawSeed = System.getProperty("jazzer.internal.seed");
-    if (rawSeed == null) {
-      return new SecureRandom().nextInt();
+    //String rawSeed = System.getProperty("jazzer.internal.seed");
+    String rawSeed = Config.fuzzSeed.get();
+    if (rawSeed.equals("")) {
+      int seed = new SecureRandom().nextInt();
+      Config.fuzzSeed.set(Integer.toUnsignedString(seed));
+      return seed;
     }
-    // If jazzer.internal.seed is set, we expect it to be a valid integer.
     return Integer.parseUnsignedInt(rawSeed);
   }
 

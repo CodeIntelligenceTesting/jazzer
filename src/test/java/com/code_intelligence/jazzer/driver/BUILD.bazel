@@ -11,6 +11,7 @@ java_test(
         "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_holder",
         "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner",
         "//src/main/java/com/code_intelligence/jazzer/runtime:coverage_map",
+        "//src/main/java/com/code_intelligence/jazzer/utils:config",
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
 )
@@ -22,15 +23,6 @@ java_test(
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
-    ],
-)
-
-java_test(
-    name = "OptTest",
-    srcs = ["OptTest.java"],
-    deps = [
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
-        "@maven//:junit_junit",
     ],
 )
 

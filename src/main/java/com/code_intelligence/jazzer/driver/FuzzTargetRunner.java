@@ -81,6 +81,7 @@ public final class FuzzTargetRunner {
   private static final ArgumentsMutator mutator;
   private static final ReproducerTemplate reproducerTemplate;
   private static Predicate<Throwable> findingHandler;
+  private static final Set<Long> ignoredTokens = new HashSet<>(Config.ignore.get());
 
   static {
     FuzzTargetHolder.FuzzTarget fuzzTarget = FuzzTargetHolder.fuzzTarget;
@@ -161,7 +162,6 @@ public final class FuzzTargetRunner {
     Throwable finding = null;
     byte[] data;
     Object argument;
-    final Set<Long> ignoredTokens = new HashSet<>(Config.ignore.get());
 
     if (Config.experimentalMutator.get()) {
       // TODO: Instead of copying the native data and then reading it in, consider the following
@@ -268,6 +268,7 @@ public final class FuzzTargetRunner {
       dumpReproducer(data);
     }
 
+    // System.err.printf("config.dedup %s%n ignored tokens size %d%n keepgoing %d%n cmp %d%n", Config.dedup.get().toString(), ignoredTokens.size(), Config.keepGoing.get(), Long.compareUnsigned(ignoredTokens.size(), Config.keepGoing.get()));
     if (!Config.dedup.get()
         || Long.compareUnsigned(ignoredTokens.size(), Config.keepGoing.get()) >= 0) {
       // Reached the maximum amount of findings to keep going for, crash after shutdown. We use
