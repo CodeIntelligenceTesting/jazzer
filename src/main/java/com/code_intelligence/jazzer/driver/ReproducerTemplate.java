@@ -47,7 +47,7 @@ final class ReproducerTemplate {
   }
 
   /**
-   * Emits a Java reproducer to {@code Crash_HASH.java} in {@code Opt.reproducerPath}.
+   * Emits a Java reproducer to {@code Crash_HASH.java} in {@code Config.reproducerPath}.
    *
    * @param data the Base64-encoded data to emit as a string literal
    * @param sha the SHA1 hash of the raw fuzzer input

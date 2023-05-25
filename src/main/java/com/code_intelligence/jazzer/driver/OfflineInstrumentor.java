@@ -46,7 +46,7 @@ public class OfflineInstrumentor {
    * @return a boolean representing the success status
    */
   public static boolean instrumentJars(List<String> jarLists) {
-    // Clear Opt.dumpClassesDir before adding new instrumented classes
+    // Clear Config.dumpClassesDir before adding new instrumented classes
     File dumpClassesDir = new File(Config.dumpClassesDir.get());
     if (dumpClassesDir.exists()) {
       for (String fn : dumpClassesDir.list()) {

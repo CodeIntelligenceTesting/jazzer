@@ -109,9 +109,6 @@ public class Driver {
       args.add(getDefaultRssLimitMbArg());
     }
 
-    // Do not modify properties beyond this point, loading Opt locks in their values. The agent will
-    // cause Opt to be loaded again, this time in the bootstrap class loader, but since all its
-    // fields are immutable that should not cause confusion.
     AgentInstaller.install(Config.hooks.get());
 
     if (!Config.instrumentOnly.get().isEmpty()) {
