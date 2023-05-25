@@ -108,11 +108,7 @@ public class Driver {
       args.add(getDefaultRssLimitMbArg());
     }
 
-    // Do not modify properties beyond this point, loading Opt locks in their values. The agent will
-    // cause Opt to be loaded again, this time in the bootstrap class loader, but since all its
-    // fields are immutable that should not cause confusion.
-    AgentInstaller.install(Opt.hooks);
-
+    // Do not modify properties beyond this point, loading Opt locks in their values.
     if (!Opt.instrumentOnly.isEmpty()) {
       boolean instrumentationSuccess = OfflineInstrumentor.instrumentJars(Opt.instrumentOnly);
       if (!instrumentationSuccess) {
@@ -124,6 +120,7 @@ public class Driver {
     Driver.class.getClassLoader().setDefaultAssertionStatus(true);
 
     if (!Opt.autofuzz.isEmpty()) {
+      AgentInstaller.install(Opt.hooks);
       FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.AUTOFUZZ_FUZZ_TARGET;
       return FuzzTargetRunner.startLibFuzzer(args);
     }
@@ -134,6 +131,8 @@ public class Driver {
       exit(1);
     }
 
+    // The JUnitRunner calls AgentInstaller.install itself after modifying flags affecting the
+    // agent.
     if (JUnitRunner.isSupported()) {
       Optional<JUnitRunner> runner = JUnitRunner.create(targetClassName, args);
       if (runner.isPresent()) {
@@ -141,6 +140,9 @@ public class Driver {
       }
     }
 
+    // Installing the agent after the following "findFuzzTarget" leads to an asan error
+    // in it on "Class.forName(targetClassName)", but only during native fuzzing.
+    AgentInstaller.install(Opt.hooks);
     FuzzTargetHolder.fuzzTarget = FuzzTargetFinder.findFuzzTarget(targetClassName);
     return FuzzTargetRunner.startLibFuzzer(args);
   }
