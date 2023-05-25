@@ -112,8 +112,6 @@ java -cp "target/*:${deps}" \
   com.code_intelligence.jazzer.Jazzer \
   --target_class=com.example.JunitSpringWebApplicationTests \
   --target_method=fuzzTestShouldPass \
-  --instrumentation_includes=com.example.* \
-  --custom_hook_includes=com.example.*
 
 
 echo "[SPRINGBOOT-JUNIT]: Direct Jazzer execution of fuzz test using autofuzz should fail"
@@ -122,8 +120,6 @@ JAZZER_FUZZ=1 java -cp "target/*:${deps}" \
   com.code_intelligence.jazzer.Jazzer \
   --target_class=com.example.JunitSpringWebApplicationTests \
   --target_method=fuzzTestWithDtoShouldFail \
-  --instrumentation_includes=com.example.* \
-  --custom_hook_includes=com.example.*
 declare -i exit_code=$?
 set -e
 
