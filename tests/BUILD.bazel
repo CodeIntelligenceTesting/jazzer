@@ -257,6 +257,29 @@ java_fuzz_target_test(
     runtime_deps = [":native_value_profile_fuzzer"],
 )
 
+java_binary(
+    name = "JUnitAgentConfigurationFuzzTest",
+    srcs = ["src/test/java/com/example/JUnitAgentConfigurationFuzzTest.java"],
+    main_class = "com.code_intelligence.jazzer.Jazzer",
+    runtime_deps = [
+        "//deploy:jazzer",
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-api",
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+sh_test(
+    name = "junit_agent_configuration_test",
+    srcs = ["src/test/shell/junit_agent_configuration_test.sh"],
+    args = ["$(rlocationpath :JUnitAgentConfigurationFuzzTest)"],
+    data = [":JUnitAgentConfigurationFuzzTest"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
 java_fuzz_target_test(
     name = "JUnitAssertFuzzer",
     timeout = "short",
