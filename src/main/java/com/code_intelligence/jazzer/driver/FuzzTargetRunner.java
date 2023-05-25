@@ -81,6 +81,8 @@ public final class FuzzTargetRunner {
   private static final ArgumentsMutator mutator;
   private static final ReproducerTemplate reproducerTemplate;
   private static Predicate<Throwable> findingHandler;
+  // This and all config options referenced in the `static` block may not be properly set if `FuzzTargetRunner` is
+  // loaded prior to `Config.loadConfig` being called. This does not appear to be problem in our tests and our
   private static final Set<Long> ignoredTokens = new HashSet<>(Config.ignore.get());
 
   static {

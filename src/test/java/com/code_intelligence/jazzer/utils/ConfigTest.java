@@ -17,27 +17,44 @@
 package com.code_intelligence.jazzer.utils;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
+
 import org.junit.Test;
 
 public class ConfigTest {
   @Test
   public void loadFromEnvTest() {
-    assumeTrue(System.getenv("JAZZER_FOO").equals("12345"));
-    assertNull(System.getProperty("jazzer.foo"));
+    assumeEnvEquals("JAZZER_KEEP_GOING", "10");
 
     Config.loadConfig(new ArrayList<>());
-    // assertEquals("12345", Config.foo.get());
+    assertEquals(0, Long.compareUnsigned(10L, Config.keepGoing.get()));
   }
 
   @Test
   public void loadFromEnvInvalidTest() {
-    assumeTrue(System.getenv("JAZZER_BAR") != null);
-    assertEquals("bar", System.getenv("JAZZER_BAR"));
-    assertNull(System.getProperty("jazzer.bar"));
+    assumeEnvEquals("JAZZER_KEEP_GOING", "foo");
+    assertThrows(NumberFormatException.class, () -> Config.loadConfig(new ArrayList<>()));
+  }
 
-    // assertThrows(NumberFormatException.class, () -> { Config.loadConfig(new ArrayList<>()); });
+  @Test
+  public void loadFromManifestTest() {
+
+  }
+
+  @Test
+  public void loadFromCliTest() {
+    Config.loadConfig(Collections.singletonList("--keep_going=15"));
+    assertEquals(0, Long.compareUnsigned(15L, Config.keepGoing.get()));
+  }
+
+  private static void assumeEnvEquals(String key, String value) {
+    assumeNotNull(System.getenv(key));
+    assumeTrue(System.getenv(key).equals(value));
   }
 }

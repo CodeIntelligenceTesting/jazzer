@@ -18,17 +18,24 @@ package com.code_intelligence.jazzer.utils;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+
+import org.junit.Before;
 import org.junit.Test;
 
 public class ConfigItemTest {
+  final String KEY = "jazzer.foo";
+
   // TODO: reset system properties so multiple tests can run
+  @Before
+  public void resetProperties() {
+    System.clearProperty("jazzer.foo");
+  }
 
   @Test
   public void intItemTest() {
-    assertNull(System.getProperty("jazzer.foo"));
+    assertNull(System.getProperty(KEY));
 
     ConfigItem.Int item = new ConfigItem.Int("jazzer", Collections.singletonList("foo"), 5);
     assertEquals(5, item.get().intValue());
@@ -39,7 +46,7 @@ public class ConfigItemTest {
 
   @Test
   public void strItemTest() {
-    assertNull(System.getProperty("jazzer.foo"));
+    assertNull(System.getProperty(KEY));
 
     ConfigItem.Str item = new ConfigItem.Str("jazzer", Collections.singletonList("foo"), "bar");
     assertEquals("bar", item.get());
@@ -50,7 +57,7 @@ public class ConfigItemTest {
 
   @Test
   public void strListTest() {
-    assertNull(System.getProperty("jazzer.foo"));
+    assertNull(System.getProperty(KEY));
 
     ConfigItem.StrList item =
         new ConfigItem.StrList("jazzer", Collections.singletonList("foo"), ',');
@@ -59,5 +66,13 @@ public class ConfigItemTest {
 
     item.set(Arrays.asList("bar", "baz"));
     assertEquals(Arrays.asList("bar", "baz"), item.get());
+  }
+
+  @Test
+  public void existingValueTest() {
+    System.setProperty(KEY, "bar");
+
+    ConfigItem.Str item = new ConfigItem.Str("jazzer", Collections.singletonList("foo"), "baz");
+    assertEquals(item.get(), "bar");
   }
 }
