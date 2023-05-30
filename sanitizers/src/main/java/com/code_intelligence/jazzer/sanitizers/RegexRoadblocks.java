@@ -291,7 +291,6 @@ public final class RegexRoadblocks {
         boolean[] bits = (boolean[]) UNSAFE.getObject(charPredicate, BIT_CLASS_BITS_OFFSET);
         for (int i = 0; i < bits.length; i++) {
           if (bits[i]) {
-            PREDICATE_SOLUTIONS.get().put(charPredicate, (char) i);
             return (char) i;
           }
         }
