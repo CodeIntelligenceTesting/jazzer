@@ -22,39 +22,16 @@
 #include "com_code_intelligence_jazzer_android_AndroidRuntime.h"
 
 const char *RUNTIME_LIBRARY = "libandroid_runtime.so";
+const char *SERVER_LIBRARY = "libandroid_servers.so";
 const char *EMBEDDED_DIR = "/data/fuzz:/system/lib64";
 const char *USE_EMBEDDED = "use_embedded";
-
-std::string getNativeString(JNIEnv *env, jbyteArray javaString) {
-  jsize num_bytes = env->GetArrayLength(javaString);
-  jbyte *elements = env->GetByteArrayElements(javaString, NULL);
-
-  if (!elements) {
-    std::cerr << "ERROR: Passed a invalid runtime_libs string." << std::endl;
-    exit(1);
-  }
-  std::string nativeString(reinterpret_cast<char *>(elements), num_bytes);
-
-  // Release the element array provided by JNI
-  env->ReleaseByteArrayElements(javaString, elements, JNI_ABORT);
-
-  return nativeString;
-}
 
 // Register native methods from the Android Runtime (ART) framework.
 [[maybe_unused]] jint
 Java_com_code_1intelligence_jazzer_android_AndroidRuntime_registerNatives(
-    JNIEnv *env, jclass clazz, jbyteArray runtimeLibs) {
-  if (runtimeLibs == nullptr) {
-    exit(1);
-  }
+    JNIEnv *env, jclass clazz) {
 
-  std::string nativeString = getNativeString(env, runtimeLibs);
-
-  if (strcmp(USE_EMBEDDED, nativeString.c_str()) == 0) {
-    setenv("LD_LIBRARY_PATH", EMBEDDED_DIR, true);
-  }
-
+  setenv("LD_LIBRARY_PATH", EMBEDDED_DIR, true);
   void *handle = nullptr;
   handle = dlopen(RUNTIME_LIBRARY, RTLD_LAZY);
 
@@ -80,5 +57,6 @@ Java_com_code_1intelligence_jazzer_android_AndroidRuntime_registerNatives(
   if (Register_Frameworks == nullptr) {
     exit(1);
   }
+
   return Register_Frameworks(env);
 }

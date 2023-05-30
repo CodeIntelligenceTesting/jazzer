@@ -94,8 +94,8 @@ public class Jazzer {
     // No native fuzzing has been requested, fuzz in the current process.
     if (!fuzzNative) {
       if (isAndroid()) {
-        final String useEmbeddedNativeLibs = getAndroidRuntimeOptions();
-        AndroidRuntime.initialize(useEmbeddedNativeLibs);
+        final String initOptions = getAndroidRuntimeOptions();
+        AndroidRuntime.initialize(initOptions);
       }
       // We only create a wrapper script if libFuzzer runs in a mode that creates subprocesses.
       // In LibFuzzer's fork mode, the subprocesses created continuously by the main libFuzzer
@@ -456,7 +456,13 @@ public class Jazzer {
   }
 
   private static String getAndroidRuntimeOptions() {
-    return System.getProperty("jazzer.runtime_libs");
+    final String[] validInitOptions = {"use_platform_libs", "use_none"};
+    final String initOptString = System.getProperty("jazzer.init_options");
+    if (!Arrays.asList(validInitOptions).contains(initOptString)) {
+      Log.error("Invalid init_options set for Android Runtime.");
+      exit(1);
+    }
+    return initOptString;
   }
 
   private static boolean isPosixOrAndroid() {

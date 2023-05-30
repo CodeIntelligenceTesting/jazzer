@@ -31,11 +31,15 @@ public class AndroidRuntime {
     }
 
     if (Opt.isAndroid) {
+      try {
+        System.loadLibrary("android_servers");
+      } catch (Exception e) {
+        Log.warn("Unable to load android_servers. If you are attempting to fuzz the system server "
+            + ", check static_libs definition.");
+      }
       RulesJni.loadLibrary("jazzer_android_tooling", "/com/code_intelligence/jazzer/driver");
-      //   RulesJni.loadLibrary("jazzer_android_tooling", AndroidRuntime.class);
       if (!runtimeLibs.equals(doNotInitialize)) {
-        byte[] bytes = runtimeLibs.getBytes("UTF-8");
-        registerNatives(bytes);
+        registerNatives();
       } else {
         Log.warn("Android Runtime (ART) is not being initialized for this fuzzer.");
       }
@@ -52,5 +56,5 @@ public class AndroidRuntime {
     return String.format(template, System.getProperty("java.class.path"));
   }
 
-  private static native int registerNatives(byte[] runtimeLibs);
+  private static native int registerNatives();
 }
