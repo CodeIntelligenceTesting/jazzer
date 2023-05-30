@@ -24,10 +24,6 @@ import org.objectweb.asm.Type;
 
 @SuppressWarnings("unused")
 final public class TraceDataFlowNativeCallbacks {
-  static {
-    RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
-  }
-
   // Note that we are not encoding as modified UTF-8 here: The FuzzedDataProvider transparently
   // converts CESU8 into modified UTF-8 by coding null bytes on two bytes. Since the fuzzer is more
   // likely to insert literal null bytes, having both the fuzzer input and the reported string
@@ -35,14 +31,33 @@ final public class TraceDataFlowNativeCallbacks {
   // UTF-8.
   private static final Charset FUZZED_DATA_CHARSET = Charset.forName("CESU8");
 
+  static {
+    RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
+  }
+
+  // It is possible for RulesJni#loadLibrary to trigger a hook even though it isn't instrumented if
+  // it uses regexes, which it does with at least some JDKs due to its use of String#format. This
+  // led to exceptions in the past when the hook ended up calling traceStrcmp or traceStrstr before
+  // the static initializer was run: FUZZED_DATA_CHARSET used to be initialized after the call and
+  // thus still had the value null when encodeForLibFuzzer was called, resulting in an NPE in
+  // String#getBytes(Charset). Just switching the order may actually make this bug worse: It could
+  // now lead to traceMemcmp being called before the native library has been loaded. We guard
+  // against this by making the hooks noops when static initialization of this class hasn't
+  // completed yet.
+  private static final boolean NATIVE_INITIALIZED = true;
+
   public static native void traceMemcmp(byte[] b1, byte[] b2, int result, int pc);
 
   public static void traceStrcmp(String s1, String s2, int result, int pc) {
-    traceMemcmp(encodeForLibFuzzer(s1), encodeForLibFuzzer(s2), result, pc);
+    if (NATIVE_INITIALIZED) {
+      traceMemcmp(encodeForLibFuzzer(s1), encodeForLibFuzzer(s2), result, pc);
+    }
   }
 
   public static void traceStrstr(String s1, String s2, int pc) {
-    traceStrstr0(encodeForLibFuzzer(s2), pc);
+    if (NATIVE_INITIALIZED) {
+      traceStrstr0(encodeForLibFuzzer(s2), pc);
+    }
   }
 
   public static void traceReflectiveCall(Executable callee, int pc) {
