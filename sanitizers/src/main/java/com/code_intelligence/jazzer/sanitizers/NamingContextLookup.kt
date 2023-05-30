@@ -49,7 +49,7 @@ object NamingContextLookup {
     )
     @JvmStatic
     fun lookupHook(method: MethodHandle?, thisObject: Any?, args: Array<Any?>, hookId: Int): Any {
-        val name = args[0] as String
+        val name = args[0] as? String ?: throw CommunicationException()
         if (name.startsWith(RMI_MARKER) || name.startsWith(LDAP_MARKER)) {
             Jazzer.reportFindingFromHook(
                 FuzzerSecurityIssueCritical(
