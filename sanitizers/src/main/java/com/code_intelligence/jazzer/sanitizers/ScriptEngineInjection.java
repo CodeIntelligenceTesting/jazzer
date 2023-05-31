@@ -1,4 +1,4 @@
-// Copyright 2022 Code Intelligence GmbH
+// Copyright 2023 Code Intelligence GmbH
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,111 +14,95 @@
 
 package com.code_intelligence.jazzer.sanitizers;
 
-import static java.util.Collections.unmodifiableSet;
-import static java.util.stream.Collectors.toSet;
-
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical;
 import com.code_intelligence.jazzer.api.HookType;
 import com.code_intelligence.jazzer.api.Jazzer;
 import com.code_intelligence.jazzer.api.MethodHook;
-import com.code_intelligence.jazzer.api.MethodHooks;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.lang.invoke.MethodHandle;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Stream;
-import javax.script.ScriptEngineManager;
 
 /**
- * Detects Script Engine injection
+ * Detects Script Engine injections.
  *
  * <p>
  * The hooks in this class attempt to detect user input flowing into
- * {@link javax.script.ScriptEngine.eval} that might lead to
- * remote code executions depending on the scripting engine's capabilities.
- * Before JDK 15, the Nashorn Engine
- * was registered by default with ScriptEngineManager under several aliases,
- * including "js". Nashorn allows
+ * {@link javax.script.ScriptEngine#eval(String)} and the like that might lead
+ * to remote code executions depending on the scripting engine's capabilities.
+ * Before JDK 15, the Nashorn Engine was registered by default with
+ * ScriptEngineManager under several aliases, including "js". Nashorn allows
  * access to JVM classes, for example {@link java.lang.Runtime} allowing the
- * execution of arbitrary OS commands.
- * Several other scripting engines can be embedded to the JVM (they must follow
- * the <a href="https://www.jcp.org/en/jsr/detail?id=223">JSR-223</a>
+ * execution of arbitrary OS commands. Several other scripting engines can be
+ * embedded to the JVM (they must follow the
+ * <a href="https://www.jcp.org/en/jsr/detail?id=223">JSR-223 </a>
  * specification).
- * </p>
  **/
+@SuppressWarnings("unused")
 public final class ScriptEngineInjection {
-  private static final String ENGINE = "js";
-  private static final String PAYLOAD = "1+1";
+  private static final String PAYLOAD = "\"jaz\"+\"zer\"";
 
-  private static char[] guideMarkableReaderTowardsEquality(Reader reader, String target, int id)
-      throws IOException {
-    final int size = target.length();
-    char[] current = new char[size];
-    int n = 0;
-
-    if (!reader.markSupported()) {
-      throw new IllegalStateException("Reader does not support mark - not possible to fuzz");
-    }
-
-    reader.mark(size);
-
-    while (n < size) {
-      int count = reader.read(current, n, size - n);
-      if (count < 0)
-        break;
-      n += count;
-    }
-    reader.reset();
-
-    Jazzer.guideTowardsEquality(new String(current), target, id);
-
-    return current;
-  }
-
-  @MethodHook(type = HookType.REPLACE, targetClassName = "javax.script.ScriptEngineManager",
-      targetMethod = "registerEngineName")
-  public static Object
-  ensureScriptEngine(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
-      throws Throwable {
-    return method.invokeWithArguments(Stream
-                                          .concat(Stream.of(thisObject),
-                                              Stream.concat(Stream.of((Object) ENGINE),
-                                                  Arrays.stream(arguments, 1, arguments.length)))
-                                          .toArray());
-  }
-
-  @MethodHook(type = HookType.REPLACE, targetClassName = "javax.script.ScriptEngineManager",
-      targetMethod = "getEngineByName",
-      targetMethodDescriptor = "(Ljava/lang/String;)Ljavax/script/ScriptEngine;")
-  public static Object
-  hookEngineName(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
-      throws Throwable {
-    String engine = (String) arguments[0];
-    Jazzer.guideTowardsEquality(engine, ENGINE, hookId);
-    return method.invokeWithArguments(
-        Stream.concat(Stream.of(thisObject), Arrays.stream(arguments)).toArray());
-  }
-
+  /**
+   * String variants of eval can be intercepted by before hooks, as the script
+   * content can directly be checked for the presence of the payload.
+   */
   @MethodHook(type = HookType.BEFORE, targetClassName = "javax.script.ScriptEngine",
       targetMethod = "eval", targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Object;")
   @MethodHook(type = HookType.BEFORE, targetClassName = "javax.script.ScriptEngine",
-      targetMethod = "eval", targetMethodDescriptor = "(Ljava/io/Reader;)Ljava/lang/Object;")
+      targetMethod = "eval",
+      targetMethodDescriptor = "(Ljava/lang/String;Ljavax/script/ScriptContext;)Ljava/lang/Object;")
+  @MethodHook(type = HookType.BEFORE, targetClassName = "javax.script.ScriptEngine",
+      targetMethod = "eval",
+      targetMethodDescriptor = "(Ljava/lang/String;Ljavax/script/Bindings;)Ljava/lang/Object;")
   public static void
+  checkScriptEngineExecuteString(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    checkScriptContent((String) arguments[0], hookId);
+  }
+
+  /**
+   * Reader variants of eval must be intercepted by replace hooks, as their
+   * contents are converted to strings, for the payload check, and back to readers
+   * for the actual method invocation.
+   */
+  @MethodHook(type = HookType.REPLACE, targetClassName = "javax.script.ScriptEngine",
+      targetMethod = "eval", targetMethodDescriptor = "(Ljava/io/Reader;)Ljava/lang/Object;")
+  @MethodHook(type = HookType.REPLACE, targetClassName = "javax.script.ScriptEngine",
+      targetMethod = "eval",
+      targetMethodDescriptor = "(Ljava/io/Reader;Ljavax/script/ScriptContext;)Ljava/lang/Object;")
+  @MethodHook(type = HookType.REPLACE, targetClassName = "javax.script.ScriptEngine",
+      targetMethod = "eval",
+      targetMethodDescriptor = "(Ljava/io/Reader;Ljavax/script/Bindings;)Ljava/lang/Object;")
+  public static Object
   checkScriptEngineExecute(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
       throws Throwable {
-    String script = null;
-
-    if (arguments[0] instanceof String) {
-      script = (String) arguments[0];
-      Jazzer.guideTowardsEquality(script, PAYLOAD, hookId);
-    } else {
-      script =
-          new String(guideMarkableReaderTowardsEquality((Reader) arguments[0], PAYLOAD, hookId));
+    if (arguments[0] != null) {
+      String content = readAll((Reader) arguments[0]);
+      checkScriptContent(content, hookId);
+      arguments[0] = new StringReader(content);
     }
+    return method.invokeWithArguments(thisObject, arguments);
+  }
 
-    if (script.equals(PAYLOAD)) {
-      Jazzer.reportFindingFromHook(new FuzzerSecurityIssueCritical("Possible script execution"));
+  private static void checkScriptContent(String content, int hookId) {
+    if (content != null) {
+      if (content.contains(PAYLOAD)) {
+        Jazzer.reportFindingFromHook(new FuzzerSecurityIssueCritical(
+            "Script Engine Injection: Insecure user input was used in script engine invocation.\n"
+            + "Depending on the script engine's capabilities this could lead to sandbox escape and remote code execution."));
+      } else {
+        Jazzer.guideTowardsContainment(content, PAYLOAD, hookId);
+      }
     }
+  }
+
+  private static String readAll(Reader reader) throws IOException {
+    StringBuilder content = new StringBuilder();
+    char[] buffer = new char[4096];
+    int numChars;
+    while ((numChars = reader.read(buffer)) >= 0) {
+      content.append(buffer, 0, numChars);
+    }
+    return content.toString();
   }
 }
