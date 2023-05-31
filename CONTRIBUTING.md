@@ -88,10 +88,7 @@ Javadocs are hosted at https://codeintelligencetesting.github.io/jazzer-docs, wh
 
 To update the docs after a release with API changes, follow these steps to get properly linked cross-references:
 
-1. Delete the contents of all subdirectories of `jazzer-docs`.
+1. Delete the contents of the `jazzer-api` subdirectory of `jazzer-docs`.
 2. Run `bazel build --//deploy:linked_javadoc //deploy:jazzer-api-docs` and unpack the jar into the `jazzer-api` subdirectory of `jazzer-docs`.
 3. Commit and push the changes, then wait for them to be published (can take a minute).
-4. Run `bazel build --//deploy:linked_javadoc //deploy:jazzer-docs` and unpack the jar into the `jazzer` subdirectory of `jazzer-docs`.
-5. Commit and push the changes, then wait for them to be published (can take a minute).
-6. Run `bazel build --//deploy:linked_javadoc //deploy:jazzer-junit-docs` and unpack the jar into the `jazzer-junit` subdirectory of `jazzer-docs`.
-7. Commit and push the changes, then wait for them to be published (can take a minute).
+4. Repeat the same steps with `jazzer-api` replaced by `jazzer` and then by `jazzer-junit`.
