@@ -52,8 +52,8 @@ kt_jvm_library(
     visibility = ["//sanitizers:__pkg__"],
     runtime_deps = [
         ":regex_roadblocks",
-        ":server_side_request_forgery",
         ":script_engine_injection",
+        ":server_side_request_forgery",
         ":sql_injection",
     ],
     deps = [
