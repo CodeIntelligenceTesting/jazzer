@@ -30,7 +30,6 @@ const char *USE_EMBEDDED = "use_embedded";
 [[maybe_unused]] jint
 Java_com_code_1intelligence_jazzer_android_AndroidRuntime_registerNatives(
     JNIEnv *env, jclass clazz) {
-
   setenv("LD_LIBRARY_PATH", EMBEDDED_DIR, true);
   void *handle = nullptr;
   handle = dlopen(RUNTIME_LIBRARY, RTLD_LAZY);
