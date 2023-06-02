@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 import static java.lang.System.exit;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
@@ -32,8 +33,7 @@ import java.util.Optional;
 
 public class Driver {
   public static int start(List<String> args, boolean spawnsSubprocesses) throws IOException {
-    boolean isAndroid = Boolean.parseBoolean(System.getProperty("jazzer.android", "false"));
-    if (isAndroid) {
+    if (IS_ANDROID) {
       if (!System.getProperty("jazzer.autofuzz", "").isEmpty()) {
         Log.error("--autofuzz is not supported for Android");
         return 1;
@@ -65,7 +65,7 @@ public class Driver {
         // pass its path to the agent in every child process. This requires adding
         // the argument to argv for it to be picked up by libFuzzer, which then
         // forwards it to child processes.
-        if (!isAndroid) {
+        if (!IS_ANDROID) {
           idSyncFile = Files.createTempFile("jazzer-", "");
         } else {
           File f = File.createTempFile("jazzer-", "", new File("/data/local/tmp/"));

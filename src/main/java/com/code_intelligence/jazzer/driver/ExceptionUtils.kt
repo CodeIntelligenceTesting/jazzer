@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.driver
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow
+import com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID
 import com.code_intelligence.jazzer.utils.Log
 import java.lang.management.ManagementFactory
 import java.nio.ByteBuffer
@@ -97,7 +98,7 @@ fun preprocessThrowable(throwable: Throwable): Throwable = when (throwable) {
             (frame !in observedFrames).also { observedFrames.add(frame) }
         }
         var securityIssueMessage = "Stack overflow"
-        if (!Opt.isAndroid) {
+        if (!IS_ANDROID) {
             securityIssueMessage = "$securityIssueMessage (use '${getReproducingXssArg()}' to reproduce)"
         }
         FuzzerSecurityIssueLow(securityIssueMessage, throwable).apply {
@@ -106,7 +107,7 @@ fun preprocessThrowable(throwable: Throwable): Throwable = when (throwable) {
     }
     is OutOfMemoryError -> {
         var securityIssueMessage = "Out of memory"
-        if (!Opt.isAndroid) {
+        if (!IS_ANDROID) {
             securityIssueMessage = "$securityIssueMessage (use '${getReproducingXmxArg()}' to reproduce)"
         }
         stripOwnStackTrace(FuzzerSecurityIssueLow(securityIssueMessage, throwable))
@@ -200,7 +201,7 @@ fun dumpAllStackTraces() {
         Log.println("")
     }
 
-    if (Opt.isAndroid) {
+    if (IS_ANDROID) {
         // ManagementFactory is not supported on Android
         return
     }

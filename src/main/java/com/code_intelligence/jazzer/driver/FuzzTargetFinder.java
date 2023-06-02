@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 import static java.lang.System.exit;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
@@ -40,7 +41,7 @@ class FuzzTargetFinder {
     if (!Opt.targetClass.isEmpty()) {
       return Opt.targetClass;
     }
-    if (Opt.isAndroid) {
+    if (IS_ANDROID) {
       // Fuzz target detection tools aren't supported on android
       return null;
     }
@@ -55,12 +56,8 @@ class FuzzTargetFinder {
   static FuzzTarget findFuzzTarget(String targetClassName) {
     Class<?> fuzzTargetClass;
     try {
-      if (Opt.isAndroid) {
-        fuzzTargetClass =
-            Class.forName(targetClassName, false, FuzzTargetFinder.class.getClassLoader());
-      } else {
-        fuzzTargetClass = Class.forName(targetClassName);
-      }
+      fuzzTargetClass =
+          Class.forName(targetClassName, false, FuzzTargetFinder.class.getClassLoader());
     } catch (ClassNotFoundException e) {
       Log.error(String.format(
           "'%s' not found on classpath:%n%n%s%n%nAll required classes must be on the classpath specified via --cp.",

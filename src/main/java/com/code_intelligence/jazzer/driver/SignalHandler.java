@@ -19,10 +19,8 @@ import sun.misc.Signal;
 
 public final class SignalHandler {
   static {
-    if (!Opt.isAndroid) {
-      RulesJni.loadLibrary("jazzer_signal_handler", SignalHandler.class);
-      Signal.handle(new Signal("INT"), sig -> handleInterrupt());
-    }
+    RulesJni.loadLibrary("jazzer_signal_handler", SignalHandler.class);
+    Signal.handle(new Signal("INT"), sig -> handleInterrupt());
   }
 
   public static void initialize() {

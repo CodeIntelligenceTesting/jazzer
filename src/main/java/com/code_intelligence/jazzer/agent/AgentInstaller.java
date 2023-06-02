@@ -15,8 +15,8 @@
 package com.code_intelligence.jazzer.agent;
 
 import static com.code_intelligence.jazzer.agent.AgentUtils.extractBootstrapJar;
+import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 
-import com.code_intelligence.jazzer.driver.Opt;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -37,7 +37,7 @@ public class AgentInstaller {
       return;
     }
 
-    if (Opt.isAndroid) {
+    if (IS_ANDROID) {
       return;
     }
 

@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.driver;
 
 import static com.code_intelligence.jazzer.driver.Constants.JAZZER_FINDING_EXIT_CODE;
+import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 import static java.lang.System.exit;
 import static java.util.stream.Collectors.joining;
 
@@ -95,7 +96,7 @@ public final class FuzzTargetRunner {
       throw new IllegalStateException(e);
     }
     useFuzzedDataProvider = fuzzTarget.usesFuzzedDataProvider();
-    if (!useFuzzedDataProvider && Opt.isAndroid) {
+    if (!useFuzzedDataProvider && IS_ANDROID) {
       Log.error("Android fuzz targets must use " + FuzzedDataProvider.class.getName());
       exit(1);
       throw new IllegalStateException("Not reached");
@@ -367,7 +368,9 @@ public final class FuzzTargetRunner {
       // https://github.com/llvm/llvm-project/blob/da3623de2411dd931913eb510e94fe846c929c24/compiler-rt/lib/fuzzer/FuzzerFlags.def#L19
       args.add("-len_control=100");
     }
-    SignalHandler.initialize();
+    if (!IS_ANDROID) {
+      SignalHandler.initialize();
+    }
     return startLibFuzzer(
         args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][] ::new));
   }
