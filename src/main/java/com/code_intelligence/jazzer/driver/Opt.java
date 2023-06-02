@@ -42,14 +42,14 @@ import java.util.stream.Stream;
  * <p>Each option corresponds to a command-line argument of the driver of the same name.
  *
  * <p>Every public field should be deeply immutable.
- *
- * <p>This class is loaded twice: As it is used in {@link FuzzTargetRunner}, it is loaded in the
- * class loader that loads {@link Driver}. It is also used in
- * {@link com.code_intelligence.jazzer.agent.Agent} after the agent JAR has been added to the
- * bootstrap classpath and thus is loaded again in the bootstrap loader. This is not a problem since
- * it only provides immutable fields and has no non-fatal side effects.
  */
 public final class Opt {
+  static {
+    if (Opt.class.getClassLoader() == null) {
+      throw new IllegalStateException("Opt should not be loaded in the bootstrap class loader");
+    }
+  }
+
   static {
     // We additionally list system properties supported by the Jazzer JUnit engine that do not
     // directly map to arguments. These are not shown in help texts.
@@ -152,10 +152,6 @@ public final class Opt {
   // runner, but still support hooks = false && dedup = true.
   public static final boolean dedup =
       boolSetting("dedup", hooks, "Compute and print a deduplication token for every finding");
-
-  // Default to false. Sets if fuzzing is taking place on Android device (virtual or physical)
-  public static final boolean isAndroid =
-      boolSetting("android", false, "Jazzer is running on Android");
 
   // Whether hook instrumentation should add a check for JazzerInternal#hooksEnabled before
   // executing hooks. Used to disable hooks during non-fuzz JUnit tests.

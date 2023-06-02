@@ -104,7 +104,6 @@ java_jni_library(
         "//src/test:__subpackages__",
     ],
     deps = [
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
 )
@@ -123,7 +122,7 @@ java_jni_library(
     srcs = ["FuzzTargetRunnerNatives.java"],
     visibility = ["//src/main/native/com/code_intelligence/jazzer/driver:__pkg__"],
     deps = [
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+        ":constants",
     ],
 )
 
@@ -159,9 +158,17 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
     deps = [
+        ":constants",
         ":coverage_map",
         ":trace_data_flow_native_callbacks",
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
     ],
+)
+
+# This target exposes a class that can safely be loaded in both the system and the bootstrap class
+# loader as it provides true constants that do not change over the lifetime of the JVM.
+java_library(
+    name = "constants",
+    srcs = ["Constants.java"],
+    visibility = ["//visibility:public"],
 )

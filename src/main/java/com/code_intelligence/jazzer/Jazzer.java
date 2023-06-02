@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer;
 
+import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 import static java.lang.System.exit;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -208,7 +209,7 @@ public class Jazzer {
     }
     char shellQuote = isPosixOrAndroid() ? '\'' : '"';
     String launcherTemplate;
-    if (isAndroid()) {
+    if (IS_ANDROID) {
       launcherTemplate = "#!/system/bin/env sh\n%s $@\n";
     } else if (isPosix()) {
       launcherTemplate = "#!/usr/bin/env sh\n%s $@\n";
@@ -237,7 +238,7 @@ public class Jazzer {
     // argv0 is printed by libFuzzer during reproduction, so have the launcher basename contain
     // "jazzer".
     Path launcher;
-    if (isAndroid()) {
+    if (IS_ANDROID) {
       launcher = Files.createTempFile(
           Paths.get("/data/local/tmp/"), "jazzer-", launcherExtension, launcherScriptAttributes);
     } else {
@@ -251,7 +252,7 @@ public class Jazzer {
 
   private static Path javaBinary() {
     String javaBinaryName;
-    if (isAndroid()) {
+    if (IS_ANDROID) {
       javaBinaryName = "dalvikvm";
     } else if (isPosix()) {
       javaBinaryName = "java";
@@ -274,7 +275,7 @@ public class Jazzer {
         // entitlements required for library insertion.
         "-Djdk.attach.allowAttachSelf=true", Jazzer.class.getName());
 
-    if (isAndroid()) {
+    if (IS_ANDROID) {
       // ManagementFactory wont work with Android
       return stream;
     }
@@ -300,7 +301,7 @@ public class Jazzer {
   }
 
   private static Path findLibrary(List<String> candidateNames) {
-    if (!isAndroid()) {
+    if (!IS_ANDROID) {
       return findHostClangLibrary(candidateNames);
     }
 
@@ -387,7 +388,7 @@ public class Jazzer {
   }
 
   private static List<String> hwasanLibNames() {
-    if (!isAndroid()) {
+    if (!IS_ANDROID) {
       Log.error("HWAsan is only supported for Android. Please try --asan");
       exit(1);
     }
@@ -397,7 +398,7 @@ public class Jazzer {
 
   private static List<String> asanLibNames() {
     if (isLinux()) {
-      if (isAndroid()) {
+      if (IS_ANDROID) {
         Log.error("ASan is not supported for Android at this time. Use --hwasan for Address "
             + "Sanitization on Android");
         exit(1);
@@ -412,7 +413,7 @@ public class Jazzer {
 
   private static List<String> ubsanLibNames() {
     if (isLinux()) {
-      if (isAndroid()) {
+      if (IS_ANDROID) {
         // return asList("libclang_rt.ubsan_standalone-aarch64-android.so");
         Log.error("ERROR: UBSan is not supported for Android at this time.");
         exit(1);
@@ -437,15 +438,14 @@ public class Jazzer {
   }
 
   private static boolean isPosix() {
-    return !isAndroid() && FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
-  }
-
-  private static boolean isAndroid() {
-    return Boolean.parseBoolean(System.getProperty("jazzer.android", "false"));
+    return !IS_ANDROID && FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
   }
 
   private static boolean isPosixOrAndroid() {
-    return isPosix() || isAndroid();
+    if (isPosix()) {
+      return true;
+    }
+    return IS_ANDROID;
   }
 
   private static byte[] readAllBytes(InputStream in) throws IOException {
