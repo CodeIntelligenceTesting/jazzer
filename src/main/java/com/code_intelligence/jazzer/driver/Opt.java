@@ -61,21 +61,20 @@ public final class Opt {
         "Additional arguments to pass to the JVM (separator can be escaped with '\\', native launcher only)");
     stringSetting(
         "agent_path", null, "Custom path to jazzer_agent_deploy.jar (native launcher only)");
-    stringSetting("init_options", null,
-        "Which libraries to use when initializing ART (native launcher only)");
     // The following arguments are interpreted by the Jazzer main class directly as they require
     // starting Jazzer as a subprocess.
     boolSetting(
         "asan", false, "Allow fuzzing of native libraries compiled with '-fsanitize=address'");
     boolSetting(
         "ubsan", false, "Allow fuzzing of native libraries compiled with '-fsanitize=undefined'");
-    boolSetting("hwasan", false, "Allow fuzzing of native libraries compiled with hwasan");
     boolSetting("native", false,
         "Allow fuzzing of native libraries compiled with '-fsanitize=fuzzer' (implied by --asan and --ubsan)");
+    // Options currently used by Android only
+    stringSetting("android_init_options", null,
+        "Which libraries to use when initializing ART (native launcher only)");
+    boolSetting("hwasan", false, "Allow fuzzing of native libraries compiled with hwasan");
   }
 
-  public static final List<String> cp =
-      stringListSetting("cp", "The class path to use for fuzzing (native launcher only)");
   public static final String autofuzz = stringSetting("autofuzz", "",
       "Fully qualified reference (optionally with a Javadoc-style signature) to a "
           + "method on the class path to be fuzzed with automatically generated arguments "
@@ -113,10 +112,6 @@ public final class Opt {
   public static final List<String> instrumentationExcludes =
       stringListSetting("instrumentation_excludes",
           "Glob patterns matching names of classes that should not be instrumented for fuzzing");
-  public static final List<String> additionalClassesExcludes =
-      stringListSetting("additional_classes_excludes",
-          "Glob patterns matching names of classes from Java that are not in your jar file, "
-              + "but may be included in your program");
   public static final Set<Long> ignore =
       unmodifiableSet(stringListSetting("ignore", ',',
           "Hex strings representing deduplication tokens of findings that should be ignored")
@@ -145,24 +140,33 @@ public final class Opt {
   public static final boolean dedup =
       boolSetting("dedup", hooks, "Compute and print a deduplication token for every finding");
 
-  // Default to false. Sets if fuzzing is taking place on Android device (virtual or physical)
-  public static final boolean isAndroid =
-      boolSetting("android", false, "Jazzer is running on Android");
-
   // Whether hook instrumentation should add a check for JazzerInternal#hooksEnabled before
   // executing hooks. Used to disable hooks during non-fuzz JUnit tests.
   public static final boolean conditionalHooks =
       boolSetting("internal.conditional_hooks", false, null);
-
-  // Some scenarios require instrumenting the jar before fuzzing begins
-  public static final List<String> instrumentOnly = stringListSetting("instrument_only", ',',
-      "Comma separated list of jar files to instrument. No fuzzing is performed.");
 
   static final boolean mergeInner = boolSetting("internal.merge_inner", false, null);
 
   private static final boolean help =
       boolSetting("help", false, "Show this list of all available arguments");
   private static final boolean version = boolSetting("version", false, "Print version information");
+
+  // Methods below currently used by Android only
+  public static final List<String> cp =
+      stringListSetting("cp", "The class path to use for fuzzing (native launcher only)");
+
+  public static final List<String> additionalClassesExcludes =
+      stringListSetting("additional_classes_excludes",
+          "Glob patterns matching names of classes from Java that are not in your jar file, "
+              + "but may be included in your program");
+
+  // Default to false. Sets if fuzzing is taking place on Android device (virtual or physical)
+  public static final boolean isAndroid =
+      boolSetting("android", false, "Jazzer is running on Android");
+
+  // Some scenarios require instrumenting the jar before fuzzing begins
+  public static final List<String> instrumentOnly = stringListSetting("instrument_only", ',',
+      "Comma separated list of jar files to instrument. No fuzzing is performed.");
 
   static {
     OptParser.failOnUnknownArgument();

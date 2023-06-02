@@ -17,31 +17,24 @@ package com.code_intelligence.jazzer.android;
 import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.utils.Log;
 import com.github.fmeum.rules_jni.RulesJni;
-import java.io.UnsupportedEncodingException;
 
 /**
  * Loads Android tooling library and registers native functions.
  */
 public class AndroidRuntime {
-  private static final String doNotInitialize = "use_none";
+  private static final String DO_NOT_INITIALIZE = "use_none";
 
-  public static void initialize(String runtimeLibs) throws UnsupportedEncodingException {
+  public static void initialize(String runtimeLibs) {
     if (runtimeLibs == null) {
       return;
     }
 
     if (Opt.isAndroid) {
-      try {
-        System.loadLibrary("android_servers");
-      } catch (Exception e) {
-        Log.warn("Unable to load android_servers. If you are attempting to fuzz the system server "
-            + ", check static_libs definition.");
-      }
       RulesJni.loadLibrary("jazzer_android_tooling", "/com/code_intelligence/jazzer/driver");
-      if (!runtimeLibs.equals(doNotInitialize)) {
-        registerNatives();
-      } else {
+      if (runtimeLibs.equals(DO_NOT_INITIALIZE)) {
         Log.warn("Android Runtime (ART) is not being initialized for this fuzzer.");
+      } else {
+        registerNatives();
       }
     }
   };
@@ -52,8 +45,7 @@ public class AndroidRuntime {
    * @return The classpath command.
    */
   public static String getClassPathsCommand() {
-    String template = "export CLASSPATH=%s";
-    return String.format(template, System.getProperty("java.class.path"));
+    return "export CLASSPATH=" + System.getProperty("java.class.path");
   }
 
   private static native int registerNatives();

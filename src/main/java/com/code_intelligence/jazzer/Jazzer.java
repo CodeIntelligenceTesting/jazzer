@@ -230,11 +230,12 @@ public class Jazzer {
                      .stream()
                      .map(e -> e.getKey() + "='" + e.getValue() + "'")
                      .collect(joining(" "));
-    String command = Stream
-                         .concat(Stream.of(javaBinary()), javaBinaryArgs())
-                         // Escape individual arguments for the shell.
-                         .map(str -> shellQuote + str + shellQuote)
-                         .collect(joining(" "));
+    String command =
+        Stream
+            .concat(Stream.of(isAndroid() ? "exec" : javaBinary().toString()), javaBinaryArgs())
+            // Escape individual arguments for the shell.
+            .map(str -> shellQuote + str + shellQuote)
+            .collect(joining(" "));
 
     String invocation = env.isEmpty() ? command : env + " " + command;
 
@@ -257,28 +258,23 @@ public class Jazzer {
     return launcher.toAbsolutePath().toString();
   }
 
-  private static String javaBinary() {
+  private static Path javaBinary() {
     String javaBinaryName;
-    if (isAndroid()) {
-      javaBinaryName = "exec";
-      return javaBinaryName;
-    } else if (isPosix()) {
+    if (isPosix()) {
       javaBinaryName = "java";
     } else {
       javaBinaryName = "java.exe";
     }
 
-    Path path = Paths.get(System.getProperty("java.home"), "bin", javaBinaryName);
-    return path.toString();
+    return Paths.get(System.getProperty("java.home"), "bin", javaBinaryName);
   }
 
   private static Stream<String> javaBinaryArgs() {
     Stream<String> stream;
     if (isAndroid()) {
-      stream = Stream.of("app_process", "-Djdk.attach.allowAttachSelf=true", "/system/bin",
-          Jazzer.class.getName());
       // ManagementFactory wont work with Android
-      return stream;
+      return Stream.of("app_process", "-Djdk.attach.allowAttachSelf=true", "/system/bin",
+          Jazzer.class.getName());
     }
     stream = Stream.of("-cp", System.getProperty("java.class.path"),
         // Make ByteBuddyAgent's job simpler by allowing it to attach directly to the JVM
@@ -456,10 +452,10 @@ public class Jazzer {
   }
 
   private static String getAndroidRuntimeOptions() {
-    final String[] validInitOptions = {"use_platform_libs", "use_none"};
-    final String initOptString = System.getProperty("jazzer.init_options");
-    if (!Arrays.asList(validInitOptions).contains(initOptString)) {
-      Log.error("Invalid init_options set for Android Runtime.");
+    List<String> validInitOptions = Arrays.asList("use_platform_libs", "use_none");
+    String initOptString = System.getProperty("jazzer.android_init_options");
+    if (!validInitOptions.contains(initOptString)) {
+      Log.error("Invalid android_init_options set for Android Runtime.");
       exit(1);
     }
     return initOptString;

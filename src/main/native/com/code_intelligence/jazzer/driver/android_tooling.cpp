@@ -22,9 +22,8 @@
 #include "com_code_intelligence_jazzer_android_AndroidRuntime.h"
 
 const char *RUNTIME_LIBRARY = "libandroid_runtime.so";
-const char *SERVER_LIBRARY = "libandroid_servers.so";
-const char *EMBEDDED_DIR = "/data/fuzz:/system/lib64";
-const char *USE_EMBEDDED = "use_embedded";
+const char *EMBEDDED_DIR =
+    "/data/fuzz/:/system/lib64/:/apex/com.android.i18n@1/lib64/";
 
 // Register native methods from the Android Runtime (ART) framework.
 [[maybe_unused]] jint
@@ -50,10 +49,13 @@ Java_com_code_1intelligence_jazzer_android_AndroidRuntime_registerNatives(
       dlsym(handle, "registerFrameworkNatives"));
   const char *dlsym_error = dlerror();
   if (dlsym_error) {
+    std::cerr << "ERROR: Unable to invoke registerFrameworkNatives."
+              << std::endl;
     exit(1);
   }
 
   if (Register_Frameworks == nullptr) {
+    std::cerr << "ERROR: Register_Frameworks is null." << std::endl;
     exit(1);
   }
 
