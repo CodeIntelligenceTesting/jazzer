@@ -19,7 +19,11 @@ package com.code_intelligence.jazzer.driver;
 import static com.code_intelligence.jazzer.driver.Constants.JAZZER_FINDING_EXIT_CODE;
 import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 import static java.lang.System.exit;
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.autofuzz.FuzzTarget;
@@ -59,6 +63,33 @@ import sun.misc.Unsafe;
  * concurrently.
  */
 public final class FuzzTargetRunner {
+  static {
+    if (Opt.autofuzz.get().isEmpty()) {
+      if (!Opt.autofuzzIgnore.get().isEmpty()) {
+        Log.error("--autofuzz_ignore requires --autofuzz");
+        exit(1);
+      }
+    } else {
+      if (!Opt.targetClass.get().isEmpty()) {
+        Log.error("--target_class and --autofuzz cannot be specified together");
+        exit(1);
+      }
+      if (!Opt.targetArgs.setIfDefault(unmodifiableList(
+              concat(Stream.of(Opt.autofuzz.get()), Opt.autofuzzIgnore.get().stream())
+                  .collect(toList())))) {
+        Log.error("--target_args and --autofuzz cannot be specified together");
+        exit(1);
+      }
+    }
+    // Default to false if hooks is false to mimic the original behavior of the native fuzz target
+    // runner, but still support hooks = false && dedup = true.
+    Opt.dedup.setIfDefault(Opt.hooks.get());
+    if ((!Opt.ignore.get().isEmpty() || Opt.keepGoing.get() > 1) && !Opt.dedup.get()) {
+      Log.error("--nodedup is not supported with --ignore or --keep_going");
+      exit(1);
+    }
+  }
+
   private static final String OPENTEST4J_TEST_ABORTED_EXCEPTION =
       "org.opentest4j.TestAbortedException";
 
@@ -71,7 +102,19 @@ public final class FuzzTargetRunner {
   private static final int LIBFUZZER_RETURN_FROM_DRIVER = -2;
 
   private static boolean invalidCorpusFileWarningShown = false;
-  private static final Set<Long> ignoredTokens = new HashSet<>(Opt.ignore);
+
+  // Keep these options used in runOne (and thus the critical path) in static final fields so that
+  // they can be constant-folded by the JIT.
+  private static final Set<Long> ignoredTokens = Opt.ignore.get()
+                                                     .stream()
+                                                     .map(s -> Long.parseUnsignedLong(s, 16))
+                                                     .collect(toCollection(HashSet::new));
+  private static final boolean useExperimentalMutator = Opt.experimentalMutator.get();
+  private static final boolean optimizeMergeInner = Opt.mergeInner.get();
+  private static final boolean useHooks = Opt.hooks.get();
+  private static final boolean emitDedupToken = Opt.dedup.get();
+  private static final long keepGoing = Opt.keepGoing.get();
+  private static final long crossOverFrequency = Opt.experimentalCrossOverFrequency.get();
   private static final FuzzedDataProviderImpl fuzzedDataProvider =
       FuzzedDataProviderImpl.withNativeData();
   private static final MethodHandle fuzzTargetMethod;
@@ -115,7 +158,7 @@ public final class FuzzTargetRunner {
       throw new IllegalStateException("Not reached");
     }
 
-    if (Opt.experimentalMutator) {
+    if (useExperimentalMutator) {
       if (Modifier.isStatic(fuzzTarget.method.getModifiers())) {
         mutator = ArgumentsMutator.forStaticMethodOrThrow(fuzzTarget.method);
       } else {
@@ -126,7 +169,7 @@ public final class FuzzTargetRunner {
       mutator = null;
     }
 
-    if (Opt.hooks) {
+    if (useHooks) {
       // libFuzzer will clear the coverage map after this method returns and keeps no record of the
       // coverage accumulated so far (e.g. by static initializers). We record it here to keep it
       // around for JaCoCo coverage reports.
@@ -162,7 +205,7 @@ public final class FuzzTargetRunner {
     Throwable finding = null;
     byte[] data;
     Object argument;
-    if (Opt.experimentalMutator) {
+    if (useExperimentalMutator) {
       // TODO: Instead of copying the native data and then reading it in, consider the following
       //  optimizations if they turn out to be worthwhile in benchmarks:
       //  1. Let libFuzzer pass in a null pointer if the byte array hasn't changed since the last
@@ -190,7 +233,7 @@ public final class FuzzTargetRunner {
       argument = data;
     }
     try {
-      if (Opt.experimentalMutator) {
+      if (useExperimentalMutator) {
         // No need to detach as we are currently reading in the mutator state from bytes in every
         // iteration.
         mutator.invoke(false);
@@ -210,7 +253,7 @@ public final class FuzzTargetRunner {
     // Incidentally, this makes the behavior of fuzz targets relying on global states more
     // consistent: Rather than resetting the global state after every crashing input and thus
     // dependent on the particular ordering of the inputs, we never reset it.
-    if (Opt.mergeInner) {
+    if (optimizeMergeInner) {
       return LIBFUZZER_CONTINUE;
     }
 
@@ -223,12 +266,12 @@ public final class FuzzTargetRunner {
     if (finding == null || finding.getClass().getName().equals(OPENTEST4J_TEST_ABORTED_EXCEPTION)) {
       return LIBFUZZER_CONTINUE;
     }
-    if (Opt.hooks) {
+    if (useHooks) {
       finding = ExceptionUtils.preprocessThrowable(finding);
     }
 
-    long dedupToken = Opt.dedup ? ExceptionUtils.computeDedupToken(finding) : 0;
-    if (Opt.dedup && !ignoredTokens.add(dedupToken)) {
+    long dedupToken = emitDedupToken ? ExceptionUtils.computeDedupToken(finding) : 0;
+    if (emitDedupToken && !ignoredTokens.add(dedupToken)) {
       return LIBFUZZER_CONTINUE;
     }
 
@@ -248,7 +291,7 @@ public final class FuzzTargetRunner {
     temporarilyDisableLibfuzzerExitHook();
 
     Log.finding(finding);
-    if (Opt.dedup) {
+    if (emitDedupToken) {
       // Has to be printed to stdout as it is parsed by libFuzzer when minimizing a crash. It does
       // not necessarily have to appear at the beginning of a line.
       // https://github.com/llvm/llvm-project/blob/4c106c93eb68f8f9f201202677cd31e326c16823/compiler-rt/lib/fuzzer/FuzzerDriver.cpp#L342
@@ -263,14 +306,14 @@ public final class FuzzTargetRunner {
     // that satisfies the same purpose.
     // It also doesn't support the experimental mutator yet as that requires implementing Java code
     // generation for mutators.
-    if (fuzzTargetInstance == null && !Opt.experimentalMutator) {
+    if (fuzzTargetInstance == null && !useExperimentalMutator) {
       dumpReproducer(data);
     }
 
-    if (!Opt.dedup || Long.compareUnsigned(ignoredTokens.size(), Opt.keepGoing) >= 0) {
+    if (!emitDedupToken || Long.compareUnsigned(ignoredTokens.size(), keepGoing) >= 0) {
       // Reached the maximum amount of findings to keep going for, crash after shutdown. We use
       // _Exit rather than System.exit to not trigger libFuzzer's exit handlers.
-      if (!Opt.autofuzz.isEmpty() && Opt.dedup) {
+      if (!Opt.autofuzz.get().isEmpty() && Opt.dedup.get()) {
         Log.println("");
         Log.info(String.format(
             "To continue fuzzing past this particular finding, rerun with the following additional argument:"
@@ -280,7 +323,8 @@ public final class FuzzTargetRunner {
             ignoredTokens.stream()
                 .map(token -> Long.toUnsignedString(token, 16))
                 .collect(joining(",")),
-            Stream.concat(Opt.autofuzzIgnore.stream(), Stream.of(finding.getClass().getName()))
+            Stream
+                .concat(Opt.autofuzzIgnore.get().stream(), Stream.of(finding.getClass().getName()))
                 .collect(joining(","))));
       }
       System.exit(JAZZER_FINDING_EXIT_CODE);
@@ -328,8 +372,7 @@ public final class FuzzTargetRunner {
     // the list of default mutators, so ~1/12 of the time. This also seems too
     // much and is reduced to a configurable frequency, default 1/100, here,
     // mutate is used in the other cases.
-    if (Opt.experimentalCrossOverFrequency != 0
-        && crossOverCount++ % Opt.experimentalCrossOverFrequency == 0) {
+    if (crossOverFrequency != 0 && crossOverCount++ % crossOverFrequency == 0) {
       mutator.crossOver(new ByteArrayInputStream(copyToArray(data1, size1)),
           new ByteArrayInputStream(copyToArray(data2, size2)), seed);
     } else {
@@ -362,7 +405,7 @@ public final class FuzzTargetRunner {
     // mutator.
     // TODO: libFuzzer still emits a message about --len_control being disabled by default even if
     //  we override it via a flag. We may want to patch this out.
-    if (!Opt.experimentalMutator) {
+    if (!useExperimentalMutator) {
       // args may not be mutable.
       args = new ArrayList<>(args);
       // https://github.com/llvm/llvm-project/blob/da3623de2411dd931913eb510e94fe846c929c24/compiler-rt/lib/fuzzer/FuzzerFlags.def#L19
@@ -394,12 +437,12 @@ public final class FuzzTargetRunner {
   }
 
   private static void shutdown() {
-    if (!Opt.coverageDump.isEmpty() || !Opt.coverageReport.isEmpty()) {
-      if (!Opt.coverageDump.isEmpty()) {
-        CoverageRecorder.dumpJacocoCoverage(Opt.coverageDump);
+    if (!Opt.coverageDump.get().isEmpty() || !Opt.coverageReport.get().isEmpty()) {
+      if (!Opt.coverageDump.get().isEmpty()) {
+        CoverageRecorder.dumpJacocoCoverage(Opt.coverageDump.get());
       }
-      if (!Opt.coverageReport.isEmpty()) {
-        CoverageRecorder.dumpCoverageReport(Opt.coverageReport);
+      if (!Opt.coverageReport.get().isEmpty()) {
+        CoverageRecorder.dumpCoverageReport(Opt.coverageReport.get());
       }
     }
 
@@ -432,9 +475,9 @@ public final class FuzzTargetRunner {
     }
     String dataSha1 = toHexString(digest.digest(data));
 
-    if (!Opt.autofuzz.isEmpty()) {
+    if (!Opt.autofuzz.get().isEmpty()) {
       fuzzedDataProvider.reset();
-      FuzzTarget.dumpReproducer(fuzzedDataProvider, Opt.reproducerPath, dataSha1);
+      FuzzTarget.dumpReproducer(fuzzedDataProvider, Opt.reproducerPath.get(), dataSha1);
       return;
     }
 
@@ -502,7 +545,7 @@ public final class FuzzTargetRunner {
    */
   private static int startLibFuzzer(byte[][] args) {
     return FuzzTargetRunnerNatives.startLibFuzzer(
-        args, FuzzTargetRunner.class, Opt.experimentalMutator);
+        args, FuzzTargetRunner.class, useExperimentalMutator);
   }
 
   /**

@@ -1,3 +1,5 @@
+load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_junit5_test")
+
 java_test(
     name = "FuzzTargetRunnerTest",
     srcs = ["FuzzTargetRunnerTest.java"],
@@ -25,12 +27,58 @@ java_test(
     ],
 )
 
-java_test(
-    name = "OptTest",
-    srcs = ["OptTest.java"],
-    deps = [
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
-        "@maven//:junit_junit",
+java_junit5_test(
+    name = "OptItemTest",
+    srcs = ["OptItemTest.java"],
+    env = {
+        "JAZZER_SOME_ARG": "env_1,env_2",
+        "JAZZER_OTHER_ARG": "env_3",
+    },
+    deps = JUNIT5_DEPS + [
+        ":direct_dep",
+        ":direct_manifest_dep_deploy.jar",
+        "//src/main/java/com/code_intelligence/jazzer/driver:opt_item",
+        "@maven//:com_google_truth_extensions_truth_java8_extension",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+java_library(
+    name = "direct_dep",
+    runtime_deps = [
+        ":indirect_dep",
+        ":indirect_manifest_dep_deploy.jar",
+    ],
+)
+
+java_binary(
+    name = "direct_manifest_dep",
+    deploy_manifest_lines = [
+        "Jazzer-Some-Arg: manifest_7",
+        "Jazzer-Other-Arg: manifest_6",
+    ],
+)
+
+java_library(
+    name = "indirect_dep",
+    runtime_deps = [
+        ":even_more_indirect_manifest_dep_deploy.jar",
+    ],
+)
+
+java_binary(
+    name = "indirect_manifest_dep",
+    deploy_manifest_lines = [
+        "Jazzer-Some-Arg: manifest_4,manifest_5",
+    ],
+)
+
+java_binary(
+    name = "even_more_indirect_manifest_dep",
+    deploy_manifest_lines = [
+        "jazzer-some-arg: manifest_3",
+        "JAZZER-OTHER-ARG: manifest_1,manifest_2",
     ],
 )
 

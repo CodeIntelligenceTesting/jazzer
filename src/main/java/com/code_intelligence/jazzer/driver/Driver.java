@@ -34,31 +34,31 @@ import java.util.Optional;
 public class Driver {
   public static int start(List<String> args, boolean spawnsSubprocesses) throws IOException {
     if (IS_ANDROID) {
-      if (!System.getProperty("jazzer.autofuzz", "").isEmpty()) {
+      if (!Opt.autofuzz.get().isEmpty()) {
         Log.error("--autofuzz is not supported for Android");
         return 1;
       }
-      if (!System.getProperty("jazzer.coverage_report", "").isEmpty()) {
-        Log.warn("--coverage_report is not supported for Android and has been disabled");
-        System.clearProperty("jazzer.coverage_report");
+      if (!Opt.coverageReport.get().isEmpty()) {
+        Log.error("--coverage_report is not supported for Android and has been disabled");
+        return 1;
       }
-      if (!System.getProperty("jazzer.coverage_dump", "").isEmpty()) {
-        Log.warn("--coverage_dump is not supported for Android and has been disabled");
-        System.clearProperty("jazzer.coverage_dump");
+      if (!Opt.coverageDump.get().isEmpty()) {
+        Log.error("--coverage_dump is not supported for Android and has been disabled");
+        return 1;
       }
     }
 
     if (spawnsSubprocesses) {
-      if (!System.getProperty("jazzer.coverage_report", "").isEmpty()) {
+      if (!Opt.coverageReport.get().isEmpty()) {
         Log.warn("--coverage_report does not support parallel fuzzing and has been disabled");
-        System.clearProperty("jazzer.coverage_report");
+        return 1;
       }
-      if (!System.getProperty("jazzer.coverage_dump", "").isEmpty()) {
+      if (!Opt.coverageDump.get().isEmpty()) {
         Log.warn("--coverage_dump does not support parallel fuzzing and has been disabled");
-        System.clearProperty("jazzer.coverage_dump");
+        return 1;
       }
 
-      String idSyncFileArg = System.getProperty("jazzer.id_sync_file", "");
+      String idSyncFileArg = Opt.idSyncFile.get();
       Path idSyncFile;
       if (idSyncFileArg.isEmpty()) {
         // Create an empty temporary file used for coverage ID synchronization and
@@ -84,7 +84,7 @@ public class Driver {
     }
 
     if (args.stream().anyMatch("-merge_inner=1" ::equals)) {
-      System.setProperty("jazzer.internal.merge_inner", "true");
+      Opt.mergeInner.setIfDefault(true);
     }
 
     // Jazzer's hooks use deterministic randomness and thus require a seed. Search for the last
@@ -108,9 +108,12 @@ public class Driver {
       args.add(getDefaultRssLimitMbArg());
     }
 
-    // Do not modify properties beyond this point, loading Opt locks in their values.
-    if (!Opt.instrumentOnly.isEmpty()) {
-      boolean instrumentationSuccess = OfflineInstrumentor.instrumentJars(Opt.instrumentOnly);
+    if (!Opt.instrumentOnly.get().isEmpty()) {
+      if (Opt.dumpClassesDir.get().isEmpty()) {
+        Log.error("--dump_classes_dir must be set with --instrument_only");
+        exit(1);
+      }
+      boolean instrumentationSuccess = OfflineInstrumentor.instrumentJars(Opt.instrumentOnly.get());
       if (!instrumentationSuccess) {
         exit(1);
       }
@@ -119,8 +122,8 @@ public class Driver {
 
     Driver.class.getClassLoader().setDefaultAssertionStatus(true);
 
-    if (!Opt.autofuzz.isEmpty()) {
-      AgentInstaller.install(Opt.hooks);
+    if (!Opt.autofuzz.get().isEmpty()) {
+      AgentInstaller.install(Opt.hooks.get());
       FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.AUTOFUZZ_FUZZ_TARGET;
       return FuzzTargetRunner.startLibFuzzer(args);
     }
@@ -142,7 +145,7 @@ public class Driver {
 
     // Installing the agent after the following "findFuzzTarget" leads to an asan error
     // in it on "Class.forName(targetClassName)", but only during native fuzzing.
-    AgentInstaller.install(Opt.hooks);
+    AgentInstaller.install(Opt.hooks.get());
     FuzzTargetHolder.fuzzTarget = FuzzTargetFinder.findFuzzTarget(targetClassName);
     return FuzzTargetRunner.startLibFuzzer(args);
   }

@@ -38,8 +38,8 @@ class FuzzTargetFinder {
   private static final String FUZZER_TEAR_DOWN = "fuzzerTearDown";
 
   static String findFuzzTargetClassName() {
-    if (!Opt.targetClass.isEmpty()) {
-      return Opt.targetClass;
+    if (!Opt.targetClass.get().isEmpty()) {
+      return Opt.targetClass.get();
     }
     if (IS_ANDROID) {
       // Fuzz target detection tools aren't supported on android
@@ -72,7 +72,7 @@ class FuzzTargetFinder {
   // Finds the traditional static fuzzerTestOneInput fuzz target method.
   private static FuzzTarget findFuzzTargetByMethodName(Class<?> clazz) {
     Method fuzzTargetMethod;
-    if (Opt.experimentalMutator) {
+    if (Opt.experimentalMutator.get()) {
       List<Method> fuzzTargetMethods =
           Arrays.stream(clazz.getMethods())
               .filter(method -> "fuzzerTestOneInput".equals(method.getName()))
@@ -105,7 +105,7 @@ class FuzzTargetFinder {
         Stream
             .of(targetPublicStaticMethod(clazz, FUZZER_INITIALIZE, String[].class)
                     .map(init -> (Callable<Object>) () -> {
-                      init.invoke(null, (Object) Opt.targetArgs.toArray(new String[] {}));
+                      init.invoke(null, (Object) Opt.targetArgs.get().toArray(new String[] {}));
                       return null;
                     }),
                 targetPublicStaticMethod(clazz, FUZZER_INITIALIZE)

@@ -45,13 +45,13 @@ public class OfflineInstrumentor {
    * @return a boolean representing the success status
    */
   public static boolean instrumentJars(List<String> jarLists) {
-    AgentInstaller.install(Opt.hooks);
+    AgentInstaller.install(Opt.hooks.get());
 
     // Clear Opt.dumpClassesDir before adding new instrumented classes
-    File dumpClassesDir = new File(Opt.dumpClassesDir);
+    File dumpClassesDir = new File(Opt.dumpClassesDir.get());
     if (dumpClassesDir.exists()) {
       for (String fn : dumpClassesDir.list()) {
-        new File(Opt.dumpClassesDir, fn).delete();
+        new File(Opt.dumpClassesDir.get(), fn).delete();
       }
     }
 
