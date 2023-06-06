@@ -29,7 +29,7 @@ import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toMap;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
-import com.code_intelligence.jazzer.mutation.annotation.proto.DescriptorSource;
+import com.code_intelligence.jazzer.mutation.annotation.proto.WithDefaultInstance;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.google.protobuf.ByteString;
@@ -126,12 +126,13 @@ final class TypeLibrary {
     }
   }
 
-  static DynamicMessage getDefaultInstance(DescriptorSource descriptorSource) {
-    String[] parts = descriptorSource.value().split("#");
+  static Message getDefaultInstance(WithDefaultInstance withDefaultInstance) {
+    String[] parts = withDefaultInstance.value().split("#");
     if (parts.length != 2) {
-      throw new IllegalArgumentException(format(
-          "Expected @DescriptorSource(\"%s\") to specify a fully-qualified field name (e.g. com.example.MyClass#MY_FIELD)",
-          descriptorSource.value()));
+      throw new IllegalArgumentException(
+          format("Expected @WithDefaultInstance(\"%s\") to specify a fully-qualified method name"
+                  + " (e.g. com.example.MyClass#getDefaultInstance)",
+              withDefaultInstance.value()));
     }
 
     Class<?> clazz;
@@ -139,47 +140,40 @@ final class TypeLibrary {
       clazz = Class.forName(parts[0]);
     } catch (ClassNotFoundException e) {
       throw new IllegalArgumentException(
-          format("Failed to find class '%s' specified by @DescriptorSource(\"%s\")", parts[0],
-              descriptorSource.value()),
+          format("Failed to find class '%s' specified by @WithDefaultInstance(\"%s\")", parts[0],
+              withDefaultInstance.value()),
           e);
     }
 
-    Field field;
+    Method method;
     try {
-      field = clazz.getDeclaredField(parts[1]);
-      field.setAccessible(true);
-    } catch (NoSuchFieldException e) {
+      method = clazz.getDeclaredMethod(parts[1]);
+      method.setAccessible(true);
+    } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
-          format("Failed to find field specified by @DescriptorSource(\"%s\")",
-              descriptorSource.value()),
+          format("Failed to find method specified by @WithDefaultInstance(\"%s\")",
+              withDefaultInstance.value()),
           e);
     }
-    if (!Modifier.isStatic(field.getModifiers())) {
+    if (!Modifier.isStatic(method.getModifiers())) {
       throw new IllegalArgumentException(
-          format("Expected field specified by @DescriptorSource(\"%s\") to be static",
-              descriptorSource.value()));
+          format("Expected method specified by @WithDefaultInstance(\"%s\") to be static",
+              withDefaultInstance.value()));
     }
-    if (!Modifier.isFinal(field.getModifiers())) {
-      throw new IllegalArgumentException(
-          format("Expected field specified by @DescriptorSource(\"%s\") to be final",
-              descriptorSource.value()));
-    }
-    if (field.getType() != Descriptor.class) {
-      throw new IllegalArgumentException(
-          format("Expected field specified by @DescriptorSource(\"%s\") to have type %s, got %s",
-              descriptorSource.value(), Descriptor.class.getName(), field.getType().getName()));
+    if (!Message.class.isAssignableFrom(method.getReturnType())) {
+      throw new IllegalArgumentException(format(
+          "Expected return type of method specified by @WithDefaultInstance(\"%s\") to be a"
+              + " subtype of %s, got %s",
+          withDefaultInstance.value(), Message.class.getName(), method.getReturnType().getName()));
     }
 
-    Descriptor descriptor;
     try {
-      descriptor = (Descriptor) field.get(null);
-    } catch (IllegalAccessException e) {
+      return (Message) method.invoke(null);
+    } catch (IllegalAccessException | InvocationTargetException e) {
       throw new IllegalArgumentException(
-          format("Failed to access field specified by @DescriptorSource(\"%s\")",
-              descriptorSource.value()),
+          format("Failed to execute method specified by @WithDefaultInstance(\"%s\")",
+              withDefaultInstance.value()),
           e);
     }
-
-    return DynamicMessage.getDefaultInstance(descriptor);
   }
 }

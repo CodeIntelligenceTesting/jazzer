@@ -21,20 +21,23 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.code_intelligence.jazzer.mutation.annotation.AppliesTo;
 import com.google.protobuf.DynamicMessage;
+import com.google.protobuf.Message;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Provides a {@link com.google.protobuf.Descriptors.Descriptor} to use as the base for mutations
- * of the annotated {@link DynamicMessage} or {@link DynamicMessage.Builder}.
+ * Provides a default instance to use as the base for mutations of the annotated {@link Message} or
+ * {@link DynamicMessage.Builder}.
  */
 @Target(TYPE_USE)
 @Retention(RUNTIME)
-@AppliesTo({DynamicMessage.class, DynamicMessage.Builder.class})
-public @interface DescriptorSource {
+@AppliesTo(subClassesOf = {Message.class, Message.Builder.class})
+public @interface WithDefaultInstance {
   /**
-   * The fully qualified name of a static final field (e.g. {@code com.example.MyClass#MY_FIELD} of
-   * type * {@link com.google.protobuf.Descriptors.Descriptor} that mutations should be based on.
+   * The fully qualified name of a static method (e.g.
+   * {@code com.example.MyClass#getDefaultInstance}) with return type assignable to
+   * {@link com.google.protobuf.Message}, which returns a default instance that mutations should be
+   * based on.
    */
   String value();
 }
