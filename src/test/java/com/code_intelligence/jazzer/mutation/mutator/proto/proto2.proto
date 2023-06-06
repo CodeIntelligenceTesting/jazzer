@@ -139,3 +139,23 @@ message TestProtobuf {
   message EmptyMessage {}
   optional EmptyMessage empty_message = 101;
 }
+
+message OriginalSubmessage2 {
+  required int32 numeric_field = 1;
+}
+
+message OriginalMessage2 {
+  required OriginalSubmessage2 message_field = 1;
+  required bool bool_field = 2;
+}
+
+message ExtendedSubmessage2 {
+  required int32 numeric_field = 1;
+  required OriginalSubmessage2 message_field = 2;
+}
+
+message ExtendedMessage2 {
+  required ExtendedSubmessage2 message_field = 1;
+  required bool bool_field = 2;
+  required float float_field = 3;
+}
