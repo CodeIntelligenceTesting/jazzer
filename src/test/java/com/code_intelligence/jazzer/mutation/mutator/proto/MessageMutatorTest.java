@@ -19,13 +19,22 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutators;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
+import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.protobuf.Proto2.ExtendedMessage2;
+import com.code_intelligence.jazzer.protobuf.Proto2.ExtendedSubmessage2;
+import com.code_intelligence.jazzer.protobuf.Proto2.OriginalMessage2;
+import com.code_intelligence.jazzer.protobuf.Proto2.OriginalSubmessage2;
 import com.code_intelligence.jazzer.protobuf.Proto3.PrimitiveField3;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 class MessageMutatorTest {
@@ -55,5 +64,29 @@ class MessageMutatorTest {
       msg = mutator.mutate(msg, prng);
       assertThat(msg).isNotEqualTo(PrimitiveField3.getDefaultInstance());
     }
+  }
+
+  @Test
+  void testIncompleteMessageWithRequiredFields() throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    OriginalMessage2.newBuilder()
+        .setMessageField(OriginalSubmessage2.newBuilder().setNumericField(42).build())
+        .setBoolField(true)
+        .build()
+        .writeTo(out);
+    byte[] bytes = out.toByteArray();
+
+    SerializingMutator<ExtendedMessage2> mutator =
+        (SerializingMutator<ExtendedMessage2>) FACTORY.createOrThrow(
+            new TypeHolder<@NotNull ExtendedMessage2>() {}.annotatedType());
+    ExtendedMessage2 extendedMessage = mutator.readExclusive(new ByteArrayInputStream(bytes));
+    assertThat(extendedMessage)
+        .isEqualTo(ExtendedMessage2.newBuilder()
+                       .setMessageField(
+                           ExtendedSubmessage2.newBuilder().setNumericField(42).setMessageField(
+                               OriginalSubmessage2.newBuilder().setNumericField(0).build()))
+                       .setBoolField(true)
+                       .setFloatField(0)
+                       .build());
   }
 }

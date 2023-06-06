@@ -245,7 +245,26 @@ public final class BuilderMutatorFactory extends MutatorFactory {
         // We never want the fuzz test to see unknown fields and our mutations should never produce
         // them.
         builder.setUnknownFields(UnknownFieldSet.getDefaultInstance());
+        // Required fields may not have been set at this point. We set them to default values to
+        // prevent an exception when built.
+        forceInitialized(builder);
         return builder;
+      }
+
+      private void forceInitialized(Builder builder) {
+        if (builder.isInitialized()) {
+          return;
+        }
+        for (FieldDescriptor field : builder.getDescriptorForType().getFields()) {
+          if (!field.isRequired()) {
+            continue;
+          }
+          if (field.getJavaType() == JavaType.MESSAGE) {
+            forceInitialized(builder.getFieldBuilder(field));
+          } else if (!builder.hasField(field)) {
+            builder.setField(field, field.getDefaultValue());
+          }
+        }
       }
 
       @Override
