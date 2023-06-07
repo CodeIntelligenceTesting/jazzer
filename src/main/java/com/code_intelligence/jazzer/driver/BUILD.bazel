@@ -151,7 +151,6 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
         "//src/main/java/com/code_intelligence/jazzer/driver:__subpackages__",
         "//src/main/java/com/code_intelligence/jazzer/junit:__pkg__",
-        "//src/test/java/com/code_intelligence/jazzer/android:__pkg__",
         "//src/test/java/com/code_intelligence/jazzer/driver:__subpackages__",
     ],
     deps = [
