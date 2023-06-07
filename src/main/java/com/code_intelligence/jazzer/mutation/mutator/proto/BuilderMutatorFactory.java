@@ -45,7 +45,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 import com.code_intelligence.jazzer.mutation.annotation.proto.AnySource;
-import com.code_intelligence.jazzer.mutation.annotation.proto.DescriptorSource;
+import com.code_intelligence.jazzer.mutation.annotation.proto.WithDefaultInstance;
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
@@ -245,7 +245,26 @@ public final class BuilderMutatorFactory extends MutatorFactory {
         // We never want the fuzz test to see unknown fields and our mutations should never produce
         // them.
         builder.setUnknownFields(UnknownFieldSet.getDefaultInstance());
+        // Required fields may not have been set at this point. We set them to default values to
+        // prevent an exception when built.
+        forceInitialized(builder);
         return builder;
+      }
+
+      private void forceInitialized(Builder builder) {
+        if (builder.isInitialized()) {
+          return;
+        }
+        for (FieldDescriptor field : builder.getDescriptorForType().getFields()) {
+          if (!field.isRequired()) {
+            continue;
+          }
+          if (field.getJavaType() == JavaType.MESSAGE) {
+            forceInitialized(builder.getFieldBuilder(field));
+          } else if (!builder.hasField(field)) {
+            builder.setField(field, field.getDefaultValue());
+          }
+        }
       }
 
       @Override
@@ -329,21 +348,20 @@ public final class BuilderMutatorFactory extends MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
     return asSubclassOrEmpty(type, Builder.class).flatMap(builderClass -> {
-      // Handled by a custom mutator factory for message fields that is created in
-      // withDescriptorDependentMutatorFactoryIfNeeded. BuilderMutatorFactory only handles proper
-      // subclasses, which correspond to generated message types.
-      if (builderClass == Message.Builder.class) {
-        return Optional.empty();
-      }
-
       Message defaultInstance;
-      if (builderClass == DynamicMessage.Builder.class) {
-        DescriptorSource descriptorSource = type.getAnnotation(DescriptorSource.class);
-        if (descriptorSource == null) {
-          throw new IllegalArgumentException(
-              "To mutate a dynamic message, add a @DescriptorSource annotation specifying the fully qualified method name of a static method returning a Descriptor");
-        }
-        defaultInstance = getDefaultInstance(descriptorSource);
+      WithDefaultInstance withDefaultInstance = type.getAnnotation(WithDefaultInstance.class);
+      if (withDefaultInstance != null) {
+        defaultInstance = getDefaultInstance(withDefaultInstance);
+      } else if (builderClass == DynamicMessage.Builder.class) {
+        throw new IllegalArgumentException(
+            "To mutate a dynamic message, add a @WithDefaultInstance annotation specifying the"
+            + " fully qualified method name of a static method returning a default instance");
+      } else if (builderClass == Message.Builder.class) {
+        // Handled by a custom mutator factory for message fields that is created in
+        // withDescriptorDependentMutatorFactoryIfNeeded. Without @WithDefaultInstance,
+        // BuilderMutatorFactory only handles proper subclasses, which correspond to generated
+        // message types.
+        return Optional.empty();
       } else {
         defaultInstance =
             getDefaultInstance((Class<? extends Message>) builderClass.getEnclosingClass());

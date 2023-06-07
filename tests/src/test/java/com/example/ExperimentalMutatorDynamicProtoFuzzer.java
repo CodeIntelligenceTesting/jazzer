@@ -18,7 +18,7 @@ package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
-import com.code_intelligence.jazzer.mutation.annotation.proto.DescriptorSource;
+import com.code_intelligence.jazzer.mutation.annotation.proto.WithDefaultInstance;
 import com.google.protobuf.DescriptorProtos.DescriptorProto;
 import com.google.protobuf.DescriptorProtos.FieldDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FieldDescriptorProto.Type;
@@ -28,20 +28,20 @@ import com.google.protobuf.Descriptors.DescriptorValidationException;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DynamicMessage;
+import com.google.protobuf.Message;
 
 public class ExperimentalMutatorDynamicProtoFuzzer {
-  private static final Descriptor DESCRIPTOR = makeDescriptor();
-  private static final FieldDescriptor I32 = DESCRIPTOR.findFieldByName("i32");
-  private static final FieldDescriptor STR = DESCRIPTOR.findFieldByName("str");
-
-  public static void fuzzerTestOneInput(@NotNull @DescriptorSource(
-      "com.example.ExperimentalMutatorDynamicProtoFuzzer#DESCRIPTOR") DynamicMessage proto) {
+  public static void fuzzerTestOneInput(@NotNull @WithDefaultInstance(
+      "com.example.ExperimentalMutatorDynamicProtoFuzzer#getDefaultInstance") Message proto) {
+    FieldDescriptor I32 = proto.getDescriptorForType().findFieldByName("i32");
+    FieldDescriptor STR = proto.getDescriptorForType().findFieldByName("str");
     if (proto.getField(I32).equals(1234) && proto.getField(STR).equals("abcd")) {
       throw new FuzzerSecurityIssueMedium("Secret proto is found!");
     }
   }
 
-  private static Descriptor makeDescriptor() {
+  @SuppressWarnings("unused")
+  private static DynamicMessage getDefaultInstance() {
     DescriptorProto myMessage =
         DescriptorProto.newBuilder()
             .setName("my_message")
@@ -55,8 +55,8 @@ public class ExperimentalMutatorDynamicProtoFuzzer {
                                    .addMessageType(myMessage)
                                    .build();
     try {
-      return FileDescriptor.buildFrom(file, new FileDescriptor[0])
-          .findMessageTypeByName("my_message");
+      return DynamicMessage.getDefaultInstance(FileDescriptor.buildFrom(file, new FileDescriptor[0])
+                                                   .findMessageTypeByName("my_message"));
     } catch (DescriptorValidationException e) {
       throw new IllegalStateException(e);
     }

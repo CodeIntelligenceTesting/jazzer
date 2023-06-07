@@ -23,6 +23,7 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
         "//src/main/java/com/code_intelligence/jazzer/android:android_runtime",
         "//src/main/java/com/code_intelligence/jazzer/driver/junit:junit_runner",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:constants",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
     ],
 )
@@ -48,6 +49,7 @@ kt_jvm_library(
     deps = [
         ":opt",
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:constants",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
     ],
 )
@@ -60,6 +62,7 @@ java_library(
         ":fuzz_target_holder",
         ":opt",
         "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:constants",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
         "//src/main/java/com/code_intelligence/jazzer/utils:manifest_utils",
     ],
@@ -107,6 +110,7 @@ java_jni_library(
         "//src/main/java/com/code_intelligence/jazzer/autofuzz",
         "//src/main/java/com/code_intelligence/jazzer/instrumentor",
         "//src/main/java/com/code_intelligence/jazzer/mutation",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:constants",
         "//src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap_compile_only",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
         "//src/main/java/com/code_intelligence/jazzer/utils:manifest_utils",
@@ -144,10 +148,11 @@ java_library(
         "OptParser.java",
     ],
     visibility = [
-        "//src/main/java/com/code_intelligence/jazzer:__subpackages__",
+        "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/driver:__subpackages__",
         "//src/main/java/com/code_intelligence/jazzer/junit:__pkg__",
         "//src/test/java/com/code_intelligence/jazzer/android:__pkg__",
-        "//src/test/java/com/code_intelligence/jazzer/driver:__pkg__",
+        "//src/test/java/com/code_intelligence/jazzer/driver:__subpackages__",
     ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer:constants",

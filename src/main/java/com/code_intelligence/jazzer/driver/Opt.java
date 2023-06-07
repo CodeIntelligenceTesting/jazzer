@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.driver;
 import static com.code_intelligence.jazzer.Constants.JAZZER_VERSION;
 import static com.code_intelligence.jazzer.driver.OptParser.boolSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.ignoreSetting;
+import static com.code_intelligence.jazzer.driver.OptParser.lazyStringListSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.stringListSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.stringSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.uint64Setting;
@@ -32,6 +33,7 @@ import static java.util.stream.Stream.concat;
 import com.code_intelligence.jazzer.utils.Log;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -40,14 +42,14 @@ import java.util.stream.Stream;
  * <p>Each option corresponds to a command-line argument of the driver of the same name.
  *
  * <p>Every public field should be deeply immutable.
- *
- * <p>This class is loaded twice: As it is used in {@link FuzzTargetRunner}, it is loaded in the
- * class loader that loads {@link Driver}. It is also used in
- * {@link com.code_intelligence.jazzer.agent.Agent} after the agent JAR has been added to the
- * bootstrap classpath and thus is loaded again in the bootstrap loader. This is not a problem since
- * it only provides immutable fields and has no non-fatal side effects.
  */
 public final class Opt {
+  static {
+    if (Opt.class.getClassLoader() == null) {
+      throw new IllegalStateException("Opt should not be loaded in the bootstrap class loader");
+    }
+  }
+
   static {
     // We additionally list system properties supported by the Jazzer JUnit engine that do not
     // directly map to arguments. These are not shown in help texts.
@@ -85,10 +87,6 @@ public final class Opt {
       "Path to write a JaCoCo .exec file to when the fuzzer exits (if non-empty)");
   public static final String coverageReport = stringSetting("coverage_report", "",
       "Path to write a human-readable coverage report to when the fuzzer exits (if non-empty)");
-  public static final List<String> customHookIncludes = stringListSetting("custom_hook_includes",
-      "Glob patterns matching names of classes to instrument with hooks (custom and built-in)");
-  public static final List<String> customHookExcludes = stringListSetting("custom_hook_excludes",
-      "Glob patterns matching names of classes that should not be instrumented with hooks (custom and built-in)");
   public static final List<String> customHooks =
       stringListSetting("custom_hooks", "Names of classes to load custom hooks from");
   public static final List<String> disabledHooks = stringListSetting("disabled_hooks",
@@ -128,6 +126,18 @@ public final class Opt {
   public static final String targetMethod = stringSetting("target_method", "", null);
   public static final List<String> trace = stringListSetting("trace",
       "Types of instrumentation to apply: cmp, cov, div, gep (disabled by default), indir, native");
+
+  // When Jazzer is executed from the command line, these settings are potentially modified by
+  // JUnit's AgentConfigurator after the Driver has initialized Opt, which would result in stale
+  // values being read if the settings weren't evaluated lazily.
+  // TODO: Look into making all settings lazy, but verify that their value never changes after they
+  //  have been read once.
+  public static final Supplier<List<String>> customHookIncludes =
+      lazyStringListSetting("custom_hook_includes",
+          "Glob patterns matching names of classes to instrument with hooks (custom and built-in)");
+  public static final Supplier<List<String>> customHookExcludes = lazyStringListSetting(
+      "custom_hook_excludes",
+      "Glob patterns matching names of classes that should not be instrumented with hooks (custom and built-in)");
 
   // The values of this setting depends on autofuzz.
   public static final List<String> targetArgs = autofuzz.isEmpty()

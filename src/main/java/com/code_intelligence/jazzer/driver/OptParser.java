@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,18 +71,29 @@ final class OptParser {
   }
 
   static List<String> stringListSetting(String name, String description) {
-    return stringListSetting(name, File.pathSeparatorChar, description);
+    return lazyStringListSetting(name, description).get();
   }
 
   static List<String> stringListSetting(String name, char separator, String description) {
+    return lazyStringListSetting(name, separator, description).get();
+  }
+
+  static Supplier<List<String>> lazyStringListSetting(String name, String description) {
+    return lazyStringListSetting(name, File.pathSeparatorChar, description);
+  }
+
+  static Supplier<List<String>> lazyStringListSetting(
+      String name, char separator, String description) {
     knownArgs.put(name,
         OptDetails.create(
             name, String.format("list separated by '%c'", separator), "", description));
-    String value = System.getProperty(OPTIONS_PREFIX + name);
-    if (value == null || value.isEmpty()) {
-      return Collections.emptyList();
-    }
-    return splitOnUnescapedSeparator(value, separator);
+    return () -> {
+      String value = System.getProperty(OPTIONS_PREFIX + name);
+      if (value == null || value.isEmpty()) {
+        return Collections.emptyList();
+      }
+      return splitOnUnescapedSeparator(value, separator);
+    };
   }
 
   static boolean boolSetting(String name, boolean defaultValue, String description) {

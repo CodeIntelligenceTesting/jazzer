@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer;
 
+import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 import static java.lang.System.exit;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -93,7 +94,7 @@ public class Jazzer {
     }
     // No native fuzzing has been requested, fuzz in the current process.
     if (!fuzzNative) {
-      if (isAndroid()) {
+      if (IS_ANDROID) {
         final String initOptions = getAndroidRuntimeOptions();
         AndroidRuntime.initialize(initOptions);
       }
@@ -101,8 +102,10 @@ public class Jazzer {
       // In LibFuzzer's fork mode, the subprocesses created continuously by the main libFuzzer
       // process do not create further subprocesses. Creating a wrapper script for each subprocess
       // is an unnecessary overhead.
-      final boolean spawnsSubprocesses = args.stream().anyMatch(
-          arg -> arg.startsWith("-fork=") || arg.startsWith("-jobs=") || arg.startsWith("-merge="));
+      final boolean spawnsSubprocesses = args.stream().anyMatch(arg
+          -> (arg.startsWith("-fork=") && !arg.equals("-fork=0"))
+              || (arg.startsWith("-jobs=") && !arg.equals("-jobs=0"))
+              || (arg.startsWith("-merge=") && !arg.equals("-merge=0")));
       // argv0 is printed by libFuzzer during reproduction, so have it contain "jazzer".
       String arg0 = spawnsSubprocesses ? prepareArgv0(new HashMap<>()) : "jazzer";
       args = Stream.concat(Stream.of(arg0), args.stream()).collect(toList());
@@ -213,8 +216,8 @@ public class Jazzer {
     }
     char shellQuote = isPosixOrAndroid() ? '\'' : '"';
     String launcherTemplate;
-    if (isAndroid()) {
-      launcherTemplate = "#!/system/bin/env sh\n%s \n%s $@\n";
+    if (IS_ANDROID) {
+      launcherTemplate = "#!/system/bin/env sh\n%s $@\n";
     } else if (isPosix()) {
       launcherTemplate = "#!/usr/bin/env sh\n%s $@\n";
     } else {
@@ -243,7 +246,7 @@ public class Jazzer {
     // "jazzer".
     Path launcher;
     String launcherContent;
-    if (isAndroid()) {
+    if (IS_ANDROID) {
       String exportCommand = AndroidRuntime.getClassPathsCommand();
       launcherContent = String.format(launcherTemplate, exportCommand, invocation);
       launcher = Files.createTempFile(
@@ -260,7 +263,9 @@ public class Jazzer {
 
   private static Path javaBinary() {
     String javaBinaryName;
-    if (isPosix()) {
+    if (IS_ANDROID) {
+      javaBinaryName = "dalvikvm";
+    } else if (isPosix()) {
       javaBinaryName = "java";
     } else {
       javaBinaryName = "java.exe";
@@ -286,6 +291,10 @@ public class Jazzer {
         // Presumably, this issue is caused by codesigning and the exec helper missing the
         // entitlements required for library insertion.
         "-Djdk.attach.allowAttachSelf=true", Jazzer.class.getName());
+    if (IS_ANDROID) {
+      // ManagementFactory wont work with Android
+      return stream;
+    }
     return Stream.concat(ManagementFactory.getRuntimeMXBean().getInputArguments().stream(), stream);
   }
 
@@ -307,7 +316,7 @@ public class Jazzer {
   }
 
   private static Path findLibrary(List<String> candidateNames) {
-    if (!isAndroid()) {
+    if (!IS_ANDROID) {
       return findHostClangLibrary(candidateNames);
     }
 
@@ -394,7 +403,7 @@ public class Jazzer {
   }
 
   private static List<String> hwasanLibNames() {
-    if (!isAndroid()) {
+    if (!IS_ANDROID) {
       Log.error("HWAsan is only supported for Android. Please try --asan");
       exit(1);
     }
@@ -404,7 +413,7 @@ public class Jazzer {
 
   private static List<String> asanLibNames() {
     if (isLinux()) {
-      if (isAndroid()) {
+      if (IS_ANDROID) {
         Log.error("ASan is not supported for Android at this time. Use --hwasan for Address "
             + "Sanitization on Android");
         exit(1);
@@ -419,7 +428,7 @@ public class Jazzer {
 
   private static List<String> ubsanLibNames() {
     if (isLinux()) {
-      if (isAndroid()) {
+      if (IS_ANDROID) {
         // return asList("libclang_rt.ubsan_standalone-aarch64-android.so");
         Log.error("ERROR: UBSan is not supported for Android at this time.");
         exit(1);
@@ -444,11 +453,7 @@ public class Jazzer {
   }
 
   private static boolean isPosix() {
-    return !isAndroid() && FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
-  }
-
-  private static boolean isAndroid() {
-    return Boolean.parseBoolean(System.getProperty("jazzer.android", "false"));
+    return !IS_ANDROID && FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
   }
 
   private static String getAndroidRuntimeOptions() {
@@ -462,7 +467,10 @@ public class Jazzer {
   }
 
   private static boolean isPosixOrAndroid() {
-    return isPosix() || isAndroid();
+    if (isPosix()) {
+      return true;
+    }
+    return IS_ANDROID;
   }
 
   private static byte[] readAllBytes(InputStream in) throws IOException {
