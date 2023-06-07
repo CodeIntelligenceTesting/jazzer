@@ -138,7 +138,12 @@ public final class Opt {
   public static final Supplier<List<String>> customHookExcludes = lazyStringListSetting(
       "custom_hook_excludes",
       "Glob patterns matching names of classes that should not be instrumented with hooks (custom and built-in)");
-
+  public static final Supplier<List<String>> instrumentationIncludes =
+      lazyStringListSetting("instrumentation_includes",
+          "Glob patterns matching names of classes to instrument for fuzzing");
+  public static final Supplier<List<String>> instrumentationExcludes =
+      lazyStringListSetting("instrumentation_excludes",
+          "Glob patterns matching names of classes that should not be instrumented for fuzzing");
   // The values of this setting depends on autofuzz.
   public static final List<String> targetArgs = autofuzz.isEmpty()
       ? stringListSetting(
