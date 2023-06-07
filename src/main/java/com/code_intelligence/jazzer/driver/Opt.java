@@ -104,12 +104,6 @@ public final class Opt {
   public static final boolean hooks = boolSetting(
       "hooks", true, "Apply fuzzing instrumentation (use 'trace' for finer-grained control)");
   public static final String idSyncFile = stringSetting("id_sync_file", null, null);
-  public static final List<String> instrumentationIncludes =
-      stringListSetting("instrumentation_includes",
-          "Glob patterns matching names of classes to instrument for fuzzing");
-  public static final List<String> instrumentationExcludes =
-      stringListSetting("instrumentation_excludes",
-          "Glob patterns matching names of classes that should not be instrumented for fuzzing");
   public static final Set<Long> ignore =
       unmodifiableSet(stringListSetting("ignore", ',',
           "Hex strings representing deduplication tokens of findings that should be ignored")
