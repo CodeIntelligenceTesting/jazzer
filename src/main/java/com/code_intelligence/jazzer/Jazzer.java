@@ -235,7 +235,7 @@ public class Jazzer {
                      .collect(joining(" "));
     String command =
         Stream
-            .concat(Stream.of(isAndroid() ? "exec" : javaBinary().toString()), javaBinaryArgs())
+            .concat(Stream.of(IS_ANDROID ? "exec" : javaBinary().toString()), javaBinaryArgs())
             // Escape individual arguments for the shell.
             .map(str -> shellQuote + str + shellQuote)
             .collect(joining(" "));
@@ -263,9 +263,7 @@ public class Jazzer {
 
   private static Path javaBinary() {
     String javaBinaryName;
-    if (IS_ANDROID) {
-      javaBinaryName = "dalvikvm";
-    } else if (isPosix()) {
+    if (isPosix()) {
       javaBinaryName = "java";
     } else {
       javaBinaryName = "java.exe";
