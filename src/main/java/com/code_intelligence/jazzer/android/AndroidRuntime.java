@@ -14,7 +14,6 @@
 
 package com.code_intelligence.jazzer.android;
 
-import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.utils.Log;
 import com.github.fmeum.rules_jni.RulesJni;
 
@@ -29,13 +28,11 @@ public class AndroidRuntime {
       return;
     }
 
-    if (Opt.isAndroid) {
-      RulesJni.loadLibrary("jazzer_android_tooling", "/com/code_intelligence/jazzer/driver");
-      if (runtimeLibs.equals(DO_NOT_INITIALIZE)) {
-        Log.warn("Android Runtime (ART) is not being initialized for this fuzzer.");
-      } else {
-        registerNatives();
-      }
+    RulesJni.loadLibrary("jazzer_android_tooling", "/com/code_intelligence/jazzer/driver");
+    if (runtimeLibs.equals(DO_NOT_INITIALIZE)) {
+      Log.warn("Android Runtime (ART) is not being initialized for this fuzzer.");
+    } else {
+      registerNatives();
     }
   };
 
