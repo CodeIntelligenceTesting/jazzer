@@ -276,7 +276,7 @@ public class Jazzer {
 
   private static Stream<String> javaBinaryArgs() {
     Stream<String> stream;
-    if (isAndroid()) {
+    if (IS_ANDROID) {
       // ManagementFactory wont work with Android
       return Stream.of("app_process", "-Djdk.attach.allowAttachSelf=true", "/system/bin",
           Jazzer.class.getName());
