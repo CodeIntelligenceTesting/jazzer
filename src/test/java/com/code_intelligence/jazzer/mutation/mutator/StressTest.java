@@ -20,7 +20,6 @@ import static com.code_intelligence.jazzer.mutation.mutator.Mutators.validateAnn
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithZeros;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
-import static com.code_intelligence.jazzer.mutation.support.TestSupport.asMap;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -38,7 +37,7 @@ import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.annotation.proto.AnySource;
-import com.code_intelligence.jazzer.mutation.annotation.proto.DescriptorSource;
+import com.code_intelligence.jazzer.mutation.annotation.proto.WithDefaultInstance;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -94,12 +93,14 @@ public class StressTest {
   private static final int NUM_MUTATE_PER_INIT = 100;
   private static final double MANY_DISTINCT_ELEMENTS_RATIO = 0.5;
 
-  @SuppressWarnings("unused")
-  static final Descriptor TEST_PROTOBUF_DESCRIPTOR = TestProtobuf.getDescriptor();
-
   private enum TestEnumTwo { A, B }
 
   private enum TestEnumThree { A, B, C }
+
+  @SuppressWarnings("unused")
+  static Message getTestProtobufDefaultInstance() {
+    return TestProtobuf.getDefaultInstance();
+  }
 
   public static Stream<Arguments> stressTestCases() {
     return Stream.of(arguments(asAnnotatedType(boolean.class), "Boolean", exactly(false, true),
@@ -305,9 +306,9 @@ public class StressTest {
             "{Builder.Nullable<Boolean>, Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>, Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>, Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>, WithoutInit(Builder.Nullable<{Builder.Nullable<Integer>, Builder via List<Integer>, WithoutInit(Builder.Nullable<(cycle) -> Message>)} -> Message>), Builder via List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>, WithoutInit(Builder via List<(cycle) -> Message>), Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
             manyDistinctElements(), manyDistinctElements()),
         arguments(
-            new TypeHolder<@NotNull @DescriptorSource(
-                "com.code_intelligence.jazzer.mutation.mutator.StressTest#TEST_PROTOBUF_DESCRIPTOR")
-                DynamicMessage>() {
+            new TypeHolder<@NotNull @WithDefaultInstance(
+                "com.code_intelligence.jazzer.mutation.mutator.StressTest#getTestProtobufDefaultInstance")
+                Message>() {
             }.annotatedType(),
             "{Builder.Nullable<Boolean>, Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>, Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>, Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>, WithoutInit(Builder.Nullable<{Builder.Nullable<Integer>, Builder via List<Integer>, WithoutInit(Builder.Nullable<(cycle) -> Message>)} -> Message>), Builder via List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>, WithoutInit(Builder via List<(cycle) -> Message>), Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
             manyDistinctElements(), manyDistinctElements()),
