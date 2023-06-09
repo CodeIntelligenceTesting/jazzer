@@ -171,6 +171,40 @@ java_test(
 
 [
     java_test(
+        name = "CorpusDirectoryTest" + JAZZER_FUZZ,
+        srcs = ["CorpusDirectoryTest.java"],
+        args = [
+            # Add a test resource root containing the seed corpus directory in a Maven layout to
+            # the classpath rather than seeds in a resource directory packaged in a JAR, as
+            # would happen if we added the directory to java_test's resources.
+            "--main_advice_classpath=$(rootpath test_resources_root)",
+        ],
+        data = ["test_resources_root"],
+        env = {
+            "JAZZER_FUZZ": JAZZER_FUZZ,
+        },
+        test_class = "com.code_intelligence.jazzer.junit.CorpusDirectoryTest",
+        runtime_deps = [
+            "//examples/junit/src/test/java/com/example:ExampleFuzzTests_deploy.jar",
+            "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        ],
+        deps = [
+            "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+            "@maven//:com_google_truth_extensions_truth_java8_extension",
+            "@maven//:com_google_truth_truth",
+            "@maven//:junit_junit",
+            "@maven//:org_junit_platform_junit_platform_engine",
+            "@maven//:org_junit_platform_junit_platform_testkit",
+        ],
+    )
+    for JAZZER_FUZZ in [
+        "",
+        "_fuzzing",
+    ]
+]
+
+[
+    java_test(
         name = "AutofuzzTest" + JAZZER_FUZZ,
         srcs = ["AutofuzzTest.java"],
         env = {
