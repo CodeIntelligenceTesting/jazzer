@@ -22,19 +22,16 @@
 #include "com_code_intelligence_jazzer_android_AndroidRuntime.h"
 
 const char *RUNTIME_LIBRARY = "libandroid_runtime.so";
-const char *EMBEDDED_DIR =
-    "/data/fuzz/:/system/lib64/:/apex/com.android.i18n@1/lib64/";
 
 // Register native methods from the Android Runtime (ART) framework.
 [[maybe_unused]] jint
 Java_com_code_1intelligence_jazzer_android_AndroidRuntime_registerNatives(
     JNIEnv *env, jclass clazz) {
-  setenv("LD_LIBRARY_PATH", EMBEDDED_DIR, true);
   void *handle = nullptr;
   handle = dlopen(RUNTIME_LIBRARY, RTLD_LAZY);
 
   if (handle == nullptr) {
-    std::cerr << "ERROR: Unable to locate runtime libs. Check LD_LIBRARY_PATH."
+    std::cerr << "ERROR: Unable to locate runtime library. Check LD_LIBRARY_PATH."
               << std::endl;
     exit(1);
   }

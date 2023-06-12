@@ -22,6 +22,8 @@ import com.github.fmeum.rules_jni.RulesJni;
  */
 public class AndroidRuntime {
   private static final String DO_NOT_INITIALIZE = "use_none";
+  private static final String FUZZ_DIR = "/data/fuzz/";
+  private static final String PLATFORM_LIB_DIRS = ":/system/lib64/:/apex/com.android.i18n@1/lib64/";
 
   public static void initialize(String runtimeLibs) {
     if (runtimeLibs == null) {
@@ -43,6 +45,22 @@ public class AndroidRuntime {
    */
   public static String getClassPathsCommand() {
     return "export CLASSPATH=" + System.getProperty("java.class.path");
+  }
+
+  /**
+   * Builds and returns the value to set for LD_LIBRARY_PATH.
+   * This value is consumed when launching jazzer on the device
+   * and specifies which directories to search for dependencies.
+   *
+   * @return The string for LD_LIBRARY_PATH.
+   */
+  public static String getLdLibraryPath() {
+    String initOptString = System.getProperty("jazzer.android_init_options");
+    if (initOptString.equals(DO_NOT_INITIALIZE) || initOptString.equals("")) {
+      return FUZZ_DIR;
+    }
+
+    return FUZZ_DIR + PLATFORM_LIB_DIRS;
   }
 
   private static native int registerNatives();

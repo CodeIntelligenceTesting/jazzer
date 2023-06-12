@@ -217,7 +217,7 @@ public class Jazzer {
     char shellQuote = isPosixOrAndroid() ? '\'' : '"';
     String launcherTemplate;
     if (IS_ANDROID) {
-      launcherTemplate = "#!/system/bin/env sh\n%s $@\n";
+      launcherTemplate = "#!/system/bin/env sh\n%s LD_LIBRARY_PATH=%s \n%s $@\n";
     } else if (isPosix()) {
       launcherTemplate = "#!/usr/bin/env sh\n%s $@\n";
     } else {
@@ -248,7 +248,8 @@ public class Jazzer {
     String launcherContent;
     if (IS_ANDROID) {
       String exportCommand = AndroidRuntime.getClassPathsCommand();
-      launcherContent = String.format(launcherTemplate, exportCommand, invocation);
+      String ldLibraryPath = AndroidRuntime.getLdLibraryPath();
+      launcherContent = String.format(launcherTemplate, exportCommand, ldLibraryPath, invocation);
       launcher = Files.createTempFile(
           Paths.get("/data/local/tmp/"), "jazzer-", launcherExtension, launcherScriptAttributes);
     } else {
@@ -455,7 +456,7 @@ public class Jazzer {
   }
 
   private static String getAndroidRuntimeOptions() {
-    List<String> validInitOptions = Arrays.asList("use_platform_libs", "use_none");
+    List<String> validInitOptions = Arrays.asList("use_platform_libs", "use_none", "");
     String initOptString = System.getProperty("jazzer.android_init_options");
     if (!validInitOptions.contains(initOptString)) {
       Log.error("Invalid android_init_options set for Android Runtime.");
