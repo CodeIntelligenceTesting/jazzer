@@ -181,7 +181,10 @@ class RuntimeInstrumentor(
             .acceptClasses(className)
             .scan()
             .use {
-                it.getClassInfo(className).resource.load()
+                it.getClassInfo(className)?.resource?.load() ?: run {
+                    Log.warn("Failed to load bytecode of class $className")
+                    return null
+                }
             }
         val (instrumentedBytecode, duration) = measureTimedValue {
             try {
