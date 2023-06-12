@@ -143,7 +143,7 @@ class RuntimeInstrumentor(
                 }
                 instrumentation.redefineModule(
                     module,
-                    /* extraReads */ setOf(RuntimeInstrumentor::class.java.module),
+                    setOf(RuntimeInstrumentor::class.java.module), // extraReads
                     emptyMap(),
                     emptyMap(),
                     emptySet(),

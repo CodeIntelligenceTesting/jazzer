@@ -12,10 +12,10 @@ jazzer_init()
 http_archive(
     name = "com_google_protobuf",
     patches = ["//third_party:protobuf-disable-layering_check.patch"],
-    sha256 = "930c2c3b5ecc6c9c12615cf5ad93f1cd6e12d0aba862b572e076259970ac3a53",
-    strip_prefix = "protobuf-3.21.12",
+    sha256 = "ddf8c9c1ffccb7e80afd183b3bd32b3b62f7cc54b106be190bf49f2bc09daab5",
+    strip_prefix = "protobuf-23.2",
     # Keep in sync with com_google_protobuf_protobuf_java in repositories.bzl.
-    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.21.12.tar.gz"],
+    urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v23.2/protobuf-23.2.tar.gz"],
 )
 
 http_archive(
@@ -110,15 +110,15 @@ http_file(
 http_file(
     name = "jacocoagent",
     downloaded_file_path = "jacocoagent.jar",
-    sha256 = "67de51e9ca1db044f3a3d10613518befb02e8eee1015f2ff6d56cfb9d4506546",
-    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/0.8.8/org.jacoco.agent-0.8.8-runtime.jar"],
+    sha256 = "191734a0b7ef97606e6a09ae584c4acab47eb30fcb4c555d3d440d4e0d71d73d",
+    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/0.8.9/org.jacoco.agent-0.8.9-runtime.jar"],
 )
 
 http_file(
     name = "jacococli",
     downloaded_file_path = "jacococli.jar",
-    sha256 = "c449591174982bbc003d1290003fcbc7b939215436922d2f0f25239d110d531a",
-    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.cli/0.8.8/org.jacoco.cli-0.8.8-nodeps.jar"],
+    sha256 = "29c7754338512599f742ebfedd095c9c93800fefbce407500eceb16f0ed5a20d",
+    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.cli/0.8.9/org.jacoco.cli-0.8.9-nodeps.jar"],
 )
 
 load("@contrib_rules_jvm//:repositories.bzl", "contrib_rules_jvm_deps")
@@ -287,9 +287,9 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 """,
-    sha256 = "fd299fd72c5cf664259d9bd43a72cb74dc6a8b9604d107fe2d2e90885aeb7c16",
-    strip_prefix = "libprotobuf-mutator-1.1",
-    urls = ["https://github.com/google/libprotobuf-mutator/archive/refs/tags/v1.1.tar.gz"],
+    sha256 = "21bfdfef25554fa2e30aec2a9f9b58f4a17c1d8c8593763fa94a6dd74b226594",
+    strip_prefix = "libprotobuf-mutator-3b28530531b154a748fe9884bc9219b4966f0754",
+    urls = ["https://github.com/google/libprotobuf-mutator/archive/3b28530531b154a748fe9884bc9219b4966f0754.tar.gz"],
 )
 
 http_file(
