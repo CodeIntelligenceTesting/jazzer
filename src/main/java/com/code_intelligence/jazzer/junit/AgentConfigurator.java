@@ -65,7 +65,7 @@ class AgentConfigurator {
     // Do not hook common IDE and JUnit classes and their dependencies.
     System.setProperty("jazzer.custom_hook_excludes",
         String.join(File.pathSeparator, "com.google.testing.junit.**", "com.intellij.**",
-            "io.github.classgraph.**", "junit.framework.**", "net.bytebuddy.**",
+            "org.jetbrains.**", "io.github.classgraph.**", "junit.framework.**", "net.bytebuddy.**",
             "org.apiguardian.**", "org.assertj.core.**", "org.hamcrest.**", "org.junit.**",
             "org.opentest4j.**", "org.mockito.**", "org.apache.maven.**", "org.gradle.**"));
   }
