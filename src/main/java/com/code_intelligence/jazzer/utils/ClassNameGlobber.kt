@@ -48,6 +48,7 @@ private val BASE_EXCLUDED_CLASS_NAME_GLOBS = listOf(
     "org.junit.**", // dependency of @FuzzTest
     "org.mockito.**", // can cause instrumentation cycles
     "net.bytebuddy.**", // ignore Byte Buddy, though it's probably shaded
+    "org.jetbrains.**", // ignore JetBrains products (coverage agent)
 ) + if (IS_BAZEL_COVERAGE_RUN) ADDITIONAL_EXCLUDED_NAME_GLOBS_FOR_BAZEL_COVERAGE else listOf()
 
 class ClassNameGlobber(includes: List<String>, excludes: List<String>) {
