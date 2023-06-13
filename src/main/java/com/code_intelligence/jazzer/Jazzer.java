@@ -302,14 +302,10 @@ public class Jazzer {
       }
 
       // ManagementFactory wont work with Android
-      Stream<String> stream =
-          Stream.of("app_process", "-Djdk.attach.allowAttachSelf=true",
-              "-Xplugin:libopenjdkjvmti.so",
-              "-agentpath:" + agentPath.toString() + "=" + nativeAgentOptions,
-              "-Xcompiler-option",
-              "--debuggable",
-              "/system/bin",
-              Jazzer.class.getName());
+      Stream<String> stream = Stream.of("app_process", "-Djdk.attach.allowAttachSelf=true",
+          "-Xplugin:libopenjdkjvmti.so",
+          "-agentpath:" + agentPath.toString() + "=" + nativeAgentOptions, "-Xcompiler-option",
+          "--debuggable", "/system/bin", Jazzer.class.getName());
 
       return stream;
     }

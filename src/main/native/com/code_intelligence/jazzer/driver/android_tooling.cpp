@@ -31,8 +31,9 @@ Java_com_code_1intelligence_jazzer_android_AndroidRuntime_registerNatives(
   handle = dlopen(RUNTIME_LIBRARY, RTLD_LAZY);
 
   if (handle == nullptr) {
-    std::cerr << "ERROR: Unable to locate runtime library. Check LD_LIBRARY_PATH."
-              << std::endl;
+    std::cerr
+        << "ERROR: Unable to locate runtime library. Check LD_LIBRARY_PATH."
+        << std::endl;
     exit(1);
   }
   // reset errors
