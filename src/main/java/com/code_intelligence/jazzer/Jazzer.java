@@ -24,6 +24,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import com.code_intelligence.jazzer.android.AndroidRuntime;
 import com.code_intelligence.jazzer.driver.Driver;
 import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.ZipUtils;
@@ -94,6 +95,10 @@ public class Jazzer {
     }
     // No native fuzzing has been requested, fuzz in the current process.
     if (!fuzzNative) {
+      if (IS_ANDROID) {
+        final String initOptions = getAndroidRuntimeOptions();
+        AndroidRuntime.initialize(initOptions);
+      }
       // We only create a wrapper script if libFuzzer runs in a mode that creates subprocesses.
       // In LibFuzzer's fork mode, the subprocesses created continuously by the main libFuzzer
       // process do not create further subprocesses. Creating a wrapper script for each subprocess
@@ -213,7 +218,7 @@ public class Jazzer {
     char shellQuote = isPosixOrAndroid() ? '\'' : '"';
     String launcherTemplate;
     if (IS_ANDROID) {
-      launcherTemplate = "#!/system/bin/env sh\n%s $@\n";
+      launcherTemplate = "#!/system/bin/env sh\n%s LD_LIBRARY_PATH=%s \n%s $@\n";
     } else if (isPosix()) {
       launcherTemplate = "#!/usr/bin/env sh\n%s $@\n";
     } else {
@@ -229,22 +234,27 @@ public class Jazzer {
                      .stream()
                      .map(e -> e.getKey() + "='" + e.getValue() + "'")
                      .collect(joining(" "));
-    String command = Stream
-                         .concat(Stream.of(javaBinary().toString()), javaBinaryArgs())
-                         // Escape individual arguments for the shell.
-                         .map(str -> shellQuote + str + shellQuote)
-                         .collect(joining(" "));
+    String command =
+        Stream
+            .concat(Stream.of(IS_ANDROID ? "exec" : javaBinary().toString()), javaBinaryArgs())
+            // Escape individual arguments for the shell.
+            .map(str -> shellQuote + str + shellQuote)
+            .collect(joining(" "));
 
     String invocation = env.isEmpty() ? command : env + " " + command;
-    String launcherContent = String.format(launcherTemplate, invocation);
 
     // argv0 is printed by libFuzzer during reproduction, so have the launcher basename contain
     // "jazzer".
     Path launcher;
+    String launcherContent;
     if (IS_ANDROID) {
+      String exportCommand = AndroidRuntime.getClassPathsCommand();
+      String ldLibraryPath = AndroidRuntime.getLdLibraryPath();
+      launcherContent = String.format(launcherTemplate, exportCommand, ldLibraryPath, invocation);
       launcher = Files.createTempFile(
           Paths.get("/data/local/tmp/"), "jazzer-", launcherExtension, launcherScriptAttributes);
     } else {
+      launcherContent = String.format(launcherTemplate, invocation);
       launcher = Files.createTempFile("jazzer-", launcherExtension, launcherScriptAttributes);
     }
 
@@ -255,9 +265,7 @@ public class Jazzer {
 
   private static Path javaBinary() {
     String javaBinaryName;
-    if (IS_ANDROID) {
-      javaBinaryName = "dalvikvm";
-    } else if (isPosix()) {
+    if (isPosix()) {
       javaBinaryName = "java";
     } else {
       javaBinaryName = "java.exe";
@@ -294,10 +302,10 @@ public class Jazzer {
       }
 
       // ManagementFactory wont work with Android
-      Stream<String> stream =
-          Stream.of("-cp", System.getProperty("java.class.path"), "-Xplugin:libopenjdkjvmti.so",
-              "-agentpath:" + agentPath.toString() + "=" + nativeAgentOptions, "-Xcompiler-option",
-              "--debuggable", "-Djdk.attach.allowAttachSelf=true", Jazzer.class.getName());
+      Stream<String> stream = Stream.of("app_process", "-Djdk.attach.allowAttachSelf=true",
+          "-Xplugin:libopenjdkjvmti.so",
+          "-agentpath:" + agentPath.toString() + "=" + nativeAgentOptions, "-Xcompiler-option",
+          "--debuggable", "/system/bin", Jazzer.class.getName());
 
       return stream;
     }
@@ -472,6 +480,16 @@ public class Jazzer {
 
   private static boolean isPosix() {
     return !IS_ANDROID && FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+  }
+
+  private static String getAndroidRuntimeOptions() {
+    List<String> validInitOptions = Arrays.asList("use_platform_libs", "use_none", "");
+    String initOptString = System.getProperty("jazzer.android_init_options");
+    if (!validInitOptions.contains(initOptString)) {
+      Log.error("Invalid android_init_options set for Android Runtime.");
+      exit(1);
+    }
+    return initOptString;
   }
 
   private static boolean isPosixOrAndroid() {

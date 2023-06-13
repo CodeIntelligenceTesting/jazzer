@@ -33,6 +33,17 @@ cc_library(
     ],
 )
 
+cc_jni_library(
+    name = "jazzer_android_tooling",
+    srcs = ["android_tooling.cpp"],
+    platforms = MULTI_PLATFORM,
+    target_compatible_with = SKIP_ON_WINDOWS,
+    visibility = ["//src/main/java/com/code_intelligence/jazzer/android:__pkg__"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/android:android_runtime.hdrs",
+    ],
+)
+
 cc_library(
     name = "coverage_tracker",
     srcs = ["coverage_tracker.cpp"],

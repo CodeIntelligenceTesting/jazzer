@@ -21,6 +21,7 @@ java_library(
         ":offline_instrumentor",
         ":opt",
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
+        "//src/main/java/com/code_intelligence/jazzer/android:android_runtime",
         "//src/main/java/com/code_intelligence/jazzer/driver/junit:junit_runner",
         "//src/main/java/com/code_intelligence/jazzer/runtime:constants",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
