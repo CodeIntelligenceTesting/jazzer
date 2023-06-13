@@ -1,5 +1,57 @@
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+
+java_import(
+    name = "jazzer_bootstrap_android_import",
+    jars = [
+        "//src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap",
+    ],
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+)
+
+android_library(
+    name = "jazzer_bootstrap_android_lib",
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+    ],
+    exports = [
+        ":jazzer_bootstrap_android_import",
+    ],
+)
+
+android_binary(
+    name = "jazzer_bootstrap_android_bin",
+    manifest = "//launcher/android:android_manifest",
+    min_sdk_version = 26,
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    deps = [
+        ":jazzer_bootstrap_android_lib",
+    ],
+)
+
+copy_file(
+    name = "jazzer_bootstrap_android",
+    src = "jazzer_bootstrap_android_bin.apk",
+    out = "jazzer_bootstrap_android.jar",
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+    ],
+)
+
+java_jni_library(
+    name = "dex_file_manager",
+    srcs = ["DexFileManager.java"],
+    native_libs = [
+        "//src/main/native/com/code_intelligence/jazzer/android:android_native_agent",
+    ],
+)
 
 android_library(
     name = "jazzer_standalone_library",
@@ -7,10 +59,7 @@ android_library(
     target_compatible_with = SKIP_ON_WINDOWS,
     exports = [
         "//deploy:jazzer-api",
-        "//sanitizers:offline_only_sanitizers",
         "//src/main/java/com/code_intelligence/jazzer:jazzer_import",
-        "//src/main/java/com/code_intelligence/jazzer/runtime",
-        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
 )
 
@@ -25,6 +74,7 @@ android_binary(
         "//launcher/android:__pkg__",
     ],
     deps = [
+        ":dex_file_manager",
         ":jazzer_standalone_library",
     ],
 )

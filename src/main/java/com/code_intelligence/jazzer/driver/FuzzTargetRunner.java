@@ -368,6 +368,13 @@ public final class FuzzTargetRunner {
       // https://github.com/llvm/llvm-project/blob/da3623de2411dd931913eb510e94fe846c929c24/compiler-rt/lib/fuzzer/FuzzerFlags.def#L19
       args.add("-len_control=100");
     }
+
+    for (String arg : args.subList(1, args.size())) {
+      if (!arg.startsWith("-")) {
+        Log.info("using inputs from: " + arg);
+      }
+    }
+
     if (!IS_ANDROID) {
       SignalHandler.initialize();
     }

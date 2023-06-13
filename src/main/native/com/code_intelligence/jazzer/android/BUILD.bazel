@@ -1,0 +1,47 @@
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+
+copy_file(
+    name = "jvmti_h_encoded",
+    src = "@android_jvmti//file",
+    out = "jvmti.encoded",
+    is_executable = False,
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+)
+
+genrule(
+    name = "jvmti_h",
+    srcs = [
+        "jvmti.encoded",
+    ],
+    outs = ["jvmti.h"],
+    cmd = "base64 --decode $< > $(OUTS)",
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+)
+
+cc_jni_library(
+    name = "android_native_agent",
+    srcs = [
+        "dex_file_manager.cpp",
+        "dex_file_manager.h",
+        "jazzer_jvmti_allocator.h",
+        "native_agent.cpp",
+        ":jvmti_h",
+    ],
+    includes = [
+        ".",
+    ],
+    linkopts = [
+        "-lz",
+    ],
+    tags = ["manual"],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_google_absl//absl/strings",
+        "@jazzer_slicer",
+    ],
+)

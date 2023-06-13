@@ -99,6 +99,15 @@ final public class TraceCmpHooks {
     }
   }
 
+  @MethodHook(type = HookType.AFTER, targetClassName = "clojure.lang.Util", targetMethod = "equiv")
+  public static void genericStaticEquals(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean areEqual) {
+    if (!areEqual && arguments.length == 2 && arguments[0] != null && arguments[1] != null
+        && arguments[1].getClass() == arguments[0].getClass()) {
+      TraceDataFlowNativeCallbacks.traceGenericCmp(arguments[0], arguments[1], hookId);
+    }
+  }
+
   @MethodHook(
       type = HookType.AFTER, targetClassName = "java.lang.String", targetMethod = "compareTo")
   @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.String",

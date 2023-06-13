@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
@@ -94,7 +95,17 @@ class FuzzTestExecutor {
     ArrayList<String> libFuzzerArgs = new ArrayList<>();
     libFuzzerArgs.add(argv0);
 
-    // Store the generated corpus in a per-class directory under the project root, just like cifuzz:
+    // Add passed in corpus directories (and files) at the beginning of the arguments list.
+    // libFuzzer uses the first directory to store discovered inputs, whereas all others are
+    // only used to provide additional seeds and aren't written into.
+    List<String> corpusDirs = originalLibFuzzerArgs.stream()
+                                  .filter(arg -> !arg.startsWith("-"))
+                                  .collect(Collectors.toList());
+    originalLibFuzzerArgs.removeAll(corpusDirs);
+    libFuzzerArgs.addAll(corpusDirs);
+
+    // Use the specified corpus dir, if given, otherwise store the generated corpus in a per-class
+    // directory under the project root, just like cifuzz:
     // https://github.com/CodeIntelligenceTesting/cifuzz/blob/bf410dcfbafbae2a73cf6c5fbed031cdfe234f2f/internal/cmd/run/run.go#L381
     // The path is specified relative to the current working directory, which with JUnit is the
     // project directory.

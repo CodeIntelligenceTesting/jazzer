@@ -1,13 +1,249 @@
-diff --git BUILD.bazel BUILD.bazel
-index 0f6e41e3a..2cf73afe8 100644
---- BUILD.bazel
-+++ BUILD.bazel
-@@ -16,6 +16,8 @@ load(
-     "py_proto_library",
- )
+commit 0cb6965869ab94858d9b843ab5d94f7deaea5dc8
+Author: Fabian Meumertzheim <fabian@meumertzhe.im>
+Date:   Mon Jun 12 16:12:02 2023 +0200
+
+    Disable layering_check
+    
+    protobuf misses a sizeable number of dependency declarations, which
+    means that `layering_check` has to be disabled for it.
+    
+    Generated with:
+    ```
+    buildozer 'add features -layering_check' //src/...:__pkg__
+    ```
+    
+    Contains only the changes to `package` directives.
+
+diff --git src/BUILD.bazel src/BUILD.bazel
+index 0de1a4eb1..b7e405147 100644
+--- src/BUILD.bazel
++++ src/BUILD.bazel
+@@ -7,6 +7,8 @@ load("@rules_pkg//:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix")
+ load("@upb//cmake:build_defs.bzl", "staleness_test")
+ load("//conformance:defs.bzl", "conformance_test")
  
 +package(features = ["-layering_check"])
 +
+ pkg_files(
+     name = "dist_files",
+     srcs = glob(["**"]),
+diff --git src/google/protobuf/BUILD.bazel src/google/protobuf/BUILD.bazel
+index 77ed2309f..8c38fb872 100644
+--- src/google/protobuf/BUILD.bazel
++++ src/google/protobuf/BUILD.bazel
+@@ -13,6 +13,7 @@ package(
+         "//:__pkg__",  # "public" targets are alias rules in //.
+         "//json:__subpackages__",
+     ],
++    features = ["-layering_check"],
+ )
+ 
+ proto_library(
+diff --git src/google/protobuf/compiler/BUILD.bazel src/google/protobuf/compiler/BUILD.bazel
+index a2171c806..8dcd34667 100644
+--- src/google/protobuf/compiler/BUILD.bazel
++++ src/google/protobuf/compiler/BUILD.bazel
+@@ -13,6 +13,8 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
+ load("//build_defs:arch_tests.bzl", "aarch64_test", "x86_64_test")
+ load("//build_defs:cpp_opts.bzl", "COPTS", "LINK_OPTS")
+ 
++package(features = ["-layering_check"])
++
+ proto_library(
+     name = "plugin_proto",
+     srcs = ["plugin.proto"],
+diff --git src/google/protobuf/compiler/allowlists/BUILD.bazel src/google/protobuf/compiler/allowlists/BUILD.bazel
+index 569a142fc..0a90b312f 100644
+--- src/google/protobuf/compiler/allowlists/BUILD.bazel
++++ src/google/protobuf/compiler/allowlists/BUILD.bazel
+@@ -1,7 +1,10 @@
+ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
+-package(default_visibility = ["//visibility:private"])
++package(
++    default_visibility = ["//visibility:private"],
++    features = ["-layering_check"],
++)
+ 
+ cc_library(
+     name = "allowlist",
+diff --git src/google/protobuf/compiler/cpp/BUILD.bazel src/google/protobuf/compiler/cpp/BUILD.bazel
+index ac1184d32..deacbf582 100644
+--- src/google/protobuf/compiler/cpp/BUILD.bazel
++++ src/google/protobuf/compiler/cpp/BUILD.bazel
+@@ -7,6 +7,8 @@ load("@rules_pkg//:mappings.bzl", "pkg_files", "strip_prefix")
+ load("@rules_proto//proto:defs.bzl", "proto_library")
+ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
++package(features = ["-layering_check"])
++
+ cc_library(
+     name = "names",
+     hdrs = ["names.h"],
+diff --git src/google/protobuf/compiler/csharp/BUILD.bazel src/google/protobuf/compiler/csharp/BUILD.bazel
+index 96b8dcbc0..a2d549f26 100644
+--- src/google/protobuf/compiler/csharp/BUILD.bazel
++++ src/google/protobuf/compiler/csharp/BUILD.bazel
+@@ -6,6 +6,8 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+ load("@rules_pkg//:mappings.bzl", "pkg_files", "strip_prefix")
+ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
++package(features = ["-layering_check"])
++
+ cc_library(
+     name = "names",
+     hdrs = ["names.h"],
+diff --git src/google/protobuf/compiler/java/BUILD.bazel src/google/protobuf/compiler/java/BUILD.bazel
+index 94573892c..c94f472d6 100644
+--- src/google/protobuf/compiler/java/BUILD.bazel
++++ src/google/protobuf/compiler/java/BUILD.bazel
+@@ -6,6 +6,8 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+ load("@rules_pkg//:mappings.bzl", "pkg_files", "strip_prefix")
+ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
++package(features = ["-layering_check"])
++
+ cc_library(
+     name = "names",
+     hdrs = ["names.h"],
+diff --git src/google/protobuf/compiler/objectivec/BUILD.bazel src/google/protobuf/compiler/objectivec/BUILD.bazel
+index f78990394..6c534219a 100644
+--- src/google/protobuf/compiler/objectivec/BUILD.bazel
++++ src/google/protobuf/compiler/objectivec/BUILD.bazel
+@@ -6,6 +6,8 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+ load("@rules_pkg//:mappings.bzl", "pkg_files", "strip_prefix")
+ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
++package(features = ["-layering_check"])
++
+ cc_library(
+     name = "names",
+     hdrs = ["names.h"],
+diff --git src/google/protobuf/compiler/php/BUILD.bazel src/google/protobuf/compiler/php/BUILD.bazel
+index fe9e75c2c..a569a1c9d 100644
+--- src/google/protobuf/compiler/php/BUILD.bazel
++++ src/google/protobuf/compiler/php/BUILD.bazel
+@@ -6,6 +6,8 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
+ load("@rules_pkg//:mappings.bzl", "pkg_files", "strip_prefix")
+ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
++package(features = ["-layering_check"])
++
+ cc_library(
+     name = "names",
+     hdrs = ["names.h"],
+diff --git src/google/protobuf/compiler/python/BUILD.bazel src/google/protobuf/compiler/python/BUILD.bazel
+index 5d26e0ce9..ce017acf1 100644
+--- src/google/protobuf/compiler/python/BUILD.bazel
++++ src/google/protobuf/compiler/python/BUILD.bazel
+@@ -6,6 +6,8 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+ load("@rules_pkg//:mappings.bzl", "pkg_files", "strip_prefix")
+ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
++package(features = ["-layering_check"])
++
+ cc_library(
+     name = "python",
+     srcs = [
+diff --git src/google/protobuf/compiler/ruby/BUILD.bazel src/google/protobuf/compiler/ruby/BUILD.bazel
+index 520b69194..1e437e7bc 100644
+--- src/google/protobuf/compiler/ruby/BUILD.bazel
++++ src/google/protobuf/compiler/ruby/BUILD.bazel
+@@ -6,6 +6,8 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+ load("@rules_pkg//:mappings.bzl", "pkg_files", "strip_prefix")
+ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
++package(features = ["-layering_check"])
++
+ cc_library(
+     name = "ruby",
+     srcs = ["ruby_generator.cc"],
+diff --git src/google/protobuf/compiler/rust/BUILD.bazel src/google/protobuf/compiler/rust/BUILD.bazel
+index 7c1f5b856..4a10038d1 100644
+--- src/google/protobuf/compiler/rust/BUILD.bazel
++++ src/google/protobuf/compiler/rust/BUILD.bazel
+@@ -5,6 +5,8 @@
+ load("@rules_cc//cc:defs.bzl", "cc_library")
+ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
++package(features = ["-layering_check"])
++
+ cc_library(
+     name = "rust",
+     srcs = ["generator.cc"],
+diff --git src/google/protobuf/io/BUILD.bazel src/google/protobuf/io/BUILD.bazel
+index 8f39625c2..fc2f8e002 100644
+--- src/google/protobuf/io/BUILD.bazel
++++ src/google/protobuf/io/BUILD.bazel
+@@ -6,6 +6,7 @@ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
+ package(
+     default_visibility = ["//visibility:public"],
++    features = ["-layering_check"],
+ )
+ 
+ cc_library(
+diff --git src/google/protobuf/json/BUILD.bazel src/google/protobuf/json/BUILD.bazel
+index d6019f939..83caca985 100644
+--- src/google/protobuf/json/BUILD.bazel
++++ src/google/protobuf/json/BUILD.bazel
+@@ -1,10 +1,13 @@
+ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
+-package(default_visibility = [
+-    "//pkg:__pkg__",
+-    "//src/google/protobuf/json:__pkg__",
+-])
++package(
++    default_visibility = [
++        "//pkg:__pkg__",
++        "//src/google/protobuf/json:__pkg__",
++    ],
++    features = ["-layering_check"],
++)
+ 
  licenses(["notice"])
  
- exports_files(["LICENSE"])
+diff --git src/google/protobuf/stubs/BUILD.bazel src/google/protobuf/stubs/BUILD.bazel
+index c8fc3e9d0..9521f5103 100644
+--- src/google/protobuf/stubs/BUILD.bazel
++++ src/google/protobuf/stubs/BUILD.bazel
+@@ -7,6 +7,7 @@ load("//build_defs:cpp_opts.bzl", "COPTS", "LINK_OPTS")
+ 
+ package(
+     default_visibility = ["//:__subpackages__"],
++    features = ["-layering_check"],
+ )
+ 
+ cc_library(
+diff --git src/google/protobuf/testing/BUILD.bazel src/google/protobuf/testing/BUILD.bazel
+index 572c1f9f4..d10435cce 100644
+--- src/google/protobuf/testing/BUILD.bazel
++++ src/google/protobuf/testing/BUILD.bazel
+@@ -5,7 +5,10 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
+ load("@rules_pkg//:mappings.bzl", "pkg_files", "strip_prefix")
+ load("//build_defs:cpp_opts.bzl", "COPTS", "LINK_OPTS")
+ 
+-package(default_visibility = ["//:__subpackages__"])
++package(
++    default_visibility = ["//:__subpackages__"],
++    features = ["-layering_check"],
++)
+ 
+ cc_library(
+     name = "testing",
+diff --git src/google/protobuf/util/BUILD.bazel src/google/protobuf/util/BUILD.bazel
+index 3afe464cf..03a3045b3 100644
+--- src/google/protobuf/util/BUILD.bazel
++++ src/google/protobuf/util/BUILD.bazel
+@@ -7,6 +7,8 @@ load("@rules_pkg//:mappings.bzl", "pkg_files", "strip_prefix")
+ load("@rules_proto//proto:defs.bzl", "proto_library")
+ load("//build_defs:cpp_opts.bzl", "COPTS")
+ 
++package(features = ["-layering_check"])
++
+ cc_library(
+     name = "delimited_message_util",
+     srcs = ["delimited_message_util.cc"],

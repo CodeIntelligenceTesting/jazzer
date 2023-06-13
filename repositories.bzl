@@ -16,8 +16,9 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_jar")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
-def jazzer_dependencies():
+def jazzer_dependencies(android = False):
     maybe(
         http_archive,
         name = "platforms",
@@ -41,8 +42,8 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "io_bazel_rules_kotlin",
-        sha256 = "fd92a98bd8a8f0e1cdcb490b93f5acef1f1727ed992571232d33de42395ca9b3",
-        url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.7.1/rules_kotlin_release.tgz",
+        sha256 = "01293740a16e474669aba5b5a1fe3d368de5832442f164e4fbfc566815a8bc3a",
+        url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.8/rules_kotlin_release.tgz",
     )
 
     maybe(
@@ -56,17 +57,17 @@ def jazzer_dependencies():
     maybe(
         http_archive,
         name = "build_bazel_apple_support",
-        sha256 = "effa003b7bdb7c72b32f00092fe6deb7acf54c682c18ee1fd6bbbe9f8cf8c08b",
-        strip_prefix = "apple_support-40306d1599fdb7924c4bbd63a0cdb766f120ec69",
-        url = "https://github.com/bazelbuild/apple_support/archive/40306d1599fdb7924c4bbd63a0cdb766f120ec69.tar.gz",
+        sha256 = "ce80afe548fd71ef27b48cb48a283ca21256a0900caec3c7ed9416241e000bfe",
+        strip_prefix = "apple_support-dab92884a6f031e63ac263e5de8a02f13ac42508",
+        url = "https://github.com/bazelbuild/apple_support/archive/dab92884a6f031e63ac263e5de8a02f13ac42508.tar.gz",
     )
 
     maybe(
         http_archive,
         name = "com_google_absl",
-        sha256 = "4208129b49006089ba1d6710845a45e31c59b0ab6bff9e5788a87f55c5abd602",
-        strip_prefix = "abseil-cpp-20220623.0",
-        url = "https://github.com/abseil/abseil-cpp/archive/refs/tags/20220623.0.tar.gz",
+        sha256 = "5366d7e7fa7ba0d915014d387b66d0d002c03236448e1ba9ef98122c13b35c36",
+        strip_prefix = "abseil-cpp-20230125.3",
+        url = "https://github.com/abseil/abseil-cpp/archive/refs/tags/20230125.3.tar.gz",
     )
 
     maybe(
@@ -90,9 +91,9 @@ def jazzer_dependencies():
         http_archive,
         build_file = Label("//third_party:classgraph.BUILD"),
         name = "com_github_classgraph_classgraph",
-        sha256 = "600f0f8f321dd0a3b55a51409c9e96f4274a92a2660f8a8abdb3da6ed83147f4",
-        strip_prefix = "classgraph-classgraph-4.8.149",
-        url = "https://github.com/classgraph/classgraph/archive/refs/tags/classgraph-4.8.149.tar.gz",
+        sha256 = "39a594834ec24ef8f604485e4ee54b8b6dfe0b0ee5020e70601a9dab538d5c9e",
+        strip_prefix = "classgraph-classgraph-4.8.160",
+        url = "https://github.com/classgraph/classgraph/archive/refs/tags/classgraph-4.8.160.tar.gz",
     )
 
     maybe(
@@ -106,8 +107,8 @@ def jazzer_dependencies():
     maybe(
         http_jar,
         name = "net_bytebuddy_byte_buddy_agent",
-        sha256 = "fbd1ab3db43c6c78b8804908cb95b656517f5c82e7fde8d255d8bdceef412d70",
-        url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.4/byte-buddy-agent-1.14.4.jar",
+        sha256 = "55f19862b870f5d85890ba5386b1b45e9bbc88d5fe1f819abe0c788b4929fa6b",
+        url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.5/byte-buddy-agent-1.14.5.jar",
     )
 
     maybe(
@@ -155,9 +156,9 @@ def jazzer_dependencies():
     maybe(
         http_jar,
         name = "com_google_protobuf_protobuf_java",
-        sha256 = "3f3edbda9286246080f3eaf561dd6b0d5a2b1f1008f6909115c8609ceae9df87",
+        sha256 = "18a057f5e0f828daa92b71c19df91f6bcc2aad067ca2cdd6b5698055ca7bcece",
         # Keep in sync with com_google_protobuf in WORKSPACE.
-        url = "https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/3.21.12/protobuf-java-3.21.12.jar",
+        url = "https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/3.23.2/protobuf-java-3.23.2.jar",
     )
 
     maybe(
@@ -182,3 +183,12 @@ def jazzer_dependencies():
         strip_prefix = "llvm-project-jazzer-2023-04-25/compiler-rt/lib/fuzzer",
         url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/refs/tags/2023-04-25.tar.gz",
     )
+
+    if android:
+        maybe(
+            git_repository,
+            name = "jazzer_slicer",
+            remote = "https://android.googlesource.com/platform/tools/dexter",
+            build_file = "//third_party:slicer.BUILD",
+            commit = "0fe35538da107ff48da6e9f9b92b55b014973bf8",
+        )

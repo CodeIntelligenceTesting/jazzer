@@ -179,6 +179,26 @@ java_fuzz_target_test(
     ],
 )
 
+# WARNING: This fuzz target uses a vulnerable version of Apache Commons Text, which could result in the execution
+# of arbitrary code during fuzzing if executed with an older JDK. Use at your own risk.
+java_fuzz_target_test(
+    name = "CommonsTextFuzzer",
+    size = "enormous",
+    srcs = [
+        "src/main/java/com/example/CommonsTextFuzzer.java",
+    ],
+    fuzzer_args = [
+        "-fork=8",
+        "-use_value_profile=1",
+    ],
+    tags = ["manual"],
+    target_class = "com.example.CommonsTextFuzzer",
+    verify_crash_reproducer = False,
+    deps = [
+        "@maven//:org_apache_commons_commons_text",
+    ],
+)
+
 java_fuzz_target_test(
     name = "JpegImageParserFuzzer",
     size = "enormous",
