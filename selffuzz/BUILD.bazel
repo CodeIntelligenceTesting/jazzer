@@ -4,4 +4,5 @@ jar_jar(
     name = "jazzer_selffuzz",
     input_jar = "//src/main/java/com/code_intelligence/jazzer:jazzer",
     rules = "selffuzz_shade_rules.jarjar",
+    visibility = ["__subpackages__"],
 )

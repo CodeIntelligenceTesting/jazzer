@@ -1,8 +1,6 @@
 package com.code_intelligence.selffuzz;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
-import org.junit.jupiter.api.*;
 import com.code_intelligence.selffuzz.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.selffuzz.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.selffuzz.jazzer.mutation.support.TypeHolder;
