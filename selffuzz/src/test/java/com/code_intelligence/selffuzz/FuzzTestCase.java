@@ -41,9 +41,6 @@ class FuzzTestCase {
 
     try {
       String out = mutator.read(stream);
-      if (out.equals("asdf")) {
-        throw new RuntimeException("asdf");
-      }
     } catch (EOFException e) {
       // ignore end of file exceptions which can happen due to an invalid length in the input byte
       // array
