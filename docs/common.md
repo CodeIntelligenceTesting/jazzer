@@ -12,7 +12,7 @@
 
 Jazzer provides many configuration settings. An up-to-date list can be found by running Jazzer with the `--help` flag.
 
-The value of a setting item `some_opt is obtained from the following sources in increasing order of precedence:
+The value of a setting item `some_opt` is obtained from the following sources in increasing order of precedence:
 
 - the default value
 - `META-INF/MANIFEST.MF` attribute `Jazzer-Some-Opt` on the classpath
