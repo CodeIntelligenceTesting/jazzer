@@ -10,8 +10,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.EOFException;
 
-import static com.google.common.truth.Truth.assertThat;
-
 class FuzzTestCase {
     @FuzzTest
     void stringMutatorTest(byte[] data) {
