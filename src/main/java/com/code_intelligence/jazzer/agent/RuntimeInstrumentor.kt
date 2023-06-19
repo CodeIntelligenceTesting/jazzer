@@ -59,7 +59,7 @@ class RuntimeInstrumentor(
         classfileBuffer: ByteArray,
     ): ByteArray? {
         var pathPrefix = ""
-        if (!Opt.instrumentOnly.isEmpty() && protectionDomain != null) {
+        if (Opt.instrumentOnly.get().isNotEmpty() && protectionDomain != null) {
             var outputPathPrefix = protectionDomain.getCodeSource().getLocation().getFile().toString()
             if (outputPathPrefix.isNotEmpty()) {
                 if (outputPathPrefix.contains(File.separator)) {
@@ -208,7 +208,7 @@ class RuntimeInstrumentor(
     }
 
     private fun instrument(internalClassName: String, bytecode: ByteArray, fullInstrumentation: Boolean): ByteArray {
-        val classWithHooksEnabledField = if (Opt.conditionalHooks) {
+        val classWithHooksEnabledField = if (Opt.conditionalHooks.get()) {
             // Let the hook instrumentation emit additional logic that checks the value of the
             // hooksEnabled field on this class and skips the hook if it is false.
             "com/code_intelligence/jazzer/runtime/JazzerInternal"

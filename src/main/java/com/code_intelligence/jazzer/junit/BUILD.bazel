@@ -15,6 +15,7 @@ java_library(
     ],
     deps = [
         ":utils",
+        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 )

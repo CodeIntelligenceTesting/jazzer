@@ -57,7 +57,7 @@ interface SeedSerializer {
       return new FuzzedDataProviderSeedSerializer();
     } else {
       Optional<ArgumentsMutator> argumentsMutator =
-          Opt.experimentalMutator ? ArgumentsMutator.forMethod(method) : Optional.empty();
+          Opt.experimentalMutator.get() ? ArgumentsMutator.forMethod(method) : Optional.empty();
       return argumentsMutator.<SeedSerializer>map(ArgumentsMutatorSeedSerializer::new)
           .orElseGet(() -> new AutofuzzSeedSerializer(method));
     }

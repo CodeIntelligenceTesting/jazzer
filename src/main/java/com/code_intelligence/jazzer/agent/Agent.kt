@@ -35,16 +35,16 @@ fun install(instrumentation: Instrumentation) {
 
 fun installInternal(
     instrumentation: Instrumentation,
-    userHookNames: List<String> = findManifestCustomHookNames() + Opt.customHooks,
-    disabledHookNames: List<String> = Opt.disabledHooks,
+    userHookNames: List<String> = findManifestCustomHookNames() + Opt.customHooks.get(),
+    disabledHookNames: List<String> = Opt.disabledHooks.get(),
     instrumentationIncludes: List<String> = Opt.instrumentationIncludes.get(),
     instrumentationExcludes: List<String> = Opt.instrumentationExcludes.get(),
     customHookIncludes: List<String> = Opt.customHookIncludes.get(),
     customHookExcludes: List<String> = Opt.customHookExcludes.get(),
-    trace: List<String> = Opt.trace,
-    idSyncFile: String? = Opt.idSyncFile,
-    dumpClassesDir: String = Opt.dumpClassesDir,
-    additionalClassesExcludes: List<String> = Opt.additionalClassesExcludes,
+    trace: List<String> = Opt.trace.get(),
+    idSyncFile: String = Opt.idSyncFile.get(),
+    dumpClassesDir: String = Opt.dumpClassesDir.get(),
+    additionalClassesExcludes: List<String> = Opt.additionalClassesExcludes.get(),
 ) {
     val allCustomHookNames = (Constants.SANITIZER_HOOK_NAMES + userHookNames).toSet()
     check(allCustomHookNames.isNotEmpty()) { "No hooks registered; expected at least the built-in hooks" }
@@ -79,7 +79,7 @@ fun installInternal(
         }
     }.toSet()
 
-    val idSyncFilePath = idSyncFile?.takeUnless { it.isEmpty() }?.let {
+    val idSyncFilePath = idSyncFile.takeUnless { it.isEmpty() }?.let {
         Paths.get(it).also { path ->
             Log.info("Synchronizing coverage IDs in ${path.toAbsolutePath()}")
         }

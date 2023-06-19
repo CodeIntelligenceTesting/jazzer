@@ -206,7 +206,7 @@ class FuzzTestExecutor {
     } else {
       AgentConfigurator.forRegressionTest(extensionContext);
     }
-    AgentInstaller.install(Opt.hooks);
+    AgentInstaller.install(Opt.hooks.get());
   }
 
   static FuzzTestExecutor fromContext(ExtensionContext extensionContext) {

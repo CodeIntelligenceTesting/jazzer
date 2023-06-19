@@ -14,6 +14,7 @@
 
 package com.code_intelligence.jazzer.android;
 
+import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.utils.Log;
 import com.github.fmeum.rules_jni.RulesJni;
 
@@ -55,7 +56,7 @@ public class AndroidRuntime {
    * @return The string for LD_LIBRARY_PATH.
    */
   public static String getLdLibraryPath() {
-    String initOptString = System.getProperty("jazzer.android_init_options");
+    String initOptString = Opt.androidInitOptions.get();
     if (initOptString.equals(DO_NOT_INITIALIZE) || initOptString.equals("")) {
       return FUZZ_DIR;
     }
