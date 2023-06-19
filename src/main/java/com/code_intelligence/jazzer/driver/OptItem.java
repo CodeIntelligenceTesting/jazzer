@@ -269,7 +269,7 @@ public abstract class OptItem<T> implements Supplier<T> {
 
     @Override
     protected String getType() {
-      return null;
+      return "bool";
     }
   }
 
