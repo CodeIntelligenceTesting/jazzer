@@ -4,7 +4,6 @@ java_test(
     deps = [
         "//selffuzz:jazzer_selffuzz",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
-        "@maven//:com_google_truth_truth",
         "@maven//:junit_junit",
     ],
 )
