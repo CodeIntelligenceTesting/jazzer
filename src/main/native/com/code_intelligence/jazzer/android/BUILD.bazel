@@ -17,7 +17,7 @@ genrule(
         "jvmti.encoded",
     ],
     outs = ["jvmti.h"],
-    cmd = "base64 --decode < $< > $(OUTS)",
+    cmd = "base64 --decode $< > $(OUTS)",
     tags = ["manual"],
     target_compatible_with = SKIP_ON_WINDOWS,
 )
