@@ -1,9 +1,12 @@
-java_test(
+load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_junit5_test")
+
+java_junit5_test(
     name = "FuzzTestCase",
     srcs = ["FuzzTestCase.java"],
-    deps = [
+    deps = JUNIT5_DEPS + [
         "//selffuzz:jazzer_selffuzz",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
-        "@maven//:junit_junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
     ],
 )

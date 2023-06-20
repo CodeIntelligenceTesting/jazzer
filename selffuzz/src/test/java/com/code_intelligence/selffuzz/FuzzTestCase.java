@@ -20,6 +20,7 @@ import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.selffuzz.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.selffuzz.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.selffuzz.jazzer.mutation.support.TypeHolder;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
