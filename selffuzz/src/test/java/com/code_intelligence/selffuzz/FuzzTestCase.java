@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 class FuzzTestCase {
-  @FuzzTest
+  @FuzzTest(maxDuration = "10m")
   void stringMutatorTest(byte[] data) {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
