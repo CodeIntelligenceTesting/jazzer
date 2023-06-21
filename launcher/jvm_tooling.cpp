@@ -14,7 +14,7 @@
 
 #include "jvm_tooling.h"
 
-#if defined(_ANDROID)
+#if defined(__ANDROID__)
 #include <dlfcn.h>
 #elif defined(__APPLE__)
 #include <mach-o/dyld.h>
@@ -64,22 +64,16 @@ std::string getExecutablePath() {
   char buf[655536];
 #if defined(__APPLE__)
   uint32_t buf_size = sizeof(buf);
-  uint32_t read_bytes = buf_size - 1;
-  bool failed = (_NSGetExecutablePath(buf, &buf_size) != 0);
+  if (_NSGetExecutablePath(buf, &buf_size) != 0) {
 #elif defined(_WIN32)
-  DWORD read_bytes = GetModuleFileNameA(NULL, buf, sizeof(buf));
-  bool failed = (read_bytes == 0);
-#elif defined(_ANDROID)
-  bool failed = true;
-  uint32_t read_bytes = 0;
+  if (GetModuleFileNameA(NULL, buf, sizeof(buf)) == 0) {
+#elif defined(__ANDROID__)
+  if (true) {
 #else  // Assume Linux
-  ssize_t read_bytes = readlink("/proc/self/exe", buf, sizeof(buf));
-  bool failed = (read_bytes == -1);
+  if (readlink("/proc/self/exe", buf, sizeof(buf)) == -1) {
 #endif
-  if (failed) {
     return "";
   }
-  buf[read_bytes] = '\0';
   return {buf};
 }
 
@@ -161,7 +155,7 @@ std::vector<std::string> splitEscaped(const std::string &str) {
 
 namespace jazzer {
 
-#if defined(_ANDROID)
+#if defined(__ANDROID__)
 typedef jint (*JNI_CreateJavaVM_t)(JavaVM **, JNIEnv **, void *);
 JNI_CreateJavaVM_t LoadAndroidVMLibs() {
   std::cout << "Loading Android libraries" << std::endl;
@@ -227,7 +221,7 @@ JVM::JVM() {
   options.push_back(
       JavaVMOption{.optionString = const_cast<char *>(class_path.c_str())});
 
-#if !defined(_ANDROID)
+#if !defined(__ANDROID__)
   // Set the maximum heap size to a value that is slightly smaller than
   // libFuzzer's default rss_limit_mb. This prevents erroneous oom reports.
   options.push_back(JavaVMOption{.optionString = (char *)"-Xmx1800m"});
@@ -278,7 +272,7 @@ JVM::JVM() {
     }
   }
 
-#if !defined(_ANDROID)
+#if !defined(__ANDROID__)
   jint jni_version = JNI_VERSION_1_8;
 #else
   jint jni_version = JNI_VERSION_1_6;
@@ -289,7 +283,7 @@ JVM::JVM() {
                                   .options = options.data(),
                                   .ignoreUnrecognized = JNI_FALSE};
 
-#if !defined(_ANDROID)
+#if !defined(__ANDROID__)
   int ret = JNI_CreateJavaVM(&jvm_, (void **)&env_, &jvm_init_args);
 #else
   JNI_CreateJavaVM_t CreateArtVM = LoadAndroidVMLibs();
