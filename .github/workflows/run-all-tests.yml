@@ -39,7 +39,7 @@ jobs:
           - os: ubuntu-20.04
             arch: "linux"
             cache: "/home/runner/.cache/bazel-disk"
-            bazel_args: "//launcher/android:jazzer_android"
+            bazel_args: "//launcher/android:jazzer_android //src/main/java/com/code_intelligence/jazzer/android:jazzer_standalone_android --config=android_arm"
           - os: ubuntu-20.04
             jdk: 20
             # Workaround for https://github.com/bazelbuild/bazel/issues/14502
