@@ -62,13 +62,55 @@
       <version>5.9.2</version>
       <scope>test</scope>
     </dependency>
-    <!-- Use Jazzer for fuzzing -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.9.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>5.9.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-commons</artifactId>
+      <version>1.9.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <version>1.9.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.code-intelligence</groupId>
+      <artifactId>jazzer</artifactId>
+      <version>dev</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/../bazel-bin/deploy/jazzer-project.jar</systemPath>
+    </dependency>
     <dependency>
       <groupId>com.code-intelligence</groupId>
       <artifactId>jazzer-junit</artifactId>
-      <version>0.17.1</version>
+      <version>dev</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/../bazel-bin/deploy/jazzer-junit-project.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.code-intelligence</groupId>
+      <artifactId>jazzer-api</artifactId>
+      <version>dev</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/../bazel-bin/deploy/jazzer-api-project.jar</systemPath>
+    </dependency>
+    <!--
+    <dependency>
+      <groupId>com.code-intelligence</groupId>
+      <artifactId>jazzer-junit</artifactId>
+      <version>0.19.0</version>
       <scope>test</scope>
     </dependency>
+    -->
     <dependency>
       <groupId>com.code-intelligence.selfuzz.com.code-intelligence</groupId>
       <artifactId>jazzer</artifactId>
