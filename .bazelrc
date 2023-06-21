@@ -103,4 +103,3 @@ coverage --test_tag_filters=-no-coverage
 # Hide all non-structured output in scripts.
 # https://github.com/bazelbuild/bazel/issues/4867#issuecomment-830402410
 common:quiet --ui_event_filters=-info,-stderr
-common:quiet --noshow_progress
