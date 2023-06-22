@@ -30,4 +30,14 @@ _sanitizer_class_names = [
     "XPathInjection",
 ]
 
+_android_sanitizer_class_names = [
+    "Deserialization",
+    "OsCommandInjection",
+    "ReflectiveCall",
+    "RegexRoadblocks",
+    "android.SqlInjection",
+]
+
+ANDROID_SANITIZER_CLASSES = [_sanitizer_package_prefix + class_name for class_name in _android_sanitizer_class_names]
+
 SANITIZER_CLASSES = [_sanitizer_package_prefix + class_name for class_name in _sanitizer_class_names]

@@ -1,15 +1,23 @@
-java_library(
-    name = "sanitizers",
-    visibility = ["//src/main/java/com/code_intelligence/jazzer/runtime:__pkg__"],
-    runtime_deps = [
-        "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers",
-    ],
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+
+bool_flag(
+    name = "for_android_flag",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "build_for_android",
+    flag_values = {
+        ":for_android_flag": "True",
+    },
+    visibility = ["//visibility:public"],
 )
 
 java_library(
-    name = "offline_only_sanitizers",
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        ":sanitizers",
-    ],
+    name = "sanitizers",
+    visibility = ["//src/main/java/com/code_intelligence/jazzer/runtime:__pkg__"],
+    runtime_deps = select({
+        ":build_for_android": ["//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers:android_sanitizers"],
+        "//conditions:default": ["//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers"],
+    }),
 )

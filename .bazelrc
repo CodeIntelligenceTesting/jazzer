@@ -39,6 +39,8 @@ build:android_arm --incompatible_enable_android_toolchain_resolution
 build:android_arm --android_platforms=//:android_arm64
 build:android_arm --copt=-D_ANDROID
 build:android_arm --java_runtime_version=local_jdk
+build:android_arm --//sanitizers:for_android_flag=True
+build:android --//sanitizers:for_android_flag=True
 
 # Windows
 # Only compiles with clang on Windows.

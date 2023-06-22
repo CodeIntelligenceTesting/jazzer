@@ -2,6 +2,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("//bazel:kotlin.bzl", "ktlint")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
+load("//sanitizers:sanitizers.bzl", "ANDROID_SANITIZER_CLASSES")
 
 java_library(
     name = "regex_roadblocks",
@@ -67,6 +68,33 @@ java_library(
     visibility = ["//visibility:public"],
 )
 
+java_library(
+    name = "android_sql_injection",
+    srcs = ["android/SqlInjection.java"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "@com_github_jsqlparser_jsqlparser//jar",
+    ],
+)
+
+kt_jvm_library(
+    name = "android_sanitizers",
+    srcs = [
+        "Deserialization.kt",
+        "OsCommandInjection.kt",
+        "ReflectiveCall.kt",
+        "Utils.kt",
+    ],
+    visibility = ["//sanitizers:__pkg__"],
+    runtime_deps = [
+        ":android_sql_injection",
+        ":regex_roadblocks",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+    ],
+)
+
 write_file(
     name = "constants_java",
     out = "Constants.java",
@@ -74,10 +102,18 @@ write_file(
         "package com.code_intelligence.jazzer.sanitizers;",
         "import java.util.Arrays;",
         "import java.util.List;",
-        "public final class Constants {",
-        "  public static final List<String> SANITIZER_HOOK_NAMES = Arrays.asList(%s);" % ", ".join(["\"%s\"" % name for name in SANITIZER_CLASSES]),
-        "}",
-    ],
+    ] + select({
+        "//sanitizers:build_for_android": [
+            "public final class Constants {",
+            "  public static final List<String> SANITIZER_HOOK_NAMES = Arrays.asList(%s);" % ", ".join(["\"%s\"" % name for name in ANDROID_SANITIZER_CLASSES]),
+            "}",
+        ],
+        "//conditions:default": [
+            "public final class Constants {",
+            "  public static final List<String> SANITIZER_HOOK_NAMES = Arrays.asList(%s);" % ", ".join(["\"%s\"" % name for name in SANITIZER_CLASSES]),
+            "}",
+        ],
+    }),
 )
 
 ktlint()
