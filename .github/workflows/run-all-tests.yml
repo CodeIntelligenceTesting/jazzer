@@ -79,8 +79,8 @@ jobs:
         run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
         shell: bash
 
-      - name: Build
-        run: bazelisk build ${{env.BUILD_BUDDY_CONFIG}} //...
+      - name: Build jvmti
+        run: bazelisk build ${{env.BUILD_BUDDY_CONFIG}} //src/main/native/com/code_intelligence/jazzer/android:jvmti_h
 
       - name: Test
         run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} --build_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" --test_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
