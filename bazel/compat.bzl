@@ -27,6 +27,13 @@ LINUX_ONLY = select({
     "//conditions:default": ["@platforms//:incompatible"],
 })
 
+ANDROID_LINUX = select({
+    "@platforms//os:linux": [
+        "//:android_arm64"
+    ],
+    "//conditions:default": ["@platforms//:incompatible"],
+})
+
 MULTI_PLATFORM = select({
     "@platforms//os:macos": [
         "//bazel/platforms:macos_arm64",
