@@ -1,7 +1,7 @@
 load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_junit5_test")
 
 java_junit5_test(
-    name = "fuzz_test_case",
+    name = "FuzzTestCase",
     srcs = ["FuzzTestCase.java"],
     deps = JUNIT5_DEPS + [
         "helpers",
