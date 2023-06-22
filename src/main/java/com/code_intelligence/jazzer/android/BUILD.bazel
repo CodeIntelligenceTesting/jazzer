@@ -1,4 +1,4 @@
-load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("//bazel:compat.bzl", "ANDROID_ONLY", "SKIP_ON_WINDOWS")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
 
@@ -8,13 +8,13 @@ java_import(
         "//src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap",
     ],
     tags = ["manual"],
-    target_compatible_with = SKIP_ON_WINDOWS,
+    target_compatible_with = ANDROID_ONLY,
 )
 
 android_library(
     name = "jazzer_bootstrap_android_lib",
     tags = ["manual"],
-    target_compatible_with = SKIP_ON_WINDOWS,
+    target_compatible_with = ANDROID_ONLY,
     visibility = [
         "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
     ],
@@ -28,7 +28,7 @@ android_binary(
     manifest = "//launcher/android:android_manifest",
     min_sdk_version = 26,
     tags = ["manual"],
-    target_compatible_with = SKIP_ON_WINDOWS,
+    target_compatible_with = ANDROID_ONLY,
     deps = [
         ":jazzer_bootstrap_android_lib",
     ],
@@ -39,7 +39,7 @@ copy_file(
     src = "jazzer_bootstrap_android_bin.apk",
     out = "jazzer_bootstrap_android.jar",
     tags = ["manual"],
-    target_compatible_with = SKIP_ON_WINDOWS,
+    target_compatible_with = ANDROID_ONLY,
     visibility = [
         "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
     ],
@@ -51,12 +51,14 @@ java_jni_library(
     native_libs = [
         "//src/main/native/com/code_intelligence/jazzer/android:android_native_agent",
     ],
+    tags = ["manual"],
+    target_compatible_with = ANDROID_ONLY,
 )
 
 android_library(
     name = "jazzer_standalone_library",
     tags = ["manual"],
-    target_compatible_with = SKIP_ON_WINDOWS,
+    target_compatible_with = ANDROID_ONLY,
     exports = [
         "//deploy:jazzer-api-lib",
         "//src/main/java/com/code_intelligence/jazzer:jazzer_import",
@@ -68,7 +70,7 @@ android_binary(
     manifest = "//launcher/android:android_manifest",
     min_sdk_version = 26,
     tags = ["manual"],
-    target_compatible_with = SKIP_ON_WINDOWS,
+    target_compatible_with = ANDROID_ONLY,
     visibility = [
         "//:__pkg__",
         "//launcher/android:__pkg__",
@@ -83,9 +85,12 @@ java_jni_library(
     name = "android_runtime",
     srcs = ["AndroidRuntime.java"],
     native_libs = select({
-        "@platforms//os:windows": [],
-        "//conditions:default": ["//src/main/native/com/code_intelligence/jazzer/driver:jazzer_android_tooling"],
+        "@platforms//os:android": [
+            "//src/main/native/com/code_intelligence/jazzer/driver:jazzer_android_tooling",
+        ],
+        "//conditions:default": [],
     }),
+    tags = ["manual"],
     visibility = [
         "//src/main/java/com/code_intelligence/jazzer:__pkg__",
         "//src/main/java/com/code_intelligence/jazzer/driver:__subpackages__",
@@ -93,6 +98,7 @@ java_jni_library(
     ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:constants",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
     ],
 )

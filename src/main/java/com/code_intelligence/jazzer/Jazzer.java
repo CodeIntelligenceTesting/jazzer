@@ -99,8 +99,7 @@ public class Jazzer {
     // No native fuzzing has been requested, fuzz in the current process.
     if (!fuzzNative) {
       if (IS_ANDROID) {
-        final String initOptions = getAndroidRuntimeOptions();
-        AndroidRuntime.initialize(initOptions);
+        AndroidRuntime.initialize();
       }
       // We only create a wrapper script if libFuzzer runs in a mode that creates subprocesses.
       // In LibFuzzer's fork mode, the subprocesses created continuously by the main libFuzzer
@@ -482,16 +481,6 @@ public class Jazzer {
 
   private static boolean isPosix() {
     return !IS_ANDROID && FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
-  }
-
-  private static String getAndroidRuntimeOptions() {
-    List<String> validInitOptions = Arrays.asList("use_platform_libs", "use_none", "");
-    String initOptString = Opt.androidInitOptions.get();
-    if (!validInitOptions.contains(initOptString)) {
-      Log.error("Invalid android_init_options set for Android Runtime.");
-      exit(1);
-    }
-    return initOptString;
   }
 
   private static boolean isPosixOrAndroid() {
