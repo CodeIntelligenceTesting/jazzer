@@ -1,4 +1,4 @@
-load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("//bazel:compat.bzl", "LINUX_ONLY")
 
 android_library(
     name = "jazzer_android_lib",
@@ -7,14 +7,14 @@ android_library(
         "//src/main/java/com/code_intelligence/jazzer/android:jazzer_standalone_android.apk",
     ],
     tags = ["manual"],
-    target_compatible_with = SKIP_ON_WINDOWS,
+    target_compatible_with = LINUX_ONLY,
 )
 
 android_binary(
     name = "jazzer_android",
     manifest = ":android_manifest",
     min_sdk_version = 26,
-    target_compatible_with = SKIP_ON_WINDOWS,
+    target_compatible_with = LINUX_ONLY,
     visibility = ["//visibility:public"],
     deps = [
         ":jazzer_android_lib",
