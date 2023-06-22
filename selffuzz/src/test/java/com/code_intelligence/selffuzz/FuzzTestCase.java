@@ -32,14 +32,8 @@ class FuzzTestCase {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
             new TypeHolder<String>() {}.annotatedType());
-    if (data.length < 3) {
-      return;
-    }
 
-    InputStream i = new ByteArrayInputStream(data);
-    DataInputStream stream = new DataInputStream(i);
-
-    try {
+    try (DataInputStream stream = Helpers.infiniteByteStream(data)) {
       String out = mutator.read(stream);
     } catch (EOFException e) {
       // ignore end of file exceptions which can happen due to an invalid length in the input byte
