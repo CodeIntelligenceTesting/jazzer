@@ -1,5 +1,5 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
-load("//bazel:compat.bzl", "MULTI_PLATFORM", "SKIP_ON_WINDOWS")
+load("//bazel:compat.bzl", "LINUX_ONLY", "MULTI_PLATFORM", "SKIP_ON_WINDOWS")
 
 cc_jni_library(
     name = "jazzer_driver",
@@ -36,7 +36,6 @@ cc_library(
 cc_jni_library(
     name = "jazzer_android_tooling",
     srcs = ["android_tooling.cpp"],
-    platforms = MULTI_PLATFORM,
     target_compatible_with = LINUX_ONLY,
     visibility = ["//src/main/java/com/code_intelligence/jazzer/android:__pkg__"],
     deps = [
