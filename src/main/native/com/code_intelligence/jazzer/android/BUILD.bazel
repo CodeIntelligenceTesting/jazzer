@@ -1,4 +1,4 @@
-load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("//bazel:compat.bzl", "ANDROID_ONLY")
 load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 
@@ -8,7 +8,7 @@ copy_file(
     out = "jvmti.encoded",
     is_executable = False,
     tags = ["manual"],
-    target_compatible_with = SKIP_ON_WINDOWS,
+    target_compatible_with = ANDROID_ONLY,
 )
 
 genrule(
@@ -19,7 +19,7 @@ genrule(
     outs = ["jvmti.h"],
     cmd = "cat $< | base64 --decode > $(OUTS)",
     tags = ["manual"],
-    target_compatible_with = SKIP_ON_WINDOWS,
+    target_compatible_with = ANDROID_ONLY,
 )
 
 cc_jni_library(
@@ -38,7 +38,7 @@ cc_jni_library(
         "-lz",
     ],
     tags = ["manual"],
-    target_compatible_with = SKIP_ON_WINDOWS,
+    target_compatible_with = ANDROID_ONLY,
     visibility = ["//visibility:public"],
     deps = [
         "@com_google_absl//absl/strings",

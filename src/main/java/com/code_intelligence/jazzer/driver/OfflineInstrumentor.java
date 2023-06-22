@@ -78,7 +78,7 @@ public class OfflineInstrumentor {
       }
 
       try {
-        createInstrumentedJar(jarPath, Opt.dumpClassesDir + File.separator + outputBaseName,
+        createInstrumentedJar(jarPath, Opt.dumpClassesDir.get() + File.separator + outputBaseName,
             outputBaseName + ".instrumented.jar");
       } catch (Exception e) {
         errorMessages.add("Failed to instrument jar: " + jarPath + ". Error: " + e);

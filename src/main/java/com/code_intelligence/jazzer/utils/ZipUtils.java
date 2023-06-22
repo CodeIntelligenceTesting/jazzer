@@ -81,7 +81,7 @@ public final class ZipUtils {
     HashSet<String> filesAdded = new HashSet<>();
     File sourceDir = new File(src);
     if (!sourceDir.isDirectory()) {
-      throw new IllegalArgumentException("Argument src must be a directory.");
+      throw new IllegalArgumentException("Argument src must be a directory. Path provided: " + src);
     }
 
     Files.walkFileTree(sourceDir.toPath(), new SimpleFileVisitor<Path>() {

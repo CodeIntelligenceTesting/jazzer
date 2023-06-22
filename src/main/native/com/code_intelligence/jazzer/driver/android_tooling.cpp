@@ -47,8 +47,7 @@ Java_com_code_1intelligence_jazzer_android_AndroidRuntime_registerNatives(
       dlsym(handle, "registerFrameworkNatives"));
   const char *dlsym_error = dlerror();
   if (dlsym_error) {
-    std::cerr << "ERROR: Unable to invoke registerFrameworkNatives."
-              << std::endl;
+    std::cerr << "ERROR: Unable to find registerFrameworkNatives." << std::endl;
     exit(1);
   }
 
