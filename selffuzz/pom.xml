@@ -20,12 +20,11 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.code_intelligence.selffuzz</groupId>
+  <groupId>com.code-intelligence.selffuzz</groupId>
   <artifactId>selffuzz</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <name>selffuzz</name>
-  <url>http://www.example.com</url>
   <description>A project that allows us to run cifuzz against parts of Jazzer's code by shading jazzer within a new
   namespace to allow us to instrument it without interfering with the normal Jazzer code which is running the fuzzing
   </description>
@@ -66,21 +65,25 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <version>5.9.2</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
       <version>5.9.2</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-commons</artifactId>
       <version>1.9.2</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-launcher</artifactId>
       <version>1.9.2</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.code-intelligence</groupId>
@@ -112,7 +115,7 @@
     </dependency>
     -->
     <dependency>
-      <groupId>com.code-intelligence.selfuzz.com.code-intelligence</groupId>
+      <groupId>com.code-intelligence.selffuzz</groupId>
       <artifactId>jazzer</artifactId>
       <version>dev</version>
       <scope>system</scope>
@@ -147,22 +150,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-clean-plugin</artifactId>
-        <version>3.1.0</version>
-      </plugin>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.0</version>
-      </plugin>
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.22.1</version>
-      </plugin>
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.0.2</version>
       </plugin>
     </plugins>
   </build>
