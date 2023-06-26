@@ -349,6 +349,11 @@ public class Zer
     return this;
   }
 
+  public Zer reversed() {
+    reportFindingIfEnabled();
+    return this;
+  }
+
   // readObject calls can directly result in RCE, see https://github.com/frohoff/ysoserial for
   // examples. Since deserialization doesn't call constructors (see
   // https://docs.oracle.com/javase/7/docs/platform/serialization/spec/input.html#2971), we emit a
