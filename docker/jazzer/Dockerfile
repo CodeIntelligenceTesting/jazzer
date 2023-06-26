@@ -37,6 +37,6 @@ FROM gcr.io/distroless/java17:debug
 COPY --from=builder /app/* /app/
 # system() expects the shell at /bin/sh, but the image has it at /busybox/sh. We create a symlink,
 # but have to use the long form as a simple RUN <command> also requires /bin/sh.
-RUN ["/busybox/sh", "-c", "ln -s /busybox/sh /bin/sh"]
+RUN ["/busybox/sh", "-c", "ln -s /busybox/sh /bin/sh && ln -s /busybox/env /usr/bin/env"]
 WORKDIR /fuzzing
 ENTRYPOINT [ "/app/jazzer" ]
