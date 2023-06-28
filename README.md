@@ -133,6 +133,10 @@ See [the README](https://github.com/bazelbuild/rules_fuzzing#java-fuzzing) for i
 [Code Intelligence](https://code-intelligence.com) and Google have teamed up to bring support for Java, Kotlin, and other JVM-based languages to [OSS-Fuzz](https://github.com/google/oss-fuzz), Google's project for large-scale fuzzing of open-souce software.
 Read [the OSS-Fuzz guide](https://google.github.io/oss-fuzz/getting-started/new-project-guide/jvm-lang/) to learn how to set up a Java project.
 
+## Building from source
+
+Information on building and testing Jazzer for development can be found in [CONTRIBUTING.md](CONTRIBUTING.md)
+
 ## Further documentation
 
 * [Common options and workflows](docs/common.md)
