@@ -33,7 +33,11 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -202,7 +206,7 @@ class FuzzTestExecutor {
     } else {
       AgentConfigurator.forRegressionTest(extensionContext);
     }
-    AgentInstaller.install(Opt.hooks);
+    AgentInstaller.install(Opt.hooks.get());
   }
 
   static FuzzTestExecutor fromContext(ExtensionContext extensionContext) {
@@ -212,8 +216,21 @@ class FuzzTestExecutor {
   }
 
   public void addSeed(byte[] bytes) throws IOException {
-    Path seed = Files.createTempFile(javaSeedsDir, "seed", null);
-    Files.write(seed, bytes);
+    Path tmpSeed = Files.createTempFile(javaSeedsDir, "tmp-seed-", null);
+    Files.write(tmpSeed, bytes);
+
+    byte[] hash;
+    try {
+      hash = MessageDigest.getInstance("SHA-256").digest(bytes);
+    } catch (NoSuchAlgorithmException e) {
+      // Always available.
+      throw new IllegalStateException(e);
+    }
+    // Case-insensitive file systems lose at most one bit of entropy per character, that is, the
+    // resulting file name still encodes more than 200 bits of entropy.
+    String basename = "seed-" + Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
+    Path seed = javaSeedsDir.resolve(basename);
+    Files.move(tmpSeed, seed, StandardCopyOption.REPLACE_EXISTING);
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")

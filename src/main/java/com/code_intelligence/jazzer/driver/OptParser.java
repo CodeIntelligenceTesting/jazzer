@@ -17,17 +17,26 @@
 package com.code_intelligence.jazzer.driver;
 
 import static java.lang.System.exit;
+import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import com.code_intelligence.jazzer.utils.Log;
 import java.io.File;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -49,164 +58,62 @@ final class OptParser {
       "",
       "Options:",
   };
-  private static final String OPTIONS_PREFIX = "jazzer.";
 
   // All supported arguments are added to this set by the individual *Setting methods.
-  private static final Map<String, OptDetails> knownArgs = new TreeMap<>();
+  private static final List<OptItem<?>> knownArgs = new ArrayList<>();
 
   static String getHelpText() {
     return Stream
         .concat(Arrays.stream(HELP_HEADER),
-            knownArgs.values().stream().filter(Objects::nonNull).map(OptDetails::toString))
-        .collect(Collectors.joining("\n\n"));
+            knownArgs.stream().filter(Objects::nonNull).map(OptItem::toString))
+        .collect(joining("\n\n"));
   }
 
-  static void ignoreSetting(String name) {
-    knownArgs.put(name, null);
+  static OptItem<String> stringSetting(String name, String defaultValue, String description) {
+    OptItem<String> opt = new OptItem.Str(name, defaultValue, description);
+    knownArgs.add(opt);
+    return opt;
   }
 
-  static String stringSetting(String name, String defaultValue, String description) {
-    knownArgs.put(name, OptDetails.create(name, "string", defaultValue, description));
-    return System.getProperty(OPTIONS_PREFIX + name, defaultValue);
+  static OptItem<List<String>> stringListSetting(String name, String description) {
+    return stringListSetting(name, File.pathSeparatorChar, description);
   }
 
-  static List<String> stringListSetting(String name, String description) {
-    return lazyStringListSetting(name, description).get();
+  static OptItem<List<String>> stringListSetting(String name, char separator, String description) {
+    OptItem<List<String>> opt = new OptItem.StrList(name, description, separator, false);
+    knownArgs.add(opt);
+    return opt;
   }
 
-  static List<String> stringListSetting(String name, char separator, String description) {
-    return lazyStringListSetting(name, separator, description).get();
+  static OptItem<Boolean> boolSetting(String name, boolean defaultValue, String description) {
+    OptItem<Boolean> opt = new OptItem.Bool(name, Boolean.toString(defaultValue), description);
+    knownArgs.add(opt);
+    return opt;
   }
 
-  static Supplier<List<String>> lazyStringListSetting(String name, String description) {
-    return lazyStringListSetting(name, File.pathSeparatorChar, description);
+  static OptItem<Long> uint64Setting(String name, long defaultValue, String description) {
+    OptItem<Long> opt = new OptItem.Uint64(name, Long.toUnsignedString(defaultValue), description);
+    knownArgs.add(opt);
+    return opt;
   }
 
-  static Supplier<List<String>> lazyStringListSetting(
-      String name, char separator, String description) {
-    knownArgs.put(name,
-        OptDetails.create(
-            name, String.format("list separated by '%c'", separator), "", description));
-    return () -> {
-      String value = System.getProperty(OPTIONS_PREFIX + name);
-      if (value == null || value.isEmpty()) {
-        return Collections.emptyList();
-      }
-      return splitOnUnescapedSeparator(value, separator);
-    };
-  }
+  static void registerAndValidateCommandLineArgs(List<Map.Entry<String, String>> cliArgs) {
+    Set<String> allowedArgs = knownArgs.stream()
+                                  .filter(optItem -> !optItem.isInternal())
+                                  .map(OptItem::cliArgName)
+                                  .collect(toSet());
+    String invalidArgs = cliArgs.stream()
+                             .map(Entry::getKey)
+                             .filter(arg -> !allowedArgs.contains(arg))
+                             .distinct()
+                             .map(arg -> "--" + arg)
+                             .collect(joining(", "));
 
-  static boolean boolSetting(String name, boolean defaultValue, String description) {
-    knownArgs.put(
-        name, OptDetails.create(name, "boolean", Boolean.toString(defaultValue), description));
-    String value = System.getProperty(OPTIONS_PREFIX + name);
-    if (value == null) {
-      return defaultValue;
-    }
-    return Boolean.parseBoolean(value);
-  }
-
-  static long uint64Setting(String name, long defaultValue, String description) {
-    knownArgs.put(
-        name, OptDetails.create(name, "uint64", Long.toUnsignedString(defaultValue), description));
-    String value = System.getProperty(OPTIONS_PREFIX + name);
-    if (value == null) {
-      return defaultValue;
-    }
-    return Long.parseUnsignedLong(value, 10);
-  }
-
-  static void failOnUnknownArgument() {
-    System.getProperties()
-        .keySet()
-        .stream()
-        .map(key -> (String) key)
-        .filter(key -> key.startsWith("jazzer."))
-        .map(key -> key.substring("jazzer.".length()))
-        .filter(key -> !key.startsWith("internal."))
-        .filter(key -> !knownArgs.containsKey(key))
-        .findFirst()
-        .ifPresent(unknownArg -> {
-          Log.error(String.format(
-              "Unknown argument '--%1$s' or property 'jazzer.%1$s' (list all available arguments with --help)",
-              unknownArg));
-          exit(1);
-        });
-  }
-
-  /**
-   * Split value into non-empty takens separated by separator. Backslashes can be used to escape
-   * separators (or backslashes).
-   *
-   * @param value the string to split
-   * @param separator a single character to split on (backslash is not allowed)
-   * @return an immutable list of tokens obtained by splitting value on separator
-   */
-  static List<String> splitOnUnescapedSeparator(String value, char separator) {
-    if (separator == '\\') {
-      throw new IllegalArgumentException("separator '\\' is not supported");
-    }
-    ArrayList<String> tokens = new ArrayList<>();
-    StringBuilder currentToken = new StringBuilder();
-    boolean inEscapeState = false;
-    for (int pos = 0; pos < value.length(); pos++) {
-      char c = value.charAt(pos);
-      if (inEscapeState) {
-        currentToken.append(c);
-        inEscapeState = false;
-      } else if (c == '\\') {
-        inEscapeState = true;
-      } else if (c == separator) {
-        // Do not emit empty tokens between consecutive separators.
-        if (currentToken.length() > 0) {
-          tokens.add(currentToken.toString());
-        }
-        currentToken.setLength(0);
-      } else {
-        currentToken.append(c);
-      }
-    }
-    if (currentToken.length() > 0) {
-      tokens.add(currentToken.toString());
-    }
-    return Collections.unmodifiableList(tokens);
-  }
-
-  private static final class OptDetails {
-    final String name;
-    final String type;
-    final String defaultValue;
-    final String description;
-
-    private OptDetails(String name, String type, String defaultValue, String description) {
-      this.name = name;
-      this.type = type;
-      this.defaultValue = defaultValue;
-      this.description = description;
+    if (!invalidArgs.isEmpty()) {
+      Log.error("Unknown arguments (list available arguments with --help): " + invalidArgs);
+      exit(1);
     }
 
-    static OptDetails create(String name, String type, String defaultValue, String description) {
-      if (description == null) {
-        return null;
-      }
-      return new OptDetails(checkNotNullOrEmpty(name, "name"), checkNotNullOrEmpty(type, "type"),
-          defaultValue, checkNotNullOrEmpty(description, "description"));
-    }
-
-    @Override
-    public String toString() {
-      return String.format(
-          "--%s (%s, default: \"%s\")%n     %s", name, type, defaultValue, description);
-    }
-
-    private static String checkNotNullOrEmpty(String arg, String name) {
-      if (arg == null) {
-        throw new NullPointerException(name + " must not be null");
-      }
-      if (arg.isEmpty()) {
-        throw new NullPointerException(name + " must not be empty");
-      }
-      return arg;
-    }
+    OptItem.registerCommandLineArgs(cliArgs);
   }
 }

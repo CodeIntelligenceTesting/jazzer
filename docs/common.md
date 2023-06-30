@@ -1,11 +1,25 @@
 ## Common options and workflows
 
+* [Passing arguments](#passing-arguments)
 * [Reproducing a finding](#reproducing-a-finding)
 * [Minimizing a crashing input](#minimizing-a-crashing-input)
 * [Parallel execution](#parallel-execution)
 * [Autofuzz mode](#autofuzz-mode)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
+
+### Passing arguments
+
+Jazzer provides many configuration settings. An up-to-date list can be found by running Jazzer with the `--help` flag.
+
+The value of a setting item `some_opt` is obtained from the following sources in increasing order of precedence:
+
+- the default value
+- `META-INF/MANIFEST.MF` attribute `Jazzer-Some-Opt` on the classpath
+- the `JAZZER_SOME_OPT` environment variable
+- the `jazzer.some_opt` system property
+- the `jazzer.some_opt` JUnit configuration parameter
+- the `--some_opt` CLI parameter
 
 ### Reproducing a finding
 
@@ -55,4 +69,3 @@ Creating objects from fuzzer input can lead to many reported exceptions.
 Jazzer addresses this issue by ignoring exceptions that the target method declares to throw.
 In addition to that, you can provide a list of exceptions to be ignored during fuzzing via the `--autofuzz_ignore` flag in the form of a comma-separated list.
 You can specify concrete exceptions (e.g., `java.lang.NullPointerException`), in which case also subclasses of these exception classes will be ignored, or glob patterns to ignore all exceptions in a specific package (e.g. `java.lang.*` or `com.company.**`).
-

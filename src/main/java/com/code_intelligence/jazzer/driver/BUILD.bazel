@@ -148,14 +148,27 @@ java_library(
         "OptParser.java",
     ],
     visibility = [
+        # Do not add //src/main/java/com/code_intelligence/jazzer/api to this list - it must
+        # function even if it isn't running within Jazzer.
+        "//src/main/java/com/code_intelligence/jazzer:__pkg__",
         "//src/main/java/com/code_intelligence/jazzer/agent:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/android:__pkg__",
         "//src/main/java/com/code_intelligence/jazzer/driver:__subpackages__",
         "//src/main/java/com/code_intelligence/jazzer/junit:__pkg__",
         "//src/test/java/com/code_intelligence/jazzer/driver:__subpackages__",
     ],
     deps = [
+        ":opt_item",
         "//src/main/java/com/code_intelligence/jazzer:constants",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
+    ],
+)
+
+java_library(
+    name = "opt_item",
+    srcs = ["OptItem.java"],
+    visibility = [
+        "//src/test/java/com/code_intelligence/jazzer/driver:__pkg__",
     ],
 )
 

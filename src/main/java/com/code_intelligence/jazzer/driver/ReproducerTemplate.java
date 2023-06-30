@@ -60,7 +60,7 @@ final class ReproducerTemplate {
                           .collect(Collectors.joining("\n"));
     String chunkedData = chunkStringLiteral(data);
     String javaSource = String.format(template, sha, chunkedData, targetClass, targetArg);
-    Path javaPath = Paths.get(Opt.reproducerPath, String.format("Crash_%s.java", sha));
+    Path javaPath = Paths.get(Opt.reproducerPath.get(), String.format("Crash_%s.java", sha));
     try {
       Files.write(javaPath, javaSource.getBytes(StandardCharsets.UTF_8));
     } catch (IOException e) {

@@ -26,6 +26,7 @@ import static java.util.stream.Collectors.toSet;
 
 import com.code_intelligence.jazzer.android.AndroidRuntime;
 import com.code_intelligence.jazzer.driver.Driver;
+import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.ZipUtils;
 import com.github.fmeum.rules_jni.RulesJni;
@@ -42,7 +43,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.AbstractMap.SimpleEntry;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -80,16 +81,18 @@ public class Jazzer {
     // itself is "silenced" by redirecting System.out and/or System.err.
     Log.fixOutErr(System.out, System.err);
 
-    parseJazzerArgsToProperties(args);
+    Opt.registerAndValidateCommandLineArgs(parseJazzerArgs(args));
+    Opt.handleHelpAndVersionArgs();
 
     // --asan and --ubsan imply --native by default, but --native can also be used by itself to fuzz
     // native libraries without sanitizers (e.g. to quickly grow a corpus).
-    final boolean loadASan = Boolean.parseBoolean(System.getProperty("jazzer.asan", "false"));
-    final boolean loadUBSan = Boolean.parseBoolean(System.getProperty("jazzer.ubsan", "false"));
-    final boolean loadHWASan = Boolean.parseBoolean(System.getProperty("jazzer.hwasan", "false"));
-    final boolean fuzzNative = Boolean.parseBoolean(
-        System.getProperty("jazzer.native", Boolean.toString(loadASan || loadUBSan || loadHWASan)));
-    if ((loadASan || loadUBSan || loadHWASan) && !fuzzNative) {
+    final boolean loadASan = Opt.asan.get();
+    final boolean loadUBSan = Opt.ubsan.get();
+    final boolean loadHWASan = Opt.hwasan.get();
+    final boolean needsNative = loadASan || loadUBSan || loadHWASan;
+    Opt.fuzzNative.setIfDefault(needsNative);
+    final boolean fuzzNative = Opt.fuzzNative.get();
+    if (needsNative && !fuzzNative) {
       Log.error("--asan, --hwasan and --ubsan cannot be used without --native");
       exit(1);
     }
@@ -182,28 +185,28 @@ public class Jazzer {
     exit(processBuilder.start().waitFor());
   }
 
-  private static void parseJazzerArgsToProperties(List<String> args) {
-    args.stream()
+  private static List<Map.Entry<String, String>> parseJazzerArgs(List<String> args) {
+    return args.stream()
         .filter(arg -> arg.startsWith("--"))
         .map(arg -> arg.substring("--".length()))
         // Filter out "--", which can be used to declare that all further arguments aren't libFuzzer
         // arguments.
         .filter(arg -> !arg.isEmpty())
         .map(Jazzer::parseSingleArg)
-        .forEach(e -> System.setProperty("jazzer." + e.getKey(), e.getValue()));
+        .collect(toList());
   }
 
-  private static SimpleEntry<String, String> parseSingleArg(String arg) {
+  private static SimpleImmutableEntry<String, String> parseSingleArg(String arg) {
     String[] nameAndValue = arg.split("=", 2);
     if (nameAndValue.length == 2) {
       // Example: --keep_going=10 --> (keep_going, 10)
-      return new SimpleEntry<>(nameAndValue[0], nameAndValue[1]);
+      return new SimpleImmutableEntry<>(nameAndValue[0], nameAndValue[1]);
     } else if (nameAndValue[0].startsWith("no")) {
       // Example: --nohooks --> (hooks, "false")
-      return new SimpleEntry<>(nameAndValue[0].substring("no".length()), "false");
+      return new SimpleImmutableEntry<>(nameAndValue[0].substring("no".length()), "false");
     } else {
       // Example: --dedup --> (dedup, "true")
-      return new SimpleEntry<>(nameAndValue[0], "true");
+      return new SimpleImmutableEntry<>(nameAndValue[0], "true");
     }
   }
 
@@ -280,9 +283,8 @@ public class Jazzer {
       Path agentPath =
           RulesJni.extractLibrary("android_native_agent", "/com/code_intelligence/jazzer/android");
 
-      String jazzerAgentPath = System.getProperty("jazzer.agent_path");
-      String bootclassClassOverrides =
-          System.getProperty("jazzer.android_bootpath_classes_overrides");
+      String jazzerAgentPath = Opt.agentPath.get();
+      String bootclassClassOverrides = Opt.androidBootclassClassesOverrides.get();
 
       String jazzerBootstrapJarPath =
           "com/code_intelligence/jazzer/android/jazzer_bootstrap_android.jar";
@@ -484,7 +486,7 @@ public class Jazzer {
 
   private static String getAndroidRuntimeOptions() {
     List<String> validInitOptions = Arrays.asList("use_platform_libs", "use_none", "");
-    String initOptString = System.getProperty("jazzer.android_init_options");
+    String initOptString = Opt.androidInitOptions.get();
     if (!validInitOptions.contains(initOptString)) {
       Log.error("Invalid android_init_options set for Android Runtime.");
       exit(1);

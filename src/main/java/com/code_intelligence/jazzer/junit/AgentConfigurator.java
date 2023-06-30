@@ -16,8 +16,11 @@ package com.code_intelligence.jazzer.junit;
 
 import static com.code_intelligence.jazzer.junit.Utils.getClassPathBasedInstrumentationFilter;
 import static com.code_intelligence.jazzer.junit.Utils.getLegacyInstrumentationFilter;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
-import java.io.File;
+import com.code_intelligence.jazzer.driver.Opt;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -32,13 +35,12 @@ class AgentConfigurator {
     applyCommonConfiguration();
 
     // Add logic to the hook instrumentation that allows us to enable and disable hooks at runtime.
-    System.setProperty("jazzer.internal.conditional_hooks", "true");
+    Opt.conditionalHooks.setIfDefault(true);
     // Apply all hooks, but no coverage or compare instrumentation.
-    System.setProperty("jazzer.instrumentation_excludes", "**");
+    Opt.instrumentationIncludes.setIfDefault(singletonList("**"));
+    Opt.instrumentationExcludes.setIfDefault(singletonList("**"));
     extensionContext.getConfigurationParameter("jazzer.instrument")
-        .ifPresent(s
-            -> System.setProperty(
-                "jazzer.custom_hook_includes", String.join(File.pathSeparator, s.split(","))));
+        .ifPresent(s -> Opt.customHookIncludes.setIfDefault(asList(s.split(","))));
   }
 
   static void forFuzzing(ExtensionContext executionRequest) {
@@ -56,17 +58,16 @@ class AgentConfigurator {
                            .orElseGet(()
                                           -> getLegacyInstrumentationFilter(
                                               executionRequest.getRequiredTestClass())));
-    String filter = String.join(File.pathSeparator, instrumentationFilter.split(","));
-    System.setProperty("jazzer.custom_hook_includes", filter);
-    System.setProperty("jazzer.instrumentation_includes", filter);
+    List<String> includes = asList(instrumentationFilter.split(","));
+    Opt.customHookIncludes.setIfDefault(includes);
+    Opt.instrumentationIncludes.setIfDefault(includes);
   }
 
   private static void applyCommonConfiguration() {
     // Do not hook common IDE and JUnit classes and their dependencies.
-    System.setProperty("jazzer.custom_hook_excludes",
-        String.join(File.pathSeparator, "com.google.testing.junit.**", "com.intellij.**",
-            "org.jetbrains.**", "io.github.classgraph.**", "junit.framework.**", "net.bytebuddy.**",
-            "org.apiguardian.**", "org.assertj.core.**", "org.hamcrest.**", "org.junit.**",
-            "org.opentest4j.**", "org.mockito.**", "org.apache.maven.**", "org.gradle.**"));
+    Opt.customHookExcludes.setIfDefault(asList("com.google.testing.junit.**", "com.intellij.**",
+        "org.jetbrains.**", "io.github.classgraph.**", "junit.framework.**", "net.bytebuddy.**",
+        "org.apiguardian.**", "org.assertj.core.**", "org.hamcrest.**", "org.junit.**",
+        "org.opentest4j.**", "org.mockito.**", "org.apache.maven.**", "org.gradle.**"));
   }
 }

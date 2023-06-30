@@ -34,7 +34,7 @@ public class FuzzTargetHolder {
 
   public static final FuzzTarget AUTOFUZZ_FUZZ_TARGET = autofuzzFuzzTarget(() -> {
     com.code_intelligence.jazzer.autofuzz.FuzzTarget.fuzzerInitialize(
-        Opt.targetArgs.toArray(new String[0]));
+        Opt.targetArgs.get().toArray(new String[0]));
     return null;
   });
 
