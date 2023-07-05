@@ -563,4 +563,12 @@ sh_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "PrimitiveTypeCompareHookFuzzer",
+    srcs = ["src/test/java/com/example/PrimitiveTypeCompareHookFuzzer.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical"],
+    fuzzer_args = ["-runs=0"],
+    target_class = "com.example.PrimitiveTypeCompareHookFuzzer",
+)
+
 ktlint()
