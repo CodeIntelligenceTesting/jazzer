@@ -37,7 +37,6 @@ class AgentConfigurator {
     // Add logic to the hook instrumentation that allows us to enable and disable hooks at runtime.
     Opt.conditionalHooks.setIfDefault(true);
     // Apply all hooks, but no coverage or compare instrumentation.
-    Opt.instrumentationIncludes.setIfDefault(singletonList("**"));
     Opt.instrumentationExcludes.setIfDefault(singletonList("**"));
     extensionContext.getConfigurationParameter("jazzer.instrument")
         .ifPresent(s -> Opt.customHookIncludes.setIfDefault(asList(s.split(","))));
