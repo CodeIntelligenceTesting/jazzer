@@ -37,7 +37,8 @@ final public class TraceCmpHooks {
       targetMethod = "compare", targetMethodDescriptor = "(II)I")
   public static void
   integerCompare(MethodHandle method, Object alwaysNull, Object[] arguments, int hookId) {
-    TraceDataFlowNativeCallbacks.traceCmpInt((int) arguments[0], (int) arguments[1], hookId);
+    TraceDataFlowNativeCallbacks.traceCmpInt(
+        ((Number) arguments[0]).intValue(), ((Number) arguments[1]).intValue(), hookId);
   }
 
   @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Byte",
@@ -48,7 +49,8 @@ final public class TraceCmpHooks {
       targetMethod = "compareTo", targetMethodDescriptor = "(Ljava/lang/Integer;)I")
   public static void
   integerCompareTo(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
-    TraceDataFlowNativeCallbacks.traceCmpInt((int) thisObject, (int) arguments[0], hookId);
+    TraceDataFlowNativeCallbacks.traceCmpInt(
+        ((Number) thisObject).intValue(), ((Number) arguments[0]).intValue(), hookId);
   }
 
   @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Long", targetMethod = "compare",
