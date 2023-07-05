@@ -35,26 +35,26 @@ public class Driver {
   public static int start(List<String> args, boolean spawnsSubprocesses) throws IOException {
     if (IS_ANDROID) {
       if (!Opt.autofuzz.get().isEmpty()) {
-        Log.error("--autofuzz is not supported for Android");
+        Log.error("--autofuzz is not supported on Android");
         return 1;
       }
       if (!Opt.coverageReport.get().isEmpty()) {
-        Log.error("--coverage_report is not supported for Android and has been disabled");
+        Log.error("--coverage_report is not supported on Android");
         return 1;
       }
       if (!Opt.coverageDump.get().isEmpty()) {
-        Log.error("--coverage_dump is not supported for Android and has been disabled");
+        Log.error("--coverage_dump is not supported on Android");
         return 1;
       }
     }
 
     if (spawnsSubprocesses) {
       if (!Opt.coverageReport.get().isEmpty()) {
-        Log.warn("--coverage_report does not support parallel fuzzing and has been disabled");
+        Log.error("--coverage_report is not supported with -fork, -jobs, or -merge");
         return 1;
       }
       if (!Opt.coverageDump.get().isEmpty()) {
-        Log.warn("--coverage_dump does not support parallel fuzzing and has been disabled");
+        Log.error("--coverage_report is not supported with -fork, -jobs, or -merge");
         return 1;
       }
 
