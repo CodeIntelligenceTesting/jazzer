@@ -91,9 +91,9 @@ def jazzer_dependencies(android = False):
         http_archive,
         build_file = Label("//third_party:classgraph.BUILD"),
         name = "com_github_classgraph_classgraph",
-        sha256 = "39a594834ec24ef8f604485e4ee54b8b6dfe0b0ee5020e70601a9dab538d5c9e",
-        strip_prefix = "classgraph-classgraph-4.8.160",
-        url = "https://github.com/classgraph/classgraph/archive/refs/tags/classgraph-4.8.160.tar.gz",
+        sha256 = "62ba0109800ba55f4ccd9a7ba5f73a050293b90237c25e96132ca40d7f4e438f",
+        strip_prefix = "classgraph-classgraph-4.8.161",
+        url = "https://github.com/classgraph/classgraph/archive/refs/tags/classgraph-4.8.161.tar.gz",
     )
 
     maybe(
