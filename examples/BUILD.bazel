@@ -4,6 +4,8 @@ load("//bazel:compat.bzl", "SKIP_ON_MACOS", "SKIP_ON_WINDOWS")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 load("//bazel:kotlin.bzl", "ktlint")
 
+package(default_testonly = True)
+
 java_fuzz_target_test(
     name = "Autofuzz",
     allowed_findings = ["java.lang.ArrayIndexOutOfBoundsException"],

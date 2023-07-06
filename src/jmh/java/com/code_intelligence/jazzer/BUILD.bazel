@@ -1,3 +1,5 @@
+package(default_testonly = True)
+
 java_plugin(
     name = "JmhGeneratorAnnotationProcessor",
     processor_class = "org.openjdk.jmh.generators.BenchmarkProcessor",

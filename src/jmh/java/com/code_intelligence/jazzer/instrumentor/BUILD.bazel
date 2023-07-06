@@ -3,6 +3,8 @@ load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("//bazel:kotlin.bzl", "ktlint")
 load("//src/jmh/java/com/code_intelligence/jazzer:jmh.bzl", "JMH_TEST_ARGS")
 
+package(default_testonly = True)
+
 java_binary(
     name = "CoverageInstrumentationBenchmark",
     main_class = "org.openjdk.jmh.Main",
