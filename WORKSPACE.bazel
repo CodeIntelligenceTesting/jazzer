@@ -54,10 +54,9 @@ http_archive(
 
 http_archive(
     name = "rules_jvm_external",
-    sha256 = "6ebe13d95fc5549cc32b27d41c907426b16464c5aae893a163c7fe0c9051ec1d",
-    # TODO: Return to the next release.
-    strip_prefix = "rules_jvm_external-90280783fa4e74439b88191acafd99232ada61aa",
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/90280783fa4e74439b88191acafd99232ada61aa.tar.gz",
+    sha256 = "d31e369b854322ca5098ea12c69d7175ded971435e55c18dd9dd5f29cc5249ac",
+    strip_prefix = "rules_jvm_external-5.3",
+    url = "https://github.com/bazelbuild/rules_jvm_external/releases/download/5.3/rules_jvm_external-5.3.tar.gz",
 )
 
 http_archive(
@@ -79,10 +78,9 @@ http_archive(
 
 http_archive(
     name = "contrib_rules_jvm",
-    # TODO: Return to the next release.
-    sha256 = "57dfe16edee7b6df7fcc2b92551aab233e9c802a7aba420e5302b99f3eccbbc3",
-    strip_prefix = "rules_jvm-80780e1b1d9cc041b843acc3155a2828a57d5807",
-    url = "https://github.com/bazel-contrib/rules_jvm/archive/80780e1b1d9cc041b843acc3155a2828a57d5807.tar.gz",
+    sha256 = "90ecdf08d7e8817b2247eea77826db872db8866da84b3a824f58d6661aca917f",
+    strip_prefix = "rules_jvm-0.14.0",
+    url = "https://github.com/bazel-contrib/rules_jvm/releases/download/v0.14.0/rules_jvm-v0.14.0.tar.gz",
 )
 
 http_archive(
