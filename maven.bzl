@@ -21,12 +21,12 @@ JAZZER_JUNIT_COORDINATES = "com.code-intelligence:jazzer-junit:%s" % JAZZER_VERS
 
 # keep sorted
 MAVEN_ARTIFACTS = [
-    "org.junit.jupiter:junit-jupiter-api:5.9.0",
-    "org.junit.jupiter:junit-jupiter-engine:5.9.0",
-    "org.junit.jupiter:junit-jupiter-params:5.9.0",
-    "org.junit.platform:junit-platform-commons:jar:1.9.0",
-    "org.junit.platform:junit-platform-engine:jar:1.9.0",
-    "org.junit.platform:junit-platform-launcher:jar:1.9.0",
+    "org.junit.jupiter:junit-jupiter-api:5.8.2",
+    "org.junit.jupiter:junit-jupiter-engine:5.8.2",
+    "org.junit.jupiter:junit-jupiter-params:5.8.2",
+    "org.junit.platform:junit-platform-commons:jar:1.8.2",
+    "org.junit.platform:junit-platform-engine:jar:1.8.2",
+    "org.junit.platform:junit-platform-launcher:jar:1.8.2",
     "org.opentest4j:opentest4j:1.2.0",
 ]
 
@@ -74,8 +74,8 @@ TEST_MAVEN_ARTIFACTS = [
         "org.glassfish:javax.el:3.0.1-b06",
         "org.hibernate:hibernate-validator:5.2.4.Final",
         "org.jacoco:org.jacoco.core:0.8.8",
-        "org.junit.platform:junit-platform-reporting:1.9.0",
-        "org.junit.platform:junit-platform-testkit:1.9.0",
+        "org.junit.platform:junit-platform-reporting:1.8.2",
+        "org.junit.platform:junit-platform-testkit:1.8.2",
         "org.mockito:mockito-core:5.2.0",
         "org.openjdk.jmh:jmh-core:1.34",
         "org.openjdk.jmh:jmh-generator-annprocess:1.34",
