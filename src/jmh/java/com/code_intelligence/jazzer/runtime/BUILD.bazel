@@ -1,6 +1,8 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
 load("//src/jmh/java/com/code_intelligence/jazzer:jmh.bzl", "JMH_TEST_ARGS")
 
+package(default_testonly = True)
+
 java_binary(
     name = "FuzzerCallbacksBenchmark",
     main_class = "org.openjdk.jmh.Main",
