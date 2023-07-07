@@ -67,8 +67,8 @@ final class ReproducerTemplate {
       Log.error(String.format("Failed to write Java reproducer to %s%n", javaPath));
       e.printStackTrace();
     }
-    Log.println(String.format(
-        "reproducer_path='%s'; Java reproducer written to %s%n", Opt.reproducerPath, javaPath));
+    Log.println(String.format("reproducer_path='%s'; Java reproducer written to %s%n",
+        Opt.reproducerPath.get(), javaPath));
   }
 
   // The serialization of recorded FuzzedDataProvider invocations can get too long to be emitted
