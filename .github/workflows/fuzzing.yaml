@@ -37,15 +37,15 @@ jobs:
           chmod u+x cifuzz_installer
           ./cifuzz_installer --install-dir $CIFUZZ_INSTALL_DIR
 
-      # - name: Mount Bazel disk cache
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: ${{ matrix.cache }}
-      #     key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
+      - name: Mount Bazel disk cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ matrix.cache }}
+          key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
 
-      # - name: Set Build Buddy config
-      #   run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
-      #   shell: bash
+      - name: Set Build Buddy config
+        run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
+        shell: bash
       - id: build-jazzer
         name: Build Jazzer deps
         run: cd $CHECKOUT_DIR && bazel build //deploy:jazzer-junit-project //deploy:jazzer-project //deploy:jazzer-api-project //selffuzz:jazzer_selffuzz
