@@ -42,9 +42,8 @@ jobs:
         with:
           path: "/home/runner/.cache/bazel-disk"
           key: bazel-disk-cache-linux-8
-
       - name: Set Build Buddy config
-        run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
+        run: $CHECKOUT_DIR/.github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
         shell: bash
       - id: build-jazzer
         name: Build Jazzer deps
