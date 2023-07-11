@@ -40,8 +40,8 @@ jobs:
       - name: Mount Bazel disk cache
         uses: actions/cache@v3
         with:
-          path: ${{ matrix.cache }}
-          key: bazel-disk-cache-${{ matrix.arch }}-${{ matrix.jdk }}
+          path: "/home/runner/.cache/bazel-disk"
+          key: bazel-disk-cache-linux-8
 
       - name: Set Build Buddy config
         run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
