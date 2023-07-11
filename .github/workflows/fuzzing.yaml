@@ -40,7 +40,7 @@ jobs:
         name: Build Fuzzers
         run: |
           export cifuzz_DIR="$GITHUB_WORKSPACE/$CIFUZZ_INSTALL_DIR/share/cmake"
-          cd $CHECKOUT_DIR/
+          cd $CHECKOUT_DIR/selffuzz/
           $GITHUB_WORKSPACE/$CIFUZZ_INSTALL_DIR/bin/cifuzz bundle \
             --commit $GITHUB_SHA \
             --branch $GITHUB_REF_NAME \
