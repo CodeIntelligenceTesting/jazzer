@@ -14,7 +14,6 @@
 
 package com.code_intelligence.jazzer.agent
 
-import com.code_intelligence.jazzer.driver.Opt
 import com.code_intelligence.jazzer.instrumentor.ClassInstrumentor
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hook
@@ -35,9 +34,11 @@ class RuntimeInstrumentor(
     private val instrumentation: Instrumentation,
     private val classesToFullyInstrument: ClassNameGlobber,
     private val classesToHookInstrument: ClassNameGlobber,
+    private val instrumentOnly: Boolean,
     private val instrumentationTypes: Set<InstrumentationType>,
     private val includedHooks: List<Hook>,
     private val customHooks: List<Hook>,
+    private var conditionalHooks: Boolean,
     // Dedicated name globber for additional classes to hook stated in hook annotations is needed due to
     // existing include and exclude pattern of classesToHookInstrument. All classes are included in hook
     // instrumentation except the ones from default excludes, like JDK and Kotlin classes. But additional
@@ -59,24 +60,27 @@ class RuntimeInstrumentor(
         classfileBuffer: ByteArray,
     ): ByteArray? {
         var pathPrefix = ""
-        if (Opt.instrumentOnly.get().isNotEmpty() && protectionDomain != null) {
-            var outputPathPrefix = protectionDomain.getCodeSource().getLocation().getFile().toString()
-            if (outputPathPrefix.isNotEmpty()) {
-                if (outputPathPrefix.contains(File.separator)) {
-                    outputPathPrefix = outputPathPrefix.substring(outputPathPrefix.lastIndexOf(File.separator) + 1, outputPathPrefix.length)
-                }
-
-                if (outputPathPrefix.endsWith(".jar")) {
-                    outputPathPrefix = outputPathPrefix.substring(0, outputPathPrefix.lastIndexOf(".jar"))
-                }
-
+        // Throwables raised from transform are silently dropped, making it extremely hard to detect instrumentation
+        // failures. The docs advise to use a top-level try-catch.
+        // https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/ClassFileTransformer.html
+        return try {
+            if (instrumentOnly && protectionDomain != null) {
+                var outputPathPrefix = protectionDomain.getCodeSource().getLocation().getFile().toString()
                 if (outputPathPrefix.isNotEmpty()) {
-                    pathPrefix = outputPathPrefix + File.separator
+                    if (outputPathPrefix.contains(File.separator)) {
+                        outputPathPrefix = outputPathPrefix.substring(outputPathPrefix.lastIndexOf(File.separator) + 1, outputPathPrefix.length)
+                    }
+
+                    if (outputPathPrefix.endsWith(".jar")) {
+                        outputPathPrefix = outputPathPrefix.substring(0, outputPathPrefix.lastIndexOf(".jar"))
+                    }
+
+                    if (outputPathPrefix.isNotEmpty()) {
+                        pathPrefix = outputPathPrefix + File.separator
+                    }
                 }
             }
-        }
 
-        return try {
             // Bail out early if we would instrument ourselves. This prevents ClassCircularityErrors as we might need to
             // load additional Jazzer classes until we reach the full exclusion logic.
             if (internalClassName.startsWith("com/code_intelligence/jazzer/")) {
@@ -96,9 +100,6 @@ class RuntimeInstrumentor(
             // redefinitions.
             transformInternal(internalClassName, classfileBuffer.takeUnless { loader == null && classBeingRedefined != null })
         } catch (t: Throwable) {
-            // Throwables raised from transform are silently dropped, making it extremely hard to detect instrumentation
-            // failures. The docs advise to use a top-level try-catch.
-            // https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/ClassFileTransformer.html
             if (dumpClassesDir != null) {
                 dumpToClassFile(internalClassName, classfileBuffer, basenameSuffix = ".failed", pathPrefix = pathPrefix)
             }
@@ -208,7 +209,7 @@ class RuntimeInstrumentor(
     }
 
     private fun instrument(internalClassName: String, bytecode: ByteArray, fullInstrumentation: Boolean): ByteArray {
-        val classWithHooksEnabledField = if (Opt.conditionalHooks.get()) {
+        val classWithHooksEnabledField = if (conditionalHooks) {
             // Let the hook instrumentation emit additional logic that checks the value of the
             // hooksEnabled field on this class and skips the hook if it is false.
             "com/code_intelligence/jazzer/runtime/JazzerInternal"
