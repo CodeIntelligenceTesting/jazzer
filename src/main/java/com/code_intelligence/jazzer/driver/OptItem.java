@@ -49,7 +49,8 @@ public abstract class OptItem<T> implements Supplier<T> {
   private static final String INTERNAL_SEGMENT = "internal";
 
   private static Optional<List<Map.Entry<String, String>>> cliArgs = Optional.empty();
-  private static Optional<Function<String, String>> configurationParameterGetter = Optional.empty();
+  private static Optional<Function<String, Optional<String>>> configurationParameterGetter =
+      Optional.empty();
 
   private final String name;
   private final String rawDefaultValue;
@@ -84,7 +85,7 @@ public abstract class OptItem<T> implements Supplier<T> {
    * <p>Must only be called once.
    */
   static void registerConfigurationParameters(
-      Function<String, String> configurationParameterGetter) {
+      Function<String, Optional<String>> configurationParameterGetter) {
     if (OptItem.configurationParameterGetter.isPresent()) {
       throw new IllegalStateException("Configuration parameters have already been set");
     }
@@ -179,8 +180,7 @@ public abstract class OptItem<T> implements Supplier<T> {
   }
 
   private Stream<T> getFromConfigurationParameters() {
-    return stream(configurationParameterGetter.flatMap(
-                      getter -> Optional.ofNullable(getter.apply(propertyName()))))
+    return stream(configurationParameterGetter.flatMap(getter -> getter.apply(propertyName())))
         .map(s -> fromStringOrThrow(s, "configuration parameter " + propertyName()));
   }
 
