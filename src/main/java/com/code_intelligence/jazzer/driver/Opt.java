@@ -28,11 +28,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Static options that determine the runtime behavior of the fuzzer, set via Java properties.
+ * Options that determine the runtime behavior of the fuzzer, set via (in increasing order of
+ * preference):
+ * <ul>
+ *   <li>the default value;</li>
+ *   <li>{@code META-INF/MANIFEST.MF} attributes {@code Jazzer-Some-Opt} on the classpath;</li>
+ *   <li>the {@code JAZZER_SOME_OPT} environment variable;</li>
+ *   <li>the {@code jazzer.some_opt} system property;</li>
+ *   <li>the {@code --some_opt} command-line argument (if running from the command line).</li>
+ * </ul>
  *
- * <p>Each option corresponds to a command-line argument of the driver of the same name.
- *
- * <p>Every public field should be deeply immutable.
+ * <p>Option values are locked in the first time they are accessed.
+ * <p>Every public field should be static and final.
  */
 public final class Opt {
   static {
