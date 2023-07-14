@@ -23,6 +23,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.createFile;
+import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
@@ -88,7 +89,7 @@ public class UtilsTest implements InvocationInterceptor {
     return Stream.of(
         arguments("foo", 0, new HashMap<>(), singletonList(5), UtilsTest.class, new int[] {1}),
         getMarkedArguments(testMethod, "some name"),
-        arguments("baz", 1, new LinkedHashMap<>(), Arrays.asList(5, 7), String.class, new int[0]),
+        arguments("baz", 1, new LinkedHashMap<>(), asList(5, 7), String.class, new int[0]),
         getMarkedArguments(testMethod, "some other name"));
   }
 
@@ -133,7 +134,8 @@ public class UtilsTest implements InvocationInterceptor {
 
     assertThat(Utils.getClassPathBasedInstrumentationFilter(makeClassPath(
                    firstDir, firstJar, nonExistentDir, secondDir, secondJar, emptyDir)))
-        .hasValue("*,com.example.other_project.**,com.example.project.**,org.example.**");
+        .hasValue(asList(
+            "*", "com.example.other_project.**", "com.example.project.**", "org.example.**"));
   }
 
   @Test

@@ -26,6 +26,8 @@ import static java.lang.System.exit;
 import com.code_intelligence.jazzer.utils.Log;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Options that determine the runtime behavior of the fuzzer, set via (in increasing order of
@@ -35,6 +37,7 @@ import java.util.Map;
  *   <li>{@code META-INF/MANIFEST.MF} attributes {@code Jazzer-Some-Opt} on the classpath;</li>
  *   <li>the {@code JAZZER_SOME_OPT} environment variable;</li>
  *   <li>the {@code jazzer.some_opt} system property;</li>
+ *   <li>the {@code jazzer.some_opt} JUnit configuration parameter (for JUnit fuzz tests);</li>
  *   <li>the {@code --some_opt} command-line argument (if running from the command line).</li>
  * </ul>
  *
@@ -115,6 +118,11 @@ public final class Opt {
           + "Jazzer will create a temporary file and pass it to subprocesses.");
   public static final OptItem<List<String>> ignore = stringListSetting("ignore", ',',
       "Hex strings representing deduplication tokens of findings that should be ignored");
+  public static final OptItem<List<String>> instrument = OptParser.stringListSetting("instrument",
+      ',',
+      "Glob patterns matching names of classes that should be instrumented for fuzzing. This "
+          + "sets both instrumentation_includes and custom_hook_includes, depending on the mode "
+          + "(regression test or fuzzing). Only used for JUnit fuzz tests");
   public static final OptItem<List<String>> instrumentationExcludes =
       OptParser.stringListSetting("instrumentation_excludes",
           "Glob patterns matching names of classes that should not be instrumented for fuzzing");
@@ -158,6 +166,11 @@ public final class Opt {
 
   public static void registerAndValidateCommandLineArgs(List<Map.Entry<String, String>> cliArgs) {
     OptParser.registerAndValidateCommandLineArgs(cliArgs);
+  }
+
+  public static void registerConfigurationParameters(
+      Function<String, Optional<String>> configurationParameterGetter) {
+    OptParser.registerConfigurationParameters(configurationParameterGetter);
   }
 
   public static void handleHelpAndVersionArgs() {
