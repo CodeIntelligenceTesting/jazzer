@@ -44,7 +44,8 @@ public class OptItemTest {
     Map<String, String> configurationParams = new HashMap<>();
     configurationParams.put("jazzer.some_arg", "config_1,config_2");
     configurationParams.put("jazzer.other_arg", "config_3,config_4");
-    OptItem.registerConfigurationParameters(configurationParams::get);
+    OptItem.registerConfigurationParameters(
+        key -> Optional.ofNullable(configurationParams.get(key)));
 
     List<Map.Entry<String, String>> cliArgs = new ArrayList<>();
     cliArgs.add(new SimpleEntry<>("some_arg", "cli_1,cli_2"));
