@@ -49,6 +49,12 @@ java_library(
     ],
 )
 
+java_library(
+    name = "fuzz_test_configuration_error",
+    srcs = ["FuzzTestConfigurationError.java"],
+    visibility = ["//src/test/java/com/code_intelligence/jazzer/junit:__pkg__"],
+)
+
 java_jni_library(
     name = "fuzz_test_executor",
     srcs = [
@@ -80,6 +86,7 @@ java_library(
     name = "seed_serializer",
     srcs = ["SeedSerializer.java"],
     deps = [
+        ":fuzz_test_configuration_error",
         "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/autofuzz",
         "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",

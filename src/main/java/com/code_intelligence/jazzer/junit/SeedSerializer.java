@@ -47,7 +47,7 @@ interface SeedSerializer {
    */
   static SeedSerializer of(Method method) {
     if (method.getParameterCount() == 0) {
-      throw new IllegalArgumentException(
+      throw new FuzzTestConfigurationError(
           "Methods annotated with @FuzzTest must take at least one parameter");
     }
     if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == byte[].class) {
