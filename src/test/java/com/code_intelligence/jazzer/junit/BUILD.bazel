@@ -32,6 +32,7 @@ java_test(
     ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test_configuration_error",
         "@maven//:com_google_truth_extensions_truth_java8_extension",
         "@maven//:com_google_truth_truth",
         "@maven//:junit_junit",

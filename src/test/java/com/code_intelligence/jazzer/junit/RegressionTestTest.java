@@ -133,7 +133,7 @@ public class RegressionTestTest {
                 uniqueIdSubstrings(ENGINE, INVALID_FUZZ_TESTS, INVALID_PARAMETER_COUNT_FUZZ))),
         event(type(FINISHED),
             container(uniqueIdSubstrings(ENGINE, INVALID_FUZZ_TESTS, INVALID_PARAMETER_COUNT_FUZZ)),
-            finishedWithFailure(instanceOf(IllegalArgumentException.class),
+            finishedWithFailure(instanceOf(FuzzTestConfigurationError.class),
                 message("Methods annotated with @FuzzTest must take at least one parameter"))),
         event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, INVALID_FUZZ_TESTS)),
             finishedSuccessfully()),
