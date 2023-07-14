@@ -16,8 +16,14 @@ package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import org.junit.jupiter.api.TestInfo;
 
 class InvalidFuzzTests {
   @FuzzTest
   void invalidParameterCountFuzz() {}
+
+  @FuzzTest
+  void parameterResolverFuzz(FuzzedDataProvider data, TestInfo testInfo) {
+    throw new RuntimeException(testInfo.getDisplayName());
+  }
 }

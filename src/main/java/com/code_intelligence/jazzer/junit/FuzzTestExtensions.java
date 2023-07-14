@@ -25,10 +25,13 @@ import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
+import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.platform.commons.support.AnnotationSupport;
 
-class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
+class FuzzTestExtensions
+    implements ExecutionCondition, InvocationInterceptor, TestExecutionExceptionHandler {
   private static final String JAZZER_INTERNAL =
       "com.code_intelligence.jazzer.runtime.JazzerInternal";
   private static final AtomicReference<Method> fuzzTestMethod = new AtomicReference<>();
@@ -166,5 +169,25 @@ class FuzzTestExtensions implements ExecutionCondition, InvocationInterceptor {
     Field hooksEnabledField = getHooksEnabledField();
     hooksEnabledField.setBoolean(null, true);
     return () -> hooksEnabledField.setBoolean(null, false);
+  }
+
+  @Override
+  public void handleTestExecutionException(ExtensionContext extensionContext, Throwable throwable)
+      throws Throwable {
+    if (throwable instanceof ParameterResolutionException) {
+      // JUnit does not provide direct information about which parameters of a given method can be
+      // resolved dynamically by ParameterResolvers. The ExecutableInvoker interface only allows to
+      // call methods that only take dynamically resolved parameters. We thus can't support fuzz
+      // test methods that rely on ParameterResolver and tell the user about this limitation when
+      // the invocation fails.
+      throw new FuzzTestConfigurationError(
+          "@FuzzTest does not support parameters resolved via ParameterResolvers. Instead of "
+              + "injecting objects via test method parameters, inject them via test instance "
+              + "properties. Note that test instances are reused across all invocations during "
+              + "fuzzing.",
+          throwable);
+    } else {
+      throw throwable;
+    }
   }
 }
