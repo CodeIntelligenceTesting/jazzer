@@ -16,6 +16,7 @@ package com.code_intelligence.jazzer.junit;
 
 import static java.util.Arrays.stream;
 import static java.util.Collections.newSetFromMap;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Named.named;
@@ -107,7 +108,7 @@ class Utils {
   /**
    * Returns a heuristic default value for jazzer.instrument based on the test class.
    */
-  static String getLegacyInstrumentationFilter(Class<?> testClass) {
+  static List<String> getLegacyInstrumentationFilter(Class<?> testClass) {
     // This is an extremely rough "implementation" of the public suffix list algorithm
     // (https://publicsuffix.org/): It tries to guess the shortest prefix of the package name that
     // isn't public. It doesn't use the actual list, but instead assumes that every root segment as
@@ -122,8 +123,9 @@ class Utils {
         && packageSegments[1].equals("github")) {
       numSegments = 3;
     }
-    return Stream.concat(Arrays.stream(packageSegments).limit(numSegments), Stream.of("**"))
-        .collect(joining("."));
+    return singletonList(
+        Stream.concat(Arrays.stream(packageSegments).limit(numSegments), Stream.of("**"))
+            .collect(joining(".")));
   }
 
   private static final Pattern CLASSPATH_SPLITTER =
@@ -133,7 +135,7 @@ class Utils {
    * Returns a heuristic default value for jazzer.instrument based on the files on the provided
    * classpath.
    */
-  static Optional<String> getClassPathBasedInstrumentationFilter(String classPath) {
+  static Optional<List<String>> getClassPathBasedInstrumentationFilter(String classPath) {
     List<Path> includes =
         CLASSPATH_SPLITTER.splitAsStream(classPath)
             .map(Paths::get)
@@ -186,8 +188,7 @@ class Utils {
             // For classes without a package, only include the unnamed package.
             .map(path -> path.isEmpty() ? "*" : path.replace(File.separator, ".") + ".**")
             .sorted()
-            // jazzer.instrument uses ',' as the separator.
-            .collect(joining(",")));
+            .collect(toList()));
   }
 
   private static final Pattern COVERAGE_AGENT_ARG =

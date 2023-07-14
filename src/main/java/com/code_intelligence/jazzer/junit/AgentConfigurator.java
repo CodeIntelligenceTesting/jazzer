@@ -32,37 +32,32 @@ class AgentConfigurator {
       return;
     }
 
-    applyCommonConfiguration();
+    applyCommonConfiguration(extensionContext);
 
     // Add logic to the hook instrumentation that allows us to enable and disable hooks at runtime.
     Opt.conditionalHooks.setIfDefault(true);
     // Apply all hooks, but no coverage or compare instrumentation.
     Opt.instrumentationExcludes.setIfDefault(singletonList("**"));
-    extensionContext.getConfigurationParameter("jazzer.instrument")
-        .ifPresent(s -> Opt.customHookIncludes.setIfDefault(asList(s.split(","))));
+    Opt.customHookIncludes.setIfDefault(Opt.instrument.get());
   }
 
-  static void forFuzzing(ExtensionContext executionRequest) {
+  static void forFuzzing(ExtensionContext extensionContext) {
     if (!hasBeenConfigured.compareAndSet(false, true)) {
       throw new IllegalStateException("Only a single fuzz test should be executed per fuzzing run");
     }
 
-    applyCommonConfiguration();
+    applyCommonConfiguration(extensionContext);
 
-    String instrumentationFilter =
-        executionRequest.getConfigurationParameter("jazzer.instrument")
+    Opt.instrument.setIfDefault(
+        getClassPathBasedInstrumentationFilter(System.getProperty("java.class.path"))
             .orElseGet(
-                ()
-                    -> getClassPathBasedInstrumentationFilter(System.getProperty("java.class.path"))
-                           .orElseGet(()
-                                          -> getLegacyInstrumentationFilter(
-                                              executionRequest.getRequiredTestClass())));
-    List<String> includes = asList(instrumentationFilter.split(","));
-    Opt.customHookIncludes.setIfDefault(includes);
-    Opt.instrumentationIncludes.setIfDefault(includes);
+                () -> getLegacyInstrumentationFilter(extensionContext.getRequiredTestClass())));
+    Opt.customHookIncludes.setIfDefault(Opt.instrument.get());
+    Opt.instrumentationIncludes.setIfDefault(Opt.instrument.get());
   }
 
-  private static void applyCommonConfiguration() {
+  private static void applyCommonConfiguration(ExtensionContext extensionContext) {
+    Opt.registerConfigurationParameters(extensionContext::getConfigurationParameter);
     // Do not hook common IDE and JUnit classes and their dependencies.
     Opt.customHookExcludes.setIfDefault(asList("com.google.testing.junit.**", "com.intellij.**",
         "org.jetbrains.**", "io.github.classgraph.**", "junit.framework.**", "net.bytebuddy.**",
