@@ -58,6 +58,8 @@ public class RegressionTestTest {
       "test-template:dataFuzz(com.code_intelligence.jazzer.api.FuzzedDataProvider)";
   private static final String INVALID_PARAMETER_COUNT_FUZZ =
       "test-template:invalidParameterCountFuzz()";
+  private static final String PARAMETER_RESOLVER_FUZZ =
+      "test-template:parameterResolverFuzz(com.code_intelligence.jazzer.api.FuzzedDataProvider, org.junit.jupiter.api.TestInfo)";
   private static final String AUTOFUZZ_WITH_CORPUS =
       "test-template:autofuzzWithCorpus(java.lang.String, int)";
   private static final String INVOCATION = "test-template-invocation:#";
@@ -135,11 +137,19 @@ public class RegressionTestTest {
             container(uniqueIdSubstrings(ENGINE, INVALID_FUZZ_TESTS, INVALID_PARAMETER_COUNT_FUZZ)),
             finishedWithFailure(instanceOf(FuzzTestConfigurationError.class),
                 message("Methods annotated with @FuzzTest must take at least one parameter"))),
+        event(type(FINISHED),
+            container(uniqueIdSubstrings(ENGINE, INVALID_FUZZ_TESTS, PARAMETER_RESOLVER_FUZZ)),
+            finishedSuccessfully()),
         event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, INVALID_FUZZ_TESTS)),
             finishedSuccessfully()),
         event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
     results.testEvents().debug().assertEventsMatchLoosely(
+        event(type(FINISHED),
+            test(uniqueIdSubstrings(
+                ENGINE, INVALID_FUZZ_TESTS, PARAMETER_RESOLVER_FUZZ, INVOCATION)),
+            displayName("<empty input>"),
+            finishedWithFailure(instanceOf(FuzzTestConfigurationError.class))),
         event(type(DYNAMIC_TEST_REGISTERED),
             test(uniqueIdSubstrings(ENGINE, VALID_FUZZ_TESTS, DATA_FUZZ, INVOCATION)),
             displayName("<empty input>")),
