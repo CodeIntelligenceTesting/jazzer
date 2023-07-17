@@ -35,8 +35,8 @@ build --tool_java_runtime_version=remotejdk_17
 build --experimental_java_classpath=bazel
 
 # Android
-build:android_arm --incompatible_enable_android_toolchain_resolution
-build:android_arm --android_platforms=//:android_arm64
+build --incompatible_enable_android_toolchain_resolution
+build --android_platforms=//:android_arm64
 build:android_arm --copt=-D_ANDROID
 build:android_arm --java_runtime_version=local_jdk
 
