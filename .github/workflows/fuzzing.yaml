@@ -64,6 +64,7 @@ jobs:
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-secrets
     env:
       ci_fuzz_token: ${{ secrets.CI_FUZZ_API_TOKEN }}
+    needs: ["setup"]
     steps:
       - id: start-fuzzing
         name: Start Fuzzing
