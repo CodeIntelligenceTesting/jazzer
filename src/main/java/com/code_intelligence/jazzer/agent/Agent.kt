@@ -96,13 +96,13 @@ fun installInternal(
         }
     }
     val includedHookNames = instrumentationTypes
-        .flatMap { type ->
+        .mapNotNull { type ->
             when (type) {
-                InstrumentationType.CMP -> listOf("com.code_intelligence.jazzer.runtime.TraceCmpHooks", "com.code_intelligence.jazzer.runtime.ClojureLangHooks")
-                InstrumentationType.DIV -> listOf("com.code_intelligence.jazzer.runtime.TraceDivHooks")
-                InstrumentationType.INDIR -> listOf("com.code_intelligence.jazzer.runtime.TraceIndirHooks")
-                InstrumentationType.NATIVE -> listOf("com.code_intelligence.jazzer.runtime.NativeLibHooks")
-                else -> listOf()
+                InstrumentationType.CMP -> "com.code_intelligence.jazzer.runtime.TraceCmpHooks"
+                InstrumentationType.DIV -> "com.code_intelligence.jazzer.runtime.TraceDivHooks"
+                InstrumentationType.INDIR -> "com.code_intelligence.jazzer.runtime.TraceIndirHooks"
+                InstrumentationType.NATIVE -> "com.code_intelligence.jazzer.runtime.NativeLibHooks"
+                else -> null
             }
         }
     val coverageIdSynchronizer = if (idSyncFilePath != null) {

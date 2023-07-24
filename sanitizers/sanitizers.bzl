@@ -16,6 +16,7 @@ _sanitizer_package_prefix = "com.code_intelligence.jazzer.sanitizers."
 
 _sanitizer_class_names = [
     # keep sorted
+    "ClojureLangHooks",
     "Deserialization",
     "ExpressionLanguageInjection",
     "LdapInjection",
