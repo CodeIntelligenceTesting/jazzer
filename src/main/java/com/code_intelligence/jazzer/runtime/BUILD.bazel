@@ -151,6 +151,8 @@ java_jni_library(
 java_library(
     name = "runtime",
     srcs = [
+        "ClojureLangHooks.java",
+        "ClojureLangIFnProxy.java",
         "HardToCatchError.java",
         "JazzerInternal.java",
         "NativeLibHooks.java",
