@@ -20,10 +20,8 @@ env:
   CIFUZZ_INSTALL_DIR: ./cifuzz
   FUZZING_ARTIFACT: fuzzing-artifact.tar.gz
 jobs:
-  fuzz_tests:
+  setup:
     runs-on: ubuntu-latest
-    # Configure your build environment here
-    # container: example/docker_image
     steps:
       - id: checkout
         name: Checkout Repository
@@ -59,6 +57,15 @@ jobs:
             --branch $GITHUB_REF_NAME \
             --output $GITHUB_WORKSPACE/$CHECKOUT_DIR/$FUZZING_ARTIFACT
         shell: "bash"
+
+
+  fuzz_tests:
+    runs-on: ubuntu-latest
+    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-secrets
+    env:
+      ci_fuzz_token: ${{ secrets.CI_FUZZ_API_TOKEN }}
+    if: ${{ env.ci_fuzz_token != '' }}
+    steps:
       - id: start-fuzzing
         name: Start Fuzzing
         uses: CodeIntelligenceTesting/github-actions/start-fuzzing@v5
