@@ -44,4 +44,17 @@ final public class TraceDivHooks {
       TraceDataFlowNativeCallbacks.traceDivLong(divisor, hookId);
     }
   }
+
+  @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers",
+      targetMethod = "divide",
+      targetMethodDescriptor = "(Ljava/lang/Number;Ljava/lang/Number;)Ljava/lang/Number;")
+  public static void
+  numberUnsignedDivide(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    long divisor = ((Number) arguments[1]).longValue();
+    // Run the callback only if the divisor, which is regarded as an unsigned long, fits in a
+    // signed long, i.e., does not have the sign bit set.
+    if (divisor > 0) {
+      TraceDataFlowNativeCallbacks.traceDivLong(divisor, hookId);
+    }
+  }
 }
