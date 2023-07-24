@@ -20,10 +20,11 @@ env:
   CIFUZZ_INSTALL_DIR: ./cifuzz
   FUZZING_ARTIFACT: fuzzing-artifact.tar.gz
 jobs:
-  fuzz_tests:
+  setup:
     runs-on: ubuntu-latest
-    # Configure your build environment here
-    # container: example/docker_image
+    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-secrets
+    env:
+      ci_fuzz_token: ${{ secrets.CI_FUZZ_API_TOKEN }}
     steps:
       - id: checkout
         name: Checkout Repository
@@ -62,6 +63,7 @@ jobs:
       - id: start-fuzzing
         name: Start Fuzzing
         uses: CodeIntelligenceTesting/github-actions/start-fuzzing@v5
+        if: ${{ env.ci_fuzz_token != '' }}
         with:
           ci_fuzz_api_token: ${{ secrets.CI_FUZZ_API_TOKEN }}
           fuzzing_server_address: ${{ env.FUZZING_SERVER_ADDRESS }}
@@ -70,6 +72,7 @@ jobs:
       - id: monitor-fuzzing
         name: Fuzzing
         uses: CodeIntelligenceTesting/github-actions/monitor-fuzzing@v5
+        if: ${{ env.ci_fuzz_token != '' }}
         with:
           ci_fuzz_api_token: ${{ secrets.CI_FUZZ_API_TOKEN }}
           test_collection_run: ${{ steps.start-fuzzing.outputs.test_collection_run }}
@@ -78,7 +81,7 @@ jobs:
       - id: save-results
         name: Save Fuzz Test Results
         uses: CodeIntelligenceTesting/github-actions/save-results@v5
-        if: ${{ success() || failure() }}
+        if: ${{ env.ci_fuzz_token != '' && (success() || failure()) }}
         with:
           ci_fuzz_api_token: ${{ secrets.CI_FUZZ_API_TOKEN }}
           test_collection_run: ${{ steps.start-fuzzing.outputs.test_collection_run }}
@@ -86,7 +89,7 @@ jobs:
           dashboard_address: ${{ env.WEB_APP_ADDRESS }}
       - id: upload-artifact
         uses: actions/upload-artifact@v2
-        if: ${{ (success() || failure()) }}
+        if: ${{ env.ci_fuzz_token != '' && (success() || failure()) }}
         with:
           name: ci_fuzz_results
           path: |
