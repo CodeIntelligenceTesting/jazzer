@@ -62,11 +62,38 @@ final public class TraceCmpHooks {
     TraceDataFlowNativeCallbacks.traceCmpLong((long) arguments[0], (long) arguments[1], hookId);
   }
 
+  @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers", targetMethod = "lt",
+      targetMethodDescriptor = "(Ljava/lang/Number;Ljava/lang/Number;)Z")
+  @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers", targetMethod = "gt",
+      targetMethodDescriptor = "(Ljava/lang/Number;Ljava/lang/Number;)Z")
+  @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers",
+      targetMethod = "lte", targetMethodDescriptor = "(Ljava/lang/Number;Ljava/lang/Number;)Z")
+  @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers",
+      targetMethod = "gte", targetMethodDescriptor = "(Ljava/lang/Number;Ljava/lang/Number;)Z")
+  public static void
+  numberCompare(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    Number arg1 = (Number) arguments[0];
+    Number arg2 = (Number) arguments[1];
+    TraceDataFlowNativeCallbacks.traceCmpLong(arg1.longValue(), arg2.longValue(), hookId);
+  }
+
   @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Long",
       targetMethod = "compareTo", targetMethodDescriptor = "(Ljava/lang/Long;)I")
   public static void
   longCompareTo(MethodHandle method, Long thisObject, Object[] arguments, int hookId) {
     TraceDataFlowNativeCallbacks.traceCmpLong(thisObject, (long) arguments[0], hookId);
+  }
+
+  @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers",
+      targetMethod = "isZero", targetMethodDescriptor = "(Ljava/lang/Number;)Z")
+  @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers",
+      targetMethod = "isPos", targetMethodDescriptor = "(Ljava/lang/Number;)Z")
+  @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers",
+      targetMethod = "isNeg", targetMethodDescriptor = "(Ljava/lang/Number;)Z")
+  public static void
+  staticNumberCompareZero(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    Number arg = (Number) arguments[0];
+    TraceDataFlowNativeCallbacks.traceCmpLong(arg.longValue(), 0, hookId);
   }
 
   @MethodHook(type = HookType.BEFORE, targetClassName = "kotlin.jvm.internal.Intrinsics ",
