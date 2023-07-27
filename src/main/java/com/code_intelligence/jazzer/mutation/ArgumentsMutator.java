@@ -195,7 +195,7 @@ public final class ArgumentsMutator {
     failIfArgumentsExposed();
     // TODO: Sometimes mutate the entire byte representation of the current value with libFuzzer's
     //  dictionary and TORC mutations.
-    productMutator.mutate(arguments, prng);
+    productMutator.mutateInPlace(arguments, prng);
   }
 
   public void invoke(boolean detach) throws Throwable {
