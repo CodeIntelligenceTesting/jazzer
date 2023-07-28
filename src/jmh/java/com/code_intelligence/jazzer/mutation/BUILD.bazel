@@ -1,0 +1,45 @@
+load("//src/jmh/java/com/code_intelligence/jazzer:jmh.bzl", "JMH_TEST_ARGS")
+
+package(default_testonly = True)
+
+java_binary(
+    name = "MutatorBenchmark",
+    env = {
+        "JAZZER_MOCK_LIBFUZZER_MUTATOR": "true",
+    },
+    main_class = "org.openjdk.jmh.Main",
+    runtime_deps = [
+        ":mutator_benchmark",
+    ],
+)
+
+java_test(
+    name = "MutatorBenchmarkTest",
+    args = JMH_TEST_ARGS,
+    env = {
+        "JAZZER_MOCK_LIBFUZZER_MUTATOR": "true",
+    },
+    main_class = "org.openjdk.jmh.Main",
+    tags = [
+        # This test forks additional JVMs, which can result in much higher RAM usage than Bazel
+        # accounts for it.
+        "exclusive-if-local",
+    ],
+    use_testrunner = False,
+    runtime_deps = [
+        ":mutator_benchmark",
+    ],
+)
+
+java_library(
+    name = "mutator_benchmark",
+    srcs = ["MutatorBenchmark.java"],
+    plugins = ["//src/jmh/java/com/code_intelligence/jazzer:JmhGeneratorAnnotationProcessor"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/engine",
+        "@maven//:org_openjdk_jmh_jmh_core",
+    ],
+)
