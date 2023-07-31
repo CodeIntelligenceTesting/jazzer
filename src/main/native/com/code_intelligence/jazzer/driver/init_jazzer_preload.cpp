@@ -17,7 +17,7 @@
 
 #include <cstdlib>
 
-#if defined(_ANDROID)
+#if defined(__ANDROID__)
 #define __jni_version__ JNI_VERSION_1_6
 #else
 #define __jni_version__ JNI_VERSION_1_8
