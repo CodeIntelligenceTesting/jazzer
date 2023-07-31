@@ -58,7 +58,7 @@ android_library(
     tags = ["manual"],
     target_compatible_with = SKIP_ON_WINDOWS,
     exports = [
-        "//deploy:jazzer-api",
+        "//deploy:jazzer-api-lib",
         "//src/main/java/com/code_intelligence/jazzer:jazzer_import",
     ],
 )

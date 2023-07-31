@@ -42,7 +42,7 @@ java_import(
     name = "jazzer_import",
     jars = [":jazzer"],
     visibility = ["//:__subpackages__"],
-    deps = ["//deploy:jazzer-api"],
+    deps = ["//deploy:jazzer-api-lib"],
 )
 
 jar_jar(
