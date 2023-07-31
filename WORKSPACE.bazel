@@ -85,9 +85,9 @@ http_archive(
 
 http_archive(
     name = "rules_android_ndk",
-    sha256 = "0fcaeed391bfc0ee784ab0365312e6c59fe75db9df3a67e8708c606e2a9cfd90",
-    strip_prefix = "rules_android_ndk-79923720aef601fad89c94e8802f5d77c1b73c5d",
-    url = "https://github.com/bazelbuild/rules_android_ndk/archive/79923720aef601fad89c94e8802f5d77c1b73c5d.zip",
+    sha256 = "73eac2cf5f2fd009e8fb197346a2ca39f320b786985658de63a1dff0f12c53d5",
+    strip_prefix = "rules_android_ndk-72ca32741f27c3de69fdcb7a1aaf3ca59919ad8c",
+    url = "https://github.com/bazelbuild/rules_android_ndk/archive/72ca32741f27c3de69fdcb7a1aaf3ca59919ad8c.zip",
 )
 
 http_file(
