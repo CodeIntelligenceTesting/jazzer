@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.code_intelligence.selffuzz;
+package com.code_intelligence.selffuzz.mutation.mutator.lang;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import com.code_intelligence.selffuzz.Helpers;
 import com.code_intelligence.selffuzz.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.selffuzz.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.selffuzz.jazzer.mutation.support.TypeHolder;
@@ -26,7 +27,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
-class FuzzTestCase {
+class StringMutatorFuzzTest {
   @FuzzTest(maxDuration = "10m")
   void stringMutatorTest(byte[] data) {
     SerializingMutator<String> mutator =
