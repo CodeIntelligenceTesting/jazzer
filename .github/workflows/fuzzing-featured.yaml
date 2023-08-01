@@ -103,7 +103,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: ${{ env.ci_fuzz_token != '' && (success() || failure()) }}
         with:
-          name: ci_fuzz_results-${{ env.PROJECT_NAME }}
+          name: ci_fuzz_results-featured
           path: |
             findings.json
             coverage.json
