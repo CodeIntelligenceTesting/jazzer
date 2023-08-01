@@ -1,0 +1,65 @@
+From cec904da75a345d4bf021855ad506657a0a4b23d Mon Sep 17 00:00:00 2001
+From: Fabian Meumertzheim <meumertzheim@code-intelligence.com>
+Date: Tue, 1 Aug 2023 13:48:57 +0200
+Subject: [PATCH] Remove unnecessary Java runtime dependencies
+
+`kt_jvm_library` no longer depends on a Java runtime for the target
+platform, which ensures that cross-platform builds targeting platforms
+without standalone Java runtimes (e.g. Android) can succeed without
+hacks (currently, Bazel's local_jdk is marked as compatible with any
+target platform, but that will change in the future).
+---
+ kotlin/internal/jvm/jvm.bzl | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/kotlin/internal/jvm/jvm.bzl b/kotlin/internal/jvm/jvm.bzl
+index 61fcb0ecc..822dd1597 100644
+--- a/kotlin/internal/jvm/jvm.bzl
++++ b/kotlin/internal/jvm/jvm.bzl
+@@ -149,6 +149,9 @@ _implicit_deps = {
+         default = Label("@bazel_tools//tools/jdk:current_java_runtime"),
+         cfg = "exec",
+     ),
++}
++
++_runnable_implicit_deps = {
+     "_java_runtime": attr.label(
+         default = Label("@bazel_tools//tools/jdk:current_java_runtime"),
+     ),
+@@ -269,7 +272,7 @@ this is not transitive""",
+     ),
+ })
+ 
+-_runnable_common_attr = utils.add_dicts(_common_attr, {
++_runnable_common_attr = utils.add_dicts(_common_attr, _runnable_implicit_deps, {
+     "jvm_flags": attr.string_list(
+         doc = """A list of flags to embed in the wrapper script generated for running this binary. Note: does not yet
+         support make variable substitution.""",
+@@ -287,6 +290,9 @@ _common_outputs = dict(
+ _common_toolchains = [
+     _TOOLCHAIN_TYPE,
+     _JAVA_TOOLCHAIN_TYPE,
++]
++
++_runnable_common_toolchains = [
+     _JAVA_RUNTIME_TOOLCHAIN_TYPE,
+ ]
+ 
+@@ -318,7 +324,7 @@ It is appropriate for building workspace utilities. `java_binary` should be pref
+     }.items()),
+     executable = True,
+     outputs = _common_outputs,
+-    toolchains = _common_toolchains,
++    toolchains = _common_toolchains + _runnable_common_toolchains,
+     fragments = ["java"],  # Required fragments of the target configuration
+     host_fragments = ["java"],  # Required fragments of the host configuration
+     implementation = _kt_jvm_binary_impl,
+@@ -353,7 +359,7 @@ Setup a simple kotlin_test.
+     executable = True,
+     outputs = _common_outputs,
+     test = True,
+-    toolchains = _common_toolchains,
++    toolchains = _common_toolchains + _runnable_common_toolchains,
+     implementation = _kt_jvm_junit_test_impl,
+     fragments = ["java"],  # Required fragments of the target configuration
+     host_fragments = ["java"],  # Required fragments of the host configuration
