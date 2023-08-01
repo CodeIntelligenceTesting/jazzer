@@ -1,0 +1,19 @@
+From 388a879657e5e4e9ad6807279a84bf01bef6c14a Mon Sep 17 00:00:00 2001
+From: Nevena Kotlaja <kotlaja@google.com>
+Date: Tue, 18 Jul 2023 14:46:57 +0200
+Subject: [PATCH] Register java toolchain inside maven_project_jar
+
+---
+ private/rules/maven_project_jar.bzl | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/private/rules/maven_project_jar.bzl b/private/rules/maven_project_jar.bzl
+index 5c8dae0c..d9118e0d 100644
+--- a/private/rules/maven_project_jar.bzl
++++ b/private/rules/maven_project_jar.bzl
+@@ -190,4 +190,5 @@ single artifact that other teams can download and use.
+             default = "@bazel_tools//tools/jdk:current_java_toolchain",
+         ),
+     },
++    toolchains = ["@bazel_tools//tools/jdk:toolchain_type"],
+ )
