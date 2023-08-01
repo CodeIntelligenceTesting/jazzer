@@ -53,6 +53,7 @@ jar_jar(
 
 java_binary(
     name = "jazzer_unshaded",
+    create_executable = False,
     # Note: We can't add
     # //src/main/java/com/code_intelligence/jazzer/runtime:java_bootstrap_unshaded itself as
     # that would also strip out external dependencies common between Jazzer and its bootstrap jar,
