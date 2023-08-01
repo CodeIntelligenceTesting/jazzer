@@ -25,6 +25,11 @@ jobs:
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-secrets
     env:
       ci_fuzz_token: ${{ secrets.CI_FUZZ_API_TOKEN }}
+    strategy:
+      matrix:
+        cisense-project:
+          - "projects/Jazzer-39e8ed3a" # normal project
+          - "projects/Jazzer-2bd02dc5" # featured project
     steps:
       - id: checkout
         name: Checkout Repository
@@ -69,6 +74,7 @@ jobs:
           fuzzing_server_address: ${{ env.FUZZING_SERVER_ADDRESS }}
           fuzzing_artifact: ${{ env.CHECKOUT_DIR }}/${{ env.FUZZING_ARTIFACT }}
           checkout_directory: ${{ env.CHECKOUT_DIR }}/selffuzz
+          project: ${{ matrix.cisense-project }}
       - id: monitor-fuzzing
         name: Fuzzing
         uses: CodeIntelligenceTesting/github-actions/monitor-fuzzing@v5
@@ -78,6 +84,7 @@ jobs:
           test_collection_run: ${{ steps.start-fuzzing.outputs.test_collection_run }}
           fuzzing_server_address: ${{ env.FUZZING_SERVER_ADDRESS }}
           dashboard_address: ${{ env.WEB_APP_ADDRESS }}
+          project: ${{ matrix.cisense-project }}
       - id: save-results
         name: Save Fuzz Test Results
         uses: CodeIntelligenceTesting/github-actions/save-results@v5
@@ -87,11 +94,12 @@ jobs:
           test_collection_run: ${{ steps.start-fuzzing.outputs.test_collection_run }}
           fuzzing_server_address: ${{ env.FUZZING_SERVER_ADDRESS }}
           dashboard_address: ${{ env.WEB_APP_ADDRESS }}
+          project: ${{ matrix.cisense-project }}
       - id: upload-artifact
         uses: actions/upload-artifact@v2
         if: ${{ env.ci_fuzz_token != '' && (success() || failure()) }}
         with:
-          name: ci_fuzz_results
+          name: ci_fuzz_results-${{ matrix.cisense-project }}
           path: |
             findings.json
             coverage.json
