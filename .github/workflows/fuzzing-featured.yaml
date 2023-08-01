@@ -1,6 +1,14 @@
-name: CI Fuzz
-# Set an action secret called "CI_FUZZ_API_TOKEN" with an API token
+# This file exists over using one workflow and a matrix because matrices don't give you an easy way to use different
+# secrets. The way that exists, having the secret's key name be a value, only works within `with` and not in `env`
+# blocks (see https://github.com/orgs/community/discussions/26302#discussioncomment-3905492). This is a problem because
+# we need to load the secret in `env` in order to check that it's there, so we can know if we want to run the fuzzing
+# job. And we need _that_ because any PRs that come in from forks may not have these secrets defined and thus would
+# cause our CI to fail if we let the steps run.
+
+name: CI Fuzz Featured Project
+# Set an action secret called "FEATURED_CI_FUZZ_API_TOKEN" with an API token
 # generated in CI Fuzz web interface.
+
 
 on:
   workflow_dispatch:
@@ -10,7 +18,7 @@ on:
     branches: [ main ]
 
 env:
-  PROJECT_NAME: projects/Jazzer-39e8ed3a
+  PROJECT_NAME: projects/Jazzer-2bd02dc5
   # The fuzzing server gRPC URL.
   FUZZING_SERVER_ADDRESS: grpc.code-intelligence.com:443
   # The fuzzing server HTTP URL.
@@ -25,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-secrets
     env:
-      ci_fuzz_token: ${{ secrets.CI_FUZZ_API_TOKEN }}
+      ci_fuzz_token: ${{ secrets.FEATURED_CI_FUZZ_API_TOKEN }}
     steps:
       - id: checkout
         name: Checkout Repository
@@ -66,7 +74,7 @@ jobs:
         uses: CodeIntelligenceTesting/github-actions/start-fuzzing@v5
         if: ${{ env.ci_fuzz_token != '' }}
         with:
-          ci_fuzz_api_token: ${{ secrets.CI_FUZZ_API_TOKEN }}
+          ci_fuzz_api_token: ${{ secrets.FEATURED_CI_FUZZ_API_TOKEN }}
           fuzzing_server_address: ${{ env.FUZZING_SERVER_ADDRESS }}
           fuzzing_artifact: ${{ env.CHECKOUT_DIR }}/${{ env.FUZZING_ARTIFACT }}
           checkout_directory: ${{ env.CHECKOUT_DIR }}/selffuzz
@@ -76,7 +84,7 @@ jobs:
         uses: CodeIntelligenceTesting/github-actions/monitor-fuzzing@v5
         if: ${{ env.ci_fuzz_token != '' }}
         with:
-          ci_fuzz_api_token: ${{ secrets.CI_FUZZ_API_TOKEN }}
+          ci_fuzz_api_token: ${{ secrets.FEATURED_CI_FUZZ_API_TOKEN }}
           test_collection_run: ${{ steps.start-fuzzing.outputs.test_collection_run }}
           fuzzing_server_address: ${{ env.FUZZING_SERVER_ADDRESS }}
           dashboard_address: ${{ env.WEB_APP_ADDRESS }}
@@ -86,7 +94,7 @@ jobs:
         uses: CodeIntelligenceTesting/github-actions/save-results@v5
         if: ${{ env.ci_fuzz_token != '' && (success() || failure()) }}
         with:
-          ci_fuzz_api_token: ${{ secrets.CI_FUZZ_API_TOKEN }}
+          ci_fuzz_api_token: ${{ secrets.FEATURED_CI_FUZZ_API_TOKEN }}
           test_collection_run: ${{ steps.start-fuzzing.outputs.test_collection_run }}
           fuzzing_server_address: ${{ env.FUZZING_SERVER_ADDRESS }}
           dashboard_address: ${{ env.WEB_APP_ADDRESS }}
@@ -95,7 +103,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: ${{ env.ci_fuzz_token != '' && (success() || failure()) }}
         with:
-          name: ci_fuzz_results
+          name: ci_fuzz_results-featured
           path: |
             findings.json
             coverage.json
