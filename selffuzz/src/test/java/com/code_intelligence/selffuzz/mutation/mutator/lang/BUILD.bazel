@@ -1,0 +1,13 @@
+load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_junit5_test")
+
+java_junit5_test(
+    name = "StringMutatorFuzzTest",
+    srcs = ["StringMutatorFuzzTest.java"],
+    deps = JUNIT5_DEPS + [
+        "//selffuzz/src/test/java/com/code_intelligence/selffuzz:helpers",
+        "//selffuzz:jazzer_selffuzz",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
