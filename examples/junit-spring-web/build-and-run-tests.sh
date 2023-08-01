@@ -18,7 +18,7 @@
 
 set -e
 ( cd ../../ &&
- bazel build //...
+ bazel build //deploy:all
 )
 
 # Update jazzer version used for building this project in the pom.xml
