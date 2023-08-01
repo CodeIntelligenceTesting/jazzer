@@ -185,6 +185,25 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "ClojureTests",
+    timeout = "long",
+    srcs = [
+        "ClojureTests.java",
+    ],
+    allowed_findings = [
+        "java.lang.ArithmeticException",
+    ],
+    target_class = "com.example.ClojureTests",
+    verify_crash_reproducer = False,
+    deps = [
+        "@clojure_core_specs_alpha_jar//jar",
+        "@clojure_jar//jar",
+        "@clojure_spec_alpha_jar//jar",
+        "@maven//:com_h2database_h2",
+    ],
+)
+
 java_test(
     name = "DisabledHooksTest",
     size = "small",

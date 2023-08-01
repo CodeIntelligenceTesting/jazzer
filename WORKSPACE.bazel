@@ -112,6 +112,24 @@ http_file(
     urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.cli/0.8.9/org.jacoco.cli-0.8.9-nodeps.jar"],
 )
 
+http_jar(
+    name = "clojure_jar",
+    sha256 = "2381b6e9423ab465151455944903d13a56243d6006b9194afc1bf4f8710cb4de",
+    url = "https://repo1.maven.org/maven2/org/clojure/clojure/1.11.1/clojure-1.11.1.jar",
+)
+
+http_jar(
+    name = "clojure_spec_alpha_jar",
+    sha256 = "67ec898eb55c66a957a55279dd85d1376bb994bd87668b2b0de1eb3b97e8aae0",
+    url = "https://repo1.maven.org/maven2/org/clojure/spec.alpha/0.3.218/spec.alpha-0.3.218.jar",
+)
+
+http_jar(
+    name = "clojure_core_specs_alpha_jar",
+    sha256 = "06eea8c070bbe45c158567e443439681bc8c46e9123414f81bfa32ba42d6cbc8",
+    url = "https://repo1.maven.org/maven2/org/clojure/core.specs.alpha/0.2.62/core.specs.alpha-0.2.62.jar",
+)
+
 load("@contrib_rules_jvm//:repositories.bzl", "contrib_rules_jvm_deps")
 
 contrib_rules_jvm_deps()
