@@ -1,7 +1,7 @@
 # This file exists over using one workflow and a matrix because matrices don't give you an easy way to use different
 # secrets. The way that exists, having the secret's key name be a value, only works within `with` and not in `env`
 # blocks (see https://github.com/orgs/community/discussions/26302#discussioncomment-3905492). This is a problem because
-# we need to load the secret in `env` in order to check that it's there so we can know if we want to run the fuzzing
+# we need to load the secret in `env` in order to check that it's there, so we can know if we want to run the fuzzing
 # job. And we need _that_ because any PRs that come in from forks may not have these secrets defined and thus would
 # cause our CI to fail if we let the steps run.
 
@@ -98,7 +98,7 @@ jobs:
           test_collection_run: ${{ steps.start-fuzzing.outputs.test_collection_run }}
           fuzzing_server_address: ${{ env.FUZZING_SERVER_ADDRESS }}
           dashboard_address: ${{ env.WEB_APP_ADDRESS }}
-          project: ${{ env.PROJECT_NAME }}
+          project_name: ${{ env.PROJECT_NAME }}
       - id: upload-artifact
         uses: actions/upload-artifact@v2
         if: ${{ env.ci_fuzz_token != '' && (success() || failure()) }}

@@ -90,7 +90,7 @@ jobs:
           test_collection_run: ${{ steps.start-fuzzing.outputs.test_collection_run }}
           fuzzing_server_address: ${{ env.FUZZING_SERVER_ADDRESS }}
           dashboard_address: ${{ env.WEB_APP_ADDRESS }}
-          project: ${{ env.PROJECT_NAME }}
+          project_name: ${{ env.PROJECT_NAME }}
       - id: upload-artifact
         uses: actions/upload-artifact@v2
         if: ${{ env.ci_fuzz_token != '' && (success() || failure()) }}
