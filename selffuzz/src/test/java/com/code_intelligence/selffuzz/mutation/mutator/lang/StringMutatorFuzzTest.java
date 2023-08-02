@@ -18,29 +18,22 @@ package com.code_intelligence.selffuzz.mutation.mutator.lang;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.selffuzz.Helpers;
+import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.selffuzz.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.selffuzz.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.selffuzz.jazzer.mutation.support.TypeHolder;
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
 
+@SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored"})
 class StringMutatorFuzzTest {
   @FuzzTest(maxDuration = "10m")
-  void stringMutatorTest(byte[] data) {
+  void stringMutatorTest(byte @NotNull[] data) throws IOException {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
             new TypeHolder<String>() {}.annotatedType());
-
     try (DataInputStream stream = Helpers.infiniteByteStream(data)) {
-      String out = mutator.read(stream);
-    } catch (EOFException e) {
-      // ignore end of file exceptions which can happen due to an invalid length in the input byte
-      // array
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+      mutator.read(stream);
     }
   }
 }
