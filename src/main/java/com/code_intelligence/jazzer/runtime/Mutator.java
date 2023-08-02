@@ -19,8 +19,12 @@ package com.code_intelligence.jazzer.runtime;
 import com.github.fmeum.rules_jni.RulesJni;
 
 public final class Mutator {
+  // Disable native mutations via environment variable in mutator unit tests,
+  // or via class name check in selffuzz integration tests.
+  @SuppressWarnings("ConstantValue")
   public static final boolean SHOULD_MOCK =
-      Boolean.parseBoolean(System.getenv("JAZZER_MOCK_LIBFUZZER_MUTATOR"));
+      Boolean.parseBoolean(System.getenv("JAZZER_MOCK_LIBFUZZER_MUTATOR"))
+      || Mutator.class.getName().startsWith("com.code_intelligence.selffuzz.");
 
   static {
     if (!SHOULD_MOCK) {

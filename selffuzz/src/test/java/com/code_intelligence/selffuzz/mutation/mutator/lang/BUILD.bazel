@@ -1,13 +1,19 @@
-load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_junit5_test")
+load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
-java_junit5_test(
+java_fuzz_target_test(
     name = "StringMutatorFuzzTest",
     srcs = ["StringMutatorFuzzTest.java"],
-    deps = JUNIT5_DEPS + [
-        "//selffuzz/src/test/java/com/code_intelligence/selffuzz:helpers",
+    fuzzer_args = [
+        "--experimental_mutator",
+    ],
+    target_class = "com.code_intelligence.selffuzz.mutation.mutator.lang.StringMutatorFuzzTest",
+    verify_crash_reproducer = False,
+    deps = [
         "//selffuzz:jazzer_selffuzz",
+        "//selffuzz/src/test/java/com/code_intelligence/selffuzz:helpers",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
-        "@maven//:org_junit_jupiter_junit_jupiter_params",
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        "@maven//:org_junit_platform_junit_platform_launcher",
     ],
 )
