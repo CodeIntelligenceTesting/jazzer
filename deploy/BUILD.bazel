@@ -96,10 +96,11 @@ java_export(
         srcs = [artifact + "_artifact_test.sh"],
         args = [
             "$(rootpath :%s)" % artifact,
+            "$(JAVABASE)",
         ],
         data = [
             ":" + artifact,
-            "@local_jdk//:bin/jar",
+            "@bazel_tools//tools/jdk:current_java_runtime",
         ],
         tags = [
             # Coverage instrumentation necessarily adds files to the jar that we
@@ -107,6 +108,9 @@ java_export(
             "no-coverage",
         ],
         target_compatible_with = SKIP_ON_WINDOWS,
+        toolchains = [
+            "@bazel_tools//tools/jdk:current_java_runtime",
+        ],
     )
     for artifact in [
         "jazzer-api",

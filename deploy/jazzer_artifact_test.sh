@@ -14,10 +14,12 @@
 # limitations under the License.
 
 [ -f "$1" ] || exit 1
+JAR="$2/bin/jar"
+[ -e "$JAR" ] || exit 1
 # List all files in the jar and exclude an allowed list of files.
 # Since grep fails if there is no match, ! ... | grep ... fails if there is a
 # match.
-! external/local_jdk/bin/jar tf "$1" | \
+! "$JAR" tf "$1" | \
   grep -v \
     -e '^com/$' \
     -e '^com/code_intelligence/$' \
