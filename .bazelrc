@@ -51,11 +51,6 @@ build:windows --features=static_link_msvcrt
 test:windows --noincompatible_strict_action_env
 run:windows --noincompatible_strict_action_env
 
-# macOS
-# Workaround for https://github.com/bazelbuild/bazel/issues/13944, which breaks external Java
-# dependencies on M1 Macs without Rosetta.
-build:macos --extra_toolchains=//bazel/toolchains:java_non_prebuilt_definition
-
 # Toolchain
 # Since the toolchain is conditional on OS and architecture, set it on the particular GitHub Action.
 common:toolchain --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
