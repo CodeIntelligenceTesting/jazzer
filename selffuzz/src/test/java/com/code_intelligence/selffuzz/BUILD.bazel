@@ -4,5 +4,8 @@ java_library(
     name = "helpers",
     srcs = ["Helpers.java"],
     visibility = ["//:__subpackages__"],
-    deps = ["//selffuzz:jazzer_selffuzz"],
+    deps = [
+        "//selffuzz:jazzer_selffuzz",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
 )

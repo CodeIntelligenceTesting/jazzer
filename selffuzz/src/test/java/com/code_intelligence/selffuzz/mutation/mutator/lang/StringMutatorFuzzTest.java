@@ -16,24 +16,22 @@
 
 package com.code_intelligence.selffuzz.mutation.mutator.lang;
 
+import static com.code_intelligence.selffuzz.Helpers.assertMutator;
+
 import com.code_intelligence.jazzer.junit.FuzzTest;
-import com.code_intelligence.selffuzz.Helpers;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.selffuzz.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.selffuzz.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.selffuzz.jazzer.mutation.support.TypeHolder;
-import java.io.DataInputStream;
 import java.io.IOException;
 
-@SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored"})
+@SuppressWarnings("unchecked")
 class StringMutatorFuzzTest {
   @FuzzTest(maxDuration = "10m")
-  void stringMutatorTest(byte @NotNull[] data) throws IOException {
+  void stringMutatorTest(long seed, byte @NotNull[] data) throws IOException {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
             new TypeHolder<String>() {}.annotatedType());
-    try (DataInputStream stream = Helpers.infiniteByteStream(data)) {
-      mutator.read(stream);
-    }
+    assertMutator(mutator, data, seed);
   }
 }
