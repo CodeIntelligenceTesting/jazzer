@@ -1,10 +1,15 @@
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
+# Mutator fuzz tests define a low `runs` to only start and iterate
+# a few times via Bazel. Long running fuzzing is executed in CI Sense through
+# the CI pipeline integration.
+
 java_fuzz_target_test(
     name = "StringMutatorFuzzTest",
     srcs = ["StringMutatorFuzzTest.java"],
     fuzzer_args = [
         "--experimental_mutator",
+        "-runs=1000",
     ],
     target_class = "com.code_intelligence.selffuzz.mutation.mutator.lang.StringMutatorFuzzTest",
     verify_crash_reproducer = False,
