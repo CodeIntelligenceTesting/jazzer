@@ -38,6 +38,7 @@ jobs:
         include:
           - os: ubuntu-20.04
             arch: "linux"
+            bazel_args: "//launcher/android:jazzer_android"
             cache: "/home/runner/.cache/bazel-disk"
           - os: ubuntu-20.04
             jdk: 20
@@ -46,8 +47,8 @@ jobs:
             arch: "linux"
             cache: "/home/runner/.cache/bazel-disk"
           - os: macos-12
-            bazel_args: "--xcode_version_config=//.github:host_xcodes"
             arch: "macos-x86_64"
+            bazel_args: "--xcode_version_config=//.github:host_xcodes //launcher/android:jazzer_android"
             cache: "/private/var/tmp/bazel-disk"
           - os: windows-2019
             arch: "windows"
