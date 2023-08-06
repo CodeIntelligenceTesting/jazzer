@@ -14,7 +14,7 @@ It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) to a
 Simply download the release binary for your OS and architecture and ensure that it is available in the `PATH`.
 The instructions below will assume that this binary is called `bazel` - Bazelisk is a thin wrapper around the actual Bazel binary and can be used interchangeably.
 
-### Compiling
+### Building
 
 Assuming the dependencies are installed, build Jazzer from source and run it as follows:
 
@@ -34,6 +34,21 @@ INFO: Found 1 target...
 Target //:jazzer_release up-to-date:
   bazel-bin/jazzer_release.tar.gz
 ...
+```
+
+#### Building for Android
+
+Android builds are supported on Linux and macOS.
+Local installations of an Android SDK and a corresponding side-by-side NDK are required.
+
+Set the following environment variables:
+* `ANDROID_HOME` points to the SDK root (e.g. `/home/user/Android/Sdk`)
+* `ANDROID_NDK_HOME` points the NDK within the SDK (e.g. `/home/user/Android/Sdk/ndk/25.2.9519653`)
+
+Then build Jazzer for Android via:
+
+``` bash
+$ bazel build //launcher/android:jazzer_android
 ```
 
 ### Running the tests
