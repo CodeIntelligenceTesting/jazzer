@@ -112,9 +112,8 @@ def jazzer_dependencies(android = False):
     maybe(
         http_archive,
         name = "fmeum_rules_jni",
-        sha256 = "530a02c4d86f7bcfabd61e7de830f8c78fcb2ea70943eab8f2bfdad96620f1f5",
-        strip_prefix = "rules_jni-0.7.0",
-        url = "https://github.com/fmeum/rules_jni/archive/refs/tags/v0.7.0.tar.gz",
+        sha256 = "8ea1e90d5f8ab85a2e267f68e4b7e59d9e27b00de533059ab1d829ece2b8bca0",
+        url = "https://github.com/fmeum/rules_jni/releases/download/v0.8.0/rules_jni-0.8.0.tar.gz",
     )
 
     maybe(
