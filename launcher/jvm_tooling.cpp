@@ -224,24 +224,20 @@ JVM::JVM() {
   std::string class_path = GetClassPath();
 
   std::vector<JavaVMOption> options;
-  options.push_back(
-      JavaVMOption{.optionString = const_cast<char *>(class_path.c_str())});
+  options.push_back(JavaVMOption{const_cast<char *>(class_path.c_str())});
 
 #if !defined(__ANDROID__)
   // Set the maximum heap size to a value that is slightly smaller than
   // libFuzzer's default rss_limit_mb. This prevents erroneous oom reports.
-  options.push_back(JavaVMOption{.optionString = (char *)"-Xmx1800m"});
+  options.push_back(JavaVMOption{(char *)"-Xmx1800m"});
   // Preserve and emit stack trace information even on hot paths.
   // This may hurt performance, but also helps find flaky bugs.
-  options.push_back(
-      JavaVMOption{.optionString = (char *)"-XX:-OmitStackTraceInFastThrow"});
+  options.push_back(JavaVMOption{(char *)"-XX:-OmitStackTraceInFastThrow"});
   // Optimize GC for high throughput rather than low latency.
-  options.push_back(JavaVMOption{.optionString = (char *)"-XX:+UseParallelGC"});
+  options.push_back(JavaVMOption{(char *)"-XX:+UseParallelGC"});
   // CriticalJNINatives has been removed in JDK 18.
-  options.push_back(
-      JavaVMOption{.optionString = (char *)"-XX:+IgnoreUnrecognizedVMOptions"});
-  options.push_back(
-      JavaVMOption{.optionString = (char *)"-XX:+CriticalJNINatives"});
+  options.push_back(JavaVMOption{(char *)"-XX:+IgnoreUnrecognizedVMOptions"});
+  options.push_back(JavaVMOption{(char *)"-XX:+CriticalJNINatives"});
 #endif
 
   std::vector<std::string> java_opts_args;
@@ -252,8 +248,7 @@ JVM::JVM() {
 
     java_opts_args = absl::StrSplit(java_opts, ' ');
     for (const std::string &java_opt : java_opts_args) {
-      options.push_back(
-          JavaVMOption{.optionString = const_cast<char *>(java_opt.c_str())});
+      options.push_back(JavaVMOption{const_cast<char *>(java_opt.c_str())});
     }
   }
 
@@ -264,8 +259,7 @@ JVM::JVM() {
   if (!FLAGS_jvm_args.empty()) {
     jvm_args = splitEscaped(FLAGS_jvm_args);
     for (const auto &arg : jvm_args) {
-      options.push_back(
-          JavaVMOption{.optionString = const_cast<char *>(arg.c_str())});
+      options.push_back(JavaVMOption{const_cast<char *>(arg.c_str())});
     }
   }
 
@@ -273,8 +267,7 @@ JVM::JVM() {
   if (!FLAGS_additional_jvm_args.empty()) {
     additional_jvm_args = splitEscaped(FLAGS_additional_jvm_args);
     for (const auto &arg : additional_jvm_args) {
-      options.push_back(
-          JavaVMOption{.optionString = const_cast<char *>(arg.c_str())});
+      options.push_back(JavaVMOption{const_cast<char *>(arg.c_str())});
     }
   }
 
@@ -284,10 +277,8 @@ JVM::JVM() {
   jint jni_version = JNI_VERSION_1_6;
 #endif
 
-  JavaVMInitArgs jvm_init_args = {.version = jni_version,
-                                  .nOptions = (int)options.size(),
-                                  .options = options.data(),
-                                  .ignoreUnrecognized = JNI_FALSE};
+  JavaVMInitArgs jvm_init_args = {jni_version, (int)options.size(),
+                                  options.data(), JNI_FALSE};
 
 #if !defined(__ANDROID__)
   int ret = JNI_CreateJavaVM(&jvm_, (void **)&env_, &jvm_init_args);
