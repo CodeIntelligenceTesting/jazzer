@@ -6,8 +6,10 @@ cc_library(
     deps = [
         ":jvm_tooling_lib",
         "@com_google_absl//absl/strings",
-        "@fmeum_rules_jni//jni:libjvm",
-    ],
+    ] + select({
+        "@platforms//os:android": [],
+        "//conditions:default": ["@fmeum_rules_jni//jni:libjvm"],
+    }),
 )
 
 cc_library(
