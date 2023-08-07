@@ -39,6 +39,7 @@ build --experimental_java_classpath=bazel
 # Android
 build --incompatible_enable_android_toolchain_resolution
 build --android_platforms=//:android_arm64
+build --toolchain_resolution_debug=.*
 
 # Windows
 # Only compiles with clang on Windows.
