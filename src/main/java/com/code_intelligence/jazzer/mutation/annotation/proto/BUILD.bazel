@@ -14,7 +14,10 @@ java_library(
     # it isn't found. Without something else bringing in the Protobuf runtime, there is no point in
     # supporting proto mutations.
     neverlink = True,
-    visibility = ["//src/main/java/com/code_intelligence/jazzer/mutation/mutator/proto:__pkg__"],
+    visibility = [
+        "//selffuzz:__subpackages__",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/proto:__pkg__",
+    ],
     exports = [
         "@com_google_protobuf_protobuf_java//jar",
     ],
