@@ -98,6 +98,20 @@ public class OptItemTest {
   }
 
   @Test
+  void optItem_boolean() {
+    OptItem<Boolean> booleanArg = new OptItem.Bool("valid_boolean", "some description", "foo");
+    assertThat(booleanArg.get()).isTrue();
+  }
+
+  @Test
+  void optItem_boolean_invalid() {
+    OptItem<Boolean> booleanArg = new OptItem.Bool("invalid_boolean", "some description", "foo");
+    assertThat(assertThrows(OptItem.IllegalOptionValueException.class, booleanArg::get))
+        .hasMessageThat()
+        .isEqualTo("Invalid value for boolean option invalid_boolean: not_true");
+  }
+
+  @Test
   void splitString() {
     assertStringSplit("", ',');
     assertStringSplit(",,,,,", ',');
