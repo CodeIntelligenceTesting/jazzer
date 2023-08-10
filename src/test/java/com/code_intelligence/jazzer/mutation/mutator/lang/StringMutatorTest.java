@@ -24,7 +24,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
+import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
@@ -36,12 +36,12 @@ import org.junit.jupiter.api.*;
 
 class StringMutatorTest {
   /**
-   * Some tests may set {@link LibFuzzerMutator#MOCK_SIZE_KEY} which can interfere with other tests
+   * Some tests may set {@link LibFuzzerMutate#MOCK_SIZE_KEY} which can interfere with other tests
    * unless cleared.
    */
   @AfterEach
   void cleanMockSize() {
-    System.clearProperty(LibFuzzerMutator.MOCK_SIZE_KEY);
+    System.clearProperty(LibFuzzerMutate.MOCK_SIZE_KEY);
   }
 
   @RepeatedTest(10)
@@ -143,7 +143,7 @@ class StringMutatorTest {
     }
     assertThat(s).isEqualTo("foobarbazf");
 
-    System.setProperty(LibFuzzerMutator.MOCK_SIZE_KEY, "5");
+    System.setProperty(LibFuzzerMutate.MOCK_SIZE_KEY, "5");
     try (MockPseudoRandom prng = mockPseudoRandom()) {
       s = mutator.mutate(s, prng);
     }
@@ -163,7 +163,7 @@ class StringMutatorTest {
     }
     assertThat(s).isEqualTo("foobarbazf");
 
-    System.setProperty(LibFuzzerMutator.MOCK_SIZE_KEY, "20");
+    System.setProperty(LibFuzzerMutate.MOCK_SIZE_KEY, "20");
     try (MockPseudoRandom prng = mockPseudoRandom()) {
       Assertions.assertThrows(
           ArrayIndexOutOfBoundsException.class, () -> { String s2 = mutator.mutate(s, prng); });

@@ -9,7 +9,7 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/combinator",
-        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/libfuzzer",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/libfuzzer:libfuzzermutate",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
         "@com_google_errorprone_error_prone_annotations//jar",
     ],
