@@ -1,6 +1,6 @@
 java_library(
-    name = "libfuzzer",
-    srcs = ["LibFuzzerMutator.java"],
+    name = "libfuzzermutate",
+    srcs = ["LibFuzzerMutate.java"],
     visibility = [
         # libFuzzer's mutators should only by used by mutators for primitive types as we want to get
         # rid of this dependency eventually.
@@ -11,5 +11,24 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
         "//src/main/java/com/code_intelligence/jazzer/runtime:mutator",
+    ],
+)
+
+java_library(
+    name = "libfuzzer",
+    srcs = [
+        "FuzzedDataProviderMutatorFactory.java",
+        "LibFuzzerMutators.java",
+    ],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator:__pkg__",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/combinator",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+        "@com_google_errorprone_error_prone_annotations//jar",
     ],
 )

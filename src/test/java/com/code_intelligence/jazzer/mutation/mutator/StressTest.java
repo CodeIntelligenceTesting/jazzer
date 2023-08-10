@@ -31,6 +31,8 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.IntStream.rangeClosed;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
 import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
 import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
@@ -64,10 +66,8 @@ import com.code_intelligence.jazzer.protobuf.Proto3.RepeatedRecursiveMessageFiel
 import com.code_intelligence.jazzer.protobuf.Proto3.SingleOptionOneOfField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.StringField3;
 import com.google.protobuf.Any;
-import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
-import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import java.io.ByteArrayInputStream;
@@ -226,7 +226,9 @@ public class StressTest {
                 min = -1.0, max = 1.0, allowNaN = false) Double>() {
             }.annotatedType(),
             "Double", all(distinctElementsRatio(0.45), doesNotContain(Double.NaN)),
-            all(distinctElementsRatio(0.55), doesNotContain(Double.NaN))));
+            all(distinctElementsRatio(0.55), doesNotContain(Double.NaN))),
+        arguments(new TypeHolder<@NotNull FuzzedDataProvider>() {}.annotatedType(),
+            "FuzzedDataProvider", distinctElementsRatio(0.45), distinctElementsRatio(0.45)));
   }
 
   public static Stream<Arguments> protoStressTestCases() {
@@ -497,7 +499,7 @@ public class StressTest {
           } else if (value instanceof Float) {
             assertThat(Float.compare((Float) value, (Float) detachedOldValue)).isNotEqualTo(0);
           } else {
-            assertThat(detachedOldValue).isNotEqualTo(value);
+            assertNotEqualMutatorValues(detachedOldValue, value);
           }
         }
 
@@ -525,7 +527,7 @@ public class StressTest {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     serializer.writeExclusive(value, out);
     T newValue = serializer.readExclusive(new ByteArrayInputStream(out.toByteArray()));
-    assertThat(newValue).isEqualTo(value);
+    assertEqualMutatorValues(newValue, value);
   }
 
   private static <T> void testReadWriteRoundtrip(Serializer<T> serializer, T value)
@@ -534,7 +536,7 @@ public class StressTest {
     serializer.write(value, new DataOutputStream(out));
     T newValue = serializer.read(
         new DataInputStream(extendWithZeros(new ByteArrayInputStream(out.toByteArray()))));
-    assertThat(newValue).isEqualTo(value);
+    assertEqualMutatorValues(newValue, value);
   }
 
   // Filter out floating point values -0.0f and -0.0 and replace them
@@ -583,6 +585,26 @@ public class StressTest {
       } else {
         builder.setField(field, transform.apply(builder.getField(field)));
       }
+    }
+  }
+
+  // Provide dedicated equals method to compare mutator values and handle
+  // FuzzedDataProviderImpl checks without an equals method in that class.
+  private static void assertEqualMutatorValues(Object actual, Object expected) {
+    if (actual instanceof FuzzedDataProviderImpl && expected instanceof FuzzedDataProviderImpl) {
+      assertThat(((FuzzedDataProviderImpl) actual).getJavaData())
+          .isEqualTo(((FuzzedDataProviderImpl) expected).getJavaData());
+    } else {
+      assertThat(actual).isEqualTo(expected);
+    }
+  }
+
+  private static void assertNotEqualMutatorValues(Object actual, Object expected) {
+    if (actual instanceof FuzzedDataProviderImpl && expected instanceof FuzzedDataProviderImpl) {
+      assertThat(((FuzzedDataProviderImpl) actual).getJavaData())
+          .isNotEqualTo(((FuzzedDataProviderImpl) expected).getJavaData());
+    } else {
+      assertThat(actual).isNotEqualTo(expected);
     }
   }
 }

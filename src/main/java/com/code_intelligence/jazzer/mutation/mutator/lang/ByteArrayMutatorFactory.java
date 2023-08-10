@@ -24,7 +24,7 @@ import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
+import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import com.google.errorprone.annotations.Immutable;
 import java.io.DataInputStream;
@@ -115,7 +115,7 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
     @Override
     public byte[] mutate(byte[] value, PseudoRandom prng) {
       int maxLengthIncrease = maxLength - value.length;
-      byte[] mutated = LibFuzzerMutator.mutateDefault(value, maxLengthIncrease);
+      byte[] mutated = LibFuzzerMutate.mutateDefault(value, maxLengthIncrease);
       return enforceLength(mutated);
     }
 

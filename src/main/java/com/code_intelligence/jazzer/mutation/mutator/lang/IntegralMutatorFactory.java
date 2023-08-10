@@ -24,7 +24,7 @@ import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
+import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
 import com.google.errorprone.annotations.ForOverride;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -48,7 +48,7 @@ final class IntegralMutatorFactory extends MutatorFactory {
       return Optional.of(new AbstractIntegralMutator<Byte>(type, Byte.MIN_VALUE, Byte.MAX_VALUE) {
         @Override
         protected long mutateWithLibFuzzer(long value) {
-          return LibFuzzerMutator.mutateDefault((byte) value, this, 0);
+          return LibFuzzerMutate.mutateDefault((byte) value, this, 0);
         }
 
         @Override
@@ -81,7 +81,7 @@ final class IntegralMutatorFactory extends MutatorFactory {
           new AbstractIntegralMutator<Short>(type, Short.MIN_VALUE, Short.MAX_VALUE) {
             @Override
             protected long mutateWithLibFuzzer(long value) {
-              return LibFuzzerMutator.mutateDefault((short) value, this, 0);
+              return LibFuzzerMutate.mutateDefault((short) value, this, 0);
             }
 
             @Override
@@ -114,7 +114,7 @@ final class IntegralMutatorFactory extends MutatorFactory {
           new AbstractIntegralMutator<Integer>(type, Integer.MIN_VALUE, Integer.MAX_VALUE) {
             @Override
             protected long mutateWithLibFuzzer(long value) {
-              return LibFuzzerMutator.mutateDefault((int) value, this, 0);
+              return LibFuzzerMutate.mutateDefault((int) value, this, 0);
             }
 
             @Override
@@ -146,7 +146,7 @@ final class IntegralMutatorFactory extends MutatorFactory {
       return Optional.of(new AbstractIntegralMutator<Long>(type, Long.MIN_VALUE, Long.MAX_VALUE) {
         @Override
         protected long mutateWithLibFuzzer(long value) {
-          return LibFuzzerMutator.mutateDefault(value, this, 0);
+          return LibFuzzerMutate.mutateDefault(value, this, 0);
         }
 
         @Override

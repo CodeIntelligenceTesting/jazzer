@@ -25,7 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-public final class LibFuzzerMutator {
+public final class LibFuzzerMutate {
   /**
    * Key name to give to {@link System#setProperty(String, String)} to control the size of the
    * returned array for {@link #defaultMutateMock(byte[], int)}. Only used for testing purposes.
@@ -81,12 +81,11 @@ public final class LibFuzzerMutator {
     if (newSizeProp != null) {
       newSize = Integer.parseUnsignedInt(newSizeProp);
     }
-
     for (int i = 0; i < newSize; i++) {
-      buffer[i] += i + 1;
+      buffer[i] += (byte) (i + 1);
     }
     return newSize;
   }
 
-  private LibFuzzerMutator() {}
+  private LibFuzzerMutate() {}
 }

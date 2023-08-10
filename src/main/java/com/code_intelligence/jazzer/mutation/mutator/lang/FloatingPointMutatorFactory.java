@@ -25,7 +25,7 @@ import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
+import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -125,7 +125,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     }
 
     public float mutateWithLibFuzzer(float value) {
-      return LibFuzzerMutator.mutateDefault(value, this, 0);
+      return LibFuzzerMutate.mutateDefault(value, this, 0);
     }
 
     @Override
@@ -385,7 +385,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     }
 
     public double mutateWithLibFuzzer(double value) {
-      return LibFuzzerMutator.mutateDefault(value, this, 0);
+      return LibFuzzerMutate.mutateDefault(value, this, 0);
     }
 
     @Override
