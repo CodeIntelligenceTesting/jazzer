@@ -138,9 +138,15 @@ fun installInternal(
     // "retransformed": They haven't been transformed yet.
     val classesToRetransform = instrumentation.allLoadedClasses
         .filter {
-            classNameGlobber.includes(it.name) ||
-                customHookClassNameGlobber.includes(it.name) ||
-                customHooks.additionalHookClassNameGlobber.includes(it.name)
+            // Always exclude internal Jazzer classes from retransformation, as even attempting to
+            // retransform those caused broken class definitions in older JVM versions. This points
+            // to a JDK bug that was not backported.
+            !it.name.startsWith("com.code_intelligence.jazzer.") &&
+                (
+                    classNameGlobber.includes(it.name) ||
+                        customHookClassNameGlobber.includes(it.name) ||
+                        customHooks.additionalHookClassNameGlobber.includes(it.name)
+                    )
         }
         .filter {
             instrumentation.isModifiableClass(it)
