@@ -217,8 +217,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
 
       // diff, range, or both are infinite: divide both by 2, reduce, and multiply by 2.
       float halfDiff = value * 0.5f - finiteMin * 0.5f;
-
-      return finiteMin + (halfDiff % (finiteMax * 0.5f - finiteMin * 0.5f)) * 2.0f;
+      return finiteMin + Math.abs(halfDiff % (finiteMax * 0.5f - finiteMin * 0.5f)) * 2.0f;
     }
 
     public float mutateWithMathematicalFn(float value, PseudoRandom prng) {
@@ -484,7 +483,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
 
       // diff, range, or both are infinite: divide both by 2, reduce, and multiply by 2.
       double halfDiff = value * 0.5 - finiteMin * 0.5;
-      return finiteMin + (halfDiff % (finiteMax * 0.5 - finiteMin * 0.5)) * 2.0;
+      return finiteMin + Math.abs(halfDiff % (finiteMax * 0.5 - finiteMin * 0.5)) * 2.0;
     }
 
     public double mutateWithMathematicalFn(double value, PseudoRandom prng) {
