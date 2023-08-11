@@ -18,6 +18,7 @@ import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
+import static java.util.stream.Collectors.toList;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
@@ -45,7 +46,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
@@ -75,9 +75,6 @@ class FuzzTestExecutor {
           "FuzzTestExecutor#prepare can only be called once per test run");
     }
 
-    Class<?> fuzzTestClass = context.getRequiredTestClass();
-    Method fuzzTestMethod = context.getRequiredTestMethod();
-
     List<ArgumentsSource> allSources = AnnotationSupport.findRepeatableAnnotations(
         context.getRequiredTestMethod(), ArgumentsSource.class);
     // Non-empty as it always contains FuzzingArgumentsProvider.
@@ -89,10 +86,6 @@ class FuzzTestExecutor {
           + " but it came after the (meta-)annotation " + lastSource);
     }
 
-    Path baseDir =
-        Paths.get(context.getConfigurationParameter("jazzer.internal.basedir").orElse(""))
-            .toAbsolutePath();
-
     List<String> originalLibFuzzerArgs = getLibFuzzerArgs(context);
     String argv0 = originalLibFuzzerArgs.isEmpty() ? "fake_argv0" : originalLibFuzzerArgs.remove(0);
 
@@ -102,11 +95,43 @@ class FuzzTestExecutor {
     // Add passed in corpus directories (and files) at the beginning of the arguments list.
     // libFuzzer uses the first directory to store discovered inputs, whereas all others are
     // only used to provide additional seeds and aren't written into.
-    List<String> corpusDirs = originalLibFuzzerArgs.stream()
-                                  .filter(arg -> !arg.startsWith("-"))
-                                  .collect(Collectors.toList());
+    List<String> corpusDirs =
+        originalLibFuzzerArgs.stream().filter(arg -> !arg.startsWith("-")).collect(toList());
     originalLibFuzzerArgs.removeAll(corpusDirs);
     libFuzzerArgs.addAll(corpusDirs);
+
+    Path javaSeedsDir = addInputAndSeedDirs(context, libFuzzerArgs);
+
+    libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
+    // Disable libFuzzer's out of memory detection: It is only useful for native library fuzzing,
+    // which we don't support without our native driver, and leads to false positives where it picks
+    // up IntelliJ's memory usage.
+    libFuzzerArgs.add("-rss_limit_mb=0");
+    if (Utils.permissivelyParseBoolean(
+            context.getConfigurationParameter("jazzer.valueprofile").orElse("false"))) {
+      libFuzzerArgs.add("-use_value_profile=1");
+    }
+
+    // Prefer original libFuzzerArgs set via command line by appending them last.
+    libFuzzerArgs.addAll(originalLibFuzzerArgs);
+
+    return new FuzzTestExecutor(libFuzzerArgs, javaSeedsDir, Utils.runFromCommandLine(context));
+  }
+
+  /**
+   * Discovers and adds the directories for the generated corpus, Java seed corpus and findings to
+   * the libFuzzer command line.
+   *
+   * @return the temporary Java seed corpus directory
+   */
+  private static Path addInputAndSeedDirs(ExtensionContext context, List<String> libFuzzerArgs)
+      throws IOException {
+    Class<?> fuzzTestClass = context.getRequiredTestClass();
+    Method fuzzTestMethod = context.getRequiredTestMethod();
+
+    Path baseDir =
+        Paths.get(context.getConfigurationParameter("jazzer.internal.basedir").orElse(""))
+            .toAbsolutePath();
 
     // Use the specified corpus dir, if given, otherwise store the generated corpus in a per-class
     // directory under the project root, just like cifuzz:
@@ -174,21 +199,7 @@ class FuzzTestExecutor {
     libFuzzerArgs.add(javaSeedsDir.toAbsolutePath().toString());
     libFuzzerArgs.add(String.format("-artifact_prefix=%s%c",
         findingsDirectory.orElse(baseDir).toAbsolutePath(), File.separatorChar));
-
-    libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
-    // Disable libFuzzer's out of memory detection: It is only useful for native library fuzzing,
-    // which we don't support without our native driver, and leads to false positives where it picks
-    // up IntelliJ's memory usage.
-    libFuzzerArgs.add("-rss_limit_mb=0");
-    if (Utils.permissivelyParseBoolean(
-            context.getConfigurationParameter("jazzer.valueprofile").orElse("false"))) {
-      libFuzzerArgs.add("-use_value_profile=1");
-    }
-
-    // Prefer original libFuzzerArgs set via command line by appending them last.
-    libFuzzerArgs.addAll(originalLibFuzzerArgs);
-
-    return new FuzzTestExecutor(libFuzzerArgs, javaSeedsDir, Utils.runFromCommandLine(context));
+    return javaSeedsDir;
   }
 
   /**
