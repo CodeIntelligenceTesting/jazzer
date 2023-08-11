@@ -29,7 +29,7 @@ jobs:
     steps:
       - id: checkout
         name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: ${{ env.CHECKOUT_DIR }}
       - id: install-cifuzz
@@ -92,7 +92,7 @@ jobs:
           dashboard_address: ${{ env.WEB_APP_ADDRESS }}
           project_name: ${{ env.PROJECT_NAME }}
       - id: upload-artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: ${{ env.ci_fuzz_token != '' && (success() || failure()) }}
         with:
           name: ci_fuzz_results
