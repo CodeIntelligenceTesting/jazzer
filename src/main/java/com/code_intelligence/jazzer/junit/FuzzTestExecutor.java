@@ -115,7 +115,19 @@ class FuzzTestExecutor {
     // project directory.
     Path generatedCorpusDir = baseDir.resolve(generatedCorpusPath(fuzzTestClass, fuzzTestMethod));
     Files.createDirectories(generatedCorpusDir);
-    libFuzzerArgs.add(generatedCorpusDir.toAbsolutePath().toString());
+    String absoluteCorpusDir = generatedCorpusDir.toAbsolutePath().toString();
+
+    // Even if support for long paths (+260 characters) is enabled on Windows,
+    // libFuzzer does not work properly. This can be circumvented by prepending "\\?\" to the path,
+    // see:
+    // https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry
+    // Error message: "GetFileAttributesA() failed for <path> (Error code: 3)."
+    // https://github.com/llvm/llvm-project/blob/release/17.x/compiler-rt/lib/fuzzer/FuzzerIOWindows.cpp#L65
+    if (Utils.isWindows()) {
+      absoluteCorpusDir = "\\\\?\\" + absoluteCorpusDir;
+    }
+
+    libFuzzerArgs.add(absoluteCorpusDir);
 
     // We can only emit findings into the source tree version of the inputs directory, not e.g. the
     // copy under Maven's target directory. If it doesn't exist, collect the inputs in the current
