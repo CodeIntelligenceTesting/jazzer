@@ -281,6 +281,29 @@ sh_test(
 )
 
 java_fuzz_target_test(
+    name = "JUnitReproducerTest",
+    srcs = ["src/test/java/com/example/JUnitReproducerTest.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical"],
+    data = [
+        "src/test/java/com/example/JUnitReproducerTest.seed",
+    ],
+    fuzzer_args = [
+        "$(rlocationpath src/test/java/com/example/JUnitReproducerTest.seed)",
+    ],
+    target_class = "com.example.JUnitReproducerTest",
+    verify_crash_input = False,
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
+java_fuzz_target_test(
     name = "TestMethodInManifestFuzzer",
     timeout = "short",
     srcs = ["src/test/java/com/example/TestMethodInManifestFuzzer.java"],
