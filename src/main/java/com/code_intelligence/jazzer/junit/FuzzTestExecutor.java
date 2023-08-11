@@ -58,11 +58,11 @@ class FuzzTestExecutor {
   private static final AtomicBoolean agentInstalled = new AtomicBoolean(false);
 
   private final List<String> libFuzzerArgs;
-  private final Path javaSeedsDir;
+  private final Optional<Path> javaSeedsDir;
   private final boolean isRunFromCommandLine;
 
   private FuzzTestExecutor(
-      List<String> libFuzzerArgs, Path javaSeedsDir, boolean isRunFromCommandLine) {
+      List<String> libFuzzerArgs, Optional<Path> javaSeedsDir, boolean isRunFromCommandLine) {
     this.libFuzzerArgs = libFuzzerArgs;
     this.javaSeedsDir = javaSeedsDir;
     this.isRunFromCommandLine = isRunFromCommandLine;
@@ -95,12 +95,20 @@ class FuzzTestExecutor {
     // Add passed in corpus directories (and files) at the beginning of the arguments list.
     // libFuzzer uses the first directory to store discovered inputs, whereas all others are
     // only used to provide additional seeds and aren't written into.
-    List<String> corpusDirs =
+    List<String> corpusFilesOrDirs =
         originalLibFuzzerArgs.stream().filter(arg -> !arg.startsWith("-")).collect(toList());
-    originalLibFuzzerArgs.removeAll(corpusDirs);
-    libFuzzerArgs.addAll(corpusDirs);
+    originalLibFuzzerArgs.removeAll(corpusFilesOrDirs);
+    libFuzzerArgs.addAll(corpusFilesOrDirs);
 
-    Path javaSeedsDir = addInputAndSeedDirs(context, libFuzzerArgs);
+    // When reproducing individual inputs, we must not add any corpus directories to the command
+    // line or libFuzzer will fail with "Not a directory: ...; exiting".
+    Optional<Path> javaSeedsDir;
+    if (!corpusFilesOrDirs.isEmpty()
+        && corpusFilesOrDirs.stream().map(Paths::get).allMatch(Files::isRegularFile)) {
+      javaSeedsDir = Optional.empty();
+    } else {
+      javaSeedsDir = Optional.of(addInputAndSeedDirs(context, libFuzzerArgs));
+    }
 
     libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
     // Disable libFuzzer's out of memory detection: It is only useful for native library fuzzing,
@@ -239,7 +247,11 @@ class FuzzTestExecutor {
   }
 
   public void addSeed(byte[] bytes) throws IOException {
-    Path tmpSeed = Files.createTempFile(javaSeedsDir, "tmp-seed-", null);
+    if (!javaSeedsDir.isPresent()) {
+      return;
+    }
+
+    Path tmpSeed = Files.createTempFile(javaSeedsDir.get(), "tmp-seed-", null);
     Files.write(tmpSeed, bytes);
 
     byte[] hash;
@@ -252,7 +264,7 @@ class FuzzTestExecutor {
     // Case-insensitive file systems lose at most one bit of entropy per character, that is, the
     // resulting file name still encodes more than 200 bits of entropy.
     String basename = "seed-" + Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
-    Path seed = javaSeedsDir.resolve(basename);
+    Path seed = javaSeedsDir.get().resolve(basename);
     Files.move(tmpSeed, seed, StandardCopyOption.REPLACE_EXISTING);
   }
 
@@ -291,7 +303,7 @@ class FuzzTestExecutor {
     }
 
     int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
-    deleteJavaSeedsDir();
+    javaSeedsDir.ifPresent(FuzzTestExecutor::deleteJavaSeedsDir);
     Throwable finding = atomicFinding.get();
     if (finding != null) {
       return Optional.of(finding);
@@ -303,7 +315,7 @@ class FuzzTestExecutor {
     }
   }
 
-  private void deleteJavaSeedsDir() {
+  private static void deleteJavaSeedsDir(Path javaSeedsDir) {
     // The directory only consists of files, which we need to delete before deleting the directory
     // itself.
     try (Stream<Path> entries = Files.list(javaSeedsDir)) {
