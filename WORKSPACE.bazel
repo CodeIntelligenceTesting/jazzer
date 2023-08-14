@@ -94,6 +94,11 @@ http_archive(
 
 http_archive(
     name = "contrib_rules_jvm",
+    patch_args = ["-p1"],
+    patches = [
+        # https://github.com/bazel-contrib/rules_jvm/pull/194
+        "//third_party:rules_jvm-fix-junit5-for-early-access-builds.patch",
+    ],
     sha256 = "90ecdf08d7e8817b2247eea77826db872db8866da84b3a824f58d6661aca917f",
     strip_prefix = "rules_jvm-0.14.0",
     url = "https://github.com/bazel-contrib/rules_jvm/releases/download/v0.14.0/rules_jvm-v0.14.0.tar.gz",

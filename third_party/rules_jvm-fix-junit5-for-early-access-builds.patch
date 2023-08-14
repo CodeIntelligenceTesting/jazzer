@@ -1,0 +1,32 @@
+From 297bdf9a7abb1980cacf911c7f2652884454dacf Mon Sep 17 00:00:00 2001
+From: Fabian Meumertzheim <fabian@meumertzhe.im>
+Date: Mon, 14 Aug 2023 16:17:42 +0200
+Subject: [PATCH] Make JUnit5Runner usable with Early Access builds
+
+Fixes this crash:
+```
+Exception in thread "main" java.lang.NumberFormatException: For input string: "21-ea"
+	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)
+	at java.base/java.lang.Integer.parseInt(Integer.java:661)
+	at java.base/java.lang.Integer.parseInt(Integer.java:777)
+	at com.github.bazel_contrib.contrib_rules_jvm.junit5.JUnit5Runner.getSystemExitToggle(JUnit5Runner.java:57)
+	at com.github.bazel_contrib.contrib_rules_jvm.junit5.JUnit5Runner.main(JUnit5Runner.java:24)
+```
+---
+ .../bazel_contrib/contrib_rules_jvm/junit5/JUnit5Runner.java   | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/java/src/com/github/bazel_contrib/contrib_rules_jvm/junit5/JUnit5Runner.java b/java/src/com/github/bazel_contrib/contrib_rules_jvm/junit5/JUnit5Runner.java
+index d331e590..b1e437b2 100644
+--- a/java/src/com/github/bazel_contrib/contrib_rules_jvm/junit5/JUnit5Runner.java
++++ b/java/src/com/github/bazel_contrib/contrib_rules_jvm/junit5/JUnit5Runner.java
+@@ -53,7 +53,8 @@ public static void main(String[] args) {
+   private static SystemExitToggle getSystemExitToggle() {
+     // In Java 8 and lower, the first part of the version is a 1.
+     // In Java 9 and higher, the first part of the version is the feature version.
+-    int featureVersion = Integer.parseInt(System.getProperty("java.version").split("\\.")[0]);
++    // Major versions of early Access builds have an "-ea" suffix.
++    int featureVersion = Integer.parseInt(System.getProperty("java.version").split("[.-]")[0]);
+     if (featureVersion == 1) {
+       featureVersion = 8;
+     }
