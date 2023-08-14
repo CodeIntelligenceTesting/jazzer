@@ -3,7 +3,11 @@ load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_junit5_test")
 java_test(
     name = "FuzzTargetRunnerTest",
     srcs = ["FuzzTargetRunnerTest.java"],
-    jvm_flags = ["-ea"],
+    jvm_flags = [
+        "-ea",
+        "-XX:+IgnoreUnrecognizedVMOptions",
+        "-XX:+EnableDynamicAgentLoading",
+    ],
     use_testrunner = False,
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
