@@ -76,7 +76,7 @@ TEST_MAVEN_ARTIFACTS = [
         "org.jacoco:org.jacoco.core:0.8.8",
         "org.junit.platform:junit-platform-reporting:1.8.2",
         "org.junit.platform:junit-platform-testkit:1.8.2",
-        "org.mockito:mockito-core:5.2.0",
+        "org.mockito:mockito-core:5.4.0",
         "org.openjdk.jmh:jmh-core:1.34",
         "org.openjdk.jmh:jmh-generator-annprocess:1.34",
     ]
