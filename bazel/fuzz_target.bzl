@@ -128,3 +128,81 @@ def java_fuzz_target_test(
         use_testrunner = False,
         tags = tags,
     )
+
+_BASE_SEED = 2735196724
+
+def fuzzer_benchmark(
+        name,
+        *,
+        num_seeds,
+        max_runs,
+        env = {},
+        fuzzer_args = [],
+        tags = [],
+        **kwargs):
+    """Creates multiple instances of a Java fuzz target test with different seeds for benchmarking.
+
+    The target `<name>` is a `test_suite` tagged with `"manual"`that can be used to run all
+    individual instances of the fuzz target test at once. The individual tests are tagged with
+    `"benchmark"` and `"manual"`. This is meant to run in CI and ensure that the maximum number of
+    runs does not regress.
+
+    The target `<name>.stats` can be run with `bazel run` to execute the benchmark and derive some
+    statistics about the number of runs.
+
+    This macro is set up specifically to make efficient use of Bazel's scheduling and caching
+    capabilities: By having one target per run instead of a single target that runs the fuzz test
+    multiple times, Bazel can schedule the runs concurrently and avoid timeouts on slow runners.
+    When increasing the number of seeds, existing results can be reused from the cache.
+
+    Args:
+      num_seeds: The number of different seeds to try; corresponds to the number of individual tests
+        generated.
+      max_runs: The maximum number of runs that each individual test is allowed to run for. Keep
+        this as low as possible with a small margin to catch regressions.
+    """
+    seed = _BASE_SEED
+    tests = []
+    for i in range(num_seeds):
+        test_name = "{}_{}".format(name, i + 1)
+        tests.append(test_name)
+        java_fuzz_target_test(
+            name = test_name,
+            fuzzer_args = fuzzer_args + [
+                "-print_final_stats=1",
+                "-seed={}".format(seed),
+                "-runs={}".format(max_runs),
+            ],
+            env = env | {"JAZZER_NO_EXPLICIT_SEED": "1"},
+            tags = tags + ["manual", "benchmark"],
+            verify_crash_input = False,
+            verify_crash_reproducer = False,
+            **kwargs
+        )
+        seed = (31 * seed) % 4294967295
+
+    native.test_suite(
+        name = name,
+        tests = tests,
+        tags = ["manual"],
+    )
+
+    native.sh_binary(
+        name = name + ".stats",
+        srcs = [Label("//bazel/tools:compute_benchmark_stats.sh")],
+        env = {
+            "TEST_SUITE_LABEL": str(native.package_relative_label(name)),
+        },
+        args = [
+            native.package_name() + "/" + test
+            for test in tests
+        ],
+    )
+
+def all_tests_above():
+    """Returns the labels of all test targets in the current package defined before this call."""
+    return [
+        ":" + r["name"]
+        for r in native.existing_rules().values()
+        if r["kind"].endswith("_test")
+    ]

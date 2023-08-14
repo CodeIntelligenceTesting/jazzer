@@ -1,0 +1,53 @@
+# Run all benchmarks (not run as part of `bazel test //...`) via:
+#  bazel test //tests/benchmark
+# Run a particular benchmark and show stats via (requires jq to be installed locally):
+#  bazel run //tests/benchmark:<name>.stats
+
+load("//bazel:fuzz_target.bzl", "all_tests_above", "fuzzer_benchmark")
+
+fuzzer_benchmark(
+    name = "UnstructuredPackedMazeFuzzerBenchmark",
+    srcs = [
+        "src/test/java/com/example/UnstructuredPackedMazeFuzzer.java",
+    ],
+    allowed_findings = ["com.example.UnstructuredPackedMazeFuzzer$$TreasureFoundException"],
+    fuzzer_args = [
+        "-use_value_profile=1",
+    ],
+    max_runs = 90000,
+    num_seeds = 15,
+    target_class = "com.example.UnstructuredPackedMazeFuzzer",
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+    ],
+)
+
+fuzzer_benchmark(
+    name = "StructuredMutatorMazeFuzzerBenchmark",
+    srcs = [
+        "src/test/java/com/example/StructuredMutatorMazeFuzzer.java",
+    ],
+    allowed_findings = ["com.example.StructuredMutatorMazeFuzzer$$TreasureFoundException"],
+    fuzzer_args = [
+        "--experimental_mutator",
+        "-use_value_profile=1",
+    ],
+    max_runs = 55000,
+    num_seeds = 15,
+    target_class = "com.example.StructuredMutatorMazeFuzzer",
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+    ],
+)
+
+# Keep at the bottom for existing_rules() to capture everything else in this package.
+test_suite(
+    name = "benchmarks",
+    tags = [
+        # Only run tests with this tag.
+        "benchmark",
+        # Do not run this test_suite with bazel test //...
+        "manual",
+    ],
+    tests = all_tests_above(),
+)
