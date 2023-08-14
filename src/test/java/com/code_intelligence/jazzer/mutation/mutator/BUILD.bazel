@@ -15,6 +15,8 @@ java_junit5_test(
     ],
     tags = ["cpu:" + str(TEST_PARALLELISM)],
     deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation/proto",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",

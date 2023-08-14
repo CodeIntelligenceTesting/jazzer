@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutator;
+import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import org.junit.jupiter.api.AfterEach;
@@ -31,12 +31,12 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored"})
 public class ByteArrayMutatorTest {
   /**
-   * Some tests may set {@link LibFuzzerMutator#MOCK_SIZE_KEY} which can interfere with other tests
+   * Some tests may set {@link LibFuzzerMutate#MOCK_SIZE_KEY} which can interfere with other tests
    * unless cleared.
    */
   @AfterEach
   void cleanMockSize() {
-    System.clearProperty(LibFuzzerMutator.MOCK_SIZE_KEY);
+    System.clearProperty(LibFuzzerMutate.MOCK_SIZE_KEY);
   }
 
   @Test
@@ -52,7 +52,7 @@ public class ByteArrayMutatorTest {
     }
     assertThat(arr).isEqualTo(new byte[] {1, 2, 3, 4, 5});
 
-    System.setProperty(LibFuzzerMutator.MOCK_SIZE_KEY, "10");
+    System.setProperty(LibFuzzerMutate.MOCK_SIZE_KEY, "10");
     try (MockPseudoRandom prng = mockPseudoRandom(false)) {
       arr = mutator.mutate(arr, prng);
     }
@@ -72,7 +72,7 @@ public class ByteArrayMutatorTest {
     }
     assertThat(arr).isEqualTo(new byte[] {1, 2, 3, 4, 5, 6, 7, 8});
 
-    System.setProperty(LibFuzzerMutator.MOCK_SIZE_KEY, "11");
+    System.setProperty(LibFuzzerMutate.MOCK_SIZE_KEY, "11");
     try (MockPseudoRandom prng = mockPseudoRandom()) {
       // the ByteArrayMutator will limit the maximum size of the data requested from libfuzzer to
       // WithLength::max so setting the mock mutator to make it bigger will cause an exception
@@ -123,7 +123,7 @@ public class ByteArrayMutatorTest {
     }
     assertThat(arr).hasLength(10);
 
-    System.setProperty(LibFuzzerMutator.MOCK_SIZE_KEY, "3");
+    System.setProperty(LibFuzzerMutate.MOCK_SIZE_KEY, "3");
 
     try (MockPseudoRandom prng = mockPseudoRandom()) {
       arr = mutator.mutate(arr, prng);

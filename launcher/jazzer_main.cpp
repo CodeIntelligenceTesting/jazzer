@@ -17,10 +17,11 @@
  * fuzzing and passes control to the Java part of the driver.
  */
 
+#if !defined(__ANDROID__)
 #include <rules_jni.h>
+#endif
 
 #include <algorithm>
-#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -84,7 +85,9 @@ void StartLibFuzzer(std::unique_ptr<jazzer::JVM> jvm,
 }  // namespace
 
 int main(int argc, char **argv) {
+#if !defined(__ANDROID__)
   rules_jni_init(argv[0]);
+#endif
 
   for (int i = 1; i < argc; ++i) {
     const std::string &arg = argv[i];

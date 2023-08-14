@@ -37,7 +37,7 @@ jobs:
     steps:
       - id: checkout
         name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: ${{ env.CHECKOUT_DIR }}
       - id: install-cifuzz
@@ -98,9 +98,9 @@ jobs:
           test_collection_run: ${{ steps.start-fuzzing.outputs.test_collection_run }}
           fuzzing_server_address: ${{ env.FUZZING_SERVER_ADDRESS }}
           dashboard_address: ${{ env.WEB_APP_ADDRESS }}
-          project_name: ${{ env.PROJECT_NAME }}
+          project: ${{ env.PROJECT_NAME }}
       - id: upload-artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: ${{ env.ci_fuzz_token != '' && (success() || failure()) }}
         with:
           name: ci_fuzz_results-featured

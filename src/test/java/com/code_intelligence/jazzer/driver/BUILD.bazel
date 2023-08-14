@@ -33,6 +33,8 @@ java_junit5_test(
     env = {
         "JAZZER_SOME_ARG": "env_1,env_2",
         "JAZZER_OTHER_ARG": "env_3",
+        "JAZZER_VALID_BOOLEAN": "1",
+        "JAZZER_INVALID_BOOLEAN": "not_true",
     },
     deps = JUNIT5_DEPS + [
         ":direct_dep",

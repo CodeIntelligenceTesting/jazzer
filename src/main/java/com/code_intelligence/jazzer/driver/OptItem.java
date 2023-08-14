@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.list;
 import static java.util.Collections.reverse;
@@ -30,6 +31,7 @@ import java.io.UncheckedIOException;
 import java.net.URL;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -258,13 +260,25 @@ public abstract class OptItem<T> implements Supplier<T> {
   }
 
   public static final class Bool extends OptItem<Boolean> {
+    private static final List<String> TRUE_VALUES =
+        unmodifiableList(asList("true", "on", "yes", "y", "1"));
+    private static final List<String> FALSE_VALUES =
+        unmodifiableList(asList("false", "off", "no", "n", "0"));
+
     Bool(String name, String defaultValue, String description) {
       super(name, defaultValue, description);
     }
 
     @Override
     protected Optional<Boolean> fromString(String rawValue) throws IllegalOptionValueException {
-      return Optional.of(Boolean.valueOf(rawValue));
+      if (TRUE_VALUES.stream().anyMatch(v -> v.equalsIgnoreCase(rawValue))) {
+        return Optional.of(true);
+      } else if (FALSE_VALUES.stream().anyMatch(v -> v.equalsIgnoreCase(rawValue))) {
+        return Optional.of(false);
+      } else {
+        throw new IllegalOptionValueException(
+            String.format("Invalid value for boolean option %s: %s", cliArgName(), rawValue));
+      }
     }
 
     @Override

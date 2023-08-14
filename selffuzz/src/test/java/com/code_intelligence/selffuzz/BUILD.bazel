@@ -1,22 +1,11 @@
 load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_junit5_test")
 
-java_junit5_test(
-    name = "FuzzTestCase",
-    srcs = ["FuzzTestCase.java"],
-    args = ["--experimental-mutator"],
-    deps = JUNIT5_DEPS + [
-        "helpers",
-        "//selffuzz:jazzer_selffuzz",
-        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
-        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/proto",
-        "@maven//:org_junit_jupiter_junit_jupiter_api",
-        "@maven//:org_junit_jupiter_junit_jupiter_params",
-        "@com_google_protobuf_protobuf_java//jar",
-    ],
-)
-
 java_library(
     name = "helpers",
     srcs = ["Helpers.java"],
-    deps = ["//selffuzz:jazzer_selffuzz"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//selffuzz:jazzer_selffuzz",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
 )

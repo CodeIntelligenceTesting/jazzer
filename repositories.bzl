@@ -42,6 +42,12 @@ def jazzer_dependencies(android = False):
     maybe(
         http_archive,
         name = "io_bazel_rules_kotlin",
+        patch_args = ["-p1"],
+        patches = [
+            # https://github.com/bazelbuild/rules_kotlin/pull/1000
+            # Remove unnecessary dependency on a Java runtime for the target platform.
+            "//third_party:rules_kotlin-remove-java-runtime-dep.patch",
+        ],
         sha256 = "01293740a16e474669aba5b5a1fe3d368de5832442f164e4fbfc566815a8bc3a",
         url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.8/rules_kotlin_release.tgz",
     )
@@ -106,9 +112,8 @@ def jazzer_dependencies(android = False):
     maybe(
         http_archive,
         name = "fmeum_rules_jni",
-        sha256 = "530a02c4d86f7bcfabd61e7de830f8c78fcb2ea70943eab8f2bfdad96620f1f5",
-        strip_prefix = "rules_jni-0.7.0",
-        url = "https://github.com/fmeum/rules_jni/archive/refs/tags/v0.7.0.tar.gz",
+        sha256 = "8ea1e90d5f8ab85a2e267f68e4b7e59d9e27b00de533059ab1d829ece2b8bca0",
+        url = "https://github.com/fmeum/rules_jni/releases/download/v0.8.0/rules_jni-0.8.0.tar.gz",
     )
 
     maybe(

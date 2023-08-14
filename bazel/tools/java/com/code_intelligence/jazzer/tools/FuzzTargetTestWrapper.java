@@ -157,10 +157,6 @@ public class FuzzTargetTestWrapper {
         System.exit(1);
       }
       List<Path> outputFiles = Files.list(outputDir).collect(toList());
-      if (outputFiles.isEmpty()) {
-        System.err.printf("Jazzer did not write a crashing input into %s%n", outputDir);
-        System.exit(1);
-      }
       // Verify that libFuzzer dumped a crashing input.
       if (shouldVerifyCrashInput
           && outputFiles.stream().noneMatch(

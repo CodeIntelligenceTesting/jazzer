@@ -1,0 +1,313 @@
+From 94f42bb23139a34acda5a0230f7db87bc32c9cf2 Mon Sep 17 00:00:00 2001
+From: Fabian Meumertzheim <fabian@meumertzhe.im>
+Date: Fri, 9 Jun 2023 09:48:21 +0200
+Subject: [PATCH 1/4] Obtain bootstrap class path from dedicated runtime
+ toolchain type
+
+This decouples the concepts of a Java runtime used to run on the target
+platform from the Java runtime that provides the bootstrap class path
+used during compilation.
+
+The former needs constraints on the target platform, whereas the latter
+should not have any constraints on the target platform to allow for
+cross-compilation to target platforms for which a JDK runtime is not
+available (e.g. Android).
+
+Work towards #17085
+Work towards https://github.com/bazelbuild/rules_java/issues/64
+Split off from #18262
+---
+ toolchains/BUILD                      | 49 ++++++++++++++++++++++++---
+ toolchains/default_java_toolchain.bzl | 27 +++++++--------
+ toolchains/local_java_repository.bzl  | 12 +++++++
+ toolchains/remote_java_repository.bzl | 10 ++++++
+ 4 files changed, 80 insertions(+), 18 deletions(-)
+
+diff --git a/toolchains/BUILD b/toolchains/BUILD
+index b8cb35d..b208e7b 100644
+--- a/toolchains/BUILD
++++ b/toolchains/BUILD
+@@ -29,14 +29,56 @@ filegroup(
+     srcs = glob(["*.bzl"]),
+ )
+ 
+-# Used to distinguish toolchains used for Java development, ie the JavaToolchainProvider.
++# A single binary distribution of a JDK (e.g., OpenJDK 17 for Windows arm64) provides three
++# different types of toolchains from the perspective of Bazel:
++
++# The compilation toolchain, which provides the Java runtime used to execute the Java compiler, as
++# well as various helper tools and settings.
++#
++# Toolchains of this type typically have constraints on the execution platform so that their Java
++# runtime can run the compiler, but not on the target platform as Java compilation outputs are
++# platform independent.
++#
++# Obtain the associated JavaToolchainInfo via:
++#   ctx.toolchains["@bazel_tools//tools/jdk:toolchain_type"].java
+ # TODO: migrate away from using @bazel_tools//tools/jdk:toolchain_type ?
+ # toolchain_type(name = "toolchain_type")
+ 
+-# Used to distinguish toolchains used for Java execution, ie the JavaRuntimeInfo.
++# The Java runtime that executable Java compilation outputs (e.g., java_binary with
++# create_executable = True) will run on.
++#
++# Toolchains of this type typically have constraints on the target platform so that the runtime's
++# native 'java' binary can be run there, but not on the execution platform as building an executable
++# Java target only requires copying or symlinking the runtime, which can be done on any platform.
++#
++# Obtain the associated JavaRuntimeInfo via:
++#   ctx.toolchains["@bazel_tools//tools/jdk:runtime_toolchain_type"].java_runtime
+ # TODO: migrate away from using @bazel_tools//tools/jdk:runtime_toolchain_type ?
+ # toolchain_type(name = "runtime_toolchain_type")
+ 
++# The Java runtime to extract the bootclasspath from that is then used to compile Java sources.
++#
++# As the bootclasspath is platform independent, toolchains of this type may have no constraints.
++# Purely as an optimization to prevent unnecessary fetches of remote runtimes for other
++# architectures, toolchains of this type may have constraints on the execution platform that match
++# those on the corresponding compilation toolchain.
++#
++# Toolchains of this type are only consumed internally by the bootclasspath rule and should not be
++# accessed from Starlark.
++# TODO: migrate away from using @bazel_tools//tools/jdk:bootstrap_runtime_toolchain_type ?
++# toolchain_type(name = "bootstrap_runtime_toolchain_type")
++
++# The Java runtime to extract the bootclasspath from that is then used to compile Java sources.
++#
++# As the bootclasspath is platform independent, toolchains of this type may have no constraints.
++# Purely as an optimization to prevent unnecessary fetches of remote runtimes for other
++# architectures, toolchains of this type may have constraints on the execution platform that match
++# those on the corresponding compilation toolchain.
++#
++# Toolchains of this type are only consumed internally by the bootclasspath rule and should not be
++# accessed from Starlark.
++# toolchain_type(name = "bootstrap_runtime_toolchain_type")
++
+ # Points to toolchain[":runtime_toolchain_type"] (was :legacy_current_java_runtime)
+ java_runtime_alias(name = "current_java_runtime")
+ 
+@@ -201,8 +243,7 @@ alias(
+ bootclasspath(
+     name = "platformclasspath",
+     src = "DumpPlatformClassPath.java",
+-    host_javabase = ":current_java_runtime",
+-    target_javabase = ":current_java_runtime",
++    java_runtime_alias = ":current_java_runtime",
+ )
+ 
+ default_java_toolchain(
+diff --git a/toolchains/default_java_toolchain.bzl b/toolchains/default_java_toolchain.bzl
+index 846302e..e696988 100644
+--- a/toolchains/default_java_toolchain.bzl
++++ b/toolchains/default_java_toolchain.bzl
+@@ -204,8 +204,10 @@ def java_runtime_files(name, srcs):
+             tags = ["manual"],
+         )
+ 
++_JAVA_BOOTSTRAP_RUNTIME_TOOLCHAIN_TYPE = Label("@bazel_tools//tools/jdk:bootstrap_runtime_toolchain_type")
++
+ def _bootclasspath_impl(ctx):
+-    host_javabase = ctx.attr.host_javabase[java_common.JavaRuntimeInfo]
++    exec_javabase = ctx.attr.java_runtime_alias[java_common.JavaRuntimeInfo]
+ 
+     class_dir = ctx.actions.declare_directory("%s_classes" % ctx.label.name)
+ 
+@@ -220,17 +222,15 @@ def _bootclasspath_impl(ctx):
+     args.add(ctx.file.src)
+ 
+     ctx.actions.run(
+-        executable = "%s/bin/javac" % host_javabase.java_home,
++        executable = "%s/bin/javac" % exec_javabase.java_home,
+         mnemonic = "JavaToolchainCompileClasses",
+-        inputs = [ctx.file.src] + ctx.files.host_javabase,
++        inputs = [ctx.file.src] + ctx.files.java_runtime_alias,
+         outputs = [class_dir],
+         arguments = [args],
+     )
+ 
+     bootclasspath = ctx.outputs.output_jar
+ 
+-    inputs = [class_dir] + ctx.files.host_javabase
+-
+     args = ctx.actions.args()
+     args.add("-XX:+IgnoreUnrecognizedVMOptions")
+     args.add("--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED")
+@@ -240,16 +240,17 @@ def _bootclasspath_impl(ctx):
+     args.add("DumpPlatformClassPath")
+     args.add(bootclasspath)
+ 
++    any_javabase = ctx.toolchains[_JAVA_BOOTSTRAP_RUNTIME_TOOLCHAIN_TYPE].java_runtime
++    args.add(any_javabase.java_home)
++
+     system_files = ("release", "modules", "jrt-fs.jar")
+-    system = [f for f in ctx.files.target_javabase if f.basename in system_files]
++    system = [f for f in any_javabase.files.to_list() if f.basename in system_files]
+     if len(system) != len(system_files):
+         system = None
+-    if ctx.attr.target_javabase:
+-        inputs.extend(ctx.files.target_javabase)
+-        args.add(ctx.attr.target_javabase[java_common.JavaRuntimeInfo].java_home)
+ 
++    inputs = depset([class_dir] + ctx.files.java_runtime_alias, transitive = [any_javabase.files])
+     ctx.actions.run(
+-        executable = str(host_javabase.java_executable_exec_path),
++        executable = str(exec_javabase.java_executable_exec_path),
+         mnemonic = "JavaToolchainCompileBootClasspath",
+         inputs = inputs,
+         outputs = [bootclasspath],
+@@ -267,7 +268,7 @@ def _bootclasspath_impl(ctx):
+ _bootclasspath = rule(
+     implementation = _bootclasspath_impl,
+     attrs = {
+-        "host_javabase": attr.label(
++        "java_runtime_alias": attr.label(
+             cfg = "exec",
+             providers = [java_common.JavaRuntimeInfo],
+         ),
+@@ -276,10 +277,8 @@ _bootclasspath = rule(
+             cfg = "exec",
+             allow_single_file = True,
+         ),
+-        "target_javabase": attr.label(
+-            providers = [java_common.JavaRuntimeInfo],
+-        ),
+     },
++    toolchains = [_JAVA_BOOTSTRAP_RUNTIME_TOOLCHAIN_TYPE],
+ )
+ 
+ def bootclasspath(name, **kwargs):
+diff --git a/toolchains/local_java_repository.bzl b/toolchains/local_java_repository.bzl
+index 3b8c386..1589d39 100644
+--- a/toolchains/local_java_repository.bzl
++++ b/toolchains/local_java_repository.bzl
+@@ -101,6 +101,12 @@ def local_java_runtime(name, java_home, version, runtime_name = None, visibility
+         toolchain_type = Label("@bazel_tools//tools/jdk:runtime_toolchain_type"),
+         toolchain = runtime_name,
+     )
++    native.toolchain(
++        name = "bootstrap_runtime_toolchain_definition",
++        target_settings = [":%s_settings_alias" % name],
++        toolchain_type = Label("@bazel_tools//tools/jdk:bootstrap_runtime_toolchain_type"),
++        toolchain = runtime_name,
++    )
+ 
+     if type(version) == type("") and version.isdigit() and int(version) > 8:
+         for version in range(8, int(version) + 1):
+@@ -245,6 +251,12 @@ toolchain(
+    toolchain_type = "@bazel_tools//tools/jdk:runtime_toolchain_type",
+    toolchain = ":jdk",
+ )
++toolchain(
++   name = "bootstrap_runtime_toolchain_definition",
++   target_settings = [":localjdk_setting"],
++   toolchain_type = "@bazel_tools//tools/jdk:bootstrap_runtime_toolchain_type",
++   toolchain = ":jdk",
++)
+ '''
+ 
+ _local_java_repository_rule = repository_rule(
+diff --git a/toolchains/remote_java_repository.bzl b/toolchains/remote_java_repository.bzl
+index 86916ec..65bbe48 100644
+--- a/toolchains/remote_java_repository.bzl
++++ b/toolchains/remote_java_repository.bzl
+@@ -82,6 +82,16 @@ toolchain(
+     toolchain_type = "@bazel_tools//tools/jdk:runtime_toolchain_type",
+     toolchain = "{toolchain}",
+ )
++toolchain(
++    name = "bootstrap_runtime_toolchain",
++    # These constraints are not required for correctness, but prevent fetches of remote JDK for
++    # different architectures. As every Java compilation toolchain depends on a bootstrap runtime in
++    # the same configuration, this constraint will not result in toolchain resolution failures.
++    exec_compatible_with = {target_compatible_with},
++    target_settings = [":version_or_prefix_version_setting"],
++    toolchain_type = "@bazel_tools//tools/jdk:bootstrap_runtime_toolchain_type",
++    toolchain = "{toolchain}",
++)
+ """.format(
+             prefix = prefix,
+             version = version,
+
+From 962ab9f9075bed19544b7cac0b53e512c62228e8 Mon Sep 17 00:00:00 2001
+From: Fabian Meumertzheim <fabian@meumertzhe.im>
+Date: Wed, 5 Jul 2023 18:28:33 +0200
+Subject: [PATCH 2/4] Register toolchains in MODULE.bazel
+
+---
+ MODULE.bazel | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/MODULE.bazel b/MODULE.bazel
+index ac5cd19..d3729b9 100644
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -26,7 +26,10 @@ use_repo(toolchains, "remote_java_tools_darwin_arm64")
+ # Declare local jdk repo
+ use_repo(toolchains, "local_jdk")
+ 
+-register_toolchains("@local_jdk//:runtime_toolchain_definition")
++register_toolchains(
++    "@local_jdk//:runtime_toolchain_definition",
++    "@local_jdk//:bootstrap_runtime_toolchain_definition",
++)
+ 
+ # Declare all remote jdk toolchain config repos
+ JDKS = {
+@@ -69,7 +72,7 @@ REMOTE_JDK_REPOS = [("remotejdk" + version + "_" + platform) for version in JDKS
+     repo + "_toolchain_config_repo",
+ ) for repo in REMOTE_JDK_REPOS]
+ 
+-[register_toolchains("@" + name + "_toolchain_config_repo//:toolchain") for name in REMOTE_JDK_REPOS]
++[register_toolchains("@" + name + "_toolchain_config_repo//:all") for name in REMOTE_JDK_REPOS]
+ 
+ # Dev dependencies
+ bazel_dep(name = "rules_pkg", version = "0.5.1", dev_dependency = True)
+
+From 58834b48f02deebddbc887f731a9199ce484a6e0 Mon Sep 17 00:00:00 2001
+From: Fabian Meumertzheim <fabian@meumertzhe.im>
+Date: Mon, 31 Jul 2023 18:09:00 +0200
+Subject: [PATCH 3/4] Update Bazel to 7.0.0-pre.20230710.5
+
+---
+ .bazelversion | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 .bazelversion
+
+diff --git a/.bazelversion b/.bazelversion
+new file mode 100644
+index 0000000..293346f
+--- /dev/null
++++ b/.bazelversion
+@@ -0,0 +1 @@
++7.0.0-pre.20230710.5
+
+From 6b04a310347861d00ecf6e439e200e559c6a1a90 Mon Sep 17 00:00:00 2001
+From: Fabian Meumertzheim <fabian@meumertzhe.im>
+Date: Tue, 1 Aug 2023 10:45:39 +0200
+Subject: [PATCH 4/4] Add missing WORKSPACE `register_toolchains` calls
+
+---
+ java/repositories.bzl | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/java/repositories.bzl b/java/repositories.bzl
+index 7e5b939..a7cf3bd 100644
+--- a/java/repositories.bzl
++++ b/java/repositories.bzl
+@@ -551,7 +551,13 @@ def rules_java_toolchains(name = "toolchains"):
+ 
+     REMOTE_JDK_REPOS = [("remotejdk" + version + "_" + platform) for version in JDKS for platform in JDKS[version]]
+ 
+-    native.register_toolchains("//toolchains:all")
+-    native.register_toolchains("@local_jdk//:runtime_toolchain_definition")
++    native.register_toolchains(
++        "//toolchains:all",
++        "@local_jdk//:runtime_toolchain_definition",
++        "@local_jdk//:bootstrap_runtime_toolchain_definition",
++    )
+     for name in REMOTE_JDK_REPOS:
+-        native.register_toolchains("@" + name + "_toolchain_config_repo//:toolchain")
++        native.register_toolchains(
++            "@" + name + "_toolchain_config_repo//:toolchain",
++            "@" + name + "_toolchain_config_repo//:bootstrap_runtime_toolchain",
++        )

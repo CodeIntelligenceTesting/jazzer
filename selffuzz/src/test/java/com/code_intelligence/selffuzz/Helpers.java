@@ -16,13 +16,39 @@
 
 package com.code_intelligence.selffuzz;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import com.code_intelligence.selffuzz.jazzer.mutation.api.PseudoRandom;
+import com.code_intelligence.selffuzz.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.selffuzz.jazzer.mutation.engine.SeededPseudoRandom;
 import com.code_intelligence.selffuzz.jazzer.mutation.support.InputStreamSupport;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 public class Helpers {
-  public static DataInputStream infiniteByteStream(byte[] data) {
+  public static <T> void assertMutator(SerializingMutator<T> mutator, byte[] data, long seed)
+      throws IOException {
+    PseudoRandom prng = new SeededPseudoRandom(seed);
+    try (DataInputStream stream = infiniteByteStream(data)) {
+      T read = mutator.read(stream);
+      T mutated = mutator.mutate(read, prng);
+      T inited = mutator.init(prng);
+      T crossedOver = mutator.crossOver(mutated, inited, prng);
+
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      mutator.write(crossedOver, new DataOutputStream(out));
+      T deserialized =
+          mutator.read(new DataInputStream(new ByteArrayInputStream(out.toByteArray())));
+
+      assertEquals(crossedOver, deserialized);
+    }
+  }
+
+  private static DataInputStream infiniteByteStream(byte[] data) {
     InputStream dataStream = new ByteArrayInputStream(data);
     return new DataInputStream(InputStreamSupport.extendWithZeros(dataStream));
   }

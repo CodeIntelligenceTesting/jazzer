@@ -9,6 +9,29 @@ load("//:init.bzl", "jazzer_init")
 
 jazzer_init()
 
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "rules_java",
+    patch_args = ["-p1"],
+    patches = [
+        # https://github.com/bazelbuild/rules_java/pull/114
+        # Remove unnecessary dependency on a Java runtime for the target platform.
+        "//third_party:rules_java-use-bootstrap-runtime-toolchain-type.patch",
+    ],
+    sha256 = "fd1d5538c8e5bbf890e1e31e983139b89710aacd0a5327ddf9afe12090ed9c78",
+    strip_prefix = "rules_java-ca72739da10036e1d2cf2aaeab78fae87673e43f",
+    urls = [
+        "https://github.com/bazelbuild/rules_java/archive/ca72739da10036e1d2cf2aaeab78fae87673e43f.tar.gz",
+    ],
+)
+
+load("@rules_java//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
+
+rules_java_dependencies()
+
+rules_java_toolchains()
+
 http_archive(
     name = "com_google_protobuf",
     patches = ["//third_party:protobuf-disable-layering_check.patch"],
