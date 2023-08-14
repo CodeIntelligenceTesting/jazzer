@@ -110,7 +110,8 @@ public class FuzzTargetTestWrapper {
       }
       command.add("--jvm_flags="
           + String.join(" ", "-XX:-OmitStackTraceInFastThrow", "-XX:+UseParallelGC",
-              "-XX:+IgnoreUnrecognizedVMOptions", "-XX:+CriticalJNINatives"));
+              "-XX:+IgnoreUnrecognizedVMOptions", "-XX:+CriticalJNINatives",
+              "-XX:+EnableDynamicAgentLoading"));
       if (System.getenv("JAZZER_DEBUG") != null) {
         command.add("--debug");
       }

@@ -239,9 +239,11 @@ JVM::JVM() {
   options.push_back(JavaVMOption{(char *)"-XX:-OmitStackTraceInFastThrow"});
   // Optimize GC for high throughput rather than low latency.
   options.push_back(JavaVMOption{(char *)"-XX:+UseParallelGC"});
-  // CriticalJNINatives has been removed in JDK 18.
+  // CriticalJNINatives has been removed in JDK 18, EnableDynamicAgentLoading
+  // has been added in JDK 9.
   options.push_back(JavaVMOption{(char *)"-XX:+IgnoreUnrecognizedVMOptions"});
   options.push_back(JavaVMOption{(char *)"-XX:+CriticalJNINatives"});
+  options.push_back(JavaVMOption{(char *)"-XX:+EnableDynamicAgentLoading"});
 #endif
 
   std::vector<std::string> java_opts_args;
