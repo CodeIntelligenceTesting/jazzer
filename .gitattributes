@@ -1,0 +1,2 @@
+# Do not perform LF/CRLF conversion during checkin or checkout.
+* -text
