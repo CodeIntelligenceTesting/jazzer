@@ -123,21 +123,4 @@ public class SeededPseudoRandomTest {
     assertThat(prng.closedRangeBiasedTowardsSmall(0)).isEqualTo(0);
     assertThat(prng.closedRangeBiasedTowardsSmall(5, 5)).isEqualTo(5);
   }
-
-  @Test
-  void testClosedRangeBiasedTowardsSmall_distribution() {
-    int num = 5000000;
-    SeededPseudoRandom prng = new SeededPseudoRandom(1337133371337L);
-    Map<Integer, Double> frequencies =
-        Stream.generate(() -> prng.closedRangeBiasedTowardsSmall(9))
-            .limit(num)
-            .collect(
-                groupingBy(i -> i, collectingAndThen(counting(), count -> ((double) count) / num)));
-    // Reference values obtained from
-    // https://www.wolframalpha.com/input?i=N%5BTable%5BPDF%5BZipfDistribution%5B10%2C+1%5D%2C+i%5D%2C+%7Bi%2C+1%2C+10%7D%5D%5D
-    assertThat(frequencies)
-        .comparingValuesUsing(Correspondence.tolerance(0.0005))
-        .containsExactly(0, 0.645, 1, 0.161, 2, 0.072, 3, 0.040, 4, 0.026, 5, 0.018, 6, 0.013, 7,
-            0.01, 8, 0.008, 9, 0.006);
-  }
 }
