@@ -218,55 +218,13 @@ public final class SeededPseudoRandom implements PseudoRandom {
 
   @Override
   public int closedRangeBiasedTowardsSmall(int upperInclusive) {
-    if (upperInclusive == 0) {
-      return 0;
-    }
-    Preconditions.require(upperInclusive > 0);
-    // Modified from (Apache-2.0)
-    // https://github.com/abseil/abseil-cpp/blob/2927340217c37328319b5869285a6dcdbc13e7a7/absl/random/zipf_distribution.h
-    // by inlining the values v = 1 and q = 2.
-    final double kd = upperInclusive;
-    final double hxm = zipf_h(kd + 0.5);
-    final double h0x5 = -1.0 / 1.5;
-    final double elogv_q = 1.0;
-    final double hx0_minus_hxm = (h0x5 - elogv_q) - hxm;
-    final double s = 0.46153846153846123;
-    double k;
-    while (true) {
-      final double v = random.nextDouble();
-      final double u = hxm + v * hx0_minus_hxm;
-      final double x = zipf_hinv(u);
-      k = Math.floor(x + 0.5);
-      if (k > kd) {
-        continue;
-      }
-      if (k - x <= s) {
-        break;
-      }
-      final double h = zipf_h(k + 0.5);
-      final double r = zipf_pow_negative_q(1.0 + k);
-      if (u >= h - r) {
-        break;
-      }
-    }
-    return (int) k;
+    require(upperInclusive >= 0);
+    return closedRange(0, upperInclusive / 2);
   }
 
   @Override
   public int closedRangeBiasedTowardsSmall(int lowerInclusive, int upperInclusive) {
     return lowerInclusive + closedRangeBiasedTowardsSmall(upperInclusive - lowerInclusive);
-  }
-
-  private static double zipf_h(double x) {
-    return -1.0 / (x + 1.0);
-  }
-
-  private static double zipf_hinv(double x) {
-    return -1.0 + -1.0 / x;
-  }
-
-  private static double zipf_pow_negative_q(double x) {
-    return 1.0 / (x * x);
   }
 
   @Override
