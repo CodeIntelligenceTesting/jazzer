@@ -229,6 +229,10 @@ JVM::JVM() {
 #if !defined(__ANDROID__)
   // Set the maximum heap size to a value that is slightly smaller than
   // libFuzzer's default rss_limit_mb. This prevents erroneous oom reports.
+  // Note: This approach is deprecated and only kept here for backwards
+  //       compatibility. The new approach is to set -rss_limit_mb to a
+  //       suitable value based on the JVM heap size when starting libFuzzer
+  //       as part of the Jazzer driver.
   options.push_back(JavaVMOption{(char *)"-Xmx1800m"});
   // Preserve and emit stack trace information even on hot paths.
   // This may hurt performance, but also helps find flaky bugs.
