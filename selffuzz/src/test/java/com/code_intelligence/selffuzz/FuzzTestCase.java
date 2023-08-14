@@ -28,9 +28,8 @@ import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DynamicMessage;
-import java.io.DataInputStream;
-import java.io.EOFException;
-import java.io.IOException;
+
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,15 +74,14 @@ class FuzzTestCase {
                .addMessageType(messageType)
                .build();
 
-    try (DataInputStream stream = Helpers.infiniteByteStream(bytes)) {
-      SerializingMutator<DynamicMessage> mutator =
-          (SerializingMutator<DynamicMessage>) ProtoMutators.newFactory().createOrThrow(
-              new TypeHolder<@WithDefaultInstance(
-                  "com.code_intelligence.selffuzz.FuzzTestCase#getDefaultInstance")
-                  DynamicMessage>() {
-              }.annotatedType());
-
-      DynamicMessage out = mutator.read(stream);
+    SerializingMutator<DynamicMessage> mutator;
+    try {
+      mutator =
+              (SerializingMutator<DynamicMessage>) ProtoMutators.newFactory().createOrThrow(
+                      new TypeHolder<@WithDefaultInstance(
+                              "com.code_intelligence.selffuzz.FuzzTestCase#getDefaultInstance")
+                              DynamicMessage>() {
+                      }.annotatedType());
     } catch (IllegalArgumentException e) {
       // an invalid proto descriptor will throw a DescriptorValidationException below but by the
       // time it gets here it'll be wrapped in a couple layers of other exceptions. We peel it apart
@@ -97,9 +95,29 @@ class FuzzTestCase {
         }
       }
       throw e;
+    }
+
+    DynamicMessage message;
+    try (DataInputStream stream = Helpers.infiniteByteStream(bytes)) {
+      message = mutator.read(stream);
+    }  catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    ByteArrayOutputStream fileBuf = new ByteArrayOutputStream();
+    try {
+      mutator.write(message, new DataOutputStream(fileBuf));
+      ByteArrayInputStream in = new ByteArrayInputStream(fileBuf.toByteArray());
+      DynamicMessage serializedMessage = mutator.read(new DataInputStream(in));
+
+      if (!message.equals(serializedMessage)) {
+        throw new RuntimeException("message not equal to itself after serialization");
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+
+
   }
 
   @SuppressWarnings("unused")
