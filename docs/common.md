@@ -1,5 +1,6 @@
 ## Common options and workflows
 
+* [Recommended JVM options](#recommended-jvm-options)
 * [Passing arguments](#passing-arguments)
 * [Reproducing a finding](#reproducing-a-finding)
 * [Minimizing a crashing input](#minimizing-a-crashing-input)
@@ -7,6 +8,17 @@
 * [Autofuzz mode](#autofuzz-mode)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
+
+### Recommended JVM options
+
+The following JVM settings are recommended for running Jazzer within JUnit.
+Both `cifuzz` and the `jazzer` launcher binary set them automatically.
+
+* `-XX:-OmitStackTraceInFastThrow` ensures that stack traces are emitted even on hot code paths.
+  This may hurt performance if your fuzz test frequently throws and catches exceptions, but also helps find flaky bugs.
+* `-XX:+UseParallelGC` optimizes garbage collection for high throughput rather than low latency.
+* `-XX:+CriticalJNINatives` is supported with JDK 17 and earlier and improves the runtime performance of Jazzer's instrumentation.
+* `-XX:+EnableDynamicAgentLoading` silences a warning with JDK 21 and later triggered by the Java agent that Jazzer attaches to instrument the fuzzed code.
 
 ### Passing arguments
 
