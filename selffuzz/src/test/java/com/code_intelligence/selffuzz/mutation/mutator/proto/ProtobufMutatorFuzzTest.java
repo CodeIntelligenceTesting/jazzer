@@ -51,8 +51,8 @@ class ProtobufMutatorFuzzTest {
     }
 
     protoName = messageType.getName();
-    // the name has to be valid to create the filedescriptor, other invalid names will be caught when constructing the
-    // mutator
+    // the name has to be valid to create the filedescriptor, other invalid names will be caught
+    // when constructing the mutator
     Matcher matcher = protoNamePattern.matcher(protoName);
     if (!matcher.find()) {
       return;
