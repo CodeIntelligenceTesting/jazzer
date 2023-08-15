@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.code_intelligence.selffuzz.mutation.mutator.lang;
+package com.code_intelligence.selffuzz.mutation.mutator.proto;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
@@ -65,7 +65,7 @@ class ProtobufMutatorFuzzTest {
             mutator =
                     (SerializingMutator<DynamicMessage>) ProtoMutators.newFactory().createOrThrow(
                             new TypeHolder<@WithDefaultInstance(
-                                    "com.code_intelligence.selffuzz.mutation.mutator.lang.ProtobufMutatorFuzzTest#getDefaultInstance")
+                                    "com.code_intelligence.selffuzz.mutation.mutator.proto.ProtobufMutatorFuzzTest#getDefaultInstance")
                                     DynamicMessage>() {
                             }.annotatedType());
         } catch (IllegalArgumentException e) {
