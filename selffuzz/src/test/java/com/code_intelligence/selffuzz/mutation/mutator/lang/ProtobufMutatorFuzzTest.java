@@ -28,13 +28,12 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DynamicMessage;
 
-import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.IOException;
 
-import com.code_intelligence.selffuzz.Helpers;
+import static com.code_intelligence.selffuzz.Helpers.assertMutator;
 
 @SuppressWarnings("unchecked")
 class ProtobufMutatorFuzzTest {
@@ -42,11 +41,11 @@ class ProtobufMutatorFuzzTest {
     private static FileDescriptorProto file;
 
     // https://protobuf.dev/reference/protobuf/proto3-spec/#identifiers
-    private static Pattern protoNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z._]$");
+    private static final Pattern protoNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z._]$");
 
     @SuppressWarnings({"unchecked", "unused"})
     @FuzzTest
-    void protobufMutatorTest(@NotNull DescriptorProto messageType, byte @NotNull[] bytes) {
+    void protobufMutatorTest(long seed, @NotNull DescriptorProto messageType, byte @NotNull[] bytes) throws IOException {
         if (messageType == null) {
             return;
         }
@@ -66,7 +65,7 @@ class ProtobufMutatorFuzzTest {
             mutator =
                     (SerializingMutator<DynamicMessage>) ProtoMutators.newFactory().createOrThrow(
                             new TypeHolder<@WithDefaultInstance(
-                                    "com.code_intelligence.selffuzz.FuzzTestCase#getDefaultInstance")
+                                    "com.code_intelligence.selffuzz.mutation.mutator.lang.ProtobufMutatorFuzzTest#getDefaultInstance")
                                     DynamicMessage>() {
                             }.annotatedType());
         } catch (IllegalArgumentException e) {
@@ -83,7 +82,9 @@ class ProtobufMutatorFuzzTest {
             }
             throw e;
         }
+        assertMutator(mutator, bytes, seed);
 
+        /*
         DynamicMessage message;
         try (DataInputStream stream = Helpers.infiniteByteStream(bytes)) {
             message = mutator.read(stream);
@@ -103,10 +104,10 @@ class ProtobufMutatorFuzzTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-
+         */
     }
 
+    // this is actually used via reflection, see the TypeHolder above
     @SuppressWarnings("unused")
     private static DynamicMessage getDefaultInstance() {
         try {

@@ -46,17 +46,22 @@ java_fuzz_target_test(
     "doubleMutatorTest",
 ]]
 
-java_junit5_test(
-    name = "ProtbufMutatorFuzzTest",
+java_fuzz_target_test(
+    name = "ProtobufMutatorFuzzTest",
     srcs = ["ProtobufMutatorFuzzTest.java"],
-    args = ["--experimental-mutator"],
-    deps = JUNIT5_DEPS + [
-        "//selffuzz/src/test/java/com/code_intelligence/selffuzz:helpers",
+    fuzzer_args = [
+        "--experimental_mutator",
+        "-runs=1000",
+    ],
+    target_class = "com.code_intelligence.selffuzz.mutation.mutator.lang.ProtobufMutatorFuzzTest",
+    deps = [
         "//selffuzz:jazzer_selffuzz",
+        "//selffuzz/src/test/java/com/code_intelligence/selffuzz:helpers",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/proto",
-        "@maven//:org_junit_jupiter_junit_jupiter_api",
-        "@maven//:org_junit_jupiter_junit_jupiter_params",
         "@com_google_protobuf_protobuf_java//jar",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
     ],
 )
