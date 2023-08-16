@@ -2,85 +2,21 @@ name: Release
 
 on:
   workflow_dispatch:
+  release:
+    types: [released]
 
 jobs:
-  build_release:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-20.04
-            name: linux
-          - os: macos-11
-            name: macos
-          - os: windows-2019
-            name: windows
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: zulu
-          java-version: 8
-
-      - name: Set Build Buddy config
-        shell: bash
-        run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
-
-      - name: Append build settings to .bazelrc
-        shell: bash
-        run: |
-          echo "build --announce_rc" >> .bazelrc
-          echo "build:linux --config=toolchain" >> .bazelrc
-          echo "build:linux --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux" >> .bazelrc
-
-      - name: Build
-        shell: bash
-        # Double forward slashes are converted to single ones by Git Bash on Windows, so we use working directory
-        # relative labels instead.
-        run: |
-          bazelisk build ${{env.BUILD_BUDDY_CONFIG}} deploy:jazzer :jazzer_release
-          cp -L $(bazel cquery --output=files deploy:jazzer) jazzer-${{ matrix.name }}.jar
-          cp -L $(bazel cquery --output=files :jazzer_release) jazzer-${{ matrix.name }}.tar.gz
-
-      - name: Upload jazzer.jar
-        uses: actions/upload-artifact@v3
-        with:
-          name: jazzer_tmp
-          path: jazzer-${{ matrix.name }}.jar
-          if-no-files-found: error
-
-      - name: Upload release archive
-        uses: actions/upload-artifact@v3
-        with:
-          name: jazzer_releases
-          path: jazzer-${{ matrix.name }}.tar.gz
-          if-no-files-found: error
-
-  merge_jars:
+  docker_push:
     runs-on: ubuntu-latest
-    needs: build_release
+
+    environment:
+      name: Deploy
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Download individual jars
-        uses: actions/download-artifact@v3
-        with:
-          name: jazzer_tmp
-          path: _tmp/
+      - name: Docker login
+        run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login --username ${{ secrets.DOCKER_USER }} --password-stdin
 
-      - name: Merge jars
-        run: |
-          bazel run @rules_jvm_external//private/tools/java/com/github/bazelbuild/rules_jvm_external/jar:MergeJars -- \
-            --output "$(pwd)"/_tmp/jazzer.jar \
-            $(find "$(pwd)/_tmp/" -name '*.jar' -printf "--sources %h/%f ")
-
-      - name: Upload merged jar
-        uses: actions/upload-artifact@v3
-        with:
-          name: jazzer
-          path: _tmp/jazzer.jar
-          if-no-files-found: error
+      - name: Push docker containers
+        run: docker/push_all.sh
