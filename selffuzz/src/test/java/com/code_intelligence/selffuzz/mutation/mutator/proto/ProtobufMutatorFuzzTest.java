@@ -46,15 +46,10 @@ class ProtobufMutatorFuzzTest {
   @FuzzTest
   void protobufMutatorTest(long seed, @NotNull DescriptorProto messageType, byte @NotNull[] bytes)
       throws IOException {
-    if (messageType == null) {
-      return;
-    }
-
     protoName = messageType.getName();
     // the name has to be valid to create the filedescriptor, other invalid names will be caught
     // when constructing the mutator
-    Matcher matcher = protoNamePattern.matcher(protoName);
-    if (!matcher.find()) {
+    if (!protoNamePattern.matcher(protoName).matches()) {
       return;
     }
     file = FileDescriptorProto.newBuilder()
