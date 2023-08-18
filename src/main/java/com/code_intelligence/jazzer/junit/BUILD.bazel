@@ -44,6 +44,7 @@ java_library(
         ":fuzz_test_executor",
         ":seed_serializer",
         ":utils",
+        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
         "@maven//:org_junit_platform_junit_platform_commons",

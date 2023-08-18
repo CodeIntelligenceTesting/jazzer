@@ -19,6 +19,7 @@ import static com.code_intelligence.jazzer.junit.Utils.runFromCommandLine;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.code_intelligence.jazzer.driver.Opt;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;

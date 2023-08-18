@@ -107,8 +107,9 @@ public class Jazzer {
       // is an unnecessary overhead.
       final boolean spawnsSubprocesses = args.stream().anyMatch(arg
           -> (arg.startsWith("-fork=") && !arg.equals("-fork=0"))
-              || (arg.startsWith("-jobs=") && !arg.equals("-jobs=0"))
-              || (arg.startsWith("-merge=") && !arg.equals("-merge=0")));
+          || (arg.startsWith("-jobs=") && !arg.equals("-jobs=0"))
+          || (arg.startsWith("-merge=") && !arg.equals("-merge=0"))
+          || (arg.startsWith("-minimize_crash=") && !arg.equals("-minimize_crash=0")));
       // argv0 is printed by libFuzzer during reproduction, so have it contain "jazzer".
       String arg0 = spawnsSubprocesses ? prepareArgv0(new HashMap<>()) : "jazzer";
       args = Stream.concat(Stream.of(arg0), args.stream()).collect(toList());

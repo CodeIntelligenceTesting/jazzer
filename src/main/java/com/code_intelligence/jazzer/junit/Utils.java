@@ -192,7 +192,7 @@ class Utils {
   }
 
   private static final Pattern COVERAGE_AGENT_ARG =
-      Pattern.compile("-javaagent:.*(?:intellij-coverage-agent|jacoco).*");
+      Pattern.compile("-javaagent:.*intellij-coverage-agent.*");
   static boolean isCoverageAgentPresent() {
     return ManagementFactory.getRuntimeMXBean().getInputArguments().stream().anyMatch(
         s -> COVERAGE_AGENT_ARG.matcher(s).matches());

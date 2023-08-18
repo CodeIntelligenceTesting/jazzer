@@ -86,6 +86,7 @@ public final class JUnitRunner {
 
     LauncherDiscoveryRequestBuilder requestBuilder =
         LauncherDiscoveryRequestBuilder.request()
+            .configurationParameter("junit.jupiter.execution.timeout.mode", "disabled")
             .configurationParameter("jazzer.internal.commandLine", "true")
             .configurationParameters(indexedArgs)
             .selectors(selectClass(testClassName))

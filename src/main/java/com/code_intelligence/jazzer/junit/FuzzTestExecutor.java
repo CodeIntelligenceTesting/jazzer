@@ -47,6 +47,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
@@ -116,9 +117,20 @@ class FuzzTestExecutor {
     // up IntelliJ's memory usage.
     libFuzzerArgs.add("-rss_limit_mb=0");
     if (Utils.permissivelyParseBoolean(
-            context.getConfigurationParameter("jazzer.valueprofile").orElse("false"))) {
+        context.getConfigurationParameter("jazzer.valueprofile").orElse("false"))) {
       libFuzzerArgs.add("-use_value_profile=1");
     }
+
+    Stream.of(
+            AnnotationSupport.findAnnotation(context.getRequiredTestMethod(), Timeout.class),
+            AnnotationSupport.findAnnotation(context.getRequiredTestClass(), Timeout.class)
+        )
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .findFirst()
+        .map(timeout -> timeout.unit().toSeconds(timeout.value()))
+        .map(timeoutSeconds -> String.format("-timeout=%d", timeoutSeconds))
+        .ifPresent(libFuzzerArgs::add);
 
     // Prefer original libFuzzerArgs set via command line by appending them last.
     libFuzzerArgs.addAll(originalLibFuzzerArgs);
@@ -207,6 +219,7 @@ class FuzzTestExecutor {
     libFuzzerArgs.add(javaSeedsDir.toAbsolutePath().toString());
     libFuzzerArgs.add(String.format("-artifact_prefix=%s%c",
         findingsDirectory.orElse(baseDir).toAbsolutePath(), File.separatorChar));
+
     return javaSeedsDir;
   }
 
