@@ -105,14 +105,13 @@ public class Jazzer {
       // In LibFuzzer's fork mode, the subprocesses created continuously by the main libFuzzer
       // process do not create further subprocesses. Creating a wrapper script for each subprocess
       // is an unnecessary overhead.
-      final boolean spawnsSubprocesses = args.stream().anyMatch(arg
-          -> (arg.startsWith("-fork=") && !arg.equals("-fork=0"))
-              || (arg.startsWith("-jobs=") && !arg.equals("-jobs=0"))
-              || (arg.startsWith("-merge=") && !arg.equals("-merge=0")));
+      final boolean spawnsSubprocesses =
+          Stream.of("fork", "jobs", "merge")
+              .anyMatch(option -> isLibFuzzerOptionEnabled(option, args));
       // argv0 is printed by libFuzzer during reproduction, so have it contain "jazzer".
       String arg0 = spawnsSubprocesses ? prepareArgv0(new HashMap<>()) : "jazzer";
-      args = Stream.concat(Stream.of(arg0), args.stream()).collect(toList());
-      exit(Driver.start(args, spawnsSubprocesses));
+      List<String> argsWithArgv0 = Stream.concat(Stream.of(arg0), args.stream()).collect(toList());
+      exit(Driver.start(argsWithArgv0, spawnsSubprocesses));
     }
 
     if (!isLinux() && !isMacOs()) {
@@ -207,6 +206,20 @@ public class Jazzer {
       // Example: --dedup --> (dedup, "true")
       return new SimpleImmutableEntry<>(nameAndValue[0], "true");
     }
+  }
+
+  /**
+   * Returns whether the given libFuzzer option which isn't enabled by default is enabled by the
+   * given command line.
+   */
+  static boolean isLibFuzzerOptionEnabled(String option, List<String> args) {
+    return args.stream()
+        .filter(arg -> arg.startsWith(String.format("-%s=", option)))
+        .map(arg -> arg.split("=", 2)[1])
+        // libFuzzer parses the value with strtol, which treats an empty value as 0.
+        .map(value -> !value.isEmpty() && !value.equals("0"))
+        // Later flags override earlier ones on the command line.
+        .reduce(false, (prev, current) -> current);
   }
 
   // Create a wrapper script that faithfully recreates the current JVM. By using this script as

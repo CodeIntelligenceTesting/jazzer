@@ -1,0 +1,13 @@
+load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_junit5_test")
+
+java_junit5_test(
+    name = "JazzerTest",
+    size = "small",
+    srcs = glob(["JazzerTest.java"]),
+    deps = JUNIT5_DEPS + [
+        # keep sorted
+        "//src/main/java/com/code_intelligence/jazzer:jazzer_lib",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
