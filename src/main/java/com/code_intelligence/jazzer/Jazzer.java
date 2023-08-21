@@ -106,7 +106,7 @@ public class Jazzer {
       // process do not create further subprocesses. Creating a wrapper script for each subprocess
       // is an unnecessary overhead.
       final boolean spawnsSubprocesses =
-          Stream.of("fork", "jobs", "merge")
+          Stream.of("fork", "jobs", "merge", "minimize_crash")
               .anyMatch(option -> isLibFuzzerOptionEnabled(option, args));
       // argv0 is printed by libFuzzer during reproduction, so have it contain "jazzer".
       String arg0 = spawnsSubprocesses ? prepareArgv0(new HashMap<>()) : "jazzer";
