@@ -17,6 +17,7 @@ package com.code_intelligence.jazzer.junit;
 import static java.util.Arrays.stream;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Named.named;
@@ -40,11 +41,15 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -52,10 +57,26 @@ import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 import org.junit.jupiter.params.provider.Arguments;
 
 class Utils {
+  private static final Pattern DURATION_PATTERN =
+      Pattern.compile("(?iu)([0-9]*) ?(ns|μs|ms|s|m|h|d)?");
+
+  private static final Map<String, TimeUnit> DURATION_UNITS_LOOKUP;
+
+  static {
+    Map<String, TimeUnit> units = new HashMap<>();
+    units.put("ns", TimeUnit.NANOSECONDS);
+    units.put("μs", TimeUnit.MICROSECONDS);
+    units.put("ms", TimeUnit.MILLISECONDS);
+    units.put("s", TimeUnit.SECONDS);
+    units.put("m", TimeUnit.MINUTES);
+    units.put("h", TimeUnit.HOURS);
+    units.put("d", TimeUnit.DAYS);
+    DURATION_UNITS_LOOKUP = unmodifiableMap(units);
+  }
+
   /**
    * Returns the resource path of the inputs directory for a given test class and method. The path
-   * will have the form
-   * {@code <class name>Inputs/<method name>}
+   * will have the form {@code <class name>Inputs/<method name>}
    */
   static String inputsDirectoryResourcePath(Class<?> testClass, Method testMethod) {
     return testClass.getSimpleName() + "Inputs"
@@ -225,6 +246,19 @@ class Utils {
     String isoDuration =
         "PT" + duration.replace("sec", "s").replace("min", "m").replace("hr", "h").replace(" ", "");
     return Duration.parse(isoDuration).getSeconds();
+  }
+
+  static long parseJUnitTimeoutValueToSeconds(String value) {
+    Matcher matcher = DURATION_PATTERN.matcher(value);
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException("Failed to parse timeout duration string: " + value);
+    }
+    long count = Long.parseUnsignedLong(matcher.group(1));
+    TimeUnit unit = DURATION_UNITS_LOOKUP.getOrDefault(matcher.group(2), TimeUnit.SECONDS);
+    long seconds = unit.toSeconds(count);
+    // libFuzzer's -timeout flag has seconds granularity. Every duration shorter than that is
+    // rounded up to 1 second.
+    return seconds != 0 ? seconds : 1;
   }
 
   /**
