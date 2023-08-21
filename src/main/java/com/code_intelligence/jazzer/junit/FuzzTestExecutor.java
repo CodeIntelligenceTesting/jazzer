@@ -46,7 +46,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
@@ -120,10 +122,39 @@ class FuzzTestExecutor {
       libFuzzerArgs.add("-use_value_profile=1");
     }
 
+    translateJUnitTimeoutToLibFuzzerFlag(context).ifPresent(libFuzzerArgs::add);
+
     // Prefer original libFuzzerArgs set via command line by appending them last.
     libFuzzerArgs.addAll(originalLibFuzzerArgs);
 
     return new FuzzTestExecutor(libFuzzerArgs, javaSeedsDir, Utils.runFromCommandLine(context));
+  }
+
+  private static Optional<String> translateJUnitTimeoutToLibFuzzerFlag(ExtensionContext context) {
+    return Stream
+        .<Supplier<Optional<Long>>>of(
+            ()
+                -> AnnotationSupport.findAnnotation(context.getRequiredTestMethod(), Timeout.class)
+                       .map(timeout -> timeout.unit().toSeconds(timeout.value())),
+            ()
+                -> AnnotationSupport.findAnnotation(context.getRequiredTestClass(), Timeout.class)
+                       .map(timeout -> timeout.unit().toSeconds(timeout.value())),
+            ()
+                -> context.getConfigurationParameter(
+                    "junit.jupiter.execution.timeout.testtemplate.method.default",
+                    Utils::parseJUnitTimeoutValueToSeconds),
+            ()
+                -> context.getConfigurationParameter(
+                    "junit.jupiter.execution.timeout.testable.method.default",
+                    Utils::parseJUnitTimeoutValueToSeconds),
+            ()
+                -> context.getConfigurationParameter("junit.jupiter.execution.timeout.default",
+                    Utils::parseJUnitTimeoutValueToSeconds))
+        .map(Supplier::get)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .findFirst()
+        .map(timeoutSeconds -> String.format("-timeout=%d", timeoutSeconds));
   }
 
   /**

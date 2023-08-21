@@ -19,6 +19,7 @@ import static com.code_intelligence.jazzer.junit.Utils.getMarkedArguments;
 import static com.code_intelligence.jazzer.junit.Utils.getMarkedInstance;
 import static com.code_intelligence.jazzer.junit.Utils.isMarkedInstance;
 import static com.code_intelligence.jazzer.junit.Utils.isMarkedInvocation;
+import static com.code_intelligence.jazzer.junit.Utils.parseJUnitTimeoutValueToSeconds;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
 import static java.nio.file.Files.createDirectories;
@@ -27,6 +28,7 @@ import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.io.File;
@@ -63,6 +65,17 @@ public class UtilsTest implements InvocationInterceptor {
     assertThat(durationStringToSeconds("1h   2m 30s")).isEqualTo(60 * 60 + 2 * 60 + 30);
     assertThat(durationStringToSeconds("1hr2min30sec")).isEqualTo(60 * 60 + 2 * 60 + 30);
     assertThat(durationStringToSeconds("1h2m30s")).isEqualTo(60 * 60 + 2 * 60 + 30);
+  }
+
+  @Test
+  void testParseJUnitTimeoutValueToSeconds() {
+    assertThat(parseJUnitTimeoutValueToSeconds("5")).isEqualTo(5);
+    assertThat(parseJUnitTimeoutValueToSeconds("5s")).isEqualTo(5);
+    assertThat(parseJUnitTimeoutValueToSeconds("50 s")).isEqualTo(50);
+    assertThat(parseJUnitTimeoutValueToSeconds("5m")).isEqualTo(300);
+    assertThat(parseJUnitTimeoutValueToSeconds("5 m")).isEqualTo(300);
+    assertThat(parseJUnitTimeoutValueToSeconds("5 ms")).isEqualTo(1);
+    assertThrows(IllegalArgumentException.class, () -> parseJUnitTimeoutValueToSeconds("5 5"));
   }
 
   @ValueSource(classes = {int.class, Class.class, Object.class, String.class, HashMap.class,

@@ -597,12 +597,10 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "JUnitTimeoutTest",
     srcs = ["src/test/java/com/example/JUnitTimeoutTest.java"],
-    # TODO: Translate JUnit's @Timeout annotation into libFuzzer's -timeout flag to get this
-    #       test to time out properly rather than just not being interrupted by JUnit's
-    #       timeout handling.
-    #    allowed_findings = ["timeout"],
+    allowed_findings = ["timeout"],
     fuzzer_args = ["-runs=1"],
     target_class = "com.example.JUnitTimeoutTest",
+    verify_crash_reproducer = False,
     runtime_deps = [
         "@maven//:org_junit_jupiter_junit_jupiter_engine",
     ],
