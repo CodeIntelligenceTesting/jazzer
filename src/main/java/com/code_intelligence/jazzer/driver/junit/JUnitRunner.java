@@ -85,7 +85,12 @@ public final class JUnitRunner {
             .collect(Collectors.toMap(i -> "jazzer.internal.arg." + i, libFuzzerArgs::get));
 
     LauncherDiscoveryRequestBuilder requestBuilder =
-        LauncherDiscoveryRequestBuilder.request()
+        LauncherDiscoveryRequestBuilder
+            .request()
+            // JUnit's timeout handling interferes with libFuzzer as from the point of view of JUnit
+            // all fuzz test invocations are combined in a single JUnit test method execution.
+            // https://junit.org/junit5/docs/current/user-guide/#writing-tests-declarative-timeouts-mode
+            .configurationParameter("junit.jupiter.execution.timeout.mode", "disabled")
             .configurationParameter("jazzer.internal.commandLine", "true")
             .configurationParameters(indexedArgs)
             .selectors(selectClass(testClassName))
