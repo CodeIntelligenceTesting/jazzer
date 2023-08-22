@@ -198,8 +198,8 @@ public final class FuzzTargetRunner {
    * @param dataPtr    a native pointer to beginning of the input provided by the fuzzer for this
    *                   execution
    * @param dataLength length of the fuzzer input
-   * @return the value that the native LLVMFuzzerTestOneInput function should return. Currently,
-   * this is always 0. The function may exit the process instead of returning.
+   * @return the value that the native LLVMFuzzerTestOneInput function should return. The function
+   * may exit the process instead of returning.
    */
   private static int runOne(long dataPtr, int dataLength) {
     Throwable finding = null;
@@ -311,8 +311,7 @@ public final class FuzzTargetRunner {
     }
 
     if (!emitDedupToken || Long.compareUnsigned(ignoredTokens.size(), keepGoing) >= 0) {
-      // Reached the maximum amount of findings to keep going for, crash after shutdown. We use
-      // _Exit rather than System.exit to not trigger libFuzzer's exit handlers.
+      // Reached the maximum amount of findings to keep going for, crash after shutdown.
       if (!Opt.autofuzz.get().isEmpty() && Opt.dedup.get()) {
         Log.println("");
         Log.info(String.format(
