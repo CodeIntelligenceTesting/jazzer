@@ -95,7 +95,8 @@ class FuzzTargetFinder {
             "%s must define exactly one of the following two functions:%n"
                 + "public static void fuzzerTestOneInput(byte[] ...)%n"
                 + "public static void fuzzerTestOneInput(FuzzedDataProvider ...)%n"
-                + "Note: Fuzz targets returning boolean are no longer supported; exceptions should be thrown instead of returning true.",
+                + "Note: Fuzz targets returning boolean are no longer supported; exceptions should be thrown instead of returning true.%n"
+                + "Note: When using the @FuzzTest annotation, you will need to set up JUnit 5, which can be as simple as adding a dependency on org.junit.jupiter:junit-jupiter-engine.",
             clazz.getName()));
       }
       fuzzTargetMethod = dataFuzzTarget.orElseGet(bytesFuzzTarget::get);
