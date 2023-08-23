@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import static com.code_intelligence.jazzer.driver.ReflectionUtils.targetPublicStaticMethod;
 import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 import static java.lang.System.exit;
 
@@ -28,14 +29,10 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 class FuzzTargetFinder {
   private static final String FUZZER_TEST_ONE_INPUT = "fuzzerTestOneInput";
-  private static final String FUZZER_INITIALIZE = "fuzzerInitialize";
-  private static final String FUZZER_TEAR_DOWN = "fuzzerTearDown";
 
   static String findFuzzTargetClassName() {
     if (!Opt.targetClass.get().isEmpty()) {
@@ -102,37 +99,6 @@ class FuzzTargetFinder {
       fuzzTargetMethod = dataFuzzTarget.orElseGet(bytesFuzzTarget::get);
     }
 
-    Callable<Object> initialize =
-        Stream
-            .of(targetPublicStaticMethod(clazz, FUZZER_INITIALIZE, String[].class)
-                    .map(init -> (Callable<Object>) () -> {
-                      init.invoke(null, (Object) Opt.targetArgs.get().toArray(new String[] {}));
-                      return null;
-                    }),
-                targetPublicStaticMethod(clazz, FUZZER_INITIALIZE)
-                    .map(init -> (Callable<Object>) () -> {
-                      init.invoke(null);
-                      return null;
-                    }))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .findFirst()
-            .orElse(() -> null);
-
-    return new FuzzTarget(
-        fuzzTargetMethod, initialize, targetPublicStaticMethod(clazz, FUZZER_TEAR_DOWN));
-  }
-
-  private static Optional<Method> targetPublicStaticMethod(
-      Class<?> clazz, String name, Class<?>... parameterTypes) {
-    try {
-      Method method = clazz.getMethod(name, parameterTypes);
-      if (!Modifier.isStatic(method.getModifiers()) || !Modifier.isPublic(method.getModifiers())) {
-        return Optional.empty();
-      }
-      return Optional.of(method);
-    } catch (NoSuchMethodException e) {
-      return Optional.empty();
-    }
+    return new FuzzTarget(fuzzTargetMethod, () -> null, LibFuzzerLifecycleMethodsInvoker.of(clazz));
   }
 }

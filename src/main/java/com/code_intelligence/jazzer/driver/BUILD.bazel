@@ -60,7 +60,9 @@ java_library(
     visibility = ["//src/test/java/com/code_intelligence/jazzer/driver:__pkg__"],
     deps = [
         ":fuzz_target_holder",
+        ":libfuzzer_lifecycle_methods_invoker",
         ":opt",
+        ":reflection_utils",
         "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/runtime:constants",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
@@ -76,6 +78,7 @@ java_library(
         "//src/test/java/com/code_intelligence/jazzer/driver:__pkg__",
     ],
     deps = [
+        ":lifecycle_methods_invoker",
         ":opt",
         "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/autofuzz",
@@ -102,6 +105,7 @@ java_jni_library(
         ":exception_utils",
         ":fuzz_target_holder",
         ":fuzzed_data_provider_impl",
+        ":lifecycle_methods_invoker",
         ":opt",
         ":recording_fuzzed_data_provider",
         ":reproducer_template",
@@ -129,6 +133,23 @@ java_jni_library(
         "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
+)
+
+java_library(
+    name = "libfuzzer_lifecycle_methods_invoker",
+    srcs = ["LibFuzzerLifecycleMethodsInvoker.java"],
+    deps = [
+        ":lifecycle_methods_invoker",
+        ":opt",
+        ":reflection_utils",
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
+    ],
+)
+
+java_library(
+    name = "lifecycle_methods_invoker",
+    srcs = ["LifecycleMethodsInvoker.java"],
+    visibility = ["//src/main/java/com/code_intelligence/jazzer/junit:__pkg__"],
 )
 
 java_library(
@@ -177,6 +198,11 @@ java_library(
     srcs = ["RecordingFuzzedDataProvider.java"],
     visibility = ["//src/test/java/com/code_intelligence/jazzer/driver:__pkg__"],
     deps = ["//src/main/java/com/code_intelligence/jazzer/api"],
+)
+
+java_library(
+    name = "reflection_utils",
+    srcs = ["ReflectionUtils.java"],
 )
 
 java_jni_library(
