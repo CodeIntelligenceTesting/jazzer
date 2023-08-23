@@ -73,6 +73,7 @@ java_jni_library(
         "//src/main/java/com/code_intelligence/jazzer/autofuzz",
         "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_holder",
         "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner",
+        "//src/main/java/com/code_intelligence/jazzer/driver:lifecycle_methods_invoker",
         "//src/main/java/com/code_intelligence/jazzer/driver:opt",
         "//src/main/java/com/code_intelligence/jazzer/driver/junit:exit_code_exception",
         "//src/main/java/com/code_intelligence/jazzer/mutation",

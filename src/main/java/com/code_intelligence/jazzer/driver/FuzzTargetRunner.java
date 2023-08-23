@@ -38,8 +38,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -118,17 +116,17 @@ public final class FuzzTargetRunner {
   private static final FuzzedDataProviderImpl fuzzedDataProvider =
       FuzzedDataProviderImpl.withNativeData();
   private static final MethodHandle fuzzTargetMethod;
+  private static final LifecycleMethodsInvoker lifecycleMethodsInvoker;
   private static final boolean useFuzzedDataProvider;
   // Reused in every iteration analogous to JUnit's PER_CLASS lifecycle.
   private static final Object fuzzTargetInstance;
-  private static final Method fuzzerTearDown;
   private static final ArgumentsMutator mutator;
   private static final ReproducerTemplate reproducerTemplate;
   private static Predicate<Throwable> findingHandler;
 
   static {
     FuzzTargetHolder.FuzzTarget fuzzTarget = FuzzTargetHolder.fuzzTarget;
-    Class<?> fuzzTargetClass = fuzzTarget.method.getDeclaringClass();
+    lifecycleMethodsInvoker = fuzzTarget.lifecycleMethodsInvoker;
 
     // The method may not be accessible - JUnit test classes and methods are usually declared
     // without access modifiers and thus package-private.
@@ -145,13 +143,14 @@ public final class FuzzTargetRunner {
       throw new IllegalStateException("Not reached");
     }
 
-    fuzzerTearDown = fuzzTarget.tearDown.orElse(null);
+    Class<?> fuzzTargetClass = fuzzTarget.method.getDeclaringClass();
     reproducerTemplate = new ReproducerTemplate(fuzzTargetClass.getName(), useFuzzedDataProvider);
 
     JazzerInternal.onFuzzTargetReady(fuzzTargetClass.getName());
 
     try {
       fuzzTargetInstance = fuzzTarget.newInstance.call();
+      lifecycleMethodsInvoker.beforeFirstExecution();
     } catch (Throwable t) {
       Log.finding(t);
       exit(1);
@@ -176,7 +175,11 @@ public final class FuzzTargetRunner {
       CoverageRecorder.updateCoveredIdsWithCoverageMap();
     }
 
-    Runtime.getRuntime().addShutdownHook(new Thread(FuzzTargetRunner::shutdown));
+    // When running with a custom finding handler, such as from within JUnit, we can't reason about
+    // when the JVM shuts down and thus don't use shutdown handlers.
+    if (findingHandler == null) {
+      Runtime.getRuntime().addShutdownHook(new Thread(FuzzTargetRunner::shutdown));
+    }
   }
 
   /**
@@ -233,6 +236,8 @@ public final class FuzzTargetRunner {
       argument = data;
     }
     try {
+      lifecycleMethodsInvoker.beforeEachExecution();
+
       if (useExperimentalMutator) {
         // No need to detach as we are currently reading in the mutator state from bytes in every
         // iteration.
@@ -282,6 +287,15 @@ public final class FuzzTargetRunner {
       if (findingHandler.test(finding)) {
         return LIBFUZZER_CONTINUE;
       } else {
+        try {
+          // We have to call afterLastExecution here as we do not register the shutdown hook that
+          // would otherwise call it when findingHandler != null.
+          lifecycleMethodsInvoker.afterLastExecution();
+        } catch (Throwable t) {
+          // We already have a finding and do not know whether the fuzz target is in an expected
+          // state, so report this as a warning rather than an error or finding.
+          Log.warn("Failed to run @AfterAll or fuzzerTearDown methods", t);
+        }
         return LIBFUZZER_RETURN_FROM_DRIVER;
       }
     }
@@ -445,18 +459,11 @@ public final class FuzzTargetRunner {
       }
     }
 
-    if (fuzzerTearDown == null) {
-      return;
-    }
-    Log.info("calling fuzzerTearDown function");
     try {
-      fuzzerTearDown.invoke(null);
-    } catch (InvocationTargetException e) {
-      Log.finding(e.getCause());
-      System.exit(JAZZER_FINDING_EXIT_CODE);
+      lifecycleMethodsInvoker.afterLastExecution();
     } catch (Throwable t) {
-      Log.error(t);
-      System.exit(1);
+      Log.finding(t);
+      System.exit(JAZZER_FINDING_EXIT_CODE);
     }
   }
 

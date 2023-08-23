@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.toList;
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
+import com.code_intelligence.jazzer.driver.LifecycleMethodsInvoker;
 import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.driver.junit.ExitCodeException;
 import java.io.File;
@@ -322,7 +323,7 @@ class FuzzTestExecutor {
     } else {
       FuzzTargetHolder.fuzzTarget =
           new FuzzTargetHolder.FuzzTarget(invocationContext.getExecutable(),
-              () -> invocationContext.getTarget().get(), Optional.empty());
+              () -> invocationContext.getTarget().get(), LifecycleMethodsInvoker.NOOP);
     }
 
     // Only register a finding handler in case the fuzz test is executed by JUnit.

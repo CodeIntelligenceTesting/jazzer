@@ -26,7 +26,8 @@ public class FuzzTargetHolder {
     try {
       Method fuzzerTestOneInput = com.code_intelligence.jazzer.autofuzz.FuzzTarget.class.getMethod(
           "fuzzerTestOneInput", FuzzedDataProvider.class);
-      return new FuzzTargetHolder.FuzzTarget(fuzzerTestOneInput, newInstance, Optional.empty());
+      return new FuzzTargetHolder.FuzzTarget(
+          fuzzerTestOneInput, newInstance, LifecycleMethodsInvoker.NOOP);
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException(e);
     }
@@ -46,12 +47,13 @@ public class FuzzTargetHolder {
   public static class FuzzTarget {
     public final Method method;
     public final Callable<Object> newInstance;
-    public final Optional<Method> tearDown;
+    public final LifecycleMethodsInvoker lifecycleMethodsInvoker;
 
-    public FuzzTarget(Method method, Callable<Object> newInstance, Optional<Method> tearDown) {
+    public FuzzTarget(Method method, Callable<Object> newInstance,
+        LifecycleMethodsInvoker lifecycleMethodsInvoker) {
       this.method = method;
       this.newInstance = newInstance;
-      this.tearDown = tearDown;
+      this.lifecycleMethodsInvoker = lifecycleMethodsInvoker;
     }
 
     public boolean usesFuzzedDataProvider() {
