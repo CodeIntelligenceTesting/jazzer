@@ -109,9 +109,9 @@ class FuzzTestExtensions
       ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext)
       throws Throwable {
     invocation.skip();
-    Optional<Throwable> throwable =
-        FuzzTestExecutor.fromContext(extensionContext)
-            .execute(invocationContext, getOrCreateSeedSerializer(extensionContext));
+    Optional<Throwable> throwable = FuzzTestExecutor.fromContext(extensionContext)
+                                        .execute(invocationContext, extensionContext,
+                                            getOrCreateSeedSerializer(extensionContext));
     if (throwable.isPresent()) {
       throw throwable.get();
     }

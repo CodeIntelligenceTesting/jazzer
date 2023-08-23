@@ -56,7 +56,7 @@ After a few seconds, Jazzer should trigger an `AssertionError`, reproducing a bu
 
 ### JUnit 5
 
-The following steps assume that JUnit 5 is set up for your project, for example based on the official [junit5-samples](https://github.com/junit-team/junit5-samples).
+The following steps assume that JUnit 5.9.0 or higher is set up for your project, for example based on the official [junit5-samples](https://github.com/junit-team/junit5-samples).
 
 1. Add a dependency on `com.code-intelligence:jazzer-junit:<latest version>`.
    All Jazzer Maven artifacts are signed with [this key](deploy/maven.pub).
