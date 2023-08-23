@@ -21,22 +21,18 @@ package com.code_intelligence.jazzer.driver;
  * execution of a fuzz target.
  */
 public interface LifecycleMethodsInvoker {
-
   /**
    * An implementation of {@link LifecycleMethodsInvoker} with empty implementations.
    */
   LifecycleMethodsInvoker NOOP = new LifecycleMethodsInvoker() {
     @Override
-    public void beforeFirstExecution() {
-    }
+    public void beforeFirstExecution() {}
 
     @Override
-    public void beforeEachExecution() {
-    }
+    public void beforeEachExecution() {}
 
     @Override
-    public void afterLastExecution() {
-    }
+    public void afterLastExecution() {}
   };
 
   /**

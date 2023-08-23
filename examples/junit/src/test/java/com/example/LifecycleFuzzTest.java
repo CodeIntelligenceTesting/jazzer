@@ -20,14 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
-import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.example.LifecycleFuzzTest.LifecycleCallbacks1;
 import com.example.LifecycleFuzzTest.LifecycleCallbacks2;
 import com.example.LifecycleFuzzTest.LifecycleCallbacks3;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -49,6 +46,7 @@ import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 @ExtendWith(LifecycleCallbacks3.class)
 class LifecycleFuzzTest {
   private static final ArrayList<String> events = new ArrayList<>();
+  private static final long RUNS = 3;
 
   private boolean beforeEachCalledOnInstance = false;
   private boolean testInstancePostProcessorCalledOnInstance = false;
@@ -81,7 +79,7 @@ class LifecycleFuzzTest {
     throw new AssertionError("This test should not be executed");
   }
 
-  @FuzzTest(maxExecutions = 3)
+  @FuzzTest(maxExecutions = RUNS)
   void lifecycleFuzz(byte[] data) {
     events.add("lifecycleFuzz");
     assertThat(beforeEachCalledOnInstance).isTrue();
@@ -126,11 +124,11 @@ class LifecycleFuzzTest {
       expectedEvents.addAll(expectedAfterEachEvents);
     }
     if (isFuzzingFromJUnit || isFuzzingFromCommandLine) {
-      expectedEvents.addAll(expectedBeforeEachEvents);
-      // TODO: Fuzz tests currently don't run before each and after each methods between fuzz test
-      // invocations.
-      expectedEvents.addAll(Collections.nCopies(3, "lifecycleFuzz"));
-      expectedEvents.addAll(expectedAfterEachEvents);
+      for (int i = 0; i < RUNS; i++) {
+        expectedEvents.addAll(expectedBeforeEachEvents);
+        expectedEvents.add("lifecycleFuzz");
+        expectedEvents.addAll(expectedAfterEachEvents);
+      }
     }
 
     expectedEvents.add("afterAll");

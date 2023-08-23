@@ -23,7 +23,6 @@ import static java.util.stream.Collectors.toList;
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
-import com.code_intelligence.jazzer.driver.LifecycleMethodsInvoker;
 import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.driver.junit.ExitCodeException;
 import java.io.File;
@@ -304,8 +303,8 @@ class FuzzTestExecutor {
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")
-  public Optional<Throwable> execute(
-      ReflectiveInvocationContext<Method> invocationContext, SeedSerializer seedSerializer) {
+  public Optional<Throwable> execute(ReflectiveInvocationContext<Method> invocationContext,
+      ExtensionContext extensionContext, SeedSerializer seedSerializer) {
     if (seedSerializer instanceof AutofuzzSeedSerializer) {
       FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.autofuzzFuzzTarget(() -> {
         // Provide an empty throws declaration to prevent autofuzz from
@@ -323,7 +322,9 @@ class FuzzTestExecutor {
     } else {
       FuzzTargetHolder.fuzzTarget =
           new FuzzTargetHolder.FuzzTarget(invocationContext.getExecutable(),
-              () -> invocationContext.getTarget().get(), LifecycleMethodsInvoker.NOOP);
+              ()
+                  -> invocationContext.getTarget().get(),
+              JUnitLifecycleMethodsInvoker.of(extensionContext));
     }
 
     // Only register a finding handler in case the fuzz test is executed by JUnit.
