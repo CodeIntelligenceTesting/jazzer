@@ -63,15 +63,17 @@ final public class TraceCmpHooks {
   }
 
   @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers", targetMethod = "lt",
-      targetMethodDescriptor = "(Ljava/lang/Number;Ljava/lang/Number;)Z")
+      targetMethodDescriptor = "(Ljava/lang/Object;Ljava/lang/Object;)Z")
   @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers", targetMethod = "gt",
-      targetMethodDescriptor = "(Ljava/lang/Number;Ljava/lang/Number;)Z")
+      targetMethodDescriptor = "(Ljava/lang/Object;Ljava/lang/Object;)Z")
   @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers",
-      targetMethod = "lte", targetMethodDescriptor = "(Ljava/lang/Number;Ljava/lang/Number;)Z")
+      targetMethod = "lte", targetMethodDescriptor = "(Ljava/lang/Object;Ljava/lang/Object;)Z")
   @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers",
-      targetMethod = "gte", targetMethodDescriptor = "(Ljava/lang/Number;Ljava/lang/Number;)Z")
+      targetMethod = "gte", targetMethodDescriptor = "(Ljava/lang/Object;Ljava/lang/Object;)Z")
   public static void
   numberCompare(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    // Clojure unconditionally casts the arguments to Number.
+    // https://github.com/clojure/clojure/blob/2a058814e5fa3e8fb630ae507c3fa7dc865138c6/src/jvm/clojure/lang/Numbers.java#L253
     Number arg1 = (Number) arguments[0];
     Number arg2 = (Number) arguments[1];
     TraceDataFlowNativeCallbacks.traceCmpLong(arg1.longValue(), arg2.longValue(), hookId);
