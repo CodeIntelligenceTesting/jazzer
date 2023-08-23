@@ -14,17 +14,10 @@
 
 package com.example;
 
-import clojure.lang.Numbers;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import java.sql.Connection;
-import java.sql.SQLException;
-import org.h2.jdbcx.JdbcDataSource;
-
-class ClojureFindingException extends Exception {}
 
 public class ClojureTests {
-  static void insecureCrashOnCertainNumbers(Long lnumber, Integer inumber, Long divisor)
-      throws Exception {
+  static void insecureCrashOnCertainNumbers(Long lnumber, Integer inumber, Long divisor) {
     if (clojure.lang.Numbers.lt(lnumber, (Long) (long) 218461)
         && clojure.lang.Numbers.lt((Long) (long) 218459, lnumber)) {
       if (clojure.lang.Numbers.lt(inumber, (Integer) 318461)
