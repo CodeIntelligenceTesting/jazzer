@@ -187,12 +187,15 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "ClojureTests",
-    timeout = "long",
     srcs = [
         "ClojureTests.java",
     ],
     allowed_findings = [
         "java.lang.ArithmeticException",
+    ],
+    fuzzer_args = [
+        # Makes the runtime of the fuzz test more consistent.
+        "-use_value_profile=1",
     ],
     target_class = "com.example.ClojureTests",
     verify_crash_reproducer = False,
