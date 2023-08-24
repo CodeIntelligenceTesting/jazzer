@@ -94,6 +94,8 @@ jobs:
       name: Deploy
 
     steps:
+      - uses: actions/checkout@v3
+
       - name: Download merged jar
         uses: actions/download-artifact@v3
         with:
