@@ -22,8 +22,8 @@ fail() {
 
 cd "$BUILD_WORKSPACE_DIRECTORY" || fail "BUILD_WORKSPACE_DIRECTORY not found"
 
-echo "$RELEASE_KEY_PRIVATE" | gpg --import
-echo "default-key $RELEASE_KEY_ID" > $HOME/.gnupg/gpg.conf
+echo "$RELEASE_SIGNING_KEY_PRIVATE" | gpg --import
+echo "default-key $RELEASE_SIGNING_KEY_ID" > $HOME/.gnupg/gpg.conf
 
 JAZZER_COORDINATES=$1
 
