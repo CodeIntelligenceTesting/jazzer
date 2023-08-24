@@ -103,7 +103,7 @@ jobs:
           path: _tmp/jazzer.jar
 
       - name: Echo key id
-        run: echo $JAZZER_RELEASE_SIGNING_KEY_ID
+        run: echo $RELEASE_SIGNING_KEY_ID
 
       - name: Echo hi!
         run: echo "hi"
