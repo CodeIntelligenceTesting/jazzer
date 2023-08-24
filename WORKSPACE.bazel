@@ -35,10 +35,10 @@ rules_java_toolchains()
 http_archive(
     name = "com_google_protobuf",
     patches = ["//third_party:protobuf-disable-layering_check.patch"],
-    sha256 = "ddf8c9c1ffccb7e80afd183b3bd32b3b62f7cc54b106be190bf49f2bc09daab5",
-    strip_prefix = "protobuf-23.2",
+    sha256 = "0930b1a6eb840a2295dfcb13bb5736d1292c3e0d61a90391181399327be7d8f1",
+    strip_prefix = "protobuf-24.1",
     # Keep in sync with com_google_protobuf_protobuf_java in repositories.bzl.
-    urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v23.2/protobuf-23.2.tar.gz"],
+    urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v24.1/protobuf-24.1.tar.gz"],
 )
 
 http_archive(
