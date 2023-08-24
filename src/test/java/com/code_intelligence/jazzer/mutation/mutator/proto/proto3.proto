@@ -112,7 +112,7 @@ message MapField3 {
 }
 
 message MessageMapField3 {
-  map<string, MapField3> some_field = 1;
+  map<string, PrimitiveField3> some_field = 1;
 }
 
 message FloatField3 {
