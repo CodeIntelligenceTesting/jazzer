@@ -229,15 +229,21 @@ JVM::JVM() {
 #if !defined(__ANDROID__)
   // Set the maximum heap size to a value that is slightly smaller than
   // libFuzzer's default rss_limit_mb. This prevents erroneous oom reports.
+  // Note: This approach is deprecated and only kept here for backwards
+  //       compatibility. The new approach is to set -rss_limit_mb to a
+  //       suitable value based on the JVM heap size when starting libFuzzer
+  //       as part of the Jazzer driver.
   options.push_back(JavaVMOption{(char *)"-Xmx1800m"});
   // Preserve and emit stack trace information even on hot paths.
   // This may hurt performance, but also helps find flaky bugs.
   options.push_back(JavaVMOption{(char *)"-XX:-OmitStackTraceInFastThrow"});
   // Optimize GC for high throughput rather than low latency.
   options.push_back(JavaVMOption{(char *)"-XX:+UseParallelGC"});
-  // CriticalJNINatives has been removed in JDK 18.
+  // CriticalJNINatives has been removed in JDK 18, EnableDynamicAgentLoading
+  // has been added in JDK 9.
   options.push_back(JavaVMOption{(char *)"-XX:+IgnoreUnrecognizedVMOptions"});
   options.push_back(JavaVMOption{(char *)"-XX:+CriticalJNINatives"});
+  options.push_back(JavaVMOption{(char *)"-XX:+EnableDynamicAgentLoading"});
 #endif
 
   std::vector<std::string> java_opts_args;

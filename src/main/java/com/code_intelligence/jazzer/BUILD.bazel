@@ -108,7 +108,10 @@ java_binary(
 java_library(
     name = "jazzer_lib",
     srcs = ["Jazzer.java"],
-    visibility = ["//deploy:__pkg__"],
+    visibility = [
+        "//deploy:__pkg__",
+        "//src/test/java/com/code_intelligence/jazzer:__pkg__",
+    ],
     runtime_deps = select({
         "@platforms//os:windows": [],
         "//conditions:default": ["//src/main/native/com/code_intelligence/jazzer:jazzer_preload"],

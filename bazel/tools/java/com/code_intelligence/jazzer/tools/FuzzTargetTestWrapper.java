@@ -108,6 +108,10 @@ public class FuzzTargetTestWrapper {
       if (hookJarActualPath != null) {
         command.add(String.format("--main_advice_classpath=%s", hookJarActualPath));
       }
+      command.add("--jvm_flags="
+          + String.join(" ", "-XX:-OmitStackTraceInFastThrow", "-XX:+UseParallelGC",
+              "-XX:+IgnoreUnrecognizedVMOptions", "-XX:+CriticalJNINatives",
+              "-XX:+EnableDynamicAgentLoading"));
       if (System.getenv("JAZZER_DEBUG") != null) {
         command.add("--debug");
       }

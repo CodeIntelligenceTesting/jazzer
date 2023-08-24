@@ -1,5 +1,4 @@
-name: Build all targets and run all tests
-
+name: CI
 on:
   push:
     branches: [ main ]
@@ -12,6 +11,7 @@ on:
 jobs:
 
   test_junit_springboot:
+    name: Spring Boot
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -20,7 +20,7 @@ jobs:
         with:
           distribution: zulu
           java-version: 17
-      - name: Build and run tests
+      - name: Run Spring Boot example
         # The Spring Boot example project is built with Maven. The shell script builds the project
         # against the local version of Jazzer and runs its unit and fuzz tests.
         # Spring version 6 requires JDK 17.
@@ -31,6 +31,7 @@ jobs:
 
   build_and_test:
     runs-on: ${{ matrix.os }}
+    name: Build & Test
     strategy:
       matrix:
         os: [ubuntu-20.04, macos-12, windows-2019]
@@ -41,7 +42,7 @@ jobs:
             bazel_args: "//launcher/android:jazzer_android"
             cache: "/home/runner/.cache/bazel-disk"
           - os: ubuntu-20.04
-            jdk: 20
+            jdk: 21-ea
             # Workaround for https://github.com/bazelbuild/bazel/issues/14502
             bazel_args: "--jvmopt=-Djava.security.manager=allow"
             arch: "linux"
