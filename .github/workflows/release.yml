@@ -84,3 +84,20 @@ jobs:
           name: jazzer
           path: _tmp/jazzer.jar
           if-no-files-found: error
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_release
+
+    # Always skip
+    if: false
+
+    steps:
+      - name: Download merged jar
+        uses: actions/download-artifact@v3
+        with:
+          name: jazzer
+          path: _tmp/jazzer.jar
+
+      - name: Echo hi!
+        run: echo "hi"
