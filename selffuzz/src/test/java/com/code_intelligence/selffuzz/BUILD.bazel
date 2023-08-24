@@ -1,5 +1,3 @@
-load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_junit5_test")
-
 java_library(
     name = "helpers",
     srcs = ["Helpers.java"],
