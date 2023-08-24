@@ -104,4 +104,15 @@ jobs:
         run: echo "hi"
 
       - name: Run Deployment
-        run: deploy/deploy.sh
+        run: bazel run deploy
+
+  docker_push:
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: Echo hi!
+        run: echo "hi"
+
+      - name: Push docker containers
+        run: docker/push_all.sh
