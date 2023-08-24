@@ -103,13 +103,13 @@ jobs:
           path: _tmp/jazzer.jar
 
       - name: Echo key id
-        run: echo "$JAZZER_RELEASE_SIGNING_KEY_ID"
+        run: echo $JAZZER_RELEASE_SIGNING_KEY_ID
 
       - name: Echo hi!
         run: echo "hi"
 
       - name: Run Deployment
-        run: RELEASE_SIGNING_KEY_PRIVATE="$RELEASE_SIGNING_KEY_PRIVATE" bazel run deploy
+        run: RELEASE_SIGNING_KEY_PRIVATE=$RELEASE_SIGNING_KEY_PRIVATE bazel run deploy
 
   docker_push:
     runs-on: ubuntu-latest
