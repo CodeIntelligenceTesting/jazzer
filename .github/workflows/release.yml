@@ -104,7 +104,7 @@ jobs:
 
       - name: Echo key id
         env:
-          RELEASE_SIGNING_KEY_ID: ${{ secrets.$RELEASE_SIGNING_KEY_ID }}
+          RELEASE_SIGNING_KEY_ID: ${{ secrets.RELEASE_SIGNING_KEY_ID }}
         run: echo $RELEASE_SIGNING_KEY_ID
 
       - name: Echo hi!
@@ -112,8 +112,8 @@ jobs:
 
       - name: Run Deployment
         env:
-          RELEASE_SIGNING_KEY_ID: ${{ secrets.$RELEASE_SIGNING_KEY_ID }}
-          RELEASE_SIGNING_KEY_PRIVATE: ${{ secrets.$RELEASE_SIGNING_KEY_PRIVATE }}
+          RELEASE_SIGNING_KEY_ID: ${{ secrets.RELEASE_SIGNING_KEY_ID }}
+          RELEASE_SIGNING_KEY_PRIVATE: ${{ secrets.RELEASE_SIGNING_KEY_PRIVATE }}
         run: RELEASE_SIGNING_KEY_PRIVATE=$RELEASE_SIGNING_KEY_PRIVATE RELEASE_SIGNING_KEY_ID=$RELEASE_SIGNING_KEY_ID bazel run deploy
 
   docker_push:
