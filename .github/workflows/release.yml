@@ -87,7 +87,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build_release
+    needs: merge_jars
 
     # Always skip
     if: false
