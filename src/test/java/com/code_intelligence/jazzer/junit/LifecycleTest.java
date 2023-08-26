@@ -32,6 +32,8 @@ import static org.junit.platform.testkit.engine.EventType.SKIPPED;
 import static org.junit.platform.testkit.engine.EventType.STARTED;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
+import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
+import com.example.TestSuccessfulException;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.Before;
@@ -80,7 +82,7 @@ public class LifecycleTest {
         event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ)),
             finishedSuccessfully()),
         event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)),
-            finishedWithFailure(instanceOf(IOException.class))),
+            finishedWithFailure(instanceOf(TestSuccessfulException.class))),
         event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
     results.testEvents().assertEventsMatchExactly(
@@ -116,7 +118,7 @@ public class LifecycleTest {
             container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
         event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
         event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)),
-            finishedWithFailure(instanceOf(IOException.class))),
+            finishedWithFailure(instanceOf(TestSuccessfulException.class))),
         event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
     results.testEvents().assertEventsMatchExactly(
