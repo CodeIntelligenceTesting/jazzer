@@ -44,7 +44,8 @@ class FuzzTestExtensions
       throws Throwable {
     FuzzTest fuzzTest =
         AnnotationSupport.findAnnotation(invocationContext.getExecutable(), FuzzTest.class).get();
-    FuzzTestExecutor.configureAndInstallAgent(extensionContext, fuzzTest.maxDuration());
+    FuzzTestExecutor.configureAndInstallAgent(
+        extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions());
     // Skip the invocation of the test method with the special arguments provided by
     // FuzzTestArgumentsProvider and start fuzzing instead.
     if (Utils.isMarkedInvocation(invocationContext)) {
