@@ -243,6 +243,9 @@ class Utils {
    * allow for duration units longer than hours, so we can always prepend PT.
    */
   static long durationStringToSeconds(String duration) {
+    if (duration.isEmpty()) {
+      return 0;
+    }
     String isoDuration =
         "PT" + duration.replace("sec", "s").replace("min", "m").replace("hr", "h").replace(" ", "");
     return Duration.parse(isoDuration).getSeconds();

@@ -70,7 +70,7 @@ class FuzzTestExecutor {
     this.isRunFromCommandLine = isRunFromCommandLine;
   }
 
-  public static FuzzTestExecutor prepare(ExtensionContext context, String maxDuration)
+  public static FuzzTestExecutor prepare(ExtensionContext context, String maxDuration, long maxRuns)
       throws IOException {
     if (!hasBeenPrepared.compareAndSet(false, true)) {
       throw new IllegalStateException(
@@ -113,6 +113,9 @@ class FuzzTestExecutor {
     }
 
     libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
+    if (maxRuns > 0) {
+      libFuzzerArgs.add("-runs=" + maxRuns);
+    }
     // Disable libFuzzer's out of memory detection: It is only useful for native library fuzzing,
     // which we don't support without our native driver, and leads to false positives where it picks
     // up IntelliJ's memory usage.
@@ -256,13 +259,13 @@ class FuzzTestExecutor {
     return args;
   }
 
-  static void configureAndInstallAgent(ExtensionContext extensionContext, String maxDuration)
-      throws IOException {
+  static void configureAndInstallAgent(ExtensionContext extensionContext, String maxDuration,
+      long maxExecutions) throws IOException {
     if (!agentInstalled.compareAndSet(false, true)) {
       return;
     }
     if (Utils.isFuzzing(extensionContext)) {
-      FuzzTestExecutor executor = prepare(extensionContext, maxDuration);
+      FuzzTestExecutor executor = prepare(extensionContext, maxDuration, maxExecutions);
       extensionContext.getRoot().getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
       AgentConfigurator.forFuzzing(extensionContext);
     } else {

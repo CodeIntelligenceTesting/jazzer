@@ -37,7 +37,8 @@ public class AgentConfiguringArgumentsProvider
     // FIXME(fmeum): Calling this here feels like a hack. There should be a lifecycle hook that runs
     //  before the argument discovery for a ParameterizedTest is kicked off, but I haven't found
     //  one.
-    FuzzTestExecutor.configureAndInstallAgent(extensionContext, fuzzTest.maxDuration());
+    FuzzTestExecutor.configureAndInstallAgent(
+        extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions());
     return Stream.empty();
   }
 }
