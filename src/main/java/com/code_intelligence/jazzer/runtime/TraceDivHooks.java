@@ -47,9 +47,11 @@ final public class TraceDivHooks {
 
   @MethodHook(type = HookType.BEFORE, targetClassName = "clojure.lang.Numbers",
       targetMethod = "divide",
-      targetMethodDescriptor = "(Ljava/lang/Number;Ljava/lang/Number;)Ljava/lang/Number;")
+      targetMethodDescriptor = "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Number;")
   public static void
   numberUnsignedDivide(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    // Clojure unconditionally casts the argument to Number.
+    // https://github.com/clojure/clojure/blob/2a058814e5fa3e8fb630ae507c3fa7dc865138c6/src/jvm/clojure/lang/Numbers.java#L189
     long divisor = ((Number) arguments[1]).longValue();
     // Run the callback only if the divisor, which is regarded as an unsigned long, fits in a
     // signed long, i.e., does not have the sign bit set.
