@@ -44,6 +44,9 @@ class FuzzTestExtensions
       throws Throwable {
     FuzzTest fuzzTest =
         AnnotationSupport.findAnnotation(invocationContext.getExecutable(), FuzzTest.class).get();
+    // We need to call this method here in addition to the call in AgentConfiguringArgumentsProvider
+    // as that provider isn't invoked before fuzz test executions for the arguments provided by
+    // user-provided ArgumentsProviders ("Java seeds").
     FuzzTestExecutor.configureAndInstallAgent(
         extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions());
     // Skip the invocation of the test method with the special arguments provided by
