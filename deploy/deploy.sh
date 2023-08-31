@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Copyright 2022 Code Intelligence GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,6 +32,24 @@ JAZZER_COORDINATES=$1
   fail "Set JAZZER_JAR_PATH to the absolute path of jazzer.jar obtained from the release GitHub Actions workflow"
 [ ! -f "${JAZZER_JAR_PATH}" ] && \
   fail "JAZZER_JAR_PATH does not exist at '$JAZZER_JAR_PATH'"
+
+# --- begin runfiles.bash initialization v3 ---
+# Copy-pasted from the Bazel Bash runfiles library v3.
+set -uo pipefail; set +e; f=bazel_tools/tools/bash/runfiles/runfiles.bash
+source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
+  source "$(grep -sm1 "^$f " "${RUNFILES_MANIFEST_FILE:-/dev/null}" | cut -f2- -d' ')" 2>/dev/null || \
+  source "$0.runfiles/$f" 2>/dev/null || \
+  source "$(grep -sm1 "^$f " "$0.runfiles_manifest" | cut -f2- -d' ')" 2>/dev/null || \
+  source "$(grep -sm1 "^$f " "$0.exe.runfiles_manifest" | cut -f2- -d' ')" 2>/dev/null || \
+  { echo>&2 "ERROR: cannot find $f"; exit 1; }; f=; set -e
+# --- end runfiles.bash initialization v3 ---
+
+# JAZZER_EXECPATH is a path of the form "external/remotejdk_17/bin/java". We need to strip of the
+# leading external to get a path we can pass to rlocation.
+java_rlocationpath=$(echo "$JAVA_EXECPATH" | cut -d/ -f2-)
+java=$(rlocation "$java_rlocationpath")
+"$java" -jar "${JAZZER_JAR_PATH}" --version 2>&1 | grep '^Jazzer v' || \
+  fail "JAZZER_JAR_PATH is not a valid jazzer.jar"
 
 MAVEN_REPO=https://oss.sonatype.org/service/local/staging/deploy/maven2
 
