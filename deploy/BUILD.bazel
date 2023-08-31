@@ -90,6 +90,21 @@ java_export(
     ],
 )
 
+sh_test(
+    name = "jazzer_version_test",
+    srcs = ["jazzer_version_test.sh"],
+    data = [
+        ":jazzer",
+        "@bazel_tools//tools/jdk:current_java_runtime",
+    ],
+    env = {
+        "JAVA_EXECPATH": "$(JAVA)",
+        "JAZZER_RLOCATIONPATH": "$(rlocationpath :jazzer)",
+    },
+    toolchains = ["@bazel_tools//tools/jdk:current_java_runtime"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
 [
     sh_test(
         name = artifact + "_artifact_test",
