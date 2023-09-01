@@ -64,6 +64,9 @@ def jazzer_dependencies(android = False):
             # Fixes an incompatibility with latest Bazel introduced in
             # https://github.com/bazelbuild/bazel/commit/d0e29582a2e788e8acdaf53fe30ab7f7dc592df3
             "//third_party:rules_jvm_external-add-toolchain-to-maven-project-jar.patch",
+            # https://github.com/bazelbuild/rules_jvm_external/pull/952
+            # Fixes javadoc generation when using neverlink dependencies.
+            "//third_party:rules_jvm_external-add-neverlink-deps-to-javadoc-classpath.patch",
         ],
         sha256 = "d31e369b854322ca5098ea12c69d7175ded971435e55c18dd9dd5f29cc5249ac",
         strip_prefix = "rules_jvm_external-5.3",

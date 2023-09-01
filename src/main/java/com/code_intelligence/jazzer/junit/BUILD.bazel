@@ -87,6 +87,12 @@ java_jni_library(
 java_library(
     name = "junit_internals_compile_only",
     neverlink = True,
+    # Do not add a dependency on junit-jupiter-engine to the POM file. The user
+    # has to add and control this dependency themselves if they want to use
+    # JUnit 5. Even if we added it, Maven resolution mechanics mean that we do
+    # not control the version anyway.
+    # https://github.com/junit-team/junit5/discussions/3441#discussioncomment-6884855
+    tags = ["maven:compile-only"],
     exports = [
         "@maven//:org_junit_jupiter_junit_jupiter_engine",
     ],
