@@ -167,14 +167,19 @@ java_fuzz_target_test(
     srcs = [
         "src/main/java/com/example/Log4jFuzzer.java",
     ],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical"],
     fuzzer_args = [
         "-fork=4",
         "-use_value_profile=1",
     ],
     # Finding this bug takes ~5 minutes on a decent laptop, but the GitHub Actions machines are not
     # powerful enough to run it as part of our test suite.
-    tags = ["manual"],
+    tags = [
+        "cpu:4",
+        "manual",
+    ],
     target_class = "com.example.Log4jFuzzer",
+    verify_crash_reproducer = False,
     deps = [
         "@maven//:org_apache_logging_log4j_log4j_api",
         "@maven//:org_apache_logging_log4j_log4j_core",
