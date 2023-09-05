@@ -239,13 +239,31 @@ class MapMutatorTest {
              // chunk size
              3,
              // from chunk offset, will skip first element of chunk as it is already present in map
-             3,
-             // to chunk offset, unused
-             0)) {
+             3)) {
       map = mutator.crossOver(map, otherMap, prng);
       assertThat(map)
           .containsExactly(1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 40, 40, 50, 50, 60, 60)
           .inOrder();
+    }
+  }
+
+  @Test
+  void testCrossOverInsertChunk_chunkBiggerThanMap() {
+    SerializingMutator<@NotNull Map<@NotNull Integer, @NotNull Integer>> mutator =
+        defaultTestMapMutator();
+
+    Map<Integer, Integer> map = asMap(3, 3);
+    Map<Integer, Integer> otherMap = asMap(1, 2, 3, 4, 5, 6, 7, 8);
+
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // insert action
+             0,
+             // chunk size
+             2,
+             // from chunk offset, will skip first element of chunk as it is already present in map
+             1)) {
+      map = mutator.crossOver(map, otherMap, prng);
+      assertThat(map).containsExactly(3, 3, 5, 6, 7, 8).inOrder();
     }
   }
 

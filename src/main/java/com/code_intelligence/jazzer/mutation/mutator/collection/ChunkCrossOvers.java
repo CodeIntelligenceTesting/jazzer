@@ -30,9 +30,12 @@ final class ChunkCrossOvers {
   private ChunkCrossOvers() {}
 
   static <T> void insertChunk(List<T> list, List<T> otherList, int maxSize, PseudoRandom prng) {
-    int maxChunkSize = Math.min(maxSize - list.size(), Math.min(list.size(), otherList.size()));
-    withChunk(list, otherList, maxChunkSize, prng,
-        (fromPos, toPos, chunk) -> { list.addAll(toPos, chunk); });
+    int maxChunkSize = Math.min(maxSize - list.size(), otherList.size());
+    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
+    int fromPos = prng.closedRange(0, otherList.size() - chunkSize);
+    int toPos = prng.closedRange(0, list.size());
+    List<T> chunk = otherList.subList(fromPos, fromPos + chunkSize);
+    list.addAll(toPos, chunk);
   }
 
   static <T> void overwriteChunk(List<T> list, List<T> otherList, PseudoRandom prng) {
@@ -83,17 +86,21 @@ final class ChunkCrossOvers {
       Map<K, V> map, Map<K, V> otherMap, int maxSize, PseudoRandom prng) {
     int originalSize = map.size();
     int maxChunkSize = Math.min(maxSize - originalSize, otherMap.size());
-    withChunk(map, otherMap, maxChunkSize, prng, (fromIterator, toIterator, chunkSize) -> {
-      // insertChunk only inserts new entries and does not overwrite existing
-      // ones. As skipping those entries would lead to fewer insertions than
-      // requested, loop over the rest of the map to fill the chunk.
-      while (map.size() < originalSize + chunkSize && fromIterator.hasNext()) {
-        Entry<K, V> entry = fromIterator.next();
-        if (!map.containsKey(entry.getKey())) {
-          map.put(entry.getKey(), entry.getValue());
-        }
+    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
+    int fromChunkOffset = prng.closedRange(0, otherMap.size() - chunkSize);
+    Iterator<Entry<K, V>> fromIterator = otherMap.entrySet().iterator();
+    for (int i = 0; i < fromChunkOffset; i++) {
+      fromIterator.next();
+    }
+    // insertChunk only inserts new entries and does not overwrite existing
+    // ones. As skipping those entries would lead to fewer insertions than
+    // requested, loop over the rest of the map to fill the chunk if possible.
+    while (map.size() < originalSize + chunkSize && fromIterator.hasNext()) {
+      Entry<K, V> entry = fromIterator.next();
+      if (!map.containsKey(entry.getKey())) {
+        map.put(entry.getKey(), entry.getValue());
       }
-    });
+    }
   }
 
   static <K, V> void overwriteChunk(Map<K, V> map, Map<K, V> otherMap, PseudoRandom prng) {

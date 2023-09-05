@@ -231,6 +231,26 @@ public class ListMutatorTest {
   }
 
   @Test
+  void testCrossOverInsertChunk_chunkBiggerThanList() {
+    SerializingMutator<@NotNull List<@NotNull Integer>> mutator = defaultListMutator();
+
+    List<Integer> list = new ArrayList<>(emptyList());
+    List<Integer> otherList = new ArrayList<>(Arrays.asList(10, 11, 12));
+    try (MockPseudoRandom prng = mockPseudoRandom(
+             // insert action
+             0,
+             // chunk size
+             2,
+             // fromPos
+             1,
+             // toPos
+             0)) {
+      list = mutator.crossOver(list, otherList, prng);
+    }
+    assertThat(list).containsExactly(11, 12).inOrder();
+  }
+
+  @Test
   void testCrossOverOverwriteChunk() {
     SerializingMutator<@NotNull List<@NotNull Integer>> mutator = defaultListMutator();
 
