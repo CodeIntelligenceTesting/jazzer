@@ -576,6 +576,21 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "MapFuzzer",
+    srcs = ["src/test/java/com/example/MapFuzzer.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
+    fuzzer_args = [
+        "--experimental_mutator",
+        "-use_value_profile=1",
+    ],
+    target_class = "com.example.MapFuzzer",
+    verify_crash_reproducer = False,
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+    ],
+)
+
 sh_test(
     name = "jazzer_from_path_test",
     srcs = ["src/test/shell/jazzer_from_path_test.sh"],

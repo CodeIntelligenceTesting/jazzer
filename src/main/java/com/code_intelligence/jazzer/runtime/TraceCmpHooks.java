@@ -756,18 +756,46 @@ public final class TraceCmpHooks {
   // key closest to the current lookup key in the mapGet hook.
   private static final int MAX_NUM_KEYS_TO_ENUMERATE = 100;
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.util.Map", targetMethod = "get")
-  public static void mapGet(
-      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Object returnValue) {
-    if (returnValue != null) return;
-    if (arguments.length != 1) {
-      return;
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.util.Map",
+      targetMethod = "containsKey",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  public static void containsKey(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean isContained) {
+    if (!isContained) {
+      mapHookInternal((Map) thisObject, arguments[0], hookId);
     }
-    if (thisObject == null) return;
-    final Map map = (Map) thisObject;
-    if (map.size() == 0) return;
-    final Object currentKey = arguments[0];
+  }
+
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.util.Map",
+      targetMethod = "get",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Ljava/lang/Object;")
+  public static void mapGet(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Object value) {
+    if (value == null) {
+      mapHookInternal((Map) thisObject, arguments[0], hookId);
+    }
+  }
+
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.util.Map",
+      targetMethod = "getOrDefault",
+      targetMethodDescriptor = "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")
+  public static void mapGetOrDefault(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Object value) {
+    Object defaultValue = arguments[1];
+    if (value == defaultValue) {
+      mapHookInternal((Map) thisObject, arguments[0], hookId);
+    }
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static <K, V> void mapHookInternal(Map<K, V> map, K currentKey, int hookId) {
+    if (map == null || map.isEmpty()) return;
     if (currentKey == null) return;
     // Find two valid map keys that bracket currentKey.
     // This is a generalization of libFuzzer's __sanitizer_cov_trace_switch:
@@ -776,7 +804,7 @@ public final class TraceCmpHooks {
     Object upperBoundKey = null;
     try {
       if (map instanceof TreeMap) {
-        final TreeMap treeMap = (TreeMap) map;
+        final TreeMap<K, V> treeMap = (TreeMap<K, V>) map;
         try {
           lowerBoundKey = treeMap.floorKey(currentKey);
           upperBoundKey = treeMap.ceilingKey(currentKey);
