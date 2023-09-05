@@ -39,21 +39,14 @@ final class ChunkCrossOvers {
   }
 
   static <T> void overwriteChunk(List<T> list, List<T> otherList, PseudoRandom prng) {
-    int maxChunkSize = Math.min(list.size(), otherList.size());
-    withChunkElements(list, otherList, maxChunkSize, prng, list::set);
+    onCorrespondingChunks(list, otherList, prng, list::set);
   }
 
   static <T> void crossOverChunk(
       List<T> list, List<T> otherList, SerializingMutator<T> elementMutator, PseudoRandom prng) {
-    int maxChunkSize = Math.min(list.size(), otherList.size());
-    withChunkElements(list, otherList, maxChunkSize, prng, (toPos, element) -> {
+    onCorrespondingChunks(list, otherList, prng, (toPos, element) -> {
       list.set(toPos, elementMutator.crossOver(list.get(toPos), element, prng));
     });
-  }
-
-  @FunctionalInterface
-  private interface ChunkListOperation<T> {
-    void apply(int fromPos, int toPos, List<T> chunk);
   }
 
   @FunctionalInterface
@@ -61,25 +54,16 @@ final class ChunkCrossOvers {
     void apply(int toPos, T chunk);
   }
 
-  static private <T> void withChunk(List<T> list, List<T> otherList, int maxChunkSize,
-      PseudoRandom prng, ChunkListOperation<T> operation) {
-    if (maxChunkSize == 0) {
-      return;
-    }
+  static private <T> void onCorrespondingChunks(
+      List<T> list, List<T> otherList, PseudoRandom prng, ChunkListElementOperation<T> operation) {
+    int maxChunkSize = Math.min(list.size(), otherList.size());
     int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
     int fromPos = prng.closedRange(0, otherList.size() - chunkSize);
     int toPos = prng.closedRange(0, list.size() - chunkSize);
     List<T> chunk = otherList.subList(fromPos, fromPos + chunkSize);
-    operation.apply(fromPos, toPos, chunk);
-  }
-
-  static private <T> void withChunkElements(List<T> list, List<T> otherList, int maxChunkSize,
-      PseudoRandom prng, ChunkListElementOperation<T> operation) {
-    withChunk(list, otherList, maxChunkSize, prng, (fromPos, toPos, chunk) -> {
-      for (int i = 0; i < chunk.size(); i++) {
-        operation.apply(toPos + i, chunk.get(i));
-      }
-    });
+    for (int i = 0; i < chunk.size(); i++) {
+      operation.apply(toPos + i, chunk.get(i));
+    }
   }
 
   static <K, V> void insertChunk(
@@ -104,8 +88,7 @@ final class ChunkCrossOvers {
   }
 
   static <K, V> void overwriteChunk(Map<K, V> map, Map<K, V> otherMap, PseudoRandom prng) {
-    int maxChunkSize = Math.min(map.size(), otherMap.size());
-    withChunk(map, otherMap, maxChunkSize, prng, (fromIterator, toIterator, chunkSize) -> {
+    onCorrespondingChunks(map, otherMap, prng, (fromIterator, toIterator, chunkSize) -> {
       // As keys can not be overwritten, only removed and new ones added, this
       // cross over overwrites the values. Removal of keys is handled by the
       // removeChunk mutation. Value equality is not checked here.
@@ -128,8 +111,7 @@ final class ChunkCrossOvers {
 
   private static <K, V> void crossOverChunkKeys(
       Map<K, V> map, Map<K, V> otherMap, SerializingMutator<K> keyMutator, PseudoRandom prng) {
-    int maxChunkSize = Math.min(map.size(), otherMap.size());
-    withChunk(map, otherMap, maxChunkSize, prng, (fromIterator, toIterator, chunkSize) -> {
+    onCorrespondingChunks(map, otherMap, prng, (fromIterator, toIterator, chunkSize) -> {
       Map<K, V> entriesToAdd = new LinkedHashMap<>(chunkSize);
       for (int i = 0; i < chunkSize; i++) {
         Entry<K, V> to = toIterator.next();
@@ -161,15 +143,22 @@ final class ChunkCrossOvers {
 
   private static <K, V> void crossOverChunkValues(
       Map<K, V> map, Map<K, V> otherMap, SerializingMutator<V> valueMutator, PseudoRandom prng) {
-    int maxChunkSize = Math.min(map.size(), otherMap.size());
-    withChunkElements(map, otherMap, maxChunkSize, prng, (fromEntry, toEntry) -> {
-      // As cross-overs do not guarantee to mutate the given object, no
-      // checks if a new value is produced are performed.
-      V newValue = valueMutator.crossOver(toEntry.getValue(), fromEntry.getValue(), prng);
+    // As cross-overs do not guarantee to mutate the given object, no
+    // checks if a new value is produced are performed.
+    // The cross-over could have already mutated value, but explicitly set it
+    // through the iterator to be sure.
+    onCorrespondingChunks(map, otherMap, prng, (fromIterator, toIterator, chunkSize) -> {
+      for (int i = 0; i < chunkSize; i++) {
+        Entry<K, V> fromEntry = fromIterator.next();
+        Entry<K, V> toEntry = toIterator.next();
+        // As cross-overs do not guarantee to mutate the given object, no
+        // checks if a new value is produced are performed.
+        V newValue = valueMutator.crossOver(toEntry.getValue(), fromEntry.getValue(), prng);
 
-      // The cross-over could have already mutated value, but explicitly set it
-      // through the iterator to be sure.
-      toEntry.setValue(newValue);
+        // The cross-over could have already mutated value, but explicitly set it
+        // through the iterator to be sure.
+        toEntry.setValue(newValue);
+      }
     });
   }
 
@@ -178,13 +167,9 @@ final class ChunkCrossOvers {
     void apply(Iterator<Entry<K, V>> fromIterator, Iterator<Entry<K, V>> toIterator, int chunkSize);
   }
 
-  @FunctionalInterface
-  private interface ChunkMapElementOperation<K, V> {
-    void apply(Entry<K, V> fromEntry, Entry<K, V> toEntry);
-  }
-
-  static <K, V> void withChunk(Map<K, V> map, Map<K, V> otherMap, int maxChunkSize,
-      PseudoRandom prng, ChunkMapOperation<K, V> operation) {
+  static <K, V> void onCorrespondingChunks(
+      Map<K, V> map, Map<K, V> otherMap, PseudoRandom prng, ChunkMapOperation<K, V> operation) {
+    int maxChunkSize = Math.min(map.size(), otherMap.size());
     int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
     int fromChunkOffset = prng.closedRange(0, otherMap.size() - chunkSize);
     int toChunkOffset = prng.closedRange(0, map.size() - chunkSize);
@@ -197,15 +182,6 @@ final class ChunkCrossOvers {
       toIterator.next();
     }
     operation.apply(fromIterator, toIterator, chunkSize);
-  }
-
-  static <K, V> void withChunkElements(Map<K, V> map, Map<K, V> otherMap, int maxChunkSize,
-      PseudoRandom prng, ChunkMapElementOperation<K, V> operation) {
-    withChunk(map, otherMap, maxChunkSize, prng, (fromIterator, toIterator, chunkSize) -> {
-      for (int i = 0; i < chunkSize; i++) {
-        operation.apply(fromIterator.next(), toIterator.next());
-      }
-    });
   }
 
   public enum CrossOverAction {
