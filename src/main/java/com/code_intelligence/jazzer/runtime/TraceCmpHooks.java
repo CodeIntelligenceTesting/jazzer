@@ -816,12 +816,10 @@ public final class TraceCmpHooks {
     }
     // Modify the hook ID so that compares against distinct valid keys are traced separately.
     if (lowerBoundKey != null) {
-      TraceDataFlowNativeCallbacks.traceGenericCmp(
-          currentKey, lowerBoundKey, hookId + lowerBoundKey.hashCode());
+      TraceDataFlowNativeCallbacks.traceGenericCmp(currentKey, lowerBoundKey, hookId);
     }
     if (upperBoundKey != null) {
-      TraceDataFlowNativeCallbacks.traceGenericCmp(
-          currentKey, upperBoundKey, hookId + upperBoundKey.hashCode());
+      TraceDataFlowNativeCallbacks.traceGenericCmp(currentKey, upperBoundKey, 31 * hookId + 11);
     }
   }
 
