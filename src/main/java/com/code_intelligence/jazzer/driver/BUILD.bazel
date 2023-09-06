@@ -121,8 +121,11 @@ java_jni_library(
 java_jni_library(
     name = "fuzzed_data_provider_impl",
     srcs = ["FuzzedDataProviderImpl.java"],
-    native_libs = ["//src/main/native/com/code_intelligence/jazzer/driver:jazzer_fuzzed_data_provider"],
+    native_libs = [
+        "//src/main/native/com/code_intelligence/jazzer/driver:jazzer_fuzzed_data_provider",
+    ],
     visibility = [
+        "//selffuzz/src/test/java/com/code_intelligence/selffuzz/driver:__subpackages__",
         "//src:__subpackages__",
     ],
     deps = [

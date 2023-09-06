@@ -71,7 +71,10 @@ cc_library(
 
 cc_library(
     name = "fuzzed_data_provider",
-    srcs = ["fuzzed_data_provider.cpp"],
+    srcs = [
+        "com_code_intelligence_selffuzz_jazzer_driver_FuzzedDataProviderImpl.h",
+        "fuzzed_data_provider.cpp",
+    ],
     visibility = [
         "//launcher:__pkg__",
     ],
@@ -85,8 +88,13 @@ cc_library(
 cc_jni_library(
     name = "jazzer_fuzzed_data_provider",
     platforms = MULTI_PLATFORM,
-    visibility = ["//src/main/java/com/code_intelligence/jazzer/driver:__pkg__"],
-    deps = [":fuzzed_data_provider"],
+    visibility = [
+        "//selffuzz/src/test/java/com/code_intelligence/selffuzz/driver:__subpackages__",
+        "//src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
+    deps = [
+        ":fuzzed_data_provider",
+    ],
 )
 
 cc_library(
