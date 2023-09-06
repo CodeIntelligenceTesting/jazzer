@@ -22,10 +22,10 @@ def jazzer_dependencies(android = False):
     maybe(
         http_archive,
         name = "platforms",
-        sha256 = "5308fc1d8865406a49427ba24a9ab53087f17f5266a7aabbfc28823f3916e1ca",
+        sha256 = "3a561c99e7bdbe9173aa653fd579fe849f1d8d67395780ab4770b1f381431d51",
         urls = [
-            "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.6/platforms-0.0.6.tar.gz",
-            "https://github.com/bazelbuild/platforms/releases/download/0.0.6/platforms-0.0.6.tar.gz",
+            "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.7/platforms-0.0.7.tar.gz",
+            "https://github.com/bazelbuild/platforms/releases/download/0.0.7/platforms-0.0.7.tar.gz",
         ],
     )
 
@@ -47,6 +47,9 @@ def jazzer_dependencies(android = False):
             # https://github.com/bazelbuild/rules_kotlin/pull/1000
             # Remove unnecessary dependency on a Java runtime for the target platform.
             "//third_party:rules_kotlin-remove-java-runtime-dep.patch",
+            # https://github.com/bazelbuild/rules_kotlin/pull/1005
+            # Required for compatibility with recent Bazel 7 pre-releases.
+            "//third_party:rules_kotlin-remove-java-info-transitive-deps.patch",
         ],
         sha256 = "01293740a16e474669aba5b5a1fe3d368de5832442f164e4fbfc566815a8bc3a",
         url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.8/rules_kotlin_release.tgz",
@@ -61,6 +64,9 @@ def jazzer_dependencies(android = False):
             # Fixes an incompatibility with latest Bazel introduced in
             # https://github.com/bazelbuild/bazel/commit/d0e29582a2e788e8acdaf53fe30ab7f7dc592df3
             "//third_party:rules_jvm_external-add-toolchain-to-maven-project-jar.patch",
+            # https://github.com/bazelbuild/rules_jvm_external/pull/952
+            # Fixes javadoc generation when using neverlink dependencies.
+            "//third_party:rules_jvm_external-add-neverlink-deps-to-javadoc-classpath.patch",
         ],
         sha256 = "d31e369b854322ca5098ea12c69d7175ded971435e55c18dd9dd5f29cc5249ac",
         strip_prefix = "rules_jvm_external-5.3",
@@ -168,9 +174,9 @@ def jazzer_dependencies(android = False):
     maybe(
         http_jar,
         name = "com_google_protobuf_protobuf_java",
-        sha256 = "18a057f5e0f828daa92b71c19df91f6bcc2aad067ca2cdd6b5698055ca7bcece",
+        sha256 = "b7eb9203fd2dd6e55b929debf2d079c949e0f9a85f15ec3a298b7534bc7ebd41",
         # Keep in sync with com_google_protobuf in WORKSPACE.
-        url = "https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/3.23.2/protobuf-java-3.23.2.jar",
+        url = "https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/3.24.1/protobuf-java-3.24.1.jar",
     )
 
     maybe(

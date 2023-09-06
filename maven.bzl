@@ -14,19 +14,19 @@
 
 load("@rules_jvm_external//:specs.bzl", "maven")
 
-JAZZER_VERSION = "0.19.0"
+JAZZER_VERSION = "0.20.1"
 JAZZER_COORDINATES = "com.code-intelligence:jazzer:%s" % JAZZER_VERSION
 JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_VERSION
 JAZZER_JUNIT_COORDINATES = "com.code-intelligence:jazzer-junit:%s" % JAZZER_VERSION
 
 # keep sorted
 MAVEN_ARTIFACTS = [
-    "org.junit.jupiter:junit-jupiter-api:5.8.2",
-    "org.junit.jupiter:junit-jupiter-engine:5.8.2",
-    "org.junit.jupiter:junit-jupiter-params:5.8.2",
-    "org.junit.platform:junit-platform-commons:jar:1.8.2",
-    "org.junit.platform:junit-platform-engine:jar:1.8.2",
-    "org.junit.platform:junit-platform-launcher:jar:1.8.2",
+    "org.junit.jupiter:junit-jupiter-api:5.9.0",
+    "org.junit.jupiter:junit-jupiter-engine:5.9.0",
+    "org.junit.jupiter:junit-jupiter-params:5.9.0",
+    "org.junit.platform:junit-platform-commons:jar:1.9.0",
+    "org.junit.platform:junit-platform-engine:jar:1.9.0",
+    "org.junit.platform:junit-platform-launcher:jar:1.9.0",
     "org.opentest4j:opentest4j:1.2.0",
 ]
 

@@ -59,6 +59,8 @@ public class UtilsTest implements InvocationInterceptor {
 
   @Test
   void testDurationStringToSeconds() {
+    assertThat(durationStringToSeconds("")).isEqualTo(0);
+    assertThat(durationStringToSeconds("0s")).isEqualTo(0);
     assertThat(durationStringToSeconds("1m")).isEqualTo(60);
     assertThat(durationStringToSeconds("1min")).isEqualTo(60);
     assertThat(durationStringToSeconds("1h")).isEqualTo(60 * 60);

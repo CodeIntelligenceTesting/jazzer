@@ -44,7 +44,11 @@ class FuzzTestExtensions
       throws Throwable {
     FuzzTest fuzzTest =
         AnnotationSupport.findAnnotation(invocationContext.getExecutable(), FuzzTest.class).get();
-    FuzzTestExecutor.configureAndInstallAgent(extensionContext, fuzzTest.maxDuration());
+    // We need to call this method here in addition to the call in AgentConfiguringArgumentsProvider
+    // as that provider isn't invoked before fuzz test executions for the arguments provided by
+    // user-provided ArgumentsProviders ("Java seeds").
+    FuzzTestExecutor.configureAndInstallAgent(
+        extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions());
     // Skip the invocation of the test method with the special arguments provided by
     // FuzzTestArgumentsProvider and start fuzzing instead.
     if (Utils.isMarkedInvocation(invocationContext)) {
@@ -105,9 +109,9 @@ class FuzzTestExtensions
       ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext)
       throws Throwable {
     invocation.skip();
-    Optional<Throwable> throwable =
-        FuzzTestExecutor.fromContext(extensionContext)
-            .execute(invocationContext, getOrCreateSeedSerializer(extensionContext));
+    Optional<Throwable> throwable = FuzzTestExecutor.fromContext(extensionContext)
+                                        .execute(invocationContext, extensionContext,
+                                            getOrCreateSeedSerializer(extensionContext));
     if (throwable.isPresent()) {
       throw throwable.get();
     }

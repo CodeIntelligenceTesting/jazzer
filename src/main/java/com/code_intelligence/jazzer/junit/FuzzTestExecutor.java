@@ -70,7 +70,7 @@ class FuzzTestExecutor {
     this.isRunFromCommandLine = isRunFromCommandLine;
   }
 
-  public static FuzzTestExecutor prepare(ExtensionContext context, String maxDuration)
+  public static FuzzTestExecutor prepare(ExtensionContext context, String maxDuration, long maxRuns)
       throws IOException {
     if (!hasBeenPrepared.compareAndSet(false, true)) {
       throw new IllegalStateException(
@@ -113,6 +113,9 @@ class FuzzTestExecutor {
     }
 
     libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
+    if (maxRuns > 0) {
+      libFuzzerArgs.add("-runs=" + maxRuns);
+    }
     // Disable libFuzzer's out of memory detection: It is only useful for native library fuzzing,
     // which we don't support without our native driver, and leads to false positives where it picks
     // up IntelliJ's memory usage.
@@ -256,13 +259,13 @@ class FuzzTestExecutor {
     return args;
   }
 
-  static void configureAndInstallAgent(ExtensionContext extensionContext, String maxDuration)
-      throws IOException {
+  static void configureAndInstallAgent(ExtensionContext extensionContext, String maxDuration,
+      long maxExecutions) throws IOException {
     if (!agentInstalled.compareAndSet(false, true)) {
       return;
     }
     if (Utils.isFuzzing(extensionContext)) {
-      FuzzTestExecutor executor = prepare(extensionContext, maxDuration);
+      FuzzTestExecutor executor = prepare(extensionContext, maxDuration, maxExecutions);
       extensionContext.getRoot().getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
       AgentConfigurator.forFuzzing(extensionContext);
     } else {
@@ -300,8 +303,8 @@ class FuzzTestExecutor {
   }
 
   @SuppressWarnings("OptionalGetWithoutIsPresent")
-  public Optional<Throwable> execute(
-      ReflectiveInvocationContext<Method> invocationContext, SeedSerializer seedSerializer) {
+  public Optional<Throwable> execute(ReflectiveInvocationContext<Method> invocationContext,
+      ExtensionContext extensionContext, SeedSerializer seedSerializer) {
     if (seedSerializer instanceof AutofuzzSeedSerializer) {
       FuzzTargetHolder.fuzzTarget = FuzzTargetHolder.autofuzzFuzzTarget(() -> {
         // Provide an empty throws declaration to prevent autofuzz from
@@ -319,7 +322,9 @@ class FuzzTestExecutor {
     } else {
       FuzzTargetHolder.fuzzTarget =
           new FuzzTargetHolder.FuzzTarget(invocationContext.getExecutable(),
-              () -> invocationContext.getTarget().get(), Optional.empty());
+              ()
+                  -> invocationContext.getTarget().get(),
+              JUnitLifecycleMethodsInvoker.of(extensionContext));
     }
 
     // Only register a finding handler in case the fuzz test is executed by JUnit.

@@ -15,6 +15,7 @@
 package com.code_intelligence.jazzer.instrumentor
 
 import com.code_intelligence.jazzer.api.HookType
+import com.code_intelligence.jazzer.utils.Log
 import org.objectweb.asm.Handle
 import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
@@ -407,10 +408,10 @@ private class HookMethodVisitor(
     private fun isReplaceHookInJava6mode(hook: Hook): Boolean {
         if (java6Mode && hook.hookType == HookType.REPLACE) {
             if (showUnsupportedHookWarning.getAndSet(false)) {
-                println(
-                    """WARN: Some hooks could not be applied to class files built for Java 7 or lower.
-                      |WARN: Ensure that the fuzz target and its dependencies are compiled with
-                      |WARN: -target 8 or higher to identify as many bugs as possible.
+                Log.warn(
+                    """Some hooks could not be applied to class files built for Java 7 or lower.
+                       Ensure that the fuzz target and its dependencies are compiled with
+                       -target 8 or higher to identify as many bugs as possible.
                     """.trimMargin(),
                 )
             }

@@ -103,9 +103,22 @@ public @interface FuzzTest {
    * A duration string such as "1h 2m 30s" indicating for how long the fuzz test should be executed
    * during fuzzing.
    *
+   * <p>To remove the default limit of 5 minutes, set this element to {@code ""}.
+   *
    * <p>This option has no effect during regression testing.
    */
   String maxDuration() default "5m";
+
+  /**
+   * If set to a positive number, the fuzz test function will be executed at most this many times
+   * during fuzzing. Otherwise (default), there is no bound on the number of executions.
+   *
+   * <p>Prefer this element over {@link #maxDuration()} if you want to ensure comparable levels of
+   * fuzzing across machine's with different performance characteristics.
+   *
+   * <p>This option has no effect during regression testing.
+   */
+  long maxExecutions() default 0;
 }
 
 // Internal use only.

@@ -20,6 +20,10 @@ sh_binary(
     name = "deploy",
     srcs = ["deploy.sh"],
     args = [JAZZER_COORDINATES],
+    data = ["@bazel_tools//tools/jdk:current_host_java_runtime"],
+    env = {"JAVA_EXECPATH": "$(JAVA)"},
+    toolchains = ["@bazel_tools//tools/jdk:current_host_java_runtime"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
 )
 
 java_export(
@@ -88,6 +92,21 @@ java_export(
         "//deploy:jazzer-api",
         "//src/main/java/com/code_intelligence/jazzer/junit",
     ],
+)
+
+sh_test(
+    name = "jazzer_version_test",
+    srcs = ["jazzer_version_test.sh"],
+    data = [
+        ":jazzer",
+        "@bazel_tools//tools/jdk:current_java_runtime",
+    ],
+    env = {
+        "JAVA_EXECPATH": "$(JAVA)",
+        "JAZZER_RLOCATIONPATH": "$(rlocationpath :jazzer)",
+    },
+    toolchains = ["@bazel_tools//tools/jdk:current_java_runtime"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
 )
 
 [

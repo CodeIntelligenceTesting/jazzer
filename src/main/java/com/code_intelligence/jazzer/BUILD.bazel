@@ -63,7 +63,9 @@ java_binary(
         "//src/main/java/com/code_intelligence/jazzer/api:api_deploy_env",
         "//src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap_env",
     ],
-    main_class = "com.code_intelligence.jazzer.Jazzer",
+    deploy_manifest_lines = [
+        "Main-Class: com.code_intelligence.jazzer.Jazzer",
+    ],
     runtime_deps = [":jazzer_lib"],
 )
 

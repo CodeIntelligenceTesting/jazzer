@@ -66,6 +66,7 @@ java_jni_library(
     ],
     deps = [
         ":agent_configurator",
+        ":junit_lifecycle_methods_invoker",
         ":seed_serializer",
         ":utils",
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
@@ -80,6 +81,31 @@ java_jni_library(
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
         "@maven//:org_junit_platform_junit_platform_commons",
+    ],
+)
+
+java_library(
+    name = "junit_internals_compile_only",
+    neverlink = True,
+    # Do not add a dependency on junit-jupiter-engine to the POM file. The user
+    # has to add and control this dependency themselves if they want to use
+    # JUnit 5. Even if we added it, Maven resolution mechanics mean that we do
+    # not control the version anyway.
+    # https://github.com/junit-team/junit5/discussions/3441#discussioncomment-6884855
+    tags = ["maven:compile-only"],
+    exports = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+)
+
+java_library(
+    name = "junit_lifecycle_methods_invoker",
+    srcs = ["JUnitLifecycleMethodsInvoker.java"],
+    deps = [
+        ":junit_internals_compile_only",
+        "//src/main/java/com/code_intelligence/jazzer/driver:lifecycle_methods_invoker",
+        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 )
 
