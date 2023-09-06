@@ -123,6 +123,8 @@ jobs:
     needs: deploy
 
     steps:
+      - uses: actions/checkout@v3
+
       - name: Echo hi!
         run: echo "hi"
 
