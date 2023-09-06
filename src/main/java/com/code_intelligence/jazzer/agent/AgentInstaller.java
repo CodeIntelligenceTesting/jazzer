@@ -50,7 +50,9 @@ public class AgentInstaller {
       Class<?> agent = Class.forName("com.code_intelligence.jazzer.agent.Agent");
       Method install = agent.getMethod("install", Instrumentation.class);
       install.invoke(null, instrumentation);
-    } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException
+    } catch (ClassNotFoundException
+        | InvocationTargetException
+        | NoSuchMethodException
         | IllegalAccessException e) {
       throw new IllegalStateException("Failed to run Agent.install", e);
     }

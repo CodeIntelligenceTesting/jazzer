@@ -16,30 +16,22 @@
 
 package com.code_intelligence.jazzer.utils;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.IllegalArgumentException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -76,27 +68,31 @@ public final class ZipUtils {
     return filesAdded;
   }
 
-  public static Set<String> mergeDirectoryToZip(String src, ZipOutputStream zos,
-      Set<String> skipFiles) throws IllegalArgumentException, IOException {
+  public static Set<String> mergeDirectoryToZip(
+      String src, ZipOutputStream zos, Set<String> skipFiles)
+      throws IllegalArgumentException, IOException {
     HashSet<String> filesAdded = new HashSet<>();
     File sourceDir = new File(src);
     if (!sourceDir.isDirectory()) {
       throw new IllegalArgumentException("Argument src must be a directory. Path provided: " + src);
     }
 
-    Files.walkFileTree(sourceDir.toPath(), new SimpleFileVisitor<Path>() {
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        String zipPath = sourceDir.toPath().relativize(file).toString();
-        if (skipFiles.stream().anyMatch(zipPath::endsWith)) {
-          return FileVisitResult.CONTINUE;
-        }
+    Files.walkFileTree(
+        sourceDir.toPath(),
+        new SimpleFileVisitor<Path>() {
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            String zipPath = sourceDir.toPath().relativize(file).toString();
+            if (skipFiles.stream().anyMatch(zipPath::endsWith)) {
+              return FileVisitResult.CONTINUE;
+            }
 
-        zos.putNextEntry(new ZipEntry(zipPath));
-        Files.copy(file, zos);
-        filesAdded.add(zipPath);
-        return FileVisitResult.CONTINUE;
-      }
-    });
+            zos.putNextEntry(new ZipEntry(zipPath));
+            Files.copy(file, zos);
+            filesAdded.add(zipPath);
+            return FileVisitResult.CONTINUE;
+          }
+        });
 
     return filesAdded;
   }
@@ -104,7 +100,7 @@ public final class ZipUtils {
   public static void extractFile(String srcZip, String targetFile, String outputFilePath)
       throws IOException {
     try (OutputStream out = new FileOutputStream(outputFilePath);
-         ZipInputStream zis = new ZipInputStream(new FileInputStream(srcZip));) {
+        ZipInputStream zis = new ZipInputStream(new FileInputStream(srcZip)); ) {
       ZipEntry ze = zis.getNextEntry();
       while (ze != null) {
         if (ze.getName().equals(targetFile)) {

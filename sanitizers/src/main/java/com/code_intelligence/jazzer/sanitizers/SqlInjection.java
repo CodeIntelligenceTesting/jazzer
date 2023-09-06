@@ -37,11 +37,12 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
  * otherwise all input was escaped correctly.
  *
  * <p>Two types of methods are hooked:
+ *
  * <ol>
- * <li>Methods that take an SQL query as the first argument (e.g. {@link
- * java.sql.Statement#execute}]).</li>
- * <li>Methods that don't take any arguments and execute an already prepared statement (e.g. {@link
- * java.sql.PreparedStatement#execute}).</li>
+ *   <li>Methods that take an SQL query as the first argument (e.g. {@link
+ *       java.sql.Statement#execute}]).
+ *   <li>Methods that don't take any arguments and execute an already prepared statement (e.g.
+ *       {@link java.sql.PreparedStatement#execute}).
  * </ol>
  *
  * For 1. we validate the syntax of the query using <a
@@ -56,30 +57,46 @@ public class SqlInjection {
   // See https://dev.mysql.com/doc/refman/8.0/en/string-literals.html
   private static final String CHARACTERS_TO_ESCAPE = "'\"\b\n\r\t\\%_";
 
-  private static final Set<String> SQL_SYNTAX_ERROR_EXCEPTIONS = unmodifiableSet(
-      Stream
-          .of("java.sql.SQLException", "java.sql.SQLNonTransientException",
-              "java.sql.SQLSyntaxErrorException", "org.h2.jdbc.JdbcSQLSyntaxErrorException",
-              "org.h2.jdbc.JdbcSQLFeatureNotSupportedException")
-          .collect(toSet()));
+  private static final Set<String> SQL_SYNTAX_ERROR_EXCEPTIONS =
+      unmodifiableSet(
+          Stream.of(
+                  "java.sql.SQLException",
+                  "java.sql.SQLNonTransientException",
+                  "java.sql.SQLSyntaxErrorException",
+                  "org.h2.jdbc.JdbcSQLSyntaxErrorException",
+                  "org.h2.jdbc.JdbcSQLFeatureNotSupportedException")
+              .collect(toSet()));
 
   @MethodHook(
-      type = HookType.REPLACE, targetClassName = "java.sql.Statement", targetMethod = "execute")
-  @MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.Statement",
+      type = HookType.REPLACE,
+      targetClassName = "java.sql.Statement",
+      targetMethod = "execute")
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.sql.Statement",
       targetMethod = "executeBatch")
-  @MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.Statement",
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.sql.Statement",
       targetMethod = "executeLargeBatch")
-  @MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.Statement",
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.sql.Statement",
       targetMethod = "executeLargeUpdate")
-  @MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.Statement",
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.sql.Statement",
       targetMethod = "executeQuery")
-  @MethodHook(type = HookType.REPLACE, targetClassName = "java.sql.Statement",
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.sql.Statement",
       targetMethod = "executeUpdate")
-  @MethodHook(type = HookType.REPLACE, targetClassName = "javax.persistence.EntityManager",
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "javax.persistence.EntityManager",
       targetMethod = "createNativeQuery")
-  public static Object
-  checkSqlExecute(MethodHandle method, Object thisObject, Object[] arguments, int hookId)
-      throws Throwable {
+  public static Object checkSqlExecute(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) throws Throwable {
     boolean hasValidSqlQuery = false;
 
     if (arguments.length > 0 && arguments[0] instanceof String) {
@@ -96,8 +113,9 @@ public class SqlInjection {
       // that we don't want to report.
       if (!hasValidSqlQuery
           && SQL_SYNTAX_ERROR_EXCEPTIONS.contains(throwable.getClass().getName())) {
-        Jazzer.reportFindingFromHook(new FuzzerSecurityIssueHigh(
-            String.format("SQL Injection%nInjected query: %s%n", arguments[0])));
+        Jazzer.reportFindingFromHook(
+            new FuzzerSecurityIssueHigh(
+                String.format("SQL Injection%nInjected query: %s%n", arguments[0])));
       }
       throw throwable;
     }

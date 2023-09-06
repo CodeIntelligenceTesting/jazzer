@@ -70,14 +70,15 @@ public final class JUnitRunner {
   public static Optional<JUnitRunner> create(String testClassName, List<String> libFuzzerArgs) {
     // We want the test execution to be as lightweight as possible, so disable all auto-discover and
     // only register the test engine we are using for @FuzzTest, JUnit Jupiter.
-    LauncherConfig config = LauncherConfig.builder()
-                                .addTestEngines(new JupiterTestEngine())
-                                .enableLauncherDiscoveryListenerAutoRegistration(false)
-                                .enableLauncherSessionListenerAutoRegistration(false)
-                                .enablePostDiscoveryFilterAutoRegistration(false)
-                                .enableTestEngineAutoRegistration(false)
-                                .enableTestExecutionListenerAutoRegistration(false)
-                                .build();
+    LauncherConfig config =
+        LauncherConfig.builder()
+            .addTestEngines(new JupiterTestEngine())
+            .enableLauncherDiscoveryListenerAutoRegistration(false)
+            .enableLauncherSessionListenerAutoRegistration(false)
+            .enablePostDiscoveryFilterAutoRegistration(false)
+            .enableTestEngineAutoRegistration(false)
+            .enableTestExecutionListenerAutoRegistration(false)
+            .build();
 
     Map<String, String> indexedArgs =
         IntStream.range(0, libFuzzerArgs.size())
@@ -85,8 +86,7 @@ public final class JUnitRunner {
             .collect(Collectors.toMap(i -> "jazzer.internal.arg." + i, libFuzzerArgs::get));
 
     LauncherDiscoveryRequestBuilder requestBuilder =
-        LauncherDiscoveryRequestBuilder
-            .request()
+        LauncherDiscoveryRequestBuilder.request()
             // JUnit's timeout handling interferes with libFuzzer as from the point of view of JUnit
             // all fuzz test invocations are combined in a single JUnit test method execution.
             // https://junit.org/junit5/docs/current/user-guide/#writing-tests-declarative-timeouts-mode
@@ -98,12 +98,15 @@ public final class JUnitRunner {
     if (!Opt.targetMethod.get().isEmpty()) {
       // HACK: This depends on JUnit internals as we need to filter by method name without having to
       // specify the parameter types of the method.
-      requestBuilder.filters((PostDiscoveryFilter) testDescriptor
-          -> includedIf(!(testDescriptor instanceof MethodBasedTestDescriptor)
-              || ((MethodBasedTestDescriptor) testDescriptor)
-                     .getTestMethod()
-                     .getName()
-                     .equals(Opt.targetMethod.get())));
+      requestBuilder.filters(
+          (PostDiscoveryFilter)
+              testDescriptor ->
+                  includedIf(
+                      !(testDescriptor instanceof MethodBasedTestDescriptor)
+                          || ((MethodBasedTestDescriptor) testDescriptor)
+                              .getTestMethod()
+                              .getName()
+                              .equals(Opt.targetMethod.get())));
     }
     LauncherDiscoveryRequest request = requestBuilder.build();
     Launcher launcher = LauncherFactory.create(config);
@@ -117,30 +120,34 @@ public final class JUnitRunner {
   public int run() {
     AtomicReference<TestExecutionResult> resultHolder =
         new AtomicReference<>(TestExecutionResult.successful());
-    launcher.execute(testPlan, new TestExecutionListener() {
-      @Override
-      public void executionFinished(
-          TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
-        // Lifecycle methods can fail too, which results in failed execution results on container
-        // nodes. We keep the last failing one with a stack trace. For tests, we also keep the stack
-        // traces of aborted tests so that we can show a warning. In JUnit Jupiter, tests and
-        // containers always fail with a throwable:
-        // https://github.com/junit-team/junit5/blob/ac31e9a7d58973db73496244dab4defe17ae563e/junit-platform-engine/src/main/java/org/junit/platform/engine/support/hierarchical/ThrowableCollector.java#LL176C37-L176C37
-        if ((testIdentifier.isTest() && testExecutionResult.getThrowable().isPresent())
-            || testExecutionResult.getStatus() == FAILED) {
-          resultHolder.set(testExecutionResult);
-        }
-        if (testExecutionResult.getStatus() == FAILED
-            && testExecutionResult.getThrowable().isPresent()) {
-          resultHolder.set(testExecutionResult);
-        }
-      }
+    launcher.execute(
+        testPlan,
+        new TestExecutionListener() {
+          @Override
+          public void executionFinished(
+              TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
+            // Lifecycle methods can fail too, which results in failed execution results on
+            // container
+            // nodes. We keep the last failing one with a stack trace. For tests, we also keep the
+            // stack
+            // traces of aborted tests so that we can show a warning. In JUnit Jupiter, tests and
+            // containers always fail with a throwable:
+            // https://github.com/junit-team/junit5/blob/ac31e9a7d58973db73496244dab4defe17ae563e/junit-platform-engine/src/main/java/org/junit/platform/engine/support/hierarchical/ThrowableCollector.java#LL176C37-L176C37
+            if ((testIdentifier.isTest() && testExecutionResult.getThrowable().isPresent())
+                || testExecutionResult.getStatus() == FAILED) {
+              resultHolder.set(testExecutionResult);
+            }
+            if (testExecutionResult.getStatus() == FAILED
+                && testExecutionResult.getThrowable().isPresent()) {
+              resultHolder.set(testExecutionResult);
+            }
+          }
 
-      @Override
-      public void reportingEntryPublished(TestIdentifier testIdentifier, ReportEntry entry) {
-        entry.getKeyValuePairs().values().forEach(Log::info);
-      }
-    });
+          @Override
+          public void reportingEntryPublished(TestIdentifier testIdentifier, ReportEntry entry) {
+            entry.getKeyValuePairs().values().forEach(Log::info);
+          }
+        });
 
     TestExecutionResult result = resultHolder.get();
     if (result.getStatus() != FAILED) {

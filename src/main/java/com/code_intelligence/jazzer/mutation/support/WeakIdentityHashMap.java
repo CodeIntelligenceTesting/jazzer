@@ -29,8 +29,8 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * An unoptimized version of a {@link java.util.WeakHashMap} with the semantics of a
- * {@link java.util.IdentityHashMap}.
+ * An unoptimized version of a {@link java.util.WeakHashMap} with the semantics of a {@link
+ * java.util.IdentityHashMap}.
  *
  * <p>If this class ever becomes a bottleneck, e.g. because of the IdentityWeakReference
  * allocations, it should be replaced by a copy of the * {@link java.util.WeakHashMap} code with all
@@ -111,18 +111,19 @@ public final class WeakIdentityHashMap<K, V> implements Map<K, V> {
   @Override
   public Set<Entry<K, V>> entrySet() {
     removeNewWeaklyReachables();
-    return map.entrySet()
-        .stream()
+    return map.entrySet().stream()
         .map(e -> new SimpleEntry<>(e.getKey().get(), e.getValue()))
         .filter(e -> e.getKey() != null)
         .collect(toSet());
   }
 
   void collectKeysForTesting() {
-    map.keySet().forEach(ref -> {
-      ref.clear();
-      ref.enqueue();
-    });
+    map.keySet()
+        .forEach(
+            ref -> {
+              ref.clear();
+              ref.enqueue();
+            });
   }
 
   private void removeNewWeaklyReachables() {

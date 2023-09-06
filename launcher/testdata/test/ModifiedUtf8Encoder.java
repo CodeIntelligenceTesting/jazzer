@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 final class ModifiedUtf8Encoder {
   // Encodes a string in the JVM's modified UTF-8 encoding.
-  static public byte[] encode(String value) {
+  public static byte[] encode(String value) {
     // Modified UTF-8 is almost the same as CESU-8, the only difference being that the zero
     // character is coded on two bytes.
     byte[] cesuBytes = value.getBytes(Charset.forName("CESU-8"));

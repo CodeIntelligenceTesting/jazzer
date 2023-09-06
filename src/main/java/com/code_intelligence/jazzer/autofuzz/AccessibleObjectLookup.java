@@ -27,13 +27,16 @@ class AccessibleObjectLookup {
   private static final Comparator<Class<?>> STABLE_CLASS_COMPARATOR =
       Comparator.comparing(Class::getName);
   private static final Comparator<Executable> STABLE_EXECUTABLE_COMPARATOR =
-      Comparator.comparing(Executable::getName).thenComparing(executable -> {
-        if (executable instanceof Method) {
-          return org.objectweb.asm.Type.getMethodDescriptor((Method) executable);
-        } else {
-          return org.objectweb.asm.Type.getConstructorDescriptor((Constructor<?>) executable);
-        }
-      });
+      Comparator.comparing(Executable::getName)
+          .thenComparing(
+              executable -> {
+                if (executable instanceof Method) {
+                  return org.objectweb.asm.Type.getMethodDescriptor((Method) executable);
+                } else {
+                  return org.objectweb.asm.Type.getConstructorDescriptor(
+                      (Constructor<?>) executable);
+                }
+              });
 
   private final Class<?> referenceClass;
 
@@ -46,30 +49,30 @@ class AccessibleObjectLookup {
         .distinct()
         .filter(this::isAccessible)
         .sorted(STABLE_CLASS_COMPARATOR)
-        .toArray(Class<?>[] ::new);
+        .toArray(Class<?>[]::new);
   }
 
   Constructor<?>[] getAccessibleConstructors(Class<?> type) {
     // Neither of getDeclaredConstructors and getConstructors is a superset of the other: While
     // getDeclaredConstructors returns constructors with all visibility modifiers, it does not
     // return the implicit default constructor.
-    return Stream
-        .concat(
+    return Stream.concat(
             Arrays.stream(type.getDeclaredConstructors()), Arrays.stream(type.getConstructors()))
         .distinct()
         .filter(this::isAccessible)
         .sorted(STABLE_EXECUTABLE_COMPARATOR)
-        .filter(constructor -> {
-          try {
-            constructor.setAccessible(true);
-            return true;
-          } catch (Exception e) {
-            // Can't make the constructor accessible, e.g. because it is in a standard library
-            // module. We can't do anything about this, so we skip the constructor.
-            return false;
-          }
-        })
-        .toArray(Constructor<?>[] ::new);
+        .filter(
+            constructor -> {
+              try {
+                constructor.setAccessible(true);
+                return true;
+              } catch (Exception e) {
+                // Can't make the constructor accessible, e.g. because it is in a standard library
+                // module. We can't do anything about this, so we skip the constructor.
+                return false;
+              }
+            })
+        .toArray(Constructor<?>[]::new);
   }
 
   Method[] getAccessibleMethods(Class<?> type) {
@@ -77,17 +80,19 @@ class AccessibleObjectLookup {
         .distinct()
         .filter(this::isAccessible)
         .sorted(STABLE_EXECUTABLE_COMPARATOR)
-        .filter(method -> {
-          try {
-            method.setAccessible(true);
-            return true;
-          } catch (Exception e) {
-            // Can't make the method accessible, e.g. because it is in a standard library module. We
-            // can't do anything about this, so we skip the method.
-            return false;
-          }
-        })
-        .toArray(Method[] ::new);
+        .filter(
+            method -> {
+              try {
+                method.setAccessible(true);
+                return true;
+              } catch (Exception e) {
+                // Can't make the method accessible, e.g. because it is in a standard library
+                // module. We
+                // can't do anything about this, so we skip the method.
+                return false;
+              }
+            })
+        .toArray(Method[]::new);
   }
 
   boolean isAccessible(Class<?> clazz, int modifiers) {

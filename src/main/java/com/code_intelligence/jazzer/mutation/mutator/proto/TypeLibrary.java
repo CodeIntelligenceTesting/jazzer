@@ -33,15 +33,12 @@ import com.code_intelligence.jazzer.mutation.annotation.proto.WithDefaultInstanc
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
-import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -55,14 +52,20 @@ final class TypeLibrary {
   private static final AnnotatedType RAW_LIST = new TypeHolder<@NotNull List>() {}.annotatedType();
   private static final AnnotatedType RAW_MAP = new TypeHolder<@NotNull Map>() {}.annotatedType();
   private static final Map<JavaType, AnnotatedType> BASE_TYPE_WITH_PRESENCE =
-      Stream
-          .of(entry(JavaType.BOOLEAN, Boolean.class), entry(JavaType.BYTE_STRING, ByteString.class),
-              entry(JavaType.DOUBLE, Double.class), entry(JavaType.ENUM, EnumValueDescriptor.class),
-              entry(JavaType.FLOAT, Float.class), entry(JavaType.INT, Integer.class),
-              entry(JavaType.LONG, Long.class), entry(JavaType.MESSAGE, Message.class),
+      Stream.of(
+              entry(JavaType.BOOLEAN, Boolean.class),
+              entry(JavaType.BYTE_STRING, ByteString.class),
+              entry(JavaType.DOUBLE, Double.class),
+              entry(JavaType.ENUM, EnumValueDescriptor.class),
+              entry(JavaType.FLOAT, Float.class),
+              entry(JavaType.INT, Integer.class),
+              entry(JavaType.LONG, Long.class),
+              entry(JavaType.MESSAGE, Message.class),
               entry(JavaType.STRING, String.class))
-          .collect(collectingAndThen(toMap(Entry::getKey, e -> asAnnotatedType(e.getValue())),
-              map -> unmodifiableMap(new EnumMap<>(map))));
+          .collect(
+              collectingAndThen(
+                  toMap(Entry::getKey, e -> asAnnotatedType(e.getValue())),
+                  map -> unmodifiableMap(new EnumMap<>(map))));
 
   private TypeLibrary() {}
 
@@ -97,14 +100,16 @@ final class TypeLibrary {
   }
 
   private static boolean isRecursiveField(FieldDescriptor field) {
-    return containedInDirectedCycle(field, f -> {
-      // For map fields, only the value can be a message.
-      FieldDescriptor realField = f.isMapField() ? f.getMessageType().getFields().get(1) : f;
-      if (realField.getJavaType() != JavaType.MESSAGE) {
-        return Stream.empty();
-      }
-      return realField.getMessageType().getFields().stream();
-    });
+    return containedInDirectedCycle(
+        field,
+        f -> {
+          // For map fields, only the value can be a message.
+          FieldDescriptor realField = f.isMapField() ? f.getMessageType().getFields().get(1) : f;
+          if (realField.getJavaType() != JavaType.MESSAGE) {
+            return Stream.empty();
+          }
+          return realField.getMessageType().getFields().stream();
+        });
   }
 
   static Message getDefaultInstance(Class<? extends Message> messageClass) {
@@ -114,7 +119,8 @@ final class TypeLibrary {
       check(Modifier.isStatic(getDefaultInstance.getModifiers()));
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException(
-          format("Message class for builder type %s does not have a getDefaultInstance method",
+          format(
+              "Message class for builder type %s does not have a getDefaultInstance method",
               messageClass.getName()),
           e);
     }
@@ -130,7 +136,8 @@ final class TypeLibrary {
     String[] parts = withDefaultInstance.value().split("#");
     if (parts.length != 2) {
       throw new IllegalArgumentException(
-          format("Expected @WithDefaultInstance(\"%s\") to specify a fully-qualified method name"
+          format(
+              "Expected @WithDefaultInstance(\"%s\") to specify a fully-qualified method name"
                   + " (e.g. com.example.MyClass#getDefaultInstance)",
               withDefaultInstance.value()));
     }
@@ -140,8 +147,9 @@ final class TypeLibrary {
       clazz = Class.forName(parts[0]);
     } catch (ClassNotFoundException e) {
       throw new IllegalArgumentException(
-          format("Failed to find class '%s' specified by @WithDefaultInstance(\"%s\")", parts[0],
-              withDefaultInstance.value()),
+          format(
+              "Failed to find class '%s' specified by @WithDefaultInstance(\"%s\")",
+              parts[0], withDefaultInstance.value()),
           e);
     }
 
@@ -151,27 +159,33 @@ final class TypeLibrary {
       method.setAccessible(true);
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
-          format("Failed to find method specified by @WithDefaultInstance(\"%s\")",
+          format(
+              "Failed to find method specified by @WithDefaultInstance(\"%s\")",
               withDefaultInstance.value()),
           e);
     }
     if (!Modifier.isStatic(method.getModifiers())) {
       throw new IllegalArgumentException(
-          format("Expected method specified by @WithDefaultInstance(\"%s\") to be static",
+          format(
+              "Expected method specified by @WithDefaultInstance(\"%s\") to be static",
               withDefaultInstance.value()));
     }
     if (!Message.class.isAssignableFrom(method.getReturnType())) {
-      throw new IllegalArgumentException(format(
-          "Expected return type of method specified by @WithDefaultInstance(\"%s\") to be a"
-              + " subtype of %s, got %s",
-          withDefaultInstance.value(), Message.class.getName(), method.getReturnType().getName()));
+      throw new IllegalArgumentException(
+          format(
+              "Expected return type of method specified by @WithDefaultInstance(\"%s\") to be a"
+                  + " subtype of %s, got %s",
+              withDefaultInstance.value(),
+              Message.class.getName(),
+              method.getReturnType().getName()));
     }
 
     try {
       return (Message) method.invoke(null);
     } catch (IllegalAccessException | InvocationTargetException e) {
       throw new IllegalArgumentException(
-          format("Failed to execute method specified by @WithDefaultInstance(\"%s\")",
+          format(
+              "Failed to execute method specified by @WithDefaultInstance(\"%s\")",
               withDefaultInstance.value()),
           e);
     }

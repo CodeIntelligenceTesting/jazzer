@@ -27,6 +27,8 @@ import java.lang.annotation.Target;
 @AppliesTo({double.class, Double.class})
 public @interface DoubleInRange {
   double min() default Double.NEGATIVE_INFINITY;
+
   double max() default Double.POSITIVE_INFINITY;
+
   boolean allowNaN() default true;
 }

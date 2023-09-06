@@ -41,6 +41,7 @@ public interface Serializer<T> extends Detacher<T> {
    * Reads a {@code T} from an endless stream that is eventually 0.
    *
    * <p>Implementations
+   *
    * <ul>
    *   <li>MUST not attempt to consume the entire stream;
    *   <li>MUST return a valid {@code T} and not throw for any (even garbage) stream;
@@ -50,9 +51,10 @@ public interface Serializer<T> extends Detacher<T> {
    * @param in an endless stream that eventually only reads null bytes
    * @return a {@code T} constructed from the bytes read
    * @throws IOException declared, but must not be thrown by implementations unless methods called
-   *                     on {@code in} do
+   *     on {@code in} do
    */
-  @CheckReturnValue T read(DataInputStream in) throws IOException;
+  @CheckReturnValue
+  T read(DataInputStream in) throws IOException;
 
   /**
    * Writes a {@code T} to a stream in such a way that an equal object can be recovered from the
@@ -63,9 +65,9 @@ public interface Serializer<T> extends Detacher<T> {
    * length.
    *
    * @param value the value to write
-   * @param out   the stream to write to
+   * @param out the stream to write to
    * @throws IOException declared, but must not be thrown by implementations unless methods called
-   *                     on {@code out} do
+   *     on {@code out} do
    */
   void write(T value, DataOutputStream out) throws IOException;
 
@@ -73,10 +75,11 @@ public interface Serializer<T> extends Detacher<T> {
    * Reads a {@code T} from a finite stream, potentially using a simpler representation than that
    * read by {@link #read(DataInputStream)}.
    *
-   * <p>The default implementations call extends the stream with null bytes and then calls
-   * {@link #read(DataInputStream)}.
+   * <p>The default implementations call extends the stream with null bytes and then calls {@link
+   * #read(DataInputStream)}.
    *
    * <p>Implementations
+   *
    * <ul>
    *   <li>MUST return a valid {@code T} and not throw for any (even garbage) stream;
    *   <li>SHOULD short-circuit the creation of nested structures upon reading null bytes;
@@ -86,7 +89,7 @@ public interface Serializer<T> extends Detacher<T> {
    * @param in a finite stream
    * @return a {@code T} constructed from the bytes read
    * @throws IOException declared, but must not be thrown by implementations unless methods called
-   *                     on {@code in} do
+   *     on {@code in} do
    */
   @CheckReturnValue
   default T readExclusive(InputStream in) throws IOException {
@@ -106,9 +109,9 @@ public interface Serializer<T> extends Detacher<T> {
    * be written to the stream without prepending its length.
    *
    * @param value the value to write
-   * @param out   the stream to write to
+   * @param out the stream to write to
    * @throws IOException declared, but must not be thrown by implementations unless methods called
-   *                     on {@code out} do
+   *     on {@code out} do
    */
   default void writeExclusive(T value, OutputStream out) throws IOException {
     write(value, new DataOutputStream(out));

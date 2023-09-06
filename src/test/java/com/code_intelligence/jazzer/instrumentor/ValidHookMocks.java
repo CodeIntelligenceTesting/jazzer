@@ -24,22 +24,33 @@ class ValidHookMocks {
       MethodHandle method, String thisObject, Object[] arguments, int hookId) {}
 
   @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.String", targetMethod = "equals")
-  public static void validAfterHook(MethodHandle method, String thisObject, Object[] arguments,
-      int hookId, Boolean returnValue) {}
+  public static void validAfterHook(
+      MethodHandle method,
+      String thisObject,
+      Object[] arguments,
+      int hookId,
+      Boolean returnValue) {}
 
-  @MethodHook(type = HookType.REPLACE, targetClassName = "java.lang.String",
-      targetMethod = "equals", targetMethodDescriptor = "(Ljava/lang/Object;)Z")
-  public static Boolean
-  validReplaceHook(MethodHandle method, String thisObject, Object[] arguments, int hookId) {
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.lang.String",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  public static Boolean validReplaceHook(
+      MethodHandle method, String thisObject, Object[] arguments, int hookId) {
     return true;
   }
 
   @MethodHook(
-      type = HookType.REPLACE, targetClassName = "java.lang.String", targetMethod = "equals")
-  @MethodHook(type = HookType.REPLACE, targetClassName = "java.lang.String",
+      type = HookType.REPLACE,
+      targetClassName = "java.lang.String",
+      targetMethod = "equals")
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.lang.String",
       targetMethod = "equalsIgnoreCase")
-  public static boolean
-  validReplaceHook2(MethodHandle method, String thisObject, Object[] arguments, int hookId) {
+  public static boolean validReplaceHook2(
+      MethodHandle method, String thisObject, Object[] arguments, int hookId) {
     return true;
   }
 }

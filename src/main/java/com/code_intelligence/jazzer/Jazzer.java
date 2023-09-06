@@ -57,9 +57,9 @@ import java.util.stream.Stream;
  * The libFuzzer-compatible CLI entrypoint for Jazzer.
  *
  * <p>Arguments to Jazzer are passed as command-line arguments or {@code jazzer.*} system
- * properties. For example, setting the property {@code jazzer.target_class} to
- * {@code com.example.FuzzTest} is equivalent to passing the argument
- * {@code --target_class=com.example.FuzzTest}.
+ * properties. For example, setting the property {@code jazzer.target_class} to {@code
+ * com.example.FuzzTest} is equivalent to passing the argument {@code
+ * --target_class=com.example.FuzzTest}.
  *
  * <p>Arguments to libFuzzer are passed as command-line arguments.
  */
@@ -71,9 +71,10 @@ public class Jazzer {
   // Accessed by jazzer_main.cpp.
   @SuppressWarnings("unused")
   private static void main(byte[][] nativeArgs) throws IOException, InterruptedException {
-    start(Arrays.stream(nativeArgs)
-              .map(bytes -> new String(bytes, StandardCharsets.UTF_8))
-              .collect(toList()));
+    start(
+        Arrays.stream(nativeArgs)
+            .map(bytes -> new String(bytes, StandardCharsets.UTF_8))
+            .collect(toList()));
   }
 
   private static void start(List<String> args) throws IOException, InterruptedException {
@@ -130,30 +131,40 @@ public class Jazzer {
     // strong and weak symbols.
     preloadLibs.add(RulesJni.extractLibrary("jazzer_preload", Jazzer.class));
     if (loadASan) {
-      processBuilder.environment().compute("ASAN_OPTIONS",
-          (name, currentValue)
-              -> appendWithPathListSeparator(name,
-                  // The JVM produces an extremely large number of false positive leaks, which makes
-                  // it impossible to use LeakSanitizer.
-                  // TODO: Investigate whether we can hook malloc/free only for JNI shared
-                  // libraries, not the JVM itself.
-                  "detect_leaks=0",
-                  // We load jazzer_preload first.
-                  "verify_asan_link_order=0"));
+      processBuilder
+          .environment()
+          .compute(
+              "ASAN_OPTIONS",
+              (name, currentValue) ->
+                  appendWithPathListSeparator(
+                      name,
+                      // The JVM produces an extremely large number of false positive leaks, which
+                      // makes
+                      // it impossible to use LeakSanitizer.
+                      // TODO: Investigate whether we can hook malloc/free only for JNI shared
+                      // libraries, not the JVM itself.
+                      "detect_leaks=0",
+                      // We load jazzer_preload first.
+                      "verify_asan_link_order=0"));
       Log.warn("Jazzer is not compatible with LeakSanitizer. Leaks are not reported.");
       preloadLibs.add(findLibrary(asanLibNames()));
     }
     if (loadHWASan) {
-      processBuilder.environment().compute("HWASAN_OPTIONS",
-          (name, currentValue)
-              -> appendWithPathListSeparator(name,
-                  // The JVM produces an extremely large number of false positive leaks, which makes
-                  // it impossible to use LeakSanitizer.
-                  // TODO: Investigate whether we can hook malloc/free only for JNI shared
-                  // libraries, not the JVM itself.
-                  "detect_leaks=0",
-                  // We load jazzer_preload first.
-                  "verify_asan_link_order=0"));
+      processBuilder
+          .environment()
+          .compute(
+              "HWASAN_OPTIONS",
+              (name, currentValue) ->
+                  appendWithPathListSeparator(
+                      name,
+                      // The JVM produces an extremely large number of false positive leaks, which
+                      // makes
+                      // it impossible to use LeakSanitizer.
+                      // TODO: Investigate whether we can hook malloc/free only for JNI shared
+                      // libraries, not the JVM itself.
+                      "detect_leaks=0",
+                      // We load jazzer_preload first.
+                      "verify_asan_link_order=0"));
       Log.warn("Jazzer is not compatible with LeakSanitizer. Leaks are not reported.");
       preloadLibs.add(findLibrary(hwasanLibNames()));
     }
@@ -168,12 +179,13 @@ public class Jazzer {
     // preloaded.
     processBuilder.environment().remove(preloadVariable());
     Map<String, String> additionalEnvironment = new HashMap<>();
-    additionalEnvironment.put(preloadVariable(),
+    additionalEnvironment.put(
+        preloadVariable(),
         appendWithPathListSeparator(
-            preloadVariable(), preloadLibs.stream().map(Path::toString).toArray(String[] ::new)));
+            preloadVariable(), preloadLibs.stream().map(Path::toString).toArray(String[]::new)));
     List<String> subProcessArgs =
-        Stream
-            .concat(Stream.of(prepareArgv0(additionalEnvironment)),
+        Stream.concat(
+                Stream.of(prepareArgv0(additionalEnvironment)),
                 // Prevent a "fork bomb" by stripping all args that trigger this code path.
                 args.stream().filter(arg -> !argsToFilter.contains(arg.split("=")[0])))
             .collect(toList());
@@ -228,7 +240,8 @@ public class Jazzer {
   private static String prepareArgv0(Map<String, String> additionalEnvironment) throws IOException {
     if (!isPosixOrAndroid() && !additionalEnvironment.isEmpty()) {
       throw new IllegalArgumentException(
-          "Setting environment variables in the wrapper is only supported on POSIX systems and Android");
+          "Setting environment variables in the wrapper is only supported on POSIX systems and"
+              + " Android");
     }
     char shellQuote = isPosixOrAndroid() ? '\'' : '"';
     String launcherTemplate;
@@ -241,17 +254,18 @@ public class Jazzer {
     }
 
     String launcherExtension = isPosix() ? ".sh" : ".bat";
-    FileAttribute<?>[] launcherScriptAttributes = isPosixOrAndroid()
-        ? new FileAttribute[] {PosixFilePermissions.asFileAttribute(
-            PosixFilePermissions.fromString("rwx------"))}
-        : new FileAttribute[] {};
-    String env = additionalEnvironment.entrySet()
-                     .stream()
-                     .map(e -> e.getKey() + "='" + e.getValue() + "'")
-                     .collect(joining(" "));
+    FileAttribute<?>[] launcherScriptAttributes =
+        isPosixOrAndroid()
+            ? new FileAttribute[] {
+              PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"))
+            }
+            : new FileAttribute[] {};
+    String env =
+        additionalEnvironment.entrySet().stream()
+            .map(e -> e.getKey() + "='" + e.getValue() + "'")
+            .collect(joining(" "));
     String command =
-        Stream
-            .concat(Stream.of(IS_ANDROID ? "exec" : javaBinary().toString()), javaBinaryArgs())
+        Stream.concat(Stream.of(IS_ANDROID ? "exec" : javaBinary().toString()), javaBinaryArgs())
             // Escape individual arguments for the shell.
             .map(str -> shellQuote + str + shellQuote)
             .collect(joining(" "));
@@ -266,8 +280,12 @@ public class Jazzer {
       String exportCommand = AndroidRuntime.getClassPathsCommand();
       String ldLibraryPath = AndroidRuntime.getLdLibraryPath();
       launcherContent = String.format(launcherTemplate, exportCommand, ldLibraryPath, invocation);
-      launcher = Files.createTempFile(
-          Paths.get("/data/local/tmp/"), "jazzer-", launcherExtension, launcherScriptAttributes);
+      launcher =
+          Files.createTempFile(
+              Paths.get("/data/local/tmp/"),
+              "jazzer-",
+              launcherExtension,
+              launcherScriptAttributes);
     } else {
       launcherContent = String.format(launcherTemplate, invocation);
       launcher = Files.createTempFile("jazzer-", launcherExtension, launcherScriptAttributes);
@@ -316,24 +334,34 @@ public class Jazzer {
       }
 
       // ManagementFactory wont work with Android
-      Stream<String> stream = Stream.of("app_process", "-Djdk.attach.allowAttachSelf=true",
-          "-Xplugin:libopenjdkjvmti.so",
-          "-agentpath:" + agentPath.toString() + "=" + nativeAgentOptions, "-Xcompiler-option",
-          "--debuggable", "/system/bin", Jazzer.class.getName());
+      Stream<String> stream =
+          Stream.of(
+              "app_process",
+              "-Djdk.attach.allowAttachSelf=true",
+              "-Xplugin:libopenjdkjvmti.so",
+              "-agentpath:" + agentPath.toString() + "=" + nativeAgentOptions,
+              "-Xcompiler-option",
+              "--debuggable",
+              "/system/bin",
+              Jazzer.class.getName());
 
       return stream;
     }
 
-    Stream<String> stream = Stream.of("-cp", System.getProperty("java.class.path"),
-        // Make ByteBuddyAgent's job simpler by allowing it to attach directly to the JVM
-        // rather than relying on an external helper. The latter fails on macOS 12 with JDK 11+
-        // (but not 8) and UBSan preloaded with:
-        // Caused by: java.io.IOException: Cannot run program
-        // "/Users/runner/hostedtoolcache/Java_Zulu_jdk/17.0.4-8/x64/bin/java": error=0, Failed
-        // to exec spawn helper: pid: 8227, signal: 9
-        // Presumably, this issue is caused by codesigning and the exec helper missing the
-        // entitlements required for library insertion.
-        "-Djdk.attach.allowAttachSelf=true", Jazzer.class.getName());
+    Stream<String> stream =
+        Stream.of(
+            "-cp",
+            System.getProperty("java.class.path"),
+            // Make ByteBuddyAgent's job simpler by allowing it to attach directly to the JVM
+            // rather than relying on an external helper. The latter fails on macOS 12 with JDK 11+
+            // (but not 8) and UBSan preloaded with:
+            // Caused by: java.io.IOException: Cannot run program
+            // "/Users/runner/hostedtoolcache/Java_Zulu_jdk/17.0.4-8/x64/bin/java": error=0, Failed
+            // to exec spawn helper: pid: 8227, signal: 9
+            // Presumably, this issue is caused by codesigning and the exec helper missing the
+            // entitlements required for library insertion.
+            "-Djdk.attach.allowAttachSelf=true",
+            Jazzer.class.getName());
 
     return Stream.concat(ManagementFactory.getRuntimeMXBean().getInputArguments().stream(), stream);
   }
@@ -419,8 +447,9 @@ public class Jazzer {
     try {
       Process process = processBuilder.start();
       if (process.waitFor() != 0) {
-        Log.error(String.format(
-            "'%s' exited with exit code %d", String.join(" ", command), process.exitValue()));
+        Log.error(
+            String.format(
+                "'%s' exited with exit code %d", String.join(" ", command), process.exitValue()));
         copy(process.getInputStream(), System.out);
         copy(process.getErrorStream(), System.err);
         exit(1);
@@ -454,8 +483,9 @@ public class Jazzer {
   private static List<String> asanLibNames() {
     if (isLinux()) {
       if (IS_ANDROID) {
-        Log.error("ASan is not supported for Android at this time. Use --hwasan for Address "
-            + "Sanitization on Android");
+        Log.error(
+            "ASan is not supported for Android at this time. Use --hwasan for Address "
+                + "Sanitization on Android");
         exit(1);
       }
 

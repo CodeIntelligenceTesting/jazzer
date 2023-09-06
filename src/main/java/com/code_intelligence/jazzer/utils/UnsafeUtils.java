@@ -31,8 +31,8 @@ public final class UnsafeUtils {
   /**
    * Dynamically creates a concrete class implementing the given abstract class.
    *
-   * <p>The returned class will not be functional and should only be used to construct instances
-   * via {@link sun.misc.Unsafe#allocateInstance(Class)}.
+   * <p>The returned class will not be functional and should only be used to construct instances via
+   * {@link sun.misc.Unsafe#allocateInstance(Class)}.
    */
   public static <T> Class<? extends T> defineAnonymousConcreteSubclass(Class<T> abstractClass) {
     if (!Modifier.isAbstract(abstractClass.getModifiers())) {
@@ -59,15 +59,22 @@ public final class UnsafeUtils {
       // MethodHandles.Lookup#defineHiddenClass is available as of Java 15.
       // Unsafe#defineAnonymousClass has been removed in Java 17.
       if (defineHiddenClass.isPresent() && classOption.isPresent()) {
-        return ((MethodHandles.Lookup) defineHiddenClass.get().invoke(MethodHandles.lookup(),
-                    cw.toByteArray(), true, Array.newInstance(classOption.get(), 0)))
+        return ((MethodHandles.Lookup)
+                defineHiddenClass
+                    .get()
+                    .invoke(
+                        MethodHandles.lookup(),
+                        cw.toByteArray(),
+                        true,
+                        Array.newInstance(classOption.get(), 0)))
             .lookupClass()
             .asSubclass(abstractClass);
       } else {
-        return (Class<? extends T>) UnsafeProvider.getUnsafe()
-            .getClass()
-            .getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class)
-            .invoke(UnsafeProvider.getUnsafe(), UnsafeUtils.class, cw.toByteArray(), null);
+        return (Class<? extends T>)
+            UnsafeProvider.getUnsafe()
+                .getClass()
+                .getMethod("defineAnonymousClass", Class.class, byte[].class, Object[].class)
+                .invoke(UnsafeProvider.getUnsafe(), UnsafeUtils.class, cw.toByteArray(), null);
       }
     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
       throw new IllegalStateException(e);

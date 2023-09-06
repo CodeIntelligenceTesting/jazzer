@@ -14,9 +14,7 @@
 
 package com.code_intelligence.jazzer.api;
 
-/**
- * The type of a {@link MethodHook}.
- */
+/** The type of a {@link MethodHook}. */
 // Note: The order of entries is important and is used during instrumentation.
 public enum HookType {
   BEFORE,

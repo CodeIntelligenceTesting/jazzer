@@ -38,19 +38,23 @@ class LibFuzzerLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
 
   static LifecycleMethodsInvoker of(Class<?> clazz) {
     Optional<ThrowingRunnable> fuzzerInitialize =
-        Stream
-            .of(targetPublicStaticMethod(clazz, FUZZER_INITIALIZE, String[].class)
-                    .map(init
-                        -> (ThrowingRunnable) ()
-                            -> init.invoke(
-                                null, (Object) Opt.targetArgs.get().toArray(new String[] {}))),
+        Stream.of(
+                targetPublicStaticMethod(clazz, FUZZER_INITIALIZE, String[].class)
+                    .map(
+                        init ->
+                            (ThrowingRunnable)
+                                () ->
+                                    init.invoke(
+                                        null,
+                                        (Object) Opt.targetArgs.get().toArray(new String[] {}))),
                 targetPublicStaticMethod(clazz, FUZZER_INITIALIZE)
                     .map(init -> (ThrowingRunnable) () -> init.invoke(null)))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .findFirst();
-    Optional<ThrowingRunnable> fuzzerTearDown = targetPublicStaticMethod(clazz, FUZZER_TEAR_DOWN)
-                                                    .map(tearDown -> () -> tearDown.invoke(null));
+    Optional<ThrowingRunnable> fuzzerTearDown =
+        targetPublicStaticMethod(clazz, FUZZER_TEAR_DOWN)
+            .map(tearDown -> () -> tearDown.invoke(null));
 
     return new LibFuzzerLifecycleMethodsInvoker(fuzzerInitialize, fuzzerTearDown);
   }

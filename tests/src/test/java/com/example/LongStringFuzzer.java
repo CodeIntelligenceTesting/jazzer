@@ -19,8 +19,8 @@ import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
 /**
  * Provoke a finding with huge captured data to verify that the generated crash reproducer is still
  * compilable. This test uses a huge, predefined corpus to speed up finding the issue.
- * <p>
- * Reproduces issue #269 (<a
+ *
+ * <p>Reproduces issue #269 (<a
  * href="https://github.com/CodeIntelligenceTesting/jazzer/issues/269">...</a>)
  */
 public class LongStringFuzzer {

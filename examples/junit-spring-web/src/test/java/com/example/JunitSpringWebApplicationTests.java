@@ -24,7 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.example.JunitSpringWebApplication.HelloRequest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -79,7 +78,8 @@ public class JunitSpringWebApplicationTests {
     }
 
     String name = data.consumeRemainingAsString();
-    mockMvc.perform(get("/buggy-hello").param("name", name))
+    mockMvc
+        .perform(get("/buggy-hello").param("name", name))
         .andExpect(content().string(containsString(name)));
   }
 
@@ -92,9 +92,10 @@ public class JunitSpringWebApplicationTests {
         helloRequest != null && helloRequest.name != null && !helloRequest.name.isBlank());
 
     mockMvc
-        .perform(post("/hello")
-                     .contentType(MediaType.APPLICATION_JSON)
-                     .content(mapper.writeValueAsString(helloRequest)))
+        .perform(
+            post("/hello")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(helloRequest)))
         .andExpect(content().string(containsString(helloRequest.name)));
   }
 }

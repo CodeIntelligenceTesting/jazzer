@@ -34,10 +34,10 @@ import java.lang.annotation.Target;
 @AppliesTo(subClassesOf = {Message.class, Message.Builder.class})
 public @interface WithDefaultInstance {
   /**
-   * The fully qualified name of a static method (e.g.
-   * {@code com.example.MyClass#getDefaultInstance}) with return type assignable to
-   * {@link com.google.protobuf.Message}, which returns a default instance that mutations should be
-   * based on.
+   * The fully qualified name of a static method (e.g. {@code
+   * com.example.MyClass#getDefaultInstance}) with return type assignable to {@link
+   * com.google.protobuf.Message}, which returns a default instance that mutations should be based
+   * on.
    */
   String value();
 }

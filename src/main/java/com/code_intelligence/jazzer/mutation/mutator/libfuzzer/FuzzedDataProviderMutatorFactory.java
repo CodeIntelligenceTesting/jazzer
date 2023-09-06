@@ -36,9 +36,12 @@ final class FuzzedDataProviderMutatorFactory extends MutatorFactory {
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
     return asSubclassOrEmpty(type, FuzzedDataProvider.class)
         .flatMap(parent -> factory.tryCreate(notNull(asAnnotatedType(byte[].class))))
-        .map(byteArrayMutator
-            -> mutateThenMap((SerializingMutator<byte[]>) byteArrayMutator,
-                FuzzedDataProviderImpl::withJavaData, FuzzedDataProviderImpl::getJavaData,
-                (Predicate<Debuggable> inCycle) -> "FuzzedDataProvider"));
+        .map(
+            byteArrayMutator ->
+                mutateThenMap(
+                    (SerializingMutator<byte[]>) byteArrayMutator,
+                    FuzzedDataProviderImpl::withJavaData,
+                    FuzzedDataProviderImpl::getJavaData,
+                    (Predicate<Debuggable> inCycle) -> "FuzzedDataProvider"));
   }
 }

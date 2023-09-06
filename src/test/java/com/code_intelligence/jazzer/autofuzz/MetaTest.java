@@ -47,44 +47,69 @@ public class MetaTest {
 
     String testString = "foo\n\t\\\"bar";
     // The expected string is obtained from testString by escaping and wrapping into escaped quotes.
-    consumeTestCase(testString, "\"foo\\n\\t\\\\\\\"bar\"",
-        Arrays.asList((byte) 1, // do not return null
-            testString.length(), testString));
+    consumeTestCase(
+        testString,
+        "\"foo\\n\\t\\\\\\\"bar\"",
+        Arrays.asList(
+            (byte) 1, // do not return null
+            testString.length(),
+            testString));
 
     consumeTestCase(null, "null", Collections.singletonList((byte) 0));
 
     boolean[] testBooleans = new boolean[] {true, false, true};
-    consumeTestCase(testBooleans, "new boolean[]{true, false, true}",
-        Arrays.asList((byte) 1, // do not return null for the array
-            2 * 3, testBooleans));
+    consumeTestCase(
+        testBooleans,
+        "new boolean[]{true, false, true}",
+        Arrays.asList(
+            (byte) 1, // do not return null for the array
+            2 * 3,
+            testBooleans));
 
     char[] testChars = new char[] {'a', '\n', '\''};
-    consumeTestCase(testChars, "new char[]{'a', '\\n', '\\''}",
-        Arrays.asList((byte) 1, // do not return null for the array
-            2 * 3 * Character.BYTES + Character.BYTES, testChars[0], 2 * 3 * Character.BYTES,
+    consumeTestCase(
+        testChars,
+        "new char[]{'a', '\\n', '\\''}",
+        Arrays.asList(
+            (byte) 1, // do not return null for the array
+            2 * 3 * Character.BYTES + Character.BYTES,
+            testChars[0],
+            2 * 3 * Character.BYTES,
             2 * 3 * Character.BYTES, // remaining bytes, 2 times what is needed for 3 chars
-            testChars[1], testChars[2]));
+            testChars[1],
+            testChars[2]));
 
     char[] testNoChars = new char[] {};
-    consumeTestCase(testNoChars, "new char[]{}",
-        Arrays.asList((byte) 1, // do not return null for the array
+    consumeTestCase(
+        testNoChars,
+        "new char[]{}",
+        Arrays.asList(
+            (byte) 1, // do not return null for the array
             0, 'a', 0, 0));
 
     short[] testShorts = new short[] {(short) 1, (short) 2, (short) 3};
-    consumeTestCase(testShorts, "new short[]{(short) 1, (short) 2, (short) 3}",
-        Arrays.asList((byte) 1, // do not return null for the array
+    consumeTestCase(
+        testShorts,
+        "new short[]{(short) 1, (short) 2, (short) 3}",
+        Arrays.asList(
+            (byte) 1, // do not return null for the array
             2 * 3 * Short.BYTES, // remaining bytes
             testShorts));
 
     long[] testLongs = new long[] {1L, 2L, 3L};
-    consumeTestCase(testLongs, "new long[]{1L, 2L, 3L}",
-        Arrays.asList((byte) 1, // do not return null for the array
+    consumeTestCase(
+        testLongs,
+        "new long[]{1L, 2L, 3L}",
+        Arrays.asList(
+            (byte) 1, // do not return null for the array
             2 * 3 * Long.BYTES, // remaining bytes
             testLongs));
 
-    consumeTestCase(new String[] {"foo", "bar", "foo\nbar"},
+    consumeTestCase(
+        new String[] {"foo", "bar", "foo\nbar"},
         "new java.lang.String[]{\"foo\", \"bar\", \"foo\\nbar\"}",
-        Arrays.asList((byte) 1, // do not return null for the array
+        Arrays.asList(
+            (byte) 1, // do not return null for the array
             32, // remaining bytes
             (byte) 1, // do not return null for the string
             31, // remaining bytes
@@ -99,34 +124,48 @@ public class MetaTest {
             "foo\nbar"));
 
     byte[] testInputStreamBytes = new byte[] {(byte) 1, (byte) 2, (byte) 3};
-    consumeTestCase(new ByteArrayInputStream(testInputStreamBytes),
+    consumeTestCase(
+        new ByteArrayInputStream(testInputStreamBytes),
         "new java.io.ByteArrayInputStream(new byte[]{(byte) 1, (byte) 2, (byte) 3})",
-        Arrays.asList((byte) 1, // do not return null for the InputStream
+        Arrays.asList(
+            (byte) 1, // do not return null for the InputStream
             2 * 3, // remaining bytes (twice the desired length)
             testInputStreamBytes));
 
-    consumeTestCase(TestEnum.BAR,
+    consumeTestCase(
+        TestEnum.BAR,
         String.format("%s.%s", TestEnum.class.getName(), TestEnum.BAR.name()),
-        Arrays.asList((byte) 1, // do not return null for the enum value
-            1 /* second value */
-            ));
+        Arrays.asList(
+            (byte) 1, // do not return null for the enum value
+            1 /* second value */));
 
-    consumeTestCase(YourAverageJavaClass.class,
+    consumeTestCase(
+        YourAverageJavaClass.class,
         "com.code_intelligence.jazzer.autofuzz.YourAverageJavaClass.class",
         Collections.singletonList((byte) 1));
 
     Type stringStringMapType =
         MetaTest.class.getDeclaredMethod("returnsStringStringMap").getGenericReturnType();
     Map<String, String> expectedMap =
-        java.util.stream.Stream
-            .of(new java.util.AbstractMap.SimpleEntry<>("key0", "value0"),
+        java.util.stream.Stream.of(
+                new java.util.AbstractMap.SimpleEntry<>("key0", "value0"),
                 new java.util.AbstractMap.SimpleEntry<>("key1", "value1"),
                 new java.util.AbstractMap.SimpleEntry<>("key2", (java.lang.String) null))
-            .collect(java.util.HashMap::new,
-                (map, e) -> map.put(e.getKey(), e.getValue()), java.util.HashMap::putAll);
-    consumeTestCase(stringStringMapType, expectedMap,
-        "java.util.stream.Stream.<java.util.AbstractMap.SimpleEntry<java.lang.String, java.lang.String>>of(new java.util.AbstractMap.SimpleEntry<>(\"key0\", \"value0\"), new java.util.AbstractMap.SimpleEntry<>(\"key1\", \"value1\"), new java.util.AbstractMap.SimpleEntry<>(\"key2\", (java.lang.String) null)).collect(java.util.HashMap::new, (map, e) -> map.put(e.getKey(), e.getValue()), java.util.HashMap::putAll)",
-        Arrays.asList((byte) 1, // do not return null for the map
+            .collect(
+                java.util.HashMap::new,
+                (map, e) -> map.put(e.getKey(), e.getValue()),
+                java.util.HashMap::putAll);
+    consumeTestCase(
+        stringStringMapType,
+        expectedMap,
+        "java.util.stream.Stream.<java.util.AbstractMap.SimpleEntry<java.lang.String,"
+            + " java.lang.String>>of(new java.util.AbstractMap.SimpleEntry<>(\"key0\", \"value0\"),"
+            + " new java.util.AbstractMap.SimpleEntry<>(\"key1\", \"value1\"), new"
+            + " java.util.AbstractMap.SimpleEntry<>(\"key2\", (java.lang.String)"
+            + " null)).collect(java.util.HashMap::new, (map, e) -> map.put(e.getKey(),"
+            + " e.getValue()), java.util.HashMap::putAll)",
+        Arrays.asList(
+            (byte) 1, // do not return null for the map
             32, // remaining bytes
             (byte) 1, // do not return null for the string
             31, // remaining bytes
@@ -164,33 +203,54 @@ public class MetaTest {
 
   @Test
   public void testAutofuzz() throws NoSuchMethodException {
-    autofuzzTestCase(true, "com.code_intelligence.jazzer.autofuzz.MetaTest.isFive(5)",
-        MetaTest.class.getMethod("isFive", int.class), Collections.singletonList(5));
-    autofuzzTestCase(false, "com.code_intelligence.jazzer.autofuzz.MetaTest.intEquals(5, 4)",
-        MetaTest.class.getMethod("intEquals", int.class, int.class), Arrays.asList(5, 4));
-    autofuzzTestCase("foobar", "(\"foo\").concat(\"bar\")",
+    autofuzzTestCase(
+        true,
+        "com.code_intelligence.jazzer.autofuzz.MetaTest.isFive(5)",
+        MetaTest.class.getMethod("isFive", int.class),
+        Collections.singletonList(5));
+    autofuzzTestCase(
+        false,
+        "com.code_intelligence.jazzer.autofuzz.MetaTest.intEquals(5, 4)",
+        MetaTest.class.getMethod("intEquals", int.class, int.class),
+        Arrays.asList(5, 4));
+    autofuzzTestCase(
+        "foobar",
+        "(\"foo\").concat(\"bar\")",
         String.class.getMethod("concat", String.class),
         Arrays.asList((byte) 1, 6, "foo", (byte) 1, 6, "bar"));
-    autofuzzTestCase("jazzer", "new java.lang.String(\"jazzer\")",
-        String.class.getConstructor(String.class), Arrays.asList((byte) 1, 12, "jazzer"));
-    autofuzzTestCase("\"jazzer\"", "com.google.json.JsonSanitizer.sanitize(\"jazzer\")",
+    autofuzzTestCase(
+        "jazzer",
+        "new java.lang.String(\"jazzer\")",
+        String.class.getConstructor(String.class),
+        Arrays.asList((byte) 1, 12, "jazzer"));
+    autofuzzTestCase(
+        "\"jazzer\"",
+        "com.google.json.JsonSanitizer.sanitize(\"jazzer\")",
         JsonSanitizer.class.getMethod("sanitize", String.class),
         Arrays.asList((byte) 1, 12, "jazzer"));
 
     FuzzedDataProvider data =
-        CannedFuzzedDataProvider.create(Arrays.asList((byte) 1, // do not return null
-            8, // remainingBytes
-            "buzz"));
-    assertEquals("fizzbuzz", new Meta(null).autofuzz(data, "fizz" ::concat));
+        CannedFuzzedDataProvider.create(
+            Arrays.asList(
+                (byte) 1, // do not return null
+                8, // remainingBytes
+                "buzz"));
+    assertEquals("fizzbuzz", new Meta(null).autofuzz(data, "fizz"::concat));
   }
 
   // Regression test for https://github.com/CodeIntelligenceTesting/jazzer/issues/465.
   @Test
   public void testPrivateInterface() {
-    autofuzzTestCase(null,
-        "com.code_intelligence.jazzer.autofuzz.OpinionatedClass.doStuffWithPrivateInterface(((java.util.function.Supplier<com.code_intelligence.jazzer.autofuzz.OpinionatedClass.PublicImplementation>) (() -> {com.code_intelligence.jazzer.autofuzz.OpinionatedClass.PublicImplementation autofuzzVariable0 = new com.code_intelligence.jazzer.autofuzz.OpinionatedClass.PublicImplementation(); return autofuzzVariable0;})).get())",
+    autofuzzTestCase(
+        null,
+        "com.code_intelligence.jazzer.autofuzz.OpinionatedClass.doStuffWithPrivateInterface(((java.util.function.Supplier<com.code_intelligence.jazzer.autofuzz.OpinionatedClass.PublicImplementation>)"
+            + " (() -> {com.code_intelligence.jazzer.autofuzz.OpinionatedClass.PublicImplementation"
+            + " autofuzzVariable0 = new"
+            + " com.code_intelligence.jazzer.autofuzz.OpinionatedClass.PublicImplementation();"
+            + " return autofuzzVariable0;})).get())",
         OpinionatedClass.class.getDeclaredMethods()[0],
-        Arrays.asList((byte) 1, // do not return null
+        Arrays.asList(
+            (byte) 1, // do not return null
             0, // first (and only) class on the classpath
             (byte) 1, // do not return null
             0 /* first (and only) constructor*/));

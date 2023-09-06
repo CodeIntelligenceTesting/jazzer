@@ -34,8 +34,11 @@ final class ByteStringMutatorFactory extends MutatorFactory {
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
     return findFirstParentIfClass(type, ByteString.class)
         .flatMap(parent -> factory.tryCreate(notNull(asAnnotatedType(byte[].class))))
-        .map(byteArrayMutator
-            -> mutateThenMapToImmutable((SerializingMutator<byte[]>) byteArrayMutator,
-                ByteString::copyFrom, ByteString::toByteArray));
+        .map(
+            byteArrayMutator ->
+                mutateThenMapToImmutable(
+                    (SerializingMutator<byte[]>) byteArrayMutator,
+                    ByteString::copyFrom,
+                    ByteString::toByteArray));
   }
 }

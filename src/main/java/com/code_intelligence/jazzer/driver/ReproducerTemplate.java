@@ -35,7 +35,8 @@ final class ReproducerTemplate {
   private static final String RAW_BYTES_INPUT =
       "byte[] input = java.util.Base64.getDecoder().decode(base64Bytes);";
   private static final String FUZZED_DATA_PROVIDER_INPUT =
-      "com.code_intelligence.jazzer.api.CannedFuzzedDataProvider input = new com.code_intelligence.jazzer.api.CannedFuzzedDataProvider(base64Bytes);";
+      "com.code_intelligence.jazzer.api.CannedFuzzedDataProvider input = new"
+          + " com.code_intelligence.jazzer.api.CannedFuzzedDataProvider(base64Bytes);";
 
   private final String targetClass;
   private final boolean useFuzzedDataProvider;
@@ -53,11 +54,13 @@ final class ReproducerTemplate {
    */
   public void dumpReproducer(String data, String sha) {
     String targetArg = useFuzzedDataProvider ? FUZZED_DATA_PROVIDER_INPUT : RAW_BYTES_INPUT;
-    String template = new BufferedReader(
-        new InputStreamReader(ReproducerTemplate.class.getResourceAsStream("Reproducer.java.tmpl"),
-            StandardCharsets.UTF_8))
-                          .lines()
-                          .collect(Collectors.joining("\n"));
+    String template =
+        new BufferedReader(
+                new InputStreamReader(
+                    ReproducerTemplate.class.getResourceAsStream("Reproducer.java.tmpl"),
+                    StandardCharsets.UTF_8))
+            .lines()
+            .collect(Collectors.joining("\n"));
     String chunkedData = chunkStringLiteral(data);
     String javaSource = String.format(template, sha, chunkedData, targetClass, targetArg);
     Path javaPath = Paths.get(Opt.reproducerPath.get(), String.format("Crash_%s.java", sha));
@@ -67,8 +70,10 @@ final class ReproducerTemplate {
       Log.error(String.format("Failed to write Java reproducer to %s%n", javaPath));
       e.printStackTrace();
     }
-    Log.println(String.format("reproducer_path='%s'; Java reproducer written to %s%n",
-        Opt.reproducerPath.get(), javaPath));
+    Log.println(
+        String.format(
+            "reproducer_path='%s'; Java reproducer written to %s%n",
+            Opt.reproducerPath.get(), javaPath));
   }
 
   // The serialization of recorded FuzzedDataProvider invocations can get too long to be emitted
@@ -77,8 +82,9 @@ final class ReproducerTemplate {
   private String chunkStringLiteral(String data) {
     ArrayList<String> chunks = new ArrayList<>();
     for (int i = 0; i <= data.length() / DATA_CHUNK_MAX_LENGTH; i++) {
-      chunks.add(data.substring(
-          i * DATA_CHUNK_MAX_LENGTH, Math.min((i + 1) * DATA_CHUNK_MAX_LENGTH, data.length())));
+      chunks.add(
+          data.substring(
+              i * DATA_CHUNK_MAX_LENGTH, Math.min((i + 1) * DATA_CHUNK_MAX_LENGTH, data.length())));
     }
     return String.join("\", \"", chunks);
   }

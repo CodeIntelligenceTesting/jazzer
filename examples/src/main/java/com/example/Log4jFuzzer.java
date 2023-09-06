@@ -34,7 +34,7 @@ import org.apache.logging.log4j.status.StatusLogger;
 
 // This fuzzer reproduces the log4j RCE vulnerability CVE-2021-44228.
 public class Log4jFuzzer {
-  private final static Logger log = LogManager.getLogger(Log4jFuzzer.class.getName());
+  private static final Logger log = LogManager.getLogger(Log4jFuzzer.class.getName());
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     log.error(data.consumeRemainingAsString());
@@ -59,7 +59,9 @@ public class Log4jFuzzer {
   }
 
   @Plugin(
-      name = "FuzzingAppender", category = Core.CATEGORY_NAME, elementType = Appender.ELEMENT_TYPE)
+      name = "FuzzingAppender",
+      category = Core.CATEGORY_NAME,
+      elementType = Appender.ELEMENT_TYPE)
   public static class FuzzingAppender extends AbstractAppender {
     protected FuzzingAppender(String name) {
       super(name, null, PatternLayout.createDefaultLayout(), true);

@@ -52,25 +52,26 @@ class ArgumentsMutatorTest {
     assertThat(maybeMutator).isPresent();
     ArgumentsMutator mutator = maybeMutator.get();
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // outer list not null
-             false,
-             // outer list size 1
-             1,
-             // inner list not null
-             false,
-             // inner list size 1
-             1,
-             // boolean
-             true,
-             // outer list not null
-             false,
-             // outer list size 1
-             1,
-             // Boolean not null
-             false,
-             // boolean
-             false)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // outer list not null
+            false,
+            // outer list size 1
+            1,
+            // inner list not null
+            false,
+            // inner list size 1
+            1,
+            // boolean
+            true,
+            // outer list not null
+            false,
+            // outer list size 1
+            1,
+            // Boolean not null
+            false,
+            // boolean
+            false)) {
       mutator.init(prng);
     }
 
@@ -80,25 +81,26 @@ class ArgumentsMutatorTest {
     assertThat(fuzzThisFunctionArgument1).containsExactly(singletonList(true));
     assertThat(fuzzThisFunctionArgument2).containsExactly(false);
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // mutate first argument
-             0,
-             // Nullable mutator
-             false,
-             // Action mutate in outer list
-             2,
-             // Mutate one element,
-             1,
-             // index to get to inner list
-             0,
-             // Nullable mutator
-             false,
-             // Action mutate inner list
-             2,
-             // Mutate one element,
-             1,
-             // index to get boolean value
-             0)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // mutate first argument
+            0,
+            // Nullable mutator
+            false,
+            // Action mutate in outer list
+            2,
+            // Mutate one element,
+            1,
+            // index to get to inner list
+            0,
+            // Nullable mutator
+            false,
+            // Action mutate inner list
+            2,
+            // Mutate one element,
+            1,
+            // index to get boolean value
+            0)) {
       mutator.mutate(prng);
     }
 
@@ -112,25 +114,26 @@ class ArgumentsMutatorTest {
     fuzzThisFunctionArgument1.get(0).clear();
     fuzzThisFunctionArgument2.clear();
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // mutate first argument
-             0,
-             // Nullable mutator
-             false,
-             // Action mutate in outer list
-             2,
-             // Mutate one element,
-             1,
-             // index to get to inner list
-             0,
-             // Nullable mutator
-             false,
-             // Action mutate inner list
-             2,
-             // Mutate one element,
-             1,
-             // index to get boolean value
-             0)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // mutate first argument
+            0,
+            // Nullable mutator
+            false,
+            // Action mutate in outer list
+            2,
+            // Mutate one element,
+            1,
+            // index to get to inner list
+            0,
+            // Nullable mutator
+            false,
+            // Action mutate inner list
+            2,
+            // Mutate one element,
+            1,
+            // index to get boolean value
+            0)) {
       mutator.mutate(prng);
     }
 
@@ -158,25 +161,26 @@ class ArgumentsMutatorTest {
     assertThat(maybeMutator).isPresent();
     ArgumentsMutator mutator = maybeMutator.get();
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // outer list not null
-             false,
-             // outer list size 1
-             1,
-             // inner list not null
-             false,
-             // inner list size 1
-             1,
-             // boolean
-             true,
-             // outer list not null
-             false,
-             // outer list size 1
-             1,
-             // Boolean not null
-             false,
-             // boolean
-             false)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // outer list not null
+            false,
+            // outer list size 1
+            1,
+            // inner list not null
+            false,
+            // inner list size 1
+            1,
+            // boolean
+            true,
+            // outer list not null
+            false,
+            // outer list size 1
+            1,
+            // Boolean not null
+            false,
+            // boolean
+            false)) {
       mutator.init(prng);
     }
 
@@ -186,25 +190,26 @@ class ArgumentsMutatorTest {
     assertThat(mutableFuzzThisFunctionArgument1).containsExactly(singletonList(true));
     assertThat(mutableFuzzThisFunctionArgument2).containsExactly(false);
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // mutate first argument
-             0,
-             // Nullable mutator
-             false,
-             // Action mutate in outer list
-             2,
-             // Mutate one element,
-             1,
-             // index to get to inner list
-             0,
-             // Nullable mutator
-             false,
-             // Action mutate inner list
-             2,
-             // Mutate one element,
-             1,
-             // index to get boolean value
-             0)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // mutate first argument
+            0,
+            // Nullable mutator
+            false,
+            // Action mutate in outer list
+            2,
+            // Mutate one element,
+            1,
+            // index to get to inner list
+            0,
+            // Nullable mutator
+            false,
+            // Action mutate inner list
+            2,
+            // Mutate one element,
+            1,
+            // index to get boolean value
+            0)) {
       mutator.mutate(prng);
     }
 
@@ -218,25 +223,26 @@ class ArgumentsMutatorTest {
     mutableFuzzThisFunctionArgument1.get(0).clear();
     mutableFuzzThisFunctionArgument2.clear();
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // mutate first argument
-             0,
-             // Nullable mutator
-             false,
-             // Action mutate in outer list
-             2,
-             // Mutate one element,
-             1,
-             // index to get to inner list
-             0,
-             // Nullable mutator
-             false,
-             // Action mutate inner list
-             2,
-             // Mutate one element,
-             1,
-             // index to get boolean value
-             0)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // mutate first argument
+            0,
+            // Nullable mutator
+            false,
+            // Action mutate in outer list
+            2,
+            // Mutate one element,
+            1,
+            // index to get to inner list
+            0,
+            // Nullable mutator
+            false,
+            // Action mutate inner list
+            2,
+            // Mutate one element,
+            1,
+            // index to get boolean value
+            0)) {
       mutator.mutate(prng);
     }
 
@@ -259,30 +265,32 @@ class ArgumentsMutatorTest {
     assertThat(maybeMutator).isPresent();
     ArgumentsMutator mutator = maybeMutator.get();
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // list not null
-             false,
-             // list size 1
-             1,
-             // not null,
-             false,
-             // boolean
-             true)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // list not null
+            false,
+            // list size 1
+            1,
+            // not null,
+            false,
+            // boolean
+            true)) {
       mutator.init(prng);
     }
     ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
     mutator.write(baos1);
     byte[] out1 = baos1.toByteArray();
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // list not null
-             false,
-             // list size 1
-             1,
-             // not null
-             false,
-             // boolean
-             false)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // list not null
+            false,
+            // list size 1
+            1,
+            // not null
+            false,
+            // boolean
+            false)) {
       mutator.init(prng);
     }
     ByteArrayOutputStream baos2 = new ByteArrayOutputStream();

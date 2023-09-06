@@ -83,7 +83,7 @@ public class Driver {
       idSyncFile.toFile().deleteOnExit();
     }
 
-    if (args.stream().anyMatch("-merge_inner=1" ::equals)) {
+    if (args.stream().anyMatch("-merge_inner=1"::equals)) {
       Opt.mergeInner.setIfDefault(true);
     }
 
@@ -91,8 +91,11 @@ public class Driver {
     // occurrence of a "-seed" argument as that is the one that is used by libFuzzer. If none is
     // set, generate one and pass it to libFuzzer so that a fuzzing run can be reproduced simply by
     // setting the seed printed by libFuzzer.
-    String seed = args.stream().reduce(
-        null, (prev, cur) -> cur.startsWith("-seed=") ? cur.substring("-seed=".length()) : prev);
+    String seed =
+        args.stream()
+            .reduce(
+                null,
+                (prev, cur) -> cur.startsWith("-seed=") ? cur.substring("-seed=".length()) : prev);
     if (seed == null) {
       seed = Integer.toUnsignedString(new SecureRandom().nextInt());
       // Only add the -seed argument to the command line if not running in a mode

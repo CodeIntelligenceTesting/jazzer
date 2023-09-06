@@ -17,27 +17,21 @@
 package com.code_intelligence.jazzer.android;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.Math;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class DexFileManager {
-  private final static int MAX_READ_LENGTH = 2000000;
+  private static final int MAX_READ_LENGTH = 2000000;
 
   public static byte[] getBytecodeFromDex(String jarPath, String dexFile) throws IOException {
     try (JarFile jarFile = new JarFile(jarPath)) {
-      JarEntry entry = jarFile.stream()
-                           .filter(jarEntry -> jarEntry.getName().equals(dexFile))
-                           .findFirst()
-                           .orElse(null);
+      JarEntry entry =
+          jarFile.stream()
+              .filter(jarEntry -> jarEntry.getName().equals(dexFile))
+              .findFirst()
+              .orElse(null);
 
       if (entry == null) {
         throw new IOException("Could not find dex file: " + dexFile);
@@ -62,7 +56,7 @@ public class DexFileManager {
       return jarFile.stream()
           .map(JarEntry::getName)
           .filter(entry -> entry.endsWith(".dex"))
-          .toArray(String[] ::new);
+          .toArray(String[]::new);
     }
   }
 }

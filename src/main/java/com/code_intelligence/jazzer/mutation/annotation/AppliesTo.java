@@ -22,19 +22,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-/**
- * A meta-annotation that limits the concrete types an annotation for type usages applies to.
- */
+/** A meta-annotation that limits the concrete types an annotation for type usages applies to. */
 @Target(ANNOTATION_TYPE)
 @Retention(RUNTIME)
 public @interface AppliesTo {
-  /**
-   * The meta-annotated annotation can be applied to these classes.
-   */
+  /** The meta-annotated annotation can be applied to these classes. */
   Class<?>[] value() default {};
 
-  /**
-   * The meta-annotated annotation can be applied to subclasses of these classes.
-   */
+  /** The meta-annotated annotation can be applied to subclasses of these classes. */
   Class<?>[] subClassesOf() default {};
 }

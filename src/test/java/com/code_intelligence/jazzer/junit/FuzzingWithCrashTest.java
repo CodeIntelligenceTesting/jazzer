@@ -74,8 +74,9 @@ public class FuzzingWithCrashTest {
     baseDir = temp.getRoot().toPath();
     // Create a fake test resource directory structure with an inputs directory to verify that
     // Jazzer uses it and emits a crash file into it.
-    inputsDirectory = baseDir.resolve(
-        Paths.get("src", "test", "resources", "com", "example", "ValidFuzzTestsInputs"));
+    inputsDirectory =
+        baseDir.resolve(
+            Paths.get("src", "test", "resources", "com", "example", "ValidFuzzTestsInputs"));
     // populate the same seed in all test directories
     for (String method :
         Arrays.asList(BYTE_FUZZ.getName(), NO_CRASH_FUZZ.getName(), DATA_FUZZ.getName())) {
@@ -101,36 +102,51 @@ public class FuzzingWithCrashTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(STARTED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId()))),
-        event(type(FINISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId())),
-            finishedSuccessfully()),
-        event(type(SKIPPED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ.getDescriptorId()))),
-        event(type(SKIPPED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ.getDescriptorId()))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
-        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+    results
+        .containerEvents()
+        .assertEventsMatchExactly(
+            event(type(STARTED), container(ENGINE)),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+            event(
+                type(STARTED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId()))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId())),
+                finishedSuccessfully()),
+            event(
+                type(SKIPPED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ.getDescriptorId()))),
+            event(
+                type(SKIPPED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ.getDescriptorId()))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+                finishedSuccessfully()),
+            event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
-    results.testEvents().assertEventsMatchLooselyInOrder(
-        event(type(DYNAMIC_TEST_REGISTERED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId()))),
-        event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId(), INVOCATION)),
-            displayName("Fuzzing...")),
-        event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId(), INVOCATION)),
-            displayName("Fuzzing..."),
-            finishedWithFailure(instanceOf(AssertionFailedError.class))));
+    results
+        .testEvents()
+        .assertEventsMatchLooselyInOrder(
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId()))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId(), INVOCATION)),
+                displayName("Fuzzing...")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId(), INVOCATION)),
+                displayName("Fuzzing..."),
+                finishedWithFailure(instanceOf(AssertionFailedError.class))));
 
     // Jazzer first tries the empty input, which doesn't crash the ByteFuzzTest. The second input is
     // the seed we planted, which is crashing, so verify that a crash file with the same content is
     // created in our fake seed corpus, but not in the current working directory.
-    try (Stream<Path> crashFiles = Files.list(baseDir).filter(
-             path -> path.getFileName().toString().startsWith("crash-"))) {
+    try (Stream<Path> crashFiles =
+        Files.list(baseDir).filter(path -> path.getFileName().toString().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
 
@@ -138,9 +154,10 @@ public class FuzzingWithCrashTest {
     // byteFuzz and will not exist in the directories of the other tests
     Path byteFuzzInputDirectory = inputsDirectory.resolve(BYTE_FUZZ.getName());
     try (Stream<Path> seeds = Files.list(byteFuzzInputDirectory)) {
-      assertThat(seeds).containsExactly(
-          byteFuzzInputDirectory.resolve("crash-" + CRASHING_SEED_DIGEST),
-          byteFuzzInputDirectory.resolve(CRASHING_SEED_NAME));
+      assertThat(seeds)
+          .containsExactly(
+              byteFuzzInputDirectory.resolve("crash-" + CRASHING_SEED_DIGEST),
+              byteFuzzInputDirectory.resolve(CRASHING_SEED_NAME));
     }
     assertThat(Files.readAllBytes(byteFuzzInputDirectory.resolve("crash-" + CRASHING_SEED_DIGEST)))
         .isEqualTo(CRASHING_SEED_CONTENT);
@@ -169,29 +186,44 @@ public class FuzzingWithCrashTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(STARTED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId()))),
-        event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId()))),
-        event(type(FINISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId())),
-            finishedSuccessfully()),
-        event(type(STARTED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ.getDescriptorId()))),
-        event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ.getDescriptorId()))),
-        event(type(FINISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ.getDescriptorId()))),
-        event(type(STARTED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ.getDescriptorId()))),
-        event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ.getDescriptorId()))),
-        event(type(FINISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ.getDescriptorId()))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
-        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+    results
+        .containerEvents()
+        .assertEventsMatchExactly(
+            event(type(STARTED), container(ENGINE)),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+            event(
+                type(STARTED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId()))),
+            event(
+                type(REPORTING_ENTRY_PUBLISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId()))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId())),
+                finishedSuccessfully()),
+            event(
+                type(STARTED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ.getDescriptorId()))),
+            event(
+                type(REPORTING_ENTRY_PUBLISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ.getDescriptorId()))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ.getDescriptorId()))),
+            event(
+                type(STARTED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ.getDescriptorId()))),
+            event(
+                type(REPORTING_ENTRY_PUBLISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ.getDescriptorId()))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, DATA_FUZZ.getDescriptorId()))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+                finishedSuccessfully()),
+            event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
     // No fuzzing means no crashes means no new seeds.
     // Check against all methods' input directories

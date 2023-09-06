@@ -66,8 +66,8 @@ public interface PseudoRandom {
 
   /**
    * @throws IllegalArgumentException if {@code array.length < 2}
-   * @return a uniformly random index valid for the given array and different from
-   * {@code currentIndex}
+   * @return a uniformly random index valid for the given array and different from {@code
+   *     currentIndex}
    */
   <T> int otherIndexIn(T[] array, int currentIndex);
 
@@ -79,26 +79,26 @@ public interface PseudoRandom {
   int otherIndexIn(int range, int currentIndex);
 
   /**
-   * @return a uniformly random {@code int} in the closed range
-   * {@code [lowerInclusive, upperInclusive]}.
+   * @return a uniformly random {@code int} in the closed range {@code [lowerInclusive,
+   *     upperInclusive]}.
    */
   int closedRange(int lowerInclusive, int upperInclusive);
 
   /**
-   * @return a uniformly random {@code long} in the closed range
-   * {@code [lowerInclusive, upperInclusive]}.
+   * @return a uniformly random {@code long} in the closed range {@code [lowerInclusive,
+   *     upperInclusive]}.
    */
   long closedRange(long lowerInclusive, long upperInclusive);
 
   /**
-   * @return a uniformly random {@code float} in the closed range
-   * {@code [lowerInclusive, upperInclusive]}.
+   * @return a uniformly random {@code float} in the closed range {@code [lowerInclusive,
+   *     upperInclusive]}.
    */
   float closedRange(float lowerInclusive, float upperInclusive);
 
   /**
-   * @return a uniformly random {@code double} in the closed range
-   * {@code [lowerInclusive, upperInclusive]}.
+   * @return a uniformly random {@code double} in the closed range {@code [lowerInclusive,
+   *     upperInclusive]}.
    */
   double closedRange(double lowerInclusive, double upperInclusive);
 
@@ -114,9 +114,7 @@ public interface PseudoRandom {
    */
   int closedRangeBiasedTowardsSmall(int lowerInclusive, int upperInclusive);
 
-  /**
-   * Fills the given array with random bytes.
-   */
+  /** Fills the given array with random bytes. */
   void bytes(byte[] bytes);
 
   /**

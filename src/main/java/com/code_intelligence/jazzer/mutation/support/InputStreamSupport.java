@@ -33,7 +33,7 @@ public final class InputStreamSupport {
     requireNonNull(stream);
     Queue<byte[]> buffers = new ArrayDeque<>();
     int arrayLength = 0;
-  outer:
+    outer:
     while (true) {
       byte[] buffer = new byte[max(8192, stream.available())];
       buffers.add(buffer);
@@ -194,9 +194,9 @@ public final class InputStreamSupport {
   }
 
   /**
-   * Wraps a given stream with the functionality to detect if it was read exactly.
-   * To do so, the stream must provide an accurate implementation of {@link
-   * InputStream#available()}, hence it's restricted to {@link ByteArrayInputStream} for now.
+   * Wraps a given stream with the functionality to detect if it was read exactly. To do so, the
+   * stream must provide an accurate implementation of {@link InputStream#available()}, hence it's
+   * restricted to {@link ByteArrayInputStream} for now.
    *
    * @return {@code stream} extended that detects if it was consumed exactly
    */

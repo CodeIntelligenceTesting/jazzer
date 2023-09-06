@@ -17,7 +17,6 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
-import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.protobuf.Proto2.TestProtobuf;
 

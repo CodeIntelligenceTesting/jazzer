@@ -19,9 +19,7 @@ package com.code_intelligence.jazzer.api;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 
-/**
- * Provides static functions that configure the behavior of bug detectors provided by Jazzer.
- */
+/** Provides static functions that configure the behavior of bug detectors provided by Jazzer. */
 public final class BugDetectors {
   private static final AtomicReference<BiPredicate<String, Integer>> currentPolicy =
       getConnectionPermittedReference();
@@ -35,16 +33,16 @@ public final class BugDetectors {
    * <p>By default, all attempted network connections are considered unexpected and result in a
    * finding being reported.
    *
-   * <p>By wrapping the call into a try-with-resources statement, network connection permissions
-   * can be configured to apply to individual parts of the fuzz test only:
+   * <p>By wrapping the call into a try-with-resources statement, network connection permissions can
+   * be configured to apply to individual parts of the fuzz test only:
    *
    * <pre>{@code
-   *   Image image = parseImage(bytes);
-   *   Response response;
-   *   try (SilentCloseable unused = BugDetectors.allowNetworkConnections()) {
-   *     response = uploadImage(image);
-   *   }
-   *   handleResponse(response);
+   * Image image = parseImage(bytes);
+   * Response response;
+   * try (SilentCloseable unused = BugDetectors.allowNetworkConnections()) {
+   *   response = uploadImage(image);
+   * }
+   * handleResponse(response);
    * }</pre>
    *
    * @return a {@link SilentCloseable} that restores the previously set permissions when closed
@@ -59,21 +57,21 @@ public final class BugDetectors {
    * <p>By default, all attempted network connections are considered unexpected and result in a
    * finding being reported.
    *
-   * <p>By wrapping the call into a try-with-resources statement, network connection permissions
-   * can be configured to apply to individual parts of the fuzz test only:
+   * <p>By wrapping the call into a try-with-resources statement, network connection permissions can
+   * be configured to apply to individual parts of the fuzz test only:
    *
    * <pre>{@code
-   *   Image image = parseImage(bytes);
-   *   Response response;
-   *   try (SilentCloseable unused = BugDetectors.allowNetworkConnections(
-   *       (host, port) -> host.equals("example.org"))) {
-   *     response = uploadImage(image, "example.org");
-   *   }
-   *   handleResponse(response);
+   * Image image = parseImage(bytes);
+   * Response response;
+   * try (SilentCloseable unused = BugDetectors.allowNetworkConnections(
+   *     (host, port) -> host.equals("example.org"))) {
+   *   response = uploadImage(image, "example.org");
+   * }
+   * handleResponse(response);
    * }</pre>
    *
    * @param connectionPermitted a predicate that evaluate to {@code true} if network connections to
-   *                            the provided combination of host and port are permitted
+   *     the provided combination of host and port are permitted
    * @return a {@link SilentCloseable} that restores the previously set predicate when closed
    */
   public static SilentCloseable allowNetworkConnections(
@@ -88,7 +86,8 @@ public final class BugDetectors {
     return () -> {
       if (!currentPolicy.compareAndSet(connectionPermitted, previousPolicy)) {
         throw new IllegalStateException(
-            "Failed to reset network connection policy - using try-with-resources is highly recommended");
+            "Failed to reset network connection policy - using try-with-resources is highly"
+                + " recommended");
       }
     };
   }
@@ -97,9 +96,8 @@ public final class BugDetectors {
     try {
       Class<?> ssrfSanitizer =
           Class.forName("com.code_intelligence.jazzer.sanitizers.ServerSideRequestForgery");
-      return (AtomicReference<BiPredicate<String, Integer>>) ssrfSanitizer
-          .getField("connectionPermitted")
-          .get(null);
+      return (AtomicReference<BiPredicate<String, Integer>>)
+          ssrfSanitizer.getField("connectionPermitted").get(null);
     } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
       System.err.println("WARNING: ");
       e.printStackTrace();

@@ -26,10 +26,13 @@ import java.nio.file.Paths;
 public class ExamplePathTraversalFuzzerHooks {
   private static final String publicFilesRootPath = "/app/upload/";
 
-  @MethodHook(type = HookType.BEFORE, targetClassName = "java.io.File", targetMethod = "<init>",
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = "java.io.File",
+      targetMethod = "<init>",
       targetMethodDescriptor = "(Ljava/lang/String;)V")
-  public static void
-  fileConstructorHook(MethodHandle handle, Object thisObject, Object[] args, int hookId) {
+  public static void fileConstructorHook(
+      MethodHandle handle, Object thisObject, Object[] args, int hookId) {
     String path = (String) args[0];
     Path normalizedPath;
     try {
@@ -41,8 +44,9 @@ public class ExamplePathTraversalFuzzerHooks {
     if (!normalizedPath.startsWith(publicFilesRootPath)) {
       // Simply throwing an exception from here would not work as the calling code catches and
       // ignores all Throwables. Instead, use the Jazzer API to report a finding from a hook.
-      Jazzer.reportFindingFromHook(new FuzzerSecurityIssueHigh(
-          "Path traversal discovered: '" + path + "' --> '" + normalizedPath + "'"));
+      Jazzer.reportFindingFromHook(
+          new FuzzerSecurityIssueHigh(
+              "Path traversal discovered: '" + path + "' --> '" + normalizedPath + "'"));
     }
   }
 }

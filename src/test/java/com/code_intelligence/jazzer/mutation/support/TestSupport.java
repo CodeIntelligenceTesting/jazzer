@@ -45,10 +45,11 @@ import java.util.function.UnaryOperator;
 
 public final class TestSupport {
   private static final DataOutputStream nullDataOutputStream =
-      new DataOutputStream(new OutputStream() {
-        @Override
-        public void write(int i) {}
-      });
+      new DataOutputStream(
+          new OutputStream() {
+            @Override
+            public void write(int i) {}
+          });
 
   private TestSupport() {}
 
@@ -66,9 +67,7 @@ public final class TestSupport {
     return new SeededPseudoRandom(8853461259049838337L);
   }
 
-  /**
-   * Creates a {@link PseudoRandom} whose methods return the given values in order.
-   */
+  /** Creates a {@link PseudoRandom} whose methods return the given values in order. */
   @MustBeClosed
   public static MockPseudoRandom mockPseudoRandom(Object... returnValues) {
     return new MockPseudoRandom(returnValues);
@@ -176,7 +175,7 @@ public final class TestSupport {
     };
   }
 
-  private static abstract class AbstractMockInPlaceMutator<T> implements InPlaceMutator<T> {
+  private abstract static class AbstractMockInPlaceMutator<T> implements InPlaceMutator<T> {
     @Override
     public void initInPlace(T reference, PseudoRandom prng) {
       throw new UnsupportedOperationException();
@@ -193,8 +192,8 @@ public final class TestSupport {
     }
   }
 
-  private static abstract class AbstractMockMutator<T> extends SerializingMutator<T> {
-    abstract protected T nextInitialValue();
+  private abstract static class AbstractMockMutator<T> extends SerializingMutator<T> {
+    protected abstract T nextInitialValue();
 
     @Override
     public T read(DataInputStream in) {

@@ -56,9 +56,11 @@ class FuzzTargetFinder {
       fuzzTargetClass =
           Class.forName(targetClassName, false, FuzzTargetFinder.class.getClassLoader());
     } catch (ClassNotFoundException e) {
-      Log.error(String.format(
-          "'%s' not found on classpath:%n%n%s%n%nAll required classes must be on the classpath specified via --cp.",
-          targetClassName, System.getProperty("java.class.path")));
+      Log.error(
+          String.format(
+              "'%s' not found on classpath:%n%n%s%n%nAll required classes must be on the classpath"
+                  + " specified via --cp.",
+              targetClassName, System.getProperty("java.class.path")));
       exit(1);
       throw new IllegalStateException("Not reached");
     }
@@ -77,7 +79,8 @@ class FuzzTargetFinder {
               .collect(Collectors.toList());
       if (fuzzTargetMethods.size() != 1) {
         throw new IllegalArgumentException(
-            String.format("%s must define exactly one function of this form:%n"
+            String.format(
+                "%s must define exactly one function of this form:%n"
                     + "public static void fuzzerTestOneInput(...)%n",
                 clazz.getName()));
       }
@@ -88,13 +91,16 @@ class FuzzTargetFinder {
       Optional<Method> dataFuzzTarget =
           targetPublicStaticMethod(clazz, FUZZER_TEST_ONE_INPUT, FuzzedDataProvider.class);
       if (bytesFuzzTarget.isPresent() == dataFuzzTarget.isPresent()) {
-        throw new IllegalArgumentException(String.format(
-            "%s must define exactly one of the following two functions:%n"
-                + "public static void fuzzerTestOneInput(byte[] ...)%n"
-                + "public static void fuzzerTestOneInput(FuzzedDataProvider ...)%n"
-                + "Note: Fuzz targets returning boolean are no longer supported; exceptions should be thrown instead of returning true.%n"
-                + "Note: When using the @FuzzTest annotation, you will need to set up JUnit 5, which can be as simple as adding a dependency on org.junit.jupiter:junit-jupiter-engine.",
-            clazz.getName()));
+        throw new IllegalArgumentException(
+            String.format(
+                "%s must define exactly one of the following two functions:%npublic static void"
+                    + " fuzzerTestOneInput(byte[] ...)%npublic static void"
+                    + " fuzzerTestOneInput(FuzzedDataProvider ...)%nNote: Fuzz targets returning"
+                    + " boolean are no longer supported; exceptions should be thrown instead of"
+                    + " returning true.%nNote: When using the @FuzzTest annotation, you will need"
+                    + " to set up JUnit 5, which can be as simple as adding a dependency on"
+                    + " org.junit.jupiter:junit-jupiter-engine.",
+                clazz.getName()));
       }
       fuzzTargetMethod = dataFuzzTarget.orElseGet(bytesFuzzTarget::get);
     }

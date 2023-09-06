@@ -17,9 +17,10 @@
 package com.code_intelligence.jazzer.api;
 
 /**
- * A specialization of {@link AutoCloseable} without a {@code throws} declarations on
- * {@link #close()}.
+ * A specialization of {@link AutoCloseable} without a {@code throws} declarations on {@link
+ * #close()}.
  */
 public interface SilentCloseable extends AutoCloseable {
-  @Override void close();
+  @Override
+  void close();
 }

@@ -34,8 +34,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 @SuppressWarnings("unchecked")
 class IntegralMutatorTest {
   static Stream<Arguments> forceInRangeCases() {
-    return Stream.of(arguments(0, 0, 1), arguments(5, 0, 1), arguments(-5, -10, -1),
-        arguments(-200, -10, -1), arguments(10, 0, 3), arguments(-5, 0, 3), arguments(10, -7, 7),
+    return Stream.of(
+        arguments(0, 0, 1),
+        arguments(5, 0, 1),
+        arguments(-5, -10, -1),
+        arguments(-200, -10, -1),
+        arguments(10, 0, 3),
+        arguments(-5, 0, 3),
+        arguments(10, -7, 7),
         arguments(Long.MIN_VALUE, Long.MIN_VALUE, Long.MAX_VALUE),
         arguments(Long.MIN_VALUE, Long.MIN_VALUE, 100),
         arguments(Long.MIN_VALUE + 100, Long.MIN_VALUE, 100),
@@ -62,8 +68,9 @@ class IntegralMutatorTest {
   @Test
   void testCrossOver() {
     SerializingMutator<Long> mutator =
-        (SerializingMutator<Long>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull Long>() {}.annotatedType());
+        (SerializingMutator<Long>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull Long>() {}.annotatedType());
     // cross over mean values
     try (MockPseudoRandom prng = mockPseudoRandom(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
       assertThat(mutator.crossOver(0L, 0L, prng)).isEqualTo(0);

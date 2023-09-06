@@ -54,7 +54,7 @@ public final class TypeSupport {
   }
 
   public static boolean isPrimitive(Type type) {
-    if (!(type instanceof Class<?>) ) {
+    if (!(type instanceof Class<?>)) {
       return false;
     }
     return ((Class<?>) type).isPrimitive();
@@ -65,15 +65,14 @@ public final class TypeSupport {
   }
 
   /**
-   * Returns {@code type} as a {@code Class<? extends T>} if it is a subclass of T, otherwise
-   * empty.
+   * Returns {@code type} as a {@code Class<? extends T>} if it is a subclass of T, otherwise empty.
    *
    * <p>This function also returns an empty {@link Optional} for more complex (e.g. parameterized)
    * types.
    */
   public static <T> Optional<Class<? extends T>> asSubclassOrEmpty(
       AnnotatedType type, Class<T> superclass) {
-    if (!(type.getType() instanceof Class<?>) ) {
+    if (!(type.getType() instanceof Class<?>)) {
       return Optional.empty();
     }
 
@@ -107,7 +106,7 @@ public final class TypeSupport {
         }
         return stream(clazz.getSuperclass().getAnnotations())
             .filter(TypeSupport::isInheritable)
-            .toArray(Annotation[] ::new);
+            .toArray(Annotation[]::new);
       }
 
       @Override
@@ -192,8 +191,8 @@ public final class TypeSupport {
 
   /**
    * Constructs an anonymous WithLength class that can be applied as an annotation to {@code type}
-   * with the given
-   * {@code min} and {@code max} values.
+   * with the given {@code min} and {@code max} values.
+   *
    * @param type
    * @param min
    * @param max
@@ -245,51 +244,58 @@ public final class TypeSupport {
     requireNonNull(type);
     requireNonNullElements(typeArguments);
     require(typeArguments.length > 0);
-    require(!(type instanceof AnnotatedParameterizedType || type instanceof AnnotatedTypeVariable
-                || type instanceof AnnotatedWildcardType || type instanceof AnnotatedArrayType),
+    require(
+        !(type instanceof AnnotatedParameterizedType
+            || type instanceof AnnotatedTypeVariable
+            || type instanceof AnnotatedWildcardType
+            || type instanceof AnnotatedArrayType),
         "only plain annotated types are supported");
     require(
         ((Class<?>) type.getType()).getEnclosingClass() == null, "nested classes aren't supported");
 
-    ParameterizedType filledRawType = new ParameterizedType() {
-      @Override
-      public Type[] getActualTypeArguments() {
-        return stream(typeArguments).map(AnnotatedType::getType).toArray(Type[] ::new);
-      }
+    ParameterizedType filledRawType =
+        new ParameterizedType() {
+          @Override
+          public Type[] getActualTypeArguments() {
+            return stream(typeArguments).map(AnnotatedType::getType).toArray(Type[]::new);
+          }
 
-      @Override
-      public Type getRawType() {
-        return type.getType();
-      }
+          @Override
+          public Type getRawType() {
+            return type.getType();
+          }
 
-      @Override
-      public Type getOwnerType() {
-        // We require the class is top-level.
-        return null;
-      }
+          @Override
+          public Type getOwnerType() {
+            // We require the class is top-level.
+            return null;
+          }
 
-      @Override
-      public String toString() {
-        return getRawType()
-            + stream(getActualTypeArguments()).map(Type::toString).collect(joining(",", "<", ">"));
-      }
+          @Override
+          public String toString() {
+            return getRawType()
+                + stream(getActualTypeArguments())
+                    .map(Type::toString)
+                    .collect(joining(",", "<", ">"));
+          }
 
-      @Override
-      public boolean equals(Object obj) {
-        if (!(obj instanceof ParameterizedType)) {
-          return false;
-        }
-        ParameterizedType other = (ParameterizedType) obj;
-        return getRawType().equals(other.getRawType()) && null == other.getOwnerType()
-            && Arrays.equals(getActualTypeArguments(), other.getActualTypeArguments());
-      }
+          @Override
+          public boolean equals(Object obj) {
+            if (!(obj instanceof ParameterizedType)) {
+              return false;
+            }
+            ParameterizedType other = (ParameterizedType) obj;
+            return getRawType().equals(other.getRawType())
+                && null == other.getOwnerType()
+                && Arrays.equals(getActualTypeArguments(), other.getActualTypeArguments());
+          }
 
-      @Override
-      public int hashCode() {
-        throw new UnsupportedOperationException(
-            "hashCode() is not supported as its behavior isn't specified");
-      }
-    };
+          @Override
+          public int hashCode() {
+            throw new UnsupportedOperationException(
+                "hashCode() is not supported as its behavior isn't specified");
+          }
+        };
 
     return new AnnotatedParameterizedType() {
       @Override
@@ -359,7 +365,8 @@ public final class TypeSupport {
       return base;
     }
 
-    require(!(base instanceof AnnotatedTypeVariable || base instanceof AnnotatedWildcardType),
+    require(
+        !(base instanceof AnnotatedTypeVariable || base instanceof AnnotatedWildcardType),
         "Adding annotations to AnnotatedTypeVariables or AnnotatedWildcardTypes is not supported");
     if (base instanceof AnnotatedArrayType) {
       return new AugmentedArrayType((AnnotatedArrayType) base, extraAnnotations);
@@ -391,7 +398,7 @@ public final class TypeSupport {
   }
 
   public static Optional<Class<?>> findFirstParentIfClass(AnnotatedType type, Class<?>... parents) {
-    if (!(type.getType() instanceof Class<?>) ) {
+    if (!(type.getType() instanceof Class<?>)) {
       return Optional.empty();
     }
     Class<?> clazz = (Class<?>) type.getType();
@@ -400,19 +407,21 @@ public final class TypeSupport {
 
   public static Optional<AnnotatedType> parameterTypeIfParameterized(
       AnnotatedType type, Class<?> expectedParent) {
-    return parameterTypesIfParameterized(type, expectedParent).flatMap(typeArguments -> {
-      if (typeArguments.size() != 1) {
-        return Optional.empty();
-      } else {
-        AnnotatedType elementType = typeArguments.get(0);
-        if (!(elementType.getType() instanceof ParameterizedType)
-            && !(elementType.getType() instanceof Class)) {
-          return Optional.empty();
-        } else {
-          return Optional.of(elementType);
-        }
-      }
-    });
+    return parameterTypesIfParameterized(type, expectedParent)
+        .flatMap(
+            typeArguments -> {
+              if (typeArguments.size() != 1) {
+                return Optional.empty();
+              } else {
+                AnnotatedType elementType = typeArguments.get(0);
+                if (!(elementType.getType() instanceof ParameterizedType)
+                    && !(elementType.getType() instanceof Class)) {
+                  return Optional.empty();
+                } else {
+                  return Optional.of(elementType);
+                }
+              }
+            });
   }
 
   public static Optional<List<AnnotatedType>> parameterTypesIfParameterized(
@@ -452,8 +461,8 @@ public final class TypeSupport {
     return false;
   }
 
-  private static class AugmentedArrayType
-      extends AugmentedAnnotatedType implements AnnotatedArrayType {
+  private static class AugmentedArrayType extends AugmentedAnnotatedType
+      implements AnnotatedArrayType {
     private AugmentedArrayType(AnnotatedArrayType base, Annotation[] extraAnnotations) {
       super(base, extraAnnotations);
     }
@@ -470,8 +479,8 @@ public final class TypeSupport {
     }
   }
 
-  private static class AugmentedParameterizedType
-      extends AugmentedAnnotatedType implements AnnotatedParameterizedType {
+  private static class AugmentedParameterizedType extends AugmentedAnnotatedType
+      implements AnnotatedParameterizedType {
     private AugmentedParameterizedType(
         AnnotatedParameterizedType base, Annotation[] extraAnnotations) {
       super(base, extraAnnotations);
@@ -526,8 +535,7 @@ public final class TypeSupport {
     public Annotation[] getAnnotations() {
       Set<Class<? extends Annotation>> directlyPresentTypes =
           stream(getDeclaredAnnotations()).map(Annotation::annotationType).collect(toSet());
-      return Stream
-          .concat(
+      return Stream.concat(
               // Directly present annotations.
               stream(getDeclaredAnnotations()),
               // Present but not directly present annotations, never added by us as we don't add
@@ -535,13 +543,13 @@ public final class TypeSupport {
               stream(base.getAnnotations())
                   .filter(
                       annotation -> !directlyPresentTypes.contains(annotation.annotationType())))
-          .toArray(Annotation[] ::new);
+          .toArray(Annotation[]::new);
     }
 
     @Override
     public Annotation[] getDeclaredAnnotations() {
       return Stream.concat(stream(base.getDeclaredAnnotations()), stream(extraAnnotations))
-          .toArray(Annotation[] ::new);
+          .toArray(Annotation[]::new);
     }
 
     @Override

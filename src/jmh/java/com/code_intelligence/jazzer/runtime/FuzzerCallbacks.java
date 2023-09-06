@@ -22,8 +22,10 @@ public final class FuzzerCallbacks {
   }
 
   static native void traceCmpInt(int arg1, int arg2, int pc);
+
   static native void traceSwitch(long val, long[] cases, int pc);
 
   static native void traceMemcmp(byte[] b1, byte[] b2, int result, int pc);
+
   static native void traceStrstr(String s1, String s2, int pc);
 }

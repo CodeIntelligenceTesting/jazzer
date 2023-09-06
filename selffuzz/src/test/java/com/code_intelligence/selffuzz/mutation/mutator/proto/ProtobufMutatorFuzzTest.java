@@ -31,7 +31,6 @@ import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DynamicMessage;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("unchecked")
@@ -44,7 +43,7 @@ class ProtobufMutatorFuzzTest {
 
   @SuppressWarnings({"unchecked", "unused"})
   @FuzzTest
-  void protobufMutatorTest(long seed, @NotNull DescriptorProto messageType, byte @NotNull[] bytes)
+  void protobufMutatorTest(long seed, @NotNull DescriptorProto messageType, byte @NotNull [] bytes)
       throws IOException {
     protoName = messageType.getName();
     // the name has to be valid to create the filedescriptor, other invalid names will be caught
@@ -52,18 +51,22 @@ class ProtobufMutatorFuzzTest {
     if (!protoNamePattern.matcher(protoName).matches()) {
       return;
     }
-    file = FileDescriptorProto.newBuilder()
-               .setName("my_protos.proto")
-               .addMessageType(messageType)
-               .build();
+    file =
+        FileDescriptorProto.newBuilder()
+            .setName("my_protos.proto")
+            .addMessageType(messageType)
+            .build();
 
     SerializingMutator<DynamicMessage> mutator;
     try {
-      mutator = (SerializingMutator<DynamicMessage>) ProtoMutators.newFactory().createOrThrow(
-          new TypeHolder<@WithDefaultInstance(
-              "com.code_intelligence.selffuzz.mutation.mutator.proto.ProtobufMutatorFuzzTest#getDefaultInstance")
-              DynamicMessage>() {
-          }.annotatedType());
+      mutator =
+          (SerializingMutator<DynamicMessage>)
+              ProtoMutators.newFactory()
+                  .createOrThrow(
+                      new TypeHolder<
+                          @WithDefaultInstance(
+                              "com.code_intelligence.selffuzz.mutation.mutator.proto.ProtobufMutatorFuzzTest#getDefaultInstance")
+                          DynamicMessage>() {}.annotatedType());
     } catch (IllegalArgumentException e) {
       // an invalid proto descriptor will throw a DescriptorValidationException below but by the
       // time it gets here it'll be wrapped in a couple layers of other exceptions. We peel it apart
@@ -72,7 +75,7 @@ class ProtobufMutatorFuzzTest {
       if (e.getCause() instanceof InvocationTargetException) {
         InvocationTargetException invocationException = (InvocationTargetException) e.getCause();
         if (invocationException.getTargetException().getCause()
-                instanceof Descriptors.DescriptorValidationException) {
+            instanceof Descriptors.DescriptorValidationException) {
           return;
         }
       }

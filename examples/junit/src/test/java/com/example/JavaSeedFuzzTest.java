@@ -38,7 +38,8 @@ class JavaSeedFuzzTest {
       Base64.getDecoder().decode("q0vPdz5oeJIW3k2U4VJ+aWDufzzZbKAcevc9cNoUTSM=");
 
   static Stream<Arguments> fuzzTheFlag() {
-    return Stream.of(arguments(asList("red", "herring"), 0),
+    return Stream.of(
+        arguments(asList("red", "herring"), 0),
         // This argument passes the hash check, but does not trigger the finding right away. This
         // is meant to verify that the seed ends up in the corpus, serving as the base for future
         // mutations rather than just being executed once.
@@ -49,8 +50,9 @@ class JavaSeedFuzzTest {
   @FuzzTest
   void fuzzTheFlag(@NotNull List<@NotNull String> flagParts, int secret)
       throws NoSuchAlgorithmException {
-    byte[] hash = MessageDigest.getInstance("SHA-256").digest(
-        String.join("", flagParts).getBytes(StandardCharsets.UTF_8));
+    byte[] hash =
+        MessageDigest.getInstance("SHA-256")
+            .digest(String.join("", flagParts).getBytes(StandardCharsets.UTF_8));
     if (MessageDigest.isEqual(hash, FLAG_SHA256) && secret == 1337) {
       throw new Error("Fl4g 4nd s3cr3et f0und!");
     }

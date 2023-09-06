@@ -17,9 +17,7 @@ package com.code_intelligence.jazzer.runtime;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
-/**
- * An Error that rethrows itself when any of its getters is invoked.
- */
+/** An Error that rethrows itself when any of its getters is invoked. */
 public class HardToCatchError extends Error {
   public HardToCatchError() {
     super();

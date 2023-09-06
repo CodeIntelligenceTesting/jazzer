@@ -21,10 +21,10 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Replays recorded FuzzedDataProvider invocations that were executed while fuzzing.
- * Note: This class is only meant to be used by Jazzer's generated reproducers.
+ * Replays recorded FuzzedDataProvider invocations that were executed while fuzzing. Note: This
+ * class is only meant to be used by Jazzer's generated reproducers.
  */
-final public class CannedFuzzedDataProvider implements FuzzedDataProvider {
+public final class CannedFuzzedDataProvider implements FuzzedDataProvider {
   private final Iterator<Object> nextReply;
 
   public CannedFuzzedDataProvider(String can) {

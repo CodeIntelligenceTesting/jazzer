@@ -81,8 +81,12 @@ final class ChunkMutations {
     list.addAll(chunkOffset, new ArraySharingList<>(chunk));
   }
 
-  static <T> boolean insertRandomChunk(Set<T> set, Consumer<T> addIfNew, int maxSize,
-      ValueMutator<T> elementMutator, PseudoRandom prng) {
+  static <T> boolean insertRandomChunk(
+      Set<T> set,
+      Consumer<T> addIfNew,
+      int maxSize,
+      ValueMutator<T> elementMutator,
+      PseudoRandom prng) {
     int oldSize = set.size();
     int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxSize - oldSize);
     return growBy(set, addIfNew, chunkSize, () -> elementMutator.init(prng));
@@ -124,21 +128,23 @@ final class ChunkMutations {
       keysToRemove.add(entry.getKey());
     }
 
-    Consumer<K> addIfNew = key -> {
-      int sizeBeforeAdd = map.size();
-      map.putIfAbsent(key, unboxNull(values.peekFirst()));
-      // The mutated key was new, try to mutate and add the next in line.
-      if (map.size() > sizeBeforeAdd) {
-        keysToMutate.removeFirst();
-        values.removeFirst();
-      }
-    };
-    Supplier<K> nextCandidate = () -> {
-      // Mutate the next candidate in the queue.
-      K candidate = keyMutator.mutate(unboxNull(keysToMutate.removeFirst()), prng);
-      keysToMutate.addFirst(boxNull(candidate));
-      return candidate;
-    };
+    Consumer<K> addIfNew =
+        key -> {
+          int sizeBeforeAdd = map.size();
+          map.putIfAbsent(key, unboxNull(values.peekFirst()));
+          // The mutated key was new, try to mutate and add the next in line.
+          if (map.size() > sizeBeforeAdd) {
+            keysToMutate.removeFirst();
+            values.removeFirst();
+          }
+        };
+    Supplier<K> nextCandidate =
+        () -> {
+          // Mutate the next candidate in the queue.
+          K candidate = keyMutator.mutate(unboxNull(keysToMutate.removeFirst()), prng);
+          keysToMutate.addFirst(boxNull(candidate));
+          return candidate;
+        };
 
     growBy(map.keySet(), addIfNew, chunkSize, nextCandidate);
     // Remove the original keys that were successfully mutated into new keys. Since the original

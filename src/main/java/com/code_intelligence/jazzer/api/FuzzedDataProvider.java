@@ -36,6 +36,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Consumes a {@code boolean} array from the fuzzer input.
+   *
    * <p>The array will usually have length {@code length}, but might be shorter if the fuzzer input
    * is not sufficiently long.
    *
@@ -62,6 +63,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Consumes a {@code byte} array from the fuzzer input.
+   *
    * <p>The array will usually have length {@code length}, but might be shorter if the fuzzer input
    * is not sufficiently long.
    *
@@ -72,6 +74,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Consumes the remaining fuzzer input as a {@code byte} array.
+   *
    * <p><b>Note:</b> After calling this method, further calls to methods of this interface will
    * return fixed values only.
    *
@@ -97,6 +100,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Consumes a {@code short} array from the fuzzer input.
+   *
    * <p>The array will usually have length {@code length}, but might be shorter if the fuzzer input
    * is not sufficiently long.
    *
@@ -123,6 +127,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Consumes an {@code int} array from the fuzzer input.
+   *
    * <p>The array will usually have length {@code length}, but might be shorter if the fuzzer input
    * is not sufficiently long.
    *
@@ -149,6 +154,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Consumes a {@code long} array from the fuzzer input.
+   *
    * <p>The array will usually have length {@code length}, but might be shorter if the fuzzer input
    * is not sufficiently long.
    *
@@ -213,9 +219,7 @@ public interface FuzzedDataProvider {
    */
   double consumeProbabilityDouble();
 
-  /**
-   * Consumes a {@code char} from the fuzzer input.
-   */
+  /** Consumes a {@code char} from the fuzzer input. */
   char consumeChar();
 
   /**
@@ -227,13 +231,12 @@ public interface FuzzedDataProvider {
    */
   char consumeChar(char min, char max);
 
-  /**
-   * Consumes a {@code char} from the fuzzer input that is never a UTF-16 surrogate character.
-   */
+  /** Consumes a {@code char} from the fuzzer input that is never a UTF-16 surrogate character. */
   char consumeCharNoSurrogates();
 
   /**
    * Consumes a {@link String} from the fuzzer input.
+   *
    * <p>The returned string may be of any length between 0 and {@code maxLength}, even if there is
    * more fuzzer input available.
    *
@@ -244,6 +247,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Consumes the remaining fuzzer input as a {@link String}.
+   *
    * <p><b>Note:</b> After calling this method, further calls to methods of this interface will
    * return fixed values only.
    *
@@ -253,17 +257,19 @@ public interface FuzzedDataProvider {
 
   /**
    * Consumes an ASCII-only {@link String} from the fuzzer input.
+   *
    * <p>The returned string may be of any length between 0 and {@code maxLength}, even if there is
    * more fuzzer input available.
    *
    * @param maxLength the maximum length of the string
    * @return a {@link String} of length between 0 and {@code maxLength} (inclusive) that contains
-   * only ASCII characters
+   *     only ASCII characters
    */
   String consumeAsciiString(int maxLength);
 
   /**
    * Consumes the remaining fuzzer input as an ASCII-only {@link String}.
+   *
    * <p><b>Note:</b> After calling this method, further calls to methods of this interface will
    * return fixed values only.
    *
@@ -280,6 +286,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks an element from {@code collection} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param collection the {@link Collection} to pick an element from.
@@ -287,7 +294,7 @@ public interface FuzzedDataProvider {
    * @return an element from {@code collection} chosen based on the fuzzer input
    */
   @SuppressWarnings("unchecked")
-  default<T> T pickValue(Collection<T> collection) {
+  default <T> T pickValue(Collection<T> collection) {
     int size = collection.size();
     if (size == 0) {
       throw new IllegalArgumentException("collection is empty");
@@ -301,13 +308,14 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks an element from {@code array} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param array the array to pick an element from.
    * @param <T> the type of the array element
    * @return an element from {@code array} chosen based on the fuzzer input
    */
-  default<T> T pickValue(T[] array) {
+  default <T> T pickValue(T[] array) {
     if (array.length == 0) {
       throw new IllegalArgumentException("array is empty");
     }
@@ -316,6 +324,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks an element from {@code array} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param array the array to pick an element from.
@@ -330,6 +339,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks an element from {@code array} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param array the array to pick an element from.
@@ -344,6 +354,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks an element from {@code array} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param array the array to pick an element from.
@@ -358,6 +369,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks an element from {@code array} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param array the array to pick an element from.
@@ -372,6 +384,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks an element from {@code array} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param array the array to pick an element from.
@@ -386,6 +399,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks an element from {@code array} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param array the array to pick an element from.
@@ -400,6 +414,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks an element from {@code array} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param array the array to pick an element from.
@@ -414,6 +429,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks an element from {@code array} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param array the array to pick an element from.
@@ -428,6 +444,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks {@code numOfElements} elements from {@code collection} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param collection the {@link Collection} to pick an element from.
@@ -436,7 +453,7 @@ public interface FuzzedDataProvider {
    * @return an array of size {@code numOfElements} from {@code collection} chosen based on the
    *     fuzzer input
    */
-  default<T> List<T> pickValues(Collection<T> collection, int numOfElements) {
+  default <T> List<T> pickValues(Collection<T> collection, int numOfElements) {
     int size = collection.size();
     if (size == 0) {
       throw new IllegalArgumentException("collection is empty");
@@ -457,6 +474,7 @@ public interface FuzzedDataProvider {
 
   /**
    * Picks {@code numOfElements} elements from {@code array} based on the fuzzer input.
+   *
    * <p><b>Note:</b> The distribution of picks is not perfectly uniform.
    *
    * @param array the array to pick an element from.
@@ -465,7 +483,7 @@ public interface FuzzedDataProvider {
    * @return an array of size {@code numOfElements} from {@code array} chosen based on the fuzzer
    *     input
    */
-  default<T> List<T> pickValues(T[] array, int numOfElements) {
+  default <T> List<T> pickValues(T[] array, int numOfElements) {
     if (array.length == 0) {
       throw new IllegalArgumentException("array is empty");
     }

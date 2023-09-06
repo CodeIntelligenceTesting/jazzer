@@ -26,8 +26,8 @@ public class SqlInjection {
     JdbcDataSource ds = new JdbcDataSource();
     ds.setURL("jdbc:h2:./test.db");
     conn = ds.getConnection();
-    conn.createStatement().execute(
-        "CREATE TABLE IF NOT EXISTS pet (id IDENTITY PRIMARY KEY, name VARCHAR(50))");
+    conn.createStatement()
+        .execute("CREATE TABLE IF NOT EXISTS pet (id IDENTITY PRIMARY KEY, name VARCHAR(50))");
   }
 
   static void insecureInsertUser(String userName) throws SQLException {

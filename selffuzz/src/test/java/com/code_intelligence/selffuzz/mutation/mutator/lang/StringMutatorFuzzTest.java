@@ -28,10 +28,10 @@ import java.io.IOException;
 @SuppressWarnings("unchecked")
 class StringMutatorFuzzTest {
   @FuzzTest(maxDuration = "10m")
-  void stringMutatorTest(long seed, byte @NotNull[] data) throws IOException {
+  void stringMutatorTest(long seed, byte @NotNull [] data) throws IOException {
     SerializingMutator<String> mutator =
-        (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<String>() {}.annotatedType());
+        (SerializingMutator<String>)
+            LangMutators.newFactory().createOrThrow(new TypeHolder<String>() {}.annotatedType());
     assertMutator(mutator, data, seed);
   }
 }

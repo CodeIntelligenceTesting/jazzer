@@ -80,9 +80,14 @@ public class RegexRoadblocks {
       matchedRangeLatin1CharProperty = true;
     }
 
-    if (matchedLiteral && matchedQuotedLiteral && matchedCaseInsensitiveLiteral && matchedGroup
-        && matchedAlternative && matchedSingleLatin1CharProperty
-        && matchedMultipleLatin1CharProperty && matchedRangeLatin1CharProperty) {
+    if (matchedLiteral
+        && matchedQuotedLiteral
+        && matchedCaseInsensitiveLiteral
+        && matchedGroup
+        && matchedAlternative
+        && matchedSingleLatin1CharProperty
+        && matchedMultipleLatin1CharProperty
+        && matchedRangeLatin1CharProperty) {
       throw new FuzzerSecurityIssueLow("Fuzzer matched all regexes in " + run + " runs");
     }
   }

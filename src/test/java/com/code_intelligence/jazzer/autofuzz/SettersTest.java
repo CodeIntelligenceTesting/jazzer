@@ -27,9 +27,16 @@ public class SettersTest {
     employee.setFirstName("foo");
     employee.setAge(26);
 
-    consumeTestCase(employee,
-        "((java.util.function.Supplier<com.code_intelligence.jazzer.autofuzz.testdata.EmployeeWithSetters>) (() -> {com.code_intelligence.jazzer.autofuzz.testdata.EmployeeWithSetters autofuzzVariable0 = new com.code_intelligence.jazzer.autofuzz.testdata.EmployeeWithSetters(); autofuzzVariable0.setFirstName(\"foo\"); autofuzzVariable0.setAge(26); return autofuzzVariable0;})).get()",
-        Arrays.asList((byte) 1, // do not return null for EmployeeWithSetters
+    consumeTestCase(
+        employee,
+        "((java.util.function.Supplier<com.code_intelligence.jazzer.autofuzz.testdata.EmployeeWithSetters>)"
+            + " (() -> {com.code_intelligence.jazzer.autofuzz.testdata.EmployeeWithSetters"
+            + " autofuzzVariable0 = new"
+            + " com.code_intelligence.jazzer.autofuzz.testdata.EmployeeWithSetters();"
+            + " autofuzzVariable0.setFirstName(\"foo\"); autofuzzVariable0.setAge(26); return"
+            + " autofuzzVariable0;})).get()",
+        Arrays.asList(
+            (byte) 1, // do not return null for EmployeeWithSetters
             0, // pick first constructor
             2, // pick two setters
             1, // pick second setter

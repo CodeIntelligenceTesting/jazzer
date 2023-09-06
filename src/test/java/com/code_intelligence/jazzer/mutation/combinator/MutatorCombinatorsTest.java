@@ -27,7 +27,6 @@ import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.i
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockCrossOver;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockCrossOverInPlace;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockInitInPlace;
-import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockInitializer;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockMutator;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.nullDataOutputStream;
@@ -81,21 +80,24 @@ class MutatorCombinatorsTest {
         mutateProperty(Foo::getValue, mockCrossOver((a, b) -> 42), Foo::setValue);
     Foo foo = new Foo(0);
     Foo otherFoo = new Foo(1);
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // use foo value
-             0)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // use foo value
+            0)) {
       mutator.crossOverInPlace(foo, otherFoo, prng);
       assertThat(foo.getValue()).isEqualTo(0);
     }
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // use otherFoo value
-             1)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // use otherFoo value
+            1)) {
       mutator.crossOverInPlace(foo, otherFoo, prng);
       assertThat(foo.getValue()).isEqualTo(1);
     }
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // use property type cross over
-             2)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // use property type cross over
+            2)) {
       mutator.crossOverInPlace(foo, otherFoo, prng);
       assertThat(foo.getValue()).isEqualTo(42);
     }
@@ -103,27 +105,30 @@ class MutatorCombinatorsTest {
 
   @Test
   void testMutateViaView() {
-    InPlaceMutator<Foo> mutator = mutateViaView(Foo::getList, new InPlaceMutator<List<Integer>>() {
-      @Override
-      public void initInPlace(List<Integer> reference, PseudoRandom prng) {
-        reference.clear();
-        reference.add(21);
-      }
+    InPlaceMutator<Foo> mutator =
+        mutateViaView(
+            Foo::getList,
+            new InPlaceMutator<List<Integer>>() {
+              @Override
+              public void initInPlace(List<Integer> reference, PseudoRandom prng) {
+                reference.clear();
+                reference.add(21);
+              }
 
-      @Override
-      public void mutateInPlace(List<Integer> reference, PseudoRandom prng) {
-        reference.add(reference.get(reference.size() - 1) + 1);
-      }
+              @Override
+              public void mutateInPlace(List<Integer> reference, PseudoRandom prng) {
+                reference.add(reference.get(reference.size() - 1) + 1);
+              }
 
-      @Override
-      public void crossOverInPlace(
-          List<Integer> reference, List<Integer> otherReference, PseudoRandom prng) {}
+              @Override
+              public void crossOverInPlace(
+                  List<Integer> reference, List<Integer> otherReference, PseudoRandom prng) {}
 
-      @Override
-      public String toDebugString(Predicate<Debuggable> isInCycle) {
-        return "List<Integer>";
-      }
-    });
+              @Override
+              public String toDebugString(Predicate<Debuggable> isInCycle) {
+                return "List<Integer>";
+              }
+            });
 
     assertThat(mutator.toString()).isEqualTo("Foo via List<Integer>");
 
@@ -145,10 +150,14 @@ class MutatorCombinatorsTest {
 
   @Test
   void testCrossOverViaView() {
-    InPlaceMutator<Foo> mutator = mutateViaView(Foo::getList, mockCrossOverInPlace((a, b) -> {
-      a.clear();
-      a.add(42);
-    }));
+    InPlaceMutator<Foo> mutator =
+        mutateViaView(
+            Foo::getList,
+            mockCrossOverInPlace(
+                (a, b) -> {
+                  a.clear();
+                  a.add(42);
+                }));
 
     Foo foo = new Foo(0, singletonList(0));
     Foo otherFoo = new Foo(0, singletonList(1));
@@ -164,27 +173,29 @@ class MutatorCombinatorsTest {
         mutateProperty(Foo::getValue, mockMutator(21, value -> 2 * value), Foo::setValue);
 
     InPlaceMutator<Foo> listMutator =
-        mutateViaView(Foo::getList, new InPlaceMutator<List<Integer>>() {
-          @Override
-          public void initInPlace(List<Integer> reference, PseudoRandom prng) {
-            reference.clear();
-            reference.add(21);
-          }
+        mutateViaView(
+            Foo::getList,
+            new InPlaceMutator<List<Integer>>() {
+              @Override
+              public void initInPlace(List<Integer> reference, PseudoRandom prng) {
+                reference.clear();
+                reference.add(21);
+              }
 
-          @Override
-          public void mutateInPlace(List<Integer> reference, PseudoRandom prng) {
-            reference.add(reference.get(reference.size() - 1) + 1);
-          }
+              @Override
+              public void mutateInPlace(List<Integer> reference, PseudoRandom prng) {
+                reference.add(reference.get(reference.size() - 1) + 1);
+              }
 
-          @Override
-          public void crossOverInPlace(
-              List<Integer> reference, List<Integer> otherReference, PseudoRandom prng) {}
+              @Override
+              public void crossOverInPlace(
+                  List<Integer> reference, List<Integer> otherReference, PseudoRandom prng) {}
 
-          @Override
-          public String toDebugString(Predicate<Debuggable> isInCycle) {
-            return "List<Integer>";
-          }
-        });
+              @Override
+              public String toDebugString(Predicate<Debuggable> isInCycle) {
+                return "List<Integer>";
+              }
+            });
     InPlaceMutator<Foo> mutator = combine(valueMutator, listMutator);
 
     assertThat(mutator.toString()).isEqualTo("{Foo.Integer, Foo via List<Integer>}");
@@ -214,18 +225,23 @@ class MutatorCombinatorsTest {
   void testCrossOverCombine() {
     InPlaceMutator<Foo> valueMutator =
         mutateProperty(Foo::getValue, mockCrossOver((a, b) -> 42), Foo::setValue);
-    InPlaceMutator<Foo> listMutator = mutateViaView(Foo::getList, mockCrossOverInPlace((a, b) -> {
-      a.clear();
-      a.add(42);
-    }));
+    InPlaceMutator<Foo> listMutator =
+        mutateViaView(
+            Foo::getList,
+            mockCrossOverInPlace(
+                (a, b) -> {
+                  a.clear();
+                  a.add(42);
+                }));
     InPlaceMutator<Foo> mutator = combine(valueMutator, listMutator);
 
     Foo foo = new Foo(0, singletonList(0));
     Foo fooOther = new Foo(1, singletonList(1));
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // call cross over in property mutator
-             2)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // call cross over in property mutator
+            2)) {
       mutator.crossOverInPlace(foo, fooOther, prng);
     }
     assertThat(foo.getValue()).isEqualTo(42);
@@ -250,43 +266,49 @@ class MutatorCombinatorsTest {
         mutateProperty(Foo::getValue, mockMutator(21, value -> 2 * value), Foo::setValue);
 
     InPlaceMutator<Foo> listMutator =
-        mutateViaView(Foo::getList, new InPlaceMutator<List<Integer>>() {
-          @Override
-          public void initInPlace(List<Integer> reference, PseudoRandom prng) {
-            reference.clear();
-            reference.add(21);
-          }
+        mutateViaView(
+            Foo::getList,
+            new InPlaceMutator<List<Integer>>() {
+              @Override
+              public void initInPlace(List<Integer> reference, PseudoRandom prng) {
+                reference.clear();
+                reference.add(21);
+              }
 
-          @Override
-          public void mutateInPlace(List<Integer> reference, PseudoRandom prng) {
-            reference.add(reference.get(reference.size() - 1) + 1);
-          }
+              @Override
+              public void mutateInPlace(List<Integer> reference, PseudoRandom prng) {
+                reference.add(reference.get(reference.size() - 1) + 1);
+              }
 
-          @Override
-          public void crossOverInPlace(
-              List<Integer> reference, List<Integer> otherReference, PseudoRandom prng) {}
+              @Override
+              public void crossOverInPlace(
+                  List<Integer> reference, List<Integer> otherReference, PseudoRandom prng) {}
 
-          @Override
-          public String toDebugString(Predicate<Debuggable> isInCycle) {
-            return "List<Integer>";
-          }
-        });
+              @Override
+              public String toDebugString(Predicate<Debuggable> isInCycle) {
+                return "List<Integer>";
+              }
+            });
 
     SerializingInPlaceMutator<Foo> mutator =
-        assemble((m) -> {}, () -> new Foo(0, singletonList(0)), new Serializer<Foo>() {
-          @Override
-          public Foo read(DataInputStream in) {
-            return null;
-          }
+        assemble(
+            (m) -> {},
+            () -> new Foo(0, singletonList(0)),
+            new Serializer<Foo>() {
+              @Override
+              public Foo read(DataInputStream in) {
+                return null;
+              }
 
-          @Override
-          public void write(Foo value, DataOutputStream out) {}
+              @Override
+              public void write(Foo value, DataOutputStream out) {}
 
-          @Override
-          public Foo detach(Foo value) {
-            return null;
-          }
-        }, () -> combine(valueMutator, listMutator));
+              @Override
+              public Foo detach(Foo value) {
+                return null;
+              }
+            },
+            () -> combine(valueMutator, listMutator));
 
     assertThat(mutator.toString()).isEqualTo("{Foo.Integer, Foo via List<Integer>}");
 
@@ -316,33 +338,42 @@ class MutatorCombinatorsTest {
     InPlaceMutator<Foo> valueMutator =
         mutateProperty(Foo::getValue, mockCrossOver((a, b) -> 42), Foo::setValue);
 
-    InPlaceMutator<Foo> listMutator = mutateViaView(Foo::getList, mockCrossOverInPlace((a, b) -> {
-      a.clear();
-      a.add(42);
-    }));
+    InPlaceMutator<Foo> listMutator =
+        mutateViaView(
+            Foo::getList,
+            mockCrossOverInPlace(
+                (a, b) -> {
+                  a.clear();
+                  a.add(42);
+                }));
 
     SerializingInPlaceMutator<Foo> mutator =
-        assemble((m) -> {}, () -> new Foo(0, singletonList(0)), new Serializer<Foo>() {
-          @Override
-          public Foo read(DataInputStream in) {
-            return null;
-          }
+        assemble(
+            (m) -> {},
+            () -> new Foo(0, singletonList(0)),
+            new Serializer<Foo>() {
+              @Override
+              public Foo read(DataInputStream in) {
+                return null;
+              }
 
-          @Override
-          public void write(Foo value, DataOutputStream out) {}
+              @Override
+              public void write(Foo value, DataOutputStream out) {}
 
-          @Override
-          public Foo detach(Foo value) {
-            return null;
-          }
-        }, () -> combine(valueMutator, listMutator));
+              @Override
+              public Foo detach(Foo value) {
+                return null;
+              }
+            },
+            () -> combine(valueMutator, listMutator));
 
     Foo foo = new Foo(0, singletonList(0));
     Foo fooOther = new Foo(1, singletonList(1));
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // cross over in property mutator
-             2)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // cross over in property mutator
+            2)) {
       mutator.crossOverInPlace(foo, fooOther, prng);
     }
     assertThat(foo.getValue()).isEqualTo(42);
@@ -352,13 +383,15 @@ class MutatorCombinatorsTest {
   @Test
   void testMutateThenMapToImmutable() throws IOException {
     SerializingMutator<char[]> charMutator =
-        mockMutator(new char[] {'H', 'e', 'l', 'l', 'o'}, chars -> {
-          for (int i = 0; i < chars.length; i++) {
-            chars[i] ^= (1 << 5);
-          }
-          chars[chars.length - 1]++;
-          return chars;
-        });
+        mockMutator(
+            new char[] {'H', 'e', 'l', 'l', 'o'},
+            chars -> {
+              for (int i = 0; i < chars.length; i++) {
+                chars[i] ^= (1 << 5);
+              }
+              chars[chars.length - 1]++;
+              return chars;
+            });
     SerializingMutator<String> mutator =
         mutateThenMapToImmutable(charMutator, String::new, String::toCharArray);
 
@@ -388,17 +421,20 @@ class MutatorCombinatorsTest {
     assertThat(value).isEqualTo("hELLP");
 
     final String capturedValue = value;
-    assertThrows(UnsupportedOperationException.class,
+    assertThrows(
+        UnsupportedOperationException.class,
         () -> mutator.write(capturedValue, nullDataOutputStream()));
   }
 
   @Test
   void testCrossOverThenMapToImmutable() {
-    SerializingMutator<char[]> charMutator = mockCrossOver((a, b) -> {
-      assertThat(a).isEqualTo(new char[] {'H', 'e', 'l', 'l', 'o'});
-      assertThat(b).isEqualTo(new char[] {'W', 'o', 'r', 'l', 'd'});
-      return new char[] {'T', 'e', 's', 't', 'e', 'd'};
-    });
+    SerializingMutator<char[]> charMutator =
+        mockCrossOver(
+            (a, b) -> {
+              assertThat(a).isEqualTo(new char[] {'H', 'e', 'l', 'l', 'o'});
+              assertThat(b).isEqualTo(new char[] {'W', 'o', 'r', 'l', 'd'});
+              return new char[] {'T', 'e', 's', 't', 'e', 'd'};
+            });
     SerializingMutator<String> mutator =
         mutateThenMapToImmutable(charMutator, String::new, String::toCharArray);
 
@@ -415,31 +451,34 @@ class MutatorCombinatorsTest {
     SerializingMutator<Integer> mutator2 = mockCrossOver((a, b) -> 42);
     ProductMutator mutator = mutateProduct(mutator1, mutator2);
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // use first value in mutator1
-             0,
-             // use second value in mutator2
-             0)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // use first value in mutator1
+            0,
+            // use second value in mutator2
+            0)) {
       Object[] crossedOver =
           mutator.crossOver(new Object[] {false, 0}, new Object[] {true, 1}, prng);
       assertThat(crossedOver).isEqualTo(new Object[] {false, 0});
     }
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // use first value in mutator1
-             1,
-             // use second value in mutator2
-             1)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // use first value in mutator1
+            1,
+            // use second value in mutator2
+            1)) {
       Object[] crossedOver =
           mutator.crossOver(new Object[] {false, 0}, new Object[] {true, 1}, prng);
       assertThat(crossedOver).isEqualTo(new Object[] {true, 1});
     }
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // use cross over in mutator1
-             2,
-             // use cross over in mutator2
-             2)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // use cross over in mutator1
+            2,
+            // use cross over in mutator2
+            2)) {
       Object[] crossedOver =
           mutator.crossOver(new Object[] {false, 0}, new Object[] {true, 2}, prng);
       assertThat(crossedOver).isEqualTo(new Object[] {true, 42});
@@ -449,7 +488,11 @@ class MutatorCombinatorsTest {
   @Test
   void testCrossOverSumInPlaceSameType() {
     ToIntFunction<List<Integer>> mutotarIndexFromValue = (r) -> 0;
-    InPlaceMutator<List<Integer>> mutator1 = mockCrossOverInPlace((a, b) -> { a.add(42); });
+    InPlaceMutator<List<Integer>> mutator1 =
+        mockCrossOverInPlace(
+            (a, b) -> {
+              a.add(42);
+            });
     InPlaceMutator<List<Integer>> mutator2 = mockCrossOverInPlace((a, b) -> {});
     InPlaceMutator<List<Integer>> mutator =
         mutateSumInPlace(mutotarIndexFromValue, mutator1, mutator2);
@@ -467,7 +510,7 @@ class MutatorCombinatorsTest {
   void testCrossOverSumInPlaceIndeterminate() {
     InPlaceMutator<List<?>> mutator1 = mockCrossOverInPlace((a, b) -> {});
     InPlaceMutator<List<?>> mutator2 = mockCrossOverInPlace((a, b) -> {});
-    ToIntFunction<List<?>> bothIndeterminate = (r) -> - 1;
+    ToIntFunction<List<?>> bothIndeterminate = (r) -> -1;
 
     InPlaceMutator<List<?>> mutator = mutateSumInPlace(bothIndeterminate, mutator1, mutator2);
 
@@ -487,7 +530,11 @@ class MutatorCombinatorsTest {
     List<Integer> otherReference = new ArrayList<>();
 
     InPlaceMutator<List<Integer>> mutator1 = mockCrossOverInPlace((a, b) -> {});
-    InPlaceMutator<List<Integer>> mutator2 = mockInitInPlace((l) -> { l.add(42); });
+    InPlaceMutator<List<Integer>> mutator2 =
+        mockInitInPlace(
+            (l) -> {
+              l.add(42);
+            });
     ToIntFunction<List<Integer>> firstIndeterminate = (r) -> r == reference ? -1 : 1;
 
     InPlaceMutator<List<Integer>> mutator =
@@ -506,6 +553,7 @@ class MutatorCombinatorsTest {
     public Foo(int value) {
       this(value, new ArrayList<>());
     }
+
     public Foo(int value, List<Integer> list) {
       this.value = value;
       this.list = new ArrayList<>(list);

@@ -29,12 +29,10 @@ import org.openjdk.jmh.annotations.State;
  * This benchmark compares the throughput of a typical fuzz target when instrumented with different
  * edge coverage instrumentation strategies and coverage map implementations.
  *
- * The benchmark currently uses the OWASP json-sanitizer as its target, which has the following
- * desirable properties for a benchmark:
- * - It is a reasonably sized project that does not consist of many different classes.
- * - It is very heavy on computation with a high density of branching.
- * - It is entirely CPU bound with no IO and does not call expensive methods from the standard
- *   library.
+ * <p>The benchmark currently uses the OWASP json-sanitizer as its target, which has the following
+ * desirable properties for a benchmark: - It is a reasonably sized project that does not consist of
+ * many different classes. - It is very heavy on computation with a high density of branching. - It
+ * is entirely CPU bound with no IO and does not call expensive methods from the standard library.
  * With these properties, results obtained from this benchmark should provide reasonable lower
  * bounds on the relative slowdown introduced by the various approaches to instrumentations.
  */
@@ -82,8 +80,9 @@ public class CoverageInstrumentationBenchmark {
   public void instrumentWithStrategies()
       throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException {
     uninstrumented_sanitize = instrumentWithStrategy(null, null);
-    local_DirectByteBuffer_NeverZero_sanitize = instrumentWithStrategy(
-        DirectByteBufferStrategy.INSTANCE, DirectByteBufferCoverageMap.class);
+    local_DirectByteBuffer_NeverZero_sanitize =
+        instrumentWithStrategy(
+            DirectByteBufferStrategy.INSTANCE, DirectByteBufferCoverageMap.class);
     staticMethod_DirectByteBuffer_NeverZero_sanitize =
         instrumentWithStrategy(new StaticMethodStrategy(), DirectByteBufferCoverageMap.class);
     staticMethod_DirectByteBuffer2_NeverZero_sanitize =

@@ -18,7 +18,6 @@ package com.example;
 
 public class TimeoutFuzzer {
   public static void fuzzerTestOneInput(byte[] b) {
-    while (true) {
-    }
+    while (true) {}
   }
 }

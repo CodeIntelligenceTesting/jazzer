@@ -29,8 +29,13 @@ public class MockTraceDataFlowCallbacks {
 
   public static boolean hookCall(String expectedCall) {
     if (assertedCalls >= hookCalls.size()) {
-      System.err.println("Not seen (" + hookCalls.size() + " calls, but " + (assertedCalls + 1)
-          + " expected): " + expectedCall);
+      System.err.println(
+          "Not seen ("
+              + hookCalls.size()
+              + " calls, but "
+              + (assertedCalls + 1)
+              + " expected): "
+              + expectedCall);
       return false;
     }
 
@@ -44,8 +49,7 @@ public class MockTraceDataFlowCallbacks {
   }
 
   public static boolean finish() {
-    if (assertedCalls == hookCalls.size())
-      return true;
+    if (assertedCalls == hookCalls.size()) return true;
     System.err.println("The following calls were not asserted:");
     for (int i = assertedCalls; i < hookCalls.size(); i++) {
       System.err.println(hookCalls.get(i));

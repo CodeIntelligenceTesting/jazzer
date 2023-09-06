@@ -27,8 +27,7 @@ public class NativeValueProfileFuzzer {
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     long[] blocks = data.consumeLongs(2);
-    if (blocks.length != 2)
-      return;
+    if (blocks.length != 2) return;
     if (checkAccess(blocks[0], blocks[1])) {
       throw new FuzzerSecurityIssueLow("Security breached");
     }

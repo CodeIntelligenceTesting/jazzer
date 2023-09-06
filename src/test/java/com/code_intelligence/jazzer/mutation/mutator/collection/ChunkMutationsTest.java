@@ -72,8 +72,9 @@ class ChunkMutationsTest {
         Stream.of(7, 7, 7, 8, 9, 9).collect(toCollection(ArrayDeque::new));
     boolean result;
     try (MockPseudoRandom prng = mockPseudoRandom(3)) {
-      result = ChunkMutations.insertRandomChunk(
-          set, set::add, 10, mockInitializer(initReturnValues::remove, v -> v), prng);
+      result =
+          ChunkMutations.insertRandomChunk(
+              set, set::add, 10, mockInitializer(initReturnValues::remove, v -> v), prng);
     }
     assertThat(result).isTrue();
     assertThat(set).containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9).inOrder();
@@ -87,8 +88,9 @@ class ChunkMutationsTest {
         IntStream.rangeClosed(1, 10000).boxed().collect(toCollection(ArrayDeque::new));
     boolean result;
     try (MockPseudoRandom prng = mockPseudoRandom(9994)) {
-      result = ChunkMutations.insertRandomChunk(
-          set, set::add, 10000, mockInitializer(initReturnValues::remove, v -> v), prng);
+      result =
+          ChunkMutations.insertRandomChunk(
+              set, set::add, 10000, mockInitializer(initReturnValues::remove, v -> v), prng);
     }
     assertThat(result).isTrue();
     assertThat(set)
@@ -105,8 +107,9 @@ class ChunkMutationsTest {
             .collect(toCollection(ArrayDeque::new));
     boolean result;
     try (MockPseudoRandom prng = mockPseudoRandom(3)) {
-      result = ChunkMutations.insertRandomChunk(
-          set, set::add, 10, mockInitializer(initReturnValues::remove, v -> v), prng);
+      result =
+          ChunkMutations.insertRandomChunk(
+              set, set::add, 10, mockInitializer(initReturnValues::remove, v -> v), prng);
     }
     assertThat(result).isFalse();
     assertThat(set).containsExactly(1, 2, 3, 4, 5, 6, 7, 8).inOrder();
@@ -134,94 +137,214 @@ class ChunkMutationsTest {
 
   @Test
   void testMutateRandomKeysChunk() {
-    Map<List<Integer>, Integer> map = asMap(asMutableList(1), 10, asMutableList(2), 20,
-        asMutableList(3), 30, asMutableList(4), 40, asMutableList(5), 50, asMutableList(6), 60);
-    SerializingMutator<List<Integer>> keyMutator = mockMutator(null, list -> {
-      List<Integer> newList = list.stream().map(i -> i + 1).collect(toList());
-      list.clear();
-      return newList;
-    }, ArrayList::new);
+    Map<List<Integer>, Integer> map =
+        asMap(
+            asMutableList(1),
+            10,
+            asMutableList(2),
+            20,
+            asMutableList(3),
+            30,
+            asMutableList(4),
+            40,
+            asMutableList(5),
+            50,
+            asMutableList(6),
+            60);
+    SerializingMutator<List<Integer>> keyMutator =
+        mockMutator(
+            null,
+            list -> {
+              List<Integer> newList = list.stream().map(i -> i + 1).collect(toList());
+              list.clear();
+              return newList;
+            },
+            ArrayList::new);
 
     try (MockPseudoRandom prng = mockPseudoRandom(2, 3)) {
       boolean result = ChunkMutations.mutateRandomKeysChunk(map, keyMutator, prng);
       assertThat(result).isTrue();
     }
     assertThat(map)
-        .containsExactly(asMutableList(1), 10, asMutableList(2), 20, asMutableList(3), 30,
-            asMutableList(6), 60, asMutableList(7), 40, asMutableList(8), 50)
+        .containsExactly(
+            asMutableList(1),
+            10,
+            asMutableList(2),
+            20,
+            asMutableList(3),
+            30,
+            asMutableList(6),
+            60,
+            asMutableList(7),
+            40,
+            asMutableList(8),
+            50)
         .inOrder();
   }
 
   @Test
   void testMutateRandomKeysChunk_failsToConstructSomeDistinctKeys() {
-    Map<List<Integer>, Integer> map = asMap(asMutableList(1), 10, asMutableList(2), 20,
-        asMutableList(3), 30, asMutableList(4), 40, asMutableList(5), 50, asMutableList(6), 60);
-    SerializingMutator<List<Integer>> keyMutator = mockMutator(null, list -> {
-      list.clear();
-      List<Integer> newList = new ArrayList<>();
-      newList.add(7);
-      return newList;
-    }, ArrayList::new);
+    Map<List<Integer>, Integer> map =
+        asMap(
+            asMutableList(1),
+            10,
+            asMutableList(2),
+            20,
+            asMutableList(3),
+            30,
+            asMutableList(4),
+            40,
+            asMutableList(5),
+            50,
+            asMutableList(6),
+            60);
+    SerializingMutator<List<Integer>> keyMutator =
+        mockMutator(
+            null,
+            list -> {
+              list.clear();
+              List<Integer> newList = new ArrayList<>();
+              newList.add(7);
+              return newList;
+            },
+            ArrayList::new);
 
     try (MockPseudoRandom prng = mockPseudoRandom(2, 3)) {
       boolean result = ChunkMutations.mutateRandomKeysChunk(map, keyMutator, prng);
       assertThat(result).isTrue();
     }
     assertThat(map)
-        .containsExactly(asMutableList(1), 10, asMutableList(2), 20, asMutableList(3), 30,
-            asMutableList(5), 50, asMutableList(6), 60, asMutableList(7), 40)
+        .containsExactly(
+            asMutableList(1),
+            10,
+            asMutableList(2),
+            20,
+            asMutableList(3),
+            30,
+            asMutableList(5),
+            50,
+            asMutableList(6),
+            60,
+            asMutableList(7),
+            40)
         .inOrder();
   }
 
   @Test
   void testMutateRandomKeysChunk_failsToConstructAnyDistinctKeys() {
-    Map<List<Integer>, Integer> map = asMap(asMutableList(1), 10, asMutableList(2), 20,
-        asMutableList(3), 30, asMutableList(4), 40, asMutableList(5), 50, asMutableList(6), 60);
-    SerializingMutator<List<Integer>> keyMutator = mockMutator(null, list -> {
-      list.clear();
-      List<Integer> newList = new ArrayList<>();
-      newList.add(1);
-      return newList;
-    }, ArrayList::new);
+    Map<List<Integer>, Integer> map =
+        asMap(
+            asMutableList(1),
+            10,
+            asMutableList(2),
+            20,
+            asMutableList(3),
+            30,
+            asMutableList(4),
+            40,
+            asMutableList(5),
+            50,
+            asMutableList(6),
+            60);
+    SerializingMutator<List<Integer>> keyMutator =
+        mockMutator(
+            null,
+            list -> {
+              list.clear();
+              List<Integer> newList = new ArrayList<>();
+              newList.add(1);
+              return newList;
+            },
+            ArrayList::new);
 
     try (MockPseudoRandom prng = mockPseudoRandom(2, 3)) {
       boolean result = ChunkMutations.mutateRandomKeysChunk(map, keyMutator, prng);
       assertThat(result).isFalse();
     }
     assertThat(map)
-        .containsExactly(asMutableList(1), 10, asMutableList(2), 20, asMutableList(3), 30,
-            asMutableList(4), 40, asMutableList(5), 50, asMutableList(6), 60)
+        .containsExactly(
+            asMutableList(1),
+            10,
+            asMutableList(2),
+            20,
+            asMutableList(3),
+            30,
+            asMutableList(4),
+            40,
+            asMutableList(5),
+            50,
+            asMutableList(6),
+            60)
         .inOrder();
   }
 
   @Test
   void testMutateRandomKeysChunk_nullKeyAndValue() {
-    Map<List<Integer>, Integer> map = asMap(asMutableList(1), 10, asMutableList(2), 20,
-        asMutableList(3), 30, asMutableList(4), null, null, 50, asMutableList(6), 60);
-    SerializingMutator<List<Integer>> keyMutator = mockMutator(null, list -> {
-      if (list != null) {
-        List<Integer> newList = list.stream().map(i -> i + 1).collect(toList());
-        list.clear();
-        return newList;
-      } else {
-        return asMutableList(10);
-      }
-    }, list -> list != null ? new ArrayList<>(list) : null);
+    Map<List<Integer>, Integer> map =
+        asMap(
+            asMutableList(1),
+            10,
+            asMutableList(2),
+            20,
+            asMutableList(3),
+            30,
+            asMutableList(4),
+            null,
+            null,
+            50,
+            asMutableList(6),
+            60);
+    SerializingMutator<List<Integer>> keyMutator =
+        mockMutator(
+            null,
+            list -> {
+              if (list != null) {
+                List<Integer> newList = list.stream().map(i -> i + 1).collect(toList());
+                list.clear();
+                return newList;
+              } else {
+                return asMutableList(10);
+              }
+            },
+            list -> list != null ? new ArrayList<>(list) : null);
 
     try (MockPseudoRandom prng = mockPseudoRandom(2, 3)) {
       boolean result = ChunkMutations.mutateRandomKeysChunk(map, keyMutator, prng);
       assertThat(result).isTrue();
     }
     assertThat(map)
-        .containsExactly(asMutableList(1), 10, asMutableList(2), 20, asMutableList(3), 30,
-            asMutableList(6), 60, asMutableList(5), null, asMutableList(10), 50)
+        .containsExactly(
+            asMutableList(1),
+            10,
+            asMutableList(2),
+            20,
+            asMutableList(3),
+            30,
+            asMutableList(6),
+            60,
+            asMutableList(5),
+            null,
+            asMutableList(10),
+            50)
         .inOrder();
   }
 
   @Test
   void testMutateRandomKeysChunk_mutateKeyToNull() {
-    Map<List<Integer>, Integer> map = asMap(asMutableList(1), 10, asMutableList(2), 20,
-        asMutableList(3), 30, asMutableList(4), 40, asMutableList(5), 50, asMutableList(6), 60);
+    Map<List<Integer>, Integer> map =
+        asMap(
+            asMutableList(1),
+            10,
+            asMutableList(2),
+            20,
+            asMutableList(3),
+            30,
+            asMutableList(4),
+            40,
+            asMutableList(5),
+            50,
+            asMutableList(6),
+            60);
     SerializingMutator<List<Integer>> keyMutator =
         mockMutator(null, list -> null, list -> list != null ? new ArrayList<>(list) : null);
 
@@ -230,8 +353,19 @@ class ChunkMutationsTest {
       assertThat(result).isTrue();
     }
     assertThat(map)
-        .containsExactly(asMutableList(1), 10, asMutableList(2), 20, asMutableList(3), 30,
-            asMutableList(5), 50, asMutableList(6), 60, null, 40)
+        .containsExactly(
+            asMutableList(1),
+            10,
+            asMutableList(2),
+            20,
+            asMutableList(3),
+            30,
+            asMutableList(5),
+            50,
+            asMutableList(6),
+            60,
+            null,
+            40)
         .inOrder();
   }
 }

@@ -24,7 +24,7 @@ public final class Mutator {
   @SuppressWarnings("ConstantValue")
   public static final boolean SHOULD_MOCK =
       Boolean.parseBoolean(System.getenv("JAZZER_MOCK_LIBFUZZER_MUTATOR"))
-      || Mutator.class.getName().startsWith("com.code_intelligence.selffuzz.");
+          || Mutator.class.getName().startsWith("com.code_intelligence.selffuzz.");
 
   static {
     if (!SHOULD_MOCK) {

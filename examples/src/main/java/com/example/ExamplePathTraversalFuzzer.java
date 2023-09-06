@@ -19,9 +19,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class ExamplePathTraversalFuzzer {
-  /**
-   * The root path for all files that this application is allowed to upload.
-   */
+  /** The root path for all files that this application is allowed to upload. */
   public static final String publicFilesRootPath = "/app/upload/";
 
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {

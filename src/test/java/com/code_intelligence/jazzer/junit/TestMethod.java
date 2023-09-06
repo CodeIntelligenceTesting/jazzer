@@ -22,10 +22,9 @@ import java.lang.reflect.Method;
 
 /**
  * Small class that allows us to capture the methods that we're using as test data. We need similar
- * but slightly different data at various points:
- * 1. the method name with parameters for finding the method initially and for referring to it in
- * JUnit
- * 2. the method name without parameters for the findings directories
+ * but slightly different data at various points: 1. the method name with parameters for finding the
+ * method initially and for referring to it in JUnit 2. the method name without parameters for the
+ * findings directories
  */
 public class TestMethod {
   Method method;
@@ -36,16 +35,12 @@ public class TestMethod {
     method = selectMethod(className + "#" + methodName).getJavaMethod();
   }
 
-  /**
-   * Returns the {@link org.junit.platform.engine.TestDescriptor} ID for this method
-   */
+  /** Returns the {@link org.junit.platform.engine.TestDescriptor} ID for this method */
   String getDescriptorId() {
     return "test-template:" + nameWithParams;
   }
 
-  /**
-   * Returns just the name of the method without parameters
-   */
+  /** Returns just the name of the method without parameters */
   String getName() {
     return method.getName();
   }

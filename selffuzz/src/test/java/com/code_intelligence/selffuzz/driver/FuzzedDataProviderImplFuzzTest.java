@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 
 public class FuzzedDataProviderImplFuzzTest {
   @FuzzTest
-  void fuzzedDataProviderTest(byte @NotNull[] buf) {
+  void fuzzedDataProviderTest(byte @NotNull [] buf) {
     try (FuzzedDataProviderImpl data = FuzzedDataProviderImpl.withJavaData(buf)) {
       List<Consumer<FuzzedDataProvider>> actionList = getActionList();
 
@@ -40,53 +40,55 @@ public class FuzzedDataProviderImplFuzzTest {
   }
 
   List<Consumer<FuzzedDataProvider>> getActionList() {
-    return Collections.unmodifiableList(Arrays.asList(
-        // clang-format off
-        // clang-format would compress this into multiple functions per line which I think looks worse
-        this::testBoolean,
-        this::testBooleans,
-        this::testByte,
-        this::testByteMinMax,
-        this::testBytes,
-        this::testRemainingAsBytes,
-        this::testShort,
-        this::testShortMinMax,
-        this::testShorts,
-        this::testInt,
-        this::testIntMinMax,
-        this::testInts,
-        this::testLong,
-        this::testLongMinMax,
-        this::testLongs,
-        this::testFloat,
-        this::testRegularFloat,
-        this::testRegularFloatMinMax,
-        this::testProbabilityFloat,
-        this::testDouble,
-        this::testRegularDouble,
-        this::testRegularDoubleMinMax,
-        this::testProbabilityDouble,
-        this::testChar,
-        this::testConsumeCharMinMax,
-        this::testCharNoSurrogates,
-        this::testString,
-        this::testRemainingAsString,
-        this::testAsciiString,
-        this::testRemainingAsAsciiString,
-        this::testPickValueCollection,
-        this::testPickValueArray,
-        this::testPickValueBoolean,
-        this::testPickValueByte,
-        this::testPickValueShort,
-        this::testPickValueInt,
-        this::testPickValueLong,
-        this::testPickValueDouble,
-        this::testPickValueFloat,
-        this::testPickValueChar,
-        this::testPickValuesCollection,
-        this::testPickValuesArray
-        // clang-format on
-        ));
+    return Collections.unmodifiableList(
+        Arrays.asList(
+            // clang-format off
+            // clang-format would compress this into multiple functions per line which I think looks
+            // worse
+            this::testBoolean,
+            this::testBooleans,
+            this::testByte,
+            this::testByteMinMax,
+            this::testBytes,
+            this::testRemainingAsBytes,
+            this::testShort,
+            this::testShortMinMax,
+            this::testShorts,
+            this::testInt,
+            this::testIntMinMax,
+            this::testInts,
+            this::testLong,
+            this::testLongMinMax,
+            this::testLongs,
+            this::testFloat,
+            this::testRegularFloat,
+            this::testRegularFloatMinMax,
+            this::testProbabilityFloat,
+            this::testDouble,
+            this::testRegularDouble,
+            this::testRegularDoubleMinMax,
+            this::testProbabilityDouble,
+            this::testChar,
+            this::testConsumeCharMinMax,
+            this::testCharNoSurrogates,
+            this::testString,
+            this::testRemainingAsString,
+            this::testAsciiString,
+            this::testRemainingAsAsciiString,
+            this::testPickValueCollection,
+            this::testPickValueArray,
+            this::testPickValueBoolean,
+            this::testPickValueByte,
+            this::testPickValueShort,
+            this::testPickValueInt,
+            this::testPickValueLong,
+            this::testPickValueDouble,
+            this::testPickValueFloat,
+            this::testPickValueChar,
+            this::testPickValuesCollection,
+            this::testPickValuesArray
+            // clang-format on
+            ));
   }
 
   void testBoolean(FuzzedDataProvider data) {

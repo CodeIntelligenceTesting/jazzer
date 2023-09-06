@@ -36,6 +36,8 @@ public class UserData {
 @Retention(RetentionPolicy.RUNTIME)
 @interface ValidEmailConstraint {
   String message() default "Invalid email address";
+
   Class<?>[] groups() default {};
+
   Class<? extends Payload>[] payload() default {};
 }

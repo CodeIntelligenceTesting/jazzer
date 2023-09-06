@@ -49,7 +49,7 @@ final class StringMutatorFactory extends MutatorFactory {
   // SPDX: Apache-2.0
   // Copyright 2022 Google LLC
   static void fixUpUtf8(byte[] bytes) {
-    for (int pos = 0; pos < bytes.length;) {
+    for (int pos = 0; pos < bytes.length; ) {
       // Leniently read a UTF-8 code point consisting of any byte viewed as the leading byte and up
       // to three following bytes that have a continuation byte header.
       //
@@ -152,21 +152,21 @@ final class StringMutatorFactory extends MutatorFactory {
 
     return findFirstParentIfClass(type, String.class)
         .flatMap(parent -> factory.tryCreate(innerByteArray))
-        .map(byteArrayMutator -> {
-          boolean fixUpAscii = type.getDeclaredAnnotation(Ascii.class) != null;
-          return mutateThenMapToImmutable((SerializingMutator<byte[]>) byteArrayMutator,
-              bytes
-              -> {
-                if (fixUpAscii) {
-                  fixUpAscii(bytes);
-                } else {
-                  fixUpUtf8(bytes);
-                }
-                return new String(bytes, StandardCharsets.UTF_8);
-              },
-              string
-              -> string.getBytes(StandardCharsets.UTF_8),
-              (Predicate<Debuggable> inCycle) -> "String");
-        });
+        .map(
+            byteArrayMutator -> {
+              boolean fixUpAscii = type.getDeclaredAnnotation(Ascii.class) != null;
+              return mutateThenMapToImmutable(
+                  (SerializingMutator<byte[]>) byteArrayMutator,
+                  bytes -> {
+                    if (fixUpAscii) {
+                      fixUpAscii(bytes);
+                    } else {
+                      fixUpUtf8(bytes);
+                    }
+                    return new String(bytes, StandardCharsets.UTF_8);
+                  },
+                  string -> string.getBytes(StandardCharsets.UTF_8),
+                  (Predicate<Debuggable> inCycle) -> "String");
+            });
   }
 }

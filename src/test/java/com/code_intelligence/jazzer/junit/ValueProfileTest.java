@@ -29,7 +29,6 @@ import static org.junit.platform.testkit.engine.EventConditions.type;
 import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstrings;
 import static org.junit.platform.testkit.engine.EventType.DYNAMIC_TEST_REGISTERED;
 import static org.junit.platform.testkit.engine.EventType.FINISHED;
-import static org.junit.platform.testkit.engine.EventType.SKIPPED;
 import static org.junit.platform.testkit.engine.EventType.STARTED;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
@@ -45,7 +44,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.junit.platform.testkit.engine.EventType;
 import org.junit.rules.TemporaryFolder;
 
 public class ValueProfileTest {
@@ -66,8 +64,16 @@ public class ValueProfileTest {
     baseDir = temp.getRoot().toPath();
     // Create a fake test resource directory structure with an input directory to verify that
     // Jazzer uses it and emits a crash file into it.
-    inputsDirectories = baseDir.resolve(Paths.get("src", "test", "resources", "com", "example",
-        "ValueProfileFuzzTestInputs", "valueProfileFuzz"));
+    inputsDirectories =
+        baseDir.resolve(
+            Paths.get(
+                "src",
+                "test",
+                "resources",
+                "com",
+                "example",
+                "ValueProfileFuzzTestInputs",
+                "valueProfileFuzz"));
     Files.createDirectories(inputsDirectories);
   }
 
@@ -87,52 +93,75 @@ public class ValueProfileTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ)),
-            finishedSuccessfully()),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
-        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+    results
+        .containerEvents()
+        .assertEventsMatchExactly(
+            event(type(STARTED), container(ENGINE)),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ)),
+                finishedSuccessfully()),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+                finishedSuccessfully()),
+            event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
-    results.testEvents().assertEventsMatchExactly(
-        event(type(DYNAMIC_TEST_REGISTERED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
-        event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
-            displayName("<empty input>")),
-        event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
-            displayName("<empty input>"), finishedSuccessfully()),
-        event(type(DYNAMIC_TEST_REGISTERED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
-        event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
-            displayName("empty_seed")),
-        event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
-            displayName("empty_seed"), finishedSuccessfully()),
-        event(type(DYNAMIC_TEST_REGISTERED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
-        event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
-            displayName("Fuzzing...")),
-        event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
-            displayName("Fuzzing..."),
-            finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
+    results
+        .testEvents()
+        .assertEventsMatchExactly(
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
+                displayName("<empty input>")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
+                displayName("<empty input>"),
+                finishedSuccessfully()),
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
+                displayName("empty_seed")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
+                displayName("empty_seed"),
+                finishedSuccessfully()),
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
+                displayName("Fuzzing...")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
+                displayName("Fuzzing..."),
+                finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
 
     // Should crash on the exact input "Jazzer", with the crash emitted into the seed corpus.
-    try (Stream<Path> crashFiles = Files.list(baseDir).filter(
-             path -> path.getFileName().toString().startsWith("crash-"))) {
+    try (Stream<Path> crashFiles =
+        Files.list(baseDir).filter(path -> path.getFileName().toString().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
     try (Stream<Path> seeds = Files.list(inputsDirectories)) {
-      assertThat(seeds).containsExactly(
-          inputsDirectories.resolve("crash-131db69c7fadc408fe5031079dad3a441df09aff"));
+      assertThat(seeds)
+          .containsExactly(
+              inputsDirectories.resolve("crash-131db69c7fadc408fe5031079dad3a441df09aff"));
     }
-    assertThat(Files.readAllBytes(
-                   inputsDirectories.resolve("crash-131db69c7fadc408fe5031079dad3a441df09aff")))
+    assertThat(
+            Files.readAllBytes(
+                inputsDirectories.resolve("crash-131db69c7fadc408fe5031079dad3a441df09aff")))
         .isEqualTo("Jazzer".getBytes(StandardCharsets.UTF_8));
 
     // Verify that the engine created the generated corpus directory and emitted inputs into it.
@@ -150,43 +179,65 @@ public class ValueProfileTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ)),
-            finishedSuccessfully()),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
-        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+    results
+        .containerEvents()
+        .assertEventsMatchExactly(
+            event(type(STARTED), container(ENGINE)),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ)),
+                finishedSuccessfully()),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+                finishedSuccessfully()),
+            event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
-    results.testEvents().assertEventsMatchExactly(
-        event(type(DYNAMIC_TEST_REGISTERED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
-        event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
-            displayName("<empty input>")),
-        event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
-            displayName("<empty input>"), finishedSuccessfully()),
-        event(type(DYNAMIC_TEST_REGISTERED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
-        event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
-            displayName("empty_seed")),
-        event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
-            displayName("empty_seed"), finishedSuccessfully()),
-        event(type(DYNAMIC_TEST_REGISTERED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
-        event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
-            displayName("Fuzzing...")),
-        event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
-            displayName("Fuzzing..."), finishedSuccessfully()));
+    results
+        .testEvents()
+        .assertEventsMatchExactly(
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
+                displayName("<empty input>")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 1)),
+                displayName("<empty input>"),
+                finishedSuccessfully()),
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
+                displayName("empty_seed")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 2)),
+                displayName("empty_seed"),
+                finishedSuccessfully()),
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
+                displayName("Fuzzing...")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
+                displayName("Fuzzing..."),
+                finishedSuccessfully()));
 
     // No crash means no crashing input is emitted anywhere.
-    try (Stream<Path> crashFiles = Files.list(baseDir).filter(
-             path -> path.getFileName().toString().startsWith("crash-"))) {
+    try (Stream<Path> crashFiles =
+        Files.list(baseDir).filter(path -> path.getFileName().toString().startsWith("crash-"))) {
       assertThat(crashFiles).isEmpty();
     }
     try (Stream<Path> seeds = Files.list(inputsDirectories)) {

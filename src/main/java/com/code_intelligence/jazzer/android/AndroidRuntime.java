@@ -20,9 +20,7 @@ import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.utils.Log;
 import com.github.fmeum.rules_jni.RulesJni;
 
-/**
- * Loads Android tooling library and registers native functions.
- */
+/** Loads Android tooling library and registers native functions. */
 public class AndroidRuntime {
   private static final String DO_NOT_INITIALIZE = "use_none";
   private static final String INIT_JAVA_ART = "use_platform_libs";
@@ -56,12 +54,15 @@ public class AndroidRuntime {
         break;
 
       default:
-        Log.error(String.format(
-            "%s is not a valid options for android_init_options. Valid Options: [use_none, use_platform_libs]",
-            androidInitOptions));
+        Log.error(
+            String.format(
+                "%s is not a valid options for android_init_options. Valid Options: [use_none,"
+                    + " use_platform_libs]",
+                androidInitOptions));
         System.exit(1);
     }
-  };
+  }
+  ;
 
   /**
    * Returns a command to set the classpath for fuzzing.

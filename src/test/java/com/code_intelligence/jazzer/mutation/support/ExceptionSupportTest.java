@@ -25,19 +25,32 @@ import org.junit.jupiter.api.Test;
 class ExceptionSupportTest {
   @Test
   void testAsUnchecked_withUncheckedException() {
-    assertThrows(IllegalStateException.class, () -> {
-      // noinspection TrivialFunctionalExpressionUsage
-      ((Runnable) () -> { throw asUnchecked(new IllegalStateException()); }).run();
-    });
+    assertThrows(
+        IllegalStateException.class,
+        () -> {
+          // noinspection TrivialFunctionalExpressionUsage
+          ((Runnable)
+                  () -> {
+                    throw asUnchecked(new IllegalStateException());
+                  })
+              .run();
+        });
   }
 
   @Test
   void testAsUnchecked_withCheckedException() {
-    assertThrows(IOException.class, () -> {
-      // Verify that asUnchecked can be used to throw a checked exception in a function that doesn't
-      // declare it as being thrown.
-      // noinspection TrivialFunctionalExpressionUsage
-      ((Runnable) () -> { throw asUnchecked(new IOException()); }).run();
-    });
+    assertThrows(
+        IOException.class,
+        () -> {
+          // Verify that asUnchecked can be used to throw a checked exception in a function that
+          // doesn't
+          // declare it as being thrown.
+          // noinspection TrivialFunctionalExpressionUsage
+          ((Runnable)
+                  () -> {
+                    throw asUnchecked(new IOException());
+                  })
+              .run();
+        });
   }
 }

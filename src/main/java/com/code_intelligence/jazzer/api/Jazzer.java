@@ -20,9 +20,7 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 import java.security.SecureRandom;
 
-/**
- * Static helper methods that hooks can use to provide feedback to the fuzzer.
- */
+/** Static helper methods that hooks can use to provide feedback to the fuzzer. */
 public final class Jazzer {
   private static final Class<?> JAZZER_INTERNAL;
 
@@ -43,27 +41,33 @@ public final class Jazzer {
     try {
       jazzerInternal = Class.forName("com.code_intelligence.jazzer.runtime.JazzerInternal");
       MethodType onFuzzTargetReadyType = MethodType.methodType(void.class, Runnable.class);
-      onFuzzTargetReady = MethodHandles.publicLookup().findStatic(
-          jazzerInternal, "registerOnFuzzTargetReadyCallback", onFuzzTargetReadyType);
+      onFuzzTargetReady =
+          MethodHandles.publicLookup()
+              .findStatic(
+                  jazzerInternal, "registerOnFuzzTargetReadyCallback", onFuzzTargetReadyType);
       Class<?> traceDataFlowNativeCallbacks =
           Class.forName("com.code_intelligence.jazzer.runtime.TraceDataFlowNativeCallbacks");
 
       // Use method handles for hints as the calls are potentially performance critical.
       MethodType traceStrcmpType =
           MethodType.methodType(void.class, String.class, String.class, int.class, int.class);
-      traceStrcmp = MethodHandles.publicLookup().findStatic(
-          traceDataFlowNativeCallbacks, "traceStrcmp", traceStrcmpType);
+      traceStrcmp =
+          MethodHandles.publicLookup()
+              .findStatic(traceDataFlowNativeCallbacks, "traceStrcmp", traceStrcmpType);
       MethodType traceStrstrType =
           MethodType.methodType(void.class, String.class, String.class, int.class);
-      traceStrstr = MethodHandles.publicLookup().findStatic(
-          traceDataFlowNativeCallbacks, "traceStrstr", traceStrstrType);
+      traceStrstr =
+          MethodHandles.publicLookup()
+              .findStatic(traceDataFlowNativeCallbacks, "traceStrstr", traceStrstrType);
       MethodType traceMemcmpType =
           MethodType.methodType(void.class, byte[].class, byte[].class, int.class, int.class);
-      traceMemcmp = MethodHandles.publicLookup().findStatic(
-          traceDataFlowNativeCallbacks, "traceMemcmp", traceMemcmpType);
+      traceMemcmp =
+          MethodHandles.publicLookup()
+              .findStatic(traceDataFlowNativeCallbacks, "traceMemcmp", traceMemcmpType);
       MethodType tracePcIndirType = MethodType.methodType(void.class, int.class, int.class);
-      tracePcIndir = MethodHandles.publicLookup().findStatic(
-          traceDataFlowNativeCallbacks, "tracePcIndir", tracePcIndirType);
+      tracePcIndir =
+          MethodHandles.publicLookup()
+              .findStatic(traceDataFlowNativeCallbacks, "tracePcIndir", tracePcIndirType);
     } catch (ClassNotFoundException ignore) {
       // Not running in the context of the agent. This is fine as long as no methods are called on
       // this class.
@@ -85,23 +89,21 @@ public final class Jazzer {
   private Jazzer() {}
 
   /**
-   * A 32-bit random number that hooks can use to make pseudo-random choices
-   * between multiple possible mutations they could guide the fuzzer towards.
-   * Hooks <b>must not</b> base the decision whether or not to report a finding
-   * on this number as this will make findings non-reproducible.
-   * <p>
-   * This is the same number that libFuzzer uses as a seed internally, which
-   * makes it possible to deterministically reproduce a previous fuzzing run by
-   * supplying the seed value printed by libFuzzer as the value of the
-   * {@code -seed}.
+   * A 32-bit random number that hooks can use to make pseudo-random choices between multiple
+   * possible mutations they could guide the fuzzer towards. Hooks <b>must not</b> base the decision
+   * whether or not to report a finding on this number as this will make findings non-reproducible.
+   *
+   * <p>This is the same number that libFuzzer uses as a seed internally, which makes it possible to
+   * deterministically reproduce a previous fuzzing run by supplying the seed value printed by
+   * libFuzzer as the value of the {@code -seed}.
    */
   public static final int SEED = getLibFuzzerSeed();
 
   /**
    * Instructs the fuzzer to guide its mutations towards making {@code current} equal to {@code
    * target}.
-   * <p>
-   * If the relation between the raw fuzzer input and the value of {@code current} is relatively
+   *
+   * <p>If the relation between the raw fuzzer input and the value of {@code current} is relatively
    * complex, running the fuzzer with the argument {@code -use_value_profile=1} may be necessary to
    * achieve equality.
    *
@@ -123,8 +125,8 @@ public final class Jazzer {
   /**
    * Instructs the fuzzer to guide its mutations towards making {@code current} equal to {@code
    * target}.
-   * <p>
-   * If the relation between the raw fuzzer input and the value of {@code current} is relatively
+   *
+   * <p>If the relation between the raw fuzzer input and the value of {@code current} is relatively
    * complex, running the fuzzer with the argument {@code -use_value_profile=1} may be necessary to
    * achieve equality.
    *
@@ -146,8 +148,8 @@ public final class Jazzer {
   /**
    * Instructs the fuzzer to guide its mutations towards making {@code haystack} contain {@code
    * needle} as a substring.
-   * <p>
-   * If the relation between the raw fuzzer input and the value of {@code haystack} is relatively
+   *
+   * <p>If the relation between the raw fuzzer input and the value of {@code haystack} is relatively
    * complex, running the fuzzer with the argument {@code -use_value_profile=1} may be necessary to
    * satisfy the substring check.
    *
@@ -170,14 +172,14 @@ public final class Jazzer {
   /**
    * Instructs the fuzzer to attain as many possible values for the absolute value of {@code state}
    * as possible.
-   * <p>
-   * Call this function from a fuzz target or a hook to help the fuzzer track partial progress
+   *
+   * <p>Call this function from a fuzz target or a hook to help the fuzzer track partial progress
    * (e.g. by passing the length of a common prefix of two lists that should become equal) or
    * explore different values of state that is not directly related to code coverage (see the
    * MazeFuzzer example).
-   * <p>
-   * <b>Note:</b> This hint only takes effect if the fuzzer is run with the argument
-   * {@code -use_value_profile=1}.
+   *
+   * <p><b>Note:</b> This hint only takes effect if the fuzzer is run with the argument {@code
+   * -use_value_profile=1}.
    *
    * @param state a numeric encoding of a state that should be varied by the fuzzer
    * @param id a (probabilistically) unique identifier for this particular state hint
@@ -215,9 +217,10 @@ public final class Jazzer {
 
   /**
    * Make Jazzer report the provided {@link Throwable} as a finding.
-   * <p>
-   * <b>Note:</b> This method must only be called from a method hook. In a
-   * fuzz target, simply throw an exception to trigger a finding.
+   *
+   * <p><b>Note:</b> This method must only be called from a method hook. In a fuzz target, simply
+   * throw an exception to trigger a finding.
+   *
    * @param finding the finding that Jazzer should report
    */
   public static void reportFindingFromHook(Throwable finding) {
@@ -234,8 +237,8 @@ public final class Jazzer {
 
   /**
    * Register a callback to be executed right before the fuzz target is executed for the first time.
-   * <p>
-   * This can be used to disable hooks until after Jazzer has been fully initializing, e.g. to
+   *
+   * <p>This can be used to disable hooks until after Jazzer has been fully initializing, e.g. to
    * prevent Jazzer internals from triggering hooks on Java standard library classes.
    *
    * @param callback the callback to execute
@@ -263,6 +266,6 @@ public final class Jazzer {
   // Rethrows a (possibly checked) exception while avoiding a throws declaration.
   @SuppressWarnings("unchecked")
   private static <T extends Throwable> void rethrowUnchecked(Throwable t) throws T {
-    throw(T) t;
+    throw (T) t;
   }
 }

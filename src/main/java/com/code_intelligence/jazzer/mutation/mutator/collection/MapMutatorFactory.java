@@ -56,24 +56,26 @@ final class MapMutatorFactory extends MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
     return parameterTypesIfParameterized(type, Map.class)
-        .map(parameterTypes
-            -> parameterTypes.stream()
-                   .map(factory::tryCreate)
-                   .flatMap(StreamSupport::getOrEmpty)
-                   .collect(Collectors.toList()))
-        .map(elementMutators -> {
-          check(elementMutators.size() == 2);
-          int min = MapMutator.DEFAULT_MIN_SIZE;
-          int max = MapMutator.DEFAULT_MAX_SIZE;
-          for (Annotation annotation : type.getDeclaredAnnotations()) {
-            if (annotation instanceof WithSize) {
-              WithSize withSize = (WithSize) annotation;
-              min = withSize.min();
-              max = withSize.max();
-            }
-          }
-          return new MapMutator<>(elementMutators.get(0), elementMutators.get(1), min, max);
-        });
+        .map(
+            parameterTypes ->
+                parameterTypes.stream()
+                    .map(factory::tryCreate)
+                    .flatMap(StreamSupport::getOrEmpty)
+                    .collect(Collectors.toList()))
+        .map(
+            elementMutators -> {
+              check(elementMutators.size() == 2);
+              int min = MapMutator.DEFAULT_MIN_SIZE;
+              int max = MapMutator.DEFAULT_MAX_SIZE;
+              for (Annotation annotation : type.getDeclaredAnnotations()) {
+                if (annotation instanceof WithSize) {
+                  WithSize withSize = (WithSize) annotation;
+                  min = withSize.min();
+                  max = withSize.max();
+                }
+              }
+              return new MapMutator<>(elementMutators.get(0), elementMutators.get(1), min, max);
+            });
   }
 
   private static final class MapMutator<K, V> extends SerializingInPlaceMutator<Map<K, V>> {
@@ -85,7 +87,10 @@ final class MapMutatorFactory extends MutatorFactory {
     private final int minSize;
     private final int maxSize;
 
-    MapMutator(SerializingMutator<K> keyMutator, SerializingMutator<V> valueMutator, int minSize,
+    MapMutator(
+        SerializingMutator<K> keyMutator,
+        SerializingMutator<V> valueMutator,
+        int minSize,
         int maxSize) {
       this.keyMutator = keyMutator;
       this.valueMutator = valueMutator;
@@ -132,14 +137,17 @@ final class MapMutatorFactory extends MutatorFactory {
     public void initInPlace(Map<K, V> map, PseudoRandom prng) {
       int targetSize = prng.closedRange(minInitialSize(), maxInitialSize());
       map.clear();
-      growBy(map.keySet(),
-          key
-          -> map.putIfAbsent(key, valueMutator.init(prng)),
-          targetSize, () -> keyMutator.init(prng));
+      growBy(
+          map.keySet(),
+          key -> map.putIfAbsent(key, valueMutator.init(prng)),
+          targetSize,
+          () -> keyMutator.init(prng));
       if (map.size() < minSize) {
-        throw new IllegalStateException(String.format(
-            "Failed to create %d distinct elements of type %s to satisfy the @WithSize#minSize constraint on Map",
-            minSize, keyMutator));
+        throw new IllegalStateException(
+            String.format(
+                "Failed to create %d distinct elements of type %s to satisfy the @WithSize#minSize"
+                    + " constraint on Map",
+                minSize, keyMutator));
       }
     }
 
@@ -150,8 +158,12 @@ final class MapMutatorFactory extends MutatorFactory {
           deleteRandomChunk(map.keySet(), minSize, prng);
           break;
         case INSERT_CHUNK:
-          insertRandomChunk(map.keySet(),
-              key -> map.putIfAbsent(key, valueMutator.init(prng)), maxSize, keyMutator, prng);
+          insertRandomChunk(
+              map.keySet(),
+              key -> map.putIfAbsent(key, valueMutator.init(prng)),
+              maxSize,
+              keyMutator,
+              prng);
           break;
         case MUTATE_CHUNK:
           if (prng.choice() || !mutateRandomKeysChunk(map, keyMutator, prng)) {
@@ -165,8 +177,8 @@ final class MapMutatorFactory extends MutatorFactory {
 
     @Override
     public void crossOverInPlace(Map<K, V> reference, Map<K, V> otherReference, PseudoRandom prng) {
-      switch (
-          pickRandomCrossOverAction(reference.keySet(), otherReference.keySet(), maxSize, prng)) {
+      switch (pickRandomCrossOverAction(
+          reference.keySet(), otherReference.keySet(), maxSize, prng)) {
         case INSERT_CHUNK:
           insertChunk(reference, otherReference, maxSize, prng);
           break;
@@ -183,15 +195,20 @@ final class MapMutatorFactory extends MutatorFactory {
 
     @Override
     public Map<K, V> detach(Map<K, V> value) {
-      return value.entrySet().stream().collect(toMap(entry
-          -> keyMutator.detach(entry.getKey()),
-          entry -> valueMutator.detach(entry.getValue())));
+      return value.entrySet().stream()
+          .collect(
+              toMap(
+                  entry -> keyMutator.detach(entry.getKey()),
+                  entry -> valueMutator.detach(entry.getValue())));
     }
 
     @Override
     public String toDebugString(Predicate<Debuggable> isInCycle) {
-      return "Map<" + keyMutator.toDebugString(isInCycle) + ","
-          + valueMutator.toDebugString(isInCycle) + ">";
+      return "Map<"
+          + keyMutator.toDebugString(isInCycle)
+          + ","
+          + valueMutator.toDebugString(isInCycle)
+          + ">";
     }
 
     private int minInitialSize() {

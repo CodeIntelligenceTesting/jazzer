@@ -27,6 +27,7 @@ public class AutofuzzTest {
   public interface UnimplementedInterface {}
 
   public interface ImplementedInterface {}
+
   public static class ImplementingClass implements ImplementedInterface {}
 
   private static boolean implIsNotNull(ImplementedInterface impl) {
@@ -46,33 +47,45 @@ public class AutofuzzTest {
 
   @Test
   public void testConsume() {
-    FuzzedDataProvider data = CannedFuzzedDataProvider.create(
-        Arrays.asList((byte) 1 /* do not return null */, 0 /* first class on the classpath */,
-            (byte) 1 /* do not return null */, 0 /* first constructor */));
+    FuzzedDataProvider data =
+        CannedFuzzedDataProvider.create(
+            Arrays.asList(
+                (byte) 1 /* do not return null */,
+                0 /* first class on the classpath */,
+                (byte) 1 /* do not return null */,
+                0 /* first constructor */));
     ImplementedInterface result = Autofuzz.consume(data, ImplementedInterface.class);
     assertNotNull(result);
   }
 
   @Test
   public void testConsumeFailsWithoutException() {
-    FuzzedDataProvider data = CannedFuzzedDataProvider.create(Collections.singletonList(
-        (byte) 1 /* do not return null without searching for implementing classes */));
+    FuzzedDataProvider data =
+        CannedFuzzedDataProvider.create(
+            Collections.singletonList(
+                (byte) 1 /* do not return null without searching for implementing classes */));
     assertNull(Autofuzz.consume(data, UnimplementedInterface.class));
   }
 
   @Test
   public void testAutofuzz() {
-    FuzzedDataProvider data = CannedFuzzedDataProvider.create(
-        Arrays.asList((byte) 1 /* do not return null */, 0 /* first class on the classpath */,
-            (byte) 1 /* do not return null */, 0 /* first constructor */));
-    assertEquals(Boolean.TRUE,
+    FuzzedDataProvider data =
+        CannedFuzzedDataProvider.create(
+            Arrays.asList(
+                (byte) 1 /* do not return null */,
+                0 /* first class on the classpath */,
+                (byte) 1 /* do not return null */,
+                0 /* first constructor */));
+    assertEquals(
+        Boolean.TRUE,
         Autofuzz.autofuzz(data, (Function1<ImplementedInterface, ?>) AutofuzzTest::implIsNotNull));
   }
 
   @Test
   public void testAutofuzzFailsWithException() {
-    FuzzedDataProvider data = CannedFuzzedDataProvider.create(
-        Collections.singletonList((byte) 1 /* do not return null */));
+    FuzzedDataProvider data =
+        CannedFuzzedDataProvider.create(
+            Collections.singletonList((byte) 1 /* do not return null */));
     try {
       Autofuzz.autofuzz(data, (Function1<UnimplementedInterface, ?>) AutofuzzTest::implIsNotNull);
     } catch (AutofuzzConstructionException e) {
@@ -84,18 +97,32 @@ public class AutofuzzTest {
 
   @Test
   public void testAutofuzzConsumer() {
-    FuzzedDataProvider data = CannedFuzzedDataProvider.create(
-        Arrays.asList((byte) 1 /* do not return null */, 6 /* string length */, "foobar", 42,
-            (byte) 5, (byte) 1 /* do not return null */, 0 /* first class on the classpath */,
-            (byte) 1 /* do not return null */, 0 /* first constructor */));
+    FuzzedDataProvider data =
+        CannedFuzzedDataProvider.create(
+            Arrays.asList(
+                (byte) 1 /* do not return null */,
+                6 /* string length */,
+                "foobar",
+                42,
+                (byte) 5,
+                (byte) 1 /* do not return null */,
+                0 /* first class on the classpath */,
+                (byte) 1 /* do not return null */,
+                0 /* first constructor */));
     Autofuzz.autofuzz(data, AutofuzzTest::checkAllTheArguments);
   }
 
   @Test
   public void testAutofuzzConsumerThrowsException() {
     FuzzedDataProvider data =
-        CannedFuzzedDataProvider.create(Arrays.asList((byte) 1 /* do not return null */,
-            6 /* string length */, "foobar", 42, (byte) 5, (byte) 0 /* *do* return null */));
+        CannedFuzzedDataProvider.create(
+            Arrays.asList(
+                (byte) 1 /* do not return null */,
+                6 /* string length */,
+                "foobar",
+                42,
+                (byte) 5,
+                (byte) 0 /* *do* return null */));
     try {
       Autofuzz.autofuzz(data, AutofuzzTest::checkAllTheArguments);
     } catch (IllegalArgumentException e) {

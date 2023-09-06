@@ -50,14 +50,16 @@ public class MutatorBenchmark {
 
   @State(Scope.Benchmark)
   public static class BenchmarkState {
-    @Param({"10", "100", "1000"}) public int mutations;
+    @Param({"10", "100", "1000"})
+    public int mutations;
 
     public ArgumentsMutator mutator;
 
     @Setup(Level.Iteration)
     public void setUp() throws NoSuchMethodException {
-      mutator = ArgumentsMutator.forStaticMethodOrThrow(
-          MutatorBenchmark.class.getMethod("fuzzMinimal", List.class));
+      mutator =
+          ArgumentsMutator.forStaticMethodOrThrow(
+              MutatorBenchmark.class.getMethod("fuzzMinimal", List.class));
     }
   }
 

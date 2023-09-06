@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 @SuppressWarnings("unused")
-final public class ClojureLangHooks {
+public final class ClojureLangHooks {
   /**
    * Used to memoize the all clojure function objects that test for substring. These function
    * objects extend AFunction and do not overwrite equals(), which allows us to use a WeakHashMap.
@@ -34,18 +34,23 @@ final public class ClojureLangHooks {
       ThreadLocal.withInitial(() -> Collections.newSetFromMap(new WeakHashMap<Object, Boolean>()));
 
   static final Set<String> stringContainsFuncNames =
-      new HashSet<String>(Arrays.asList("clojure.string$includes_QMARK_",
-          "clojure.string$starts_with_QMARK_", "clojure.string$ends_with_QMARK_",
-          "clojure.string$index_of_QMARK_", "clojure.string$last_index_of_QMARK_"));
+      new HashSet<String>(
+          Arrays.asList(
+              "clojure.string$includes_QMARK_",
+              "clojure.string$starts_with_QMARK_",
+              "clojure.string$ends_with_QMARK_",
+              "clojure.string$index_of_QMARK_",
+              "clojure.string$last_index_of_QMARK_"));
 
   /**
    * This hook checks the type of the returned clojure.lang.IFn objects and puts them into
    * stringContainsFuncs if they match know string-contains functions.
    */
   @MethodHook(
-      type = HookType.AFTER, targetClassName = "clojure.lang.Var", targetMethod = "getRawRoot")
-  public static void
-  clojureMarkContains(
+      type = HookType.AFTER,
+      targetClassName = "clojure.lang.Var",
+      targetMethod = "getRawRoot")
+  public static void clojureMarkContains(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Object result) {
     if (stringContainsFuncNames.contains(result.getClass().getCanonicalName())) {
       stringContainsFuncs.get().add(result);

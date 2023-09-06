@@ -35,48 +35,56 @@ public final class Mutators {
   private Mutators() {}
 
   public static MutatorFactory newFactory() {
-    return new ChainedMutatorFactory(LangMutators.newFactory(), CollectionMutators.newFactory(),
-        ProtoMutators.newFactory(), LibFuzzerMutators.newFactory());
+    return new ChainedMutatorFactory(
+        LangMutators.newFactory(),
+        CollectionMutators.newFactory(),
+        ProtoMutators.newFactory(),
+        LibFuzzerMutators.newFactory());
   }
 
   /**
-   * Throws an exception if any annotation on {@code type} violates the restrictions of its
-   * {@link AppliesTo} meta-annotation.
+   * Throws an exception if any annotation on {@code type} violates the restrictions of its {@link
+   * AppliesTo} meta-annotation.
    */
   public static void validateAnnotationUsage(AnnotatedType type) {
-    visitAnnotatedType(type, (clazz, annotations) -> {
-      outer:
-        for (Annotation annotation : annotations) {
-          AppliesTo appliesTo = annotation.annotationType().getAnnotation(AppliesTo.class);
-          if (appliesTo == null) {
-            continue;
-          }
-          for (Class<?> allowedClass : appliesTo.value()) {
-            if (allowedClass == clazz) {
-              continue outer;
+    visitAnnotatedType(
+        type,
+        (clazz, annotations) -> {
+          outer:
+          for (Annotation annotation : annotations) {
+            AppliesTo appliesTo = annotation.annotationType().getAnnotation(AppliesTo.class);
+            if (appliesTo == null) {
+              continue;
             }
-          }
-          for (Class<?> allowedSuperClass : appliesTo.subClassesOf()) {
-            if (allowedSuperClass.isAssignableFrom(clazz)) {
-              continue outer;
+            for (Class<?> allowedClass : appliesTo.value()) {
+              if (allowedClass == clazz) {
+                continue outer;
+              }
             }
-          }
+            for (Class<?> allowedSuperClass : appliesTo.subClassesOf()) {
+              if (allowedSuperClass.isAssignableFrom(clazz)) {
+                continue outer;
+              }
+            }
 
-          String helpText = "";
-          if (appliesTo.value().length != 0) {
-            helpText = stream(appliesTo.value()).map(Class::getName).collect(joining(", "));
-          }
-          if (appliesTo.subClassesOf().length != 0) {
-            if (!helpText.isEmpty()) {
-              helpText += "as well as ";
+            String helpText = "";
+            if (appliesTo.value().length != 0) {
+              helpText = stream(appliesTo.value()).map(Class::getName).collect(joining(", "));
             }
-            helpText += "subclasses of ";
-            helpText += stream(appliesTo.subClassesOf()).map(Class::getName).collect(joining(", "));
+            if (appliesTo.subClassesOf().length != 0) {
+              if (!helpText.isEmpty()) {
+                helpText += "as well as ";
+              }
+              helpText += "subclasses of ";
+              helpText +=
+                  stream(appliesTo.subClassesOf()).map(Class::getName).collect(joining(", "));
+            }
+            // Use the simple name as our annotations live in a single package.
+            throw new IllegalArgumentException(
+                format(
+                    "%s does not apply to %s, only applies to %s",
+                    annotation.annotationType().getSimpleName(), clazz.getName(), helpText));
           }
-          // Use the simple name as our annotations live in a single package.
-          throw new IllegalArgumentException(format("%s does not apply to %s, only applies to %s",
-              annotation.annotationType().getSimpleName(), clazz.getName(), helpText));
-        }
-    });
+        });
   }
 }

@@ -26,23 +26,27 @@ import jdk.incubator.foreign.ResourceScope;
 import jdk.incubator.foreign.SymbolLookup;
 
 /**
- * Pure-Java implementation of the fuzzer callbacks backed by Project Panama (requires JDK 16+).
- * To include the implementation in the benchmark on a supported JDK, uncomment the relevant lines
- * in BUILD.bazel.
+ * Pure-Java implementation of the fuzzer callbacks backed by Project Panama (requires JDK 16+). To
+ * include the implementation in the benchmark on a supported JDK, uncomment the relevant lines in
+ * BUILD.bazel.
  */
 public class FuzzerCallbacksPanama {
   static {
     RulesJni.loadLibrary("fuzzer_callbacks", FuzzerCallbacks.class);
   }
 
-  private static final MethodHandle traceCmp4 = CLinker.getInstance().downcallHandle(
-      SymbolLookup.loaderLookup().lookup("__sanitizer_cov_trace_cmp4").get(),
-      MethodType.methodType(void.class, int.class, int.class),
-      FunctionDescriptor.ofVoid(CLinker.C_INT, CLinker.C_INT));
-  private static final MethodHandle traceSwitch = CLinker.getInstance().downcallHandle(
-      SymbolLookup.loaderLookup().lookup("__sanitizer_cov_trace_switch").get(),
-      MethodType.methodType(void.class, long.class, MemoryAddress.class),
-      FunctionDescriptor.ofVoid(CLinker.C_LONG, CLinker.C_POINTER));
+  private static final MethodHandle traceCmp4 =
+      CLinker.getInstance()
+          .downcallHandle(
+              SymbolLookup.loaderLookup().lookup("__sanitizer_cov_trace_cmp4").get(),
+              MethodType.methodType(void.class, int.class, int.class),
+              FunctionDescriptor.ofVoid(CLinker.C_INT, CLinker.C_INT));
+  private static final MethodHandle traceSwitch =
+      CLinker.getInstance()
+          .downcallHandle(
+              SymbolLookup.loaderLookup().lookup("__sanitizer_cov_trace_switch").get(),
+              MethodType.methodType(void.class, long.class, MemoryAddress.class),
+              FunctionDescriptor.ofVoid(CLinker.C_LONG, CLinker.C_POINTER));
 
   static void traceCmpInt(int arg1, int arg2, int pc) throws Throwable {
     traceCmp4.invokeExact(arg1, arg2);
@@ -50,8 +54,9 @@ public class FuzzerCallbacksPanama {
 
   static void traceCmpSwitch(long val, long[] cases, int pc) throws Throwable {
     try (ResourceScope scope = ResourceScope.newConfinedScope()) {
-      MemorySegment nativeCopy = MemorySegment.allocateNative(
-          MemoryLayout.sequenceLayout(cases.length, CLinker.C_LONG), scope);
+      MemorySegment nativeCopy =
+          MemorySegment.allocateNative(
+              MemoryLayout.sequenceLayout(cases.length, CLinker.C_LONG), scope);
       nativeCopy.copyFrom(MemorySegment.ofArray(cases));
       traceSwitch.invokeExact(val, nativeCopy.address());
     }

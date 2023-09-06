@@ -50,11 +50,12 @@ public class ListMutatorTest {
     assertThat(mutator.toString()).isEqualTo("List<Integer>");
 
     List<Integer> list;
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // targetSize
-             1,
-             // elementMutator.init
-             1)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // targetSize
+            1,
+            // elementMutator.init
+            1)) {
       list = mutator.init(prng);
     }
     assertThat(list).containsExactly(0);
@@ -63,8 +64,8 @@ public class ListMutatorTest {
   @Test
   void testInitMaxSize() {
     AnnotatedType type =
-        new TypeHolder<@NotNull @WithSize(min = 2, max = 3) List<@NotNull Integer>>(){}
-            .annotatedType();
+        new TypeHolder<
+            @NotNull @WithSize(min = 2, max = 3) List<@NotNull Integer>>() {}.annotatedType();
 
     SerializingMutator<@NotNull List<@NotNull Integer>> mutator =
         (SerializingMutator<@NotNull List<@NotNull Integer>>) FACTORY.createOrThrow(type);
@@ -83,13 +84,14 @@ public class ListMutatorTest {
     SerializingMutator<@NotNull List<@NotNull Integer>> mutator = defaultListMutator();
 
     List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // action
-             0,
-             // number of elements to remove
-             1,
-             // index to remove
-             2)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // action
+            0,
+            // number of elements to remove
+            1,
+            // index to remove
+            2)) {
       list = mutator.mutate(list, prng);
     }
     assertThat(list).containsExactly(1, 2, 4, 5, 6, 7, 8, 9).inOrder();
@@ -100,13 +102,14 @@ public class ListMutatorTest {
     SerializingMutator<@NotNull List<@NotNull Integer>> mutator = defaultListMutator();
 
     List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // action
-             0,
-             // chunk size
-             2,
-             // chunk offset
-             3)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // action
+            0,
+            // chunk size
+            2,
+            // chunk offset
+            3)) {
       list = mutator.mutate(list, prng);
     }
     assertThat(list).containsExactly(1, 2, 3, 6, 7, 8, 9).inOrder();
@@ -117,17 +120,18 @@ public class ListMutatorTest {
     SerializingMutator<@NotNull List<@NotNull Integer>> mutator = defaultListMutator();
 
     List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // action
-             1,
-             // add single element,
-             1,
-             // offset,
-             9,
-             // Integral initImpl sentinel value
-             4,
-             // value
-             42L)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // action
+            1,
+            // add single element,
+            1,
+            // offset,
+            9,
+            // Integral initImpl sentinel value
+            4,
+            // value
+            42L)) {
       list = mutator.mutate(list, prng);
     }
     assertThat(list).containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 42).inOrder();
@@ -138,17 +142,18 @@ public class ListMutatorTest {
     SerializingMutator<@NotNull List<@NotNull Integer>> mutator = defaultListMutator();
 
     List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // action
-             1,
-             // chunkSize
-             2,
-             // chunkOffset
-             3,
-             // Integral initImpl
-             4,
-             // val
-             42L)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // action
+            1,
+            // chunkSize
+            2,
+            // chunkOffset
+            3,
+            // Integral initImpl
+            4,
+            // val
+            42L)) {
       list = mutator.mutate(list, prng);
     }
     assertThat(list).containsExactly(1, 2, 3, 42, 42, 4, 5, 6, 7, 8, 9).inOrder();
@@ -159,18 +164,19 @@ public class ListMutatorTest {
     SerializingMutator<@NotNull List<@NotNull Integer>> mutator = defaultListMutator();
 
     List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // action
-             2,
-             // number of elements to mutate
-             1,
-             // first index to mutate at
-             2,
-             // mutation choice based on `IntegralMutatorFactory`
-             // 2 == closedRange
-             2,
-             // value
-             55L)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // action
+            2,
+            // number of elements to mutate
+            1,
+            // first index to mutate at
+            2,
+            // mutation choice based on `IntegralMutatorFactory`
+            // 2 == closedRange
+            2,
+            // value
+            55L)) {
       list = mutator.mutate(list, prng);
     }
     assertThat(list).containsExactly(1, 2, 55, 4, 5, 6, 7, 8, 9).inOrder();
@@ -181,19 +187,21 @@ public class ListMutatorTest {
     SerializingMutator<@NotNull List<@NotNull Integer>> mutator = defaultListMutator();
 
     List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // action
-             2,
-             // number of elements to mutate
-             2,
-             // first index to mutate at
-             5,
-             // mutation: 0 == bitflip
-             0,
-             // shift constant
-             13,
-             // and again
-             0, 12)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // action
+            2,
+            // number of elements to mutate
+            2,
+            // first index to mutate at
+            5,
+            // mutation: 0 == bitflip
+            0,
+            // shift constant
+            13,
+            // and again
+            0,
+            12)) {
       list = mutator.mutate(list, prng);
     }
     assertThat(list).containsExactly(1, 2, 3, 4, 5, 8198, 4103, 8, 9, 10, 11).inOrder();
@@ -216,15 +224,16 @@ public class ListMutatorTest {
     List<Integer> list = new ArrayList<>(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
     List<Integer> otherList =
         new ArrayList<>(Arrays.asList(10, 11, 12, 13, 14, 15, 16, 17, 18, 19));
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // insert action
-             0,
-             // chunk size
-             3,
-             // fromPos
-             2,
-             // toPos
-             5)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // insert action
+            0,
+            // chunk size
+            3,
+            // fromPos
+            2,
+            // toPos
+            5)) {
       list = mutator.crossOver(list, otherList, prng);
     }
     assertThat(list).containsExactly(0, 1, 2, 3, 4, 12, 13, 14, 5, 6, 7, 8, 9).inOrder();
@@ -236,15 +245,16 @@ public class ListMutatorTest {
 
     List<Integer> list = new ArrayList<>(emptyList());
     List<Integer> otherList = new ArrayList<>(Arrays.asList(10, 11, 12));
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // insert action
-             0,
-             // chunk size
-             2,
-             // fromPos
-             1,
-             // toPos
-             0)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // insert action
+            0,
+            // chunk size
+            2,
+            // fromPos
+            1,
+            // toPos
+            0)) {
       list = mutator.crossOver(list, otherList, prng);
     }
     assertThat(list).containsExactly(11, 12).inOrder();
@@ -257,15 +267,16 @@ public class ListMutatorTest {
     List<Integer> list = new ArrayList<>(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
     List<Integer> otherList =
         new ArrayList<>(Arrays.asList(10, 11, 12, 13, 14, 15, 16, 17, 18, 19));
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // overwrite action
-             1,
-             // chunk size
-             3,
-             // fromPos
-             2,
-             // toPos
-             5)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // overwrite action
+            1,
+            // chunk size
+            3,
+            // fromPos
+            2,
+            // toPos
+            5)) {
       list = mutator.crossOver(list, otherList, prng);
     }
     assertThat(list).containsExactly(0, 1, 2, 3, 4, 12, 13, 14, 8, 9).inOrder();
@@ -278,21 +289,22 @@ public class ListMutatorTest {
     List<Integer> list = new ArrayList<>(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
     List<Integer> otherList =
         new ArrayList<>(Arrays.asList(10, 11, 12, 13, 14, 15, 16, 17, 18, 19));
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // overwrite action
-             2,
-             // chunk size
-             3,
-             // fromPos
-             2,
-             // toPos
-             2,
-             // mean value in sub cross over
-             0,
-             // mean value in sub cross over
-             0,
-             // mean value in sub cross over
-             0)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // overwrite action
+            2,
+            // chunk size
+            3,
+            // fromPos
+            2,
+            // toPos
+            2,
+            // mean value in sub cross over
+            0,
+            // mean value in sub cross over
+            0,
+            // mean value in sub cross over
+            0)) {
       list = mutator.crossOver(list, otherList, prng);
     }
     assertThat(list).containsExactly(0, 1, 7, 8, 9, 5, 6, 7, 8, 9).inOrder();

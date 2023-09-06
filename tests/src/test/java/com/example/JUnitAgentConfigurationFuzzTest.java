@@ -32,9 +32,8 @@ class JUnitAgentConfigurationFuzzTest {
   private static Object getLazyOptValue(String name) {
     try {
       Supplier<Object> supplier =
-          (Supplier<Object>) Class.forName("com.code_intelligence.jazzer.driver.Opt")
-              .getField(name)
-              .get(null);
+          (Supplier<Object>)
+              Class.forName("com.code_intelligence.jazzer.driver.Opt").getField(name).get(null);
       return supplier.get();
     } catch (NoSuchFieldException | ClassNotFoundException | IllegalAccessException e) {
       throw new IllegalStateException(e);

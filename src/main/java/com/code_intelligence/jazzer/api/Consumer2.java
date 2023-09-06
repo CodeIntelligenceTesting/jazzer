@@ -18,5 +18,6 @@ import java.util.function.BiConsumer;
 
 @FunctionalInterface
 public interface Consumer2<T1, T2> extends BiConsumer<T1, T2> {
-  @Override void accept(T1 t1, T2 t2);
+  @Override
+  void accept(T1 t1, T2 t2);
 }

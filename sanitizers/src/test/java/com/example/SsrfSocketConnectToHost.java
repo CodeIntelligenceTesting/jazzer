@@ -16,7 +16,6 @@ package com.example;
 
 import com.code_intelligence.jazzer.api.BugDetectors;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.code_intelligence.jazzer.api.Jazzer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -32,10 +31,9 @@ public class SsrfSocketConnectToHost {
 
     try (AutoCloseable ignored = BugDetectors.allowNetworkConnections()) {
       // Verify that policies nest properly.
-      try (AutoCloseable ignored1 = BugDetectors.allowNetworkConnections(
-               (String h, Integer p) -> h.equals("localhost"))) {
-        try (AutoCloseable ignored2 = BugDetectors.allowNetworkConnections()) {
-        }
+      try (AutoCloseable ignored1 =
+          BugDetectors.allowNetworkConnections((String h, Integer p) -> h.equals("localhost"))) {
+        try (AutoCloseable ignored2 = BugDetectors.allowNetworkConnections()) {}
         try (Socket s = new Socket()) {
           s.connect(new InetSocketAddress(host, port), CONNECTION_TIMEOUT_MS);
         } catch (IOException ignored3) {

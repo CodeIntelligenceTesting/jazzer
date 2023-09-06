@@ -28,9 +28,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/**
- * Verifies that reproducing a single input works for @FuzzTests.
- */
+/** Verifies that reproducing a single input works for @FuzzTests. */
 class JUnitReproducerTest {
   // echo "Hello, Jazzer!" | openssl dgst -binary -sha256 | openssl base64 -A
   private static final byte[] TARGET_DIGEST =

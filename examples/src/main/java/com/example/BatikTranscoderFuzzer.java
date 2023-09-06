@@ -26,9 +26,12 @@ public class BatikTranscoderFuzzer {
     String host = data.consumeRemainingAsString();
 
     byte[] svg =
-        ("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" >\n"
-            + "<image width=\"50\" height=\"50\" xlink:href=\"https://" + host + "/\"></image>\n"
-            + "</svg>")
+        ("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\""
+                + " >\n"
+                + "<image width=\"50\" height=\"50\" xlink:href=\"https://"
+                + host
+                + "/\"></image>\n"
+                + "</svg>")
             .getBytes();
 
     // Convert SVG to JPEG

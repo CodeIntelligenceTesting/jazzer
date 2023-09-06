@@ -38,8 +38,9 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 class MessageMutatorTest {
-  private static final MutatorFactory FACTORY = new ChainedMutatorFactory(
-      LangMutators.newFactory(), CollectionMutators.newFactory(), ProtoMutators.newFactory());
+  private static final MutatorFactory FACTORY =
+      new ChainedMutatorFactory(
+          LangMutators.newFactory(), CollectionMutators.newFactory(), ProtoMutators.newFactory());
 
   @Test
   void testSimpleMessage() {
@@ -47,20 +48,22 @@ class MessageMutatorTest {
 
     PrimitiveField3 msg;
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // not null
-             false,
-             // boolean
-             false)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // not null
+            false,
+            // boolean
+            false)) {
       msg = mutator.init(prng);
       assertThat(msg).isEqualTo(PrimitiveField3.getDefaultInstance());
     }
 
-    try (MockPseudoRandom prng = mockPseudoRandom(
-             // not null,
-             false,
-             // mutate first field
-             0)) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // not null,
+            false,
+            // mutate first field
+            0)) {
       msg = mutator.mutate(msg, prng);
       assertThat(msg).isNotEqualTo(PrimitiveField3.getDefaultInstance());
     }
@@ -77,16 +80,19 @@ class MessageMutatorTest {
     byte[] bytes = out.toByteArray();
 
     SerializingMutator<ExtendedMessage2> mutator =
-        (SerializingMutator<ExtendedMessage2>) FACTORY.createOrThrow(
-            new TypeHolder<@NotNull ExtendedMessage2>() {}.annotatedType());
+        (SerializingMutator<ExtendedMessage2>)
+            FACTORY.createOrThrow(new TypeHolder<@NotNull ExtendedMessage2>() {}.annotatedType());
     ExtendedMessage2 extendedMessage = mutator.readExclusive(new ByteArrayInputStream(bytes));
     assertThat(extendedMessage)
-        .isEqualTo(ExtendedMessage2.newBuilder()
-                       .setMessageField(
-                           ExtendedSubmessage2.newBuilder().setNumericField(42).setMessageField(
-                               OriginalSubmessage2.newBuilder().setNumericField(0).build()))
-                       .setBoolField(true)
-                       .setFloatField(0)
-                       .build());
+        .isEqualTo(
+            ExtendedMessage2.newBuilder()
+                .setMessageField(
+                    ExtendedSubmessage2.newBuilder()
+                        .setNumericField(42)
+                        .setMessageField(
+                            OriginalSubmessage2.newBuilder().setNumericField(0).build()))
+                .setBoolField(true)
+                .setFloatField(0)
+                .build());
   }
 }

@@ -48,7 +48,8 @@ class FloatingPointMutatorTest {
 
     return Stream.of(
         // value is already in range: it should stay in range
-        arguments(0.0f, 0.0f, 1.0f, true), arguments(0.0f, 1.0f, 1.0f, true),
+        arguments(0.0f, 0.0f, 1.0f, true),
+        arguments(0.0f, 1.0f, 1.0f, true),
         arguments(Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, 1.0f, true),
         arguments(Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, true),
         arguments(Float.NaN, 0.0f, 1.0f, true),
@@ -73,7 +74,8 @@ class FloatingPointMutatorTest {
         // Values outside the range
         arguments(-2e30f, -100000.0f, 100000.0f, true),
         arguments(2e30f, Float.NEGATIVE_INFINITY, -Float.MAX_VALUE, true),
-        arguments(-1.0f, 0.0f, 1.0f, false), arguments(5.0f, 0.0f, 1.0f, false),
+        arguments(-1.0f, 0.0f, 1.0f, false),
+        arguments(5.0f, 0.0f, 1.0f, false),
         arguments(-Float.MAX_VALUE, -Float.MAX_VALUE, 100.0f, true),
         // NaN not allowed
         arguments(Float.NaN, 0.0f, 1.0f, false),
@@ -88,7 +90,8 @@ class FloatingPointMutatorTest {
         arguments(Float.NaN, 0.0f, Float.MIN_VALUE, false),
         // There are many possible NaN values, test a few of them that are different from Float.NaN
         // (0x7fc00000)
-        arguments(NaN1, 0.0f, 1.0f, false), arguments(NaN2, 0.0f, 1.0f, false),
+        arguments(NaN1, 0.0f, 1.0f, false),
+        arguments(NaN2, 0.0f, 1.0f, false),
         arguments(NaN3, 0.0f, 1.0f, false));
   }
 
@@ -98,12 +101,16 @@ class FloatingPointMutatorTest {
     double NaN3 = Double.longBitsToDouble(0x7ff0000000000003L);
     double NaNdeadbeef = Double.longBitsToDouble(0x7ff00000deadbeefL);
     assertThat(
-        Double.isNaN(NaN1) && Double.isNaN(NaN2) && Double.isNaN(NaN3) && Double.isNaN(NaNdeadbeef))
+            Double.isNaN(NaN1)
+                && Double.isNaN(NaN2)
+                && Double.isNaN(NaN3)
+                && Double.isNaN(NaNdeadbeef))
         .isTrue();
 
     return Stream.of(
         // value is already in range: it should stay in range
-        arguments(0.0, 0.0, 1.0, true), arguments(0.0, 1.0, 1.0, true),
+        arguments(0.0, 0.0, 1.0, true),
+        arguments(0.0, 1.0, 1.0, true),
         arguments(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, 1.0, true),
         arguments(
             Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true),
@@ -129,12 +136,16 @@ class FloatingPointMutatorTest {
         // Values outside the range
         arguments(-2e30, -100000.0, 100000.0, true),
         arguments(2e30, Double.NEGATIVE_INFINITY, -Double.MAX_VALUE, true),
-        arguments(-1.0, 0.0, 1.0, false), arguments(5.0, 0.0, 1.0, false),
+        arguments(-1.0, 0.0, 1.0, false),
+        arguments(5.0, 0.0, 1.0, false),
         arguments(-Double.MAX_VALUE, -Double.MAX_VALUE, 100.0, true),
         arguments(
             Math.nextDown(Double.MAX_VALUE), -Double.MAX_VALUE * 0.5, Double.MAX_VALUE * 0.5, true),
-        arguments(Math.nextDown(Double.MAX_VALUE), -Double.MAX_VALUE * 0.5,
-            Math.nextUp(Double.MAX_VALUE * 0.5), true),
+        arguments(
+            Math.nextDown(Double.MAX_VALUE),
+            -Double.MAX_VALUE * 0.5,
+            Math.nextUp(Double.MAX_VALUE * 0.5),
+            true),
         // NaN not allowed
         arguments(Double.NaN, 0.0, 1.0, false),
         arguments(Double.NaN, -Double.MAX_VALUE, 1.0, false),
@@ -148,7 +159,8 @@ class FloatingPointMutatorTest {
         arguments(Double.NaN, 0.0, Double.MIN_VALUE, false),
         // There are many possible NaN values, test a few of them that are different from Double.NaN
         // (0x7ff8000000000000L)
-        arguments(NaN1, 0.0, 1.0, false), arguments(NaN2, 0.0, 1.0, false),
+        arguments(NaN1, 0.0, 1.0, false),
+        arguments(NaN2, 0.0, 1.0, false),
         arguments(NaN3, 0.0, 1.0, false),
         arguments(NaNdeadbeef, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, false));
   }
@@ -213,10 +225,12 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> floatInitCasesFullRange() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull Float>() {}.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull Float>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), Float.NEGATIVE_INFINITY, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), Float.NEGATIVE_INFINITY, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Float.MAX_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Float.MIN_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -0.0f, true),
@@ -230,11 +244,15 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> floatInitCasesMinusOneToOne() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @FloatInRange(min = -1.0f, max = 1.0f) Float>() {
-            }.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull @FloatInRange(min = -1.0f, max = 1.0f)
+                        Float>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), -1.0f, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), -1.0f, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Float.MIN_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -0.0f, true),
         arguments(mutator, Stream.of(true, ctr.get()), 0.0f, true),
@@ -246,12 +264,15 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> floatInitCasesMinusMinToMin() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @FloatInRange(
-                min = -Float.MIN_VALUE, max = Float.MIN_VALUE) Float>() {
-            }.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull @FloatInRange(min = -Float.MIN_VALUE, max = Float.MIN_VALUE)
+                        Float>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), -Float.MIN_VALUE, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), -Float.MIN_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -0.0f, true),
         arguments(mutator, Stream.of(true, ctr.get()), 0.0f, true),
         arguments(mutator, Stream.of(true, ctr.get()), Float.MIN_VALUE, true),
@@ -261,12 +282,15 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> floatInitCasesMaxToInf() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @FloatInRange(
-                min = Float.MAX_VALUE, max = Float.POSITIVE_INFINITY) Float>() {
-            }.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull @FloatInRange(min = Float.MAX_VALUE, max = Float.POSITIVE_INFINITY)
+                        Float>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), Float.MAX_VALUE, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), Float.MAX_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), Float.POSITIVE_INFINITY, true),
         arguments(mutator, Stream.of(true, ctr.get()), Float.NaN, true),
         arguments(mutator, Stream.of(true, ctr.get()), UNUSED_FLOAT, false));
@@ -274,12 +298,16 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> floatInitCasesMinusInfToMinusMax() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @FloatInRange(
-                min = Float.NEGATIVE_INFINITY, max = -Float.MAX_VALUE) Float>() {
-            }.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull
+                        @FloatInRange(min = Float.NEGATIVE_INFINITY, max = -Float.MAX_VALUE)
+                        Float>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), Float.NEGATIVE_INFINITY, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), Float.NEGATIVE_INFINITY, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Float.MAX_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), Float.NaN, true),
         arguments(mutator, Stream.of(true, ctr.get()), UNUSED_FLOAT, false));
@@ -287,12 +315,19 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> floatInitCasesFullRangeWithoutNaN() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @FloatInRange(min = Float.NEGATIVE_INFINITY,
-                max = Float.POSITIVE_INFINITY, allowNaN = true) Float>() {
-            }.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull
+                        @FloatInRange(
+                            min = Float.NEGATIVE_INFINITY,
+                            max = Float.POSITIVE_INFINITY,
+                            allowNaN = true)
+                        Float>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), Float.NEGATIVE_INFINITY, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), Float.NEGATIVE_INFINITY, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Float.MAX_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Float.MIN_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -0.0f, true),
@@ -305,11 +340,18 @@ class FloatingPointMutatorTest {
   }
 
   @ParameterizedTest
-  @MethodSource({"floatInitCasesMinusOneToOne", "floatInitCasesFullRange",
-      "floatInitCasesMinusMinToMin", "floatInitCasesMaxToInf", "floatInitCasesMinusInfToMinusMax",
-      "floatInitCasesFullRangeWithoutNaN"})
-  void
-  testFloatInitCases(SerializingMutator<Float> mutator, Stream<Object> prngValues, float expected,
+  @MethodSource({
+    "floatInitCasesMinusOneToOne",
+    "floatInitCasesFullRange",
+    "floatInitCasesMinusMinToMin",
+    "floatInitCasesMaxToInf",
+    "floatInitCasesMinusInfToMinusMax",
+    "floatInitCasesFullRangeWithoutNaN"
+  })
+  void testFloatInitCases(
+      SerializingMutator<Float> mutator,
+      Stream<Object> prngValues,
+      float expected,
       boolean specialValueIndexExists) {
     assertThat(mutator.toString()).isEqualTo("Float");
     if (specialValueIndexExists) {
@@ -319,20 +361,28 @@ class FloatingPointMutatorTest {
       }
       assertThat(n).isEqualTo(expected);
     } else { // should throw
-      assertThrows(AssertionError.class, () -> {
-        try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(prngValues.toArray())) {
-          mutator.init(prng);
-        }
-      });
+      assertThrows(
+          AssertionError.class,
+          () -> {
+            try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(prngValues.toArray())) {
+              mutator.init(prng);
+            }
+          });
     }
   }
 
   static Stream<Arguments> floatMutateSanityChecksFullRangeCases() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @FloatInRange(min = Float.NEGATIVE_INFINITY,
-                max = Float.POSITIVE_INFINITY, allowNaN = true) Float>() {
-            }.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull
+                        @FloatInRange(
+                            min = Float.NEGATIVE_INFINITY,
+                            max = Float.POSITIVE_INFINITY,
+                            allowNaN = true)
+                        Float>() {}.annotatedType());
     // Init value can be set to desired one by giving this to the init method: (false, <desired
     // value>)
     return Stream.of(
@@ -347,7 +397,11 @@ class FloatingPointMutatorTest {
         arguments(mutator, Stream.of(false, 0f), Stream.of(false, 1, 0B01111111), 1.0f, true),
         // mutateMantissa
         arguments(mutator, Stream.of(false, 0f), Stream.of(false, 2, 0, 100), 1.4e-43f, true),
-        arguments(mutator, Stream.of(false, Float.intBitsToFloat(1)), Stream.of(false, 2, 0, -1), 0,
+        arguments(
+            mutator,
+            Stream.of(false, Float.intBitsToFloat(1)),
+            Stream.of(false, 2, 0, -1),
+            0,
             true),
         // mutateWithMathematicalFn
         arguments(
@@ -363,15 +417,22 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> floatMutateLimitedRangeCases() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @FloatInRange(min = -1f, max = 1f, allowNaN = false) Float>() {
-            }.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull @FloatInRange(min = -1f, max = 1f, allowNaN = false)
+                        Float>() {}.annotatedType());
     // Init value can be set to desired one by giving this to the init method: (false, <desired
     // value>)
     return Stream.of(
         // Bit flip; forceInRange(); result equals previous value; adjust value
-        arguments(mutator, Stream.of(false, 0f), Stream.of(false, 0, 30, true),
-            0f - Float.MIN_VALUE, true),
+        arguments(
+            mutator,
+            Stream.of(false, 0f),
+            Stream.of(false, 0, 30, true),
+            0f - Float.MIN_VALUE,
+            true),
         arguments(mutator, Stream.of(false, 1f), Stream.of(false, 0, 30), Math.nextDown(1f), true),
         arguments(mutator, Stream.of(false, -1f), Stream.of(false, 0, 30), Math.nextUp(-1f), true),
         // NaN after mutateWithMathematicalFn with NaN not allowed; forceInRange will return
@@ -381,9 +442,12 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> floatMutateLimitedRangeCasesWithNaN() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @FloatInRange(min = -1f, max = 1f, allowNaN = true) Float>() {
-            }.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull @FloatInRange(min = -1f, max = 1f, allowNaN = true)
+                        Float>() {}.annotatedType());
     // Init value can be set to desired one by giving this to the init method: (false, <desired
     // value>)
     return Stream.of(
@@ -395,11 +459,17 @@ class FloatingPointMutatorTest {
   }
 
   @ParameterizedTest
-  @MethodSource({"floatMutateSanityChecksFullRangeCases", "floatMutateLimitedRangeCases",
-      "floatMutateLimitedRangeCasesWithNaN"})
-  void
-  testFloatMutateCases(SerializingMutator<Float> mutator, Stream<Object> initValues,
-      Stream<Object> mutationValues, float expected, boolean knownMutatorSwitchCase) {
+  @MethodSource({
+    "floatMutateSanityChecksFullRangeCases",
+    "floatMutateLimitedRangeCases",
+    "floatMutateLimitedRangeCasesWithNaN"
+  })
+  void testFloatMutateCases(
+      SerializingMutator<Float> mutator,
+      Stream<Object> initValues,
+      Stream<Object> mutationValues,
+      float expected,
+      boolean knownMutatorSwitchCase) {
     assertThat(mutator.toString()).isEqualTo("Float");
     Float n;
 
@@ -424,21 +494,24 @@ class FloatingPointMutatorTest {
         assertThat(n).isAtMost(((FloatMutator) mutator).maxValue);
       }
     } else { // Invalid mutation because a case is not handled
-      assertThrows(AssertionError.class, () -> {
-        try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(mutationValues.toArray())) {
-          mutator.mutate(UNUSED_FLOAT, prng);
-        }
-      });
+      assertThrows(
+          AssertionError.class,
+          () -> {
+            try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(mutationValues.toArray())) {
+              mutator.mutate(UNUSED_FLOAT, prng);
+            }
+          });
     }
   }
 
   @Test
   void testFloatCrossOverMean() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull Float>() {}.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull Float>() {}.annotatedType());
     try (TestSupport.MockPseudoRandom prng =
-             mockPseudoRandom(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
+        mockPseudoRandom(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
       assertThat(mutator.crossOver(0f, 0f, prng)).isWithin(0).of(0f);
       assertThat(mutator.crossOver(-0f, 0f, prng)).isWithin(0).of(0f);
       assertThat(mutator.crossOver(0f, 2f, prng)).isWithin(1e-10f).of(1.0f);
@@ -474,8 +547,9 @@ class FloatingPointMutatorTest {
   @Test
   void testFloatCrossOverExponent() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull Float>() {}.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull Float>() {}.annotatedType());
     try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(1, 1, 1)) {
       assertThat(mutator.crossOver(2.0f, -1.5f, prng)).isWithin(1e-10f).of(1.0f);
       assertThat(mutator.crossOver(2.0f, Float.POSITIVE_INFINITY, prng)).isPositiveInfinity();
@@ -486,8 +560,9 @@ class FloatingPointMutatorTest {
   @Test
   void testFloatCrossOverMantissa() {
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull Float>() {}.annotatedType());
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull Float>() {}.annotatedType());
     try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(2, 2, 2)) {
       assertThat(mutator.crossOver(4.0f, 3.5f, prng)).isWithin(1e-10f).of(7.0f);
       assertThat(mutator.crossOver(Float.POSITIVE_INFINITY, 3.0f, prng)).isNaN();
@@ -497,10 +572,12 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> doubleInitCasesFullRange() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull Double>() {}.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull Double>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), Double.NEGATIVE_INFINITY, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), Double.NEGATIVE_INFINITY, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Double.MAX_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Double.MIN_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -0.0, true),
@@ -514,11 +591,15 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> doubleInitCasesMinusOneToOne() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @DoubleInRange(min = -1.0, max = 1.0) Double>() {
-            }.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull @DoubleInRange(min = -1.0, max = 1.0)
+                        Double>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), -1.0, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), -1.0, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Double.MIN_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -0.0, true),
         arguments(mutator, Stream.of(true, ctr.get()), 0.0, true),
@@ -530,12 +611,15 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> doubleInitCasesMinusMinToMin() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @DoubleInRange(
-                min = -Double.MIN_VALUE, max = Double.MIN_VALUE) Double>() {
-            }.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull @DoubleInRange(min = -Double.MIN_VALUE, max = Double.MIN_VALUE)
+                        Double>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), -Double.MIN_VALUE, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), -Double.MIN_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -0.0, true),
         arguments(mutator, Stream.of(true, ctr.get()), 0.0, true),
         arguments(mutator, Stream.of(true, ctr.get()), Double.MIN_VALUE, true),
@@ -545,12 +629,16 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> doubleInitCasesMaxToInf() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @DoubleInRange(
-                min = Double.MAX_VALUE, max = Double.POSITIVE_INFINITY) Double>() {
-            }.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull
+                        @DoubleInRange(min = Double.MAX_VALUE, max = Double.POSITIVE_INFINITY)
+                        Double>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), Double.MAX_VALUE, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), Double.MAX_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), Double.POSITIVE_INFINITY, true),
         arguments(mutator, Stream.of(true, ctr.get()), Double.NaN, true),
         arguments(mutator, Stream.of(true, ctr.get()), UNUSED_DOUBLE, false));
@@ -558,12 +646,16 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> doubleInitCasesMinusInfToMinusMax() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @DoubleInRange(
-                min = Double.NEGATIVE_INFINITY, max = -Double.MAX_VALUE) Double>() {
-            }.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull
+                        @DoubleInRange(min = Double.NEGATIVE_INFINITY, max = -Double.MAX_VALUE)
+                        Double>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), Double.NEGATIVE_INFINITY, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), Double.NEGATIVE_INFINITY, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Double.MAX_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), Double.NaN, true),
         arguments(mutator, Stream.of(true, ctr.get()), UNUSED_DOUBLE, false));
@@ -571,12 +663,19 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> doubleInitCasesFullRangeWithoutNaN() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @DoubleInRange(min = Double.NEGATIVE_INFINITY,
-                max = Double.POSITIVE_INFINITY, allowNaN = true) Double>() {
-            }.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull
+                        @DoubleInRange(
+                            min = Double.NEGATIVE_INFINITY,
+                            max = Double.POSITIVE_INFINITY,
+                            allowNaN = true)
+                        Double>() {}.annotatedType());
     Supplier<Integer> ctr = makeCounter();
-    return Stream.of(arguments(mutator, Stream.of(true, ctr.get()), Double.NEGATIVE_INFINITY, true),
+    return Stream.of(
+        arguments(mutator, Stream.of(true, ctr.get()), Double.NEGATIVE_INFINITY, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Double.MAX_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -Double.MIN_VALUE, true),
         arguments(mutator, Stream.of(true, ctr.get()), -0.0, true),
@@ -589,12 +688,19 @@ class FloatingPointMutatorTest {
   }
 
   @ParameterizedTest
-  @MethodSource({"doubleInitCasesMinusOneToOne", "doubleInitCasesFullRange",
-      "doubleInitCasesMinusMinToMin", "doubleInitCasesMaxToInf",
-      "doubleInitCasesMinusInfToMinusMax", "doubleInitCasesFullRangeWithoutNaN"})
-  void
-  testDoubleInitCases(SerializingMutator<Double> mutator, Stream<Object> prngValues,
-      double expected, boolean knownSwitchCase) {
+  @MethodSource({
+    "doubleInitCasesMinusOneToOne",
+    "doubleInitCasesFullRange",
+    "doubleInitCasesMinusMinToMin",
+    "doubleInitCasesMaxToInf",
+    "doubleInitCasesMinusInfToMinusMax",
+    "doubleInitCasesFullRangeWithoutNaN"
+  })
+  void testDoubleInitCases(
+      SerializingMutator<Double> mutator,
+      Stream<Object> prngValues,
+      double expected,
+      boolean knownSwitchCase) {
     assertThat(mutator.toString()).isEqualTo("Double");
     if (knownSwitchCase) {
       Double n = null;
@@ -603,20 +709,28 @@ class FloatingPointMutatorTest {
       }
       assertThat(n).isEqualTo(expected);
     } else {
-      assertThrows(AssertionError.class, () -> {
-        try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(prngValues.toArray())) {
-          mutator.init(prng);
-        }
-      });
+      assertThrows(
+          AssertionError.class,
+          () -> {
+            try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(prngValues.toArray())) {
+              mutator.init(prng);
+            }
+          });
     }
   }
 
   static Stream<Arguments> doubleMutateSanityChecksFullRangeCases() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @DoubleInRange(min = Double.NEGATIVE_INFINITY,
-                max = Double.POSITIVE_INFINITY, allowNaN = true) Double>() {
-            }.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull
+                        @DoubleInRange(
+                            min = Double.NEGATIVE_INFINITY,
+                            max = Double.POSITIVE_INFINITY,
+                            allowNaN = true)
+                        Double>() {}.annotatedType());
     // Init value can be set to desired one by giving this to the init method: (false, <desired
     // value>)
     return Stream.of(
@@ -631,8 +745,12 @@ class FloatingPointMutatorTest {
         arguments(mutator, Stream.of(false, 0.0), Stream.of(false, 1, 0B1111111111), 1.0, true),
         // mutateMantissa
         arguments(mutator, Stream.of(false, 0.0), Stream.of(false, 2, 0, 100L), 4.94e-322, true),
-        arguments(mutator, Stream.of(false, Double.longBitsToDouble(1)),
-            Stream.of(false, 2, 0, -1L), 0, true),
+        arguments(
+            mutator,
+            Stream.of(false, Double.longBitsToDouble(1)),
+            Stream.of(false, 2, 0, -1L),
+            0,
+            true),
         // mutateWithMathematicalFn
         arguments(mutator, Stream.of(false, 10.1), Stream.of(false, 3, 4), 11, true), // Math::ceil
         arguments(
@@ -646,15 +764,22 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> doubleMutateLimitedRangeCases() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @DoubleInRange(min = -1, max = 1, allowNaN = false) Double>() {
-            }.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull @DoubleInRange(min = -1, max = 1, allowNaN = false)
+                        Double>() {}.annotatedType());
     // Init value can be set to desired one by giving this to the init method: (false, <desired
     // value>)
     return Stream.of(
         // Bit flip; forceInRange(); result equals previous value; adjust value
-        arguments(mutator, Stream.of(false, 0.0), Stream.of(false, 0, 62, true),
-            0.0 - Double.MIN_VALUE, true),
+        arguments(
+            mutator,
+            Stream.of(false, 0.0),
+            Stream.of(false, 0, 62, true),
+            0.0 - Double.MIN_VALUE,
+            true),
         arguments(
             mutator, Stream.of(false, 1.0), Stream.of(false, 0, 62), Math.nextDown(1.0), true),
         arguments(
@@ -666,9 +791,12 @@ class FloatingPointMutatorTest {
 
   static Stream<Arguments> doubleMutateLimitedRangeCasesWithNaN() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @DoubleInRange(min = -1, max = 1, allowNaN = true) Double>() {
-            }.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull @DoubleInRange(min = -1, max = 1, allowNaN = true)
+                        Double>() {}.annotatedType());
     // Init value can be set to desired one by giving this to the init method: (false, <desired
     // value>)
     return Stream.of(
@@ -680,11 +808,17 @@ class FloatingPointMutatorTest {
   }
 
   @ParameterizedTest
-  @MethodSource({"doubleMutateSanityChecksFullRangeCases", "doubleMutateLimitedRangeCases",
-      "doubleMutateLimitedRangeCasesWithNaN"})
-  void
-  testDoubleMutateCases(SerializingMutator<Double> mutator, Stream<Object> initValues,
-      Stream<Object> mutationValues, double expected, boolean knownSwitchCase) {
+  @MethodSource({
+    "doubleMutateSanityChecksFullRangeCases",
+    "doubleMutateLimitedRangeCases",
+    "doubleMutateLimitedRangeCasesWithNaN"
+  })
+  void testDoubleMutateCases(
+      SerializingMutator<Double> mutator,
+      Stream<Object> initValues,
+      Stream<Object> mutationValues,
+      double expected,
+      boolean knownSwitchCase) {
     assertThat(mutator.toString()).isEqualTo("Double");
     Double n;
 
@@ -709,21 +843,24 @@ class FloatingPointMutatorTest {
         assertThat(n).isAtMost(((DoubleMutator) mutator).maxValue);
       }
     } else { // Invalid mutation because a case is not handled
-      assertThrows(AssertionError.class, () -> {
-        try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(mutationValues.toArray())) {
-          mutator.mutate(UNUSED_DOUBLE, prng);
-        }
-      });
+      assertThrows(
+          AssertionError.class,
+          () -> {
+            try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(mutationValues.toArray())) {
+              mutator.mutate(UNUSED_DOUBLE, prng);
+            }
+          });
     }
   }
 
   @Test
   void testDoubleCrossOverMean() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull Double>() {}.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull Double>() {}.annotatedType());
     try (TestSupport.MockPseudoRandom prng =
-             mockPseudoRandom(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
+        mockPseudoRandom(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
       assertThat(mutator.crossOver(0.0, 0.0, prng)).isWithin(0).of(0f);
       assertThat(mutator.crossOver(-0.0, 0.0, prng)).isWithin(0).of(0f);
       assertThat(mutator.crossOver(0.0, 2.0, prng)).isWithin(1e-10f).of(1.0f);
@@ -760,8 +897,9 @@ class FloatingPointMutatorTest {
   @Test
   void testDoubleCrossOverExponent() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull Double>() {}.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull Double>() {}.annotatedType());
     try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(1, 1, 1)) {
       assertThat(mutator.crossOver(2.0, -1.5, prng)).isWithin(1e-10f).of(1.0f);
       assertThat(mutator.crossOver(2.0, Double.POSITIVE_INFINITY, prng)).isPositiveInfinity();
@@ -772,8 +910,9 @@ class FloatingPointMutatorTest {
   @Test
   void testDoubleCrossOverMantissa() {
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull Double>() {}.annotatedType());
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull Double>() {}.annotatedType());
     try (TestSupport.MockPseudoRandom prng = mockPseudoRandom(2, 2, 2)) {
       assertThat(mutator.crossOver(4.0, 3.5, prng)).isWithin(1e-10f).of(7.0f);
       assertThat(mutator.crossOver(Double.POSITIVE_INFINITY, 3.0, prng)).isNaN();

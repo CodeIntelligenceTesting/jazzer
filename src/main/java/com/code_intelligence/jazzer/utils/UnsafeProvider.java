@@ -47,10 +47,11 @@ public final class UnsafeProvider {
           }
         }
       }
-      throw new IllegalStateException(String.format(
-          "Please file a bug at https://github.com/CodeIntelligenceTesting/jazzer/issues/new with "
-          + "this information: Failed to find Unsafe member on Unsafe class, have: "
-          + Arrays.deepToString(Unsafe.class.getDeclaredFields())));
+      throw new IllegalStateException(
+          String.format(
+              "Please file a bug at https://github.com/CodeIntelligenceTesting/jazzer/issues/new"
+                  + " with this information: Failed to find Unsafe member on Unsafe class, have: "
+                  + Arrays.deepToString(Unsafe.class.getDeclaredFields())));
     }
   }
 }

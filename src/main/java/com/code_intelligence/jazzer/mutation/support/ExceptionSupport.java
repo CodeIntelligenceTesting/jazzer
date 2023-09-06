@@ -24,7 +24,7 @@ public final class ExceptionSupport {
    */
   @SuppressWarnings("unchecked")
   public static <T extends Throwable> T asUnchecked(Throwable t) throws T {
-    throw(T) t;
+    throw (T) t;
   }
 
   private ExceptionSupport() {}

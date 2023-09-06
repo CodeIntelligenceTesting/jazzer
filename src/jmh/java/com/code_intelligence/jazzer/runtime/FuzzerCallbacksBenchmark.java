@@ -71,7 +71,8 @@ public class FuzzerCallbacksBenchmark {
 
   @State(Scope.Benchmark)
   public static class TraceSwitchState {
-    @Param({"5", "10"}) int numCases;
+    @Param({"5", "10"})
+    int numCases;
 
     long val;
     long[] cases;
@@ -81,16 +82,18 @@ public class FuzzerCallbacksBenchmark {
     public void setup() {
       cases = new long[2 + numCases];
       Random random = ThreadLocalRandom.current();
-      Arrays.setAll(cases, i -> {
-        switch (i) {
-          case 0:
-            return numCases;
-          case 1:
-            return 32;
-          default:
-            return random.nextInt();
-        }
-      });
+      Arrays.setAll(
+          cases,
+          i -> {
+            switch (i) {
+              case 0:
+                return numCases;
+              case 1:
+                return 32;
+              default:
+                return random.nextInt();
+            }
+          });
       Arrays.sort(cases, 2, cases.length);
       val = random.nextInt();
     }
@@ -128,7 +131,8 @@ public class FuzzerCallbacksBenchmark {
 
   @State(Scope.Benchmark)
   public static class TraceMemcmpState {
-    @Param({"10", "100", "1000"}) int length;
+    @Param({"10", "100", "1000"})
+    int length;
 
     byte[] array1;
     byte[] array2;
@@ -166,8 +170,11 @@ public class FuzzerCallbacksBenchmark {
 
   @State(Scope.Benchmark)
   public static class TraceStrstrState {
-    @Param({"10", "100", "1000"}) int length;
-    @Param({"true", "false"}) boolean asciiOnly;
+    @Param({"10", "100", "1000"})
+    int length;
+
+    @Param({"true", "false"})
+    boolean asciiOnly;
 
     String haystack;
     String needle;

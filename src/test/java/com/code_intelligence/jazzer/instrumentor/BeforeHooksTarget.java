@@ -19,7 +19,7 @@ import java.util.Map;
 
 // selfCheck() only passes with the hooks in BeforeHooks.java applied.
 public class BeforeHooksTarget implements BeforeHooksTargetContract {
-  static private int timesCalled = 0;
+  private static int timesCalled = 0;
   Map<String, Boolean> results = new HashMap<>();
   Boolean func1Called = false;
   Boolean funcWithArgsCalled = false;
