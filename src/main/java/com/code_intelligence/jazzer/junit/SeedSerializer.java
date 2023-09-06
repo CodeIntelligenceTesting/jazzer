@@ -28,6 +28,7 @@ import java.util.Optional;
 
 interface SeedSerializer {
   Object[] read(byte[] bytes);
+
   default boolean allReadsValid() {
     return true;
   }
@@ -38,11 +39,12 @@ interface SeedSerializer {
 
   /**
    * Creates specialized {@link SeedSerializer} instances for the following method parameters:
+   *
    * <ul>
    *   <li>{@code byte[]}
    *   <li>{@code FuzzDataProvider}
    *   <li>Any other types will attempt to be created using either Autofuzz or the experimental
-   * mutator framework if {@link Opt}'s {@code experimentalMutator} is set.
+   *       mutator framework if {@link Opt}'s {@code experimentalMutator} is set.
    * </ul>
    */
   static SeedSerializer of(Method method) {
@@ -58,7 +60,8 @@ interface SeedSerializer {
     } else {
       Optional<ArgumentsMutator> argumentsMutator =
           Opt.experimentalMutator.get() ? ArgumentsMutator.forMethod(method) : Optional.empty();
-      return argumentsMutator.<SeedSerializer>map(ArgumentsMutatorSeedSerializer::new)
+      return argumentsMutator
+          .<SeedSerializer>map(ArgumentsMutatorSeedSerializer::new)
           .orElseGet(() -> new AutofuzzSeedSerializer(method));
     }
   }

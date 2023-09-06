@@ -30,16 +30,17 @@ import sun.misc.Unsafe;
  * Represents the Java view on a libFuzzer 8 bit counter coverage map. By using a direct ByteBuffer,
  * the counters are shared directly with native code.
  */
-final public class CoverageMap {
+public final class CoverageMap {
   static {
     RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
   }
 
   private static final String ENV_MAX_NUM_COUNTERS = "JAZZER_MAX_NUM_COUNTERS";
 
-  private static final int MAX_NUM_COUNTERS = System.getenv(ENV_MAX_NUM_COUNTERS) != null
-      ? Integer.parseInt(System.getenv(ENV_MAX_NUM_COUNTERS))
-      : 1 << 20;
+  private static final int MAX_NUM_COUNTERS =
+      System.getenv(ENV_MAX_NUM_COUNTERS) != null
+          ? Integer.parseInt(System.getenv(ENV_MAX_NUM_COUNTERS))
+          : 1 << 20;
 
   private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
   private static final Class<?> LOG;
@@ -48,12 +49,16 @@ final public class CoverageMap {
 
   static {
     try {
-      LOG = Class.forName(
-          "com.code_intelligence.jazzer.utils.Log", false, ClassLoader.getSystemClassLoader());
-      LOG_INFO = MethodHandles.lookup().findStatic(
-          LOG, "info", MethodType.methodType(void.class, String.class));
-      LOG_ERROR = MethodHandles.lookup().findStatic(
-          LOG, "error", MethodType.methodType(void.class, String.class, Throwable.class));
+      LOG =
+          Class.forName(
+              "com.code_intelligence.jazzer.utils.Log", false, ClassLoader.getSystemClassLoader());
+      LOG_INFO =
+          MethodHandles.lookup()
+              .findStatic(LOG, "info", MethodType.methodType(void.class, String.class));
+      LOG_ERROR =
+          MethodHandles.lookup()
+              .findStatic(
+                  LOG, "error", MethodType.methodType(void.class, String.class, Throwable.class));
     } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException e) {
       throw new RuntimeException(e);
     }
@@ -94,9 +99,10 @@ final public class CoverageMap {
       if (newNumCounters > MAX_NUM_COUNTERS) {
         logError(
             String.format(
-                "Maximum number (%s) of coverage counters exceeded. Try to limit the scope of a single fuzz target as "
-                    + "much as possible to keep the fuzzer fast. If that is not possible, the maximum number of "
-                    + "counters can be increased via the %s environment variable.",
+                "Maximum number (%s) of coverage counters exceeded. Try to limit the scope of a"
+                    + " single fuzz target as much as possible to keep the fuzzer fast. If that is"
+                    + " not possible, the maximum number of counters can be increased via the %s"
+                    + " environment variable.",
                 MAX_NUM_COUNTERS, ENV_MAX_NUM_COUNTERS),
             null);
         System.exit(1);

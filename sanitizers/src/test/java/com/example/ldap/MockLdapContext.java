@@ -25,7 +25,7 @@ import javax.naming.ldap.*;
 /**
  * Mock LdapContex implementation to test LdapInjection hook configuration.
  *
- * Only {@code com.example.ldap.MockLdapContext#search(java.lang.String, java.lang.String,
+ * <p>Only {@code com.example.ldap.MockLdapContext#search(java.lang.String, java.lang.String,
  * javax.naming.directory.SearchControls)} is implemented to validate DN and filer query.
  */
 public class MockLdapContext implements LdapContext {
@@ -135,14 +135,16 @@ public class MockLdapContext implements LdapContext {
   }
 
   @Override
-  public NamingEnumeration<SearchResult> search(Name name, Attributes matchingAttributes,
-      String[] attributesToReturn) throws NamingException {
+  public NamingEnumeration<SearchResult> search(
+      Name name, Attributes matchingAttributes, String[] attributesToReturn)
+      throws NamingException {
     return null;
   }
 
   @Override
-  public NamingEnumeration<SearchResult> search(String name, Attributes matchingAttributes,
-      String[] attributesToReturn) throws NamingException {
+  public NamingEnumeration<SearchResult> search(
+      String name, Attributes matchingAttributes, String[] attributesToReturn)
+      throws NamingException {
     return null;
   }
 
@@ -180,14 +182,16 @@ public class MockLdapContext implements LdapContext {
   }
 
   @Override
-  public NamingEnumeration<SearchResult> search(Name name, String filterExpr, Object[] filterArgs,
-      SearchControls cons) throws NamingException {
+  public NamingEnumeration<SearchResult> search(
+      Name name, String filterExpr, Object[] filterArgs, SearchControls cons)
+      throws NamingException {
     return null;
   }
 
   @Override
-  public NamingEnumeration<SearchResult> search(String name, String filterExpr, Object[] filterArgs,
-      SearchControls cons) throws NamingException {
+  public NamingEnumeration<SearchResult> search(
+      String name, String filterExpr, Object[] filterArgs, SearchControls cons)
+      throws NamingException {
     return null;
   }
 

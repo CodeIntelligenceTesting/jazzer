@@ -26,48 +26,52 @@ import java.util.stream.Collectors;
 // "IJON: Exploring Deep State Spaces via Fuzzing", available at:
 // https://wcventure.github.io/FuzzingPaper/Paper/SP20_IJON.pdf
 public final class MazeFuzzer {
-  private static final String[] MAZE_STRING = new String[] {
-      "  ███████████████████",
-      "    █ █ █   █ █     █",
-      "█ █ █ █ ███ █ █ █ ███",
-      "█ █ █   █       █   █",
-      "█ █████ ███ ███ █ ███",
-      "█       █   █ █ █   █",
-      "█ ███ ███████ █ ███ █",
-      "█ █     █ █     █   █",
-      "███████ █ █ █████ ███",
-      "█   █       █     █ █",
-      "█ ███████ █ ███ ███ █",
-      "█   █     █ █ █   █ █",
-      "███ ███ █ ███ █ ███ █",
-      "█     █ █ █   █     █",
-      "█ ███████ █ █ █ █ █ █",
-      "█ █         █ █ █ █ █",
-      "█ █ █████████ ███ ███",
-      "█   █   █   █ █ █   █",
-      "█ █ █ ███ █████ ███ █",
-      "█ █         █        ",
-      "███████████████████ #",
-  };
+  private static final String[] MAZE_STRING =
+      new String[] {
+        "  ███████████████████",
+        "    █ █ █   █ █     █",
+        "█ █ █ █ ███ █ █ █ ███",
+        "█ █ █   █       █   █",
+        "█ █████ ███ ███ █ ███",
+        "█       █   █ █ █   █",
+        "█ ███ ███████ █ ███ █",
+        "█ █     █ █     █   █",
+        "███████ █ █ █████ ███",
+        "█   █       █     █ █",
+        "█ ███████ █ ███ ███ █",
+        "█   █     █ █ █   █ █",
+        "███ ███ █ ███ █ ███ █",
+        "█     █ █ █   █     █",
+        "█ ███████ █ █ █ █ █ █",
+        "█ █         █ █ █ █ █",
+        "█ █ █████████ ███ ███",
+        "█   █   █   █ █ █   █",
+        "█ █ █ ███ █████ ███ █",
+        "█ █         █        ",
+        "███████████████████ #",
+      };
 
   private static final char[][] MAZE = parseMaze();
   private static final char[][] REACHED_FIELDS = parseMaze();
 
   public static void fuzzerTestOneInput(byte[] commands) {
-    executeCommands(commands, (x, y, won) -> {
-      if (won) {
-        throw new TreasureFoundException(commands);
-      }
-      // This is the key line that makes this fuzz target work: It instructs the fuzzer to track
-      // every new combination of x and y as a new feature. Without it, the fuzzer would be
-      // completely lost in the maze as guessing an escaping path by chance is close to impossible.
-      Jazzer.exploreState((byte) Objects.hash(x, y), 0);
-      if (REACHED_FIELDS[y][x] == ' ') {
-        // Fuzzer reached a new field in the maze, print its progress.
-        REACHED_FIELDS[y][x] = '.';
-        System.out.println(renderMaze(REACHED_FIELDS));
-      }
-    });
+    executeCommands(
+        commands,
+        (x, y, won) -> {
+          if (won) {
+            throw new TreasureFoundException(commands);
+          }
+          // This is the key line that makes this fuzz target work: It instructs the fuzzer to track
+          // every new combination of x and y as a new feature. Without it, the fuzzer would be
+          // completely lost in the maze as guessing an escaping path by chance is close to
+          // impossible.
+          Jazzer.exploreState((byte) Objects.hash(x, y), 0);
+          if (REACHED_FIELDS[y][x] == ' ') {
+            // Fuzzer reached a new field in the maze, print its progress.
+            REACHED_FIELDS[y][x] = '.';
+            System.out.println(renderMaze(REACHED_FIELDS));
+          }
+        });
   }
 
   private static class TreasureFoundException extends RuntimeException {
@@ -119,7 +123,7 @@ public final class MazeFuzzer {
   }
 
   private static char[][] parseMaze() {
-    return Arrays.stream(MazeFuzzer.MAZE_STRING).map(String::toCharArray).toArray(char[][] ::new);
+    return Arrays.stream(MazeFuzzer.MAZE_STRING).map(String::toCharArray).toArray(char[][]::new);
   }
 
   private static String renderMaze(char[][] maze) {
@@ -128,11 +132,13 @@ public final class MazeFuzzer {
 
   private static String renderPath(byte[] commands) {
     char[][] mutableMaze = parseMaze();
-    executeCommands(commands, (x, y, won) -> {
-      if (!won) {
-        mutableMaze[y][x] = '.';
-      }
-    });
+    executeCommands(
+        commands,
+        (x, y, won) -> {
+          if (!won) {
+            mutableMaze[y][x] = '.';
+          }
+        });
     return renderMaze(mutableMaze);
   }
 }

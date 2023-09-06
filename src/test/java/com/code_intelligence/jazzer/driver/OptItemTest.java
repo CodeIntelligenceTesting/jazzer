@@ -18,8 +18,6 @@ package com.code_intelligence.jazzer.driver;
 
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.code_intelligence.jazzer.driver.OptItem.StrList;
@@ -30,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -65,12 +62,34 @@ public class OptItemTest {
   void optItem_precedence() {
     // See BUILD.bazel for environment variables and manifest entries.
     assertThat(testOptItem("some_arg").get())
-        .containsExactly("manifest_3", "manifest_4", "manifest_5", "manifest_7", "env_1", "env_2",
-            "property_1", "property_2", "config_1", "config_2", "cli_1", "cli_2", "cli_6")
+        .containsExactly(
+            "manifest_3",
+            "manifest_4",
+            "manifest_5",
+            "manifest_7",
+            "env_1",
+            "env_2",
+            "property_1",
+            "property_2",
+            "config_1",
+            "config_2",
+            "cli_1",
+            "cli_2",
+            "cli_6")
         .inOrder();
     assertThat(testOptItem("other_arg").get())
-        .containsExactly("manifest_1", "manifest_2", "manifest_6", "env_3", "property_3",
-            "property_4", "config_3", "config_4", "cli_3", "cli_4", "cli_5")
+        .containsExactly(
+            "manifest_1",
+            "manifest_2",
+            "manifest_6",
+            "env_3",
+            "property_3",
+            "property_4",
+            "config_3",
+            "config_4",
+            "cli_3",
+            "cli_4",
+            "cli_5")
         .inOrder();
   }
 
@@ -84,7 +103,8 @@ public class OptItemTest {
     OptItem<List<String>> unsetArg = testOptItem("unset_arg");
     assertThat(unsetArg.setIfDefault(Arrays.asList("not", "default"))).isTrue();
     assertThat(unsetArg.get()).containsExactly("not", "default").inOrder();
-    assertThrows(IllegalStateException.class,
+    assertThrows(
+        IllegalStateException.class,
         () -> unsetArg.setIfDefault(Arrays.asList("also", "not", "default")));
   }
 
@@ -93,7 +113,8 @@ public class OptItemTest {
     OptItem<List<String>> setArg = testOptItem("some_arg");
     assertThat(setArg.setIfDefault(singletonList("not_default"))).isFalse();
     assertThat(setArg.get()).doesNotContain("not_default");
-    assertThrows(IllegalStateException.class,
+    assertThrows(
+        IllegalStateException.class,
         () -> setArg.setIfDefault(Arrays.asList("also", "not", "default")));
   }
 

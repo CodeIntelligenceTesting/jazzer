@@ -42,10 +42,33 @@ import java.util.stream.DoubleStream;
 final class FloatingPointMutatorFactory extends MutatorFactory {
   @SuppressWarnings("unchecked")
   private static final DoubleFunction<Double>[] mathFunctions =
-      new DoubleFunction[] {Math::acos, Math::asin, Math::atan, Math::cbrt, Math::ceil, Math::cos,
-          Math::cosh, Math::exp, Math::expm1, Math::floor, Math::log, Math::log10, Math::log1p,
-          Math::rint, Math::sin, Math::sinh, Math::sqrt, Math::tan, Math::tanh, Math::toDegrees,
-          Math::toRadians, n -> n * 0.5, n -> n * 2.0, n -> n * 0.333333333333333, n -> n * 3.0};
+      new DoubleFunction[] {
+        Math::acos,
+        Math::asin,
+        Math::atan,
+        Math::cbrt,
+        Math::ceil,
+        Math::cos,
+        Math::cosh,
+        Math::exp,
+        Math::expm1,
+        Math::floor,
+        Math::log,
+        Math::log10,
+        Math::log1p,
+        Math::rint,
+        Math::sin,
+        Math::sinh,
+        Math::sqrt,
+        Math::tan,
+        Math::tanh,
+        Math::toDegrees,
+        Math::toRadians,
+        n -> n * 0.5,
+        n -> n * 2.0,
+        n -> n * 0.333333333333333,
+        n -> n * 3.0
+      };
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
@@ -79,7 +102,10 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     final boolean allowNaN;
     private final float[] specialValues;
 
-    FloatMutator(AnnotatedType type, float defaultMinValueForType, float defaultMaxValueForType,
+    FloatMutator(
+        AnnotatedType type,
+        float defaultMinValueForType,
+        float defaultMaxValueForType,
         boolean defaultAllowNaN) {
       float minValue = defaultMinValueForType;
       float maxValue = defaultMaxValueForType;
@@ -94,9 +120,11 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
         }
       }
 
-      require(minValue <= maxValue,
+      require(
+          minValue <= maxValue,
           format("[%f, %f] is not a valid interval: %s", minValue, maxValue, type));
-      require(minValue != maxValue,
+      require(
+          minValue != maxValue,
           format(
               "[%f, %f] can not be mutated, use a constant instead: %s", minValue, maxValue, type));
       this.minValue = minValue;
@@ -108,10 +136,18 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     private float[] collectSpecialValues(float minValue, float maxValue) {
       // stream of floats
       List<Double> specialValues =
-          DoubleStream
-              .of(Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, 0.0f, -0.0f, Float.NaN,
-                  Float.MAX_VALUE, Float.MIN_VALUE, -Float.MAX_VALUE, -Float.MIN_VALUE,
-                  this.minValue, this.maxValue)
+          DoubleStream.of(
+                  Float.NEGATIVE_INFINITY,
+                  Float.POSITIVE_INFINITY,
+                  0.0f,
+                  -0.0f,
+                  Float.NaN,
+                  Float.MAX_VALUE,
+                  Float.MIN_VALUE,
+                  -Float.MAX_VALUE,
+                  -Float.MIN_VALUE,
+                  this.minValue,
+                  this.maxValue)
               .filter(n -> (n >= minValue && n <= maxValue) || allowNaN && Double.isNaN(n))
               .distinct()
               .sorted()
@@ -175,12 +211,12 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
           return prng.closedRange(minValue, maxValue);
         } else { // Change the value to the neighboring float.
           if (result > minValue && result < maxValue) {
-            return prng.choice() ? Math.nextAfter(result, Float.NEGATIVE_INFINITY)
-                                 : Math.nextAfter(result, Float.POSITIVE_INFINITY);
+            return prng.choice()
+                ? Math.nextAfter(result, Float.NEGATIVE_INFINITY)
+                : Math.nextAfter(result, Float.POSITIVE_INFINITY);
           } else if (result > minValue) {
             return Math.nextAfter(result, Float.NEGATIVE_INFINITY);
-          } else
-            return Math.nextAfter(result, Float.POSITIVE_INFINITY);
+          } else return Math.nextAfter(result, Float.POSITIVE_INFINITY);
         }
       }
 
@@ -192,22 +228,18 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
         return value;
 
       // Clamp infinite values
-      if (value == Float.POSITIVE_INFINITY)
-        return maxValue;
-      if (value == Float.NEGATIVE_INFINITY)
-        return minValue;
+      if (value == Float.POSITIVE_INFINITY) return maxValue;
+      if (value == Float.NEGATIVE_INFINITY) return minValue;
 
       // From here on limits should be finite
       float finiteMax = Math.min(Float.MAX_VALUE, maxValue);
       float finiteMin = Math.max(-Float.MAX_VALUE, minValue);
 
       // If NaN was allowed, it was handled above. Replace it by the midpoint of the range.
-      if (Float.isNaN(value))
-        return finiteMin * 0.5f + finiteMax * 0.5f;
+      if (Float.isNaN(value)) return finiteMin * 0.5f + finiteMax * 0.5f;
 
       float range = finiteMax - finiteMin;
-      if (range == 0f)
-        return finiteMin;
+      if (range == 0f) return finiteMin;
 
       float diff = value - finiteMin;
 
@@ -234,10 +266,12 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
 
     private float mutateExponent(float value, PseudoRandom prng) {
       int bits = Float.floatToRawIntBits(value);
-      int exponent = ((bits >> EXPONENT_INITIAL_BIT) & EXPONENT_MASK)
-          + prng.closedRange(0, EXPONENT_RANDOM_WALK_RANGE);
-      bits = (bits & ~(EXPONENT_MASK << EXPONENT_INITIAL_BIT))
-          | ((exponent % EXPONENT_MASK) << EXPONENT_INITIAL_BIT);
+      int exponent =
+          ((bits >> EXPONENT_INITIAL_BIT) & EXPONENT_MASK)
+              + prng.closedRange(0, EXPONENT_RANDOM_WALK_RANGE);
+      bits =
+          (bits & ~(EXPONENT_MASK << EXPONENT_INITIAL_BIT))
+              | ((exponent % EXPONENT_MASK) << EXPONENT_INITIAL_BIT);
       return Float.intBitsToFloat(bits);
     }
 
@@ -249,12 +283,12 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
         case 0: // +
           mantissa =
               (mantissa + prng.closedRange(-MANTISSA_RANDOM_WALK_RANGE, MANTISSA_RANDOM_WALK_RANGE))
-              % MANTISSA_MASK;
+                  % MANTISSA_MASK;
           break;
         case 1: // *
           mantissa =
               (mantissa * prng.closedRange(-MANTISSA_RANDOM_WALK_RANGE, MANTISSA_RANDOM_WALK_RANGE))
-              % MANTISSA_MASK;
+                  % MANTISSA_MASK;
           break;
         case 2: // /
           int divisor = prng.closedRange(2, MANTISSA_RANDOM_WALK_RANGE);
@@ -343,7 +377,10 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     final boolean allowNaN;
     private final double[] specialValues;
 
-    DoubleMutator(AnnotatedType type, double defaultMinValueForType, double defaultMaxValueForType,
+    DoubleMutator(
+        AnnotatedType type,
+        double defaultMinValueForType,
+        double defaultMaxValueForType,
         boolean defaultAllowNaN) {
       double minValue = defaultMinValueForType;
       double maxValue = defaultMaxValueForType;
@@ -358,11 +395,14 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
         }
       }
 
-      require(!Double.isNaN(minValue) && !Double.isNaN(maxValue),
+      require(
+          !Double.isNaN(minValue) && !Double.isNaN(maxValue),
           format("[%f, %f] is not a valid interval: %s", minValue, maxValue, type));
-      require(minValue <= maxValue,
+      require(
+          minValue <= maxValue,
           format("[%f, %f] is not a valid interval: %s", minValue, maxValue, type));
-      require(minValue != maxValue,
+      require(
+          minValue != maxValue,
           format(
               "[%f, %f] can not be mutated, use a constant instead: %s", minValue, maxValue, type));
       this.minValue = minValue;
@@ -372,9 +412,20 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     }
 
     private double[] collectSpecialValues(double minValue, double maxValue) {
-      double[] specialValues = new double[] {Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY,
-          0.0, -0.0, Double.NaN, Double.MAX_VALUE, Double.MIN_VALUE, -Double.MAX_VALUE,
-          -Double.MIN_VALUE, this.minValue, this.maxValue};
+      double[] specialValues =
+          new double[] {
+            Double.NEGATIVE_INFINITY,
+            Double.POSITIVE_INFINITY,
+            0.0,
+            -0.0,
+            Double.NaN,
+            Double.MAX_VALUE,
+            Double.MIN_VALUE,
+            -Double.MAX_VALUE,
+            -Double.MIN_VALUE,
+            this.minValue,
+            this.maxValue
+          };
       return Arrays.stream(specialValues)
           .boxed()
           .filter(value -> (allowNaN && value.isNaN()) || (value >= minValue && value <= maxValue))
@@ -435,12 +486,12 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
           return prng.closedRange(minValue, maxValue);
         } else { // Change the value to the neighboring float.
           if (result > minValue && result < maxValue) {
-            return prng.choice() ? Math.nextAfter(result, Double.NEGATIVE_INFINITY)
-                                 : Math.nextAfter(result, Double.POSITIVE_INFINITY);
+            return prng.choice()
+                ? Math.nextAfter(result, Double.NEGATIVE_INFINITY)
+                : Math.nextAfter(result, Double.POSITIVE_INFINITY);
           } else if (result > minValue) {
             return Math.nextAfter(result, Double.NEGATIVE_INFINITY);
-          } else
-            return Math.nextAfter(result, Double.POSITIVE_INFINITY);
+          } else return Math.nextAfter(result, Double.POSITIVE_INFINITY);
         }
       }
 
@@ -453,10 +504,8 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
       }
 
       // Clamp infinite values
-      if (value == Double.POSITIVE_INFINITY)
-        return maxValue;
-      if (value == Double.NEGATIVE_INFINITY)
-        return minValue;
+      if (value == Double.POSITIVE_INFINITY) return maxValue;
+      if (value == Double.NEGATIVE_INFINITY) return minValue;
 
       // From here on limits should be finite
       double finiteMax = Math.min(Double.MAX_VALUE, maxValue);
@@ -472,8 +521,7 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
       }
 
       double range = finiteMax - finiteMin;
-      if (range == 0)
-        return finiteMin;
+      if (range == 0) return finiteMin;
 
       double diff = value - finiteMin;
 
@@ -499,10 +547,12 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
 
     private static double mutateExponent(double value, PseudoRandom prng) {
       long bits = Double.doubleToRawLongBits(value);
-      long exponent = ((bits >> EXPONENT_INITIAL_BIT) & EXPONENT_MASK)
-          + prng.closedRange(0, EXPONENT_RANDOM_WALK_RANGE);
-      bits = (bits & ~(EXPONENT_MASK << EXPONENT_INITIAL_BIT))
-          | ((exponent % EXPONENT_MASK) << EXPONENT_INITIAL_BIT);
+      long exponent =
+          ((bits >> EXPONENT_INITIAL_BIT) & EXPONENT_MASK)
+              + prng.closedRange(0, EXPONENT_RANDOM_WALK_RANGE);
+      bits =
+          (bits & ~(EXPONENT_MASK << EXPONENT_INITIAL_BIT))
+              | ((exponent % EXPONENT_MASK) << EXPONENT_INITIAL_BIT);
       return Double.longBitsToDouble(bits);
     }
 
@@ -513,12 +563,12 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
         case 0: // +
           mantissa =
               (mantissa + prng.closedRange(-MANTISSA_RANDOM_WALK_RANGE, MANTISSA_RANDOM_WALK_RANGE))
-              % MANTISSA_MASK;
+                  % MANTISSA_MASK;
           break;
         case 1: // *
           mantissa =
               (mantissa * prng.closedRange(-MANTISSA_RANDOM_WALK_RANGE, MANTISSA_RANDOM_WALK_RANGE))
-              % MANTISSA_MASK;
+                  % MANTISSA_MASK;
           break;
         case 2: // /
           long divisor = prng.closedRange(2, MANTISSA_RANDOM_WALK_RANGE);

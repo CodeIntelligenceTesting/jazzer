@@ -17,55 +17,50 @@
 package com.code_intelligence.jazzer.driver;
 
 import static java.lang.System.exit;
-import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import com.code_intelligence.jazzer.utils.Log;
 import java.io.File;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 final class OptParser {
-  private static final String[] HELP_HEADER = new String[] {
-      "A coverage-guided, in-process fuzzer for the JVM",
-      "",
-      "Usage:",
-      String.format(
-          "  java -cp jazzer.jar[%cclasspath_entries] com.code_intelligence.jazzer.Jazzer --target_class=<target class> [args...]",
-          File.separatorChar),
-      String.format(
-          "  java -cp jazzer.jar[%cclasspath_entries] com.code_intelligence.jazzer.Jazzer --autofuzz=<method reference> [args...]",
-          File.separatorChar),
-      "",
-      "In addition to the options listed below, Jazzer also accepts all",
-      "libFuzzer options described at:",
-      "  https://llvm.org/docs/LibFuzzer.html#options",
-      "",
-      "Options:",
-  };
+  private static final String[] HELP_HEADER =
+      new String[] {
+        "A coverage-guided, in-process fuzzer for the JVM",
+        "",
+        "Usage:",
+        String.format(
+            "  java -cp jazzer.jar[%cclasspath_entries] com.code_intelligence.jazzer.Jazzer"
+                + " --target_class=<target class> [args...]",
+            File.separatorChar),
+        String.format(
+            "  java -cp jazzer.jar[%cclasspath_entries] com.code_intelligence.jazzer.Jazzer"
+                + " --autofuzz=<method reference> [args...]",
+            File.separatorChar),
+        "",
+        "In addition to the options listed below, Jazzer also accepts all",
+        "libFuzzer options described at:",
+        "  https://llvm.org/docs/LibFuzzer.html#options",
+        "",
+        "Options:",
+      };
 
   // All supported arguments are added to this set by the individual *Setting methods.
   private static final List<OptItem<?>> knownArgs = new ArrayList<>();
 
   static String getHelpText() {
-    return Stream
-        .concat(Arrays.stream(HELP_HEADER),
+    return Stream.concat(
+            Arrays.stream(HELP_HEADER),
             knownArgs.stream().filter(Objects::nonNull).map(OptItem::toString))
         .collect(joining("\n\n"));
   }
@@ -99,16 +94,18 @@ final class OptParser {
   }
 
   static void registerAndValidateCommandLineArgs(List<Map.Entry<String, String>> cliArgs) {
-    Set<String> allowedArgs = knownArgs.stream()
-                                  .filter(optItem -> !optItem.isInternal())
-                                  .map(OptItem::cliArgName)
-                                  .collect(toSet());
-    String invalidArgs = cliArgs.stream()
-                             .map(Entry::getKey)
-                             .filter(arg -> !allowedArgs.contains(arg))
-                             .distinct()
-                             .map(arg -> "--" + arg)
-                             .collect(joining(", "));
+    Set<String> allowedArgs =
+        knownArgs.stream()
+            .filter(optItem -> !optItem.isInternal())
+            .map(OptItem::cliArgName)
+            .collect(toSet());
+    String invalidArgs =
+        cliArgs.stream()
+            .map(Entry::getKey)
+            .filter(arg -> !allowedArgs.contains(arg))
+            .distinct()
+            .map(arg -> "--" + arg)
+            .collect(joining(", "));
 
     if (!invalidArgs.isEmpty()) {
       Log.error("Unknown arguments (list available arguments with --help): " + invalidArgs);

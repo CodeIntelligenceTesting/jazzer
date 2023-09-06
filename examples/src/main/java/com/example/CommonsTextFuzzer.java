@@ -21,8 +21,8 @@ public class CommonsTextFuzzer {
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     try {
       StringSubstitutor.createInterpolator().replace(data.consumeAsciiString(20));
-    } catch (
-        java.lang.IllegalArgumentException | java.lang.ArrayIndexOutOfBoundsException ignored) {
+    } catch (java.lang.IllegalArgumentException
+        | java.lang.ArrayIndexOutOfBoundsException ignored) {
     }
   }
 }

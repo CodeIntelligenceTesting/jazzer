@@ -51,8 +51,9 @@ public class FuzzTargetTestWrapper {
   private static final String FRAME_PREFIX = "\tat ";
   private static final Pattern SANITIZER_FINDING = Pattern.compile("^SUMMARY: \\w*Sanitizer");
   private static final String THREAD_DUMP_HEADER = "Stack traces of all JVM threads:";
-  private static final Set<String> PUBLIC_JAZZER_PACKAGES = Collections.unmodifiableSet(
-      Stream.of("api", "replay", "sanitizers").collect(Collectors.toSet()));
+  private static final Set<String> PUBLIC_JAZZER_PACKAGES =
+      Collections.unmodifiableSet(
+          Stream.of("api", "replay", "sanitizers").collect(Collectors.toSet()));
 
   public static void main(String[] args) {
     Runfiles runfiles;
@@ -80,10 +81,11 @@ public class FuzzTargetTestWrapper {
       allowedFindings =
           Arrays.stream(args[8].split(",")).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
       // Map all files/dirs to real location
-      arguments = Arrays.stream(args)
-                      .skip(9)
-                      .map(arg -> arg.startsWith("-") ? arg : runfiles.rlocation(arg))
-                      .collect(toList());
+      arguments =
+          Arrays.stream(args)
+              .skip(9)
+              .map(arg -> arg.startsWith("-") ? arg : runfiles.rlocation(arg))
+              .collect(toList());
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
@@ -108,19 +110,28 @@ public class FuzzTargetTestWrapper {
       if (hookJarActualPath != null) {
         command.add(String.format("--main_advice_classpath=%s", hookJarActualPath));
       }
-      command.add("--jvm_flags="
-          + String.join(" ", "-XX:-OmitStackTraceInFastThrow", "-XX:+UseParallelGC",
-              "-XX:+IgnoreUnrecognizedVMOptions", "-XX:+CriticalJNINatives",
-              "-XX:+EnableDynamicAgentLoading"));
+      command.add(
+          "--jvm_flags="
+              + String.join(
+                  " ",
+                  "-XX:-OmitStackTraceInFastThrow",
+                  "-XX:+UseParallelGC",
+                  "-XX:+IgnoreUnrecognizedVMOptions",
+                  "-XX:+CriticalJNINatives",
+                  "-XX:+EnableDynamicAgentLoading"));
       if (System.getenv("JAZZER_DEBUG") != null) {
         command.add("--debug");
       }
     } else {
-      command.add(String.format("--cp=%s",
-          hookJarActualPath == null
-              ? targetJarActualPath
-              : String.join(System.getProperty("path.separator"), targetJarActualPath.toString(),
-                  hookJarActualPath.toString())));
+      command.add(
+          String.format(
+              "--cp=%s",
+              hookJarActualPath == null
+                  ? targetJarActualPath
+                  : String.join(
+                      System.getProperty("path.separator"),
+                      targetJarActualPath.toString(),
+                      hookJarActualPath.toString())));
     }
     command.add(String.format("-artifact_prefix=%s/", outputDir));
     command.add(String.format("--reproducer_path=%s", outputDir));
@@ -130,8 +141,9 @@ public class FuzzTargetTestWrapper {
     command.addAll(arguments);
 
     // Make JVM error reports available in test outputs.
-    processBuilder.environment().put(
-        "JAVA_TOOL_OPTIONS", String.format("-XX:ErrorFile=%s/hs_err_pid%%p.log", outputDir));
+    processBuilder
+        .environment()
+        .put("JAVA_TOOL_OPTIONS", String.format("-XX:ErrorFile=%s/hs_err_pid%%p.log", outputDir));
     processBuilder.redirectOutput(Redirect.INHERIT);
     processBuilder.redirectInput(Redirect.INHERIT);
     processBuilder.command(command);
@@ -155,7 +167,8 @@ public class FuzzTargetTestWrapper {
       }
       // Assert that we either found a crash in Java (exit code 77), a sanitizer crash (exit code
       // 76), or a timeout (exit code 70).
-      if (exitCode != 76 && exitCode != 77
+      if (exitCode != 76
+          && exitCode != 77
           && !(allowedFindings.contains("timeout") && exitCode == 70)) {
         System.err.printf("Did expect a crash, but Jazzer exited with exit code %d%n", exitCode);
         System.exit(1);
@@ -163,18 +176,18 @@ public class FuzzTargetTestWrapper {
       List<Path> outputFiles = Files.list(outputDir).collect(toList());
       // Verify that libFuzzer dumped a crashing input.
       if (shouldVerifyCrashInput
-          && outputFiles.stream().noneMatch(
-              name -> name.getFileName().toString().startsWith("crash-"))
+          && outputFiles.stream()
+              .noneMatch(name -> name.getFileName().toString().startsWith("crash-"))
           && !(allowedFindings.contains("timeout")
-              && outputFiles.stream().anyMatch(
-                  name -> name.getFileName().toString().startsWith("timeout-")))) {
+              && outputFiles.stream()
+                  .anyMatch(name -> name.getFileName().toString().startsWith("timeout-")))) {
         System.err.printf("No crashing input found in %s%n", outputDir);
         System.exit(1);
       }
       // Verify that libFuzzer dumped a crash reproducer.
       if (shouldVerifyCrashReproducer
-          && outputFiles.stream().noneMatch(
-              name -> name.getFileName().toString().startsWith("Crash_"))) {
+          && outputFiles.stream()
+              .noneMatch(name -> name.getFileName().toString().startsWith("Crash_"))) {
         System.err.printf("No crash reproducer found in %s%n", outputDir);
         System.exit(1);
       }
@@ -199,19 +212,25 @@ public class FuzzTargetTestWrapper {
     List<String> stackTrace;
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(fuzzerOutput))) {
       stackTrace =
-          reader.lines()
+          reader
+              .lines()
               .peek(System.err::println)
-              .filter(line
-                  -> line.startsWith(EXCEPTION_PREFIX) || line.startsWith(FRAME_PREFIX)
-                      || line.equals(THREAD_DUMP_HEADER) || SANITIZER_FINDING.matcher(line).find())
+              .filter(
+                  line ->
+                      line.startsWith(EXCEPTION_PREFIX)
+                          || line.startsWith(FRAME_PREFIX)
+                          || line.equals(THREAD_DUMP_HEADER)
+                          || SANITIZER_FINDING.matcher(line).find())
               .collect(toList());
     }
     if (expectedFindings.isEmpty()) {
       if (stackTrace.isEmpty()) {
         return;
       }
-      throw new IllegalStateException(String.format(
-          "Did not expect a finding, but got a stack trace:%n%s", String.join("\n", stackTrace)));
+      throw new IllegalStateException(
+          String.format(
+              "Did not expect a finding, but got a stack trace:%n%s",
+              String.join("\n", stackTrace)));
     }
     if (expectedFindings.contains("native")) {
       // Expect a native sanitizer finding as well as a thread dump with at least one frame.
@@ -247,8 +266,10 @@ public class FuzzTargetTestWrapper {
     }
     for (String finding : findings) {
       if (!expectedFindings.contains(finding)) {
-        throw new IllegalStateException(String.format("Got finding %s, but expected one of: %s",
-            findings.get(0), String.join(", ", expectedFindings)));
+        throw new IllegalStateException(
+            String.format(
+                "Got finding %s, but expected one of: %s",
+                findings.get(0), String.join(", ", expectedFindings)));
       }
     }
     List<String> unexpectedFrames =
@@ -257,14 +278,17 @@ public class FuzzTargetTestWrapper {
             .map(line -> line.substring(FRAME_PREFIX.length()))
             .filter(line -> line.startsWith("com.code_intelligence.jazzer."))
             // With --nohooks, Jazzer does not filter out its own stack frames.
-            .filter(line
-                -> !noHooks
-                    && !PUBLIC_JAZZER_PACKAGES.contains(
-                        line.substring("com.code_intelligence.jazzer.".length()).split("\\.")[0]))
+            .filter(
+                line ->
+                    !noHooks
+                        && !PUBLIC_JAZZER_PACKAGES.contains(
+                            line.substring("com.code_intelligence.jazzer.".length())
+                                .split("\\.")[0]))
             .collect(toList());
     if (!unexpectedFrames.isEmpty()) {
       throw new IllegalStateException(
-          String.format("Unexpected strack trace frames:%n%n%s%n%nin:%n%s",
+          String.format(
+              "Unexpected strack trace frames:%n%n%s%n%nin:%n%s",
               String.join("\n", unexpectedFrames), String.join("\n", stackTrace)));
     }
   }
@@ -288,8 +312,9 @@ public class FuzzTargetTestWrapper {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null)) {
       Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjects(source);
-      List<String> options = Arrays.asList(
-          "-classpath", String.join(File.pathSeparator, api.toString(), targetJar.toString()));
+      List<String> options =
+          Arrays.asList(
+              "-classpath", String.join(File.pathSeparator, api.toString(), targetJar.toString()));
       System.out.printf(
           "Compile crash reproducer %s with options %s%n", source.getAbsolutePath(), options);
       CompilationTask task =
@@ -301,24 +326,27 @@ public class FuzzTargetTestWrapper {
     }
   }
 
-  private static void execute(String className, Path outputDir, Path api, Path targetJar,
-      Set<String> expectedFindings) throws IOException, ReflectiveOperationException {
+  private static void execute(
+      String className, Path outputDir, Path api, Path targetJar, Set<String> expectedFindings)
+      throws IOException, ReflectiveOperationException {
     try {
       System.out.printf("Execute crash reproducer %s%n", className);
-      URLClassLoader classLoader = new URLClassLoader(
-          new URL[] {
-              outputDir.toUri().toURL(),
-              api.toUri().toURL(),
-              targetJar.toUri().toURL(),
-          },
-          getPlatformClassLoader());
+      URLClassLoader classLoader =
+          new URLClassLoader(
+              new URL[] {
+                outputDir.toUri().toURL(), api.toUri().toURL(), targetJar.toUri().toURL(),
+              },
+              getPlatformClassLoader());
       Class<?> crashReproducerClass = classLoader.loadClass(className);
       Method main = crashReproducerClass.getMethod("main", String[].class);
       System.setProperty("jazzer.is_reproducer", "true");
       main.invoke(null, new Object[] {new String[] {}});
       if (!expectedFindings.isEmpty()) {
-        throw new IllegalStateException("Expected crash with any of "
-            + String.join(", ", expectedFindings) + " not reproduced by " + className);
+        throw new IllegalStateException(
+            "Expected crash with any of "
+                + String.join(", ", expectedFindings)
+                + " not reproduced by "
+                + className);
       }
       System.out.println("Reproducer finished successfully without finding");
     } catch (InvocationTargetException e) {

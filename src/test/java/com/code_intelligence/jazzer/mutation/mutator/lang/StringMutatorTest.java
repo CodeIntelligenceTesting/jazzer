@@ -46,8 +46,9 @@ class StringMutatorTest {
 
   @RepeatedTest(10)
   void testFixAscii_randomInputFixed(RepetitionInfo info) {
-    SplittableRandom random = new SplittableRandom(
-        (long) "testFixAscii_randomInputFixed".hashCode() * info.getCurrentRepetition());
+    SplittableRandom random =
+        new SplittableRandom(
+            (long) "testFixAscii_randomInputFixed".hashCode() * info.getCurrentRepetition());
 
     for (int length = 0; length < 1000; length++) {
       byte[] randomBytes = generateRandomBytes(random, length);
@@ -63,8 +64,9 @@ class StringMutatorTest {
 
   @RepeatedTest(10)
   void testFixAscii_validInputNotChanged(RepetitionInfo info) {
-    SplittableRandom random = new SplittableRandom(
-        (long) "testFixAscii_validInputNotChanged".hashCode() * info.getCurrentRepetition());
+    SplittableRandom random =
+        new SplittableRandom(
+            (long) "testFixAscii_validInputNotChanged".hashCode() * info.getCurrentRepetition());
 
     for (int codePoints = 0; codePoints < 1000; codePoints++) {
       byte[] validAscii = generateValidAsciiBytes(random, codePoints);
@@ -76,8 +78,9 @@ class StringMutatorTest {
 
   @RepeatedTest(20)
   void testFixUtf8_randomInputFixed(RepetitionInfo info) {
-    SplittableRandom random = new SplittableRandom(
-        (long) "testFixUtf8_randomInputFixed".hashCode() * info.getCurrentRepetition());
+    SplittableRandom random =
+        new SplittableRandom(
+            (long) "testFixUtf8_randomInputFixed".hashCode() * info.getCurrentRepetition());
 
     for (int length = 0; length < 1000; length++) {
       byte[] randomBytes = generateRandomBytes(random, length);
@@ -93,8 +96,9 @@ class StringMutatorTest {
 
   @RepeatedTest(20)
   void testFixUtf8_validInputNotChanged(RepetitionInfo info) {
-    SplittableRandom random = new SplittableRandom(
-        (long) "testFixUtf8_validInputNotChanged".hashCode() * info.getCurrentRepetition());
+    SplittableRandom random =
+        new SplittableRandom(
+            (long) "testFixUtf8_validInputNotChanged".hashCode() * info.getCurrentRepetition());
 
     for (int codePoints = 0; codePoints < 1000; codePoints++) {
       byte[] validUtf8 = generateValidUtf8Bytes(random, codePoints);
@@ -107,34 +111,48 @@ class StringMutatorTest {
   @Test
   void testMinLengthInit() {
     SerializingMutator<String> mutator =
-        (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
+        (SerializingMutator<String>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
     try (MockPseudoRandom prng = mockPseudoRandom(5)) {
       // mock prng should throw an assert error when given a lower value than min
-      Assertions.assertThrows(AssertionError.class, () -> { String s = mutator.init(prng); });
+      Assertions.assertThrows(
+          AssertionError.class,
+          () -> {
+            String s = mutator.init(prng);
+          });
     }
   }
 
   @Test
   void testMaxLengthInit() {
     SerializingMutator<String> mutator =
-        (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @WithUtf8Length(max = 50) String>() {}.annotatedType());
+        (SerializingMutator<String>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<@NotNull @WithUtf8Length(max = 50) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
     try (MockPseudoRandom prng = mockPseudoRandom(60)) {
       // mock prng should throw an assert error when given a value higher than max
-      Assertions.assertThrows(AssertionError.class, () -> { String s = mutator.init(prng); });
+      Assertions.assertThrows(
+          AssertionError.class,
+          () -> {
+            String s = mutator.init(prng);
+          });
     }
   }
 
   @Test
   void testMinLengthMutate() {
     SerializingMutator<String> mutator =
-        (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
+        (SerializingMutator<String>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
     String s;
@@ -153,8 +171,10 @@ class StringMutatorTest {
   @Test
   void testMaxLengthMutate() {
     SerializingMutator<String> mutator =
-        (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @WithUtf8Length(max = 15) String>() {}.annotatedType());
+        (SerializingMutator<String>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<@NotNull @WithUtf8Length(max = 15) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
     String s;
@@ -166,20 +186,25 @@ class StringMutatorTest {
     System.setProperty(LibFuzzerMutate.MOCK_SIZE_KEY, "20");
     try (MockPseudoRandom prng = mockPseudoRandom()) {
       Assertions.assertThrows(
-          ArrayIndexOutOfBoundsException.class, () -> { String s2 = mutator.mutate(s, prng); });
+          ArrayIndexOutOfBoundsException.class,
+          () -> {
+            String s2 = mutator.mutate(s, prng);
+          });
     }
   }
 
   @Test
   void testMultibyteCharacters() {
     SerializingMutator<String> mutator =
-        (SerializingMutator<String>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
+        (SerializingMutator<String>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
     String s;
-    try (
-        MockPseudoRandom prng = mockPseudoRandom(10, "foobarÖÖ".getBytes(StandardCharsets.UTF_8))) {
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(10, "foobarÖÖ".getBytes(StandardCharsets.UTF_8))) {
       s = mutator.init(prng);
     }
     assertThat(s).hasLength(8);
@@ -206,7 +231,8 @@ class StringMutatorTest {
   }
 
   private static byte[] generateValidAsciiBytes(SplittableRandom random, int length) {
-    return random.ints(0, 0x7F)
+    return random
+        .ints(0, 0x7F)
         .limit(length)
         .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
         .toString()
@@ -214,7 +240,8 @@ class StringMutatorTest {
   }
 
   private static byte[] generateValidUtf8Bytes(SplittableRandom random, long codePoints) {
-    return random.ints(0, Character.MAX_CODE_POINT + 1)
+    return random
+        .ints(0, Character.MAX_CODE_POINT + 1)
         .filter(code -> code < Character.MIN_SURROGATE || code > Character.MAX_SURROGATE)
         .limit(codePoints)
         .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)

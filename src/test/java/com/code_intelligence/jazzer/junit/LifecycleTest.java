@@ -32,9 +32,7 @@ import static org.junit.platform.testkit.engine.EventType.SKIPPED;
 import static org.junit.platform.testkit.engine.EventType.STARTED;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
-import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
 import com.example.TestSuccessfulException;
-import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
@@ -72,36 +70,54 @@ public class LifecycleTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(SKIPPED), container(uniqueIdSubstrings(ENGINE, CLAZZ, DISABLED_FUZZ))),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-        // Warning because the seed corpus directory hasn't been found.
-        event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ)),
-            finishedSuccessfully()),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)),
-            finishedWithFailure(instanceOf(TestSuccessfulException.class))),
-        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+    results
+        .containerEvents()
+        .assertEventsMatchExactly(
+            event(type(STARTED), container(ENGINE)),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+            event(type(SKIPPED), container(uniqueIdSubstrings(ENGINE, CLAZZ, DISABLED_FUZZ))),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+            // Warning because the seed corpus directory hasn't been found.
+            event(
+                type(REPORTING_ENTRY_PUBLISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ)),
+                finishedSuccessfully()),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+                finishedWithFailure(instanceOf(TestSuccessfulException.class))),
+            event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
-    results.testEvents().assertEventsMatchExactly(
-        event(
-            type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-        event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
-            displayName("<empty input>")),
-        event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
-            displayName("<empty input>"), finishedSuccessfully()),
-        event(
-            type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-        event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 2)),
-            displayName("Fuzzing...")),
-        event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 2)),
-            displayName("Fuzzing..."), finishedSuccessfully()));
+    results
+        .testEvents()
+        .assertEventsMatchExactly(
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
+                displayName("<empty input>")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
+                displayName("<empty input>"),
+                finishedSuccessfully()),
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 2)),
+                displayName("Fuzzing...")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 2)),
+                displayName("Fuzzing..."),
+                finishedSuccessfully()));
   }
 
   @Test
@@ -110,25 +126,37 @@ public class LifecycleTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(SKIPPED), container(uniqueIdSubstrings(ENGINE, CLAZZ, DISABLED_FUZZ))),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-        event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)),
-            finishedWithFailure(instanceOf(TestSuccessfulException.class))),
-        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+    results
+        .containerEvents()
+        .assertEventsMatchExactly(
+            event(type(STARTED), container(ENGINE)),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+            event(type(SKIPPED), container(uniqueIdSubstrings(ENGINE, CLAZZ, DISABLED_FUZZ))),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+            event(
+                type(REPORTING_ENTRY_PUBLISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+            event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+                finishedWithFailure(instanceOf(TestSuccessfulException.class))),
+            event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
-    results.testEvents().assertEventsMatchExactly(
-        event(
-            type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-        event(type(STARTED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
-            displayName("<empty input>")),
-        event(type(FINISHED),
-            test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
-            displayName("<empty input>"), finishedSuccessfully()));
+    results
+        .testEvents()
+        .assertEventsMatchExactly(
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
+                displayName("<empty input>")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 1)),
+                displayName("<empty input>"),
+                finishedSuccessfully()));
   }
 }

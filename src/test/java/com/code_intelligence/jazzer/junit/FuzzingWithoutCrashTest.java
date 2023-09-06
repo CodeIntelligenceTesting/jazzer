@@ -23,18 +23,14 @@ import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.displayName;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
-import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
 import static org.junit.platform.testkit.engine.EventConditions.test;
 import static org.junit.platform.testkit.engine.EventConditions.type;
 import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstrings;
 import static org.junit.platform.testkit.engine.EventType.DYNAMIC_TEST_REGISTERED;
 import static org.junit.platform.testkit.engine.EventType.FINISHED;
 import static org.junit.platform.testkit.engine.EventType.REPORTING_ENTRY_PUBLISHED;
-import static org.junit.platform.testkit.engine.EventType.SKIPPED;
 import static org.junit.platform.testkit.engine.EventType.STARTED;
-import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
-import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,11 +43,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.junit.platform.testkit.engine.Event;
-import org.junit.platform.testkit.engine.EventType;
-import org.junit.platform.testkit.engine.Events;
 import org.junit.rules.TemporaryFolder;
-import org.opentest4j.AssertionFailedError;
 
 public class FuzzingWithoutCrashTest {
   private static final String ENGINE = "engine:junit-jupiter";
@@ -81,27 +73,46 @@ public class FuzzingWithoutCrashTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        // Warning because the inputs directory hasn't been found in the source tree.
-        event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        // Warning because the inputs directory has been found on the classpath, but only in a JAR.
-        event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ)),
-            finishedSuccessfully()),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
-        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+    results
+        .containerEvents()
+        .assertEventsMatchExactly(
+            event(type(STARTED), container(ENGINE)),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+            // Warning because the inputs directory hasn't been found in the source tree.
+            event(
+                type(REPORTING_ENTRY_PUBLISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+            // Warning because the inputs directory has been found on the classpath, but only in a
+            // JAR.
+            event(
+                type(REPORTING_ENTRY_PUBLISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ)),
+                finishedSuccessfully()),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+                finishedSuccessfully()),
+            event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
-    results.testEvents().assertEventsMatchLooselyInOrder(
-        event(
-            type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION)),
-            displayName("Fuzzing...")),
-        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION)),
-            displayName("Fuzzing..."), finishedSuccessfully()));
+    results
+        .testEvents()
+        .assertEventsMatchLooselyInOrder(
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION)),
+                displayName("Fuzzing...")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION)),
+                displayName("Fuzzing..."),
+                finishedSuccessfully()));
 
     // Verify that the engine created the generated corpus directory. As the fuzz test produces
     // coverage (but no crash), it should not be empty.
@@ -119,27 +130,45 @@ public class FuzzingWithoutCrashTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
-        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+    results
+        .containerEvents()
+        .assertEventsMatchExactly(
+            event(type(STARTED), container(ENGINE)),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+            event(
+                type(REPORTING_ENTRY_PUBLISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+            event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+                finishedSuccessfully()),
+            event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
-    results.testEvents().assertEventsMatchExactly(
-        IntStream.rangeClosed(1, 6)
-            .boxed()
-            .flatMap(i
-                -> Stream.of(event(type(DYNAMIC_TEST_REGISTERED),
-                                 test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
-                    event(type(STARTED),
-                        test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION + i))),
-                    event(type(FINISHED),
-                        test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION + i)),
-                        finishedSuccessfully())))
-            .toArray(Condition[] ::new));
+    results
+        .testEvents()
+        .assertEventsMatchExactly(
+            IntStream.rangeClosed(1, 6)
+                .boxed()
+                .flatMap(
+                    i ->
+                        Stream.of(
+                            event(
+                                type(DYNAMIC_TEST_REGISTERED),
+                                test(uniqueIdSubstrings(ENGINE, CLAZZ, NO_CRASH_FUZZ))),
+                            event(
+                                type(STARTED),
+                                test(
+                                    uniqueIdSubstrings(
+                                        ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION + i))),
+                            event(
+                                type(FINISHED),
+                                test(
+                                    uniqueIdSubstrings(
+                                        ENGINE, CLAZZ, NO_CRASH_FUZZ, INVOCATION + i)),
+                                finishedSuccessfully())))
+                .toArray(Condition[]::new));
 
     // Verify that the generated corpus directory hasn't been created.
     Path generatedCorpus =

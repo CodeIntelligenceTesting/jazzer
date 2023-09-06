@@ -72,7 +72,8 @@ public class AutofuzzCodegenVisitor {
   static String escapeForLiteral(String string) {
     // The list of escape sequences is taken from:
     // https://docs.oracle.com/javase/tutorial/java/data/characters.html
-    return string.replace("\\", "\\\\")
+    return string
+        .replace("\\", "\\\\")
         .replace("\t", "\\t")
         .replace("\b", "\\b")
         .replace("\n", "\\n")

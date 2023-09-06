@@ -25,15 +25,16 @@ package com.code_intelligence.jazzer.mutation.api;
  * can't. In such cases, use {@link ValueMutator} instead.
  *
  * <p>Implementations
+ *
  * <ul>
  *   <li>MAY weakly associate mutable state with the identity (not equality class) of objects they
- *   have been passed as arguments or returned from initialization functions;
- *   <li>MAY assume that they are only passed arguments that they have initialized or mutated;</li>
+ *       have been passed as arguments or returned from initialization functions;
+ *   <li>MAY assume that they are only passed arguments that they have initialized or mutated;
  *   <li>SHOULD use {@link com.code_intelligence.jazzer.mutation.support.WeakIdentityHashMap} for
- *   this purpose;
+ *       this purpose;
  *   <li>MUST otherwise be deeply immutable;
  *   <li>SHOULD override {@link Object#toString()} to return {@code
- * Debuggable.getDebugString(this)}.
+ *       Debuggable.getDebugString(this)}.
  * </ul>
  *
  * @param <T> the reference type this mutator operates on
@@ -41,33 +42,36 @@ package com.code_intelligence.jazzer.mutation.api;
 public interface InPlaceMutator<T> extends Debuggable {
   /**
    * Implementations
+   *
    * <ul>
    *   <li>MUST accept any mutable instance of {@code T}, not just those it creates itself.
    *   <li>SHOULD, when called repeatedly, initialize the object in ways that are likely to be
-   *   distinct.
+   *       distinct.
    * </ul>
    */
   void initInPlace(T reference, PseudoRandom prng);
 
   /**
    * Implementations
+   *
    * <ul>
    *   <li>MUST ensure that {@code reference} does not {@link Object#equals(Object)} the state it
-   * had prior to the call (if possible);
+   *       had prior to the call (if possible);
    *   <li>MUST accept any mutable instance of {@code T}, not just those it creates itself.
    *   <li>SHOULD, when called repeatedly, be able to eventually reach any valid state of the part
-   * of {@code T} governed by this mutator;
+   *       of {@code T} governed by this mutator;
    * </ul>
    */
   void mutateInPlace(T reference, PseudoRandom prng);
 
   /**
    * Implementations
+   *
    * <ul>
    *   <li>MUST ensure that {@code reference} does not {@link Object#equals(Object)} the state it
-   * had prior to the call (if possible);
+   *       had prior to the call (if possible);
    *   <li>MUST accept any mutable instance of {@code T}, not just those it creates itself.
-   *   <li>MUST NOT mutate {@code otherReference}</li>
+   *   <li>MUST NOT mutate {@code otherReference}
    * </ul>
    */
   void crossOverInPlace(T reference, T otherReference, PseudoRandom prng);

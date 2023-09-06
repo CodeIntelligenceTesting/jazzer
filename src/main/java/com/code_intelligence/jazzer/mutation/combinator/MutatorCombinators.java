@@ -45,7 +45,7 @@ import net.jodah.typetools.TypeResolver;
 
 public final class MutatorCombinators {
   // Inverse frequency in which value mutator should be used in cross over.
-  private final static int INVERSE_PICK_VALUE_SUPPLIER_FREQUENCY = 100;
+  private static final int INVERSE_PICK_VALUE_SUPPLIER_FREQUENCY = 100;
 
   private MutatorCombinators() {}
 
@@ -73,10 +73,12 @@ public final class MutatorCombinators {
         // don't cross over values themselves.
         R referenceValue = getter.apply(reference);
         R otherReferenceValue = getter.apply(otherReference);
-        R crossedOver = prng.pickValue(referenceValue, otherReferenceValue,
-            ()
-                -> mutator.crossOver(referenceValue, otherReferenceValue, prng),
-            INVERSE_PICK_VALUE_SUPPLIER_FREQUENCY);
+        R crossedOver =
+            prng.pickValue(
+                referenceValue,
+                otherReferenceValue,
+                () -> mutator.crossOver(referenceValue, otherReferenceValue, prng),
+                INVERSE_PICK_VALUE_SUPPLIER_FREQUENCY);
         if (crossedOver == otherReferenceValue) {
           // If otherReference was picked, it needs to be detached as mutating
           // it is prohibited in cross over.
@@ -205,8 +207,11 @@ public final class MutatorCombinators {
     return new PostComposedMutator<T, R>(mutator, map, inverse) {};
   }
 
-  public static <T, R> SerializingMutator<R> mutateThenMap(SerializingMutator<T> mutator,
-      Function<T, R> map, Function<R, T> inverse, Function<Predicate<Debuggable>, String> debug) {
+  public static <T, R> SerializingMutator<R> mutateThenMap(
+      SerializingMutator<T> mutator,
+      Function<T, R> map,
+      Function<R, T> inverse,
+      Function<Predicate<Debuggable>, String> debug) {
     return new PostComposedMutator<T, R>(mutator, map, inverse) {
       @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
@@ -226,7 +231,9 @@ public final class MutatorCombinators {
   }
 
   public static <T, @ImmutableTypeParameter R> SerializingMutator<R> mutateThenMapToImmutable(
-      SerializingMutator<T> mutator, Function<T, R> map, Function<R, T> inverse,
+      SerializingMutator<T> mutator,
+      Function<T, R> map,
+      Function<R, T> inverse,
       Function<Predicate<Debuggable>, String> debug) {
     return new PostComposedMutator<T, R>(mutator, map, inverse) {
       @Override
@@ -282,8 +289,8 @@ public final class MutatorCombinators {
   }
 
   /**
-   * Combines multiple mutators for potentially different types into one that mutates an
-   * {@code Object[]} containing one instance per mutator.
+   * Combines multiple mutators for potentially different types into one that mutates an {@code
+   * Object[]} containing one instance per mutator.
    */
   @SuppressWarnings("rawtypes")
   public static ProductMutator mutateProduct(SerializingMutator... mutators) {
@@ -291,10 +298,11 @@ public final class MutatorCombinators {
   }
 
   /**
-   * Mutates a sum type (e.g. a Protobuf oneof) in place, preferring to mutate the current state
-   * but occasionally switching to a different state.
+   * Mutates a sum type (e.g. a Protobuf oneof) in place, preferring to mutate the current state but
+   * occasionally switching to a different state.
+   *
    * @param getState a function that returns the current state of the sum type as an index into
-   *                 {@code perStateMutators}, or -1 if the state is indeterminate.
+   *     {@code perStateMutators}, or -1 if the state is indeterminate.
    * @param perStateMutators the mutators for each state
    * @return a mutator that mutates the sum type in place
    */
@@ -352,7 +360,7 @@ public final class MutatorCombinators {
 
   /**
    * @return a mutator that behaves identically to the provided one except that its {@link
-   * InPlaceMutator#initInPlace(Object, PseudoRandom)} is a no-op
+   *     InPlaceMutator#initInPlace(Object, PseudoRandom)} is a no-op
    */
   public static <T> InPlaceMutator<T> withoutInit(InPlaceMutator<T> mutator) {
     return new InPlaceMutator<T>() {
@@ -424,20 +432,20 @@ public final class MutatorCombinators {
   /**
    * Assembles the parameters into a full implementation of {@link SerializingInPlaceMutator<T>}:
    *
-   * @param registerSelf        a callback that will receive the uninitialized mutator instance
-   *                            before {@code lazyMutator} is invoked. For simple cases this can
-   *                            just do nothing, but it is needed to implement mutators for
-   *                            structures that are self-referential (e.g. Protobuf message A having
-   *                            a field of type A).
+   * @param registerSelf a callback that will receive the uninitialized mutator instance before
+   *     {@code lazyMutator} is invoked. For simple cases this can just do nothing, but it is needed
+   *     to implement mutators for structures that are self-referential (e.g. Protobuf message A
+   *     having a field of type A).
    * @param makeDefaultInstance constructs a mutable default instance of {@code T}
-   * @param serializer          implementation of the {@link Serializer<T>} part
-   * @param lazyMutator         supplies the implementation of the {@link InPlaceMutator<T>} part.
-   *                            This is guaranteed to be invoked exactly once and only after
-   *                            {@code registerSelf}.
+   * @param serializer implementation of the {@link Serializer<T>} part
+   * @param lazyMutator supplies the implementation of the {@link InPlaceMutator<T>} part. This is
+   *     guaranteed to be invoked exactly once and only after {@code registerSelf}.
    */
   public static <T> SerializingInPlaceMutator<T> assemble(
-      Consumer<SerializingInPlaceMutator<T>> registerSelf, Supplier<T> makeDefaultInstance,
-      Serializer<T> serializer, Supplier<InPlaceMutator<T>> lazyMutator) {
+      Consumer<SerializingInPlaceMutator<T>> registerSelf,
+      Supplier<T> makeDefaultInstance,
+      Serializer<T> serializer,
+      Supplier<InPlaceMutator<T>> lazyMutator) {
     return new DelegatingSerializingInPlaceMutator<>(
         registerSelf, makeDefaultInstance, serializer, lazyMutator);
   }
@@ -447,8 +455,10 @@ public final class MutatorCombinators {
     private final Serializer<T> serializer;
     private final InPlaceMutator<T> mutator;
 
-    private DelegatingSerializingInPlaceMutator(Consumer<SerializingInPlaceMutator<T>> registerSelf,
-        Supplier<T> makeDefaultInstance, Serializer<T> serializer,
+    private DelegatingSerializingInPlaceMutator(
+        Consumer<SerializingInPlaceMutator<T>> registerSelf,
+        Supplier<T> makeDefaultInstance,
+        Serializer<T> serializer,
         Supplier<InPlaceMutator<T>> lazyMutator) {
       requireNonNull(makeDefaultInstance);
       requireNonNull(serializer);

@@ -62,16 +62,25 @@ public class FindingsBaseDirTest {
             .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
             .execute();
 
-    results.containerEvents().assertEventsMatchExactly(event(type(STARTED), container(ENGINE)),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
-        // Warning because the inputs directory hasn't been found in the source tree.
-        event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ)),
-            finishedSuccessfully()),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
-        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+    results
+        .containerEvents()
+        .assertEventsMatchExactly(
+            event(type(STARTED), container(ENGINE)),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
+            // Warning because the inputs directory hasn't been found in the source tree.
+            event(
+                type(REPORTING_ENTRY_PUBLISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ)),
+                finishedSuccessfully()),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+                finishedSuccessfully()),
+            event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
     // Crash should be emitted into the base directory, as no findings dir available.
     try (Stream<Path> baseDirFiles = Files.list(baseDir)) {

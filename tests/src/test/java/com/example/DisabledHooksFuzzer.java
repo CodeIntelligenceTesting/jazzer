@@ -43,10 +43,13 @@ public class DisabledHooksFuzzer {
 }
 
 class DisabledHook {
-  @MethodHook(type = HookType.BEFORE, targetClassName = "com.example.DisabledHooksFuzzer",
-      targetMethod = "triggerCustomHook", targetMethodDescriptor = "()V")
-  public static void
-  triggerCustomHookHook(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = "com.example.DisabledHooksFuzzer",
+      targetMethod = "triggerCustomHook",
+      targetMethodDescriptor = "()V")
+  public static void triggerCustomHookHook(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     Jazzer.reportFindingFromHook(
         new IllegalStateException("hook on triggerCustomHook should have been disabled"));
   }

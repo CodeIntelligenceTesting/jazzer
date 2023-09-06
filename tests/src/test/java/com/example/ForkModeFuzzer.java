@@ -19,14 +19,17 @@ import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
 public final class ForkModeFuzzer {
   public static void fuzzerInitialize() {
     // When running through a Java reproducer, do not check the Java opts.
-    if (System.getProperty("jazzer.is_reproducer") != null)
-      return;
+    if (System.getProperty("jazzer.is_reproducer") != null) return;
     String foo = System.getProperty("foo");
     String bar = System.getProperty("bar");
     String baz = System.getProperty("baz");
     // Only used to verify that arguments are correctly passed down to child processes.
-    if (foo == null || bar == null || baz == null || !foo.equals("foo")
-        || !(bar.equals("b;ar") || bar.equals("b:ar")) || !baz.equals("baz")) {
+    if (foo == null
+        || bar == null
+        || baz == null
+        || !foo.equals("foo")
+        || !(bar.equals("b;ar") || bar.equals("b:ar"))
+        || !baz.equals("baz")) {
       // Exit the process with an exit code different from that for a finding.
       System.err.println("ERROR: Did not correctly pass all jvm_args to child process.");
       System.err.printf("foo: %s%nbar: %s%nbaz: %s%n", foo, bar, baz);

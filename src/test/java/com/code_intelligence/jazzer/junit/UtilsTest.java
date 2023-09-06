@@ -80,11 +80,21 @@ public class UtilsTest implements InvocationInterceptor {
     assertThrows(IllegalArgumentException.class, () -> parseJUnitTimeoutValueToSeconds("5 5"));
   }
 
-  @ValueSource(classes = {int.class, Class.class, Object.class, String.class, HashMap.class,
-                   Map.class, int[].class, int[][].class, AbstractMap.class, AbstractList.class})
+  @ValueSource(
+      classes = {
+        int.class,
+        Class.class,
+        Object.class,
+        String.class,
+        HashMap.class,
+        Map.class,
+        int[].class,
+        int[][].class,
+        AbstractMap.class,
+        AbstractList.class
+      })
   @ParameterizedTest
-  void
-  testMarkedInstances(Class<?> clazz) {
+  void testMarkedInstances(Class<?> clazz) {
     Object instance = getMarkedInstance(clazz);
     if (clazz == int.class) {
       assertThat(instance).isInstanceOf(Integer.class);
@@ -111,14 +121,21 @@ public class UtilsTest implements InvocationInterceptor {
   @MethodSource("testWithMarkedNamedParametersSource")
   @ExtendWith(UtilsTest.class)
   @ParameterizedTest
-  void testWithMarkedNamedParameters(String str, int num, AbstractMap<String, String> map,
-      List<Integer> list, Class<?> clazz, int[] array) {}
+  void testWithMarkedNamedParameters(
+      String str,
+      int num,
+      AbstractMap<String, String> map,
+      List<Integer> list,
+      Class<?> clazz,
+      int[] array) {}
 
   boolean argumentsExpectedToBeMarked = false;
 
   @Override
-  public void interceptTestTemplateMethod(Invocation<Void> invocation,
-      ReflectiveInvocationContext<Method> invocationContext, ExtensionContext extensionContext)
+  public void interceptTestTemplateMethod(
+      Invocation<Void> invocation,
+      ReflectiveInvocationContext<Method> invocationContext,
+      ExtensionContext extensionContext)
       throws Throwable {
     assertThat(isMarkedInvocation(invocationContext)).isEqualTo(argumentsExpectedToBeMarked);
     argumentsExpectedToBeMarked = !argumentsExpectedToBeMarked;
@@ -147,10 +164,12 @@ public class UtilsTest implements InvocationInterceptor {
     Path firstJar = createFile(temp.resolve("first.jar"));
     Path secondJar = createFile(temp.resolve("second.jar"));
 
-    assertThat(Utils.getClassPathBasedInstrumentationFilter(makeClassPath(
-                   firstDir, firstJar, nonExistentDir, secondDir, secondJar, emptyDir)))
-        .hasValue(asList(
-            "*", "com.example.other_project.**", "com.example.project.**", "org.example.**"));
+    assertThat(
+            Utils.getClassPathBasedInstrumentationFilter(
+                makeClassPath(firstDir, firstJar, nonExistentDir, secondDir, secondJar, emptyDir)))
+        .hasValue(
+            asList(
+                "*", "com.example.other_project.**", "com.example.project.**", "org.example.**"));
   }
 
   @Test

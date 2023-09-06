@@ -32,15 +32,22 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 class EnumMutatorTest {
-  enum TestEnumOne { A }
+  enum TestEnumOne {
+    A
+  }
 
-  enum TestEnum { A, B, C }
+  enum TestEnum {
+    A,
+    B,
+    C
+  }
 
   @Test
   void testBoxed() {
     SerializingMutator<TestEnum> mutator =
-        (SerializingMutator<TestEnum>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
+        (SerializingMutator<TestEnum>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Enum<TestEnum>");
     TestEnum cl;
     try (MockPseudoRandom prng = mockPseudoRandom(0)) {
@@ -71,17 +78,21 @@ class EnumMutatorTest {
 
   @Test
   void testEnumWithOneElementShouldThrow() {
-    assertThrows(IllegalArgumentException.class, () -> {
-      LangMutators.newFactory().createOrThrow(
-          new TypeHolder<@NotNull TestEnumOne>() {}.annotatedType());
-    }, "When trying to build mutators for Enum with one value, an Exception should be thrown.");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          LangMutators.newFactory()
+              .createOrThrow(new TypeHolder<@NotNull TestEnumOne>() {}.annotatedType());
+        },
+        "When trying to build mutators for Enum with one value, an Exception should be thrown.");
   }
 
   @Test
   void testEnumBasedOnInvalidInput() throws IOException {
     SerializingMutator<TestEnum> mutator =
-        (SerializingMutator<TestEnum>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
+        (SerializingMutator<TestEnum>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
     ByteArrayOutputStream bo = new ByteArrayOutputStream();
     DataOutputStream os = new DataOutputStream(bo);
     // Valid values

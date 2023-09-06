@@ -18,14 +18,14 @@ package com.code_intelligence.jazzer.driver;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import java.lang.reflect.Method;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 
 public class FuzzTargetHolder {
   public static FuzzTarget autofuzzFuzzTarget(Callable<Object> newInstance) {
     try {
-      Method fuzzerTestOneInput = com.code_intelligence.jazzer.autofuzz.FuzzTarget.class.getMethod(
-          "fuzzerTestOneInput", FuzzedDataProvider.class);
+      Method fuzzerTestOneInput =
+          com.code_intelligence.jazzer.autofuzz.FuzzTarget.class.getMethod(
+              "fuzzerTestOneInput", FuzzedDataProvider.class);
       return new FuzzTargetHolder.FuzzTarget(
           fuzzerTestOneInput, newInstance, LifecycleMethodsInvoker.NOOP);
     } catch (NoSuchMethodException e) {
@@ -33,15 +33,15 @@ public class FuzzTargetHolder {
     }
   }
 
-  public static final FuzzTarget AUTOFUZZ_FUZZ_TARGET = autofuzzFuzzTarget(() -> {
-    com.code_intelligence.jazzer.autofuzz.FuzzTarget.fuzzerInitialize(
-        Opt.targetArgs.get().toArray(new String[0]));
-    return null;
-  });
+  public static final FuzzTarget AUTOFUZZ_FUZZ_TARGET =
+      autofuzzFuzzTarget(
+          () -> {
+            com.code_intelligence.jazzer.autofuzz.FuzzTarget.fuzzerInitialize(
+                Opt.targetArgs.get().toArray(new String[0]));
+            return null;
+          });
 
-  /**
-   * The fuzz target that {@link FuzzTargetRunner} should fuzz.
-   */
+  /** The fuzz target that {@link FuzzTargetRunner} should fuzz. */
   public static FuzzTarget fuzzTarget;
 
   public static class FuzzTarget {
@@ -49,7 +49,9 @@ public class FuzzTargetHolder {
     public final Callable<Object> newInstance;
     public final LifecycleMethodsInvoker lifecycleMethodsInvoker;
 
-    public FuzzTarget(Method method, Callable<Object> newInstance,
+    public FuzzTarget(
+        Method method,
+        Callable<Object> newInstance,
         LifecycleMethodsInvoker lifecycleMethodsInvoker) {
       this.method = method;
       this.newInstance = newInstance;

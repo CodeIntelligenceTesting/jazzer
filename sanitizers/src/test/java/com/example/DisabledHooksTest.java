@@ -84,7 +84,8 @@ public class DisabledHooksTest {
 
   @Test
   public void disableExpressionLanguageSanitizer() throws Throwable {
-    System.setProperty("jazzer.disabled_hooks",
+    System.setProperty(
+        "jazzer.disabled_hooks",
         "com.code_intelligence.jazzer.sanitizers.ExpressionLanguageInjection");
     triggerExpressionLanguageInjectionSanitizer();
   }
@@ -99,7 +100,8 @@ public class DisabledHooksTest {
 
   @Test
   public void disableAllSanitizers() throws Throwable {
-    System.setProperty("jazzer.disabled_hooks",
+    System.setProperty(
+        "jazzer.disabled_hooks",
         "com.code_intelligence.jazzer.sanitizers.ReflectiveCall,"
             + "com.code_intelligence.jazzer.sanitizers.Deserialization,"
             + "com.code_intelligence.jazzer.sanitizers.ExpressionLanguageInjection");

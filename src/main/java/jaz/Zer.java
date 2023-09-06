@@ -24,28 +24,36 @@ import java.util.function.Function;
 /**
  * A honeypot class that reports a finding on initialization.
  *
- * Class loading based on externally controlled data could lead to RCE
- * depending on available classes on the classpath. Even if no applicable
- * gadget class is available, allowing input to control class loading is a bad
- * idea and should be prevented. A finding is generated whenever the class
- * is loaded and initialized, regardless of its further use.
- * <p>
- * This class needs to implement {@link Serializable} to be considered in
- * deserialization scenarios. It also implements common constructors, getter
- * and setter and common interfaces to increase chances of passing
- * deserialization checks.
- * <p>
- * <b>Note</b>: Jackson provides a nice list of "nasty classes" at
- * <a
+ * <p>Class loading based on externally controlled data could lead to RCE depending on available
+ * classes on the classpath. Even if no applicable gadget class is available, allowing input to
+ * control class loading is a bad idea and should be prevented. A finding is generated whenever the
+ * class is loaded and initialized, regardless of its further use.
+ *
+ * <p>This class needs to implement {@link Serializable} to be considered in deserialization
+ * scenarios. It also implements common constructors, getter and setter and common interfaces to
+ * increase chances of passing deserialization checks.
+ *
+ * <p><b>Note</b>: Jackson provides a nice list of "nasty classes" at <a
  * href=https://github.com/FasterXML/jackson-databind/blob/2.14/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java>SubTypeValidator</a>.
- * <p>
- * <b>Note</b>: This class must not be referenced in any way by the rest of the code, not even
+ *
+ * <p><b>Note</b>: This class must not be referenced in any way by the rest of the code, not even
  * statically. When referring to it, always use its hardcoded class name {@code jaz.Zer}.
  */
 @SuppressWarnings({"rawtypes", "unused"})
 public class Zer
-    implements Serializable, Cloneable, Comparable<Zer>, Comparator, Closeable, Flushable, Iterable,
-               Iterator, Runnable, Callable, Function, Collection, List {
+    implements Serializable,
+        Cloneable,
+        Comparable<Zer>,
+        Comparator,
+        Closeable,
+        Flushable,
+        Iterable,
+        Iterator,
+        Runnable,
+        Callable,
+        Function,
+        Collection,
+        List {
   static final long serialVersionUID = 42L;
 
   // serialized size is 41 bytes
@@ -97,9 +105,12 @@ public class Zer
   }
 
   private static void reportFinding() {
-    Jazzer.reportFindingFromHook(new FuzzerSecurityIssueHigh("Remote Code Execution\n"
-        + "Unrestricted class/object creation based on externally controlled data may allow\n"
-        + "remote code execution depending on available classes on the classpath."));
+    Jazzer.reportFindingFromHook(
+        new FuzzerSecurityIssueHigh(
+            "Remote Code Execution\n"
+                + "Unrestricted class/object creation based on externally controlled data may"
+                + " allow\n"
+                + "remote code execution depending on available classes on the classpath."));
   }
 
   private static boolean isSanitizerEnabled(byte sanitizerId) {

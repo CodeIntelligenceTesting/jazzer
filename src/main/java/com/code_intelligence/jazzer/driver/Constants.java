@@ -20,5 +20,6 @@ public final class Constants {
   // Default value of the libFuzzer -error_exitcode flag.
   public static final int JAZZER_FINDING_EXIT_CODE = 77;
 
-  private Constants(){};
+  private Constants() {}
+  ;
 }

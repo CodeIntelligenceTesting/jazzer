@@ -177,8 +177,7 @@ public final class SeededPseudoRandom implements PseudoRandom {
         upperInclusive == Double.POSITIVE_INFINITY ? Double.MAX_VALUE : upperInclusive;
 
     // After limiting, the range may contain only a single value: return that
-    if (limitedLower == limitedUpper)
-      return limitedLower;
+    if (limitedLower == limitedUpper) return limitedLower;
 
     // random.nextDouble() is exclusive of the upper bound. To include the upper bound,
     // we extend the bound to the next double value by using Math.nextUp(limitedUpper).
@@ -197,8 +196,7 @@ public final class SeededPseudoRandom implements PseudoRandom {
       // This is a workaround for RandomSupport.nextDouble() that causes it to
       // return values greater than upper bound.
       // See https://bugs.openjdk.org/browse/JDK-8281183 for a list of affected JDK versions.
-      if (result > limitedUpper)
-        result = limitedUpper;
+      if (result > limitedUpper) result = limitedUpper;
       return result;
     } else {
       // Ranges that exceeds the maximum representable double value, or ranges that could not be

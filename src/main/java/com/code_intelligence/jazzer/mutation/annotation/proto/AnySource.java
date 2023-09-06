@@ -33,8 +33,6 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @AppliesTo(subClassesOf = {Message.class, Builder.class})
 public @interface AnySource {
-  /**
-   * A non-empty list of {@link Message}s to use for {@link com.google.protobuf.Any} fields.
-   */
+  /** A non-empty list of {@link Message}s to use for {@link com.google.protobuf.Any} fields. */
   Class<? extends Message>[] value();
 }

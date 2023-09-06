@@ -34,11 +34,17 @@ public class HookDependenciesFuzzerHooks {
     PATTERN_ROOT = root;
   }
 
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.util.regex.Matcher",
-      targetMethod = "matches", targetMethodDescriptor = "()Z",
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.util.regex.Matcher",
+      targetMethod = "matches",
+      targetMethodDescriptor = "()Z",
       additionalClassesToHook = {"java.util.regex.Pattern"})
-  public static void
-  matcherMatchesHook(MethodHandle method, Object alwaysNull, Object[] alwaysEmpty, int hookId,
+  public static void matcherMatchesHook(
+      MethodHandle method,
+      Object alwaysNull,
+      Object[] alwaysEmpty,
+      int hookId,
       Boolean returnValue) {
     if (PATTERN_ROOT != null) {
       throw new FuzzerSecurityIssueLow("Hook applied even though it depends on the class to hook");

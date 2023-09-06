@@ -60,44 +60,51 @@ class SeedArgumentsProvider implements ArgumentsProvider {
 
     if (Utils.isCoverageAgentPresent()
         && Files.isDirectory(Utils.generatedCorpusPath(testClass, testMethod))) {
-      rawSeeds = Stream.concat(rawSeeds,
-          walkInputsInPath(Utils.generatedCorpusPath(testClass, testMethod), Integer.MAX_VALUE));
+      rawSeeds =
+          Stream.concat(
+              rawSeeds,
+              walkInputsInPath(
+                  Utils.generatedCorpusPath(testClass, testMethod), Integer.MAX_VALUE));
     }
 
     SeedSerializer serializer = SeedSerializer.of(testMethod);
     return rawSeeds
-        .map(entry -> {
-          Object[] args = serializer.read(entry.getValue());
-          args[0] = named(entry.getKey(), args[0]);
-          return arguments(args);
-        })
-        .onClose(() -> {
-          if (!isFuzzing(extensionContext)) {
-            extensionContext.publishReportEntry(
-                "No fuzzing has been performed, the fuzz test has only been executed on the fixed "
-                + "set of inputs in the seed corpus.\n"
-                + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ set to a "
-                + "non-empty value.");
-          }
-          if (!serializer.allReadsValid()) {
-            extensionContext.publishReportEntry(
-                "Some files in the seed corpus do not match the fuzz target signature.\n"
-                + "This indicates that they were generated with a different signature and may cause "
-                + "issues reproducing previous findings.");
-          }
-        });
+        .map(
+            entry -> {
+              Object[] args = serializer.read(entry.getValue());
+              args[0] = named(entry.getKey(), args[0]);
+              return arguments(args);
+            })
+        .onClose(
+            () -> {
+              if (!isFuzzing(extensionContext)) {
+                extensionContext.publishReportEntry(
+                    "No fuzzing has been performed, the fuzz test has only been executed on the"
+                        + " fixed set of inputs in the seed corpus.\n"
+                        + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ"
+                        + " set to a non-empty value.");
+              }
+              if (!serializer.allReadsValid()) {
+                extensionContext.publishReportEntry(
+                    "Some files in the seed corpus do not match the fuzz target signature.\n"
+                        + "This indicates that they were generated with a different signature and"
+                        + " may cause issues reproducing previous findings.");
+              }
+            });
   }
 
   /**
-   * Used in regression mode to get test cases for the associated {@code testMethod}
-   * This will return a stream of files consisting of:
+   * Used in regression mode to get test cases for the associated {@code testMethod} This will
+   * return a stream of files consisting of:
+   *
    * <ul>
-   * <li>{@code resources/<classpath>/<testClass name>Inputs/*}</li>
-   * <li>{@code resources/<classpath>/<testClass name>Inputs/<testMethod name>/**}</li>
+   *   <li>{@code resources/<classpath>/<testClass name>Inputs/*}
+   *   <li>{@code resources/<classpath>/<testClass name>Inputs/<testMethod name>/**}
    * </ul>
+   *
    * Or the equivalent behavior on resources inside a jar file.
-   * <p>
-   * Note that the first {@code <testClass name>Inputs} path will not recursively search all
+   *
+   * <p>Note that the first {@code <testClass name>Inputs} path will not recursively search all
    * directories but only gives files in that directory whereas the {@code <testMethod name>}
    * directory is searched recursively. This allows for multiple tests to share inputs without
    * needing to explicitly copy them into each test's directory.
@@ -135,15 +142,16 @@ class SeedArgumentsProvider implements ArgumentsProvider {
 
       Path classPathInJar = jar.getPath(pathInJar);
 
-      return Stream
-          .concat(walkClassInputs(classPathInJar), walkTestInputs(classPathInJar, testMethod))
-          .onClose(() -> {
-            try {
-              jar.close();
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          });
+      return Stream.concat(
+              walkClassInputs(classPathInJar), walkTestInputs(classPathInJar, testMethod))
+          .onClose(
+              () -> {
+                try {
+                  jar.close();
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              });
     } else {
       throw new IOException(
           "Unsupported protocol for inputs resource directory: " + classInputsDirUrl);
@@ -152,9 +160,9 @@ class SeedArgumentsProvider implements ArgumentsProvider {
 
   /**
    * Walks over the inputs for the method being tested, recurses into subdirectories
+   *
    * @param classInputsPath the path of the class being tested, used as the base path where the test
-   *     method's directory
-   *                        should be
+   *     method's directory should be
    * @param testMethod the method being tested
    * @return a stream of all files under {@code <classInputsPath>/<testMethod name>}
    * @throws IOException can be thrown by the underlying call to {@link Files#find}
@@ -171,10 +179,10 @@ class SeedArgumentsProvider implements ArgumentsProvider {
 
   /**
    * Walks over the inputs for the class being tested. Does not recurse into subdirectories
+   *
    * @param path the path to search to files
    * @return a stream of all files (without directories) within {@code path}. If {@code path} is not
-   *     found, an empty
-   *    stream is returned.
+   *     found, an empty stream is returned.
    * @throws IOException can be thrown by the underlying call to {@link Files#find}
    */
   private static Stream<Map.Entry<String, byte[]>> walkClassInputs(Path path) throws IOException {
@@ -189,10 +197,11 @@ class SeedArgumentsProvider implements ArgumentsProvider {
 
   /**
    * Gets a sorted stream of all files (without directories) within under the given {@code path}
+   *
    * @param path the path to walk
    * @param depth the maximum depth of subdirectories to search from within {@code path}. 1
-   *     indicates it should return
-   *              only the files directly in {@code path} and not search any of its subdirectories
+   *     indicates it should return only the files directly in {@code path} and not search any of
+   *     its subdirectories
    * @return a stream of file name -> file contents as a raw byte array
    * @throws IOException can be thrown by the call to {@link Files#find(Path, int, BiPredicate,
    *     FileVisitOption...)}
@@ -201,18 +210,19 @@ class SeedArgumentsProvider implements ArgumentsProvider {
       throws IOException {
     // @ParameterTest automatically closes Streams and AutoCloseable instances.
     // noinspection resource
-    return Files
-        .find(path, depth,
-            (fileOrDir, basicFileAttributes)
-                -> !basicFileAttributes.isDirectory(),
+    return Files.find(
+            path,
+            depth,
+            (fileOrDir, basicFileAttributes) -> !basicFileAttributes.isDirectory(),
             FileVisitOption.FOLLOW_LINKS)
         // JUnit identifies individual runs of a `@ParameterizedTest` via their invocation number.
         // In order to get reproducible behavior e.g. when trying to debug a particular input, all
         // inputs thus have to be provided in deterministic order.
         .sorted()
-        .map(file
-            -> new SimpleImmutableEntry<>(
-                file.getFileName().toString(), readAllBytesUnchecked(file)));
+        .map(
+            file ->
+                new SimpleImmutableEntry<>(
+                    file.getFileName().toString(), readAllBytesUnchecked(file)));
   }
 
   private static byte[] readAllBytesUnchecked(Path path) {

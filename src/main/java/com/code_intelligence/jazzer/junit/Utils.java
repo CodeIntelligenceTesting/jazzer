@@ -79,8 +79,7 @@ class Utils {
    * will have the form {@code <class name>Inputs/<method name>}
    */
   static String inputsDirectoryResourcePath(Class<?> testClass, Method testMethod) {
-    return testClass.getSimpleName() + "Inputs"
-        + "/" + testMethod.getName();
+    return testClass.getSimpleName() + "Inputs" + "/" + testMethod.getName();
   }
 
   static String inputsDirectoryResourcePath(Class<?> testClass) {
@@ -126,9 +125,7 @@ class Utils {
     return Paths.get(".cifuzz-corpus", testClass.getName(), testMethod.getName());
   }
 
-  /**
-   * Returns a heuristic default value for jazzer.instrument based on the test class.
-   */
+  /** Returns a heuristic default value for jazzer.instrument based on the test class. */
   static List<String> getLegacyInstrumentationFilter(Class<?> testClass) {
     // This is an extremely rough "implementation" of the public suffix list algorithm
     // (https://publicsuffix.org/): It tries to guess the shortest prefix of the package name that
@@ -140,7 +137,8 @@ class Utils {
     String packageName = testClass.getPackage().getName();
     String[] packageSegments = packageName.split("\\.");
     int numSegments = 2;
-    if (packageSegments.length > 2 && packageSegments[0].equals("com")
+    if (packageSegments.length > 2
+        && packageSegments[0].equals("com")
         && packageSegments[1].equals("github")) {
       numSegments = 3;
     }
@@ -158,46 +156,55 @@ class Utils {
    */
   static Optional<List<String>> getClassPathBasedInstrumentationFilter(String classPath) {
     List<Path> includes =
-        CLASSPATH_SPLITTER.splitAsStream(classPath)
+        CLASSPATH_SPLITTER
+            .splitAsStream(classPath)
             .map(Paths::get)
             // We consider classpath entries that are directories rather than jar files to contain
             // the classes of the current project rather than external dependencies. This is just a
             // heuristic and breaks with build systems that package all classes in jar files, e.g.
             // with Bazel.
             .filter(Files::isDirectory)
-            .flatMap(root -> {
-              HashSet<Path> pkgs = new HashSet<>();
-              try {
-                Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
-                  @Override
-                  public FileVisitResult preVisitDirectory(
-                      Path dir, BasicFileAttributes basicFileAttributes) throws IOException {
-                    try (Stream<Path> entries = Files.list(dir)) {
-                      // If a directory contains a .class file, we add an include filter matching it
-                      // and all subdirectories.
-                      // Special case: If there is a class defined at the root, only the unnamed
-                      // package is included, so continue with the traversal of subdirectories
-                      // to discover additional includes.
-                      if (entries.filter(path -> path.toString().endsWith(".class"))
-                              .anyMatch(Files::isRegularFile)) {
-                        Path pkgPath = root.relativize(dir);
-                        pkgs.add(pkgPath);
-                        if (pkgPath.toString().isEmpty()) {
-                          return FileVisitResult.CONTINUE;
-                        } else {
-                          return FileVisitResult.SKIP_SUBTREE;
-                        }
-                      }
-                    }
-                    return FileVisitResult.CONTINUE;
+            .flatMap(
+                root -> {
+                  HashSet<Path> pkgs = new HashSet<>();
+                  try {
+                    Files.walkFileTree(
+                        root,
+                        new SimpleFileVisitor<Path>() {
+                          @Override
+                          public FileVisitResult preVisitDirectory(
+                              Path dir, BasicFileAttributes basicFileAttributes)
+                              throws IOException {
+                            try (Stream<Path> entries = Files.list(dir)) {
+                              // If a directory contains a .class file, we add an include filter
+                              // matching it
+                              // and all subdirectories.
+                              // Special case: If there is a class defined at the root, only the
+                              // unnamed
+                              // package is included, so continue with the traversal of
+                              // subdirectories
+                              // to discover additional includes.
+                              if (entries
+                                  .filter(path -> path.toString().endsWith(".class"))
+                                  .anyMatch(Files::isRegularFile)) {
+                                Path pkgPath = root.relativize(dir);
+                                pkgs.add(pkgPath);
+                                if (pkgPath.toString().isEmpty()) {
+                                  return FileVisitResult.CONTINUE;
+                                } else {
+                                  return FileVisitResult.SKIP_SUBTREE;
+                                }
+                              }
+                            }
+                            return FileVisitResult.CONTINUE;
+                          }
+                        });
+                  } catch (IOException e) {
+                    // This is only a best-effort heuristic anyway, ignore this directory.
+                    return Stream.of();
                   }
-                });
-              } catch (IOException e) {
-                // This is only a best-effort heuristic anyway, ignore this directory.
-                return Stream.of();
-              }
-              return pkgs.stream();
-            })
+                  return pkgs.stream();
+                })
             .distinct()
             .collect(toList());
     if (includes.isEmpty()) {
@@ -214,26 +221,27 @@ class Utils {
 
   private static final Pattern COVERAGE_AGENT_ARG =
       Pattern.compile("-javaagent:.*(?:intellij-coverage-agent|jacoco).*");
+
   static boolean isCoverageAgentPresent() {
-    return ManagementFactory.getRuntimeMXBean().getInputArguments().stream().anyMatch(
-        s -> COVERAGE_AGENT_ARG.matcher(s).matches());
+    return ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
+        .anyMatch(s -> COVERAGE_AGENT_ARG.matcher(s).matches());
   }
 
   private static final boolean IS_FUZZING_ENV =
       System.getenv("JAZZER_FUZZ") != null && !System.getenv("JAZZER_FUZZ").isEmpty();
+
   static boolean isFuzzing(ExtensionContext extensionContext) {
     return IS_FUZZING_ENV || runFromCommandLine(extensionContext);
   }
 
   static boolean runFromCommandLine(ExtensionContext extensionContext) {
-    return extensionContext.getConfigurationParameter("jazzer.internal.commandLine")
+    return extensionContext
+        .getConfigurationParameter("jazzer.internal.commandLine")
         .map(Boolean::parseBoolean)
         .orElse(false);
   }
 
-  /**
-   * Returns true if and only if the value is equal to "true", "1", or "yes" case-insensitively.
-   */
+  /** Returns true if and only if the value is equal to "true", "1", or "yes" case-insensitively. */
   static boolean permissivelyParseBoolean(String value) {
     return value.equalsIgnoreCase("true") || value.equals("1") || value.equalsIgnoreCase("yes");
   }
@@ -271,16 +279,17 @@ class Utils {
    * @param displayName the display name to assign to every argument
    */
   static Arguments getMarkedArguments(Method method, String displayName) {
-    return arguments(stream(method.getParameterTypes())
-                         .map(Utils::getMarkedInstance)
-                         // Wrap in named as toString may crash on marked instances.
-                         .map(arg -> named(displayName, arg))
-                         .toArray(Object[] ::new));
+    return arguments(
+        stream(method.getParameterTypes())
+            .map(Utils::getMarkedInstance)
+            // Wrap in named as toString may crash on marked instances.
+            .map(arg -> named(displayName, arg))
+            .toArray(Object[]::new));
   }
 
   /**
    * @return {@code true} if and only if the arguments for this test method invocation were created
-   * with {@link #getMarkedArguments}
+   *     with {@link #getMarkedArguments}
    */
   static boolean isMarkedInvocation(ReflectiveInvocationContext<Method> invocationContext) {
     if (invocationContext.getArguments().stream().anyMatch(Utils::isMarkedInstance)) {
@@ -294,12 +303,13 @@ class Utils {
     }
   }
 
-  private static final ClassValue<Object> uniqueInstanceCache = new ClassValue<Object>() {
-    @Override
-    protected Object computeValue(Class<?> clazz) {
-      return makeMarkedInstance(clazz);
-    }
-  };
+  private static final ClassValue<Object> uniqueInstanceCache =
+      new ClassValue<Object>() {
+        @Override
+        protected Object computeValue(Class<?> clazz) {
+          return makeMarkedInstance(clazz);
+        }
+      };
   private static final Set<Object> uniqueInstances = newSetFromMap(new IdentityHashMap<>());
 
   // Visible for testing.

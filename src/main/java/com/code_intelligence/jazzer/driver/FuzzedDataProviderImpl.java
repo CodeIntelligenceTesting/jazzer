@@ -47,11 +47,10 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
    * Creates a {@link FuzzedDataProvider} that consumes bytes from an already existing native array.
    *
    * <ul>
-   * <li>{@link #close()} <b>must</b> be called on instances created with this method to free the
-   * native copy of the Java
-   * {@code byte} array.
-   * <li>{@link #setNativeData(long, int)} <b>must not</b> be called on instances created with this
-   * method.
+   *   <li>{@link #close()} <b>must</b> be called on instances created with this method to free the
+   *       native copy of the Java {@code byte} array.
+   *   <li>{@link #setNativeData(long, int)} <b>must not</b> be called on instances created with
+   *       this method.
    *
    * @param data the raw bytes used as input
    * @return a {@link FuzzedDataProvider} backed by {@code data}
@@ -136,11 +135,14 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
     return nativeCopy;
   }
 
-  @Override public native boolean consumeBoolean();
+  @Override
+  public native boolean consumeBoolean();
 
-  @Override public native boolean[] consumeBooleans(int maxLength);
+  @Override
+  public native boolean[] consumeBooleans(int maxLength);
 
-  @Override public native byte consumeByte();
+  @Override
+  public native byte consumeByte();
 
   @Override
   public byte consumeByte(byte min, byte max) {
@@ -151,7 +153,8 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
     return consumeByteUnchecked(min, max);
   }
 
-  @Override public native short consumeShort();
+  @Override
+  public native short consumeShort();
 
   @Override
   public short consumeShort(short min, short max) {
@@ -162,9 +165,11 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
     return consumeShortUnchecked(min, max);
   }
 
-  @Override public native short[] consumeShorts(int maxLength);
+  @Override
+  public native short[] consumeShorts(int maxLength);
 
-  @Override public native int consumeInt();
+  @Override
+  public native int consumeInt();
 
   @Override
   public int consumeInt(int min, int max) {
@@ -175,9 +180,11 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
     return consumeIntUnchecked(min, max);
   }
 
-  @Override public native int[] consumeInts(int maxLength);
+  @Override
+  public native int[] consumeInts(int maxLength);
 
-  @Override public native long consumeLong();
+  @Override
+  public native long consumeLong();
 
   @Override
   public long consumeLong(long min, long max) {
@@ -188,11 +195,14 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
     return consumeLongUnchecked(min, max);
   }
 
-  @Override public native long[] consumeLongs(int maxLength);
+  @Override
+  public native long[] consumeLongs(int maxLength);
 
-  @Override public native float consumeFloat();
+  @Override
+  public native float consumeFloat();
 
-  @Override public native float consumeRegularFloat();
+  @Override
+  public native float consumeRegularFloat();
 
   @Override
   public float consumeRegularFloat(float min, float max) {
@@ -209,9 +219,11 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
     return consumeRegularFloatUnchecked(min, max);
   }
 
-  @Override public native float consumeProbabilityFloat();
+  @Override
+  public native float consumeProbabilityFloat();
 
-  @Override public native double consumeDouble();
+  @Override
+  public native double consumeDouble();
 
   @Override
   public double consumeRegularDouble(double min, double max) {
@@ -228,11 +240,14 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
     return consumeRegularDoubleUnchecked(min, max);
   }
 
-  @Override public native double consumeRegularDouble();
+  @Override
+  public native double consumeRegularDouble();
 
-  @Override public native double consumeProbabilityDouble();
+  @Override
+  public native double consumeProbabilityDouble();
 
-  @Override public native char consumeChar();
+  @Override
+  public native char consumeChar();
 
   @Override
   public char consumeChar(char min, char max) {
@@ -243,27 +258,41 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
     return consumeCharUnchecked(min, max);
   }
 
-  @Override public native char consumeCharNoSurrogates();
+  @Override
+  public native char consumeCharNoSurrogates();
 
-  @Override public native String consumeAsciiString(int maxLength);
+  @Override
+  public native String consumeAsciiString(int maxLength);
 
-  @Override public native String consumeString(int maxLength);
+  @Override
+  public native String consumeString(int maxLength);
 
-  @Override public native String consumeRemainingAsAsciiString();
+  @Override
+  public native String consumeRemainingAsAsciiString();
 
-  @Override public native String consumeRemainingAsString();
+  @Override
+  public native String consumeRemainingAsString();
 
-  @Override public native byte[] consumeBytes(int maxLength);
+  @Override
+  public native byte[] consumeBytes(int maxLength);
 
-  @Override public native byte[] consumeRemainingAsBytes();
+  @Override
+  public native byte[] consumeRemainingAsBytes();
 
-  @Override public native int remainingBytes();
+  @Override
+  public native int remainingBytes();
 
   private native byte consumeByteUnchecked(byte min, byte max);
+
   private native short consumeShortUnchecked(short min, short max);
+
   private native char consumeCharUnchecked(char min, char max);
+
   private native int consumeIntUnchecked(int min, int max);
+
   private native long consumeLongUnchecked(long min, long max);
+
   private native float consumeRegularFloatUnchecked(float min, float max);
+
   private native double consumeRegularDoubleUnchecked(double min, double max);
 }

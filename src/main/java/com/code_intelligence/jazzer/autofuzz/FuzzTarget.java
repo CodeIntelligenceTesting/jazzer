@@ -40,12 +40,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class FuzzTarget {
-  private static final String AUTOFUZZ_REPRODUCER_TEMPLATE = "public class Crash_%1$s {\n"
-      + "  public static void main(String[] args) throws Throwable {\n"
-      + "    Crash_%1$s.class.getClassLoader().setDefaultAssertionStatus(true);\n"
-      + "    %2$s;\n"
-      + "  }\n"
-      + "}";
+  private static final String AUTOFUZZ_REPRODUCER_TEMPLATE =
+      "public class Crash_%1$s {\n"
+          + "  public static void main(String[] args) throws Throwable {\n"
+          + "    Crash_%1$s.class.getClassLoader().setDefaultAssertionStatus(true);\n"
+          + "    %2$s;\n"
+          + "  }\n"
+          + "}";
   private static final long MAX_EXECUTIONS_WITHOUT_INVOCATION = 100;
 
   private static Meta meta;
@@ -59,7 +60,8 @@ public final class FuzzTarget {
   public static void fuzzerInitialize(String[] args) {
     if (args.length == 0 || !args[0].contains("::")) {
       Log.error(
-          "Expected the argument to --autofuzz to be a method reference (e.g. System.out::println)");
+          "Expected the argument to --autofuzz to be a method reference (e.g."
+              + " System.out::println)");
       System.exit(1);
     }
     String methodSignature = args[0];
@@ -95,9 +97,11 @@ public final class FuzzTarget {
       } catch (ClassNotFoundException e) {
         int classSeparatorIndex = targetClassName.lastIndexOf(".");
         if (classSeparatorIndex == -1) {
-          Log.error(String.format(
-              "Failed to find class %s for autofuzz, please ensure it is contained in the classpath specified with --cp and specify the full package name",
-              className));
+          Log.error(
+              String.format(
+                  "Failed to find class %s for autofuzz, please ensure it is contained in the"
+                      + " classpath specified with --cp and specify the full package name",
+                  className));
           System.exit(1);
           return;
         }
@@ -118,20 +122,24 @@ public final class FuzzTarget {
     // methods. This is necessary e.g. when using Autofuzz on a package-private JUnit @FuzzTest
     // method.
     if (isConstructor) {
-      executables = Arrays.stream(lookup.getAccessibleConstructors(targetClass))
-                        .filter(constructor -> constructor.getDeclaringClass().equals(targetClass))
-                        .filter(constructor
-                            -> (descriptor == null && Modifier.isPublic(constructor.getModifiers()))
-                                || Utils.getReadableDescriptor(constructor).equals(descriptor))
-                        .toArray(Executable[] ::new);
+      executables =
+          Arrays.stream(lookup.getAccessibleConstructors(targetClass))
+              .filter(constructor -> constructor.getDeclaringClass().equals(targetClass))
+              .filter(
+                  constructor ->
+                      (descriptor == null && Modifier.isPublic(constructor.getModifiers()))
+                          || Utils.getReadableDescriptor(constructor).equals(descriptor))
+              .toArray(Executable[]::new);
     } else {
-      executables = Arrays.stream(lookup.getAccessibleMethods(targetClass))
-                        .filter(method -> method.getDeclaringClass().equals(targetClass))
-                        .filter(method
-                            -> method.getName().equals(methodName)
-                                && ((descriptor == null && Modifier.isPublic(method.getModifiers()))
-                                    || Utils.getReadableDescriptor(method).equals(descriptor)))
-                        .toArray(Executable[] ::new);
+      executables =
+          Arrays.stream(lookup.getAccessibleMethods(targetClass))
+              .filter(method -> method.getDeclaringClass().equals(targetClass))
+              .filter(
+                  method ->
+                      method.getName().equals(methodName)
+                          && ((descriptor == null && Modifier.isPublic(method.getModifiers()))
+                              || Utils.getReadableDescriptor(method).equals(descriptor)))
+              .toArray(Executable[]::new);
     }
     if (executables.length == 0) {
       if (isConstructor) {
@@ -139,80 +147,101 @@ public final class FuzzTarget {
           Log.error(
               String.format("Failed to find constructors in class %s for autofuzz.%n", className));
         } else {
-          Log.error(String.format(
-              "Failed to find constructors with signature %s in class %s for autofuzz.%n"
-                  + "Public constructors declared by the class:%n%s",
-              descriptor, className,
-              Arrays.stream(lookup.getAccessibleConstructors(targetClass))
-                  .filter(constructor -> Modifier.isPublic(constructor.getModifiers()))
-                  .filter(constructor -> constructor.getDeclaringClass().equals(targetClass))
-                  .map(method
-                      -> String.format("%s::new%s", method.getDeclaringClass().getName(),
-                          Utils.getReadableDescriptor(method)))
-                  .distinct()
-                  .collect(Collectors.joining(System.lineSeparator()))));
+          Log.error(
+              String.format(
+                  "Failed to find constructors with signature %s in class %s for autofuzz.%n"
+                      + "Public constructors declared by the class:%n%s",
+                  descriptor,
+                  className,
+                  Arrays.stream(lookup.getAccessibleConstructors(targetClass))
+                      .filter(constructor -> Modifier.isPublic(constructor.getModifiers()))
+                      .filter(constructor -> constructor.getDeclaringClass().equals(targetClass))
+                      .map(
+                          method ->
+                              String.format(
+                                  "%s::new%s",
+                                  method.getDeclaringClass().getName(),
+                                  Utils.getReadableDescriptor(method)))
+                      .distinct()
+                      .collect(Collectors.joining(System.lineSeparator()))));
         }
       } else {
         if (descriptor == null) {
-          Log.error(String.format("Failed to find methods named %s in class %s for autofuzz.%n"
-                  + "Public methods declared by the class:%n%s",
-              methodName, className,
-              Arrays.stream(lookup.getAccessibleMethods(targetClass))
-                  .filter(method -> Modifier.isPublic(method.getModifiers()))
-                  .filter(method -> method.getDeclaringClass().equals(targetClass))
-                  .map(method
-                      -> String.format(
-                          "%s::%s", method.getDeclaringClass().getName(), method.getName()))
-                  .distinct()
-                  .collect(Collectors.joining(System.lineSeparator()))));
+          Log.error(
+              String.format(
+                  "Failed to find methods named %s in class %s for autofuzz.%n"
+                      + "Public methods declared by the class:%n%s",
+                  methodName,
+                  className,
+                  Arrays.stream(lookup.getAccessibleMethods(targetClass))
+                      .filter(method -> Modifier.isPublic(method.getModifiers()))
+                      .filter(method -> method.getDeclaringClass().equals(targetClass))
+                      .map(
+                          method ->
+                              String.format(
+                                  "%s::%s", method.getDeclaringClass().getName(), method.getName()))
+                      .distinct()
+                      .collect(Collectors.joining(System.lineSeparator()))));
         } else {
-          Log.error(String.format(
-              "Failed to find public methods named %s with signature %s in class %s for autofuzz.%n"
-                  + "Public methods with that name:%n%s",
-              methodName, descriptor, className,
-              Arrays.stream(lookup.getAccessibleMethods(targetClass))
-                  .filter(method -> Modifier.isPublic(method.getModifiers()))
-                  .filter(method -> method.getDeclaringClass().equals(targetClass))
-                  .filter(method -> method.getName().equals(methodName))
-                  .map(method
-                      -> String.format("%s::%s%s", method.getDeclaringClass().getName(),
-                          method.getName(), Utils.getReadableDescriptor(method)))
-                  .distinct()
-                  .collect(Collectors.joining(System.lineSeparator()))));
+          Log.error(
+              String.format(
+                  "Failed to find public methods named %s with signature %s in class %s for"
+                      + " autofuzz.%nPublic methods with that name:%n%s",
+                  methodName,
+                  descriptor,
+                  className,
+                  Arrays.stream(lookup.getAccessibleMethods(targetClass))
+                      .filter(method -> Modifier.isPublic(method.getModifiers()))
+                      .filter(method -> method.getDeclaringClass().equals(targetClass))
+                      .filter(method -> method.getName().equals(methodName))
+                      .map(
+                          method ->
+                              String.format(
+                                  "%s::%s%s",
+                                  method.getDeclaringClass().getName(),
+                                  method.getName(),
+                                  Utils.getReadableDescriptor(method)))
+                      .distinct()
+                      .collect(Collectors.joining(System.lineSeparator()))));
         }
       }
       System.exit(1);
     }
 
-    Set<SimpleGlobMatcher> ignoredExceptionGlobMatchers = Arrays.stream(args)
-                                                              .skip(1)
-                                                              .filter(s -> s.contains("*"))
-                                                              .map(SimpleGlobMatcher::new)
-                                                              .collect(Collectors.toSet());
+    Set<SimpleGlobMatcher> ignoredExceptionGlobMatchers =
+        Arrays.stream(args)
+            .skip(1)
+            .filter(s -> s.contains("*"))
+            .map(SimpleGlobMatcher::new)
+            .collect(Collectors.toSet());
 
     List<Class<?>> alwaysIgnore =
         Arrays.stream(args)
             .skip(1)
             .filter(s -> !s.contains("*"))
-            .map(name -> {
-              try {
-                return ClassLoader.getSystemClassLoader().loadClass(name);
-              } catch (ClassNotFoundException e) {
-                Log.error(String.format(
-                    "Failed to find class '%s' specified in --autofuzz_ignore", name));
-                System.exit(1);
-              }
-              throw new Error("Not reached");
-            })
+            .map(
+                name -> {
+                  try {
+                    return ClassLoader.getSystemClassLoader().loadClass(name);
+                  } catch (ClassNotFoundException e) {
+                    Log.error(
+                        String.format(
+                            "Failed to find class '%s' specified in --autofuzz_ignore", name));
+                    System.exit(1);
+                  }
+                  throw new Error("Not reached");
+                })
             .collect(Collectors.toList());
 
     Map<Executable, Class<?>[]> ignoredExceptionClasses =
         Arrays.stream(executables)
-            .collect(Collectors.toMap(method
-                -> method,
-                method
-                -> Stream.concat(Arrays.stream(method.getExceptionTypes()), alwaysIgnore.stream())
-                       .toArray(Class[] ::new)));
+            .collect(
+                Collectors.toMap(
+                    method -> method,
+                    method ->
+                        Stream.concat(
+                                Arrays.stream(method.getExceptionTypes()), alwaysIgnore.stream())
+                            .toArray(Class[]::new)));
 
     setTarget(
         executables, null, methodSignature, ignoredExceptionGlobMatchers, ignoredExceptionClasses);
@@ -222,8 +251,11 @@ public final class FuzzTarget {
    * Set the target executables to (auto-)fuzz. This method is primarily used by the JUnit
    * integration to set the target class and method passed in by the test framework.
    */
-  public static void setTarget(Executable[] targetExecutables, Object targetInstance,
-      String methodReference, Set<SimpleGlobMatcher> ignoredExceptionMatchers,
+  public static void setTarget(
+      Executable[] targetExecutables,
+      Object targetInstance,
+      String methodReference,
+      Set<SimpleGlobMatcher> ignoredExceptionMatchers,
       Map<Executable, Class<?>[]> throwsDeclarations) {
     Class<?> targetClass = null;
     for (Executable executable : targetExecutables) {
@@ -267,8 +299,9 @@ public final class FuzzTarget {
     } catch (IOException e) {
       Log.error(String.format("Failed to write Java reproducer to %s%n", javaPath), e);
     }
-    Log.println(String.format(
-        "reproducer_path='%s'; Java reproducer written to %s%n", reproducerPath, javaPath));
+    Log.println(
+        String.format(
+            "reproducer_path='%s'; Java reproducer written to %s%n", reproducerPath, javaPath));
   }
 
   private static void fuzzerTestOneInput(
@@ -304,7 +337,8 @@ public final class FuzzTarget {
       executionsSinceLastInvocation++;
       if (executionsSinceLastInvocation >= MAX_EXECUTIONS_WITHOUT_INVOCATION) {
         Log.error(
-            String.format("Failed to generate valid arguments to '%s' in %d attempts; giving up",
+            String.format(
+                "Failed to generate valid arguments to '%s' in %d attempts; giving up",
                 methodReference, executionsSinceLastInvocation));
         System.exit(1);
       } else if (executionsSinceLastInvocation == MAX_EXECUTIONS_WITHOUT_INVOCATION / 2) {
@@ -347,8 +381,9 @@ public final class FuzzTarget {
     while (cause != null) {
       StackTraceElement[] elements = cause.getStackTrace();
       int firstInterestingPos;
-      for (firstInterestingPos = elements.length - 1; firstInterestingPos > 0;
-           firstInterestingPos--) {
+      for (firstInterestingPos = elements.length - 1;
+          firstInterestingPos > 0;
+          firstInterestingPos--) {
         String className = elements[firstInterestingPos].getClassName();
         if (!className.startsWith("com.code_intelligence.jazzer.autofuzz.")
             && !className.startsWith("java.lang.reflect.")

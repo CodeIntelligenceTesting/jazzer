@@ -31,7 +31,6 @@ import java.io.UncheckedIOException;
 import java.net.URL;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,9 +41,7 @@ import java.util.function.Supplier;
 import java.util.jar.Manifest;
 import java.util.stream.Stream;
 
-/**
- * A typed option that is evaluated lazily (see {@link #get()}).
- */
+/** A typed option that is evaluated lazily (see {@link #get()}). */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public abstract class OptItem<T> implements Supplier<T> {
   private static final String ROOT_SEGMENT = "jazzer";
@@ -75,10 +72,12 @@ public abstract class OptItem<T> implements Supplier<T> {
     if (OptItem.cliArgs.isPresent()) {
       throw new IllegalStateException("Command-line arguments have already been set");
     }
-    OptItem.cliArgs = Optional.of(
-        unmodifiableList(cliArgs.stream()
-                             .map(e -> new SimpleImmutableEntry<>(e.getKey(), e.getValue()))
-                             .collect(toList())));
+    OptItem.cliArgs =
+        Optional.of(
+            unmodifiableList(
+                cliArgs.stream()
+                    .map(e -> new SimpleImmutableEntry<>(e.getKey(), e.getValue()))
+                    .collect(toList())));
   }
 
   /**
@@ -98,18 +97,18 @@ public abstract class OptItem<T> implements Supplier<T> {
    * Get the value of this item, which is cached on the first call of this method and will not
    * change afterward.
    *
-   * <p>The value of an item {@code some_opt} is obtained from the following sources in
-   * increasing order of precedence:
+   * <p>The value of an item {@code some_opt} is obtained from the following sources in increasing
+   * order of precedence:
+   *
    * <ol>
-   *    <li>the default value;</li>
-   *    <li>{@code META-INF/MANIFEST.MF} attributes {@code Jazzer-Some-Opt} on the
-   *    classpath;</li>
-   *    <li>the {@code JAZZER_SOME_OPT} environment variable;</li>
-   *    <li>the {@code jazzer.some_opt} system property;</li>
-   *    <li>the {@code jazzer.some_opt} JUnit configuration parameter (if {@link
-   * #registerConfigurationParameters(Function)} has been called);</li>
-   *    <li>the {@code --some_opt} command-line argument (if {@link #registerCommandLineArgs(List)
-   * has been called}).</li>
+   *   <li>the default value;
+   *   <li>{@code META-INF/MANIFEST.MF} attributes {@code Jazzer-Some-Opt} on the classpath;
+   *   <li>the {@code JAZZER_SOME_OPT} environment variable;
+   *   <li>the {@code jazzer.some_opt} system property;
+   *   <li>the {@code jazzer.some_opt} JUnit configuration parameter (if {@link
+   *       #registerConfigurationParameters(Function)} has been called);
+   *   <li>the {@code --some_opt} command-line argument (if {@link #registerCommandLineArgs(List)
+   *       has been called}).
    * </ol>
    */
   @Override
@@ -129,13 +128,14 @@ public abstract class OptItem<T> implements Supplier<T> {
    * taking the role of its default value, otherwise throws an {@link IllegalStateException}.
    *
    * @return {@code true} if the value of the item was not set explicitly and thus defaulted to
-   * {@code newValue}.
+   *     {@code newValue}.
    */
   public final boolean setIfDefault(T newValue) throws IllegalOptionValueException {
     if (value != null) {
-      throw new IllegalStateException(String.format(
-          "Attempted to set of option %s to %s, but it has already been read elsewhere",
-          propertyName(), newValue));
+      throw new IllegalStateException(
+          String.format(
+              "Attempted to set of option %s to %s, but it has already been read elsewhere",
+              propertyName(), newValue));
     }
     Optional<T> explicitValue = getExplicitValue();
     if (explicitValue.isPresent()) {
@@ -166,16 +166,18 @@ public abstract class OptItem<T> implements Supplier<T> {
   }
 
   private Optional<T> getExplicitValue() {
-    return Stream
-        .<Supplier<Stream<T>>>of(this::getFromManifest, this::getFromEnv, this::getFromProperties,
-            this::getFromConfigurationParameters, this::getFromCommandLineArguments)
+    return Stream.<Supplier<Stream<T>>>of(
+            this::getFromManifest,
+            this::getFromEnv,
+            this::getFromProperties,
+            this::getFromConfigurationParameters,
+            this::getFromCommandLineArguments)
         .flatMap(Supplier::get)
         .reduce(this::accumulate);
   }
 
   private Stream<T> getFromCommandLineArguments() {
-    return cliArgs.orElse(emptyList())
-        .stream()
+    return cliArgs.orElse(emptyList()).stream()
         .filter(e -> e.getKey().equals(cliArgName()))
         .map(Entry::getValue)
         .map(s -> fromStringOrThrow(s, "command-line argument " + cliArgName()));
@@ -203,27 +205,37 @@ public abstract class OptItem<T> implements Supplier<T> {
       // The manifest entry that comes *last* on the class path should be evaluated *first* as it
       // has the *lowest* precedence.
       reverse(manifests);
-      return manifests.stream().flatMap(url -> {
-        try (InputStream inputStream = url.openStream()) {
-          return stream(
-              Optional.ofNullable(
-                  new Manifest(inputStream).getMainAttributes().getValue(manifestAttributeName())))
-              .map(s
-                  -> fromStringOrThrow(s,
-                      String.format("manifest attribute %s in %s", manifestAttributeName(), url)));
-        } catch (IOException e) {
-          throw new UncheckedIOException(e);
-        }
-      });
+      return manifests.stream()
+          .flatMap(
+              url -> {
+                try (InputStream inputStream = url.openStream()) {
+                  return stream(
+                          Optional.ofNullable(
+                              new Manifest(inputStream)
+                                  .getMainAttributes()
+                                  .getValue(manifestAttributeName())))
+                      .map(
+                          s ->
+                              fromStringOrThrow(
+                                  s,
+                                  String.format(
+                                      "manifest attribute %s in %s",
+                                      manifestAttributeName(), url)));
+                } catch (IOException e) {
+                  throw new UncheckedIOException(e);
+                }
+              });
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   private T fromStringOrThrow(String rawValue, String what) throws IllegalOptionValueException {
-    return fromString(rawValue).orElseThrow(()
-                                                -> new IllegalOptionValueException(String.format(
-                                                    "Invalid value for %s: %s", what, rawValue)));
+    return fromString(rawValue)
+        .orElseThrow(
+            () ->
+                new IllegalOptionValueException(
+                    String.format("Invalid value for %s: %s", what, rawValue)));
   }
 
   String cliArgName() {

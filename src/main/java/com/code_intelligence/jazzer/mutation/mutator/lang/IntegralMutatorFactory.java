@@ -45,37 +45,38 @@ final class IntegralMutatorFactory extends MutatorFactory {
     Class<?> clazz = (Class<?>) type.getType();
 
     if (clazz == byte.class || clazz == Byte.class) {
-      return Optional.of(new AbstractIntegralMutator<Byte>(type, Byte.MIN_VALUE, Byte.MAX_VALUE) {
-        @Override
-        protected long mutateWithLibFuzzer(long value) {
-          return LibFuzzerMutate.mutateDefault((byte) value, this, 0);
-        }
+      return Optional.of(
+          new AbstractIntegralMutator<Byte>(type, Byte.MIN_VALUE, Byte.MAX_VALUE) {
+            @Override
+            protected long mutateWithLibFuzzer(long value) {
+              return LibFuzzerMutate.mutateDefault((byte) value, this, 0);
+            }
 
-        @Override
-        public Byte init(PseudoRandom prng) {
-          return (byte) initImpl(prng);
-        }
+            @Override
+            public Byte init(PseudoRandom prng) {
+              return (byte) initImpl(prng);
+            }
 
-        @Override
-        public Byte mutate(Byte value, PseudoRandom prng) {
-          return (byte) mutateImpl(value, prng);
-        }
+            @Override
+            public Byte mutate(Byte value, PseudoRandom prng) {
+              return (byte) mutateImpl(value, prng);
+            }
 
-        @Override
-        public Byte crossOver(Byte value, Byte otherValue, PseudoRandom prng) {
-          return (byte) crossOverImpl(value, otherValue, prng);
-        }
+            @Override
+            public Byte crossOver(Byte value, Byte otherValue, PseudoRandom prng) {
+              return (byte) crossOverImpl(value, otherValue, prng);
+            }
 
-        @Override
-        public Byte read(DataInputStream in) throws IOException {
-          return (byte) forceInRange(in.readByte());
-        }
+            @Override
+            public Byte read(DataInputStream in) throws IOException {
+              return (byte) forceInRange(in.readByte());
+            }
 
-        @Override
-        public void write(Byte value, DataOutputStream out) throws IOException {
-          out.writeByte(value);
-        }
-      });
+            @Override
+            public void write(Byte value, DataOutputStream out) throws IOException {
+              out.writeByte(value);
+            }
+          });
     } else if (clazz == short.class || clazz == Short.class) {
       return Optional.of(
           new AbstractIntegralMutator<Short>(type, Short.MIN_VALUE, Short.MAX_VALUE) {
@@ -143,37 +144,38 @@ final class IntegralMutatorFactory extends MutatorFactory {
             }
           });
     } else if (clazz == long.class || clazz == Long.class) {
-      return Optional.of(new AbstractIntegralMutator<Long>(type, Long.MIN_VALUE, Long.MAX_VALUE) {
-        @Override
-        protected long mutateWithLibFuzzer(long value) {
-          return LibFuzzerMutate.mutateDefault(value, this, 0);
-        }
+      return Optional.of(
+          new AbstractIntegralMutator<Long>(type, Long.MIN_VALUE, Long.MAX_VALUE) {
+            @Override
+            protected long mutateWithLibFuzzer(long value) {
+              return LibFuzzerMutate.mutateDefault(value, this, 0);
+            }
 
-        @Override
-        public Long init(PseudoRandom prng) {
-          return initImpl(prng);
-        }
+            @Override
+            public Long init(PseudoRandom prng) {
+              return initImpl(prng);
+            }
 
-        @Override
-        public Long mutate(Long value, PseudoRandom prng) {
-          return mutateImpl(value, prng);
-        }
+            @Override
+            public Long mutate(Long value, PseudoRandom prng) {
+              return mutateImpl(value, prng);
+            }
 
-        @Override
-        public Long crossOver(Long value, Long otherValue, PseudoRandom prng) {
-          return crossOverImpl(value, otherValue, prng);
-        }
+            @Override
+            public Long crossOver(Long value, Long otherValue, PseudoRandom prng) {
+              return crossOverImpl(value, otherValue, prng);
+            }
 
-        @Override
-        public Long read(DataInputStream in) throws IOException {
-          return forceInRange(in.readLong());
-        }
+            @Override
+            public Long read(DataInputStream in) throws IOException {
+              return forceInRange(in.readLong());
+            }
 
-        @Override
-        public void write(Long value, DataOutputStream out) throws IOException {
-          out.writeLong(value);
-        }
-      });
+            @Override
+            public void write(Long value, DataOutputStream out) throws IOException {
+              out.writeLong(value);
+            }
+          });
     } else {
       return Optional.empty();
     }
@@ -185,7 +187,7 @@ final class IntegralMutatorFactory extends MutatorFactory {
   // Copyright 2022 Google LLC
   //
   // Visible for testing.
-  static abstract class AbstractIntegralMutator<T extends Number> extends SerializingMutator<T> {
+  abstract static class AbstractIntegralMutator<T extends Number> extends SerializingMutator<T> {
     private static final long RANDOM_WALK_RANGE = 5;
     private final long minValue;
     private final long maxValue;
@@ -209,21 +211,25 @@ final class IntegralMutatorFactory extends MutatorFactory {
           // Byte.MAX_VALUE instead. IDEs will warn about the redundant specification of the default
           // value, so this should not be a problem in practice.
           if (inRange.min() != Long.MIN_VALUE) {
-            require(inRange.min() >= defaultMinValueForType,
+            require(
+                inRange.min() >= defaultMinValueForType,
                 format("@InRange.min=%d is out of range: %s", inRange.min(), type.getType()));
             minValue = inRange.min();
           }
           if (inRange.max() != Long.MAX_VALUE) {
-            require(inRange.max() <= defaultMaxValueForType,
+            require(
+                inRange.max() <= defaultMaxValueForType,
                 format("@InRange.max=%d is out of range: %s", inRange.max(), type.getType()));
             maxValue = inRange.max();
           }
         }
       }
 
-      require(minValue <= maxValue,
+      require(
+          minValue <= maxValue,
           format("[%d, %d] is not a valid interval: %s", minValue, maxValue, type));
-      require(minValue != maxValue,
+      require(
+          minValue != maxValue,
           format(
               "[%d, %d] can not be mutated, use a constant instead: %s", minValue, maxValue, type));
       this.minValue = minValue;
@@ -319,7 +325,8 @@ final class IntegralMutatorFactory extends MutatorFactory {
       return mean + (1 & xor & (mean >>> 31));
     }
 
-    @ForOverride protected abstract long mutateWithLibFuzzer(long value);
+    @ForOverride
+    protected abstract long mutateWithLibFuzzer(long value);
 
     /**
      * Force value into the closed interval [minValue, maxValue] while preserving as many of its
@@ -391,7 +398,8 @@ final class IntegralMutatorFactory extends MutatorFactory {
 
     @Override
     public String toDebugString(Predicate<Debuggable> isInCycle) {
-      return ((Class<T>) ((ParameterizedType) this.getClass().getGenericSuperclass())
+      return ((Class<T>)
+              ((ParameterizedType) this.getClass().getGenericSuperclass())
                   .getActualTypeArguments()[0])
           .getSimpleName();
     }

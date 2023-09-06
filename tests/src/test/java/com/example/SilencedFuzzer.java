@@ -21,10 +21,12 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 
 public class SilencedFuzzer {
-  private static final PrintStream noopStream = new PrintStream(new OutputStream() {
-    @Override
-    public void write(int b) {}
-  });
+  private static final PrintStream noopStream =
+      new PrintStream(
+          new OutputStream() {
+            @Override
+            public void write(int b) {}
+          });
 
   public static void fuzzerInitialize() {
     System.setErr(noopStream);

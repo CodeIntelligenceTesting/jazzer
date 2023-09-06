@@ -45,8 +45,9 @@ public class TurboJpegFuzzer {
       TJDecompressor tjd;
       if (data.consumeBoolean()) {
         TJTransformer tjt = new TJTransformer(data.consumeRemainingAsBytes());
-        TJTransform tjf = new TJTransform(
-            0, 0, transformWidth, transformHeight, transformOp, transformOptions, null);
+        TJTransform tjf =
+            new TJTransform(
+                0, 0, transformWidth, transformHeight, transformOp, transformOptions, null);
         tjd = tjt.transform(new TJTransform[] {tjf}, flagsTransform)[0];
       } else {
         tjd = new TJDecompressor(data.consumeRemainingAsBytes());

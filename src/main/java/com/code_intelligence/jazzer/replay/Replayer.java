@@ -101,7 +101,8 @@ public class Replayer {
     } catch (Exception e) {
       handleInvokeException(e, fuzzTarget);
     }
-    System.err.printf("%s must define exactly one of the following two functions:%n"
+    System.err.printf(
+        "%s must define exactly one of the following two functions:%n"
             + "    public static void fuzzerTestOneInput(byte[] ...)%n"
             + "    public static void fuzzerTestOneInput(FuzzedDataProvider ...)%n"
             + "Note: Fuzz targets returning boolean are no longer supported; exceptions should%n"
@@ -111,8 +112,7 @@ public class Replayer {
   }
 
   private static void handleInvokeException(Exception e, Class<?> fuzzTarget) {
-    if (e instanceof NoSuchMethodException)
-      return;
+    if (e instanceof NoSuchMethodException) return;
     if (e instanceof InvocationTargetException) {
       filterOutOwnStackTraceElements(e.getCause(), fuzzTarget);
       e.getCause().printStackTrace();
@@ -124,14 +124,11 @@ public class Replayer {
   }
 
   private static void filterOutOwnStackTraceElements(Throwable t, Class<?> fuzzTarget) {
-    if (t.getCause() != null)
-      filterOutOwnStackTraceElements(t.getCause(), fuzzTarget);
-    if (t.getStackTrace() == null || t.getStackTrace().length == 0)
-      return;
+    if (t.getCause() != null) filterOutOwnStackTraceElements(t.getCause(), fuzzTarget);
+    if (t.getStackTrace() == null || t.getStackTrace().length == 0) return;
     StackTraceElement lowestFrame = t.getStackTrace()[t.getStackTrace().length - 1];
     if (!lowestFrame.getClassName().equals(Replayer.class.getName())
-        || !lowestFrame.getMethodName().equals("main"))
-      return;
+        || !lowestFrame.getMethodName().equals("main")) return;
     for (int i = t.getStackTrace().length - 1; i >= 0; i--) {
       StackTraceElement frame = t.getStackTrace()[i];
       if (frame.getClassName().equals(fuzzTarget.getName())

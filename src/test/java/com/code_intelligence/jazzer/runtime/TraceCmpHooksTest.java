@@ -34,9 +34,11 @@ public class TraceCmpHooksTest {
     map.put(arg, arg);
 
     // Add elements to map asynchronously
-    Function<Integer, Runnable> put = (final Integer num) -> () -> {
-      map.put(String.valueOf(num), num);
-    };
+    Function<Integer, Runnable> put =
+        (final Integer num) ->
+            () -> {
+              map.put(String.valueOf(num), num);
+            };
     for (int i = 0; i < 1_000_000; i++) {
       ES.submit(put.apply(i));
     }

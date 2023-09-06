@@ -42,6 +42,7 @@ import java.util.stream.Stream;
 
 public class JarStripper {
   private static final Map<String, String> ZIP_FS_PROPERTIES = new HashMap<>();
+
   static {
     // We copy the input to the output path before modifying, so don't try to create a new file at
     // that path if something went wrong.
@@ -58,17 +59,19 @@ public class JarStripper {
 
     Path inFile = Paths.get(args[0]);
     Path outFile = Paths.get(args[1]);
-    Map<Boolean, List<String>> rawPaths = unmodifiableMap(
-        Arrays.stream(args)
-            .skip(2)
-            .map(arg -> {
-              if (arg.startsWith("+")) {
-                return new SimpleEntry<>(true, arg.substring(1));
-              } else {
-                return new SimpleEntry<>(false, arg);
-              }
-            })
-            .collect(partitioningBy(e -> e.getKey(), mapping(e -> e.getValue(), toList()))));
+    Map<Boolean, List<String>> rawPaths =
+        unmodifiableMap(
+            Arrays.stream(args)
+                .skip(2)
+                .map(
+                    arg -> {
+                      if (arg.startsWith("+")) {
+                        return new SimpleEntry<>(true, arg.substring(1));
+                      } else {
+                        return new SimpleEntry<>(false, arg);
+                      }
+                    })
+                .collect(partitioningBy(e -> e.getKey(), mapping(e -> e.getValue(), toList()))));
 
     try {
       Files.copy(inFile, outFile);
@@ -98,16 +101,18 @@ public class JarStripper {
       PathMatcher pathsToKeep = toPathMatcher(zipFs, rawPaths.get(true), true);
       try (Stream<Path> walk = Files.walk(zipFs.getPath(""))) {
         walk.sorted(Comparator.reverseOrder())
-            .filter(path
-                -> (pathsToKeep != null && !pathsToKeep.matches(path))
-                    || (pathsToDelete != null && pathsToDelete.matches(path)))
-            .forEach(path -> {
-              try {
-                Files.delete(path);
-              } catch (IOException e) {
-                throw new UncheckedIOException(e);
-              }
-            });
+            .filter(
+                path ->
+                    (pathsToKeep != null && !pathsToKeep.matches(path))
+                        || (pathsToDelete != null && pathsToDelete.matches(path)))
+            .forEach(
+                path -> {
+                  try {
+                    Files.delete(path);
+                  } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                  }
+                });
       }
     } catch (Throwable e) {
       Throwable throwable = e;
@@ -123,10 +128,12 @@ public class JarStripper {
     if (paths.isEmpty()) {
       return null;
     }
-    return fs.getPathMatcher(String.format("glob:{%s}",
-        paths.stream()
-            .flatMap(pattern -> keep ? toKeepGlobs(pattern) : toRemoveGlobs(pattern))
-            .collect(joining(","))));
+    return fs.getPathMatcher(
+        String.format(
+            "glob:{%s}",
+            paths.stream()
+                .flatMap(pattern -> keep ? toKeepGlobs(pattern) : toRemoveGlobs(pattern))
+                .collect(joining(","))));
   }
 
   private static Stream<String> toRemoveGlobs(String path) {
@@ -141,7 +148,8 @@ public class JarStripper {
   private static Stream<String> toKeepGlobs(String path) {
     // When keeping something, also keep all parents.
     String[] segments = path.split("/");
-    return Stream.concat(Stream.of(path),
+    return Stream.concat(
+        Stream.of(path),
         IntStream.range(0, segments.length)
             .mapToObj(i -> Arrays.stream(segments).limit(i).collect(joining("/"))));
   }

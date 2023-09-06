@@ -24,13 +24,13 @@ public class EmployeeWithSetters {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
     EmployeeWithSetters hero = (EmployeeWithSetters) o;
-    return age == hero.age && Objects.equals(firstName, hero.firstName)
-        && Objects.equals(lastName, hero.lastName) && Objects.equals(jobTitle, hero.jobTitle);
+    return age == hero.age
+        && Objects.equals(firstName, hero.firstName)
+        && Objects.equals(lastName, hero.lastName)
+        && Objects.equals(jobTitle, hero.jobTitle);
   }
 
   @Override

@@ -45,8 +45,8 @@ public final class StreamSupport {
   }
 
   /**
-   * @return an array with the values if all {@link Optional}s are present, otherwise
-   * {@link Optional#empty()}
+   * @return an array with the values if all {@link Optional}s are present, otherwise {@link
+   *     Optional#empty()}
    */
   public static <T> Optional<T[]> toArrayOrEmpty(
       Stream<Optional<T>> stream, IntFunction<T[]> newArray) {

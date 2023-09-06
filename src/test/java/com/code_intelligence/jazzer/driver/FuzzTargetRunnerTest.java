@@ -121,12 +121,12 @@ public class FuzzTargetRunnerTest {
       assert UNSAFE.getByte(CoverageMap.countersAddress + 3) == 0;
 
       String errOutput = new String(recordedErr.toByteArray(), StandardCharsets.UTF_8);
-      List<String> unexpectedLines = Arrays.stream(errOutput.split("\n"))
-                                         .filter(line -> !line.startsWith("INFO: "))
-                                         .collect(Collectors.toList());
+      List<String> unexpectedLines =
+          Arrays.stream(errOutput.split("\n"))
+              .filter(line -> !line.startsWith("INFO: "))
+              .collect(Collectors.toList());
       assert unexpectedLines.isEmpty()
-          : "Unexpected output on System.err: '"
-          + String.join("\n", unexpectedLines) + "'";
+          : "Unexpected output on System.err: '" + String.join("\n", unexpectedLines) + "'";
       String outOutput = new String(recordedOut.toByteArray(), StandardCharsets.UTF_8);
       assert outOutput.isEmpty() : "Non-empty System.out: '" + outOutput + "'";
     }
@@ -174,7 +174,8 @@ public class FuzzTargetRunnerTest {
         // Verify that the StackOverflowError is wrapped in security issue and contains reproducer
         // information.
         assert errOutput.contains(
-            "== Java Exception: com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow: Stack overflow (use ");
+            "== Java Exception: com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow: Stack"
+                + " overflow (use ");
         assert !errOutput.contains("not reported");
         Matcher dedupTokenMatcher = DEDUP_TOKEN_PATTERN.matcher(outOutput);
         assert dedupTokenMatcher.matches() : "Unexpected output on System.out: '" + outOutput + "'";
@@ -194,11 +195,10 @@ public class FuzzTargetRunnerTest {
     throw new IllegalStateException("Expected FuzzTargetRunner to call fuzzerTearDown");
   }
 
-  /**
-   * An OutputStream that prints to two OutputStreams simultaneously.
-   */
+  /** An OutputStream that prints to two OutputStreams simultaneously. */
   private static class TeeOutputStream extends PrintStream {
     private final PrintStream otherOut;
+
     public TeeOutputStream(PrintStream out1, PrintStream out2) {
       super(out1, true);
       this.otherOut = out2;

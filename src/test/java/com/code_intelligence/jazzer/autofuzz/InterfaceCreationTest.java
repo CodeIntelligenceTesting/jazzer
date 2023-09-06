@@ -27,7 +27,7 @@ public class InterfaceCreationTest {
     void bar();
   }
 
-  public static abstract class ClassA1 implements InterfaceA {
+  public abstract static class ClassA1 implements InterfaceA {
     @Override
     public void foo() {}
   }
@@ -44,10 +44,8 @@ public class InterfaceCreationTest {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o)
-        return true;
-      if (o == null || getClass() != o.getClass())
-        return false;
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
       ClassB1 classB1 = (ClassB1) o;
       return n == classB1.n;
     }
@@ -73,10 +71,8 @@ public class InterfaceCreationTest {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o)
-        return true;
-      if (o == null || getClass() != o.getClass())
-        return false;
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
       ClassB2 classB2 = (ClassB2) o;
       return Objects.equals(s, classB2.s);
     }
@@ -86,19 +82,28 @@ public class InterfaceCreationTest {
       return Objects.hash(s);
     }
   }
+
   @Test
   public void testConsumeInterface() {
-    consumeTestCase(InterfaceA.class, new ClassB1(5),
-        "(com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.InterfaceA) new com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.ClassB1(5)",
-        Arrays.asList((byte) 1, // do not return null
+    consumeTestCase(
+        InterfaceA.class,
+        new ClassB1(5),
+        "(com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.InterfaceA) new"
+            + " com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.ClassB1(5)",
+        Arrays.asList(
+            (byte) 1, // do not return null
             0, // pick ClassB1
             (byte) 1, // do not return null
             0, // pick first constructor
             5 // arg for ClassB1 constructor
             ));
-    consumeTestCase(InterfaceA.class, new ClassB2("test"),
-        "(com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.InterfaceA) new com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.ClassB2(\"test\")",
-        Arrays.asList((byte) 1, // do not return null
+    consumeTestCase(
+        InterfaceA.class,
+        new ClassB2("test"),
+        "(com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.InterfaceA) new"
+            + " com.code_intelligence.jazzer.autofuzz.InterfaceCreationTest.ClassB2(\"test\")",
+        Arrays.asList(
+            (byte) 1, // do not return null
             1, // pick ClassB2
             (byte) 1, // do not return null
             0, // pick first constructor

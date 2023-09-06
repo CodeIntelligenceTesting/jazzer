@@ -33,9 +33,7 @@ public class Log {
   private static PrintStream fixedOut;
   private static PrintStream fixedErr;
 
-  /**
-   * The {@link PrintStream}s to use for all output from this call on.
-   */
+  /** The {@link PrintStream}s to use for all output from this call on. */
   public static void fixOutErr(PrintStream out, PrintStream err) {
     if (out == null) {
       throw new IllegalArgumentException("out must not be null");

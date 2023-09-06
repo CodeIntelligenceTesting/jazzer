@@ -22,7 +22,9 @@ public class LibraryLoad {
 
     try {
       System.loadLibrary(input);
-    } catch (SecurityException | UnsatisfiedLinkError | NullPointerException
+    } catch (SecurityException
+        | UnsatisfiedLinkError
+        | NullPointerException
         | IllegalArgumentException ignored) {
     }
   }

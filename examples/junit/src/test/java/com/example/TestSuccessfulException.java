@@ -21,6 +21,7 @@ package com.example;
  *
  * <p>Use this instead of a generic exception to ensure that tests do not pass if such a generic
  * exception is thrown unexpectedly.
+ *
  * <p>Use this instead of {@link com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow} and other
  * Jazzer-specific exceptions as using them in tests leads to classloader issues: The exception
  * classes may be loaded both in the bootstrap and the system classloader depending on when exactly

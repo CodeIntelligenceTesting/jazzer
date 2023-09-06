@@ -21,23 +21,20 @@ package com.code_intelligence.jazzer.driver;
  * execution of a fuzz target.
  */
 public interface LifecycleMethodsInvoker {
-  /**
-   * An implementation of {@link LifecycleMethodsInvoker} with empty implementations.
-   */
-  LifecycleMethodsInvoker NOOP = new LifecycleMethodsInvoker() {
-    @Override
-    public void beforeFirstExecution() {}
+  /** An implementation of {@link LifecycleMethodsInvoker} with empty implementations. */
+  LifecycleMethodsInvoker NOOP =
+      new LifecycleMethodsInvoker() {
+        @Override
+        public void beforeFirstExecution() {}
 
-    @Override
-    public void beforeEachExecution() {}
+        @Override
+        public void beforeEachExecution() {}
 
-    @Override
-    public void afterLastExecution() {}
-  };
+        @Override
+        public void afterLastExecution() {}
+      };
 
-  /**
-   * Invoked before the first execution of the fuzz target.
-   */
+  /** Invoked before the first execution of the fuzz target. */
   void beforeFirstExecution() throws Throwable;
 
   /**
@@ -48,8 +45,7 @@ public interface LifecycleMethodsInvoker {
   void beforeEachExecution() throws Throwable;
 
   /**
-   * Invoked after the last execution of the fuzz target, regardless of whether there was a
-   * finding.
+   * Invoked after the last execution of the fuzz target, regardless of whether there was a finding.
    */
   void afterLastExecution() throws Throwable;
 

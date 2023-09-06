@@ -20,9 +20,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Internal helper allowing to apply multiple {@link MethodHook} annotations to the same method.
- */
+/** Internal helper allowing to apply multiple {@link MethodHook} annotations to the same method. */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @Documented

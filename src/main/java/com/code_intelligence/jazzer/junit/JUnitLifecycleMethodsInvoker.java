@@ -34,8 +34,8 @@ import org.junit.jupiter.engine.execution.DefaultExecutableInvoker;
 import org.junit.jupiter.engine.extension.ExtensionRegistry;
 
 /**
- * Adapts JUnit BeforeEach and AfterEach callbacks to
- * {@link com.code_intelligence.jazzer.driver.FuzzTargetRunner} lifecycle hooks.
+ * Adapts JUnit BeforeEach and AfterEach callbacks to {@link
+ * com.code_intelligence.jazzer.driver.FuzzTargetRunner} lifecycle hooks.
  */
 public class JUnitLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
   private final ThrowingRunnable[] beforeEachExecutionRunnables;
@@ -62,26 +62,27 @@ public class JUnitLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
     // are turned into extensions using an internal adapter class, BeforeEachMethodAdapter.
     // https://junit.org/junit5/docs/current/user-guide/#extensions-execution-order-wrapping-behavior
     ArrayList<ThrowingRunnable> beforeEachMethods =
-        Stream
-            .<ThrowingRunnable>concat(
+        Stream.<ThrowingRunnable>concat(
                 extensionRegistry.stream(BeforeEachCallback.class)
                     .map(callback -> () -> callback.beforeEach(extensionContext)),
                 extensionRegistry.stream(BeforeEachMethodAdapter.class)
-                    .map(callback
-                        -> ()
-                            -> callback.invokeBeforeEachMethod(
-                                extensionContext, extensionRegistry)))
+                    .map(
+                        callback ->
+                            () ->
+                                callback.invokeBeforeEachMethod(
+                                    extensionContext, extensionRegistry)))
             .collect(toCollection(ArrayList::new));
 
     ArrayList<ThrowingRunnable> afterEachMethods =
-        Stream
-            .<ThrowingRunnable>concat(
+        Stream.<ThrowingRunnable>concat(
                 extensionRegistry.stream(AfterEachCallback.class)
                     .map(callback -> () -> callback.afterEach(extensionContext)),
                 extensionRegistry.stream(AfterEachMethodAdapter.class)
-                    .map(callback
-                        -> ()
-                            -> callback.invokeAfterEachMethod(extensionContext, extensionRegistry)))
+                    .map(
+                        callback ->
+                            () ->
+                                callback.invokeAfterEachMethod(
+                                    extensionContext, extensionRegistry)))
             .collect(toCollection(ArrayList::new));
     // JUnit calls AfterEach methods in reverse order of registration so that the methods registered
     // first run last.
@@ -89,7 +90,7 @@ public class JUnitLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
 
     return new JUnitLifecycleMethodsInvoker(
         Stream.concat(afterEachMethods.stream(), beforeEachMethods.stream())
-            .toArray(ThrowingRunnable[] ::new));
+            .toArray(ThrowingRunnable[]::new));
   }
 
   private static Optional<ExtensionRegistry> getExtensionRegistryViaHack(
@@ -105,14 +106,16 @@ public class JUnitLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
     return Arrays.stream(DefaultExecutableInvoker.class.getDeclaredFields())
         .filter(field -> field.getType() == ExtensionRegistry.class)
         .findFirst()
-        .flatMap(extensionRegistryField -> {
-          DefaultExecutableInvoker invoker =
-              (DefaultExecutableInvoker) extensionContext.getExecutableInvoker();
-          long extensionRegistryFieldOffset =
-              UnsafeProvider.getUnsafe().objectFieldOffset(extensionRegistryField);
-          return Optional.ofNullable((ExtensionRegistry) UnsafeProvider.getUnsafe().getObject(
-              invoker, extensionRegistryFieldOffset));
-        });
+        .flatMap(
+            extensionRegistryField -> {
+              DefaultExecutableInvoker invoker =
+                  (DefaultExecutableInvoker) extensionContext.getExecutableInvoker();
+              long extensionRegistryFieldOffset =
+                  UnsafeProvider.getUnsafe().objectFieldOffset(extensionRegistryField);
+              return Optional.ofNullable(
+                  (ExtensionRegistry)
+                      UnsafeProvider.getUnsafe().getObject(invoker, extensionRegistryFieldOffset));
+            });
   }
 
   @Override

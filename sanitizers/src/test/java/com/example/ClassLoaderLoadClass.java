@@ -15,7 +15,6 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import java.lang.reflect.InvocationTargetException;
 
 public class ClassLoaderLoadClass {
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws InterruptedException {

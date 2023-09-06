@@ -34,8 +34,7 @@ public class ExampleValueProfileFuzzer {
     // expected input byte by byte, which takes linear rather than exponential time.
     if (((Object) base64(data.consumeBytes(6))).equals("SmF6emVy")) {
       long[] plaintextBlocks = data.consumeLongs(2);
-      if (plaintextBlocks.length != 2)
-        return;
+      if (plaintextBlocks.length != 2) return;
       if (insecureEncrypt(plaintextBlocks[0]) == 0x9fc48ee64d3dc090L) {
         // Without variants of the fuzzer hooks for compares that also take in fake PCs, the fuzzer
         // would get stuck here as the value profile information for long comparisons would not be

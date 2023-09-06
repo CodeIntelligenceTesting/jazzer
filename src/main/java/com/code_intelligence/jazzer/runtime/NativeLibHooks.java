@@ -19,17 +19,29 @@ import com.code_intelligence.jazzer.api.MethodHook;
 import java.lang.invoke.MethodHandle;
 
 @SuppressWarnings("unused")
-final public class NativeLibHooks {
-  @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Runtime",
-      targetMethod = "loadLibrary", targetMethodDescriptor = "(Ljava/lang/String;)V")
-  @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.System",
-      targetMethod = "loadLibrary", targetMethodDescriptor = "(Ljava/lang/String;)V")
-  @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Runtime", targetMethod = "load",
+public final class NativeLibHooks {
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = "java.lang.Runtime",
+      targetMethod = "loadLibrary",
       targetMethodDescriptor = "(Ljava/lang/String;)V")
-  @MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.System", targetMethod = "load",
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = "java.lang.System",
+      targetMethod = "loadLibrary",
       targetMethodDescriptor = "(Ljava/lang/String;)V")
-  public static void
-  loadLibraryHook(MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = "java.lang.Runtime",
+      targetMethod = "load",
+      targetMethodDescriptor = "(Ljava/lang/String;)V")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = "java.lang.System",
+      targetMethod = "load",
+      targetMethodDescriptor = "(Ljava/lang/String;)V")
+  public static void loadLibraryHook(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     if (Constants.IS_ANDROID) {
       return;
     }

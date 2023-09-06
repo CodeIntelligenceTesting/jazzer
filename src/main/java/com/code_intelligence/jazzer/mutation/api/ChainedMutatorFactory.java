@@ -25,9 +25,7 @@ import java.lang.reflect.AnnotatedType;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * A {@link MutatorFactory} that delegates to the given factories in order.
- */
+/** A {@link MutatorFactory} that delegates to the given factories in order. */
 public final class ChainedMutatorFactory extends MutatorFactory {
   private final List<MutatorFactory> factories;
 

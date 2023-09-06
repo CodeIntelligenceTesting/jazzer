@@ -61,9 +61,10 @@ class HolderTest {
 
   @Test
   void testParameterHolder_rawType() {
-    Type type = new ParameterHolder() {
-      void foo(List<String> parameter) {}
-    }.type();
+    Type type =
+        new ParameterHolder() {
+          void foo(List<String> parameter) {}
+        }.type();
     assertThat(type).isInstanceOf(ParameterizedType.class);
 
     ParameterizedType parameterizedType = (ParameterizedType) type;
@@ -73,9 +74,10 @@ class HolderTest {
 
   @Test
   void testParameterHolder_annotatedType() {
-    AnnotatedType type = new ParameterHolder() {
-      void foo(@ParameterAnnotation @Foo List<@Bar String> parameter) {}
-    }.annotatedType();
+    AnnotatedType type =
+        new ParameterHolder() {
+          void foo(@ParameterAnnotation @Foo List<@Bar String> parameter) {}
+        }.annotatedType();
     assertThat(type).isInstanceOf(AnnotatedParameterizedType.class);
 
     AnnotatedParameterizedType listType = (AnnotatedParameterizedType) type;
@@ -93,9 +95,10 @@ class HolderTest {
 
   @Test
   void testParameterHolder_parameterAnnotations() {
-    Annotation[] annotations = new ParameterHolder() {
-      void foo(@ParameterAnnotation @Foo List<@Bar String> parameter) {}
-    }.parameterAnnotations();
+    Annotation[] annotations =
+        new ParameterHolder() {
+          void foo(@ParameterAnnotation @Foo List<@Bar String> parameter) {}
+        }.parameterAnnotations();
     assertThat(annotations).hasLength(1);
     assertThat(annotations[0]).isInstanceOf(ParameterAnnotation.class);
   }

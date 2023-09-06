@@ -29,9 +29,9 @@ public interface Debuggable {
    * its structure in tests.
    *
    * @param isInCycle evaluates to {@code true} if a cycle has been detected during recursive calls
-   *                  of this function. Must be called at most once with {@code this} as the single
-   *                  argument. Implementing classes that know that their current instance can never
-   *                  be contained in recursive substructures need not call this method.
+   *     of this function. Must be called at most once with {@code this} as the single argument.
+   *     Implementing classes that know that their current instance can never be contained in
+   *     recursive substructures need not call this method.
    */
   String toDebugString(Predicate<Debuggable> isInCycle);
 

@@ -28,13 +28,13 @@ class Employee {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
     Employee hero = (Employee) o;
-    return age == hero.age && Objects.equals(firstName, hero.firstName)
-        && Objects.equals(lastName, hero.lastName) && Objects.equals(jobTitle, hero.jobTitle);
+    return age == hero.age
+        && Objects.equals(firstName, hero.firstName)
+        && Objects.equals(lastName, hero.lastName)
+        && Objects.equals(jobTitle, hero.jobTitle);
   }
 
   @Override
@@ -79,9 +79,12 @@ class Employee {
 public class BuilderPatternTest {
   @Test
   public void testBuilderPattern() {
-    consumeTestCase(new Employee.Builder("foo", "bar").withAge(20).withJobTitle("baz").build(),
-        "new com.code_intelligence.jazzer.autofuzz.Employee.Builder(\"foo\", \"bar\").withAge(20).withJobTitle(\"baz\").build()",
-        Arrays.asList((byte) 1, // do not return null
+    consumeTestCase(
+        new Employee.Builder("foo", "bar").withAge(20).withJobTitle("baz").build(),
+        "new com.code_intelligence.jazzer.autofuzz.Employee.Builder(\"foo\","
+            + " \"bar\").withAge(20).withJobTitle(\"baz\").build()",
+        Arrays.asList(
+            (byte) 1, // do not return null
             0, // Select the first Builder
             2, // Select two Builder methods returning a builder object (fluent design)
             0, // Select the first build method

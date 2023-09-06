@@ -84,14 +84,16 @@ public class Meta {
   @SuppressWarnings("unchecked")
   public static <T1, T2> void autofuzz(FuzzedDataProvider data, Consumer2<T1, T2> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Consumer2.class, func.getClass());
-    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+    func.accept(
+        (T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
         (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1));
   }
 
   @SuppressWarnings("unchecked")
   public static <T1, T2, T3> void autofuzz(FuzzedDataProvider data, Consumer3<T1, T2, T3> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Consumer3.class, func.getClass());
-    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+    func.accept(
+        (T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
         (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
         (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2));
   }
@@ -100,7 +102,8 @@ public class Meta {
   public static <T1, T2, T3, T4> void autofuzz(
       FuzzedDataProvider data, Consumer4<T1, T2, T3, T4> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Consumer4.class, func.getClass());
-    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+    func.accept(
+        (T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
         (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
         (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
         (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3));
@@ -110,7 +113,8 @@ public class Meta {
   public static <T1, T2, T3, T4, T5> void autofuzz(
       FuzzedDataProvider data, Consumer5<T1, T2, T3, T4, T5> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Consumer5.class, func.getClass());
-    func.accept((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+    func.accept(
+        (T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
         (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
         (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
         (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3),
@@ -126,14 +130,16 @@ public class Meta {
   @SuppressWarnings("unchecked")
   public static <T1, T2, R> R autofuzz(FuzzedDataProvider data, Function2<T1, T2, R> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Function2.class, func.getClass());
-    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+    return func.apply(
+        (T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
         (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1));
   }
 
   @SuppressWarnings("unchecked")
   public static <T1, T2, T3, R> R autofuzz(FuzzedDataProvider data, Function3<T1, T2, T3, R> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Function3.class, func.getClass());
-    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+    return func.apply(
+        (T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
         (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
         (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2));
   }
@@ -142,7 +148,8 @@ public class Meta {
   public static <T1, T2, T3, T4, R> R autofuzz(
       FuzzedDataProvider data, Function4<T1, T2, T3, T4, R> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Function4.class, func.getClass());
-    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+    return func.apply(
+        (T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
         (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
         (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
         (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3));
@@ -152,7 +159,8 @@ public class Meta {
   public static <T1, T2, T3, T4, T5, R> R autofuzz(
       FuzzedDataProvider data, Function5<T1, T2, T3, T4, T5, R> func) {
     Class<?>[] types = TypeResolver.resolveRawArguments(Function5.class, func.getClass());
-    return func.apply((T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
+    return func.apply(
+        (T1) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 0),
         (T2) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 1),
         (T3) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 2),
         (T4) PUBLIC_LOOKUP_INSTANCE.consumeChecked(data, types, 3),
@@ -189,17 +197,21 @@ public class Meta {
       return "null";
     }
     if (obj.getClass().isArray()) {
-      return String.format("(%s[]) %s", obj.getClass().getComponentType().getName(),
-          Arrays.deepToString((Object[]) obj));
+      return String.format(
+          "(%s[]) %s",
+          obj.getClass().getComponentType().getName(), Arrays.deepToString((Object[]) obj));
     }
     return obj.toString();
   }
 
   private static String getDebugSummary(
       Executable executable, Object thisObject, Object[] arguments) {
-    return String.format("%nMethod: %s::%s%s%nthis: %s%nArguments: %s",
-        executable.getDeclaringClass().getName(), executable.getName(),
-        Utils.getReadableDescriptor(executable), thisObject,
+    return String.format(
+        "%nMethod: %s::%s%s%nthis: %s%nArguments: %s",
+        executable.getDeclaringClass().getName(),
+        executable.getName(),
+        Utils.getReadableDescriptor(executable),
+        thisObject,
         Arrays.stream(arguments).map(Meta::deepToString).collect(Collectors.joining(", ")));
   }
 
@@ -214,8 +226,8 @@ public class Meta {
     } else if (genericType instanceof TypeVariable<?>) {
       throw new AutofuzzError("Did not expect genericType to be a TypeVariable: " + genericType);
     } else if (genericType instanceof GenericArrayType) {
-      return Array
-          .newInstance(getRawType(((GenericArrayType) genericType).getGenericComponentType()), 0)
+      return Array.newInstance(
+              getRawType(((GenericArrayType) genericType).getGenericComponentType()), 0)
           .getClass();
     } else {
       throw new AutofuzzError("Got unexpected class implementing Type: " + genericType);
@@ -439,33 +451,37 @@ public class Meta {
       if (type == byte[].class) {
         byte[] result = data.consumeBytes(consumeArrayLength(data, Byte.BYTES));
         if (visitor != null) {
-          visitor.pushElement(IntStream.range(0, result.length)
-                                  .mapToObj(i -> "(byte) " + result[i])
-                                  .collect(Collectors.joining(", ", "new byte[]{", "}")));
+          visitor.pushElement(
+              IntStream.range(0, result.length)
+                  .mapToObj(i -> "(byte) " + result[i])
+                  .collect(Collectors.joining(", ", "new byte[]{", "}")));
         }
         return result;
       } else if (type == int[].class) {
         int[] result = data.consumeInts(consumeArrayLength(data, Integer.BYTES));
         if (visitor != null) {
-          visitor.pushElement(Arrays.stream(result)
-                                  .mapToObj(String::valueOf)
-                                  .collect(Collectors.joining(", ", "new int[]{", "}")));
+          visitor.pushElement(
+              Arrays.stream(result)
+                  .mapToObj(String::valueOf)
+                  .collect(Collectors.joining(", ", "new int[]{", "}")));
         }
         return result;
       } else if (type == short[].class) {
         short[] result = data.consumeShorts(consumeArrayLength(data, Short.BYTES));
         if (visitor != null) {
-          visitor.pushElement(IntStream.range(0, result.length)
-                                  .mapToObj(i -> "(short) " + result[i])
-                                  .collect(Collectors.joining(", ", "new short[]{", "}")));
+          visitor.pushElement(
+              IntStream.range(0, result.length)
+                  .mapToObj(i -> "(short) " + result[i])
+                  .collect(Collectors.joining(", ", "new short[]{", "}")));
         }
         return result;
       } else if (type == long[].class) {
         long[] result = data.consumeLongs(consumeArrayLength(data, Long.BYTES));
         if (visitor != null) {
-          visitor.pushElement(Arrays.stream(result)
-                                  .mapToObj(e -> e + "L")
-                                  .collect(Collectors.joining(", ", "new long[]{", "}")));
+          visitor.pushElement(
+              Arrays.stream(result)
+                  .mapToObj(e -> e + "L")
+                  .collect(Collectors.joining(", ", "new long[]{", "}")));
         }
         return result;
       } else if (type == boolean[].class) {
@@ -485,8 +501,9 @@ public class Meta {
         int remainingBytesAfterFirstElementCreation = data.remainingBytes();
         int sizeOfElementEstimate =
             remainingBytesBeforeFirstElementCreation - remainingBytesAfterFirstElementCreation;
-        Object array = Array.newInstance(
-            type.getComponentType(), consumeArrayLength(data, sizeOfElementEstimate));
+        Object array =
+            Array.newInstance(
+                type.getComponentType(), consumeArrayLength(data, sizeOfElementEstimate));
         for (int i = 0; i < Array.getLength(array); i++) {
           if (i == 0) {
             Array.set(array, i, firstElement);
@@ -507,10 +524,12 @@ public class Meta {
     } else if (type == ByteArrayInputStream.class || type == InputStream.class) {
       byte[] array = data.consumeBytes(consumeArrayLength(data, Byte.BYTES));
       if (visitor != null) {
-        visitor.pushElement(IntStream.range(0, array.length)
-                                .mapToObj(i -> "(byte) " + array[i])
-                                .collect(Collectors.joining(
-                                    ", ", "new java.io.ByteArrayInputStream(new byte[]{", "})")));
+        visitor.pushElement(
+            IntStream.range(0, array.length)
+                .mapToObj(i -> "(byte) " + array[i])
+                .collect(
+                    Collectors.joining(
+                        ", ", "new java.io.ByteArrayInputStream(new byte[]{", "})")));
       }
       return new ByteArrayInputStream(array);
     } else if (type == Map.class) {
@@ -526,10 +545,12 @@ public class Meta {
         // Also annotate the type of the entry stream since it might be empty, in which case type
         // inference on the accumulator could fail.
         visitor.pushGroup(
-            String.format("java.util.stream.Stream.<java.util.AbstractMap.SimpleEntry<%s, %s>>of(",
+            String.format(
+                "java.util.stream.Stream.<java.util.AbstractMap.SimpleEntry<%s, %s>>of(",
                 keyType.getTypeName(), valueType.getTypeName()),
             ", ",
-            ").collect(java.util.HashMap::new, (map, e) -> map.put(e.getKey(), e.getValue()), java.util.HashMap::putAll)");
+            ").collect(java.util.HashMap::new, (map, e) -> map.put(e.getKey(), e.getValue()),"
+                + " java.util.HashMap::putAll)");
       }
       int remainingBytesBeforeFirstEntryCreation = data.remainingBytes();
       if (visitor != null) {
@@ -593,32 +614,36 @@ public class Meta {
       if (implementingClasses == null) {
         // TODO: We may be scanning multiple times. Instead, we should keep the ScanResult around
         //  for as long as there is enough memory.
-        ClassGraph classGraph = new ClassGraph()
-                                    .enableClassInfo()
-                                    .ignoreClassVisibility()
-                                    .ignoreMethodVisibility()
-                                    .enableInterClassDependencies()
-                                    .rejectPackages("jaz");
+        ClassGraph classGraph =
+            new ClassGraph()
+                .enableClassInfo()
+                .ignoreClassVisibility()
+                .ignoreMethodVisibility()
+                .enableInterClassDependencies()
+                .rejectPackages("jaz");
         if (!IS_TEST) {
           classGraph.rejectPackages("com.code_intelligence.jazzer");
         }
         try (ScanResult result = classGraph.scan()) {
           ClassInfoList children =
               type.isInterface() ? result.getClassesImplementing(type) : result.getSubclasses(type);
-          implementingClasses = children.getStandardClasses()
-                                    .filter(info -> !Modifier.isAbstract(info.getModifiers()))
-                                    .filter(info -> lookup.isAccessible(info, info.getModifiers()))
-                                    // Filter out anonymous and local classes, which can't be
-                                    // instantiated in reproducers.
-                                    .filter(info -> info.getName() != null)
-                                    .loadClasses();
+          implementingClasses =
+              children
+                  .getStandardClasses()
+                  .filter(info -> !Modifier.isAbstract(info.getModifiers()))
+                  .filter(info -> lookup.isAccessible(info, info.getModifiers()))
+                  // Filter out anonymous and local classes, which can't be
+                  // instantiated in reproducers.
+                  .filter(info -> info.getName() != null)
+                  .loadClasses();
           implementingClassesCache.put(type, implementingClasses);
         }
       }
       if (implementingClasses.isEmpty()) {
         if (IS_DEBUG) {
-          throw new AutofuzzConstructionException(String.format(
-              "Could not find classes implementing %s on the classpath", type.getName()));
+          throw new AutofuzzConstructionException(
+              String.format(
+                  "Could not find classes implementing %s on the classpath", type.getName()));
         } else {
           throw new AutofuzzConstructionException();
         }
@@ -646,8 +671,10 @@ public class Meta {
         // Embed the instance creation and setters into an immediately invoked lambda expression to
         // turn them into an expression.
         String uniqueVariableName = visitor.uniqueVariableName();
-        visitor.pushGroup(String.format("((java.util.function.Supplier<%1$s>) (() -> {%1$s %2$s = ",
-                              type.getCanonicalName(), uniqueVariableName),
+        visitor.pushGroup(
+            String.format(
+                "((java.util.function.Supplier<%1$s>) (() -> {%1$s %2$s = ",
+                type.getCanonicalName(), uniqueVariableName),
             String.format("; %s.", uniqueVariableName),
             String.format("; return %s;})).get()", uniqueVariableName));
       }
@@ -686,8 +713,9 @@ public class Meta {
         // Group for the chain of builder methods.
         visitor.pushGroup("", ".", "");
       }
-      Object builderObj = autofuzzForConsume(
-          data, data.pickValue(lookup.getAccessibleConstructors(pickedBuilder)), visitor);
+      Object builderObj =
+          autofuzzForConsume(
+              data, data.pickValue(lookup.getAccessibleConstructors(pickedBuilder)), visitor);
       for (Method method : pickedMethods) {
         builderObj = autofuzzForConsume(data, method, builderObj, visitor);
       }
@@ -706,15 +734,17 @@ public class Meta {
     // We ran out of ways to construct an instance of the requested type. If in debug mode, report
     // more detailed information.
     if (IS_DEBUG) {
-      String summary = String.format(
-          "Failed to generate instance of %s:%nAccessible constructors: %s%nNested subclasses: %s%n",
-          type.getName(),
-          Arrays.stream(lookup.getAccessibleConstructors(type))
-              .map(Utils::getReadableDescriptor)
-              .collect(Collectors.joining(", ")),
-          Arrays.stream(lookup.getAccessibleClasses(type))
-              .map(Class::getName)
-              .collect(Collectors.joining(", ")));
+      String summary =
+          String.format(
+              "Failed to generate instance of %s:%nAccessible constructors: %s%nNested subclasses:"
+                  + " %s%n",
+              type.getName(),
+              Arrays.stream(lookup.getAccessibleConstructors(type))
+                  .map(Utils::getReadableDescriptor)
+                  .collect(Collectors.joining(", ")),
+              Arrays.stream(lookup.getAccessibleClasses(type))
+                  .map(Class::getName)
+                  .collect(Collectors.joining(", ")));
       throw new AutofuzzConstructionException(summary);
     } else {
       throw new AutofuzzConstructionException();
@@ -724,10 +754,11 @@ public class Meta {
   private List<Class<?>> getNestedBuilderClasses(Class<?> type) {
     List<Class<?>> nestedBuilderClasses = nestedBuilderClassesCache.get(type);
     if (nestedBuilderClasses == null) {
-      nestedBuilderClasses = Arrays.stream(lookup.getAccessibleClasses(type))
-                                 .filter(cls -> cls.getName().endsWith("Builder"))
-                                 .filter(cls -> !getOriginalObjectCreationMethods(cls).isEmpty())
-                                 .collect(Collectors.toList());
+      nestedBuilderClasses =
+          Arrays.stream(lookup.getAccessibleClasses(type))
+              .filter(cls -> cls.getName().endsWith("Builder"))
+              .filter(cls -> !getOriginalObjectCreationMethods(cls).isEmpty())
+              .collect(Collectors.toList());
       nestedBuilderClassesCache.put(type, nestedBuilderClasses);
     }
     return nestedBuilderClasses;
@@ -748,9 +779,10 @@ public class Meta {
   private List<Method> getCascadingBuilderMethods(Class<?> builder) {
     List<Method> cascadingBuilderMethods = cascadingBuilderMethodsCache.get(builder);
     if (cascadingBuilderMethods == null) {
-      cascadingBuilderMethods = Arrays.stream(lookup.getAccessibleMethods(builder))
-                                    .filter(m -> m.getReturnType() == builder)
-                                    .collect(Collectors.toList());
+      cascadingBuilderMethods =
+          Arrays.stream(lookup.getAccessibleMethods(builder))
+              .filter(m -> m.getReturnType() == builder)
+              .collect(Collectors.toList());
       cascadingBuilderMethodsCache.put(builder, cascadingBuilderMethods);
     }
     return cascadingBuilderMethods;
@@ -768,9 +800,10 @@ public class Meta {
       FuzzedDataProvider data, Executable executable, AutofuzzCodegenVisitor visitor) {
     Object[] result;
     try {
-      result = Arrays.stream(executable.getGenericParameterTypes())
-                   .map(type -> consume(data, type, visitor))
-                   .toArray();
+      result =
+          Arrays.stream(executable.getGenericParameterTypes())
+              .map(type -> consume(data, type, visitor))
+              .toArray();
       return result;
     } catch (AutofuzzConstructionException e) {
       // Do not nest AutofuzzConstructionExceptions.

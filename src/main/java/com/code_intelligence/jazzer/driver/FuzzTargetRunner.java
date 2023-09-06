@@ -72,7 +72,8 @@ public final class FuzzTargetRunner {
         Log.error("--target_class and --autofuzz cannot be specified together");
         exit(1);
       }
-      if (!Opt.targetArgs.setIfDefault(unmodifiableList(
+      if (!Opt.targetArgs.setIfDefault(
+          unmodifiableList(
               concat(Stream.of(Opt.autofuzz.get()), Opt.autofuzzIgnore.get().stream())
                   .collect(toList())))) {
         Log.error("--target_args and --autofuzz cannot be specified together");
@@ -103,10 +104,10 @@ public final class FuzzTargetRunner {
 
   // Keep these options used in runOne (and thus the critical path) in static final fields so that
   // they can be constant-folded by the JIT.
-  private static final Set<Long> ignoredTokens = Opt.ignore.get()
-                                                     .stream()
-                                                     .map(s -> Long.parseUnsignedLong(s, 16))
-                                                     .collect(toCollection(HashSet::new));
+  private static final Set<Long> ignoredTokens =
+      Opt.ignore.get().stream()
+          .map(s -> Long.parseUnsignedLong(s, 16))
+          .collect(toCollection(HashSet::new));
   private static final boolean useExperimentalMutator = Opt.experimentalMutator.get();
   private static final boolean optimizeMergeInner = Opt.mergeInner.get();
   private static final boolean useHooks = Opt.hooks.get();
@@ -182,9 +183,7 @@ public final class FuzzTargetRunner {
     }
   }
 
-  /**
-   * A test-only convenience wrapper around {@link #runOne(long, int)}.
-   */
+  /** A test-only convenience wrapper around {@link #runOne(long, int)}. */
   static int runOne(byte[] data) {
     long dataPtr = UNSAFE.allocateMemory(data.length);
     UNSAFE.copyMemory(data, BYTE_ARRAY_OFFSET, null, dataPtr, data.length);
@@ -198,11 +197,11 @@ public final class FuzzTargetRunner {
   /**
    * Executes the user-provided fuzz target once.
    *
-   * @param dataPtr    a native pointer to beginning of the input provided by the fuzzer for this
-   *                   execution
+   * @param dataPtr a native pointer to beginning of the input provided by the fuzzer for this
+   *     execution
    * @param dataLength length of the fuzzer input
    * @return the value that the native LLVMFuzzerTestOneInput function should return. The function
-   * may exit the process instead of returning.
+   *     may exit the process instead of returning.
    */
   private static int runOne(long dataPtr, int dataLength) {
     Throwable finding = null;
@@ -222,8 +221,10 @@ public final class FuzzTargetRunner {
       // once.
       if (!(invalidCorpusFileWarningShown || readExactly || isFixedLibFuzzerInput(buf))) {
         invalidCorpusFileWarningShown = true;
-        Log.warn("Some files in the seed corpus do not match the fuzz target signature. "
-            + "This indicates that they were generated with a different signature and may cause issues reproducing previous findings.");
+        Log.warn(
+            "Some files in the seed corpus do not match the fuzz target signature. This indicates"
+                + " that they were generated with a different signature and may cause issues"
+                + " reproducing previous findings.");
       }
       data = null;
       argument = null;
@@ -328,17 +329,18 @@ public final class FuzzTargetRunner {
       // Reached the maximum amount of findings to keep going for, crash after shutdown.
       if (!Opt.autofuzz.get().isEmpty() && Opt.dedup.get()) {
         Log.println("");
-        Log.info(String.format(
-            "To continue fuzzing past this particular finding, rerun with the following additional argument:"
-                + "%n%n    --ignore=%s%n%n"
-                + "To ignore all findings of this kind, rerun with the following additional argument:"
-                + "%n%n    --autofuzz_ignore=%s",
-            ignoredTokens.stream()
-                .map(token -> Long.toUnsignedString(token, 16))
-                .collect(joining(",")),
-            Stream
-                .concat(Opt.autofuzzIgnore.get().stream(), Stream.of(finding.getClass().getName()))
-                .collect(joining(","))));
+        Log.info(
+            String.format(
+                "To continue fuzzing past this particular finding, rerun with the following"
+                    + " additional argument:%n%n    --ignore=%s%n%nTo ignore all findings of this"
+                    + " kind, rerun with the following additional argument:%n%n   "
+                    + " --autofuzz_ignore=%s",
+                ignoredTokens.stream()
+                    .map(token -> Long.toUnsignedString(token, 16))
+                    .collect(joining(",")),
+                Stream.concat(
+                        Opt.autofuzzIgnore.get().stream(), Stream.of(finding.getClass().getName()))
+                    .collect(joining(","))));
       }
       System.exit(JAZZER_FINDING_EXIT_CODE);
       throw new IllegalStateException("Not reached");
@@ -386,8 +388,10 @@ public final class FuzzTargetRunner {
     // much and is reduced to a configurable frequency, default 1/100, here,
     // mutate is used in the other cases.
     if (crossOverFrequency != 0 && crossOverCount++ % crossOverFrequency == 0) {
-      mutator.crossOver(new ByteArrayInputStream(copyToArray(data1, size1)),
-          new ByteArrayInputStream(copyToArray(data2, size2)), seed);
+      mutator.crossOver(
+          new ByteArrayInputStream(copyToArray(data1, size1)),
+          new ByteArrayInputStream(copyToArray(data2, size2)),
+          seed);
     } else {
       mutate(data1, size1, seed);
     }
@@ -435,15 +439,15 @@ public final class FuzzTargetRunner {
       SignalHandler.initialize();
     }
     return startLibFuzzer(
-        args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][] ::new));
+        args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][]::new));
   }
 
   /**
    * Registers a custom handler for findings.
    *
    * @param findingHandler a consumer for the finding that returns true if the fuzzer should
-   *                       continue fuzzing and false if it should return from
-   *                       {@link FuzzTargetRunner#startLibFuzzer(List)}.
+   *     continue fuzzing and false if it should return from {@link
+   *     FuzzTargetRunner#startLibFuzzer(List)}.
    */
   public static void registerFindingHandler(Predicate<Throwable> findingHandler) {
     FuzzTargetRunner.findingHandler = findingHandler;
@@ -501,8 +505,9 @@ public final class FuzzTargetRunner {
         // Expected.
       }
       try {
-        base64Data = RecordingFuzzedDataProvider.serializeFuzzedDataProviderProxy(
-            recordingFuzzedDataProvider);
+        base64Data =
+            RecordingFuzzedDataProvider.serializeFuzzedDataProviderProxy(
+                recordingFuzzedDataProvider);
       } catch (IOException e) {
         Log.error("Failed to create reproducer", e);
         // Don't let libFuzzer print a native stack trace.
@@ -562,17 +567,14 @@ public final class FuzzTargetRunner {
     FuzzTargetRunnerNatives.printCrashingInput();
   }
 
-  /**
-   * Returns the debug string of the current mutator.
-   * If no mutator is used, returns null.
-   */
+  /** Returns the debug string of the current mutator. If no mutator is used, returns null. */
   public static String mutatorDebugString() {
     return mutator != null ? mutator.toString() : null;
   }
 
   /**
-   * Returns whether the current mutator has detected invalid corpus files.
-   * If no mutator is used, returns false.
+   * Returns whether the current mutator has detected invalid corpus files. If no mutator is used,
+   * returns false.
    */
   public static boolean invalidCorpusFilesPresent() {
     return mutator != null && invalidCorpusFileWarningShown;

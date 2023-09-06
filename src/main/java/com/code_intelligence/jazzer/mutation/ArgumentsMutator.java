@@ -52,12 +52,11 @@ public final class ArgumentsMutator {
   private Object[] arguments;
 
   /**
-   * True if the arguments array has already been passed to a user-provided function or exposed
-   * via {@link #getArguments()} without going through {@link ProductMutator#detach(Object[])}.
-   * In this case the arguments may have been modified externally, which interferes with mutation,
-   * or could have been stored in static state that would be affected by future mutations.
-   * Arguments should either be detached or not be reused after being exposed, which is enforced by
-   * this variable.
+   * True if the arguments array has already been passed to a user-provided function or exposed via
+   * {@link #getArguments()} without going through {@link ProductMutator#detach(Object[])}. In this
+   * case the arguments may have been modified externally, which interferes with mutation, or could
+   * have been stored in static state that would be affected by future mutations. Arguments should
+   * either be detached or not be reused after being exposed, which is enforced by this variable.
    */
   private boolean argumentsExposed;
 
@@ -68,22 +67,27 @@ public final class ArgumentsMutator {
   }
 
   private static String prettyPrintMethod(Method method) {
-    return format("%s.%s(%s)", method.getDeclaringClass().getName(), method.getName(),
+    return format(
+        "%s.%s(%s)",
+        method.getDeclaringClass().getName(),
+        method.getName(),
         stream(method.getAnnotatedParameterTypes()).map(Object::toString).collect(joining(", ")));
   }
 
   public static ArgumentsMutator forInstanceMethodOrThrow(Object instance, Method method) {
     return forInstanceMethod(Mutators.newFactory(), instance, method)
-        .orElseThrow(()
-                         -> new IllegalArgumentException(
-                             "Failed to construct mutator for " + prettyPrintMethod(method)));
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    "Failed to construct mutator for " + prettyPrintMethod(method)));
   }
 
   public static ArgumentsMutator forStaticMethodOrThrow(Method method) {
     return forStaticMethod(Mutators.newFactory(), method)
-        .orElseThrow(()
-                         -> new IllegalArgumentException(
-                             "Failed to construct mutator for " + prettyPrintMethod(method)));
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    "Failed to construct mutator for " + prettyPrintMethod(method)));
   }
 
   public static Optional<ArgumentsMutator> forMethod(Method method) {
@@ -94,7 +98,8 @@ public final class ArgumentsMutator {
       MutatorFactory mutatorFactory, Object instance, Method method) {
     require(!isStatic(method), "method must not be static");
     requireNonNull(instance, "instance must not be null");
-    require(method.getDeclaringClass().isInstance(instance),
+    require(
+        method.getDeclaringClass().isInstance(instance),
         format("instance is a %s, expected %s", instance.getClass(), method.getDeclaringClass()));
     return forMethod(mutatorFactory, instance, method);
   }
@@ -112,8 +117,8 @@ public final class ArgumentsMutator {
       validateAnnotationUsage(parameter);
     }
     return toArrayOrEmpty(
-        stream(method.getAnnotatedParameterTypes()).map(mutatorFactory::tryCreate),
-        SerializingMutator<?>[] ::new)
+            stream(method.getAnnotatedParameterTypes()).map(mutatorFactory::tryCreate),
+            SerializingMutator<?>[]::new)
         .map(MutatorCombinators::mutateProduct)
         .map(productMutator -> ArgumentsMutator.create(instance, method, productMutator));
   }
@@ -226,7 +231,9 @@ public final class ArgumentsMutator {
   }
 
   private void failIfArgumentsExposed() {
-    Preconditions.check(!argumentsExposed,
-        "Arguments have previously been exposed to user-provided code without calling #detach and may have been modified");
+    Preconditions.check(
+        !argumentsExposed,
+        "Arguments have previously been exposed to user-provided code without calling #detach and"
+            + " may have been modified");
   }
 }

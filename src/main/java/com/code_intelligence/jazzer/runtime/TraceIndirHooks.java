@@ -20,15 +20,18 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Executable;
 
 @SuppressWarnings("unused")
-final public class TraceIndirHooks {
+public final class TraceIndirHooks {
   // The reflection hook is of type AFTER as it should only report calls that did not fail because
   // of incorrect arguments passed.
   @MethodHook(
-      type = HookType.AFTER, targetClassName = "java.lang.reflect.Method", targetMethod = "invoke")
-  @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.reflect.Constructor",
+      type = HookType.AFTER,
+      targetClassName = "java.lang.reflect.Method",
+      targetMethod = "invoke")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.lang.reflect.Constructor",
       targetMethod = "newInstance")
-  public static void
-  methodInvoke(
+  public static void methodInvoke(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Object returnValue) {
     TraceDataFlowNativeCallbacks.traceReflectiveCall((Executable) thisObject, hookId);
   }

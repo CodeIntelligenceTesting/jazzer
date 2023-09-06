@@ -44,9 +44,13 @@ final class ChunkCrossOvers {
 
   static <T> void crossOverChunk(
       List<T> list, List<T> otherList, SerializingMutator<T> elementMutator, PseudoRandom prng) {
-    onCorrespondingChunks(list, otherList, prng, (toPos, element) -> {
-      list.set(toPos, elementMutator.crossOver(list.get(toPos), element, prng));
-    });
+    onCorrespondingChunks(
+        list,
+        otherList,
+        prng,
+        (toPos, element) -> {
+          list.set(toPos, elementMutator.crossOver(list.get(toPos), element, prng));
+        });
   }
 
   @FunctionalInterface
@@ -54,7 +58,7 @@ final class ChunkCrossOvers {
     void apply(int toPos, T chunk);
   }
 
-  static private <T> void onCorrespondingChunks(
+  private static <T> void onCorrespondingChunks(
       List<T> list, List<T> otherList, PseudoRandom prng, ChunkListElementOperation<T> operation) {
     int maxChunkSize = Math.min(list.size(), otherList.size());
     int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
@@ -88,20 +92,28 @@ final class ChunkCrossOvers {
   }
 
   static <K, V> void overwriteChunk(Map<K, V> map, Map<K, V> otherMap, PseudoRandom prng) {
-    onCorrespondingChunks(map, otherMap, prng, (fromIterator, toIterator, chunkSize) -> {
-      // As keys can not be overwritten, only removed and new ones added, this
-      // cross over overwrites the values. Removal of keys is handled by the
-      // removeChunk mutation. Value equality is not checked here.
-      for (int i = 0; i < chunkSize; i++) {
-        Entry<K, V> from = fromIterator.next();
-        Entry<K, V> to = toIterator.next();
-        to.setValue(from.getValue());
-      }
-    });
+    onCorrespondingChunks(
+        map,
+        otherMap,
+        prng,
+        (fromIterator, toIterator, chunkSize) -> {
+          // As keys can not be overwritten, only removed and new ones added, this
+          // cross over overwrites the values. Removal of keys is handled by the
+          // removeChunk mutation. Value equality is not checked here.
+          for (int i = 0; i < chunkSize; i++) {
+            Entry<K, V> from = fromIterator.next();
+            Entry<K, V> to = toIterator.next();
+            to.setValue(from.getValue());
+          }
+        });
   }
 
-  static <K, V> void crossOverChunk(Map<K, V> map, Map<K, V> otherMap,
-      SerializingMutator<K> keyMutator, SerializingMutator<V> valueMutator, PseudoRandom prng) {
+  static <K, V> void crossOverChunk(
+      Map<K, V> map,
+      Map<K, V> otherMap,
+      SerializingMutator<K> keyMutator,
+      SerializingMutator<V> valueMutator,
+      PseudoRandom prng) {
     if (prng.choice()) {
       crossOverChunkKeys(map, otherMap, keyMutator, prng);
     } else {
@@ -111,34 +123,38 @@ final class ChunkCrossOvers {
 
   private static <K, V> void crossOverChunkKeys(
       Map<K, V> map, Map<K, V> otherMap, SerializingMutator<K> keyMutator, PseudoRandom prng) {
-    onCorrespondingChunks(map, otherMap, prng, (fromIterator, toIterator, chunkSize) -> {
-      Map<K, V> entriesToAdd = new LinkedHashMap<>(chunkSize);
-      for (int i = 0; i < chunkSize; i++) {
-        Entry<K, V> to = toIterator.next();
-        Entry<K, V> from = fromIterator.next();
+    onCorrespondingChunks(
+        map,
+        otherMap,
+        prng,
+        (fromIterator, toIterator, chunkSize) -> {
+          Map<K, V> entriesToAdd = new LinkedHashMap<>(chunkSize);
+          for (int i = 0; i < chunkSize; i++) {
+            Entry<K, V> to = toIterator.next();
+            Entry<K, V> from = fromIterator.next();
 
-        // The entry has to be removed from the map before the cross-over, as
-        // mutating its key could cause problems in subsequent lookups.
-        // Furthermore, no new entries may be added while using the iterator,
-        // so crossed-over keys are collected for later addition.
-        K key = to.getKey();
-        V value = to.getValue();
-        toIterator.remove();
+            // The entry has to be removed from the map before the cross-over, as
+            // mutating its key could cause problems in subsequent lookups.
+            // Furthermore, no new entries may be added while using the iterator,
+            // so crossed-over keys are collected for later addition.
+            K key = to.getKey();
+            V value = to.getValue();
+            toIterator.remove();
 
-        // As cross-overs do not guarantee to mutate the given object, no
-        // checks if the crossed over key already exists in the map are
-        // performed. This potentially overwrites existing entries or
-        // generates equal keys.
-        // In case of cross over this behavior is acceptable.
-        K newKey = keyMutator.crossOver(key, from.getKey(), prng);
+            // As cross-overs do not guarantee to mutate the given object, no
+            // checks if the crossed over key already exists in the map are
+            // performed. This potentially overwrites existing entries or
+            // generates equal keys.
+            // In case of cross over this behavior is acceptable.
+            K newKey = keyMutator.crossOver(key, from.getKey(), prng);
 
-        // Prevent null keys, as those are not allowed in some map implementations.
-        if (newKey != null) {
-          entriesToAdd.put(newKey, value);
-        }
-      }
-      map.putAll(entriesToAdd);
-    });
+            // Prevent null keys, as those are not allowed in some map implementations.
+            if (newKey != null) {
+              entriesToAdd.put(newKey, value);
+            }
+          }
+          map.putAll(entriesToAdd);
+        });
   }
 
   private static <K, V> void crossOverChunkValues(
@@ -147,19 +163,23 @@ final class ChunkCrossOvers {
     // checks if a new value is produced are performed.
     // The cross-over could have already mutated value, but explicitly set it
     // through the iterator to be sure.
-    onCorrespondingChunks(map, otherMap, prng, (fromIterator, toIterator, chunkSize) -> {
-      for (int i = 0; i < chunkSize; i++) {
-        Entry<K, V> fromEntry = fromIterator.next();
-        Entry<K, V> toEntry = toIterator.next();
-        // As cross-overs do not guarantee to mutate the given object, no
-        // checks if a new value is produced are performed.
-        V newValue = valueMutator.crossOver(toEntry.getValue(), fromEntry.getValue(), prng);
+    onCorrespondingChunks(
+        map,
+        otherMap,
+        prng,
+        (fromIterator, toIterator, chunkSize) -> {
+          for (int i = 0; i < chunkSize; i++) {
+            Entry<K, V> fromEntry = fromIterator.next();
+            Entry<K, V> toEntry = toIterator.next();
+            // As cross-overs do not guarantee to mutate the given object, no
+            // checks if a new value is produced are performed.
+            V newValue = valueMutator.crossOver(toEntry.getValue(), fromEntry.getValue(), prng);
 
-        // The cross-over could have already mutated value, but explicitly set it
-        // through the iterator to be sure.
-        toEntry.setValue(newValue);
-      }
-    });
+            // The cross-over could have already mutated value, but explicitly set it
+            // through the iterator to be sure.
+            toEntry.setValue(newValue);
+          }
+        });
   }
 
   @FunctionalInterface

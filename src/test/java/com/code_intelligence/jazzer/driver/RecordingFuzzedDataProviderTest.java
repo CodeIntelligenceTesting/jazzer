@@ -16,7 +16,6 @@ package com.code_intelligence.jazzer.driver;
 
 import com.code_intelligence.jazzer.api.CannedFuzzedDataProvider;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.code_intelligence.jazzer.driver.RecordingFuzzedDataProvider;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -48,10 +47,10 @@ public class RecordingFuzzedDataProviderTest {
     result.append(Arrays.stream(ints).mapToObj(Integer::toString).collect(Collectors.joining(",")));
     result.append(data.pickValue(ints));
     result.append(data.consumeString(20));
-    result.append(data.pickValues(Arrays.stream(ints).boxed().collect(Collectors.toSet()), 5)
-                      .stream()
-                      .map(Integer::toHexString)
-                      .collect(Collectors.joining(",")));
+    result.append(
+        data.pickValues(Arrays.stream(ints).boxed().collect(Collectors.toSet()), 5).stream()
+            .map(Integer::toHexString)
+            .collect(Collectors.joining(",")));
     result.append(data.remainingBytes());
     return result.toString();
   }

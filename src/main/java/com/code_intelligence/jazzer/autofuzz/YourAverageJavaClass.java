@@ -42,8 +42,17 @@ public class YourAverageJavaClass implements Cloneable, Closeable, Serializable 
 
   // Everything below has been automatically generated (apart from a minor modification to clone());
 
-  public YourAverageJavaClass(byte aByte, boolean aBoolean, double aDouble, float aFloat, int anInt,
-      int transientInt, long aLong, short aShort, short volatileShort, String string) {
+  public YourAverageJavaClass(
+      byte aByte,
+      boolean aBoolean,
+      double aDouble,
+      float aFloat,
+      int anInt,
+      int transientInt,
+      long aLong,
+      short aShort,
+      short volatileShort,
+      String string) {
     this.aByte = aByte;
     this.aBoolean = aBoolean;
     this.aDouble = aDouble;
@@ -58,9 +67,20 @@ public class YourAverageJavaClass implements Cloneable, Closeable, Serializable 
 
   public YourAverageJavaClass() {}
 
-  public YourAverageJavaClass(byte aByte, boolean aBoolean, double aDouble, float aFloat, int anInt,
-      int transientInt, long aLong, short aShort, short volatileShort, String string, byte[] bytes,
-      List<YourAverageJavaClass> list, Map<String, YourAverageJavaClass> map) {
+  public YourAverageJavaClass(
+      byte aByte,
+      boolean aBoolean,
+      double aDouble,
+      float aFloat,
+      int anInt,
+      int transientInt,
+      long aLong,
+      short aShort,
+      short volatileShort,
+      String string,
+      byte[] bytes,
+      List<YourAverageJavaClass> list,
+      Map<String, YourAverageJavaClass> map) {
     this.aByte = aByte;
     this.aBoolean = aBoolean;
     this.aDouble = aDouble;
@@ -194,23 +214,40 @@ public class YourAverageJavaClass implements Cloneable, Closeable, Serializable 
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (!(o instanceof YourAverageJavaClass))
-      return false;
+    if (this == o) return true;
+    if (!(o instanceof YourAverageJavaClass)) return false;
     YourAverageJavaClass that = (YourAverageJavaClass) o;
-    return aByte == that.aByte && aBoolean == that.aBoolean
-        && Double.compare(that.aDouble, aDouble) == 0 && Float.compare(that.aFloat, aFloat) == 0
-        && anInt == that.anInt && transientInt == that.transientInt && aLong == that.aLong
-        && aShort == that.aShort && volatileShort == that.volatileShort
-        && Objects.equals(string, that.string) && Arrays.equals(bytes, that.bytes)
-        && Objects.equals(list, that.list) && Objects.equals(map, that.map);
+    return aByte == that.aByte
+        && aBoolean == that.aBoolean
+        && Double.compare(that.aDouble, aDouble) == 0
+        && Float.compare(that.aFloat, aFloat) == 0
+        && anInt == that.anInt
+        && transientInt == that.transientInt
+        && aLong == that.aLong
+        && aShort == that.aShort
+        && volatileShort == that.volatileShort
+        && Objects.equals(string, that.string)
+        && Arrays.equals(bytes, that.bytes)
+        && Objects.equals(list, that.list)
+        && Objects.equals(map, that.map);
   }
 
   @Override
   public int hashCode() {
-    int result = Objects.hash(aByte, aBoolean, aDouble, aFloat, anInt, transientInt, aLong, aShort,
-        volatileShort, string, list, map);
+    int result =
+        Objects.hash(
+            aByte,
+            aBoolean,
+            aDouble,
+            aFloat,
+            anInt,
+            transientInt,
+            aLong,
+            aShort,
+            volatileShort,
+            string,
+            list,
+            map);
     result = 31 * result + Arrays.hashCode(bytes);
     return result;
   }
@@ -218,10 +255,34 @@ public class YourAverageJavaClass implements Cloneable, Closeable, Serializable 
   @Override
   public String toString() {
     return "YourAverageJavaClass{"
-        + "aByte=" + aByte + ", aBoolean=" + aBoolean + ", aDouble=" + aDouble + ", aFloat="
-        + aFloat + ", anInt=" + anInt + ", transientInt=" + transientInt + ", aLong=" + aLong
-        + ", aShort=" + aShort + ", volatileShort=" + volatileShort + ", string='" + string + '\''
-        + ", bytes=" + Arrays.toString(bytes) + ", list=" + list + ", map=" + map + '}';
+        + "aByte="
+        + aByte
+        + ", aBoolean="
+        + aBoolean
+        + ", aDouble="
+        + aDouble
+        + ", aFloat="
+        + aFloat
+        + ", anInt="
+        + anInt
+        + ", transientInt="
+        + transientInt
+        + ", aLong="
+        + aLong
+        + ", aShort="
+        + aShort
+        + ", volatileShort="
+        + volatileShort
+        + ", string='"
+        + string
+        + '\''
+        + ", bytes="
+        + Arrays.toString(bytes)
+        + ", list="
+        + list
+        + ", map="
+        + map
+        + '}';
   }
 
   @Override

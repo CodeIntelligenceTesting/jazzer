@@ -34,13 +34,13 @@ import org.jacoco.core.data.SessionInfoStore;
 /**
  * Test of coverage report and dump.
  *
- * Internally, JaCoCo is used to gather coverage information to guide the fuzzer to cover new
+ * <p>Internally, JaCoCo is used to gather coverage information to guide the fuzzer to cover new
  * branches. This information can be dumped in the JaCoCo format and used to generate reports later
  * on. The dump only contains classes with at least one coverage data point. A JaCoCo report will
- * also include completely uncovered files based on the available classes in the stated jar files
- * in the report command.
+ * also include completely uncovered files based on the available classes in the stated jar files in
+ * the report command.
  *
- * A human-readable coverage report can be generated directly by Jazzer. It contains information
+ * <p>A human-readable coverage report can be generated directly by Jazzer. It contains information
  * on file level about all classes that should have been instrumented according to the
  * instrumentation_includes and instrumentation_exclude filters.
  */
@@ -49,9 +49,11 @@ public final class CoverageFuzzer {
   // Not used during fuzz run, so not included in the dump
   public static class ClassNotToCover {
     private final int i;
+
     public ClassNotToCover(int i) {
       this.i = i;
     }
+
     public int getI() {
       return i;
     }
@@ -96,13 +98,14 @@ public final class CoverageFuzzer {
     List<String> coverage = Files.readAllLines(Paths.get(System.getenv("COVERAGE_REPORT_FILE")));
     List<List<String>> sections = new ArrayList<>(4);
     sections.add(new ArrayList<>());
-    coverage.forEach(l -> {
-      if (l.isEmpty()) {
-        sections.add(new ArrayList<>());
-      } else {
-        sections.get(sections.size() - 1).add(l);
-      }
-    });
+    coverage.forEach(
+        l -> {
+          if (l.isEmpty()) {
+            sections.add(new ArrayList<>());
+          } else {
+            sections.get(sections.size() - 1).add(l);
+          }
+        });
 
     List<String> branchCoverage = sections.get(0);
     assertEquals(2, branchCoverage.size());
@@ -136,13 +139,15 @@ public final class CoverageFuzzer {
             .filter(l -> l.startsWith(CoverageFuzzer.class.getSimpleName()))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("Could not find missed coverage"));
-    List<String> missingLines = IntStream.rangeClosed(63, 79)
-                                    .mapToObj(i -> " " + i)
-                                    .filter(missed::contains)
-                                    .collect(Collectors.toList());
+    List<String> missingLines =
+        IntStream.rangeClosed(63, 79)
+            .mapToObj(i -> " " + i)
+            .filter(missed::contains)
+            .collect(Collectors.toList());
     if (!missingLines.isEmpty()) {
-      throw new IllegalStateException(String.format(
-          "Missing coverage for ClassToCover on lines %s", String.join(", ", missingLines)));
+      throw new IllegalStateException(
+          String.format(
+              "Missing coverage for ClassToCover on lines %s", String.join(", ", missingLines)));
     }
   }
 
@@ -177,8 +182,7 @@ public final class CoverageFuzzer {
   private static int countHits(boolean[] probes) {
     int count = 0;
     for (boolean probe : probes) {
-      if (probe)
-        count++;
+      if (probe) count++;
     }
     return count;
   }

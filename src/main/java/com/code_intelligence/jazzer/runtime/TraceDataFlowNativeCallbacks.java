@@ -23,7 +23,7 @@ import java.util.Arrays;
 import org.objectweb.asm.Type;
 
 @SuppressWarnings("unused")
-final public class TraceDataFlowNativeCallbacks {
+public final class TraceDataFlowNativeCallbacks {
   // Note that we are not encoding as modified UTF-8 here: The FuzzedDataProvider transparently
   // converts CESU8 into modified UTF-8 by coding null bytes on two bytes. Since the fuzzer is more
   // likely to insert literal null bytes, having both the fuzzer input and the reported string
@@ -102,14 +102,21 @@ final public class TraceDataFlowNativeCallbacks {
 
   /* trace-cmp */
   public static native void traceCmpInt(int arg1, int arg2, int pc);
+
   public static native void traceConstCmpInt(int arg1, int arg2, int pc);
+
   public static native void traceCmpLong(long arg1, long arg2, int pc);
+
   public static native void traceSwitch(long val, long[] cases, int pc);
+
   /* trace-div */
   public static native void traceDivInt(int val, int pc);
+
   public static native void traceDivLong(long val, int pc);
+
   /* trace-gep */
   public static native void traceGep(long val, int pc);
+
   /* indirect-calls */
   public static native void tracePcIndir(int callee, int caller);
 

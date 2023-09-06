@@ -18,7 +18,6 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateIndices;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMap;
-import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 
@@ -32,16 +31,21 @@ import java.util.function.Predicate;
 final class EnumMutatorFactory extends MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
-    return asSubclassOrEmpty(type, Enum.class).map(parent -> {
-      require(((Class<Enum<?>>) type.getType()).getEnumConstants().length > 1,
-          String.format(
-              "%s defines less than two enum constants and can't be mutated. Use a constant instead.",
-              parent));
-      Enum<?>[] values = ((Class<Enum<?>>) type.getType()).getEnumConstants();
-      return mutateThenMap(mutateIndices(values.length),
-          (index)
-              -> values[index],
-          Enum::ordinal, (Predicate<Debuggable> inCycle) -> "Enum<" + parent.getSimpleName() + ">");
-    });
+    return asSubclassOrEmpty(type, Enum.class)
+        .map(
+            parent -> {
+              require(
+                  ((Class<Enum<?>>) type.getType()).getEnumConstants().length > 1,
+                  String.format(
+                      "%s defines less than two enum constants and can't be mutated. Use a constant"
+                          + " instead.",
+                      parent));
+              Enum<?>[] values = ((Class<Enum<?>>) type.getType()).getEnumConstants();
+              return mutateThenMap(
+                  mutateIndices(values.length),
+                  (index) -> values[index],
+                  Enum::ordinal,
+                  (Predicate<Debuggable> inCycle) -> "Enum<" + parent.getSimpleName() + ">");
+            });
   }
 }

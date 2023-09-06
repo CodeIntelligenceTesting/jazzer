@@ -33,24 +33,30 @@ import java.lang.annotation.Annotation;
 @SuppressWarnings("unchecked")
 class FloatingPointMutatorFuzzTests {
   @FuzzTest(maxDuration = "10m")
-  public void doubleMutatorTest(double min, double max, long seed, byte @NotNull[] data)
+  public void doubleMutatorTest(double min, double max, long seed, byte @NotNull [] data)
       throws IOException {
     DoubleInRange range = rndDoubleInRange(min, max);
     assumeTrue(range != null);
     SerializingMutator<Double> mutator =
-        (SerializingMutator<Double>) LangMutators.newFactory().createOrThrow(
-            withExtraAnnotations(new TypeHolder<@NotNull Double>() {}.annotatedType(), range));
+        (SerializingMutator<Double>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    withExtraAnnotations(
+                        new TypeHolder<@NotNull Double>() {}.annotatedType(), range));
     assertMutator(mutator, data, seed);
   }
 
   @FuzzTest(maxDuration = "10m")
-  public void floatMutatorTest(float min, float max, long seed, byte @NotNull[] data)
+  public void floatMutatorTest(float min, float max, long seed, byte @NotNull [] data)
       throws IOException {
     FloatInRange range = rndFloatInRange(min, max);
     assumeTrue(range != null);
     SerializingMutator<Float> mutator =
-        (SerializingMutator<Float>) LangMutators.newFactory().createOrThrow(
-            withExtraAnnotations(new TypeHolder<@NotNull Float>() {}.annotatedType(), range));
+        (SerializingMutator<Float>)
+            LangMutators.newFactory()
+                .createOrThrow(
+                    withExtraAnnotations(
+                        new TypeHolder<@NotNull Float>() {}.annotatedType(), range));
     assertMutator(mutator, data, seed);
   }
 
@@ -88,7 +94,8 @@ class FloatingPointMutatorFuzzTests {
           return false;
         }
         DoubleInRange other = (DoubleInRange) o;
-        return this.min() == other.min() && this.max() == other.max()
+        return this.min() == other.min()
+            && this.max() == other.max()
             && this.allowNaN() == other.allowNaN();
       }
 
@@ -137,7 +144,8 @@ class FloatingPointMutatorFuzzTests {
           return false;
         }
         FloatInRange other = (FloatInRange) o;
-        return this.min() == other.min() && this.max() == other.max()
+        return this.min() == other.min()
+            && this.max() == other.max()
             && this.allowNaN() == other.allowNaN();
       }
 

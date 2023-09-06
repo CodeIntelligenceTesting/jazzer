@@ -54,11 +54,14 @@ public abstract class MutatorFactory {
    * of {@link SerializingInPlaceMutator}.
    */
   public final Optional<SerializingInPlaceMutator<?>> tryCreateInPlace(AnnotatedType type) {
-    return tryCreate(type).map(mutator -> {
-      require(mutator instanceof InPlaceMutator<?>,
-          format("Mutator for %s is not in-place: %s", type, mutator.getClass()));
-      return (SerializingInPlaceMutator<?>) mutator;
-    });
+    return tryCreate(type)
+        .map(
+            mutator -> {
+              require(
+                  mutator instanceof InPlaceMutator<?>,
+                  format("Mutator for %s is not in-place: %s", type, mutator.getClass()));
+              return (SerializingInPlaceMutator<?>) mutator;
+            });
   }
 
   @CheckReturnValue
@@ -71,8 +74,8 @@ public abstract class MutatorFactory {
    *
    * @param type the type to mutate
    * @param factory the factory to use when creating submutators
-   * @return a {@link SerializingMutator} for the given {@code type}, or {@link Optional#empty()}
-   * if this factory can't create such mutators
+   * @return a {@link SerializingMutator} for the given {@code type}, or {@link Optional#empty()} if
+   *     this factory can't create such mutators
    */
   @CheckReturnValue
   public abstract Optional<SerializingMutator<?>> tryCreate(

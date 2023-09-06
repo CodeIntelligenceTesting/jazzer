@@ -47,8 +47,9 @@ class BooleanMutatorTest {
   @Test
   void testBoxed() {
     SerializingMutator<Boolean> mutator =
-        (SerializingMutator<Boolean>) LangMutators.newFactory().createOrThrow(
-            new TypeHolder<@NotNull Boolean>() {}.annotatedType());
+        (SerializingMutator<Boolean>)
+            LangMutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull Boolean>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Boolean");
 
     Boolean bool;

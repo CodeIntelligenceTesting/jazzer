@@ -36,17 +36,22 @@ public final class MessageMutatorFactory extends MutatorFactory {
     return asSubclassOrEmpty(messageType, Message.class)
         // If the Message class doesn't have a nested Builder class, it is not a concrete generated
         // message and we can't mutate it.
-        .flatMap(messageClass
-            -> Arrays.stream(messageClass.getDeclaredClasses())
-                   .filter(clazz -> clazz.getSimpleName().equals("Builder"))
-                   .findFirst())
-        .flatMap(builderClass
-            ->
-            // Forward the annotations (e.g. @NotNull) on the Message type to the Builder type.
-            factory.tryCreateInPlace(
-                withExtraAnnotations(asAnnotatedType(builderClass), messageType.getAnnotations())))
-        .map(builderMutator
-            -> mutateThenMapToImmutable(
-                (SerializingMutator<Builder>) builderMutator, Builder::build, Message::toBuilder));
+        .flatMap(
+            messageClass ->
+                Arrays.stream(messageClass.getDeclaredClasses())
+                    .filter(clazz -> clazz.getSimpleName().equals("Builder"))
+                    .findFirst())
+        .flatMap(
+            builderClass ->
+                // Forward the annotations (e.g. @NotNull) on the Message type to the Builder type.
+                factory.tryCreateInPlace(
+                    withExtraAnnotations(
+                        asAnnotatedType(builderClass), messageType.getAnnotations())))
+        .map(
+            builderMutator ->
+                mutateThenMapToImmutable(
+                    (SerializingMutator<Builder>) builderMutator,
+                    Builder::build,
+                    Message::toBuilder));
   }
 }

@@ -29,8 +29,9 @@ class JazzerTest {
     assertThat(isLibFuzzerOptionEnabled("foo", asList("-bar=1", "-foo=1", "baz"))).isTrue();
     assertThat(isLibFuzzerOptionEnabled("foo", asList("-bar=1", "-foo=1", "some/path", "-foo=")))
         .isFalse();
-    assertThat(isLibFuzzerOptionEnabled(
-                   "foo", asList("-bar=1", "-foo=1", "-baz=1", "-foo=0", "--baz=0", "-foo=12")))
+    assertThat(
+            isLibFuzzerOptionEnabled(
+                "foo", asList("-bar=1", "-foo=1", "-baz=1", "-foo=0", "--baz=0", "-foo=12")))
         .isTrue();
   }
 }

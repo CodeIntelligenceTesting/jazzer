@@ -72,37 +72,63 @@ public class HermeticInstrumentationTest {
 
     EngineExecutionResults results = executeTests();
 
-    results.containerEvents().assertEventsMatchLoosely(event(type(STARTED), container(ENGINE)),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1))),
-        event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1))),
-        event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2))),
-        event(type(REPORTING_ENTRY_PUBLISHED),
-            container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2))),
-        event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ)), finishedSuccessfully()),
-        event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
+    results
+        .containerEvents()
+        .assertEventsMatchLoosely(
+            event(type(STARTED), container(ENGINE)),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1))),
+            event(
+                type(REPORTING_ENTRY_PUBLISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1))),
+            event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1))),
+            event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2))),
+            event(
+                type(REPORTING_ENTRY_PUBLISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2))),
+            event(type(FINISHED), container(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2))),
+            event(
+                type(FINISHED),
+                container(uniqueIdSubstrings(ENGINE, CLAZZ)),
+                finishedSuccessfully()),
+            event(type(FINISHED), container(ENGINE), finishedSuccessfully()));
 
-    results.testEvents().assertEventsMatchLoosely(
-        event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1))),
-        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1, INVOCATION)),
-            displayName("<empty input>")),
-        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1, INVOCATION)),
-            displayName("<empty input>"),
-            finishedWithFailure(instanceOf(FuzzerSecurityIssueLow.class))),
-        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, UNIT_TEST_1))),
-        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, UNIT_TEST_1)),
-            finishedWithFailure(instanceOf(PatternSyntaxException.class))),
-        event(type(DYNAMIC_TEST_REGISTERED), test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2))),
-        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2, INVOCATION)),
-            displayName("<empty input>")),
-        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2, INVOCATION)),
-            displayName("<empty input>"),
-            finishedWithFailure(instanceOf(FuzzerSecurityIssueLow.class))),
-        event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, UNIT_TEST_2))),
-        event(type(FINISHED), test(uniqueIdSubstrings(ENGINE, CLAZZ, UNIT_TEST_2)),
-            finishedWithFailure(instanceOf(PatternSyntaxException.class))));
+    results
+        .testEvents()
+        .assertEventsMatchLoosely(
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1, INVOCATION)),
+                displayName("<empty input>")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1, INVOCATION)),
+                displayName("<empty input>"),
+                finishedWithFailure(instanceOf(FuzzerSecurityIssueLow.class))),
+            event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, UNIT_TEST_1))),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, UNIT_TEST_1)),
+                finishedWithFailure(instanceOf(PatternSyntaxException.class))),
+            event(
+                type(DYNAMIC_TEST_REGISTERED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2))),
+            event(
+                type(STARTED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2, INVOCATION)),
+                displayName("<empty input>")),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2, INVOCATION)),
+                displayName("<empty input>"),
+                finishedWithFailure(instanceOf(FuzzerSecurityIssueLow.class))),
+            event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, UNIT_TEST_2))),
+            event(
+                type(FINISHED),
+                test(uniqueIdSubstrings(ENGINE, CLAZZ, UNIT_TEST_2)),
+                finishedWithFailure(instanceOf(PatternSyntaxException.class))));
   }
 }

@@ -64,7 +64,10 @@ class TestHelpers {
     assertEquals(expectedResultString, visitor.generate());
   }
 
-  static void autofuzzTestCase(Object expectedResult, String expectedResultString, Executable func,
+  static void autofuzzTestCase(
+      Object expectedResult,
+      String expectedResultString,
+      Executable func,
       List<Object> cannedData) {
     AutofuzzCodegenVisitor visitor = new AutofuzzCodegenVisitor();
     FuzzedDataProvider data = CannedFuzzedDataProvider.create(cannedData);

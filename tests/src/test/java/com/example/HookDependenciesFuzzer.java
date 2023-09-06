@@ -15,10 +15,6 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
-import com.code_intelligence.jazzer.api.HookType;
-import com.code_intelligence.jazzer.api.MethodHook;
-import java.lang.invoke.MethodHandle;
-import java.lang.reflect.Field;
 import java.util.regex.Pattern;
 
 // This fuzzer verifies that:

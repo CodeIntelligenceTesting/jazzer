@@ -22,7 +22,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 
 public class ExpressionLanguageInjection {
-  final private static Validator validator =
+  private static final Validator validator =
       Validation.buildDefaultValidatorFactory().getValidator();
 
   public static void fuzzerInitialize() {

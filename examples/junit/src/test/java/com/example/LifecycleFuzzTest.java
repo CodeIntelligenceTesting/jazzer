@@ -109,10 +109,24 @@ class LifecycleFuzzTest {
     boolean isFuzzingFromCommandLine = System.getenv("JAZZER_FUZZ") == null;
     boolean isFuzzingFromJUnit = !isFuzzingFromCommandLine && !isRegressionTest;
 
-    final List<String> expectedBeforeEachEvents = unmodifiableList(asList("beforeEachCallback1",
-        "beforeEachCallback2", "beforeEachCallback3", "beforeEach1", "beforeEach2", "beforeEach3"));
-    final List<String> expectedAfterEachEvents = unmodifiableList(asList("afterEach1", "afterEach2",
-        "afterEach3", "afterEachCallback3", "afterEachCallback2", "afterEachCallback1"));
+    final List<String> expectedBeforeEachEvents =
+        unmodifiableList(
+            asList(
+                "beforeEachCallback1",
+                "beforeEachCallback2",
+                "beforeEachCallback3",
+                "beforeEach1",
+                "beforeEach2",
+                "beforeEach3"));
+    final List<String> expectedAfterEachEvents =
+        unmodifiableList(
+            asList(
+                "afterEach1",
+                "afterEach2",
+                "afterEach3",
+                "afterEachCallback3",
+                "afterEachCallback2",
+                "afterEachCallback1"));
 
     ArrayList<String> expectedEvents = new ArrayList<>();
     expectedEvents.add("beforeAll");

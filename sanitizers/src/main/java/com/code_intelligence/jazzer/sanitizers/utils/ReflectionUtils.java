@@ -27,8 +27,7 @@ public final class ReflectionUtils {
     try {
       return Class.forName(className);
     } catch (ClassNotFoundException e) {
-      if (JAZZER_REFLECTION_DEBUG)
-        e.printStackTrace();
+      if (JAZZER_REFLECTION_DEBUG) e.printStackTrace();
       return null;
     }
   }
@@ -38,8 +37,7 @@ public final class ReflectionUtils {
   }
 
   public static Field field(Class<?> clazz, String name, Class<?> type) {
-    if (clazz == null)
-      return null;
+    if (clazz == null) return null;
     try {
       Field field = clazz.getDeclaredField(name);
       if (!field.getType().equals(type)) {
@@ -48,15 +46,13 @@ public final class ReflectionUtils {
       }
       return field;
     } catch (NoSuchFieldException e) {
-      if (JAZZER_REFLECTION_DEBUG)
-        e.printStackTrace();
+      if (JAZZER_REFLECTION_DEBUG) e.printStackTrace();
       return null;
     }
   }
 
   public static long offset(Unsafe unsafe, Field field) {
-    if (unsafe == null || field == null)
-      return INVALID_OFFSET;
+    if (unsafe == null || field == null) return INVALID_OFFSET;
     return unsafe.objectFieldOffset(field);
   }
 }

@@ -23,8 +23,13 @@ public final class LangMutators {
   private LangMutators() {}
 
   public static MutatorFactory newFactory() {
-    return new ChainedMutatorFactory(new NullableMutatorFactory(), new BooleanMutatorFactory(),
-        new FloatingPointMutatorFactory(), new IntegralMutatorFactory(),
-        new ByteArrayMutatorFactory(), new StringMutatorFactory(), new EnumMutatorFactory());
+    return new ChainedMutatorFactory(
+        new NullableMutatorFactory(),
+        new BooleanMutatorFactory(),
+        new FloatingPointMutatorFactory(),
+        new IntegralMutatorFactory(),
+        new ByteArrayMutatorFactory(),
+        new StringMutatorFactory(),
+        new EnumMutatorFactory());
   }
 }

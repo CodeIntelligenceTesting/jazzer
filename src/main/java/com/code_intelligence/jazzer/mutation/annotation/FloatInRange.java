@@ -27,6 +27,8 @@ import java.lang.annotation.Target;
 @AppliesTo({float.class, Float.class})
 public @interface FloatInRange {
   float min() default Float.NEGATIVE_INFINITY;
+
   float max() default Float.POSITIVE_INFINITY;
+
   boolean allowNaN() default true;
 }

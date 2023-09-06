@@ -19,12 +19,15 @@ import com.code_intelligence.jazzer.api.MethodHook;
 import java.lang.invoke.MethodHandle;
 
 public class ExampleFuzzerHooks {
-  @MethodHook(type = HookType.REPLACE, targetClassName = "java.security.SecureRandom",
-      targetMethod = "nextLong", targetMethodDescriptor = "()J")
-  public static long
-  getRandomNumber(MethodHandle handle, Object thisObject, Object[] args, int hookId) {
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.security.SecureRandom",
+      targetMethod = "nextLong",
+      targetMethodDescriptor = "()J")
+  public static long getRandomNumber(
+      MethodHandle handle, Object thisObject, Object[] args, int hookId) {
     return 4; // chosen by fair dice roll.
-              // guaranteed to be random.
-              // https://xkcd.com/221/
+    // guaranteed to be random.
+    // https://xkcd.com/221/
   }
 }

@@ -20,7 +20,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.code_intelligence.jazzer.driver.Opt;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -59,9 +58,21 @@ class AgentConfigurator {
   private static void applyCommonConfiguration(ExtensionContext extensionContext) {
     Opt.registerConfigurationParameters(extensionContext::getConfigurationParameter);
     // Do not hook common IDE and JUnit classes and their dependencies.
-    Opt.customHookExcludes.setIfDefault(asList("com.google.testing.junit.**", "com.intellij.**",
-        "org.jetbrains.**", "io.github.classgraph.**", "junit.framework.**", "net.bytebuddy.**",
-        "org.apiguardian.**", "org.assertj.core.**", "org.hamcrest.**", "org.junit.**",
-        "org.opentest4j.**", "org.mockito.**", "org.apache.maven.**", "org.gradle.**"));
+    Opt.customHookExcludes.setIfDefault(
+        asList(
+            "com.google.testing.junit.**",
+            "com.intellij.**",
+            "org.jetbrains.**",
+            "io.github.classgraph.**",
+            "junit.framework.**",
+            "net.bytebuddy.**",
+            "org.apiguardian.**",
+            "org.assertj.core.**",
+            "org.hamcrest.**",
+            "org.junit.**",
+            "org.opentest4j.**",
+            "org.mockito.**",
+            "org.apache.maven.**",
+            "org.gradle.**"));
   }
 }

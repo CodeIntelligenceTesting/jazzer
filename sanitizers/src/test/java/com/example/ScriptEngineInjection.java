@@ -25,8 +25,8 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
 public class ScriptEngineInjection {
-  private final static ScriptEngine engine = new DummyScriptEngine();
-  private final static ScriptContext context = new DummyScriptContext();
+  private static final ScriptEngine engine = new DummyScriptEngine();
+  private static final ScriptContext context = new DummyScriptContext();
 
   private static void insecureScriptEval(String input) throws Exception {
     engine.eval(new StringReader(input), context);

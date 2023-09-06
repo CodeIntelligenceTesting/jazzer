@@ -18,15 +18,10 @@ import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.ZipUtils;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.UnsupportedClassVersionError;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -38,8 +33,8 @@ import java.util.zip.ZipOutputStream;
 
 public class OfflineInstrumentor {
   /**
-   * Create a new jar file at <jazzer_path>/<jarBaseName>.instrumented.jar
-   * for each jar in passed in, with classes that have Jazzer instrumentation.
+   * Create a new jar file at <jazzer_path>/<jarBaseName>.instrumented.jar for each jar in passed
+   * in, with classes that have Jazzer instrumentation.
    *
    * @param jarLists list of jars to instrument
    * @return a boolean representing the success status
@@ -59,8 +54,9 @@ public class OfflineInstrumentor {
     for (String jarPath : jarLists) {
       String outputBaseName = jarPath;
       if (outputBaseName.contains(File.separator)) {
-        outputBaseName = outputBaseName.substring(
-            outputBaseName.lastIndexOf(File.separator) + 1, outputBaseName.length());
+        outputBaseName =
+            outputBaseName.substring(
+                outputBaseName.lastIndexOf(File.separator) + 1, outputBaseName.length());
       }
 
       if (outputBaseName.contains(".jar")) {
@@ -72,13 +68,18 @@ public class OfflineInstrumentor {
       try {
         errorMessages = createInstrumentedClasses(jarPath);
       } catch (IOException e) {
-        errorMessages.add("Failed to instrument jar: " + jarPath
-            + ". Please ensure the file at this location is a jar file. Error Message: " + e);
+        errorMessages.add(
+            "Failed to instrument jar: "
+                + jarPath
+                + ". Please ensure the file at this location is a jar file. Error Message: "
+                + e);
         continue;
       }
 
       try {
-        createInstrumentedJar(jarPath, Opt.dumpClassesDir.get() + File.separator + outputBaseName,
+        createInstrumentedJar(
+            jarPath,
+            Opt.dumpClassesDir.get() + File.separator + outputBaseName,
             outputBaseName + ".instrumented.jar");
       } catch (Exception e) {
         errorMessages.add("Failed to instrument jar: " + jarPath + ". Error: " + e);
@@ -94,8 +95,8 @@ public class OfflineInstrumentor {
   }
 
   /**
-   * Loops over all classes in jar file and adds instrumentation. The output
-   * of the instrumented classes will be at --dump-classes-dir
+   * Loops over all classes in jar file and adds instrumentation. The output of the instrumented
+   * classes will be at --dump-classes-dir
    *
    * @param jarPath a path to a jar file to instrument.
    * @return a list of errors that were hit when trying to instrument all classes in jar
