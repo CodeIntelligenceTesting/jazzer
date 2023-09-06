@@ -100,7 +100,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: jazzer
-          path: _tmp/jazzer.jar
+          path: _tmp/
 
       - name: Echo key id
         env:

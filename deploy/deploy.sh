@@ -27,13 +27,13 @@ echo "default-key $RELEASE_SIGNING_KEY_ID" > $HOME/.gnupg/gpg.conf
 
 JAZZER_COORDINATES=$1
 
-namei -l $(pwd)
-namei -l "${JAZZER_JAR_PATH}"
-namei -l /home/runner/work/jazzer/jazzer/_tmp/
-namei -l /home/runner/work/jazzer/jazzer/
-ls -als /home/runner/work/jazzer/jazzer/
-ls -als /home/runner/work/jazzer/jazzer/_tmp/
-ls -als "${JAZZER_JAR_PATH}"
+#namei -l $(pwd)
+#namei -l "${JAZZER_JAR_PATH}"
+#namei -l /home/runner/work/jazzer/jazzer/_tmp/
+#namei -l /home/runner/work/jazzer/jazzer/
+#ls -als /home/runner/work/jazzer/jazzer
+#ls -als /home/runner/work/jazzer/jazzer/_tmp/
+#ls -als "${JAZZER_JAR_PATH}"
 
 
 [ -z "${MAVEN_USER+x}" ] && \
