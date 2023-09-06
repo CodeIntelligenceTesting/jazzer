@@ -22,7 +22,7 @@ import java.util.Base64;
 
 class ValueProfileFuzzTest {
   // Only passed with the configuration parameter jazzer.valueprofile=true.
-  @FuzzTest(maxDuration = "20s")
+  @FuzzTest(maxExecutions = 10000000)
   void valueProfileFuzz(byte[] data) {
     // Trigger some coverage even with value profiling disabled.
     if (data.length < 1 || data[0] > 100) {
