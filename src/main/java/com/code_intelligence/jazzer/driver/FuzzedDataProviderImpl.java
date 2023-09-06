@@ -196,6 +196,12 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
 
   @Override
   public float consumeRegularFloat(float min, float max) {
+    if (!Float.isFinite(min)) {
+      throw new IllegalArgumentException("min must be a regular float");
+    }
+    if (!Float.isFinite(max)) {
+      throw new IllegalArgumentException("max must be a regular float");
+    }
     if (min > max) {
       throw new IllegalArgumentException(
           String.format("min must be <= max (got min: %f, max: %f)", min, max));
@@ -209,6 +215,12 @@ public class FuzzedDataProviderImpl implements FuzzedDataProvider, AutoCloseable
 
   @Override
   public double consumeRegularDouble(double min, double max) {
+    if (!Double.isFinite(min)) {
+      throw new IllegalArgumentException("min must be a regular double");
+    }
+    if (!Double.isFinite(max)) {
+      throw new IllegalArgumentException("max must be a regular double");
+    }
     if (min > max) {
       throw new IllegalArgumentException(
           String.format("min must be <= max (got min: %f, max: %f)", min, max));

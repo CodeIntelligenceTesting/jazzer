@@ -98,10 +98,13 @@ ConsumeIntegralArray(JNIEnv &env, jobject self, jint max_length) {
   const auto *dataPtr =
       reinterpret_cast<const uint8_t *>(env.GetLongField(self, gDataPtrField));
   jint remainingBytes = env.GetIntField(self, gRemainingBytesField);
+  uint64_t requested_bytes = sizeof(T) * max_length;
+  // requested_bytes may overflow a jint so cap it to remainingBytes which will
+  // definitely be within jint's range
+  uint64_t capped_bytes =
+      std::min(requested_bytes, static_cast<uint64_t>(remainingBytes));
 
-  jint max_num_bytes =
-      std::min(static_cast<jint>(sizeof(T)) * max_length, remainingBytes);
-  jsize actual_length = max_num_bytes / sizeof(T);
+  jsize actual_length = static_cast<jint>(capped_bytes) / sizeof(T);
   jint actual_num_bytes = sizeof(T) * actual_length;
   auto array = (env.*(JniArrayType<T>::kNewArrayFunc))(actual_length);
   (env.*(JniArrayType<T>::kSetArrayRegionFunc))(
@@ -209,7 +212,11 @@ T JNICALL ConsumeFloatInRange(JNIEnv &env, jobject self, T min, T max) {
   }
 
   T probability = ConsumeProbability<T>(env, self);
-  return result + range * probability;
+  result += range * probability;
+
+  // extreme values can cause precision errors that make result > max
+  // clamp the value to max when that happens
+  return std::min(result, max);
 }
 
 template <typename T>

@@ -308,6 +308,9 @@ public interface FuzzedDataProvider {
    * @return an element from {@code array} chosen based on the fuzzer input
    */
   default<T> T pickValue(T[] array) {
+    if (array.length == 0) {
+      throw new IllegalArgumentException("array is empty");
+    }
     return array[consumeInt(0, array.length - 1)];
   }
 
@@ -319,6 +322,9 @@ public interface FuzzedDataProvider {
    * @return an element from {@code array} chosen based on the fuzzer input
    */
   default boolean pickValue(boolean[] array) {
+    if (array.length == 0) {
+      throw new IllegalArgumentException("array is empty");
+    }
     return array[consumeInt(0, array.length - 1)];
   }
 
@@ -330,6 +336,9 @@ public interface FuzzedDataProvider {
    * @return an element from {@code array} chosen based on the fuzzer input
    */
   default byte pickValue(byte[] array) {
+    if (array.length == 0) {
+      throw new IllegalArgumentException("array is empty");
+    }
     return array[consumeInt(0, array.length - 1)];
   }
 
@@ -341,6 +350,9 @@ public interface FuzzedDataProvider {
    * @return an element from {@code array} chosen based on the fuzzer input
    */
   default short pickValue(short[] array) {
+    if (array.length == 0) {
+      throw new IllegalArgumentException("array is empty");
+    }
     return array[consumeInt(0, array.length - 1)];
   }
 
@@ -352,6 +364,9 @@ public interface FuzzedDataProvider {
    * @return an element from {@code array} chosen based on the fuzzer input
    */
   default int pickValue(int[] array) {
+    if (array.length == 0) {
+      throw new IllegalArgumentException("array is empty");
+    }
     return array[consumeInt(0, array.length - 1)];
   }
 
@@ -363,6 +378,9 @@ public interface FuzzedDataProvider {
    * @return an element from {@code array} chosen based on the fuzzer input
    */
   default long pickValue(long[] array) {
+    if (array.length == 0) {
+      throw new IllegalArgumentException("array is empty");
+    }
     return array[consumeInt(0, array.length - 1)];
   }
 
@@ -374,6 +392,9 @@ public interface FuzzedDataProvider {
    * @return an element from {@code array} chosen based on the fuzzer input
    */
   default double pickValue(double[] array) {
+    if (array.length == 0) {
+      throw new IllegalArgumentException("array is empty");
+    }
     return array[consumeInt(0, array.length - 1)];
   }
 
@@ -385,6 +406,9 @@ public interface FuzzedDataProvider {
    * @return an element from {@code array} chosen based on the fuzzer input
    */
   default float pickValue(float[] array) {
+    if (array.length == 0) {
+      throw new IllegalArgumentException("array is empty");
+    }
     return array[consumeInt(0, array.length - 1)];
   }
 
@@ -396,6 +420,9 @@ public interface FuzzedDataProvider {
    * @return an element from {@code array} chosen based on the fuzzer input
    */
   default char pickValue(char[] array) {
+    if (array.length == 0) {
+      throw new IllegalArgumentException("array is empty");
+    }
     return array[consumeInt(0, array.length - 1)];
   }
 
@@ -439,6 +466,9 @@ public interface FuzzedDataProvider {
    *     input
    */
   default<T> List<T> pickValues(T[] array, int numOfElements) {
+    if (array.length == 0) {
+      throw new IllegalArgumentException("array is empty");
+    }
     return pickValues(Arrays.asList(array), numOfElements);
   }
 }
