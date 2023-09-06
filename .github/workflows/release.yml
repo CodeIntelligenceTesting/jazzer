@@ -116,6 +116,7 @@ jobs:
           RELEASE_SIGNING_KEY_PRIVATE: ${{ secrets.RELEASE_SIGNING_KEY_PRIVATE }}
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          JAZZER_JAR_PATH: "_tmp/jazzer.jar"
         run: bazel run deploy
 
   docker_push:
