@@ -6,3 +6,10 @@ jar_jar(
     rules = "selffuzz_shade_rules.jarjar",
     visibility = ["__subpackages__"],
 )
+
+jar_jar(
+    name = "jazzer_api_selffuzz",
+    input_jar = "//src/main/java/com/code_intelligence/jazzer/api:api",
+    rules = "selffuzz_shade_rules.jarjar",
+    visibility = ["__subpackages__"],
+)

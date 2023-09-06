@@ -1,1 +1,5 @@
+# this is loaded in a special way at runtime and so we can't shade it but it should be safe to share between selffuzz
+# and normal jazzer. In order to not shade it, we make a rule to transform it to itself and then have the
+# general rule because a file will be transformed by the first rule where it fits the filter
+rule com.code_intelligence.jazzer.utils.UnsafeProvider com.code_intelligence.jazzer.utils.UnsafeProvider
 rule com.code_intelligence.jazzer.** com.code_intelligence.selffuzz.jazzer.@1

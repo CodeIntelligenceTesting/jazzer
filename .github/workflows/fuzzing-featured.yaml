@@ -57,7 +57,7 @@ jobs:
         shell: bash
       - id: build-jazzer
         name: Build Jazzer deps
-        run: cd $CHECKOUT_DIR && bazel build //deploy:jazzer-junit-project //deploy:jazzer-project //deploy:jazzer-api-project //selffuzz:jazzer_selffuzz
+        run: cd $CHECKOUT_DIR && bazel build //deploy:jazzer-junit-project //deploy:jazzer-project //deploy:jazzer-api-project //selffuzz:jazzer_selffuzz //selffuzz:jazzer_api_selffuzz
 
       - id: build-fuzzers
         name: Build Fuzzers

@@ -51,6 +51,8 @@
 #include <type_traits>
 
 #include "com_code_intelligence_jazzer_driver_FuzzedDataProviderImpl.h"
+// see the header file for an explanation of why this is here
+#include "com_code_intelligence_selffuzz_jazzer_driver_FuzzedDataProviderImpl.h"
 
 namespace {
 
@@ -685,6 +687,15 @@ const jint kNumFuzzedDataMethods =
 
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_driver_FuzzedDataProviderImpl_nativeInit(
+    JNIEnv *env, jclass clazz) {
+  env->RegisterNatives(clazz, kFuzzedDataMethods, kNumFuzzedDataMethods);
+  gDataPtrField = env->GetFieldID(clazz, "dataPtr", "J");
+  gRemainingBytesField = env->GetFieldID(clazz, "remainingBytes", "I");
+}
+
+// duplicate nativeInit for selffuzz (see the selffuzz header file)
+[[maybe_unused]] void
+Java_com_code_1intelligence_selffuzz_jazzer_driver_FuzzedDataProviderImpl_nativeInit(
     JNIEnv *env, jclass clazz) {
   env->RegisterNatives(clazz, kFuzzedDataMethods, kNumFuzzedDataMethods);
   gDataPtrField = env->GetFieldID(clazz, "dataPtr", "J");
