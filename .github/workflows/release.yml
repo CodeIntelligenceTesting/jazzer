@@ -9,6 +9,9 @@ jobs:
   docker_push:
     runs-on: ubuntu-latest
 
+    environment:
+      name: Deploy
+
     steps:
       - uses: actions/checkout@v3
 
