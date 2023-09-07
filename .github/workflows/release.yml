@@ -118,6 +118,42 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         run: JAZZER_JAR_PATH="$(pwd)/_tmp/jazzer.jar" bazel run deploy
 
+  create_release:
+    needs: build_release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # for creating releases (?TODO necessary)
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Download individual tar.gzs
+        uses: actions/download-artifact@v3
+        with:
+          name: jazzer_releases
+          path: _releases/
+
+      - name: read version
+        id: read-version
+        run: |
+          echo ::set-output name=version::\
+          $(sed -nr 's/JAZZER_VERSION = "(.*)"/\1/p' maven.bzl)
+        shell: bash
+
+      - name: create release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: v${{ steps.read-version.outputs.version }}
+          generate_release_notes: true
+          draft: true
+          files: |
+            _releases/jazzer-linux.tar.gz
+            _releases/jazzer-macos.tar.gz
+            _releases/jazzer-windows.tar.gz
+
+
   docker_push:
     runs-on: ubuntu-latest
     needs: deploy
