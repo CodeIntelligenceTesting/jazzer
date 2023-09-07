@@ -138,6 +138,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: v${{ steps.read-version.outputs.version }}
+          tag_name: v${{ steps.read-version.outputs.version }}
           generate_release_notes: true
           draft: true
           files: |
