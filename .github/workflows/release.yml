@@ -8,7 +8,6 @@ on:
 jobs:
   docker_push:
     runs-on: ubuntu-latest
-    needs: deploy
 
     steps:
       - uses: actions/checkout@v3
