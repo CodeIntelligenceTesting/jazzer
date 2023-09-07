@@ -17,14 +17,21 @@
 package com.example;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.time.Instant;
 import org.junit.jupiter.api.Timeout;
 
 class JUnitTimeoutTest {
-  private static int runs = 0;
 
+  @Retention(RetentionPolicy.RUNTIME)
   @FuzzTest
   @Timeout(3)
+  public @interface TimedFuzzTest {}
+
+  private static int runs = 0;
+
+  @TimedFuzzTest
   void timesOutTest(byte[] data) throws InterruptedException {
     if (runs++ > 0) {
       return;

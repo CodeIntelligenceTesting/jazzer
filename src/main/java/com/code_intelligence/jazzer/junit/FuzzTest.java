@@ -50,6 +50,11 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
  *       also render previous findings unreproducible.
  * </dl>
  *
+ * <p>The {@link FuzzTest} annotation can also be applied to another annotations as a
+ * meta-annotation and then applies to all methods annotated with that annotation. This can be used
+ * to create reusable custom annotations for fuzz tests combined with other JUnit annotations such
+ * as {@link org.junit.jupiter.api.Timeout} or {@link org.junit.jupiter.api.Tag}.
+ *
  * <h2>Test modes</h2>
  *
  * A fuzz test can be run in two modes: fuzzing and regression testing.
@@ -84,7 +89,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
  * fuzz tests contained in the class {@code com.example.MyFuzzTests} would run on all files under
  * {@code src/test/resources/com/example/MyFuzzTestsInputs}.
  */
-@Target({ElementType.METHOD})
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @AgentConfiguringArgumentsProviderArgumentsSource
 @ArgumentsSource(SeedArgumentsProvider.class)
