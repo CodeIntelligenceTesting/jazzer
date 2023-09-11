@@ -1,20 +1,6 @@
-load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@rules_jvm_external//:defs.bzl", "java_export")
 load("//:maven.bzl", "JAZZER_API_COORDINATES", "JAZZER_COORDINATES", "JAZZER_JUNIT_COORDINATES")
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
-
-bool_flag(
-    name = "linked_javadoc",
-    build_setting_default = False,
-)
-
-config_setting(
-    name = "emit_linked_javadoc",
-    flag_values = {
-        ":linked_javadoc": "True",
-    },
-    visibility = ["//:__subpackages__"],
-)
 
 sh_binary(
     name = "deploy",
@@ -28,13 +14,11 @@ sh_binary(
 
 java_export(
     name = "jazzer-api",
-    javadocopts = select({
-        ":emit_linked_javadoc": [
-            "-link",
-            "https://docs.oracle.com/en/java/javase/17/docs/api/",
-        ],
-        "//conditions:default": [],
-    }),
+    doc_url = "https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/",
+    javadocopts = [
+        "-link",
+        "https://docs.oracle.com/en/java/javase/17/docs/api/",
+    ],
     maven_coordinates = JAZZER_API_COORDINATES,
     pom_template = "//deploy:jazzer-api.pom",
     visibility = ["//visibility:public"],
@@ -69,19 +53,17 @@ java_export(
     # Exclude the unshaded classes comprising com.code-intelligence:jazzer since the java_library
     # target comprising jazzer-junit depend on the individual libraries, not the shaded jar.
     deploy_env = ["//src/main/java/com/code_intelligence/jazzer:jazzer_lib"],
-    javadocopts = select({
-        ":emit_linked_javadoc": [
-            "-link",
-            "https://docs.oracle.com/en/java/javase/17/docs/api/",
-            "-link",
-            "https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/",
-            "-link",
-            "https://codeintelligencetesting.github.io/jazzer-docs/jazzer/",
-            "-link",
-            "https://junit.org/junit5/docs/current/api/",
-        ],
-        "//conditions:default": [],
-    }),
+    doc_deps = [
+        ":jazzer-api-docs",
+        ":jazzer-docs",
+    ],
+    doc_url = "https://codeintelligencetesting.github.io/jazzer-docs/jazzer-junit/",
+    javadocopts = [
+        "-link",
+        "https://docs.oracle.com/en/java/javase/17/docs/api/",
+        "-link",
+        "https://junit.org/junit5/docs/current/api/",
+    ],
     maven_coordinates = JAZZER_JUNIT_COORDINATES,
     pom_template = "jazzer-junit.pom",
     visibility = ["//visibility:public"],

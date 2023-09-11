@@ -73,15 +73,12 @@ java_binary(
 # considered a public interface.
 javadoc(
     name = "jazzer-docs",
-    javadocopts = select({
-        "//deploy:emit_linked_javadoc": [
-            "-link",
-            "https://docs.oracle.com/en/java/javase/17/docs/api/",
-            "-link",
-            "https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/",
-        ],
-        "//conditions:default": [],
-    }),
+    doc_deps = ["//deploy:jazzer-api-docs"],
+    doc_url = "https://codeintelligencetesting.github.io/jazzer-docs/jazzer/",
+    javadocopts = [
+        "-link",
+        "https://docs.oracle.com/en/java/javase/17/docs/api/",
+    ],
     visibility = ["//deploy:__pkg__"],
     deps = [":jazzer_lib"],
 )

@@ -101,9 +101,5 @@ Requires an account on [Sonatype](https://issues.sonatype.org) with access to th
 
 Javadocs are hosted at https://codeintelligencetesting.github.io/jazzer-docs, which is populated from https://github.com/CodeIntelligenceTesting/jazzer-docs.
 
-To update the docs after a release with API changes, follow these steps to get properly linked cross-references:
-
-1. Delete the contents of the `jazzer-api` subdirectory of `jazzer-docs`.
-2. Run `bazel build --//deploy:linked_javadoc //deploy:jazzer-api-docs` and unpack the jar into the `jazzer-api` subdirectory of `jazzer-docs`.
-3. Commit and push the changes, then wait for them to be published (can take a minute).
-4. Repeat the same steps with `jazzer-api` replaced by `jazzer` and then by `jazzer-junit`.
+To update the docs after a release with API changes, replace the contents of the `jazzer`, `jazzer-api`, and `jazzer-junit` subdirectories of `jazzer-docs` with the extracted contents of the `//deploy:jazzer-docs`, `//deploy:jazzer-api-docs`, and `//deploy:jazzer-junit-docs` targets, respectively.
+Then commit and push to have the docs published automatically (can take about a few minutes to appear).

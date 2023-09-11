@@ -60,6 +60,9 @@ def jazzer_dependencies(android = False):
         name = "rules_jvm_external",
         patch_args = ["-p1"],
         patches = [
+            # https://github.com/bazelbuild/rules_jvm_external/pull/958
+            # Allows javadoc targets to reference other javadoc targets.
+            "//third_party:rules_jvm_external-javadoc-deps.patch",
         ],
         sha256 = "aa17db9b810b22e411bf722095be34eeb66c76819b9c3423ad7740f452016aa3",
         strip_prefix = "rules_jvm_external-4b073de468eff9741406f475acb04e94bee7c9d0",
