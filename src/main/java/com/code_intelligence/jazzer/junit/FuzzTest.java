@@ -124,6 +124,14 @@ public @interface FuzzTest {
    * <p>This option has no effect during regression testing.
    */
   long maxExecutions() default 0;
+
+  /**
+   * Controls the JUnit lifecycle of fuzz tests during fuzzing.
+   *
+   * <p>During regression testing, fuzz tests always go through the full JUnit lifecycle for every
+   * execution regardless of the value of this option.
+   */
+  Lifecycle lifecycle() default Lifecycle.PER_EXECUTION;
 }
 
 // Internal use only.

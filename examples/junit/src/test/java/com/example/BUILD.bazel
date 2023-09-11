@@ -69,13 +69,34 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
-    name = "LifecycleFuzzTest",
-    srcs = ["LifecycleFuzzTest.java"],
+    name = "PerExecutionLifecycleFuzzTest",
+    srcs = ["PerExecutionLifecycleFuzzTest.java"],
     allowed_findings = ["com.example.TestSuccessfulException"],
     fuzzer_args = [
         "-runs=3",
     ],
-    target_class = "com.example.LifecycleFuzzTest",
+    target_class = "com.example.PerExecutionLifecycleFuzzTest",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        ":junit_runtime",
+    ],
+    deps = [
+        ":test_successful_exception",
+        "//examples/junit/src/main/java/com/example:parser",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "PerTestLifecycleFuzzTest",
+    srcs = ["PerTestLifecycleFuzzTest.java"],
+    allowed_findings = ["com.example.TestSuccessfulException"],
+    fuzzer_args = [
+        "-runs=3",
+    ],
+    target_class = "com.example.PerTestLifecycleFuzzTest",
     verify_crash_reproducer = False,
     runtime_deps = [
         ":junit_runtime",

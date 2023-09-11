@@ -33,6 +33,9 @@ java_library(
         "//examples/junit/src/test/java/com/example:__pkg__",
         "//selffuzz/src/test/java/com/code_intelligence/selffuzz:__subpackages__",
     ],
+    exports = [
+        ":lifecycle",
+    ],
     runtime_deps = [
         # The JUnit launcher that is part of the Jazzer driver needs this on the classpath
         # to run an @FuzzTest with JUnit. This will also result in a transitive dependency
@@ -42,6 +45,7 @@ java_library(
     deps = [
         ":fuzz_test_configuration_error",
         ":fuzz_test_executor",
+        ":lifecycle",
         ":seed_serializer",
         ":utils",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
@@ -67,6 +71,7 @@ java_jni_library(
     deps = [
         ":agent_configurator",
         ":junit_lifecycle_methods_invoker",
+        ":lifecycle",
         ":seed_serializer",
         ":utils",
         "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
@@ -103,10 +108,16 @@ java_library(
     srcs = ["JUnitLifecycleMethodsInvoker.java"],
     deps = [
         ":junit_internals_compile_only",
+        ":lifecycle",
         "//src/main/java/com/code_intelligence/jazzer/driver:lifecycle_methods_invoker",
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
+)
+
+java_library(
+    name = "lifecycle",
+    srcs = ["Lifecycle.java"],
 )
 
 java_library(
