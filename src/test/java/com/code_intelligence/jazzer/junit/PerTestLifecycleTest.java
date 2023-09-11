@@ -41,9 +41,9 @@ import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
 import org.junit.rules.TemporaryFolder;
 
-public class LifecycleTest {
+public class PerTestLifecycleTest {
   private static final String ENGINE = "engine:junit-jupiter";
-  private static final String CLAZZ = "class:com.example.LifecycleFuzzTest";
+  private static final String CLAZZ = "class:com.example.PerTestLifecycleFuzzTest";
   private static final String DISABLED_FUZZ = "test-template:disabledFuzz([B)";
   private static final String LIFECYCLE_FUZZ = "test-template:lifecycleFuzz([B)";
   private static final String INVOCATION = "test-template-invocation:#";
@@ -57,7 +57,7 @@ public class LifecycleTest {
 
   private EngineExecutionResults executeTests() {
     return EngineTestKit.engine("junit-jupiter")
-        .selectors(selectClass("com.example.LifecycleFuzzTest"))
+        .selectors(selectClass("com.example.PerTestLifecycleFuzzTest"))
         .configurationParameter(
             "jazzer.instrument", "com.other.package.**,com.example.**,com.yet.another.package.*")
         .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())

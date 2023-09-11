@@ -21,9 +21,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
-import com.example.LifecycleFuzzTest.LifecycleCallbacks1;
-import com.example.LifecycleFuzzTest.LifecycleCallbacks2;
-import com.example.LifecycleFuzzTest.LifecycleCallbacks3;
+import com.example.PerExecutionLifecycleFuzzTest.LifecycleCallbacks1;
+import com.example.PerExecutionLifecycleFuzzTest.LifecycleCallbacks2;
+import com.example.PerExecutionLifecycleFuzzTest.LifecycleCallbacks3;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
@@ -40,11 +40,11 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@ExtendWith(LifecycleFuzzTest.LifecycleInstancePostProcessor.class)
+@ExtendWith(PerExecutionLifecycleFuzzTest.LifecycleInstancePostProcessor.class)
 @ExtendWith(LifecycleCallbacks1.class)
 @ExtendWith(LifecycleCallbacks2.class)
 @ExtendWith(LifecycleCallbacks3.class)
-class LifecycleFuzzTest {
+class PerExecutionLifecycleFuzzTest {
   private static final ArrayList<String> events = new ArrayList<>();
   private static final long RUNS = 3;
 
@@ -154,7 +154,7 @@ class LifecycleFuzzTest {
   static class LifecycleInstancePostProcessor implements TestInstancePostProcessor {
     @Override
     public void postProcessTestInstance(Object o, ExtensionContext extensionContext) {
-      ((LifecycleFuzzTest) o).testInstancePostProcessorCalledOnInstance = true;
+      ((PerExecutionLifecycleFuzzTest) o).testInstancePostProcessorCalledOnInstance = true;
     }
   }
 

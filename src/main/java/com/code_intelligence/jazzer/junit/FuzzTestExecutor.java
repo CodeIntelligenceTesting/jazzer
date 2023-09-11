@@ -312,7 +312,8 @@ class FuzzTestExecutor {
   public Optional<Throwable> execute(
       ReflectiveInvocationContext<Method> invocationContext,
       ExtensionContext extensionContext,
-      SeedSerializer seedSerializer) {
+      SeedSerializer seedSerializer,
+      Lifecycle lifecycle) {
     if (seedSerializer instanceof AutofuzzSeedSerializer) {
       FuzzTargetHolder.fuzzTarget =
           FuzzTargetHolder.autofuzzFuzzTarget(
@@ -336,7 +337,7 @@ class FuzzTestExecutor {
           new FuzzTargetHolder.FuzzTarget(
               invocationContext.getExecutable(),
               () -> invocationContext.getTarget().get(),
-              JUnitLifecycleMethodsInvoker.of(extensionContext));
+              JUnitLifecycleMethodsInvoker.of(extensionContext, lifecycle));
     }
 
     // Only register a finding handler in case the fuzz test is executed by JUnit.

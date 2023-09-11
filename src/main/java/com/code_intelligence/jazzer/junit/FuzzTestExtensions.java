@@ -54,7 +54,7 @@ class FuzzTestExtensions
     // Skip the invocation of the test method with the special arguments provided by
     // FuzzTestArgumentsProvider and start fuzzing instead.
     if (Utils.isMarkedInvocation(invocationContext)) {
-      startFuzzing(invocation, invocationContext, extensionContext);
+      startFuzzing(invocation, invocationContext, extensionContext, fuzzTest.lifecycle());
     } else {
       // Blocked by https://github.com/junit-team/junit5/issues/3282:
       // TODO: The seeds from the input directory are duplicated here as there is no way to
@@ -113,13 +113,17 @@ class FuzzTestExtensions
   private static void startFuzzing(
       Invocation<Void> invocation,
       ReflectiveInvocationContext<Method> invocationContext,
-      ExtensionContext extensionContext)
+      ExtensionContext extensionContext,
+      Lifecycle lifecycle)
       throws Throwable {
     invocation.skip();
     Optional<Throwable> throwable =
         FuzzTestExecutor.fromContext(extensionContext)
             .execute(
-                invocationContext, extensionContext, getOrCreateSeedSerializer(extensionContext));
+                invocationContext,
+                extensionContext,
+                getOrCreateSeedSerializer(extensionContext),
+                lifecycle);
     if (throwable.isPresent()) {
       throw throwable.get();
     }

@@ -46,15 +46,19 @@ class JUnitLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
     this.beforeEachExecutionRunnables = beforeEachExecutionRunnables;
   }
 
-  static LifecycleMethodsInvoker of(ExtensionContext extensionContext) {
+  static LifecycleMethodsInvoker of(ExtensionContext extensionContext, Lifecycle lifecycleMode) {
+    if (lifecycleMode == Lifecycle.PER_TEST) {
+      return LifecycleMethodsInvoker.NOOP;
+    }
     // ExtensionRegistry is private JUnit API that is the source of truth for all lifecycle
     // callbacks, both annotation- and extension-based.
     Optional<ExtensionRegistry> maybeExtensionRegistry =
         getExtensionRegistryViaHack(extensionContext);
     if (!maybeExtensionRegistry.isPresent()) {
-      extensionContext.publishReportEntry(
-          "Jazzer does not support BeforeEach and AfterEach callbacks with this version of JUnit.");
-      return LifecycleMethodsInvoker.NOOP;
+      throw new IllegalArgumentException(
+          "Jazzer does not support BeforeEach and AfterEach callbacks with this version of JUnit."
+              + " Either update to at least JUnit 5.9.0 or set lifecycleMode ="
+              + " LifecycleMode.PER_TEST on @FuzzTest.");
     }
     ExtensionRegistry extensionRegistry = maybeExtensionRegistry.get();
 
