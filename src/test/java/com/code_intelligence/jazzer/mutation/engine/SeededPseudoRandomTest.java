@@ -130,21 +130,20 @@ public class SeededPseudoRandomTest {
   }
 
   @Test
-  void testClosedRangeBiasedTowardsSmall() {
+  void testNonEmptySubsetSize() {
     SeededPseudoRandom prng = new SeededPseudoRandom(1337133371337L);
 
-    assertThrows(IllegalArgumentException.class, () -> prng.closedRangeBiasedTowardsSmall(-1));
-    assertThrows(IllegalArgumentException.class, () -> prng.closedRangeBiasedTowardsSmall(2, 1));
-    assertThat(prng.closedRangeBiasedTowardsSmall(0)).isEqualTo(0);
-    assertThat(prng.closedRangeBiasedTowardsSmall(5, 5)).isEqualTo(5);
+    assertThrows(IllegalArgumentException.class, () -> prng.nonEmptySubsetSize(-1));
+    assertThrows(IllegalArgumentException.class, () -> prng.nonEmptySubsetSize(0));
+    assertThat(prng.nonEmptySubsetSize(1)).isEqualTo(1);
   }
 
   @Test
-  void testClosedRangeBiasedTowardsSmall_distribution() {
+  void testNonEmptySubsetSize_distribution() {
     int num = 5000000;
     SeededPseudoRandom prng = new SeededPseudoRandom(1337133371337L);
     Map<Integer, Double> frequencies =
-        Stream.generate(() -> prng.closedRangeBiasedTowardsSmall(9))
+        Stream.generate(() -> prng.nonEmptySubsetSize(10))
             .limit(num)
             .collect(
                 groupingBy(i -> i, collectingAndThen(counting(), count -> ((double) count) / num)));
@@ -153,7 +152,7 @@ public class SeededPseudoRandomTest {
     assertThat(frequencies)
         .comparingValuesUsing(Correspondence.tolerance(0.0005))
         .containsExactly(
-            0, 0.645, 1, 0.161, 2, 0.072, 3, 0.040, 4, 0.026, 5, 0.018, 6, 0.013, 7, 0.01, 8, 0.008,
-            9, 0.006);
+            1, 0.645, 2, 0.161, 3, 0.072, 4, 0.040, 5, 0.026, 6, 0.018, 7, 0.013, 8, 0.01, 9, 0.008,
+            10, 0.006);
   }
 }

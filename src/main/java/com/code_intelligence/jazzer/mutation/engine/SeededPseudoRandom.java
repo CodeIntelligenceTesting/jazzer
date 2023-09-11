@@ -215,7 +215,11 @@ public final class SeededPseudoRandom implements PseudoRandom {
   }
 
   @Override
-  public int closedRangeBiasedTowardsSmall(int upperInclusive) {
+  public int nonEmptySubsetSize(int size) {
+    return zipf(size - 1) + 1;
+  }
+
+  private int zipf(int upperInclusive) {
     if (upperInclusive == 0) {
       return 0;
     }
@@ -248,11 +252,6 @@ public final class SeededPseudoRandom implements PseudoRandom {
       }
     }
     return (int) k;
-  }
-
-  @Override
-  public int closedRangeBiasedTowardsSmall(int lowerInclusive, int upperInclusive) {
-    return lowerInclusive + closedRangeBiasedTowardsSmall(upperInclusive - lowerInclusive);
   }
 
   private static double zipf_h(double x) {

@@ -43,7 +43,7 @@ final class ChunkMutations {
   static <T> void deleteRandomChunk(List<T> list, int minSize, PseudoRandom prng) {
     int oldSize = list.size();
     int minFinalSize = Math.max(minSize, oldSize / 2);
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, oldSize - minFinalSize);
+    int chunkSize = prng.nonEmptySubsetSize(oldSize - minFinalSize);
     int chunkOffset = prng.closedRange(0, oldSize - chunkSize);
 
     list.subList(chunkOffset, chunkOffset + chunkSize).clear();
@@ -52,7 +52,7 @@ final class ChunkMutations {
   static <T> void deleteRandomChunk(Collection<T> collection, int minSize, PseudoRandom prng) {
     int oldSize = collection.size();
     int minFinalSize = Math.max(minSize, oldSize / 2);
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, oldSize - minFinalSize);
+    int chunkSize = prng.nonEmptySubsetSize(oldSize - minFinalSize);
     int chunkOffset = prng.closedRange(0, oldSize - chunkSize);
 
     Iterator<T> it = collection.iterator();
@@ -68,7 +68,7 @@ final class ChunkMutations {
   static <T> void insertRandomChunk(
       List<T> list, int maxSize, SerializingMutator<T> elementMutator, PseudoRandom prng) {
     int oldSize = list.size();
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxSize - oldSize);
+    int chunkSize = prng.nonEmptySubsetSize(maxSize - oldSize);
     int chunkOffset = prng.closedRange(0, oldSize);
 
     T baseElement = elementMutator.init(prng);
@@ -88,13 +88,13 @@ final class ChunkMutations {
       ValueMutator<T> elementMutator,
       PseudoRandom prng) {
     int oldSize = set.size();
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxSize - oldSize);
+    int chunkSize = prng.nonEmptySubsetSize(maxSize - oldSize);
     return growBy(set, addIfNew, chunkSize, () -> elementMutator.init(prng));
   }
 
   static <T> void mutateRandomChunk(List<T> list, ValueMutator<T> mutator, PseudoRandom prng) {
     int size = list.size();
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, size);
+    int chunkSize = prng.nonEmptySubsetSize(size);
     int chunkOffset = prng.closedRange(0, size - chunkSize);
 
     for (int i = chunkOffset; i < chunkOffset + chunkSize; i++) {
@@ -105,7 +105,7 @@ final class ChunkMutations {
   static <K, V, KW, VW> boolean mutateRandomKeysChunk(
       Map<K, V> map, SerializingMutator<K> keyMutator, PseudoRandom prng) {
     int originalSize = map.size();
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, originalSize);
+    int chunkSize = prng.nonEmptySubsetSize(originalSize);
     int chunkOffset = prng.closedRange(0, originalSize - chunkSize);
 
     // To ensure that mutating keys actually results in the set of keys changing and not just their
@@ -159,7 +159,7 @@ final class ChunkMutations {
       Map<K, V> map, ValueMutator<V> valueMutator, PseudoRandom prng) {
     Collection<Map.Entry<K, V>> collection = map.entrySet();
     int oldSize = collection.size();
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, oldSize);
+    int chunkSize = prng.nonEmptySubsetSize(oldSize);
     int chunkOffset = prng.closedRange(0, oldSize - chunkSize);
 
     Iterator<Map.Entry<K, V>> it = collection.iterator();

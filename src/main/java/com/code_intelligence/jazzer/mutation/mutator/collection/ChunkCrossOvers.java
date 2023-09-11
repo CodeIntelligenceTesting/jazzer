@@ -31,7 +31,7 @@ final class ChunkCrossOvers {
 
   static <T> void insertChunk(List<T> list, List<T> otherList, int maxSize, PseudoRandom prng) {
     int maxChunkSize = Math.min(maxSize - list.size(), otherList.size());
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
+    int chunkSize = prng.nonEmptySubsetSize(maxChunkSize);
     int fromPos = prng.closedRange(0, otherList.size() - chunkSize);
     int toPos = prng.closedRange(0, list.size());
     List<T> chunk = otherList.subList(fromPos, fromPos + chunkSize);
@@ -61,7 +61,7 @@ final class ChunkCrossOvers {
   private static <T> void onCorrespondingChunks(
       List<T> list, List<T> otherList, PseudoRandom prng, ChunkListElementOperation<T> operation) {
     int maxChunkSize = Math.min(list.size(), otherList.size());
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
+    int chunkSize = prng.nonEmptySubsetSize(maxChunkSize);
     int fromPos = prng.closedRange(0, otherList.size() - chunkSize);
     int toPos = prng.closedRange(0, list.size() - chunkSize);
     List<T> chunk = otherList.subList(fromPos, fromPos + chunkSize);
@@ -74,7 +74,7 @@ final class ChunkCrossOvers {
       Map<K, V> map, Map<K, V> otherMap, int maxSize, PseudoRandom prng) {
     int originalSize = map.size();
     int maxChunkSize = Math.min(maxSize - originalSize, otherMap.size());
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
+    int chunkSize = prng.nonEmptySubsetSize(maxChunkSize);
     int fromChunkOffset = prng.closedRange(0, otherMap.size() - chunkSize);
     Iterator<Entry<K, V>> fromIterator = otherMap.entrySet().iterator();
     for (int i = 0; i < fromChunkOffset; i++) {
@@ -190,7 +190,7 @@ final class ChunkCrossOvers {
   static <K, V> void onCorrespondingChunks(
       Map<K, V> map, Map<K, V> otherMap, PseudoRandom prng, ChunkMapOperation<K, V> operation) {
     int maxChunkSize = Math.min(map.size(), otherMap.size());
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
+    int chunkSize = prng.nonEmptySubsetSize(maxChunkSize);
     int fromChunkOffset = prng.closedRange(0, otherMap.size() - chunkSize);
     int toChunkOffset = prng.closedRange(0, map.size() - chunkSize);
     Iterator<Entry<K, V>> fromIterator = otherMap.entrySet().iterator();
