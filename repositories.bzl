@@ -60,17 +60,10 @@ def jazzer_dependencies(android = False):
         name = "rules_jvm_external",
         patch_args = ["-p1"],
         patches = [
-            # https://github.com/bazelbuild/rules_jvm_external/pull/933
-            # Fixes an incompatibility with latest Bazel introduced in
-            # https://github.com/bazelbuild/bazel/commit/d0e29582a2e788e8acdaf53fe30ab7f7dc592df3
-            "//third_party:rules_jvm_external-add-toolchain-to-maven-project-jar.patch",
-            # https://github.com/bazelbuild/rules_jvm_external/pull/952
-            # Fixes javadoc generation when using neverlink dependencies.
-            "//third_party:rules_jvm_external-add-neverlink-deps-to-javadoc-classpath.patch",
         ],
-        sha256 = "d31e369b854322ca5098ea12c69d7175ded971435e55c18dd9dd5f29cc5249ac",
-        strip_prefix = "rules_jvm_external-5.3",
-        url = "https://github.com/bazelbuild/rules_jvm_external/releases/download/5.3/rules_jvm_external-5.3.tar.gz",
+        sha256 = "aa17db9b810b22e411bf722095be34eeb66c76819b9c3423ad7740f452016aa3",
+        strip_prefix = "rules_jvm_external-4b073de468eff9741406f475acb04e94bee7c9d0",
+        url = "https://github.com/bazelbuild/rules_jvm_external/archive/4b073de468eff9741406f475acb04e94bee7c9d0.tar.gz",
     )
 
     maybe(
