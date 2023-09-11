@@ -22,8 +22,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.support.AnnotationConsumer;
 
-public class AgentConfiguringArgumentsProvider
-    implements ArgumentsProvider, AnnotationConsumer<FuzzTest> {
+class AgentConfiguringArgumentsProvider implements ArgumentsProvider, AnnotationConsumer<FuzzTest> {
   private FuzzTest fuzzTest;
 
   @Override

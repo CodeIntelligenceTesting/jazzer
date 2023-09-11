@@ -37,7 +37,7 @@ import org.junit.jupiter.engine.extension.ExtensionRegistry;
  * Adapts JUnit BeforeEach and AfterEach callbacks to {@link
  * com.code_intelligence.jazzer.driver.FuzzTargetRunner} lifecycle hooks.
  */
-public class JUnitLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
+class JUnitLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
   private final ThrowingRunnable[] beforeEachExecutionRunnables;
 
   private long timesCalledBetweenExecutions = 0;
