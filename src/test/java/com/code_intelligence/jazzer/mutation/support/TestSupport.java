@@ -351,6 +351,17 @@ public final class TestSupport {
     }
 
     @Override
+    public int growBy(int currentSize, int maxSize) {
+      assertThat(currentSize).isLessThan(maxSize);
+
+      assertThat(elements).isNotEmpty();
+      int result = (int) elements.poll();
+      assertThat(result).isAtLeast(1);
+      assertThat(result).isAtMost(maxSize - currentSize);
+      return result;
+    }
+
+    @Override
     public int nonEmptySubsetSize(int size) {
       assertThat(size).isAtLeast(1);
 

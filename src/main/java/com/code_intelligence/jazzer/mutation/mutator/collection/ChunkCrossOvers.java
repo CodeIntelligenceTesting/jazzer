@@ -30,8 +30,7 @@ final class ChunkCrossOvers {
   private ChunkCrossOvers() {}
 
   static <T> void insertChunk(List<T> list, List<T> otherList, int maxSize, PseudoRandom prng) {
-    int maxChunkSize = Math.min(maxSize - list.size(), otherList.size());
-    int chunkSize = prng.nonEmptySubsetSize(maxChunkSize);
+    int chunkSize = Math.min(prng.growBy(list.size(), maxSize), otherList.size());
     int fromPos = prng.closedRange(0, otherList.size() - chunkSize);
     int toPos = prng.closedRange(0, list.size());
     List<T> chunk = otherList.subList(fromPos, fromPos + chunkSize);
@@ -73,8 +72,7 @@ final class ChunkCrossOvers {
   static <K, V> void insertChunk(
       Map<K, V> map, Map<K, V> otherMap, int maxSize, PseudoRandom prng) {
     int originalSize = map.size();
-    int maxChunkSize = Math.min(maxSize - originalSize, otherMap.size());
-    int chunkSize = prng.nonEmptySubsetSize(maxChunkSize);
+    int chunkSize = Math.min(prng.growBy(originalSize, maxSize), otherMap.size());
     int fromChunkOffset = prng.closedRange(0, otherMap.size() - chunkSize);
     Iterator<Entry<K, V>> fromIterator = otherMap.entrySet().iterator();
     for (int i = 0; i < fromChunkOffset; i++) {

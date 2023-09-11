@@ -103,6 +103,11 @@ public interface PseudoRandom {
   double closedRange(double lowerInclusive, double upperInclusive);
 
   /**
+   * @return a random value in the closed range [currentSize + 1, maxSize].
+   */
+  int growBy(int currentSize, int maxSize);
+
+  /**
    * @return a random value in the closed range [1, size - 1] that is biased towards being small.
    */
   int nonEmptySubsetSize(int size);

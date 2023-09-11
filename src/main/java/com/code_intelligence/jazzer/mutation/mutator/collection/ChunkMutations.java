@@ -68,7 +68,7 @@ final class ChunkMutations {
   static <T> void insertRandomChunk(
       List<T> list, int maxSize, SerializingMutator<T> elementMutator, PseudoRandom prng) {
     int oldSize = list.size();
-    int chunkSize = prng.nonEmptySubsetSize(maxSize - oldSize);
+    int chunkSize = prng.growBy(oldSize, maxSize);
     int chunkOffset = prng.closedRange(0, oldSize);
 
     T baseElement = elementMutator.init(prng);
@@ -87,8 +87,7 @@ final class ChunkMutations {
       int maxSize,
       ValueMutator<T> elementMutator,
       PseudoRandom prng) {
-    int oldSize = set.size();
-    int chunkSize = prng.nonEmptySubsetSize(maxSize - oldSize);
+    int chunkSize = prng.growBy(set.size(), maxSize);
     return growBy(set, addIfNew, chunkSize, () -> elementMutator.init(prng));
   }
 
