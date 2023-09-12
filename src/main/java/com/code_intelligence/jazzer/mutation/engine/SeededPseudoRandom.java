@@ -216,12 +216,12 @@ public final class SeededPseudoRandom implements PseudoRandom {
 
   @Override
   public int growBy(int currentSize, int maxSize) {
-    return zipf(maxSize - currentSize - 1) + 1;
+    return Math.max(1, (maxSize - currentSize) / 2);
   }
 
   @Override
   public int nonEmptySubsetSize(int size) {
-    return zipf(size - 1) + 1;
+    return size / 2;
   }
 
   private int zipf(int upperInclusive) {
