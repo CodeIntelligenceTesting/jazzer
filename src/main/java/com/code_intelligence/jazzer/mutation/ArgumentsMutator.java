@@ -50,6 +50,7 @@ public final class ArgumentsMutator {
   private final Method method;
   private final ProductMutator productMutator;
   private Object[] arguments;
+  private int runs = 1;
 
   /**
    * True if the arguments array has already been passed to a user-provided function or exposed via
@@ -141,7 +142,7 @@ public final class ArgumentsMutator {
     try {
       Object[] objects1 = productMutator.readExclusive(data1);
       Object[] objects2 = productMutator.readExclusive(data2);
-      PseudoRandom prng = new SeededPseudoRandom(seed);
+      PseudoRandom prng = new SeededPseudoRandom(seed, runs);
       arguments = productMutator.crossOver(objects1, objects2, prng);
       argumentsExposed = false;
     } catch (IOException e) {
@@ -184,7 +185,7 @@ public final class ArgumentsMutator {
   }
 
   public void init(long seed) {
-    init(new SeededPseudoRandom(seed));
+    init(new SeededPseudoRandom(seed, runs));
   }
 
   void init(PseudoRandom prng) {
@@ -193,7 +194,7 @@ public final class ArgumentsMutator {
   }
 
   public void mutate(long seed) {
-    mutate(new SeededPseudoRandom(seed));
+    mutate(new SeededPseudoRandom(seed, runs));
   }
 
   void mutate(PseudoRandom prng) {
@@ -204,6 +205,7 @@ public final class ArgumentsMutator {
   }
 
   public void invoke(boolean detach) throws Throwable {
+    runs++;
     Object[] invokeArguments;
     if (detach) {
       invokeArguments = productMutator.detach(arguments);
