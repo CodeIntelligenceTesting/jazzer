@@ -211,7 +211,8 @@ final class ChunkCrossOvers {
     public static CrossOverAction pickRandomCrossOverAction(
         Collection<?> reference, Collection<?> otherReference, int maxSize, PseudoRandom prng) {
       List<CrossOverAction> actions = new ArrayList<>();
-      if (reference.size() < maxSize && !otherReference.isEmpty()) {
+      if (reference.size() < Math.min(maxSize, prng.controlledMaxSize())
+          && !otherReference.isEmpty()) {
         actions.add(INSERT_CHUNK);
       }
       if (!reference.isEmpty() && !otherReference.isEmpty()) {

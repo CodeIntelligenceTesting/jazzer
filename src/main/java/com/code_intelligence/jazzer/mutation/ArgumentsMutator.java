@@ -50,7 +50,6 @@ public final class ArgumentsMutator {
   private final Method method;
   private final ProductMutator productMutator;
   private Object[] arguments;
-  private int runs = 1;
 
   /**
    * True if the arguments array has already been passed to a user-provided function or exposed via
@@ -138,11 +137,11 @@ public final class ArgumentsMutator {
   /**
    * @throws UncheckedIOException if the underlying InputStream throws
    */
-  public void crossOver(InputStream data1, InputStream data2, long seed) {
+  public void crossOver(InputStream data1, InputStream data2, long seed, int controlledMaxSize) {
     try {
       Object[] objects1 = productMutator.readExclusive(data1);
       Object[] objects2 = productMutator.readExclusive(data2);
-      PseudoRandom prng = new SeededPseudoRandom(seed, runs);
+      PseudoRandom prng = new SeededPseudoRandom(seed, controlledMaxSize);
       arguments = productMutator.crossOver(objects1, objects2, prng);
       argumentsExposed = false;
     } catch (IOException e) {
@@ -184,8 +183,8 @@ public final class ArgumentsMutator {
     }
   }
 
-  public void init(long seed) {
-    init(new SeededPseudoRandom(seed, runs));
+  public void init(long seed, int controlledMaxSize) {
+    init(new SeededPseudoRandom(seed, controlledMaxSize));
   }
 
   void init(PseudoRandom prng) {
@@ -193,8 +192,8 @@ public final class ArgumentsMutator {
     argumentsExposed = false;
   }
 
-  public void mutate(long seed) {
-    mutate(new SeededPseudoRandom(seed, runs));
+  public void mutate(long seed, int controlledMaxSize) {
+    mutate(new SeededPseudoRandom(seed, controlledMaxSize));
   }
 
   void mutate(PseudoRandom prng) {
@@ -205,7 +204,6 @@ public final class ArgumentsMutator {
   }
 
   public void invoke(boolean detach) throws Throwable {
-    runs++;
     Object[] invokeArguments;
     if (detach) {
       invokeArguments = productMutator.detach(arguments);

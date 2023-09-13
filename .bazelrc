@@ -101,3 +101,4 @@ coverage --test_tag_filters=-no-coverage
 # https://github.com/bazelbuild/bazel/issues/4867#issuecomment-830402410
 common:quiet --ui_event_filters=-info,-stderr
 common:quiet --noshow_progress
+common --local_test_jobs=4

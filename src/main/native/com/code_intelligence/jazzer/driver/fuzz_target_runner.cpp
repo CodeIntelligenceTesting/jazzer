@@ -32,6 +32,10 @@
 
 #include "com_code_intelligence_jazzer_runtime_FuzzTargetRunnerNatives.h"
 
+extern size_t gTotalNumberOfRuns;
+extern size_t gLastCorpusUpdateRun;
+size_t ControlledMaxSize = 4;
+
 extern "C" int LLVMFuzzerRunDriver(int *argc, char ***argv,
                                    int (*UserCb)(const uint8_t *Data,
                                                  size_t Size));
@@ -50,11 +54,21 @@ jboolean gUseExperimentalMutator;
 // not include a stack trace.
 void (*gLibfuzzerPrintCrashingInput)() = nullptr;
 
+inline uint32_t Clzll(unsigned long long X) { return __builtin_clzll(X); }
+
+inline size_t Log(size_t X) {
+  return static_cast<size_t>((sizeof(unsigned long long) * 8) - Clzll(X) - 1);
+}
+
 int testOneInput(const uint8_t *data, const std::size_t size) {
   JNIEnv &env = *gEnv;
   jint jsize =
       std::min(size, static_cast<size_t>(std::numeric_limits<jint>::max()));
-  int res = env.CallStaticIntMethod(gRunner, gRunOneId, data, jsize);
+  if (gTotalNumberOfRuns - gLastCorpusUpdateRun > 50 * Log(ControlledMaxSize)) {
+    ControlledMaxSize += Log(ControlledMaxSize);
+    gLastCorpusUpdateRun = gTotalNumberOfRuns;
+  }
+  int res = env.CallStaticIntMethod(gRunner, gRunOneId, data, jsize, ControlledMaxSize);
   if (env.ExceptionCheck()) {
     env.ExceptionDescribe();
     _Exit(1);
@@ -142,7 +156,7 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_startLibFuzze
   gEnv = env;
   env->GetJavaVM(&gJavaVm);
   gRunner = reinterpret_cast<jclass>(env->NewGlobalRef(runner));
-  gRunOneId = env->GetStaticMethodID(runner, "runOne", "(JI)I");
+  gRunOneId = env->GetStaticMethodID(runner, "runOne", "(JII)I");
   gMutateOneId = env->GetStaticMethodID(runner, "mutateOne", "(JIII)I");
   gCrossOverId = env->GetStaticMethodID(runner, "crossOver", "(JIJIJII)I");
   if (gRunOneId == nullptr) {

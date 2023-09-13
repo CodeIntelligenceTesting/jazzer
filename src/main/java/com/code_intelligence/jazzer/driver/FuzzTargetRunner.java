@@ -124,6 +124,7 @@ public final class FuzzTargetRunner {
   private static final ArgumentsMutator mutator;
   private static final ReproducerTemplate reproducerTemplate;
   private static Predicate<Throwable> findingHandler;
+  private static int controlledMaxSize;
 
   static {
     FuzzTargetHolder.FuzzTarget fuzzTarget = FuzzTargetHolder.fuzzTarget;
@@ -183,12 +184,12 @@ public final class FuzzTargetRunner {
     }
   }
 
-  /** A test-only convenience wrapper around {@link #runOne(long, int)}. */
+  /** A test-only convenience wrapper around {@link #runOne(long, int, int)}. */
   static int runOne(byte[] data) {
     long dataPtr = UNSAFE.allocateMemory(data.length);
     UNSAFE.copyMemory(data, BYTE_ARRAY_OFFSET, null, dataPtr, data.length);
     try {
-      return runOne(dataPtr, data.length);
+      return runOne(dataPtr, data.length, Integer.MAX_VALUE);
     } finally {
       UNSAFE.freeMemory(dataPtr);
     }
@@ -203,7 +204,11 @@ public final class FuzzTargetRunner {
    * @return the value that the native LLVMFuzzerTestOneInput function should return. The function
    *     may exit the process instead of returning.
    */
-  private static int runOne(long dataPtr, int dataLength) {
+  private static int runOne(long dataPtr, int dataLength, int controlledMaxSize) {
+    if (controlledMaxSize > FuzzTargetRunner.controlledMaxSize) {
+      Log.info("New controlled max size: " + FuzzTargetRunner.controlledMaxSize);
+      FuzzTargetRunner.controlledMaxSize = controlledMaxSize;
+    }
     Throwable finding = null;
     byte[] data;
     Object argument;
@@ -367,11 +372,11 @@ public final class FuzzTargetRunner {
     // initialize the mutator instead of just reading that trivial input to produce a more
     // interesting value.
     if (size == 1 && UNSAFE.getByte(data) == '\n') {
-      mutator.init(seed);
+      mutator.init(seed, controlledMaxSize);
     } else {
       // TODO: See the comment on earlier calls to read for potential optimizations.
       mutator.read(new ByteArrayInputStream(copyToArray(data, size)));
-      mutator.mutate(seed);
+      mutator.mutate(seed, controlledMaxSize);
     }
   }
 
@@ -391,7 +396,8 @@ public final class FuzzTargetRunner {
       mutator.crossOver(
           new ByteArrayInputStream(copyToArray(data1, size1)),
           new ByteArrayInputStream(copyToArray(data2, size2)),
-          seed);
+          seed,
+          controlledMaxSize);
     } else {
       mutate(data1, size1, seed);
     }

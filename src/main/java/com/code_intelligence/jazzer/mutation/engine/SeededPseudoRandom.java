@@ -29,23 +29,16 @@ public final class SeededPseudoRandom implements PseudoRandom {
   // We use SplittableRandom instead of Random since it doesn't incur unnecessary synchronization
   // overhead and uses a much better RNG under the hood that can generate all long values.
   private final SplittableRandom random;
-  private static int controlledMaxSize = 4;
-  private static int lastGrow = 0;
+  private int controlledMaxSize = 4;
 
   public SeededPseudoRandom(long seed) {
     this(seed, Integer.MAX_VALUE);
-    controlledMaxSize = 100;
+    controlledMaxSize = Integer.MAX_VALUE;
   }
 
-  public SeededPseudoRandom(long seed, int runs) {
+  public SeededPseudoRandom(long seed, int controlledMaxSize) {
     this.random = new SplittableRandom(seed);
-    if ((runs - lastGrow) > 100 * fastLog(controlledMaxSize)) {
-      controlledMaxSize =
-          (int)
-              Math.min(
-                  Integer.MAX_VALUE, (long) controlledMaxSize + (long) fastLog(controlledMaxSize));
-      lastGrow = runs;
-    }
+    this.controlledMaxSize = controlledMaxSize;
   }
 
   private static int fastLog(int x) {
@@ -234,8 +227,13 @@ public final class SeededPseudoRandom implements PseudoRandom {
 
   @Override
   public int growBy(int currentSize, int maxSize) {
-    maxSize = Math.max(Math.min(maxSize, controlledMaxSize), currentSize + 1);
-    return Math.max(1, (maxSize - currentSize) / 2);
+    maxSize = Math.min(maxSize, controlledMaxSize);
+    return (maxSize - currentSize) / 2;
+  }
+
+  @Override
+  public int controlledMaxSize() {
+    return controlledMaxSize;
   }
 
   @Override

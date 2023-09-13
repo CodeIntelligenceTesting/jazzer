@@ -32,7 +32,7 @@ fuzzer_benchmark(
         "--experimental_mutator",
         "-use_value_profile=1",
     ],
-    max_runs = 55000,
+    max_runs = 10000000,
     num_seeds = 15,
     target_class = "com.example.StructuredMutatorMazeFuzzer",
     deps = [

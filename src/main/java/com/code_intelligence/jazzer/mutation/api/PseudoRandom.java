@@ -107,6 +107,8 @@ public interface PseudoRandom {
    */
   int growBy(int currentSize, int maxSize);
 
+  int controlledMaxSize();
+
   /**
    * @return a random value in the closed range [1, size - 1] that is biased towards being small.
    */

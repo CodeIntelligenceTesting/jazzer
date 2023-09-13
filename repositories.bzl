@@ -193,14 +193,18 @@ def jazzer_dependencies(android = False):
         url = "https://github.com/jacoco/jacoco/archive/refs/tags/v0.8.9.tar.gz",
     )
 
-    maybe(
-        http_archive,
+    native.local_repository(
         name = "jazzer_libfuzzer",
-        build_file = Label("//third_party:libFuzzer.BUILD"),
-        sha256 = "200b32c897b1171824462706f577d7f1d6175da602eccfe570d2dceeac11d490",
-        strip_prefix = "llvm-project-jazzer-2023-04-25/compiler-rt/lib/fuzzer",
-        url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/refs/tags/2023-04-25.tar.gz",
+        path = "../llvm-project-jazzer/compiler-rt/lib/fuzzer",
     )
+    #    maybe(
+    #        http_archive,
+    #        name = "jazzer_libfuzzer",
+    #        build_file = Label("//third_party:libFuzzer.BUILD"),
+    #        sha256 = "200b32c897b1171824462706f577d7f1d6175da602eccfe570d2dceeac11d490",
+    #        strip_prefix = "llvm-project-jazzer-2023-04-25/compiler-rt/lib/fuzzer",
+    #        url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/refs/tags/2023-04-25.tar.gz",
+    #    )
 
     if android:
         maybe(

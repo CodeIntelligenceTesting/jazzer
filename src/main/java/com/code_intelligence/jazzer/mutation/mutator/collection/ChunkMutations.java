@@ -213,7 +213,7 @@ final class ChunkMutations {
       if (c.size() > minSize) {
         actions.add(DELETE_CHUNK);
       }
-      if (c.size() < maxSize) {
+      if (c.size() < Math.min(maxSize, prng.controlledMaxSize())) {
         actions.add(INSERT_CHUNK);
       }
       if (!c.isEmpty()) {
