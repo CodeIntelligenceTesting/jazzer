@@ -21,6 +21,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import com.code_intelligence.jazzer.junit.Lifecycle;
 import com.example.PerExecutionLifecycleFuzzTest.LifecycleCallbacks1;
 import com.example.PerExecutionLifecycleFuzzTest.LifecycleCallbacks2;
 import com.example.PerExecutionLifecycleFuzzTest.LifecycleCallbacks3;
@@ -79,7 +80,7 @@ class PerExecutionLifecycleFuzzTest {
     throw new AssertionError("This test should not be executed");
   }
 
-  @FuzzTest(maxExecutions = RUNS)
+  @FuzzTest(maxExecutions = RUNS, lifecycle = Lifecycle.PER_EXECUTION)
   void lifecycleFuzz(byte[] data) {
     events.add("lifecycleFuzz");
     assertThat(beforeEachCalledOnInstance).isTrue();
