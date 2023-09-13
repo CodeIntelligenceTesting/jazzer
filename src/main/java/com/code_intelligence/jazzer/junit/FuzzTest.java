@@ -131,7 +131,7 @@ public @interface FuzzTest {
    * <p>During regression testing, fuzz tests always go through the full JUnit lifecycle for every
    * execution regardless of the value of this option.
    */
-  Lifecycle lifecycle() default Lifecycle.PER_EXECUTION;
+  Lifecycle lifecycle() default Lifecycle.PER_TEST;
 }
 
 // Internal use only.
