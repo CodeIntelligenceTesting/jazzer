@@ -1,4 +1,4 @@
-name: Release
+name: Pre-Release
 
 on:
   workflow_dispatch:
@@ -90,7 +90,6 @@ jobs:
     needs: merge_jars
 
     environment:
-      # Run in 'Deploy' environment which will make this step require a manual start
       name: Deploy
 
     steps:
@@ -115,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write # for creating releases (?TODO necessary)
+      contents: write # for creating releases
 
     steps:
       - name: checkout
