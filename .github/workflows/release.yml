@@ -20,3 +20,82 @@ jobs:
 
       - name: Push docker containers
         run: docker/push_all.sh
+
+  generate_docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Build documentation
+        run: |
+          bazel build //deploy:jazzer-docs //deploy:jazzer-api-docs //deploy:jazzer-junit-docs
+          cp $(bazel cquery --output=files //deploy:jazzer-docs) ./jazzer-docs.jar
+          cp $(bazel cquery --output=files //deploy:jazzer-api-docs) ./jazzer-api-docs.jar
+          cp $(bazel cquery --output=files //deploy:jazzer-junit-docs) ./jazzer-junit-docs.jar
+
+      - name: Upload jars
+        uses: actions/upload-artifact@v3
+        with:
+          name: jazzer_docs_jars
+          path: |
+            jazzer-docs.jar
+            jazzer-api-docs.jar
+            jazzer-junit-docs.jar
+          if-no-files-found: error
+
+  update_docs:
+    runs-on: ubuntu-latest
+    needs: generate_docs
+
+    environment:
+      name: Deploy
+
+    steps:
+      - name: checkout docs
+        uses: actions/checkout@v3
+        with:
+          repository: 'CodeIntelligenceTesting/jazzer-docs'
+          ssh-key: "${{ secrets.JAZZER_DOCS_SSH_KEY_PRIVATE }}"
+
+      - name: Download jar
+        uses: actions/download-artifact@v3
+        with:
+          name: jazzer_docs_jars
+          path: .
+
+      - name: Setup git
+        run: |
+          git config user.email "info@code-intelligence.com"
+          git config user.name "Jazzer release pipeline"
+
+      - name: Extract API docs jar
+        run: |
+          git rm -rf jazzer-api
+          mkdir jazzer-api
+          unzip jazzer-api-docs.jar -d jazzer-api
+          git add jazzer-api
+          # Do not fail if no changes to commit
+          # https://stackoverflow.com/questions/8123674/how-to-git-commit-nothing-without-an-error
+          git diff-index --quiet HEAD || git commit -m "Automated update: jazzer-api docs"
+
+      - name: Extract Jazzer docs jar
+        run: |
+          git rm -rf jazzer
+          mkdir jazzer
+          unzip jazzer-docs.jar -d jazzer
+          git add jazzer
+          git diff-index --quiet HEAD || git commit -m "Automated update: jazzer docs"
+
+      - name: Extract JUnit docs jar
+        run: |
+          git rm -rf jazzer-junit
+          mkdir jazzer-junit
+          unzip jazzer-junit-docs.jar -d jazzer-junit
+          git add jazzer-junit
+          git diff-index --quiet HEAD || git commit -m "Automated update: jazzer-junit docs"
+
+      - name: Push changes
+        run: |
+          git push
