@@ -70,36 +70,11 @@ Run `./format.sh` to format all source files in the way enforced by the "Check f
 
 ## Releasing (CI employees only)
 
-Requires an account on [Sonatype](https://issues.sonatype.org) with access to the `com.code-intelligence` group as well as a YubiKey with the signing key.
-
-### One-time setup
-
-1. Install GPG prerequisites via `sudo apt-get install gnupg2 gnupg-agent scdaemon pcscd`.
-2. Execute `mkdir -p ~/.gnupg && echo use-agent >> ~/.gnupg/gpg.conf` to enable GPG's smart card support.
-3. Execute `cat deploy/maven.pub | gpg --import` to import the public key used for Maven signatures
-4. Plug in the YubiKey and execute `gpg --card-status` to generate a key stub.
-   If you see a `No such device` error, retry after executing `killall gpg-agent; killall pcscd` to remove existing locks on the YubiKey.
-
-### Per release
-
 1. Update `JAZZER_VERSION` in [`maven.bzl`](maven.bzl).
-2. Create a release, using the auto-generated changelog as a base for the release notes.
-3. Trigger the "Release" GitHub Actions workflow for the tag.
-   This builds release archives for GitHub as well as the multi-architecture jar for the `com.code-intelligence:jazzer` Maven artifact.
-4. Create a GitHub release and upload the contents of the `jazzer_releases` artifact from the workflow run.
-5. Check out the tag locally and, with the YubiKey plugged in, run `bazel run //deploy` with the following environment variables to upload the Maven artifacts:
-    * `JAZZER_JAR_PATH`: local path of the multi-architecture `jazzer.jar` contained in the `jazzer` artifact of the "Release" workflow
-    * `MAVEN_USER`: username on https://oss.sonatype.org
-    * `MAVEN_PASSWORD`: password on https://oss.sonatype.org
-
-   The YubiKey blinks repeatedly and needs a touch to confirm each individual signature.
-6. Log into https://oss.sonatype.org, select both staging repositories and "Close" them.
+2. Trigger the "Prerelease" GitHub Actions workflow for the branch where you want to do the release:
+    * `main` for major and minor releases
+    * An appropriate release branch for patch releases
+3. Wait for the workflow to finish (about 10 minutes)
+4. When successful and happy with the results, log into https://oss.sonatype.org, select both staging repositories and "Close" them.
    Wait and refresh, then select them again and "Release" them.
-7. Locally, with Docker credentials available, run `docker/push_all.sh` to build and push the `cifuzz/jazzer` and `cifuzz/jazzer-autofuzz` Docker images.
-
-### Updating the hosted javadocs
-
-Javadocs are hosted at https://codeintelligencetesting.github.io/jazzer-docs, which is populated from https://github.com/CodeIntelligenceTesting/jazzer-docs.
-
-To update the docs after a release with API changes, replace the contents of the `jazzer`, `jazzer-api`, and `jazzer-junit` subdirectories of `jazzer-docs` with the extracted contents of the `//deploy:jazzer-docs`, `//deploy:jazzer-api-docs`, and `//deploy:jazzer-junit-docs` targets, respectively.
-Then commit and push to have the docs published automatically (can take about a few minutes to appear).
+5. Release the draft Github release. This will automatically create a tag, push the docker images and deploy the docs (can take about a few minutes to appear at [jazzer-docs]( https://codeintelligencetesting.github.io/jazzer-docs)).
