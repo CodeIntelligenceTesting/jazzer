@@ -78,7 +78,7 @@ bazel run --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}
   //deploy:jazzer-api.publish
 MAVEN_REPO="$MAVEN_REPO" GPG_SIGN="true" MAVEN_USER="$MAVEN_USER" MAVEN_PASSWORD="$MAVEN_PASSWORD" \
   bazel run @rules_jvm_external//private/tools/java/com/github/bazelbuild/rules_jvm_external/maven:MavenPublisher -- \
-  "$JAZZER_COORDINATES" "$JAZZER_POM_PATH" "$JAZZER_JAR_PATH" "$JAZZER_SOURCES_PATH" "$JAZZER_DOCS_PATH"
+  "$JAZZER_COORDINATES" "$JAZZER_POM_PATH" "$JAZZER_JAR_PATH" "sources=${JAZZER_SOURCES_PATH},javadoc=${JAZZER_DOCS_PATH}"
 bazel run --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}" \
   --define "maven_password=${MAVEN_PASSWORD}" --define gpg_sign=true \
   //deploy:jazzer-junit.publish
