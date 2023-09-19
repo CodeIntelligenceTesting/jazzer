@@ -78,6 +78,7 @@ java_library(
         "//src/test/java/com/code_intelligence/jazzer/driver:__pkg__",
     ],
     deps = [
+        ":libfuzzer_lifecycle_methods_invoker",
         ":lifecycle_methods_invoker",
         ":opt",
         "//src/main/java/com/code_intelligence/jazzer/api",

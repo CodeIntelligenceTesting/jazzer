@@ -18,16 +18,14 @@ package com.code_intelligence.jazzer.driver;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import java.lang.reflect.Method;
-import java.util.concurrent.Callable;
 
 public class FuzzTargetHolder {
-  public static FuzzTarget autofuzzFuzzTarget(Callable<Object> newInstance) {
+  public static FuzzTarget autofuzzFuzzTarget(LifecycleMethodsInvoker lifecycleMethodsInvoker) {
     try {
       Method fuzzerTestOneInput =
           com.code_intelligence.jazzer.autofuzz.FuzzTarget.class.getMethod(
               "fuzzerTestOneInput", FuzzedDataProvider.class);
-      return new FuzzTargetHolder.FuzzTarget(
-          fuzzerTestOneInput, newInstance, LifecycleMethodsInvoker.NOOP);
+      return new FuzzTargetHolder.FuzzTarget(fuzzerTestOneInput, lifecycleMethodsInvoker);
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException(e);
     }
@@ -35,26 +33,18 @@ public class FuzzTargetHolder {
 
   public static final FuzzTarget AUTOFUZZ_FUZZ_TARGET =
       autofuzzFuzzTarget(
-          () -> {
-            com.code_intelligence.jazzer.autofuzz.FuzzTarget.fuzzerInitialize(
-                Opt.targetArgs.get().toArray(new String[0]));
-            return null;
-          });
+          LibFuzzerLifecycleMethodsInvoker.of(
+              com.code_intelligence.jazzer.autofuzz.FuzzTarget.class));
 
   /** The fuzz target that {@link FuzzTargetRunner} should fuzz. */
   public static FuzzTarget fuzzTarget;
 
   public static class FuzzTarget {
     public final Method method;
-    public final Callable<Object> newInstance;
     public final LifecycleMethodsInvoker lifecycleMethodsInvoker;
 
-    public FuzzTarget(
-        Method method,
-        Callable<Object> newInstance,
-        LifecycleMethodsInvoker lifecycleMethodsInvoker) {
+    public FuzzTarget(Method method, LifecycleMethodsInvoker lifecycleMethodsInvoker) {
       this.method = method;
-      this.newInstance = newInstance;
       this.lifecycleMethodsInvoker = lifecycleMethodsInvoker;
     }
 

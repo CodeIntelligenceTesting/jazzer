@@ -23,7 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-class LibFuzzerLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
+final class LibFuzzerLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
   private static final String FUZZER_INITIALIZE = "fuzzerInitialize";
   private static final String FUZZER_TEAR_DOWN = "fuzzerTearDown";
 
@@ -74,6 +74,9 @@ class LibFuzzerLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
   public void beforeEachExecution() {}
 
   @Override
+  public void afterEachExecution() {}
+
+  @Override
   public void afterLastExecution() throws Throwable {
     if (fuzzerTearDown.isPresent()) {
       // Only preserved for backwards compatibility.
@@ -84,5 +87,10 @@ class LibFuzzerLifecycleMethodsInvoker implements LifecycleMethodsInvoker {
         throw e.getCause();
       }
     }
+  }
+
+  @Override
+  public Object getTestClassInstance() {
+    return null;
   }
 }

@@ -23,9 +23,10 @@ import static java.util.stream.Collectors.toList;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.jazzer.junit.Lifecycle;
-import com.example.PerExecutionLifecycleFuzzTest.LifecycleCallbacks1;
-import com.example.PerExecutionLifecycleFuzzTest.LifecycleCallbacks2;
-import com.example.PerExecutionLifecycleFuzzTest.LifecycleCallbacks3;
+import com.example.PerExecutionLifecycleWithFindingFuzzTest.LifecycleCallbacks1;
+import com.example.PerExecutionLifecycleWithFindingFuzzTest.LifecycleCallbacks2;
+import com.example.PerExecutionLifecycleWithFindingFuzzTest.LifecycleCallbacks3;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,15 +45,14 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@ExtendWith(PerExecutionLifecycleFuzzTest.LifecycleInstancePostProcessor.class)
+@ExtendWith(PerExecutionLifecycleWithFindingFuzzTest.LifecycleInstancePostProcessor.class)
 @ExtendWith(LifecycleCallbacks1.class)
 @ExtendWith(LifecycleCallbacks2.class)
 @ExtendWith(LifecycleCallbacks3.class)
-class PerExecutionLifecycleFuzzTest {
+class PerExecutionLifecycleWithFindingFuzzTest {
   private static final ArrayList<String> events = new ArrayList<>();
   private static final long RUNS = 3;
   private static int nextInstanceId = 1;
-
   private final int instanceId = nextInstanceId++;
 
   @BeforeAll
@@ -87,8 +87,12 @@ class PerExecutionLifecycleFuzzTest {
   }
 
   @FuzzTest(maxExecutions = RUNS, lifecycle = Lifecycle.PER_EXECUTION)
-  void lifecycleFuzz(byte[] data) {
+  void lifecycleFuzz(byte[] data) throws IOException {
     addEvent("lifecycleFuzz");
+    if (data.length != 0) {
+      throw new IOException(
+          "Planted finding on first non-trivial input (second execution during fuzzing)");
+    }
   }
 
   @AfterEach
@@ -151,11 +155,10 @@ class PerExecutionLifecycleFuzzTest {
       firstFuzzingInstanceId++;
     }
     if (isFuzzingFromJUnit || isFuzzingFromCommandLine) {
-      // See the comment in JUnitLifecycleMethodsInvoker#beforeFirstExecution() for an explanation
-      // of why we see the lifecycle events on firstFuzzingInstanceId.
       expectedEvents.add("postProcessTestInstance on " + firstFuzzingInstanceId);
       expectedEvents.addAll(expectedBeforeEachEvents(firstFuzzingInstanceId));
-      for (int i = 1; i <= RUNS; i++) {
+      // The fuzz test fails during the second run.
+      for (int i = 1; i <= 2; i++) {
         int expectedId = firstFuzzingInstanceId + i;
         expectedEvents.add("postProcessTestInstance on " + expectedId);
         expectedEvents.addAll(expectedBeforeEachEvents(expectedId));
@@ -185,7 +188,7 @@ class PerExecutionLifecycleFuzzTest {
     public void postProcessTestInstance(Object o, ExtensionContext extensionContext) {
       assertThat(extensionContext.getTestInstance()).isEmpty();
       assertThat(extensionContext.getTestInstances()).isEmpty();
-      ((PerExecutionLifecycleFuzzTest) o).addEvent("postProcessTestInstance");
+      ((PerExecutionLifecycleWithFindingFuzzTest) o).addEvent("postProcessTestInstance");
     }
   }
 
@@ -193,14 +196,14 @@ class PerExecutionLifecycleFuzzTest {
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
       assertConsistentTestInstances(extensionContext);
-      ((PerExecutionLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+      ((PerExecutionLifecycleWithFindingFuzzTest) extensionContext.getRequiredTestInstance())
           .addEvent("beforeEachCallback1");
     }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) {
       assertConsistentTestInstances(extensionContext);
-      ((PerExecutionLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+      ((PerExecutionLifecycleWithFindingFuzzTest) extensionContext.getRequiredTestInstance())
           .addEvent("afterEachCallback1");
     }
   }
@@ -209,14 +212,14 @@ class PerExecutionLifecycleFuzzTest {
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
       assertConsistentTestInstances(extensionContext);
-      ((PerExecutionLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+      ((PerExecutionLifecycleWithFindingFuzzTest) extensionContext.getRequiredTestInstance())
           .addEvent("beforeEachCallback2");
     }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) {
       assertConsistentTestInstances(extensionContext);
-      ((PerExecutionLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+      ((PerExecutionLifecycleWithFindingFuzzTest) extensionContext.getRequiredTestInstance())
           .addEvent("afterEachCallback2");
     }
   }
@@ -225,14 +228,14 @@ class PerExecutionLifecycleFuzzTest {
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
       assertConsistentTestInstances(extensionContext);
-      ((PerExecutionLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+      ((PerExecutionLifecycleWithFindingFuzzTest) extensionContext.getRequiredTestInstance())
           .addEvent("beforeEachCallback3");
     }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) {
       assertConsistentTestInstances(extensionContext);
-      ((PerExecutionLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+      ((PerExecutionLifecycleWithFindingFuzzTest) extensionContext.getRequiredTestInstance())
           .addEvent("afterEachCallback3");
     }
   }

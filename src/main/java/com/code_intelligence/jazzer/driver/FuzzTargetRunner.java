@@ -118,8 +118,6 @@ public final class FuzzTargetRunner {
   private static final MethodHandle fuzzTargetMethod;
   private static final LifecycleMethodsInvoker lifecycleMethodsInvoker;
   private static final boolean useFuzzedDataProvider;
-  // Reused in every iteration analogous to JUnit's PER_CLASS lifecycle.
-  private static final Object fuzzTargetInstance;
   private static final ArgumentsMutator mutator;
   private static final ReproducerTemplate reproducerTemplate;
   private static Predicate<Throwable> findingHandler;
@@ -149,7 +147,6 @@ public final class FuzzTargetRunner {
     JazzerInternal.onFuzzTargetReady(fuzzTargetClass.getName());
 
     try {
-      fuzzTargetInstance = fuzzTarget.newInstance.call();
       lifecycleMethodsInvoker.beforeFirstExecution();
     } catch (Throwable t) {
       Log.finding(t);
@@ -231,20 +228,41 @@ public final class FuzzTargetRunner {
       data = copyToArray(dataPtr, dataLength);
       argument = data;
     }
+    Object fuzzTargetInstance;
     try {
       lifecycleMethodsInvoker.beforeEachExecution();
-
-      if (useExperimentalMutator) {
-        // No need to detach as we are currently reading in the mutator state from bytes in every
-        // iteration.
-        mutator.invoke(fuzzTargetInstance, false);
-      } else if (fuzzTargetInstance == null) {
-        fuzzTargetMethod.invoke(argument);
-      } else {
-        fuzzTargetMethod.invoke(fuzzTargetInstance, argument);
-      }
     } catch (Throwable uncaughtFinding) {
       finding = uncaughtFinding;
+    }
+    // Do not insert code here. After beforeEachExecution has completed without a finding, we should
+    // always enter the try block that calls afterEachExecution in finally.
+    if (finding == null) {
+      try {
+        fuzzTargetInstance = lifecycleMethodsInvoker.getTestClassInstance();
+        if (useExperimentalMutator) {
+          // No need to detach as we are currently reading in the mutator state from bytes in every
+          // iteration.
+          mutator.invoke(fuzzTargetInstance, false);
+        } else if (fuzzTargetInstance == null) {
+          fuzzTargetMethod.invoke(argument);
+        } else {
+          fuzzTargetMethod.invoke(fuzzTargetInstance, argument);
+        }
+      } catch (Throwable uncaughtFinding) {
+        finding = uncaughtFinding;
+      } finally{
+        try {
+          lifecycleMethodsInvoker.afterEachExecution();
+        } catch (Throwable t) {
+          if (finding != null) {
+            // We already have a finding and do not know whether the fuzz target is in an expected
+            // state, so report this as a warning rather than an error or finding.
+            Log.warn("Failed to run lifecycle method", t);
+          } else {
+            finding = t;
+          }
+        }
+      }
     }
 
     // When using libFuzzer's -merge flag, only the coverage of the current input is relevant, not
