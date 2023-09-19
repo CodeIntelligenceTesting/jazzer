@@ -316,7 +316,7 @@ public final class FuzzTargetRunner {
     // that satisfies the same purpose.
     // It also doesn't support the experimental mutator yet as that requires implementing Java code
     // generation for mutators.
-    if (fuzzTargetInstance == null && !useExperimentalMutator) {
+    if (findingHandler == null && !useExperimentalMutator) {
       dumpReproducer(data);
     }
 
