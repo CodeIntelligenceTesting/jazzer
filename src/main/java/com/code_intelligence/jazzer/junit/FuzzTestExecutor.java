@@ -14,15 +14,18 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import static com.code_intelligence.jazzer.driver.FuzzTargetHolder.autofuzzFuzzTarget;
 import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
+import com.code_intelligence.jazzer.driver.LifecycleMethodsInvoker;
 import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.driver.junit.ExitCodeException;
 import java.io.File;
@@ -39,7 +42,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -333,28 +335,29 @@ class FuzzTestExecutor {
       SeedSerializer seedSerializer,
       Lifecycle lifecycle) {
     if (seedSerializer instanceof AutofuzzSeedSerializer) {
-      FuzzTargetHolder.fuzzTarget =
-          FuzzTargetHolder.autofuzzFuzzTarget(
-              () -> {
-                // Provide an empty throws declaration to prevent autofuzz from
-                // ignoring the defined test exceptions. All exceptions in tests
-                // should cause them to fail.
-                Map<Executable, Class<?>[]> throwsDeclarations = new HashMap<>(1);
-                throwsDeclarations.put(invocationContext.getExecutable(), new Class[0]);
+      if (lifecycle != Lifecycle.PER_TEST) {
+        throw new IllegalArgumentException(
+            "Values for @FuzzTest#lifecycle other than Lifecycle.PER_TEST are not supported with "
+                + "Autofuzz. Either use Lifecycle.PER_TEST or modify your test to accept a "
+                + "FuzzedDataProvider parameter.");
+      }
+      Map<Executable, Class<?>[]> throwsDeclarations = new HashMap<>(1);
+      throwsDeclarations.put(invocationContext.getExecutable(), new Class[0]);
 
-                com.code_intelligence.jazzer.autofuzz.FuzzTarget.setTarget(
-                    new Executable[] {invocationContext.getExecutable()},
-                    invocationContext.getTarget().get(),
-                    invocationContext.getExecutable().toString(),
-                    Collections.emptySet(),
-                    throwsDeclarations);
-                return null;
-              });
+      // Provide an empty throws declaration to prevent autofuzz from
+      // ignoring the defined test exceptions. All exceptions in tests
+      // should cause them to fail.
+      com.code_intelligence.jazzer.autofuzz.FuzzTarget.setTarget(
+          new Executable[] {invocationContext.getExecutable()},
+          invocationContext.getTarget().get(),
+          invocationContext.getExecutable().toString(),
+          emptySet(),
+          throwsDeclarations);
+      FuzzTargetHolder.fuzzTarget = autofuzzFuzzTarget(LifecycleMethodsInvoker.noop(null));
     } else {
       FuzzTargetHolder.fuzzTarget =
           new FuzzTargetHolder.FuzzTarget(
               invocationContext.getExecutable(),
-              () -> invocationContext.getTarget().get(),
               JUnitLifecycleMethodsInvoker.of(extensionContext, lifecycle));
     }
 

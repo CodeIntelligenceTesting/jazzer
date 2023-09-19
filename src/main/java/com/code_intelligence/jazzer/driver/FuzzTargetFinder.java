@@ -105,6 +105,6 @@ class FuzzTargetFinder {
       fuzzTargetMethod = dataFuzzTarget.orElseGet(bytesFuzzTarget::get);
     }
 
-    return new FuzzTarget(fuzzTargetMethod, () -> null, LibFuzzerLifecycleMethodsInvoker.of(clazz));
+    return new FuzzTarget(fuzzTargetMethod, LibFuzzerLifecycleMethodsInvoker.of(clazz));
   }
 }

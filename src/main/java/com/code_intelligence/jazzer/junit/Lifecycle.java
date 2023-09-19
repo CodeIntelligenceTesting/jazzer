@@ -33,20 +33,24 @@ public enum Lifecycle {
    * Fuzz tests with this lifecycle go through the JUnit test method lifecycle once for every test
    * method execution during fuzzing, i.e., per-test lifecycle methods such as {@link
    * org.junit.jupiter.api.BeforeEach} methods are executed before each individual invocation of the
-   * fuzz test method.
+   * fuzz test method and every execution uses its own test class instance.
    *
    * <p>This mode is usually less efficient than {@link Lifecycle#PER_TEST}, but makes it easier to
    * write stateless fuzz tests that interoperate correctly with JUnit extensions used by test
    * frameworks.
    *
-   * <p>Only the following lifecycle methods and extensions are currently supported:
+   * <p>The following lifecycle methods and extensions are currently supported:
    *
    * <ul>
    *   <li>{@link org.junit.jupiter.api.extension.BeforeEachCallback}
+   *   <li>{@link org.junit.jupiter.api.extension.TestInstancePostProcessor}
    *   <li>{@link org.junit.jupiter.api.BeforeEach}
    *   <li>{@link org.junit.jupiter.api.AfterEach}
    *   <li>{@link org.junit.jupiter.api.extension.AfterEachCallback}
    * </ul>
+   *
+   * <p>Note: Lifecycle methods for different test class instances may be invoked concurrently,
+   * which can lead to issues if these methods are using global resources (e.g. file locks).
    */
   PER_EXECUTION,
 }

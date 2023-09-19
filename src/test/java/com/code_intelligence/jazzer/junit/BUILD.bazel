@@ -258,6 +258,26 @@ java_test(
     ]
 ]
 
+java_test(
+    name = "PerExecutionLifecycleWithFindingTest_fuzzing",
+    srcs = ["PerExecutionLifecycleWithFindingTest.java"],
+    env = {
+        "JAZZER_FUZZ": "true",
+    },
+    test_class = "com.code_intelligence.jazzer.junit.PerExecutionLifecycleWithFindingTest",
+    runtime_deps = [
+        "//examples/junit/src/test/java/com/example:ExampleFuzzTests_deploy.jar",
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//examples/junit/src/test/java/com/example:test_successful_exception",
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "@maven//:junit_junit",
+        "@maven//:org_junit_platform_junit_platform_engine",
+        "@maven//:org_junit_platform_junit_platform_testkit",
+    ],
+)
+
 [
     java_test(
         name = "PerTestLifecycleTest" + JAZZER_FUZZ,
