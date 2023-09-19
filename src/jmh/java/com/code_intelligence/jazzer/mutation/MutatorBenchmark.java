@@ -58,7 +58,7 @@ public class MutatorBenchmark {
     @Setup(Level.Iteration)
     public void setUp() throws NoSuchMethodException {
       mutator =
-          ArgumentsMutator.forStaticMethodOrThrow(
+          ArgumentsMutator.forMethodOrThrow(
               MutatorBenchmark.class.getMethod("fuzzMinimal", List.class));
     }
   }
@@ -70,7 +70,7 @@ public class MutatorBenchmark {
     mutator.init(prng);
     for (int i = 0; i < state.mutations; i++) {
       mutator.mutate(prng);
-      mutator.invoke(true);
+      mutator.invoke(null, true);
     }
   }
 
@@ -88,7 +88,7 @@ public class MutatorBenchmark {
       out.reset();
       mutator.write(out);
       buffer = out.toByteArray();
-      mutator.invoke(false);
+      mutator.invoke(null, false);
     }
   }
 }
