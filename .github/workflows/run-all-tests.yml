@@ -35,17 +35,14 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04, macos-12, windows-2019]
-        jdk: [8, 17]
+        jdk: [8, 21]
         include:
+          - jdk: 21
+            # Workaround for https://github.com/bazelbuild/bazel/issues/14502
+            extra_bazel_args: "--jvmopt=-Djava.security.manager=allow"
           - os: ubuntu-20.04
             arch: "linux"
             bazel_args: "//launcher/android:jazzer_android"
-            cache: "/home/runner/.cache/bazel-disk"
-          - os: ubuntu-20.04
-            jdk: 21-ea
-            # Workaround for https://github.com/bazelbuild/bazel/issues/14502
-            bazel_args: "--jvmopt=-Djava.security.manager=allow"
-            arch: "linux"
             cache: "/home/runner/.cache/bazel-disk"
           - os: macos-12
             arch: "macos-x86_64"
@@ -81,7 +78,7 @@ jobs:
         shell: bash
 
       - name: Build & Test
-        run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} --build_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" --test_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
+        run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=local_jdk_${{ matrix.jdk }} --disk_cache=${{ matrix.cache }} ${{ matrix.bazel_args }} ${{ matrix.extra_bazel_args }} --build_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" --test_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
 
       - name: Copy Bazel log
         if: always()
