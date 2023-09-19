@@ -22,7 +22,6 @@ import static com.code_intelligence.jazzer.mutation.support.Preconditions.requir
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
@@ -42,11 +41,9 @@ import java.io.UncheckedIOException;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Optional;
 
 public final class ArgumentsMutator {
-  private final Object instance;
   private final Method method;
   private final ProductMutator productMutator;
   private Object[] arguments;
@@ -60,8 +57,7 @@ public final class ArgumentsMutator {
    */
   private boolean argumentsExposed;
 
-  private ArgumentsMutator(Object instance, Method method, ProductMutator productMutator) {
-    this.instance = instance;
+  private ArgumentsMutator(Method method, ProductMutator productMutator) {
     this.method = method;
     this.productMutator = productMutator;
   }
@@ -74,16 +70,8 @@ public final class ArgumentsMutator {
         stream(method.getAnnotatedParameterTypes()).map(Object::toString).collect(joining(", ")));
   }
 
-  public static ArgumentsMutator forInstanceMethodOrThrow(Object instance, Method method) {
-    return forInstanceMethod(Mutators.newFactory(), instance, method)
-        .orElseThrow(
-            () ->
-                new IllegalArgumentException(
-                    "Failed to construct mutator for " + prettyPrintMethod(method)));
-  }
-
-  public static ArgumentsMutator forStaticMethodOrThrow(Method method) {
-    return forStaticMethod(Mutators.newFactory(), method)
+  public static ArgumentsMutator forMethodOrThrow(Method method) {
+    return forMethod(Mutators.newFactory(), method)
         .orElseThrow(
             () ->
                 new IllegalArgumentException(
@@ -91,27 +79,10 @@ public final class ArgumentsMutator {
   }
 
   public static Optional<ArgumentsMutator> forMethod(Method method) {
-    return forMethod(Mutators.newFactory(), null, method);
+    return forMethod(Mutators.newFactory(), method);
   }
 
-  public static Optional<ArgumentsMutator> forInstanceMethod(
-      MutatorFactory mutatorFactory, Object instance, Method method) {
-    require(!isStatic(method), "method must not be static");
-    requireNonNull(instance, "instance must not be null");
-    require(
-        method.getDeclaringClass().isInstance(instance),
-        format("instance is a %s, expected %s", instance.getClass(), method.getDeclaringClass()));
-    return forMethod(mutatorFactory, instance, method);
-  }
-
-  public static Optional<ArgumentsMutator> forStaticMethod(
-      MutatorFactory mutatorFactory, Method method) {
-    require(isStatic(method), "method must be static");
-    return forMethod(mutatorFactory, null, method);
-  }
-
-  public static Optional<ArgumentsMutator> forMethod(
-      MutatorFactory mutatorFactory, Object instance, Method method) {
+  public static Optional<ArgumentsMutator> forMethod(MutatorFactory mutatorFactory, Method method) {
     require(method.getParameterCount() > 0, "Can't fuzz method without parameters: " + method);
     for (AnnotatedType parameter : method.getAnnotatedParameterTypes()) {
       validateAnnotationUsage(parameter);
@@ -120,18 +91,13 @@ public final class ArgumentsMutator {
             stream(method.getAnnotatedParameterTypes()).map(mutatorFactory::tryCreate),
             SerializingMutator<?>[]::new)
         .map(MutatorCombinators::mutateProduct)
-        .map(productMutator -> ArgumentsMutator.create(instance, method, productMutator));
+        .map(productMutator -> ArgumentsMutator.create(method, productMutator));
   }
 
-  private static ArgumentsMutator create(
-      Object instance, Method method, ProductMutator productMutator) {
+  private static ArgumentsMutator create(Method method, ProductMutator productMutator) {
     method.setAccessible(true);
 
-    return new ArgumentsMutator(instance, method, productMutator);
-  }
-
-  private static boolean isStatic(Method method) {
-    return Modifier.isStatic(method.getModifiers());
+    return new ArgumentsMutator(method, productMutator);
   }
 
   /**
@@ -203,7 +169,7 @@ public final class ArgumentsMutator {
     productMutator.mutateInPlace(arguments, prng);
   }
 
-  public void invoke(boolean detach) throws Throwable {
+  public void invoke(Object instance, boolean detach) throws Throwable {
     Object[] invokeArguments;
     if (detach) {
       invokeArguments = productMutator.detach(arguments);

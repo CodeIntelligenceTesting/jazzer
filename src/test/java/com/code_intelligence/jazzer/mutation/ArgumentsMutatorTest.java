@@ -48,7 +48,7 @@ class ArgumentsMutatorTest {
     Method method =
         ArgumentsMutatorTest.class.getMethod("fuzzThisFunction", List.class, List.class);
     Optional<ArgumentsMutator> maybeMutator =
-        ArgumentsMutator.forStaticMethod(Mutators.newFactory(), method);
+        ArgumentsMutator.forMethod(Mutators.newFactory(), method);
     assertThat(maybeMutator).isPresent();
     ArgumentsMutator mutator = maybeMutator.get();
 
@@ -77,7 +77,7 @@ class ArgumentsMutatorTest {
 
     fuzzThisFunctionArgument1 = null;
     fuzzThisFunctionArgument2 = null;
-    mutator.invoke(true);
+    mutator.invoke(this, true);
     assertThat(fuzzThisFunctionArgument1).containsExactly(singletonList(true));
     assertThat(fuzzThisFunctionArgument2).containsExactly(false);
 
@@ -106,7 +106,7 @@ class ArgumentsMutatorTest {
 
     fuzzThisFunctionArgument1 = null;
     fuzzThisFunctionArgument2 = null;
-    mutator.invoke(true);
+    mutator.invoke(this, true);
     assertThat(fuzzThisFunctionArgument1).containsExactly(singletonList(false));
     assertThat(fuzzThisFunctionArgument2).containsExactly(false);
 
@@ -139,7 +139,7 @@ class ArgumentsMutatorTest {
 
     fuzzThisFunctionArgument1 = null;
     fuzzThisFunctionArgument2 = null;
-    mutator.invoke(false);
+    mutator.invoke(this, false);
     assertThat(fuzzThisFunctionArgument1).containsExactly(singletonList(true));
     assertThat(fuzzThisFunctionArgument2).containsExactly(false);
   }
@@ -157,7 +157,7 @@ class ArgumentsMutatorTest {
     Method method =
         ArgumentsMutatorTest.class.getMethod("mutableFuzzThisFunction", List.class, List.class);
     Optional<ArgumentsMutator> maybeMutator =
-        ArgumentsMutator.forInstanceMethod(Mutators.newFactory(), this, method);
+        ArgumentsMutator.forMethod(Mutators.newFactory(), method);
     assertThat(maybeMutator).isPresent();
     ArgumentsMutator mutator = maybeMutator.get();
 
@@ -186,7 +186,7 @@ class ArgumentsMutatorTest {
 
     mutableFuzzThisFunctionArgument1 = null;
     mutableFuzzThisFunctionArgument2 = null;
-    mutator.invoke(true);
+    mutator.invoke(this, true);
     assertThat(mutableFuzzThisFunctionArgument1).containsExactly(singletonList(true));
     assertThat(mutableFuzzThisFunctionArgument2).containsExactly(false);
 
@@ -215,7 +215,7 @@ class ArgumentsMutatorTest {
 
     mutableFuzzThisFunctionArgument1 = null;
     mutableFuzzThisFunctionArgument2 = null;
-    mutator.invoke(true);
+    mutator.invoke(this, true);
     assertThat(mutableFuzzThisFunctionArgument1).containsExactly(singletonList(false));
     assertThat(mutableFuzzThisFunctionArgument2).containsExactly(false);
 
@@ -248,7 +248,7 @@ class ArgumentsMutatorTest {
 
     mutableFuzzThisFunctionArgument1 = null;
     mutableFuzzThisFunctionArgument2 = null;
-    mutator.invoke(false);
+    mutator.invoke(this, false);
     assertThat(mutableFuzzThisFunctionArgument1).containsExactly(singletonList(true));
     assertThat(mutableFuzzThisFunctionArgument2).containsExactly(false);
   }
@@ -261,7 +261,7 @@ class ArgumentsMutatorTest {
   void testCrossOver() throws Throwable {
     Method method = ArgumentsMutatorTest.class.getMethod("crossOverFunction", List.class);
     Optional<ArgumentsMutator> maybeMutator =
-        ArgumentsMutator.forInstanceMethod(Mutators.newFactory(), this, method);
+        ArgumentsMutator.forMethod(Mutators.newFactory(), method);
     assertThat(maybeMutator).isPresent();
     ArgumentsMutator mutator = maybeMutator.get();
 

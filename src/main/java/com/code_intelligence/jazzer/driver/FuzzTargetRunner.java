@@ -38,7 +38,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Modifier;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -159,11 +158,7 @@ public final class FuzzTargetRunner {
     }
 
     if (useExperimentalMutator) {
-      if (Modifier.isStatic(fuzzTarget.method.getModifiers())) {
-        mutator = ArgumentsMutator.forStaticMethodOrThrow(fuzzTarget.method);
-      } else {
-        mutator = ArgumentsMutator.forInstanceMethodOrThrow(fuzzTargetInstance, fuzzTarget.method);
-      }
+      mutator = ArgumentsMutator.forMethodOrThrow(fuzzTarget.method);
       Log.info("Using experimental mutator: " + mutator);
     } else {
       mutator = null;
@@ -242,7 +237,7 @@ public final class FuzzTargetRunner {
       if (useExperimentalMutator) {
         // No need to detach as we are currently reading in the mutator state from bytes in every
         // iteration.
-        mutator.invoke(false);
+        mutator.invoke(fuzzTargetInstance, false);
       } else if (fuzzTargetInstance == null) {
         fuzzTargetMethod.invoke(argument);
       } else {
