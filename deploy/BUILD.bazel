@@ -91,6 +91,21 @@ sh_test(
     deps = ["@bazel_tools//tools/bash/runfiles"],
 )
 
+sh_test(
+    name = "jazzer_standalone_version_test",
+    srcs = ["jazzer_version_test.sh"],
+    data = [
+        "//src/main/java/com/code_intelligence/jazzer:jazzer_standalone_deploy.jar",
+        "@bazel_tools//tools/jdk:current_java_runtime",
+    ],
+    env = {
+        "JAVA_EXECPATH": "$(JAVA)",
+        "JAZZER_RLOCATIONPATH": "$(rlocationpath //src/main/java/com/code_intelligence/jazzer:jazzer_standalone_deploy.jar)",
+    },
+    toolchains = ["@bazel_tools//tools/jdk:current_java_runtime"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
 [
     sh_test(
         name = artifact + "_artifact_test",
