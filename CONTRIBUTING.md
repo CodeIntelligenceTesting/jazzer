@@ -70,11 +70,8 @@ Run `./format.sh` to format all source files in the way enforced by the "Check f
 
 ## Releasing (CI employees only)
 
-1. Update `JAZZER_VERSION` in [`maven.bzl`](maven.bzl).
-2. Trigger the "Prerelease" GitHub Actions workflow for the branch where you want to do the release:
-    * `main` for major and minor releases
-    * An appropriate release branch for patch releases
-3. Wait for the workflow to finish (about 10 minutes)
-4. When successful and happy with the results, log into https://oss.sonatype.org, select both staging repositories and "Close" them.
+1. Push a tag of the form `v1.2.3` to trigger the "Prerelease" GitHub Actions workflow.
+2. Wait for the workflow to finish (about 10 minutes)
+3. When successful and happy with the results, log into https://oss.sonatype.org, select all three staging repositories (under "Repositories" -> "Staging" -> `com/code_intelligence`) and "Close" them.
    Wait and refresh, then select them again and "Release" them.
-5. Release the draft Github release. This will automatically create a tag, push the docker images and deploy the docs (can take about a few minutes to appear at [jazzer-docs]( https://codeintelligencetesting.github.io/jazzer-docs)).
+4. Release the draft Github release. This will automatically create a tag, push the docker images and deploy the docs (can take about a few minutes to appear at [jazzer-docs]( https://codeintelligencetesting.github.io/jazzer-docs)).

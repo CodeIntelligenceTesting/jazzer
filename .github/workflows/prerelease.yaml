@@ -2,6 +2,9 @@ name: Pre-Release
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   build_release:
@@ -25,14 +28,13 @@ jobs:
           distribution: zulu
           java-version: 8
 
-      - name: Set Build Buddy config
-        shell: bash
-        run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
-
       - name: Append build settings to .bazelrc
         shell: bash
         run: |
-          echo "build --announce_rc" >> .bazelrc
+          TAG=${{ github.ref_name }}
+          echo "build --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }}" >> .bazelrc
+          echo "build --config=ci" >> .bazelrc
+          echo "build --//deploy:jazzer_version=${TAG#v}" >> .bazelrc
           echo "build:linux --config=toolchain" >> .bazelrc
           echo "build:linux --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux" >> .bazelrc
 
@@ -86,7 +88,9 @@ jobs:
           if-no-files-found: error
 
   maven_predeploy:
-    runs-on: ubuntu-latest
+    # TODO: Our hermetic toolchain doesn't support ubuntu-latest yet and fails with:
+    # external/llvm_toolchain_llvm/bin/clang: error while loading shared libraries: libtinfo.so.5: cannot open shared object file: No such file or directory
+    runs-on: ubuntu-20.04
     needs: merge_jars
 
     environment:
@@ -94,6 +98,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 8
+
+      - name: Append build settings to .bazelrc
+        shell: bash
+        run: |
+          TAG=${{ github.ref_name }}
+          echo "build --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }}" >> .bazelrc
+          echo "build --config=ci" >> .bazelrc
+          echo "build --//deploy:jazzer_version=${TAG#v}" >> .bazelrc
+          echo "build:linux --config=toolchain" >> .bazelrc
+          echo "build:linux --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux" >> .bazelrc
 
       - name: Download merged jar
         uses: actions/download-artifact@v3
@@ -126,18 +146,9 @@ jobs:
           name: jazzer_releases
           path: _releases/
 
-      - name: read version
-        id: read-version
-        run: |
-          echo ::set-output name=version::\
-          $(sed -nr 's/JAZZER_VERSION = "(.*)"/\1/p' maven.bzl)
-        shell: bash
-
       - name: create release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@c9b46fe7aad9f02afd89b12450b780f52dacfb2d
         with:
-          name: v${{ steps.read-version.outputs.version }}
-          tag_name: v${{ steps.read-version.outputs.version }}
           generate_release_notes: true
           draft: true
           files: |

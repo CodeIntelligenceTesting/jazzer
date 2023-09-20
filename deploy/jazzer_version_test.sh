@@ -32,4 +32,4 @@ jazzer=$(rlocation "$JAZZER_RLOCATIONPATH")
 [ -f "$jazzer" ] || exit 1
 jazzer_version_output=$("$java" -jar "$jazzer" --version 2>&1)
 echo "$jazzer_version_output"
-echo "$jazzer_version_output" | tr -d '\n' | grep -q '^Jazzer v[0-9.]*$' || exit 1
+echo "$jazzer_version_output" | tr -d '\n' | grep -q '^Jazzer v0.0.0-dev$' || exit 1

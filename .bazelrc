@@ -80,6 +80,7 @@ build:ci --noslim_profile
 build:ci --experimental_profile_include_target_label
 build:ci --experimental_profile_include_primary_output
 build:ci --nolegacy_important_outputs
+common:ci --announce_rc
 
 # Docker images
 common:docker --config=toolchain

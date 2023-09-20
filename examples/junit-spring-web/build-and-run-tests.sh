@@ -21,11 +21,6 @@ set -e
  bazel build //deploy:all
 )
 
-# Update jazzer version used for building this project in the pom.xml
-JAZZER_VERSION=$(grep -oP '(?<=JAZZER_VERSION = ")[^"]*' ../../maven.bzl)
-# Find line with "<artifactId>jazzer-junit</artifactId>" and replace the version in the next line
-sed -i "/<artifactId>jazzer-junit<\/artifactId>/ {n;s/<version>.*<\/version>/<version>$JAZZER_VERSION<\/version>/}" pom.xml
-
 # Add locally-built Jazzer to the Maven repository
 ./mvnw install:install-file -Dfile=../../bazel-bin/deploy/jazzer-junit-project.jar -DpomFile=../../bazel-bin/deploy/jazzer-junit-pom.xml
 ./mvnw install:install-file -Dfile=../../bazel-bin/deploy/jazzer-project.jar       -DpomFile=../../bazel-bin/deploy/jazzer-pom.xml
