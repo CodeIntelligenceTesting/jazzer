@@ -158,11 +158,11 @@ public class CorpusDirectoryTest {
     assertCrashFileExistsIn(artifactsDirectory);
     assertNoCrashFileExistsIn(baseDir);
     assertNoCrashFileExistsIn(explicitGeneratedCorpus);
-    assertNoCrashFileExistsIn(defaultGeneratedCorpus);
+    // Default generated corpus directory isn't used and thus should not have been created.
+    assertThat(Files.notExists(defaultGeneratedCorpus)).isTrue();
 
     // Verify that corpus files are written to given corpus directory and not generated one.
     assertThat(Files.list(explicitGeneratedCorpus)).isNotEmpty();
-    assertThat(Files.list(defaultGeneratedCorpus)).isEmpty();
   }
 
   @Test
