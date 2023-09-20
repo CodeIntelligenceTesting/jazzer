@@ -72,6 +72,6 @@ Run `./format.sh` to format all source files in the way enforced by the "Check f
 
 1. Push a tag of the form `v1.2.3` to trigger the "Prerelease" GitHub Actions workflow.
 2. Wait for the workflow to finish (about 10 minutes)
-3. When successful and happy with the results, log into https://oss.sonatype.org, select all three staging repositories (under "Repositories" -> "Staging" -> `com/code_intelligence`) and "Close" them.
+3. When successful and happy with the results, log into https://oss.sonatype.org, select all staging repositories (usually one, can be more) under "Staging Repositories" and "Close" them.
    Wait and refresh, then select them again and "Release" them.
 4. Release the draft Github release. This will automatically create a tag, push the docker images and deploy the docs (can take about a few minutes to appear at [jazzer-docs]( https://codeintelligencetesting.github.io/jazzer-docs)).
