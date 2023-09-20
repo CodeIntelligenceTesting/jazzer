@@ -14,7 +14,7 @@
 
 load("@rules_jvm_external//:specs.bzl", "maven")
 
-JAZZER_VERSION = "0.20.1"
+JAZZER_VERSION = "0.21.0"
 JAZZER_COORDINATES = "com.code-intelligence:jazzer:%s" % JAZZER_VERSION
 JAZZER_API_COORDINATES = "com.code-intelligence:jazzer-api:%s" % JAZZER_VERSION
 JAZZER_JUNIT_COORDINATES = "com.code-intelligence:jazzer-junit:%s" % JAZZER_VERSION
