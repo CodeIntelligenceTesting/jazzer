@@ -44,7 +44,7 @@ class ChunkMutationsTest {
     List<Integer> list = Stream.of(1, 2, 3, 4, 5, 6).collect(toList());
 
     try (MockPseudoRandom prng = mockPseudoRandom(2, 3)) {
-      ChunkMutations.deleteRandomChunk(list, 2, prng);
+      ChunkMutations.deleteRandomChunk(list, 2, prng, false);
     }
     assertThat(list).containsExactly(1, 2, 3, 6).inOrder();
   }

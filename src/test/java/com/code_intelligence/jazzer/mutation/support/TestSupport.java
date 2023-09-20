@@ -363,18 +363,8 @@ public final class TestSupport {
     }
 
     @Override
-    public int closedRangeBiasedTowardsSmall(int upperInclusive) {
-      assertThat(upperInclusive).isAtLeast(0);
-
-      assertThat(elements).isNotEmpty();
-      int result = (int) elements.poll();
-      assertThat(result).isAtLeast(0);
-      assertThat(result).isAtMost(upperInclusive);
-      return result;
-    }
-
-    @Override
-    public int closedRangeBiasedTowardsSmall(int lowerInclusive, int upperInclusive) {
+    public int sizeInClosedRange(
+        int lowerInclusive, int upperInclusive, boolean elementsHaveFixedSize) {
       assertThat(lowerInclusive).isAtMost(upperInclusive);
 
       assertThat(elements).isNotEmpty();

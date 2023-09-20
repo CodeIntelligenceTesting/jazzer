@@ -114,7 +114,7 @@ final class ListMutatorFactory extends MutatorFactory {
     public void mutateInPlace(List<T> list, PseudoRandom prng) {
       switch (pickRandomMutationAction(list, minSize, maxSize, prng)) {
         case DELETE_CHUNK:
-          deleteRandomChunk(list, minSize, prng);
+          deleteRandomChunk(list, minSize, prng, elementMutator.hasFixedSize());
           break;
         case INSERT_CHUNK:
           insertRandomChunk(list, maxSize, elementMutator, prng);
@@ -133,10 +133,10 @@ final class ListMutatorFactory extends MutatorFactory {
       // the appropriate mutations on the result.
       switch (pickRandomCrossOverAction(reference, otherReference, maxSize, prng)) {
         case INSERT_CHUNK:
-          insertChunk(reference, otherReference, maxSize, prng);
+          insertChunk(reference, otherReference, maxSize, prng, elementMutator.hasFixedSize());
           break;
         case OVERWRITE_CHUNK:
-          overwriteChunk(reference, otherReference, prng);
+          overwriteChunk(reference, otherReference, prng, elementMutator.hasFixedSize());
           break;
         case CROSS_OVER_CHUNK:
           crossOverChunk(reference, otherReference, elementMutator, prng);

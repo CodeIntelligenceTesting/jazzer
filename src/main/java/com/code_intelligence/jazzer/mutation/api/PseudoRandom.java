@@ -103,16 +103,13 @@ public interface PseudoRandom {
   double closedRange(double lowerInclusive, double upperInclusive);
 
   /**
-   * @return a random value in the closed range [0, upperInclusive] that is heavily biased towards
-   *     being small
+   * Returns random value in the closed range [lowerInclusive, upperInclusive], meant to be used as
+   * the size of a collection or subset thereof.
+   *
+   * @param elementsHaveFixedSize Whether the elements of the collection have a fixed size
+   *     representation.
    */
-  int closedRangeBiasedTowardsSmall(int upperInclusive);
-
-  /**
-   * @return a random value in the closed range [lowerInclusive, upperInclusive] that is heavily
-   *     biased towards being small
-   */
-  int closedRangeBiasedTowardsSmall(int lowerInclusive, int upperInclusive);
+  int sizeInClosedRange(int lowerInclusive, int upperInclusive, boolean elementsHaveFixedSize);
 
   /** Fills the given array with random bytes. */
   void bytes(byte[] bytes);

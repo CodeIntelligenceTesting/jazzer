@@ -214,8 +214,7 @@ public final class SeededPseudoRandom implements PseudoRandom {
     RandomSupport.nextBytes(random, bytes);
   }
 
-  @Override
-  public int closedRangeBiasedTowardsSmall(int upperInclusive) {
+  private int closedRangeBiasedTowardsSmall(int upperInclusive) {
     if (upperInclusive == 0) {
       return 0;
     }
@@ -251,7 +250,8 @@ public final class SeededPseudoRandom implements PseudoRandom {
   }
 
   @Override
-  public int closedRangeBiasedTowardsSmall(int lowerInclusive, int upperInclusive) {
+  public int sizeInClosedRange(
+      int lowerInclusive, int upperInclusive, boolean elementsHaveFixedSize) {
     return lowerInclusive + closedRangeBiasedTowardsSmall(upperInclusive - lowerInclusive);
   }
 
