@@ -194,6 +194,11 @@ final class MapMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public boolean hasFixedSize() {
+      return false;
+    }
+
+    @Override
     public Map<K, V> detach(Map<K, V> value) {
       return value.entrySet().stream()
           .collect(

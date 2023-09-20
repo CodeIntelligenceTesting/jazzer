@@ -99,7 +99,7 @@ final class TypeLibrary {
     return withoutInit(mutator);
   }
 
-  private static boolean isRecursiveField(FieldDescriptor field) {
+  static boolean isRecursiveField(FieldDescriptor field) {
     return containedInDirectedCycle(
         field,
         f -> {

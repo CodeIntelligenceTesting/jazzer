@@ -67,6 +67,11 @@ final class BooleanMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public boolean hasFixedSize() {
+      return true;
+    }
+
+    @Override
     public String toDebugString(Predicate<Debuggable> isInLoop) {
       return "Boolean";
     }

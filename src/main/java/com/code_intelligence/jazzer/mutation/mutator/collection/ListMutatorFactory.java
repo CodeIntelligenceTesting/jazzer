@@ -147,6 +147,11 @@ final class ListMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public boolean hasFixedSize() {
+      return false;
+    }
+
+    @Override
     public List<T> detach(List<T> value) {
       return value.stream()
           .map(elementMutator::detach)

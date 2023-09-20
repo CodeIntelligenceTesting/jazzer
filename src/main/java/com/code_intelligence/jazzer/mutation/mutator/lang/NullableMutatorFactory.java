@@ -110,6 +110,11 @@ final class NullableMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public boolean hasFixedSize() {
+      return mutator.hasFixedSize();
+    }
+
+    @Override
     public T detach(T value) {
       if (value == null) {
         return null;

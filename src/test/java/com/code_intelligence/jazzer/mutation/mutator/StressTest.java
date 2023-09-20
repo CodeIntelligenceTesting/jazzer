@@ -112,46 +112,58 @@ public class StressTest {
   public static Stream<Arguments> stressTestCases() {
     return Stream.of(
         arguments(
-            asAnnotatedType(boolean.class), "Boolean", exactly(false, true), exactly(false, true)),
+            asAnnotatedType(boolean.class),
+            "Boolean",
+            true,
+            exactly(false, true),
+            exactly(false, true)),
         arguments(
             new TypeHolder<@NotNull Boolean>() {}.annotatedType(),
             "Boolean",
+            true,
             exactly(false, true),
             exactly(false, true)),
         arguments(
             new TypeHolder<Boolean>() {}.annotatedType(),
             "Nullable<Boolean>",
+            true,
             exactly(null, false, true),
             exactly(null, false, true)),
         arguments(
             new TypeHolder<@NotNull List<@NotNull Boolean>>() {}.annotatedType(),
             "List<Boolean>",
+            false,
             exactly(emptyList(), singletonList(false), singletonList(true)),
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull List<Boolean>>() {}.annotatedType(),
             "List<Nullable<Boolean>>",
+            false,
             exactly(emptyList(), singletonList(null), singletonList(false), singletonList(true)),
             manyDistinctElements()),
         arguments(
             new TypeHolder<List<@NotNull Boolean>>() {}.annotatedType(),
             "Nullable<List<Boolean>>",
+            false,
             exactly(null, emptyList(), singletonList(false), singletonList(true)),
             distinctElementsRatio(0.30)),
         arguments(
             new TypeHolder<List<Boolean>>() {}.annotatedType(),
             "Nullable<List<Nullable<Boolean>>>",
+            false,
             exactly(
                 null, emptyList(), singletonList(null), singletonList(false), singletonList(true)),
             distinctElementsRatio(0.30)),
         arguments(
             new TypeHolder<@NotNull Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
             "Map<String,String>",
+            false,
             distinctElementsRatio(0.45),
             distinctElementsRatio(0.45)),
         arguments(
             new TypeHolder<Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
             "Nullable<Map<String,String>>",
+            false,
             distinctElementsRatio(0.46),
             distinctElementsRatio(0.48)),
         arguments(
@@ -159,12 +171,14 @@ public class StressTest {
                 @WithSize(max = 3) @NotNull Map<
                     @NotNull Integer, @NotNull Integer>>() {}.annotatedType(),
             "Map<Integer,Integer>",
+            false,
             // Half of all maps are empty, the other half is heavily biased towards special values.
             all(mapSizeInClosedRange(0, 3), distinctElementsRatio(0.2)),
             all(mapSizeInClosedRange(0, 3), manyDistinctElements())),
         arguments(
             new TypeHolder<@NotNull Map<@NotNull Boolean, @NotNull Boolean>>() {}.annotatedType(),
             "Map<Boolean,Boolean>",
+            false,
             // 1 0-element map, 4 1-element maps
             distinctElements(1 + 4),
             // 1 0-element map, 4 1-element maps, 4 2-element maps
@@ -172,6 +186,7 @@ public class StressTest {
         arguments(
             asAnnotatedType(byte.class),
             "Byte",
+            true,
             // init is heavily biased towards special values and only returns a uniformly random
             // value in 1 out of 5 calls.
             all(
@@ -182,6 +197,7 @@ public class StressTest {
         arguments(
             asAnnotatedType(short.class),
             "Short",
+            true,
             // init is heavily biased towards special values and only returns a uniformly random
             // value in 1 out of 5 calls.
             all(
@@ -195,6 +211,7 @@ public class StressTest {
         arguments(
             asAnnotatedType(int.class),
             "Integer",
+            true,
             // init is heavily biased towards special values and only returns a uniformly random
             // value in 1 out of 5 calls.
             all(
@@ -206,6 +223,7 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull @InRange(min = 0) Long>() {}.annotatedType(),
             "Long",
+            true,
             // init is heavily biased towards special values and only returns a uniformly random
             // value in 1 out of 5 calls.
             all(
@@ -218,21 +236,25 @@ public class StressTest {
             new TypeHolder<
                 @NotNull @InRange(max = Integer.MIN_VALUE + 5) Integer>() {}.annotatedType(),
             "Integer",
+            true,
             exactly(rangeClosed(Integer.MIN_VALUE, Integer.MIN_VALUE + 5).boxed().toArray()),
             exactly(rangeClosed(Integer.MIN_VALUE, Integer.MIN_VALUE + 5).boxed().toArray())),
         arguments(
             asAnnotatedType(TestEnumTwo.class),
             "Nullable<Enum<TestEnumTwo>>",
+            true,
             exactly(null, TestEnumTwo.A, TestEnumTwo.B),
             exactly(null, TestEnumTwo.A, TestEnumTwo.B)),
         arguments(
             asAnnotatedType(TestEnumThree.class),
             "Nullable<Enum<TestEnumThree>>",
+            true,
             exactly(null, TestEnumThree.A, TestEnumThree.B, TestEnumThree.C),
             exactly(null, TestEnumThree.A, TestEnumThree.B, TestEnumThree.C)),
         arguments(
             new TypeHolder<@NotNull @FloatInRange(min = 0f) Float>() {}.annotatedType(),
             "Float",
+            true,
             all(
                 distinctElementsRatio(0.45),
                 doesNotContain(Float.NEGATIVE_INFINITY, -Float.MAX_VALUE, -Float.MIN_VALUE),
@@ -249,6 +271,7 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull Float>() {}.annotatedType(),
             "Float",
+            true,
             all(
                 distinctElementsRatio(0.45),
                 contains(
@@ -267,6 +290,7 @@ public class StressTest {
                 @NotNull @FloatInRange(min = -1.0f, max = 1.0f, allowNaN = false)
                 Float>() {}.annotatedType(),
             "Float",
+            true,
             all(
                 distinctElementsRatio(0.45),
                 doesNotContain(
@@ -288,6 +312,7 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull Double>() {}.annotatedType(),
             "Double",
+            true,
             all(
                 distinctElementsRatio(0.45),
                 contains(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY)),
@@ -297,11 +322,13 @@ public class StressTest {
                 @NotNull @DoubleInRange(min = -1.0, max = 1.0, allowNaN = false)
                 Double>() {}.annotatedType(),
             "Double",
+            true,
             all(distinctElementsRatio(0.45), doesNotContain(Double.NaN)),
             all(distinctElementsRatio(0.55), doesNotContain(Double.NaN))),
         arguments(
             new TypeHolder<@NotNull FuzzedDataProvider>() {}.annotatedType(),
             "FuzzedDataProvider",
+            false,
             distinctElementsRatio(0.45),
             distinctElementsRatio(0.45)));
   }
@@ -311,6 +338,7 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull OptionalPrimitiveField3>() {}.annotatedType(),
             "{Builder.Nullable<Boolean>} -> Message",
+            true,
             exactly(
                 OptionalPrimitiveField3.newBuilder().build(),
                 OptionalPrimitiveField3.newBuilder().setSomeField(false).build(),
@@ -322,6 +350,7 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull RepeatedRecursiveMessageField3>() {}.annotatedType(),
             "{Builder.Boolean, WithoutInit(Builder via List<(cycle) -> Message>)} -> Message",
+            false,
             // The message field is recursive and thus not initialized.
             exactly(
                 RepeatedRecursiveMessageField3.getDefaultInstance(),
@@ -330,6 +359,7 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull IntegralField3>() {}.annotatedType(),
             "{Builder.Integer} -> Message",
+            true,
             // init is heavily biased towards special values and only returns a uniformly random
             // value in 1 out of 5 calls.
             all(
@@ -345,6 +375,7 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull RepeatedIntegralField3>() {}.annotatedType(),
             "{Builder via List<Integer>} -> Message",
+            false,
             contains(
                 RepeatedIntegralField3.getDefaultInstance(),
                 RepeatedIntegralField3.newBuilder().addSomeField(0).build(),
@@ -358,16 +389,19 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull BytesField3>() {}.annotatedType(),
             "{Builder.byte[] -> ByteString} -> Message",
+            false,
             manyDistinctElements(),
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull StringField3>() {}.annotatedType(),
             "{Builder.String} -> Message",
+            false,
             manyDistinctElements(),
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull EnumField3>() {}.annotatedType(),
             "{Builder.Enum<TestEnum>} -> Message",
+            true,
             exactly(
                 EnumField3.getDefaultInstance(),
                 EnumField3.newBuilder().setSomeField(TestEnum.VAL2).build()),
@@ -377,6 +411,7 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull EnumFieldRepeated3>() {}.annotatedType(),
             "{Builder via List<Enum<TestEnumRepeated>>} -> Message",
+            false,
             exactly(
                 EnumFieldRepeated3.getDefaultInstance(),
                 EnumFieldRepeated3.newBuilder().addSomeField(TestEnumRepeated.UNASSIGNED).build(),
@@ -386,31 +421,37 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull MapField3>() {}.annotatedType(),
             "{Builder.Map<Integer,String>} -> Message",
+            false,
             distinctElementsRatio(0.46),
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull MessageMapField3>() {}.annotatedType(),
             "{Builder.Map<String,{Builder.Map<Integer,String>} -> Message>} -> Message",
+            false,
             distinctElementsRatio(0.45),
             distinctElementsRatio(0.45)),
         arguments(
             new TypeHolder<@NotNull DoubleField3>() {}.annotatedType(),
             "{Builder.Double} -> Message",
+            true,
             distinctElementsRatio(0.45),
             distinctElementsRatio(0.7)),
         arguments(
             new TypeHolder<@NotNull RepeatedDoubleField3>() {}.annotatedType(),
             "{Builder via List<Double>} -> Message",
+            false,
             distinctElementsRatio(0.2),
             distinctElementsRatio(0.9)),
         arguments(
             new TypeHolder<@NotNull FloatField3>() {}.annotatedType(),
             "{Builder.Float} -> Message",
+            true,
             distinctElementsRatio(0.45),
             distinctElementsRatio(0.7)),
         arguments(
             new TypeHolder<@NotNull RepeatedFloatField3>() {}.annotatedType(),
             "{Builder via List<Float>} -> Message",
+            false,
             distinctElementsRatio(0.20),
             distinctElementsRatio(0.9),
             emptyList()),
@@ -429,6 +470,7 @@ public class StressTest {
                 + " Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>,"
                 + " Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> |"
                 + " Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
+            false,
             manyDistinctElements(),
             manyDistinctElements()),
         arguments(
@@ -450,6 +492,7 @@ public class StressTest {
                 + " Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>,"
                 + " Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> |"
                 + " Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
+            false,
             manyDistinctElements(),
             manyDistinctElements()),
         arguments(
@@ -459,6 +502,7 @@ public class StressTest {
             "{Builder.Nullable<Builder.{Builder.Boolean} -> Message |"
                 + " Builder.{Builder.Nullable<(cycle) -> Message>} -> Message -> Message>} ->"
                 + " Message",
+            false,
             exactly(
                 AnyField3.getDefaultInstance(),
                 AnyField3.newBuilder()
@@ -512,6 +556,7 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull SingleOptionOneOfField3>() {}.annotatedType(),
             "{Builder.Nullable<Boolean>} -> Message",
+            true,
             exactly(
                 SingleOptionOneOfField3.getDefaultInstance(),
                 SingleOptionOneOfField3.newBuilder().setBoolField(false).build(),
@@ -616,12 +661,14 @@ public class StressTest {
   void genericMutatorStressTest(
       AnnotatedType type,
       String mutatorTree,
+      boolean hasFixedSize,
       Consumer<List<Object>> expectedInitValues,
       Consumer<List<Object>> expectedMutatedValues)
       throws IOException {
     validateAnnotationUsage(type);
     SerializingMutator mutator = Mutators.newFactory().createOrThrow(type);
     assertThat(mutator.toString()).isEqualTo(mutatorTree);
+    assertThat(mutator.hasFixedSize()).isEqualTo(hasFixedSize);
 
     // Even with a fallback to mutating map values when no new key can be constructed, the map
     // {false: true, true: false} will not change its equality class when the fallback picks both

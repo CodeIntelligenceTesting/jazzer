@@ -220,6 +220,11 @@ final class ByteArrayMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public boolean hasFixedSize() {
+      return false;
+    }
+
+    @Override
     public String toDebugString(Predicate<Debuggable> isInCycle) {
       return "byte[]";
     }

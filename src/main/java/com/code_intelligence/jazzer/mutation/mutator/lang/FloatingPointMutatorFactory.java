@@ -361,6 +361,11 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
     public String toDebugString(Predicate<Debuggable> isInCycle) {
       return "Float";
     }
+
+    @Override
+    public boolean hasFixedSize() {
+      return true;
+    }
   }
 
   static final class DoubleMutator extends SerializingMutator<Double> {
@@ -621,6 +626,11 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
       long otherMantissa = Double.doubleToRawLongBits(otherValue) & MANTISSA_MASK;
       long bitsWithOtherMantissa = (bits & ~MANTISSA_MASK) | otherMantissa;
       return Double.longBitsToDouble(bitsWithOtherMantissa);
+    }
+
+    @Override
+    public boolean hasFixedSize() {
+      return true;
     }
 
     @Override
