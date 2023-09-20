@@ -155,7 +155,7 @@ final class MapMutatorFactory extends MutatorFactory {
     public void mutateInPlace(Map<K, V> map, PseudoRandom prng) {
       switch (pickRandomMutationAction(map.keySet(), minSize, maxSize, prng)) {
         case DELETE_CHUNK:
-          deleteRandomChunk(map.keySet(), minSize, prng);
+          deleteRandomChunk(map.keySet(), minSize, prng, entriesHaveFixedSize());
           break;
         case INSERT_CHUNK:
           insertRandomChunk(
@@ -180,10 +180,10 @@ final class MapMutatorFactory extends MutatorFactory {
       switch (pickRandomCrossOverAction(
           reference.keySet(), otherReference.keySet(), maxSize, prng)) {
         case INSERT_CHUNK:
-          insertChunk(reference, otherReference, maxSize, prng);
+          insertChunk(reference, otherReference, maxSize, prng, entriesHaveFixedSize());
           break;
         case OVERWRITE_CHUNK:
-          overwriteChunk(reference, otherReference, prng);
+          overwriteChunk(reference, otherReference, prng, entriesHaveFixedSize());
           break;
         case CROSS_OVER_CHUNK:
           crossOverChunk(reference, otherReference, keyMutator, valueMutator, prng);
@@ -191,6 +191,10 @@ final class MapMutatorFactory extends MutatorFactory {
         default:
           // Both maps are empty or could otherwise not be crossed over.
       }
+    }
+
+    private boolean entriesHaveFixedSize() {
+      return keyMutator.hasFixedSize() && valueMutator.hasFixedSize();
     }
 
     @Override

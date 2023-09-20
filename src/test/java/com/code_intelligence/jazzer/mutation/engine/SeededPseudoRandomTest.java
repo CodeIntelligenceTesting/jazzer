@@ -133,10 +133,10 @@ public class SeededPseudoRandomTest {
   void testClosedRangeBiasedTowardsSmall() {
     SeededPseudoRandom prng = new SeededPseudoRandom(1337133371337L);
 
-    assertThrows(IllegalArgumentException.class, () -> prng.closedRangeBiasedTowardsSmall(-1));
-    assertThrows(IllegalArgumentException.class, () -> prng.closedRangeBiasedTowardsSmall(2, 1));
-    assertThat(prng.closedRangeBiasedTowardsSmall(0)).isEqualTo(0);
-    assertThat(prng.closedRangeBiasedTowardsSmall(5, 5)).isEqualTo(5);
+    assertThrows(IllegalArgumentException.class, () -> prng.sizeInClosedRange(2, 1, false));
+    assertThrows(IllegalArgumentException.class, () -> prng.sizeInClosedRange(2, 1, true));
+    assertThat(prng.sizeInClosedRange(5, 5, false)).isEqualTo(5);
+    assertThat(prng.sizeInClosedRange(5, 5, true)).isEqualTo(5);
   }
 
   @Test
@@ -144,7 +144,7 @@ public class SeededPseudoRandomTest {
     int num = 5000000;
     SeededPseudoRandom prng = new SeededPseudoRandom(1337133371337L);
     Map<Integer, Double> frequencies =
-        Stream.generate(() -> prng.closedRangeBiasedTowardsSmall(9))
+        Stream.generate(() -> prng.sizeInClosedRange(0, 9, false))
             .limit(num)
             .collect(
                 groupingBy(i -> i, collectingAndThen(counting(), count -> ((double) count) / num)));

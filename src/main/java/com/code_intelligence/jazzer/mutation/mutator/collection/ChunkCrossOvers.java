@@ -29,17 +29,19 @@ import java.util.Map.Entry;
 final class ChunkCrossOvers {
   private ChunkCrossOvers() {}
 
-  static <T> void insertChunk(List<T> list, List<T> otherList, int maxSize, PseudoRandom prng) {
+  static <T> void insertChunk(
+      List<T> list, List<T> otherList, int maxSize, PseudoRandom prng, boolean hasFixedSize) {
     int maxChunkSize = Math.min(maxSize - list.size(), otherList.size());
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
+    int chunkSize = prng.sizeInClosedRange(1, maxChunkSize, hasFixedSize);
     int fromPos = prng.closedRange(0, otherList.size() - chunkSize);
     int toPos = prng.closedRange(0, list.size());
     List<T> chunk = otherList.subList(fromPos, fromPos + chunkSize);
     list.addAll(toPos, chunk);
   }
 
-  static <T> void overwriteChunk(List<T> list, List<T> otherList, PseudoRandom prng) {
-    onCorrespondingChunks(list, otherList, prng, list::set);
+  static <T> void overwriteChunk(
+      List<T> list, List<T> otherList, PseudoRandom prng, boolean hasFixedSize) {
+    onCorrespondingChunks(list, otherList, prng, list::set, hasFixedSize);
   }
 
   static <T> void crossOverChunk(
@@ -50,7 +52,8 @@ final class ChunkCrossOvers {
         prng,
         (toPos, element) -> {
           list.set(toPos, elementMutator.crossOver(list.get(toPos), element, prng));
-        });
+        },
+        elementMutator.hasFixedSize());
   }
 
   @FunctionalInterface
@@ -59,9 +62,13 @@ final class ChunkCrossOvers {
   }
 
   private static <T> void onCorrespondingChunks(
-      List<T> list, List<T> otherList, PseudoRandom prng, ChunkListElementOperation<T> operation) {
+      List<T> list,
+      List<T> otherList,
+      PseudoRandom prng,
+      ChunkListElementOperation<T> operation,
+      boolean hasFixedSize) {
     int maxChunkSize = Math.min(list.size(), otherList.size());
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
+    int chunkSize = prng.sizeInClosedRange(1, maxChunkSize, hasFixedSize);
     int fromPos = prng.closedRange(0, otherList.size() - chunkSize);
     int toPos = prng.closedRange(0, list.size() - chunkSize);
     List<T> chunk = otherList.subList(fromPos, fromPos + chunkSize);
@@ -71,10 +78,10 @@ final class ChunkCrossOvers {
   }
 
   static <K, V> void insertChunk(
-      Map<K, V> map, Map<K, V> otherMap, int maxSize, PseudoRandom prng) {
+      Map<K, V> map, Map<K, V> otherMap, int maxSize, PseudoRandom prng, boolean hasFixedSize) {
     int originalSize = map.size();
     int maxChunkSize = Math.min(maxSize - originalSize, otherMap.size());
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
+    int chunkSize = prng.sizeInClosedRange(1, maxChunkSize, hasFixedSize);
     int fromChunkOffset = prng.closedRange(0, otherMap.size() - chunkSize);
     Iterator<Entry<K, V>> fromIterator = otherMap.entrySet().iterator();
     for (int i = 0; i < fromChunkOffset; i++) {
@@ -91,7 +98,8 @@ final class ChunkCrossOvers {
     }
   }
 
-  static <K, V> void overwriteChunk(Map<K, V> map, Map<K, V> otherMap, PseudoRandom prng) {
+  static <K, V> void overwriteChunk(
+      Map<K, V> map, Map<K, V> otherMap, PseudoRandom prng, boolean hasFixedSize) {
     onCorrespondingChunks(
         map,
         otherMap,
@@ -105,7 +113,8 @@ final class ChunkCrossOvers {
             Entry<K, V> to = toIterator.next();
             to.setValue(from.getValue());
           }
-        });
+        },
+        hasFixedSize);
   }
 
   static <K, V> void crossOverChunk(
@@ -154,7 +163,8 @@ final class ChunkCrossOvers {
             }
           }
           map.putAll(entriesToAdd);
-        });
+        },
+        keyMutator.hasFixedSize());
   }
 
   private static <K, V> void crossOverChunkValues(
@@ -179,7 +189,8 @@ final class ChunkCrossOvers {
             // through the iterator to be sure.
             toEntry.setValue(newValue);
           }
-        });
+        },
+        valueMutator.hasFixedSize());
   }
 
   @FunctionalInterface
@@ -188,9 +199,13 @@ final class ChunkCrossOvers {
   }
 
   static <K, V> void onCorrespondingChunks(
-      Map<K, V> map, Map<K, V> otherMap, PseudoRandom prng, ChunkMapOperation<K, V> operation) {
+      Map<K, V> map,
+      Map<K, V> otherMap,
+      PseudoRandom prng,
+      ChunkMapOperation<K, V> operation,
+      boolean hasFixedSize) {
     int maxChunkSize = Math.min(map.size(), otherMap.size());
-    int chunkSize = prng.closedRangeBiasedTowardsSmall(1, maxChunkSize);
+    int chunkSize = prng.sizeInClosedRange(1, maxChunkSize, hasFixedSize);
     int fromChunkOffset = prng.closedRange(0, otherMap.size() - chunkSize);
     int toChunkOffset = prng.closedRange(0, map.size() - chunkSize);
     Iterator<Entry<K, V>> fromIterator = otherMap.entrySet().iterator();
