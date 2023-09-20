@@ -125,6 +125,11 @@ class MutatorCombinatorsTest {
                   List<Integer> reference, List<Integer> otherReference, PseudoRandom prng) {}
 
               @Override
+              public boolean hasFixedSize() {
+                return false;
+              }
+
+              @Override
               public String toDebugString(Predicate<Debuggable> isInCycle) {
                 return "List<Integer>";
               }
@@ -190,6 +195,11 @@ class MutatorCombinatorsTest {
               @Override
               public void crossOverInPlace(
                   List<Integer> reference, List<Integer> otherReference, PseudoRandom prng) {}
+
+              @Override
+              public boolean hasFixedSize() {
+                return false;
+              }
 
               @Override
               public String toDebugString(Predicate<Debuggable> isInCycle) {
@@ -285,6 +295,11 @@ class MutatorCombinatorsTest {
                   List<Integer> reference, List<Integer> otherReference, PseudoRandom prng) {}
 
               @Override
+              public boolean hasFixedSize() {
+                return true;
+              }
+
+              @Override
               public String toDebugString(Predicate<Debuggable> isInCycle) {
                 return "List<Integer>";
               }
@@ -308,7 +323,8 @@ class MutatorCombinatorsTest {
                 return null;
               }
             },
-            () -> combine(valueMutator, listMutator));
+            () -> combine(valueMutator, listMutator),
+            false);
 
     assertThat(mutator.toString()).isEqualTo("{Foo.Integer, Foo via List<Integer>}");
 
@@ -365,7 +381,8 @@ class MutatorCombinatorsTest {
                 return null;
               }
             },
-            () -> combine(valueMutator, listMutator));
+            () -> combine(valueMutator, listMutator),
+            false);
 
     Foo foo = new Foo(0, singletonList(0));
     Foo fooOther = new Foo(1, singletonList(1));

@@ -30,6 +30,7 @@ import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapter
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setFieldWithPresence;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setMapField;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.getDefaultInstance;
+import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.isRecursiveField;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.withoutInitIfRecursive;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
@@ -64,6 +65,7 @@ import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
+import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.UnknownFieldSet;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -334,6 +336,11 @@ public final class BuilderMutatorFactory extends MutatorFactory {
             .boxed()
             .collect(toMap(i -> getTypeUrl(getDefaultInstance(anySource.value()[i])), identity()));
 
+    boolean hasFixedSize =
+        stream(anySource.value())
+            .map(TypeLibrary::getDefaultInstance)
+            .map(MessageOrBuilder::getDescriptorForType)
+            .allMatch(BuilderMutatorFactory::hasFixedSize);
     return assemble(
         mutator -> internedMutators.put(new CacheKey(Any.getDescriptor(), anySource), mutator),
         Any.getDefaultInstance()::toBuilder,
@@ -367,7 +374,8 @@ public final class BuilderMutatorFactory extends MutatorFactory {
                                 any.setValue(message.toByteString());
                               });
                         })
-                    .toArray(InPlaceMutator[]::new)));
+                    .toArray(InPlaceMutator[]::new)),
+        hasFixedSize);
   }
 
   private static String getTypeUrl(Message message) {
@@ -466,7 +474,21 @@ public final class BuilderMutatorFactory extends MutatorFactory {
                                     ? new Annotation[0]
                                     : new Annotation[] {anySource},
                                 factory))
-                    .toArray(InPlaceMutator[]::new)));
+                    .toArray(InPlaceMutator[]::new)),
+        hasFixedSize(descriptor));
+  }
+
+  private static boolean hasFixedSize(Descriptor descriptor) {
+    return descriptor.getFields().stream()
+        .noneMatch(
+            field ->
+                field.isMapField()
+                    || field.isRepeated()
+                    || isRecursiveField(field)
+                    || field.getJavaType() == JavaType.STRING
+                    || field.getJavaType() == JavaType.BYTE_STRING
+                    || (field.getJavaType() == JavaType.MESSAGE
+                        && !hasFixedSize(field.getMessageType())));
   }
 
   private static final class CacheKey {

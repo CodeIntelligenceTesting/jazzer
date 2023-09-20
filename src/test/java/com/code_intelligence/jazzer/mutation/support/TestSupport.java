@@ -190,6 +190,12 @@ public final class TestSupport {
     public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
       throw new UnsupportedOperationException();
     }
+
+    @Override
+    public boolean hasFixedSize() {
+      // This value is ignored by MockPseudoRandom.
+      return false;
+    }
   }
 
   private abstract static class AbstractMockMutator<T> extends SerializingMutator<T> {
@@ -213,6 +219,12 @@ public final class TestSupport {
     @Override
     public T crossOver(T value, T otherValue, PseudoRandom prng) {
       return value;
+    }
+
+    @Override
+    public boolean hasFixedSize() {
+      // This value is ignored by MockPseudoRandom.
+      return false;
     }
 
     @Override

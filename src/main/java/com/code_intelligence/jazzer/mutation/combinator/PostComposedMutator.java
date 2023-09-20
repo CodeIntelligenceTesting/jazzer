@@ -62,6 +62,11 @@ abstract class PostComposedMutator<T, R> extends SerializingMutator<R> {
   }
 
   @Override
+  public boolean hasFixedSize() {
+    return mutator.hasFixedSize();
+  }
+
+  @Override
   public final R read(DataInputStream in) throws IOException {
     return map.apply(mutator.read(in));
   }

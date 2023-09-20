@@ -26,6 +26,7 @@ import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.api.ValueMutator;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -40,11 +41,13 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
   private static final int INVERSE_PICK_VALUE_SUPPLIER_FREQUENCY = 100;
 
   private final SerializingMutator[] mutators;
+  private final boolean hasFixedSize;
 
   ProductMutator(SerializingMutator[] mutators) {
     requireNonNullElements(mutators);
     require(mutators.length > 0, "mutators must not be empty");
     this.mutators = Arrays.copyOf(mutators, mutators.length);
+    this.hasFixedSize = stream(mutators).allMatch(ValueMutator::hasFixedSize);
   }
 
   @Override
@@ -122,6 +125,11 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
       }
       reference[i] = crossedOver;
     }
+  }
+
+  @Override
+  public boolean hasFixedSize() {
+    return hasFixedSize;
   }
 
   @Override

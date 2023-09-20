@@ -391,6 +391,11 @@ final class IntegralMutatorFactory extends MutatorFactory {
     }
 
     @Override
+    public boolean hasFixedSize() {
+      return true;
+    }
+
+    @Override
     public T detach(T value) {
       // Always immutable.
       return value;

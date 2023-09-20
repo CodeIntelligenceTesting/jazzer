@@ -88,6 +88,11 @@ public final class MutatorCombinators {
       }
 
       @Override
+      public boolean hasFixedSize() {
+        return mutator.hasFixedSize();
+      }
+
+      @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
         Class<?> owningType =
             TypeResolver.resolveRawArguments(Function.class, getter.getClass())[0];
@@ -119,6 +124,11 @@ public final class MutatorCombinators {
       @Override
       public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
         mutator.crossOverInPlace(map.apply(reference), map.apply(otherReference), prng);
+      }
+
+      @Override
+      public boolean hasFixedSize() {
+        return mutator.hasFixedSize();
       }
 
       @Override
@@ -156,6 +166,11 @@ public final class MutatorCombinators {
         public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {}
 
         @Override
+        public boolean hasFixedSize() {
+          return true;
+        }
+
+        @Override
         public String toDebugString(Predicate<Debuggable> isInCycle) {
           return "{<empty>}";
         }
@@ -167,6 +182,7 @@ public final class MutatorCombinators {
       };
     }
 
+    boolean hasFixedSize = stream(partialMutators).allMatch(InPlaceMutator::hasFixedSize);
     final InPlaceMutator<T>[] mutators = Arrays.copyOf(partialMutators, partialMutators.length);
     return new InPlaceMutator<T>() {
       @Override
@@ -186,6 +202,11 @@ public final class MutatorCombinators {
         for (InPlaceMutator<T> mutator : mutators) {
           mutator.crossOverInPlace(reference, otherReference, prng);
         }
+      }
+
+      @Override
+      public boolean hasFixedSize() {
+        return hasFixedSize;
       }
 
       @Override
@@ -282,6 +303,11 @@ public final class MutatorCombinators {
       }
 
       @Override
+      public boolean hasFixedSize() {
+        return true;
+      }
+
+      @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
         return "mutateIndices(" + length + ")";
       }
@@ -309,6 +335,7 @@ public final class MutatorCombinators {
   @SafeVarargs
   public static <T> InPlaceMutator<T> mutateSumInPlace(
       ToIntFunction<T> getState, InPlaceMutator<T>... perStateMutators) {
+    boolean hasFixedSize = stream(perStateMutators).allMatch(InPlaceMutator::hasFixedSize);
     final InPlaceMutator<T>[] mutators = Arrays.copyOf(perStateMutators, perStateMutators.length);
     return new InPlaceMutator<T>() {
       @Override
@@ -350,6 +377,11 @@ public final class MutatorCombinators {
       }
 
       @Override
+      public boolean hasFixedSize() {
+        return hasFixedSize;
+      }
+
+      @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
         return stream(mutators)
             .map(mutator -> mutator.toDebugString(isInCycle))
@@ -382,6 +414,11 @@ public final class MutatorCombinators {
       @Override
       public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
         mutator.crossOverInPlace(reference, otherReference, prng);
+      }
+
+      @Override
+      public boolean hasFixedSize() {
+        return mutator.hasFixedSize();
       }
     };
   }
@@ -426,6 +463,11 @@ public final class MutatorCombinators {
       public T crossOver(T value, T otherValue, PseudoRandom prng) {
         return value;
       }
+
+      @Override
+      public boolean hasFixedSize() {
+        return true;
+      }
     };
   }
 
@@ -440,32 +482,39 @@ public final class MutatorCombinators {
    * @param serializer implementation of the {@link Serializer<T>} part
    * @param lazyMutator supplies the implementation of the {@link InPlaceMutator<T>} part. This is
    *     guaranteed to be invoked exactly once and only after {@code registerSelf}.
+   * @param hasFixedSize the value to return from the resulting mutators {@link
+   *     InPlaceMutator#hasFixedSize()}
    */
   public static <T> SerializingInPlaceMutator<T> assemble(
       Consumer<SerializingInPlaceMutator<T>> registerSelf,
       Supplier<T> makeDefaultInstance,
       Serializer<T> serializer,
-      Supplier<InPlaceMutator<T>> lazyMutator) {
+      Supplier<InPlaceMutator<T>> lazyMutator,
+      boolean hasFixedSize) {
     return new DelegatingSerializingInPlaceMutator<>(
-        registerSelf, makeDefaultInstance, serializer, lazyMutator);
+        registerSelf, makeDefaultInstance, serializer, lazyMutator, hasFixedSize);
   }
 
   private static class DelegatingSerializingInPlaceMutator<T> extends SerializingInPlaceMutator<T> {
     private final Supplier<T> makeDefaultInstance;
     private final Serializer<T> serializer;
     private final InPlaceMutator<T> mutator;
+    private final boolean hasFixedSize;
 
     private DelegatingSerializingInPlaceMutator(
         Consumer<SerializingInPlaceMutator<T>> registerSelf,
         Supplier<T> makeDefaultInstance,
         Serializer<T> serializer,
-        Supplier<InPlaceMutator<T>> lazyMutator) {
+        Supplier<InPlaceMutator<T>> lazyMutator,
+        boolean hasFixedSize) {
       requireNonNull(makeDefaultInstance);
       requireNonNull(serializer);
 
       registerSelf.accept(this);
       this.makeDefaultInstance = makeDefaultInstance;
       this.serializer = serializer;
+      // Set before invoking the supplier as that can result in calls to hasFixedSize().
+      this.hasFixedSize = hasFixedSize;
       this.mutator = lazyMutator.get();
     }
 
@@ -482,6 +531,13 @@ public final class MutatorCombinators {
     @Override
     public void crossOverInPlace(T reference, T otherReference, PseudoRandom prng) {
       mutator.crossOverInPlace(reference, otherReference, prng);
+    }
+
+    @Override
+    public boolean hasFixedSize() {
+      // This uses a fixed value rather than calling mutator.hasFixedSize() as this method is called
+      // before the constructor has finished, which is necessary in the case of a cycle.
+      return hasFixedSize;
     }
 
     @Override
