@@ -42,7 +42,7 @@ jobs:
             extra_bazel_args: "--jvmopt=-Djava.security.manager=allow"
           - os: ubuntu-20.04
             arch: "linux"
-            bazel_args: "//launcher/android:jazzer_android"
+            bazel_args: "//launcher/android:jazzer_android //tests/benchmarks"
             cache: "/home/runner/.cache/bazel-disk"
           - os: macos-12
             arch: "macos-x86_64"

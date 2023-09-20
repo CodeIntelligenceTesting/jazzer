@@ -252,7 +252,11 @@ public final class SeededPseudoRandom implements PseudoRandom {
   @Override
   public int sizeInClosedRange(
       int lowerInclusive, int upperInclusive, boolean elementsHaveFixedSize) {
-    return lowerInclusive + closedRangeBiasedTowardsSmall(upperInclusive - lowerInclusive);
+    if (elementsHaveFixedSize) {
+      return closedRange(lowerInclusive, upperInclusive);
+    } else {
+      return lowerInclusive + closedRangeBiasedTowardsSmall(upperInclusive - lowerInclusive);
+    }
   }
 
   private static double zipf_h(double x) {
