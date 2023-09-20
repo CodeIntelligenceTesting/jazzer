@@ -1,7 +1,5 @@
-load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@rules_jvm_external//:defs.bzl", "javadoc")
-load("//:maven.bzl", "JAZZER_VERSION")
 load("//bazel:jar.bzl", "strip_jar")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 
@@ -133,13 +131,16 @@ java_library(
     ],
 )
 
-write_file(
+genrule(
     name = "constants_java",
-    out = "Constants.java",
-    content = [
-        "package com.code_intelligence.jazzer;",
-        "public final class Constants {",
-        "  public static final String JAZZER_VERSION = \"%s\";" % JAZZER_VERSION,
-        "}",
-    ],
+    outs = ["Constants.java"],
+    cmd = """
+cat > $@ <<'EOF'
+package com.code_intelligence.jazzer;
+public final class Constants {
+  public static final String JAZZER_VERSION = \"$(JAZZER_VERSION)\";
+}
+EOF
+""",
+    toolchains = ["//deploy:jazzer_version"],
 )

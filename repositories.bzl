@@ -32,10 +32,11 @@ def jazzer_dependencies(android = False):
     maybe(
         http_archive,
         name = "bazel_skylib",
-        sha256 = "b8a1527901774180afc798aeb28c4634bdccf19c4d98e7bdd1ce79d1fe9aaad7",
+        sha256 = "ade20530fd2d39abb49d537e77d4d873a823649b6061e0bb0c369b34450909d6",
+        strip_prefix = "bazel-skylib-8386b9d32bf69dd2d2f92d9ca39582cf6dabeb37",
+        # TODO: Return to the next release.
         urls = [
-            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.4.1/bazel-skylib-1.4.1.tar.gz",
-            "https://github.com/bazelbuild/bazel-skylib/releases/download/1.4.1/bazel-skylib-1.4.1.tar.gz",
+            "https://github.com/bazelbuild/bazel-skylib/archive/8386b9d32bf69dd2d2f92d9ca39582cf6dabeb37.tar.gz",
         ],
     )
 
@@ -63,6 +64,10 @@ def jazzer_dependencies(android = False):
             # https://github.com/bazelbuild/rules_jvm_external/pull/958
             # Allows javadoc targets to reference other javadoc targets.
             "//third_party:rules_jvm_external-javadoc-deps.patch",
+            # https://github.com/bazelbuild/rules_jvm_external/pull/960
+            # Forwards the toolchains attribute on java_export to all underlying targets and
+            # evaluates Make variables from deps in pom_file.
+            "//third_party:rules_jvm_external-toolchains-attribute.patch",
         ],
         sha256 = "aa17db9b810b22e411bf722095be34eeb66c76819b9c3423ad7740f452016aa3",
         strip_prefix = "rules_jvm_external-4b073de468eff9741406f475acb04e94bee7c9d0",
