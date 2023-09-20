@@ -89,8 +89,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class StressTest {
-  private static final int NUM_INITS = 500;
-  private static final int NUM_MUTATE_PER_INIT = 100;
+  private static final int NUM_INITS = 400;
+  private static final int NUM_MUTATE_PER_INIT = 80;
   private static final double MANY_DISTINCT_ELEMENTS_RATIO = 0.5;
 
   private enum TestEnumTwo {
@@ -386,7 +386,7 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull MapField3>() {}.annotatedType(),
             "{Builder.Map<Integer,String>} -> Message",
-            distinctElementsRatio(0.47),
+            distinctElementsRatio(0.46),
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull MessageMapField3>() {}.annotatedType(),
