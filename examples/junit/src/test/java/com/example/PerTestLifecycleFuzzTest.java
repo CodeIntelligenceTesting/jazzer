@@ -17,15 +17,18 @@
 package com.example;
 
 import static com.google.common.truth.Truth.assertThat;
-import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableList;
+import static com.google.common.truth.Truth8.assertThat;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.example.PerTestLifecycleFuzzTest.LifecycleCallbacks1;
 import com.example.PerTestLifecycleFuzzTest.LifecycleCallbacks2;
 import com.example.PerTestLifecycleFuzzTest.LifecycleCallbacks3;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -47,58 +50,83 @@ import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 class PerTestLifecycleFuzzTest {
   private static final ArrayList<String> events = new ArrayList<>();
   private static final long RUNS = 3;
+  private static int nextInstanceId = 1;
 
-  private boolean beforeEachCalledOnInstance = false;
-  private boolean testInstancePostProcessorCalledOnInstance = false;
+  private final int instanceId = nextInstanceId++;
 
   @BeforeAll
   static void beforeAll() {
     events.add("beforeAll");
   }
 
+  private void addEvent(String what) {
+    events.add(what + " on " + instanceId);
+  }
+
   @BeforeEach
   void beforeEach1() {
-    events.add("beforeEach1");
-    beforeEachCalledOnInstance = true;
+    addEvent("beforeEach1");
   }
 
   @BeforeEach
   void beforeEach2() {
-    events.add("beforeEach2");
+    addEvent("beforeEach2");
   }
 
   @BeforeEach
   void beforeEach3() {
-    events.add("beforeEach3");
+    addEvent("beforeEach3");
   }
 
   @Disabled
   @FuzzTest
   void disabledFuzz(byte[] data) {
-    events.add("disabledFuzz");
+    addEvent("disabledFuzz");
     throw new AssertionError("This test should not be executed");
   }
 
   @FuzzTest(maxExecutions = RUNS)
   void lifecycleFuzz(byte[] data) {
-    events.add("lifecycleFuzz");
-    assertThat(beforeEachCalledOnInstance).isTrue();
-    assertThat(testInstancePostProcessorCalledOnInstance).isTrue();
+    addEvent("lifecycleFuzz");
   }
 
   @AfterEach
   void afterEach1() {
-    events.add("afterEach1");
+    addEvent("afterEach1");
   }
 
   @AfterEach
   void afterEach2() {
-    events.add("afterEach2");
+    addEvent("afterEach2");
   }
 
   @AfterEach
   void afterEach3() {
-    events.add("afterEach3");
+    addEvent("afterEach3");
+  }
+
+  static List<String> expectedBeforeEachEvents(int instanceId) {
+    return Stream.of(
+            "beforeEachCallback1",
+            "beforeEachCallback2",
+            "beforeEachCallback3",
+            "beforeEach1",
+            "beforeEach2",
+            "beforeEach3")
+        .map(s -> s + " on " + instanceId)
+        .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+  }
+
+  static List<String> expectedAfterEachEvents(int instanceId) {
+    return Stream.of(
+            "afterEach1",
+            "afterEach2",
+            "afterEach3",
+            "afterEachCallback3",
+            "afterEachCallback2",
+            "afterEachCallback1")
+        .map(s -> s + " on " + instanceId)
+        .collect(collectingAndThen(toList(), Collections::unmodifiableList));
   }
 
   @AfterAll
@@ -109,40 +137,28 @@ class PerTestLifecycleFuzzTest {
     boolean isFuzzingFromCommandLine = System.getenv("JAZZER_FUZZ") == null;
     boolean isFuzzingFromJUnit = !isFuzzingFromCommandLine && !isRegressionTest;
 
-    final List<String> expectedBeforeEachEvents =
-        unmodifiableList(
-            asList(
-                "beforeEachCallback1",
-                "beforeEachCallback2",
-                "beforeEachCallback3",
-                "beforeEach1",
-                "beforeEach2",
-                "beforeEach3"));
-    final List<String> expectedAfterEachEvents =
-        unmodifiableList(
-            asList(
-                "afterEach1",
-                "afterEach2",
-                "afterEach3",
-                "afterEachCallback3",
-                "afterEachCallback2",
-                "afterEachCallback1"));
-
     ArrayList<String> expectedEvents = new ArrayList<>();
     expectedEvents.add("beforeAll");
 
     // When run from the command-line, the fuzz test is not separately executed on the empty seed.
+    int fuzzingInstanceId = 1;
+    // When run from the command-line, the fuzz test is not separately executed on the empty seed.
     if (isRegressionTest || isFuzzingFromJUnit) {
-      expectedEvents.addAll(expectedBeforeEachEvents);
-      expectedEvents.add("lifecycleFuzz");
-      expectedEvents.addAll(expectedAfterEachEvents);
+      expectedEvents.add("postProcessTestInstance on 1");
+      expectedEvents.addAll(expectedBeforeEachEvents(1));
+      expectedEvents.add("lifecycleFuzz on 1");
+      expectedEvents.addAll(expectedAfterEachEvents(1));
+      fuzzingInstanceId++;
     }
     if (isFuzzingFromJUnit || isFuzzingFromCommandLine) {
-      expectedEvents.addAll(expectedBeforeEachEvents);
-      for (int i = 0; i < RUNS; i++) {
-        expectedEvents.add("lifecycleFuzz");
+      // With the PER_TEST lifecycle, fuzzing uses the instance provided by JUnit for all
+      // executions.
+      expectedEvents.add("postProcessTestInstance on " + fuzzingInstanceId);
+      expectedEvents.addAll(expectedBeforeEachEvents(fuzzingInstanceId));
+      for (int i = 1; i <= RUNS; i++) {
+        expectedEvents.add("lifecycleFuzz on " + fuzzingInstanceId);
       }
-      expectedEvents.addAll(expectedAfterEachEvents);
+      expectedEvents.addAll(expectedAfterEachEvents(fuzzingInstanceId));
     }
 
     expectedEvents.add("afterAll");
@@ -151,46 +167,69 @@ class PerTestLifecycleFuzzTest {
     throw new TestSuccessfulException("Lifecycle methods invoked as expected");
   }
 
+  static void assertConsistentTestInstances(ExtensionContext extensionContext) {
+    assertThat(extensionContext.getTestInstance().get())
+        .isSameInstanceAs(extensionContext.getRequiredTestInstance());
+    assertThat(extensionContext.getTestInstances().get())
+        .isSameInstanceAs(extensionContext.getRequiredTestInstances());
+    assertThat(extensionContext.getRequiredTestInstances().getAllInstances())
+        .containsExactly(extensionContext.getRequiredTestInstance());
+  }
+
   static class LifecycleInstancePostProcessor implements TestInstancePostProcessor {
     @Override
     public void postProcessTestInstance(Object o, ExtensionContext extensionContext) {
-      ((PerTestLifecycleFuzzTest) o).testInstancePostProcessorCalledOnInstance = true;
+      assertThat(extensionContext.getTestInstance()).isEmpty();
+      assertThat(extensionContext.getTestInstances()).isEmpty();
+      ((PerTestLifecycleFuzzTest) o).addEvent("postProcessTestInstance");
     }
   }
 
   static class LifecycleCallbacks1 implements BeforeEachCallback, AfterEachCallback {
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-      events.add("beforeEachCallback1");
+      assertConsistentTestInstances(extensionContext);
+      ((PerTestLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+          .addEvent("beforeEachCallback1");
     }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) {
-      events.add("afterEachCallback1");
+      assertConsistentTestInstances(extensionContext);
+      ((PerTestLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+          .addEvent("afterEachCallback1");
     }
   }
 
   static class LifecycleCallbacks2 implements BeforeEachCallback, AfterEachCallback {
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-      events.add("beforeEachCallback2");
+      assertConsistentTestInstances(extensionContext);
+      ((PerTestLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+          .addEvent("beforeEachCallback2");
     }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) {
-      events.add("afterEachCallback2");
+      assertConsistentTestInstances(extensionContext);
+      ((PerTestLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+          .addEvent("afterEachCallback2");
     }
   }
 
   static class LifecycleCallbacks3 implements BeforeEachCallback, AfterEachCallback {
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-      events.add("beforeEachCallback3");
+      assertConsistentTestInstances(extensionContext);
+      ((PerTestLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+          .addEvent("beforeEachCallback3");
     }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) {
-      events.add("afterEachCallback3");
+      assertConsistentTestInstances(extensionContext);
+      ((PerTestLifecycleFuzzTest) extensionContext.getRequiredTestInstance())
+          .addEvent("afterEachCallback3");
     }
   }
 }
