@@ -27,7 +27,6 @@ import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.driver.junit.ExitCodeException;
 import com.code_intelligence.jazzer.junit.FuzzerDictionary.WithDictionary;
 import com.code_intelligence.jazzer.junit.FuzzerDictionary.WithDictionaryFile;
-import com.code_intelligence.jazzer.utils.Log;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Executable;
@@ -124,13 +123,7 @@ class FuzzTestExecutor {
     }
 
     Optional<String> dictionary = createDictionaryFile(context);
-    if (dictionary.isPresent()) {
-      Log.info("fuzzing with dictionary " + dictionary.get());
-      List<String> lines = Files.readAllLines(Paths.get(dictionary.get()));
-      Log.info(String.join("%n", lines));
-
-      libFuzzerArgs.add("-dict=" + dictionary.get());
-    }
+    dictionary.ifPresent(s -> libFuzzerArgs.add("-dict=" + s));
 
     libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
     if (maxRuns > 0) {
@@ -273,7 +266,8 @@ class FuzzTestExecutor {
     return javaSeedsDir;
   }
 
-  private static Optional<String> createDictionaryFile(ExtensionContext context) {
+  private static Optional<String> createDictionaryFile(ExtensionContext context)
+      throws IOException {
     List<WithDictionary> inlineDictionaries =
         AnnotationSupport.findRepeatableAnnotations(
             context.getRequiredTestMethod(), WithDictionary.class);
@@ -282,15 +276,7 @@ class FuzzTestExecutor {
         AnnotationSupport.findRepeatableAnnotations(
             context.getRequiredTestMethod(), WithDictionaryFile.class);
 
-    try {
-      if (!inlineDictionaries.isEmpty() || !fileDictionaries.isEmpty()) {
-        return Optional.of(FuzzerDictionary.createMergedFile(inlineDictionaries, fileDictionaries));
-      } else {
-        return Optional.empty();
-      }
-    } catch (IOException e) {
-      throw new RuntimeException("error creating dictionary file", e);
-    }
+    return FuzzerDictionary.createDictionaryFile(inlineDictionaries, fileDictionaries);
   }
 
   /** Returns the list of arguments set on the command line. */

@@ -61,6 +61,5 @@ public class DictionaryFuzzTests {
     if (MessageDigest.isEqual(hash, FLAG_SHA256)) {
       throw new Error("error found");
     }
-    throw new RuntimeException("asdf");
   }
 }
