@@ -254,6 +254,28 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "DictionaryFuzzTests",
+    srcs = ["DictionaryFuzzTests.java"],
+    allowed_findings = ["java.lang.Error"],
+    env = {"JAZZER_FUZZ": "1"},
+    target_class = "com.example.DictionaryFuzzTests",
+    # target_method = "inlineTest",
+    # target_method = "fileTest",
+    target_method = "mixedTest",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        ":junit_runtime",
+    ],
+    deps = [
+        "//examples/junit/src/test/resources:example_dictionaries",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test_executor",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
 java_library(
     name = "junit_runtime",
     runtime_deps = [

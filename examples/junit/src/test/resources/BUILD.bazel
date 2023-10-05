@@ -4,6 +4,12 @@ java_library(
     visibility = ["//examples/junit/src/test/java/com/example:__pkg__"],
 )
 
+java_library(
+    name = "example_dictionaries",
+    resources = glob(["**/*.dict"]),
+    visibility = ["//examples/junit/src/test/java/com/example:__pkg__"],
+)
+
 filegroup(
     name = "MutatorFuzzTestInputs",
     srcs = ["com/example/MutatorFuzzTestInputs"],

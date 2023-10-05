@@ -25,6 +25,9 @@ import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.driver.junit.ExitCodeException;
+import com.code_intelligence.jazzer.junit.FuzzerDictionary.WithDictionary;
+import com.code_intelligence.jazzer.junit.FuzzerDictionary.WithDictionaryFile;
+import com.code_intelligence.jazzer.utils.Log;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Executable;
@@ -118,6 +121,15 @@ class FuzzTestExecutor {
       boolean createDefaultGeneratedCorpusDir = corpusFilesOrDirs.isEmpty();
       javaSeedsDir =
           Optional.of(addInputAndSeedDirs(context, libFuzzerArgs, createDefaultGeneratedCorpusDir));
+    }
+
+    Optional<String> dictionary = createDictionaryFile(context);
+    if (dictionary.isPresent()) {
+      Log.info("fuzzing with dictionary " + dictionary.get());
+      List<String> lines = Files.readAllLines(Paths.get(dictionary.get()));
+      Log.info(String.join("%n", lines));
+
+      libFuzzerArgs.add("-dict=" + dictionary.get());
     }
 
     libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
@@ -259,6 +271,26 @@ class FuzzTestExecutor {
             "-artifact_prefix=%s%c",
             findingsDirectory.orElse(baseDir).toAbsolutePath(), File.separatorChar));
     return javaSeedsDir;
+  }
+
+  private static Optional<String> createDictionaryFile(ExtensionContext context) {
+    List<WithDictionary> inlineDictionaries =
+        AnnotationSupport.findRepeatableAnnotations(
+            context.getRequiredTestMethod(), WithDictionary.class);
+
+    List<WithDictionaryFile> fileDictionaries =
+        AnnotationSupport.findRepeatableAnnotations(
+            context.getRequiredTestMethod(), WithDictionaryFile.class);
+
+    try {
+      if (!inlineDictionaries.isEmpty() || !fileDictionaries.isEmpty()) {
+        return Optional.of(FuzzerDictionary.createMergedFile(inlineDictionaries, fileDictionaries));
+      } else {
+        return Optional.empty();
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("error creating dictionary file", e);
+    }
   }
 
   /** Returns the list of arguments set on the command line. */
