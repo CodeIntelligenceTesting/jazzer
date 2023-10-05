@@ -18,7 +18,8 @@ package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
-import com.code_intelligence.jazzer.junit.FuzzerDictionary;
+import com.code_intelligence.jazzer.junit.FuzzerDictionary.WithDictionary;
+import com.code_intelligence.jazzer.junit.FuzzerDictionary.WithDictionaryFile;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -31,7 +32,7 @@ public class DictionaryFuzzTests {
   private static final byte[] FLAG_SHA256 =
       Base64.getDecoder().decode("IT7goSzYg6MXLugHl9H4oCswA+OEb4bGZmKrDzlZjO4=");
 
-  @FuzzerDictionary.WithDictionary(tokens = {"a_", "53Cr3T_", "fl4G"})
+  @WithDictionary(tokens = {"a_", "53Cr3T_", "fl4G"})
   @FuzzTest
   public void inlineTest(FuzzedDataProvider data) throws NoSuchAlgorithmException {
     String s = data.consumeRemainingAsString();
@@ -41,7 +42,7 @@ public class DictionaryFuzzTests {
     }
   }
 
-  @FuzzerDictionary.WithDictionaryFile(resourcePath = "/com/example/test.dict")
+  @WithDictionaryFile(resourcePath = "/com/example/test.dict")
   @FuzzTest
   public void fileTest(FuzzedDataProvider data) throws NoSuchAlgorithmException {
     String s = data.consumeRemainingAsString();
@@ -51,9 +52,9 @@ public class DictionaryFuzzTests {
     }
   }
 
-  @FuzzerDictionary.WithDictionary(tokens = {"a_"})
-  @FuzzerDictionary.WithDictionaryFile(resourcePath = "/com/example/test2.dict")
-  @FuzzerDictionary.WithDictionaryFile(resourcePath = "/com/example/test3.dict")
+  @WithDictionary(tokens = {"a_"})
+  @WithDictionaryFile(resourcePath = "/com/example/test2.dict")
+  @WithDictionaryFile(resourcePath = "/com/example/test3.dict")
   @FuzzTest
   public void mixedTest(FuzzedDataProvider data) throws NoSuchAlgorithmException {
     String s = data.consumeRemainingAsString();
