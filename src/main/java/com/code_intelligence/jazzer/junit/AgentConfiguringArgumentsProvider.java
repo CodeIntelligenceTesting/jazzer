@@ -16,11 +16,13 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.support.AnnotationConsumer;
+
+import java.util.Optional;
+import java.util.stream.Stream;
 
 class AgentConfiguringArgumentsProvider implements ArgumentsProvider, AnnotationConsumer<FuzzTest> {
   private FuzzTest fuzzTest;
@@ -36,11 +38,12 @@ class AgentConfiguringArgumentsProvider implements ArgumentsProvider, Annotation
     // FIXME(fmeum): Calling this here feels like a hack. There should be a lifecycle hook that runs
     //  before the argument discovery for a ParameterizedTest is kicked off, but I haven't found
     //  one.
+    Optional<String> dictionaryPath = FuzzerDictionary.createDictionaryFile(extensionContext);
     // We need to call this method here in addition to the call in FuzzTestExtensions as our
     // ArgumentProviders need the bootstrap jar on the classpath and there may be no user-provided
     // ArgumentProviders to trigger the call in FuzzTestExtensions.
     FuzzTestExecutor.configureAndInstallAgent(
-        extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions());
+        extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions(), dictionaryPath);
     return Stream.empty();
   }
 }

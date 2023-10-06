@@ -270,7 +270,6 @@ java_fuzz_target_test(
             "//examples/junit/src/test/java/com/example:test_successful_exception",
             "//examples/junit/src/test/resources:example_dictionaries",
             "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
-            "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test_executor",
             "@maven//:org_junit_jupiter_junit_jupiter_api",
             "@maven//:org_junit_jupiter_junit_jupiter_params",
         ],

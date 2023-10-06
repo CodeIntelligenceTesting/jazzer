@@ -17,6 +17,8 @@
 package com.code_intelligence.jazzer.junit;
 
 import com.code_intelligence.jazzer.utils.Log;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.platform.commons.support.AnnotationSupport;
 import org.junit.platform.commons.util.ClassLoaderUtils;
 
 import java.io.BufferedReader;
@@ -27,11 +29,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
@@ -40,8 +37,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Class that manages dictionaries for fuzz tests. The {@link WithDictionary} and {@link
- * WithDictionaryFile} annotations are added to {@link FuzzTest}s to indicate that these
+ * Class that manages dictionaries for fuzz tests. The {@link DictionaryEntries} and {@link
+ * DictionaryFile} annotations are added to {@link FuzzTest}s to indicate that these
  * dictionaries should be used for fuzzing this function. All tokens from all the sources will be
  * added into a single merged dictionary file as libfuzzer can only accept a single {@code -dict}
  * flag.
@@ -49,24 +46,36 @@ import java.util.stream.Stream;
  * <p>Syntax for dictionaries can be found <a
  * href="https://llvm.org/docs/LibFuzzer.html#dictionaries">here</a>.
  */
-public class FuzzerDictionary {
+class FuzzerDictionary {
   private static final String DICTIONARY_PREFIX = "jazzer-";
   private static final String DICTIONARY_SUFFIX = ".dict";
+
+  static Optional<String> createDictionaryFile(ExtensionContext context) throws IOException {
+    List<DictionaryEntries> inlineDictionaries =
+            AnnotationSupport.findRepeatableAnnotations(
+                    context.getRequiredTestMethod(), DictionaryEntries.class);
+
+    List<DictionaryFile> fileDictionaries =
+            AnnotationSupport.findRepeatableAnnotations(
+                    context.getRequiredTestMethod(), DictionaryFile.class);
+
+    return FuzzerDictionary.createDictionaryFile(inlineDictionaries, fileDictionaries);
+  }
 
   /**
    * Create a temporary dictionary file for use during a fuzzing run based on the tokens found
    * within {@code inline} and {@code files}.
    *
-   * @param inline List of {@link WithDictionary} annotations that directly hold static token values
+   * @param inline List of {@link DictionaryEntries} annotations that directly hold static token values
    *     to use in the dictionary
-   * @param files List of {@link WithDictionaryFile} annotations that reference dictionary files to
+   * @param files List of {@link DictionaryFile} annotations that reference dictionary files to
    *     include
    * @return Optional containing the path to the created file, or nothing if {@code inline} and
    *     {@code files} are both empty
    * @throws IOException
    */
-  public static Optional<String> createDictionaryFile(
-      List<WithDictionary> inline, List<WithDictionaryFile> files) throws IOException {
+  private static Optional<String> createDictionaryFile(
+      List<DictionaryEntries> inline, List<DictionaryFile> files) throws IOException {
     int sources = inline.size() + files.size();
     if (sources == 0) {
       return Optional.empty();
@@ -98,12 +107,12 @@ public class FuzzerDictionary {
    * Gets the inlined arrays from each annotation, flattens them into a single stream, and wraps the
    * elements in double quotes to comply with libfuzzer's dictionary syntax
    *
-   * @param inline List of {@link WithDictionary} annotations to extract from
+   * @param inline List of {@link DictionaryEntries} annotations to extract from
    * @return stream of all the tokens from each of the elements of {@code inline}
    */
-  private static Stream<String> getInlineTokens(List<WithDictionary> inline) {
+  private static Stream<String> getInlineTokens(List<DictionaryEntries> inline) {
     return inline.stream()
-        .map(WithDictionary::tokens)
+        .map(DictionaryEntries::tokens)
         .flatMap(Arrays::stream)
         .map(token -> String.format("\"%s\"", token));
   }
@@ -111,12 +120,12 @@ public class FuzzerDictionary {
   /**
    * Gets the individual lines from each of the specified dictionary files
    *
-   * @param files List of {@link WithDictionaryFile} annotations indicating which files to use
+   * @param files List of {@link DictionaryFile} annotations indicating which files to use
    * @return stream of all lines from each of the files
    */
-  private static Stream<String> getFileTokens(List<WithDictionaryFile> files) {
+  private static Stream<String> getFileTokens(List<DictionaryFile> files) {
     return files.stream()
-        .map(WithDictionaryFile::resourcePath)
+        .map(DictionaryFile::resourcePath)
         .map(FuzzerDictionary::tokensFromFile)
         .flatMap(List::stream);
   }
@@ -133,39 +142,5 @@ public class FuzzerDictionary {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-  }
-
-  /**
-   * Defines a dictionary where the values are given inline within this annotation. Values given
-   * here are intended to be bare tokens, so should not be given in the {@code name="value"} form.
-   */
-  @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Retention(RetentionPolicy.RUNTIME)
-  @Repeatable(Dictionaries.class)
-  public @interface WithDictionary {
-    String[] tokens();
-  }
-
-  /**
-   * Defines a reference to a dictionary within the resources directory. These should follow <a
-   * href="https://llvm.org/docs/LibFuzzer.html#dictionaries">libfuzzer's dictionary syntax</a>.
-   */
-  @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Retention(RetentionPolicy.RUNTIME)
-  @Repeatable(DictionaryFiles.class)
-  public @interface WithDictionaryFile {
-    String resourcePath();
-  }
-
-  @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Retention(RetentionPolicy.RUNTIME)
-  public @interface Dictionaries {
-    WithDictionary[] value();
-  }
-
-  @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Retention(RetentionPolicy.RUNTIME)
-  public @interface DictionaryFiles {
-    WithDictionaryFile[] value();
   }
 }

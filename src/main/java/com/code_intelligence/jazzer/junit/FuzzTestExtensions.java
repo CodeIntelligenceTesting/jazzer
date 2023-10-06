@@ -14,12 +14,6 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -29,6 +23,15 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.platform.commons.support.AnnotationSupport;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static com.code_intelligence.jazzer.junit.FuzzerDictionary.createDictionaryFile;
 
 class FuzzTestExtensions
     implements ExecutionCondition, InvocationInterceptor, TestExecutionExceptionHandler {
@@ -46,11 +49,13 @@ class FuzzTestExtensions
       throws Throwable {
     FuzzTest fuzzTest =
         AnnotationSupport.findAnnotation(invocationContext.getExecutable(), FuzzTest.class).get();
+    Optional<String> dictionaryPath = createDictionaryFile(extensionContext);
+
     // We need to call this method here in addition to the call in AgentConfiguringArgumentsProvider
     // as that provider isn't invoked before fuzz test executions for the arguments provided by
     // user-provided ArgumentsProviders ("Java seeds").
     FuzzTestExecutor.configureAndInstallAgent(
-        extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions());
+        extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions(), dictionaryPath);
     // Skip the invocation of the test method with the special arguments provided by
     // FuzzTestArgumentsProvider and start fuzzing instead.
     if (Utils.isMarkedInvocation(invocationContext)) {
