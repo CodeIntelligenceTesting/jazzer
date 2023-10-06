@@ -258,7 +258,7 @@ java_fuzz_target_test(
     java_fuzz_target_test(
         name = "DictionaryFuzzTests_" + method,
         srcs = ["DictionaryFuzzTests.java"],
-        allowed_findings = ["java.lang.Error"],
+        allowed_findings = ["com.example.TestSuccessfulException"],
         env = {"JAZZER_FUZZ": "1"},
         target_class = "com.example.DictionaryFuzzTests",
         target_method = method,
@@ -267,6 +267,7 @@ java_fuzz_target_test(
             ":junit_runtime",
         ],
         deps = [
+            "//examples/junit/src/test/java/com/example:test_successful_exception",
             "//examples/junit/src/test/resources:example_dictionaries",
             "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
             "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test_executor",
