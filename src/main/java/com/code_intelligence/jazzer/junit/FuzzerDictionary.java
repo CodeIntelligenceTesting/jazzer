@@ -17,10 +17,6 @@
 package com.code_intelligence.jazzer.junit;
 
 import com.code_intelligence.jazzer.utils.Log;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.platform.commons.support.AnnotationSupport;
-import org.junit.platform.commons.util.ClassLoaderUtils;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,19 +25,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.platform.commons.support.AnnotationSupport;
+import org.junit.platform.commons.util.ClassLoaderUtils;
 
 /**
  * Class that manages dictionaries for fuzz tests. The {@link DictionaryEntries} and {@link
- * DictionaryFile} annotations are added to {@link FuzzTest}s to indicate that these
- * dictionaries should be used for fuzzing this function. All tokens from all the sources will be
- * added into a single merged dictionary file as libfuzzer can only accept a single {@code -dict}
- * flag.
+ * DictionaryFile} annotations are added to {@link FuzzTest}s to indicate that these dictionaries
+ * should be used for fuzzing this function. All tokens from all the sources will be added into a
+ * single merged dictionary file as libfuzzer can only accept a single {@code -dict} flag.
  *
  * <p>Syntax for dictionaries can be found <a
  * href="https://llvm.org/docs/LibFuzzer.html#dictionaries">here</a>.
@@ -50,28 +48,33 @@ class FuzzerDictionary {
   private static final String DICTIONARY_PREFIX = "jazzer-";
   private static final String DICTIONARY_SUFFIX = ".dict";
 
-  static Optional<String> createDictionaryFile(ExtensionContext context) throws IOException {
+  /**
+   * Create a temporary dictionary file for use during a fuzzing run based on the {@link
+   * DictionaryEntries} and {@link DictionaryFile} annotations applied to {@code method}
+   *
+   * @param method The method which has 0 or more {@link DictionaryEntries} and {@link
+   *     DictionaryFile} annotations applied
+   * @return Optional containing the path to the created file, or nothing if {@code inline} and
+   *     {@code files} are both empty
+   * @throws IOException
+   */
+  static Optional<String> createDictionaryFile(Method method) throws IOException {
     List<DictionaryEntries> inlineDictionaries =
-            AnnotationSupport.findRepeatableAnnotations(
-                    context.getRequiredTestMethod(), DictionaryEntries.class);
+        AnnotationSupport.findRepeatableAnnotations(method, DictionaryEntries.class);
 
     List<DictionaryFile> fileDictionaries =
-            AnnotationSupport.findRepeatableAnnotations(
-                    context.getRequiredTestMethod(), DictionaryFile.class);
+        AnnotationSupport.findRepeatableAnnotations(method, DictionaryFile.class);
 
     return FuzzerDictionary.createDictionaryFile(inlineDictionaries, fileDictionaries);
   }
 
   /**
-   * Create a temporary dictionary file for use during a fuzzing run based on the tokens found
-   * within {@code inline} and {@code files}.
+   * Takes the lists of {@link DictionaryEntries} and {@link DictionaryFile} and creates the
+   * temporary dictionary file based on their tokens
    *
-   * @param inline List of {@link DictionaryEntries} annotations that directly hold static token values
-   *     to use in the dictionary
-   * @param files List of {@link DictionaryFile} annotations that reference dictionary files to
-   *     include
-   * @return Optional containing the path to the created file, or nothing if {@code inline} and
-   *     {@code files} are both empty
+   * @param inline list of {@link DictionaryEntries}
+   * @param files list of {@link DictionaryFile}
+   * @return Optional of dictionaryPath if created
    * @throws IOException
    */
   private static Optional<String> createDictionaryFile(

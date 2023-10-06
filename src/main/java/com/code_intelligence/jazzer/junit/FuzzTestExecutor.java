@@ -14,18 +14,17 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
+import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
+import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
+import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
+import static java.util.stream.Collectors.toList;
+
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.driver.junit.ExitCodeException;
-import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
-import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
-import org.junit.jupiter.params.provider.ArgumentsSource;
-import org.junit.platform.commons.support.AnnotationSupport;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Executable;
@@ -50,12 +49,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-
-import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
-import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
-import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
-import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
-import static java.util.stream.Collectors.toList;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
+import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
+import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.platform.commons.support.AnnotationSupport;
 
 class FuzzTestExecutor {
   private static final AtomicBoolean hasBeenPrepared = new AtomicBoolean();
@@ -72,7 +71,8 @@ class FuzzTestExecutor {
     this.isRunFromCommandLine = isRunFromCommandLine;
   }
 
-  public static FuzzTestExecutor prepare(ExtensionContext context, String maxDuration, long maxRuns, Optional<String> dictionaryPath)
+  public static FuzzTestExecutor prepare(
+      ExtensionContext context, String maxDuration, long maxRuns, Optional<String> dictionaryPath)
       throws IOException {
     if (!hasBeenPrepared.compareAndSet(false, true)) {
       throw new IllegalStateException(
@@ -284,13 +284,17 @@ class FuzzTestExecutor {
   }
 
   static void configureAndInstallAgent(
-      ExtensionContext extensionContext, String maxDuration, long maxExecutions, Optional<String> dictionaryPath)
+      ExtensionContext extensionContext,
+      String maxDuration,
+      long maxExecutions,
+      Optional<String> dictionaryPath)
       throws IOException {
     if (!agentInstalled.compareAndSet(false, true)) {
       return;
     }
     if (Utils.isFuzzing(extensionContext)) {
-      FuzzTestExecutor executor = prepare(extensionContext, maxDuration, maxExecutions, dictionaryPath);
+      FuzzTestExecutor executor =
+          prepare(extensionContext, maxDuration, maxExecutions, dictionaryPath);
       extensionContext.getRoot().getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
       AgentConfigurator.forFuzzing(extensionContext);
     } else {
