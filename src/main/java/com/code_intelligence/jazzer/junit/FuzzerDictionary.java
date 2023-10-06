@@ -17,15 +17,27 @@
 package com.code_intelligence.jazzer.junit;
 
 import com.code_intelligence.jazzer.utils.Log;
-import java.io.*;
-import java.lang.annotation.*;
+import org.junit.platform.commons.util.ClassLoaderUtils;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.junit.platform.commons.util.ClassLoaderUtils;
 
 /**
  * Class that manages dictionaries for fuzz tests. The {@link WithDictionary} and {@link
