@@ -93,7 +93,7 @@ public class FuzzerDictionary {
     return inline.stream()
         .map(WithDictionary::tokens)
         .flatMap(Arrays::stream)
-        .map((token) -> String.format("\"%s\"", token));
+        .map(token -> String.format("\"%s\"", token));
   }
 
   /**
