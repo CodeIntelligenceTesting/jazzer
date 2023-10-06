@@ -129,14 +129,15 @@ class FuzzerDictionary {
   private static Stream<String> getFileTokens(List<DictionaryFile> files) {
     return files.stream()
         .map(DictionaryFile::resourcePath)
-        .map(FuzzerDictionary::tokensFromFile)
+        .map(FuzzerDictionary::tokensFromResource)
         .flatMap(List::stream);
   }
 
-  private static List<String> tokensFromFile(String path) {
-    try (InputStream resourceFile = ClassLoaderUtils.class.getResourceAsStream(path)) {
+  private static List<String> tokensFromResource(String absoluteResourcePath) {
+    try (InputStream resourceFile =
+        ClassLoaderUtils.class.getResourceAsStream(absoluteResourcePath)) {
       if (resourceFile == null) {
-        throw new FileNotFoundException(path);
+        throw new FileNotFoundException(absoluteResourcePath);
       }
       BufferedReader reader = new BufferedReader(new InputStreamReader(resourceFile));
       // I think returning just reader.lines() results in the file stream being closed before it's
