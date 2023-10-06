@@ -122,8 +122,7 @@ class FuzzTestExecutor {
           Optional.of(addInputAndSeedDirs(context, libFuzzerArgs, createDefaultGeneratedCorpusDir));
     }
 
-    Optional<String> dictionary = createDictionaryFile(context);
-    dictionary.ifPresent(s -> libFuzzerArgs.add("-dict=" + s));
+    createDictionaryFile(context).ifPresent(s -> libFuzzerArgs.add("-dict=" + s));
 
     libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
     if (maxRuns > 0) {
