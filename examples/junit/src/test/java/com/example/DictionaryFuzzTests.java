@@ -34,7 +34,8 @@ public class DictionaryFuzzTests {
 
   @WithDictionary(tokens = {"a_", "53Cr3T_", "fl4G"})
   @FuzzTest
-  public void inlineTest(FuzzedDataProvider data) throws NoSuchAlgorithmException, TestSuccessfulException {
+  public void inlineTest(FuzzedDataProvider data)
+      throws NoSuchAlgorithmException, TestSuccessfulException {
     String s = data.consumeRemainingAsString();
     byte[] hash = MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));
     if (MessageDigest.isEqual(hash, FLAG_SHA256)) {
@@ -44,7 +45,8 @@ public class DictionaryFuzzTests {
 
   @WithDictionaryFile(resourcePath = "/com/example/test.dict")
   @FuzzTest
-  public void fileTest(FuzzedDataProvider data) throws NoSuchAlgorithmException, TestSuccessfulException {
+  public void fileTest(FuzzedDataProvider data)
+      throws NoSuchAlgorithmException, TestSuccessfulException {
     String s = data.consumeRemainingAsString();
     byte[] hash = MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));
     if (MessageDigest.isEqual(hash, FLAG_SHA256)) {
@@ -56,7 +58,8 @@ public class DictionaryFuzzTests {
   @WithDictionaryFile(resourcePath = "/com/example/test2.dict")
   @WithDictionaryFile(resourcePath = "/com/example/test3.dict")
   @FuzzTest
-  public void mixedTest(FuzzedDataProvider data) throws NoSuchAlgorithmException, TestSuccessfulException {
+  public void mixedTest(FuzzedDataProvider data)
+      throws NoSuchAlgorithmException, TestSuccessfulException {
     String s = data.consumeRemainingAsString();
     byte[] hash = MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));
     if (MessageDigest.isEqual(hash, FLAG_SHA256)) {
