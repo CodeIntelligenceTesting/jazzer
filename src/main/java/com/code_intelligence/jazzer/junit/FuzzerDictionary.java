@@ -141,10 +141,11 @@ class FuzzerDictionary {
       if (resourceFile == null) {
         throw new FileNotFoundException(absoluteResourcePath);
       }
-      BufferedReader reader = new BufferedReader(new InputStreamReader(resourceFile));
-      // I think returning just reader.lines() results in the file stream being closed before it's
-      // read, so we immediately read the file and collect the lines into a list
-      return reader.lines().collect(Collectors.toList());
+      List<String> tokens;
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceFile))) {
+        tokens = reader.lines().collect(Collectors.toList());
+      }
+      return tokens;
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
