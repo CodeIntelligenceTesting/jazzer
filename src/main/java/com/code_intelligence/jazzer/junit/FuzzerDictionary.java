@@ -17,7 +17,13 @@
 package com.code_intelligence.jazzer.junit;
 
 import com.code_intelligence.jazzer.utils.Log;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -28,7 +34,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.platform.commons.support.AnnotationSupport;
-import org.junit.platform.commons.util.ClassLoaderUtils;
 
 /**
  * Class that manages dictionaries for fuzz tests. The {@link DictionaryEntries} and {@link
@@ -126,8 +131,13 @@ class FuzzerDictionary {
   }
 
   private static List<String> tokensFromResource(String absoluteResourcePath) {
+    if (absoluteResourcePath.startsWith("/")) {
+      throw new IllegalArgumentException(
+          String.format(
+              "absolute resource path is must not have leading /: %s", absoluteResourcePath));
+    }
     try (InputStream resourceFile =
-        ClassLoaderUtils.class.getResourceAsStream(absoluteResourcePath)) {
+        FuzzerDictionary.class.getClassLoader().getResourceAsStream(absoluteResourcePath)) {
       if (resourceFile == null) {
         throw new FileNotFoundException(absoluteResourcePath);
       }
