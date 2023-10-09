@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -37,7 +38,7 @@ class AgentConfiguringArgumentsProvider implements ArgumentsProvider, Annotation
     // FIXME(fmeum): Calling this here feels like a hack. There should be a lifecycle hook that runs
     //  before the argument discovery for a ParameterizedTest is kicked off, but I haven't found
     //  one.
-    Optional<String> dictionaryPath =
+    Optional<Path> dictionaryPath =
         FuzzerDictionary.createDictionaryFile(extensionContext.getRequiredTestMethod());
     // We need to call this method here in addition to the call in FuzzTestExtensions as our
     // ArgumentProviders need the bootstrap jar on the classpath and there may be no user-provided

@@ -19,17 +19,12 @@ import static com.code_intelligence.jazzer.junit.FuzzerDictionary.createDictiona
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.jupiter.api.extension.ConditionEvaluationResult;
-import org.junit.jupiter.api.extension.ExecutionCondition;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.*;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
-import org.junit.jupiter.api.extension.InvocationInterceptor;
-import org.junit.jupiter.api.extension.ParameterResolutionException;
-import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
-import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.platform.commons.support.AnnotationSupport;
 
 class FuzzTestExtensions
@@ -48,8 +43,7 @@ class FuzzTestExtensions
       throws Throwable {
     FuzzTest fuzzTest =
         AnnotationSupport.findAnnotation(invocationContext.getExecutable(), FuzzTest.class).get();
-    Optional<String> dictionaryPath =
-        createDictionaryFile(extensionContext.getRequiredTestMethod());
+    Optional<Path> dictionaryPath = createDictionaryFile(extensionContext.getRequiredTestMethod());
 
     // We need to call this method here in addition to the call in AgentConfiguringArgumentsProvider
     // as that provider isn't invoked before fuzz test executions for the arguments provided by

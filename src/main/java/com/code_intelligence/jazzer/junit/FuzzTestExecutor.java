@@ -37,14 +37,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -72,7 +65,7 @@ class FuzzTestExecutor {
   }
 
   public static FuzzTestExecutor prepare(
-      ExtensionContext context, String maxDuration, long maxRuns, Optional<String> dictionaryPath)
+      ExtensionContext context, String maxDuration, long maxRuns, Optional<Path> dictionaryPath)
       throws IOException {
     if (!hasBeenPrepared.compareAndSet(false, true)) {
       throw new IllegalStateException(
@@ -287,7 +280,7 @@ class FuzzTestExecutor {
       ExtensionContext extensionContext,
       String maxDuration,
       long maxExecutions,
-      Optional<String> dictionaryPath)
+      Optional<Path> dictionaryPath)
       throws IOException {
     if (!agentInstalled.compareAndSet(false, true)) {
       return;

@@ -17,16 +17,11 @@
 package com.code_intelligence.jazzer.junit;
 
 import com.code_intelligence.jazzer.utils.Log;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -58,7 +53,7 @@ class FuzzerDictionary {
    *     {@code files} are both empty
    * @throws IOException
    */
-  static Optional<String> createDictionaryFile(Method method) throws IOException {
+  static Optional<Path> createDictionaryFile(Method method) throws IOException {
     List<DictionaryEntries> inlineDictionaries =
         AnnotationSupport.findRepeatableAnnotations(method, DictionaryEntries.class);
 
@@ -77,7 +72,7 @@ class FuzzerDictionary {
    * @return Optional of dictionaryPath if created
    * @throws IOException
    */
-  private static Optional<String> createDictionaryFile(
+  private static Optional<Path> createDictionaryFile(
       List<DictionaryEntries> inline, List<DictionaryFile> files) throws IOException {
     int sources = inline.size() + files.size();
     if (sources == 0) {
@@ -86,24 +81,21 @@ class FuzzerDictionary {
 
     Stream<String> joined = Stream.concat(getInlineTokens(inline), getFileTokens(files));
 
-    File f = File.createTempFile(DICTIONARY_PREFIX, DICTIONARY_SUFFIX);
-    f.deleteOnExit();
+    Path p = Files.createTempFile(DICTIONARY_PREFIX, DICTIONARY_SUFFIX);
+    p.toFile().deleteOnExit();
     Log.info(String.format("Creating merged dictionary from %d sources", sources));
 
-    try (OutputStream out = Files.newOutputStream(f.toPath())) {
+    try (Writer w = Files.newBufferedWriter(p, StandardCharsets.UTF_8)) {
       joined.forEach(
-          (token) -> {
+          token -> {
             try {
-              // the tokens will come in without newlines attached, so we append them here before
-              // writing
-              String line = token.concat("\n");
-              out.write(line.getBytes());
+              w.append(token).append('\n');
             } catch (IOException e) {
               throw new UncheckedIOException(e);
             }
           });
     }
-    return Optional.of(f.getPath());
+    return Optional.of(p);
   }
 
   /**
