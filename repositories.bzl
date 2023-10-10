@@ -65,9 +65,9 @@ def jazzer_dependencies(android = False):
     maybe(
         http_archive,
         name = "com_google_absl",
-        sha256 = "5366d7e7fa7ba0d915014d387b66d0d002c03236448e1ba9ef98122c13b35c36",
-        strip_prefix = "abseil-cpp-20230125.3",
-        url = "https://github.com/abseil/abseil-cpp/archive/refs/tags/20230125.3.tar.gz",
+        sha256 = "987ce98f02eefbaf930d6e38ab16aa05737234d7afbab2d5c4ea7adbe50c28ed",
+        strip_prefix = "abseil-cpp-20230802.1",
+        url = "https://github.com/abseil/abseil-cpp/archive/refs/tags/20230802.1.tar.gz",
     )
 
     maybe(
@@ -91,9 +91,9 @@ def jazzer_dependencies(android = False):
         http_archive,
         build_file = Label("//third_party:classgraph.BUILD"),
         name = "com_github_classgraph_classgraph",
-        sha256 = "62ba0109800ba55f4ccd9a7ba5f73a050293b90237c25e96132ca40d7f4e438f",
-        strip_prefix = "classgraph-classgraph-4.8.161",
-        url = "https://github.com/classgraph/classgraph/archive/refs/tags/classgraph-4.8.161.tar.gz",
+        sha256 = "83f3c193e90b77487cfc24fb6f73e9624e7478d9be4f94e2b20a29165a1aa906",
+        strip_prefix = "classgraph-classgraph-4.8.162",
+        url = "https://github.com/classgraph/classgraph/archive/refs/tags/classgraph-4.8.162.tar.gz",
     )
 
     maybe(
@@ -106,36 +106,36 @@ def jazzer_dependencies(android = False):
     maybe(
         http_jar,
         name = "net_bytebuddy_byte_buddy_agent",
-        sha256 = "55f19862b870f5d85890ba5386b1b45e9bbc88d5fe1f819abe0c788b4929fa6b",
-        url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.5/byte-buddy-agent-1.14.5.jar",
+        sha256 = "f7c60fd229df2b0f4e390f50e0582a23ac1d895645df0d487c54dd67a289800b",
+        url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.8/byte-buddy-agent-1.14.8.jar",
     )
 
     maybe(
         http_jar,
         name = "org_ow2_asm_asm",
-        sha256 = "b62e84b5980729751b0458c534cf1366f727542bb8d158621335682a460f0353",
-        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm/9.5/asm-9.5.jar",
+        sha256 = "3c6fac2424db3d4a853b669f4e3d1d9c3c552235e19a319673f887083c2303a1",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm/9.6/asm-9.6.jar",
     )
 
     maybe(
         http_jar,
         name = "org_ow2_asm_asm_commons",
-        sha256 = "72eee9fbafb9de8d9463f20dd584a48ceeb7e5152ad4c987bfbe17dd4811c9ae",
-        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-commons/9.5/asm-commons-9.5.jar",
+        sha256 = "7aefd0d5c0901701c69f7513feda765fb6be33af2ce7aa17c5781fc87657c511",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-commons/9.6/asm-commons-9.6.jar",
     )
 
     maybe(
         http_jar,
         name = "org_ow2_asm_asm_tree",
-        sha256 = "3c33a648191079aeaeaeb7c19a49b153952f9e40fe86fbac5205554ddd9acd94",
-        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-tree/9.5/asm-tree-9.5.jar",
+        sha256 = "c43ecf17b539c777e15da7b5b86553b377e2d39a683de6285567d5283888e7ef",
+        url = "https://repo1.maven.org/maven2/org/ow2/asm/asm-tree/9.6/asm-tree-9.6.jar",
     )
 
     maybe(
         http_jar,
         name = "com_github_jsqlparser_jsqlparser",
-        sha256 = "61b02b8520fda987b7bc12878833b223234450e505de83c36e78abe6d69c0184",
-        url = "https://repo1.maven.org/maven2/com/github/jsqlparser/jsqlparser/4.6/jsqlparser-4.6.jar",
+        sha256 = "9d25de1d79a669352f0d535daee906c2e35e8162e6894d82ea3f0aad8545655e",
+        url = "https://repo1.maven.org/maven2/com/github/jsqlparser/jsqlparser/4.7/jsqlparser-4.7.jar",
     )
 
     maybe(
@@ -155,9 +155,9 @@ def jazzer_dependencies(android = False):
     maybe(
         http_jar,
         name = "com_google_protobuf_protobuf_java",
-        sha256 = "b7eb9203fd2dd6e55b929debf2d079c949e0f9a85f15ec3a298b7534bc7ebd41",
+        sha256 = "e5655522be1aa5cc1f2f092aa036b0445157f294928eedf1332ac938c7b69686",
         # Keep in sync with com_google_protobuf in WORKSPACE.
-        url = "https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/3.24.1/protobuf-java-3.24.1.jar",
+        url = "https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/3.24.4/protobuf-java-3.24.4.jar",
     )
 
     maybe(
@@ -169,9 +169,9 @@ def jazzer_dependencies(android = False):
             Label("//third_party:jacoco-make-probe-inserter-subclassable.patch"),
             Label("//third_party:jacoco-ignore-offline-instrumentation.patch"),
         ],
-        sha256 = "b6b90469db034dff01a8577d8e91da51bc40f328a988359028652771f20abf1d",
-        strip_prefix = "jacoco-0.8.9",
-        url = "https://github.com/jacoco/jacoco/archive/refs/tags/v0.8.9.tar.gz",
+        sha256 = "5c72dea2d13eef33a4d972d157186fc12d85149bc042186953efe1be50c220ee",
+        strip_prefix = "jacoco-0.8.10",
+        url = "https://github.com/jacoco/jacoco/archive/refs/tags/v0.8.10.tar.gz",
     )
 
     maybe(
