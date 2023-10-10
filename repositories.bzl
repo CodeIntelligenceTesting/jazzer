@@ -43,43 +43,23 @@ def jazzer_dependencies(android = False):
     maybe(
         http_archive,
         name = "io_bazel_rules_kotlin",
-        patch_args = ["-p1"],
-        patches = [
-            # https://github.com/bazelbuild/rules_kotlin/pull/1000
-            # Remove unnecessary dependency on a Java runtime for the target platform.
-            "//third_party:rules_kotlin-remove-java-runtime-dep.patch",
-            # https://github.com/bazelbuild/rules_kotlin/pull/1005
-            # Required for compatibility with recent Bazel 7 pre-releases.
-            "//third_party:rules_kotlin-remove-java-info-transitive-deps.patch",
-        ],
-        sha256 = "01293740a16e474669aba5b5a1fe3d368de5832442f164e4fbfc566815a8bc3a",
-        url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.8/rules_kotlin_release.tgz",
+        sha256 = "a630cda9fdb4f56cf2dc20a4bf873765c41cf00e9379e8d59cd07b24730f4fde",
+        url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.8.1/rules_kotlin_release.tgz",
     )
 
     maybe(
         http_archive,
         name = "rules_jvm_external",
-        patch_args = ["-p1"],
-        patches = [
-            # https://github.com/bazelbuild/rules_jvm_external/pull/958
-            # Allows javadoc targets to reference other javadoc targets.
-            "//third_party:rules_jvm_external-javadoc-deps.patch",
-            # https://github.com/bazelbuild/rules_jvm_external/pull/960
-            # Forwards the toolchains attribute on java_export to all underlying targets and
-            # evaluates Make variables from deps in pom_file.
-            "//third_party:rules_jvm_external-toolchains-attribute.patch",
-        ],
-        sha256 = "aa17db9b810b22e411bf722095be34eeb66c76819b9c3423ad7740f452016aa3",
-        strip_prefix = "rules_jvm_external-4b073de468eff9741406f475acb04e94bee7c9d0",
-        url = "https://github.com/bazelbuild/rules_jvm_external/archive/4b073de468eff9741406f475acb04e94bee7c9d0.tar.gz",
+        sha256 = "5061364ad9c53de3d2072975f6c14768f2982bbf4101442306270554b317772e",
+        strip_prefix = "rules_jvm_external-f0c92a5aa7a9ea457ec3b89c76c59ff72829d9d7",
+        url = "https://github.com/bazelbuild/rules_jvm_external/archive/f0c92a5aa7a9ea457ec3b89c76c59ff72829d9d7.tar.gz",
     )
 
     maybe(
         http_archive,
         name = "build_bazel_apple_support",
-        sha256 = "ce80afe548fd71ef27b48cb48a283ca21256a0900caec3c7ed9416241e000bfe",
-        strip_prefix = "apple_support-dab92884a6f031e63ac263e5de8a02f13ac42508",
-        url = "https://github.com/bazelbuild/apple_support/archive/dab92884a6f031e63ac263e5de8a02f13ac42508.tar.gz",
+        sha256 = "62cb8c6658739d22986bbe4b025fe9f0f42cce91394096dc85d64b120ccde229",
+        url = "https://github.com/bazelbuild/apple_support/releases/download/1.10.1/apple_support.1.10.1.tar.gz",
     )
 
     maybe(
@@ -93,9 +73,9 @@ def jazzer_dependencies(android = False):
     maybe(
         http_archive,
         name = "com_github_johnynek_bazel_jar_jar",
-        sha256 = "85260ebdaf86cf0ce6d0d0f0a3268a09f628c815513141a6b99a023116523f96",
-        strip_prefix = "bazel_jar_jar-78c8c13ff437e8397ffe80c9a4c905376720a339",
-        url = "https://github.com/bazeltools/bazel_jar_jar/archive/78c8c13ff437e8397ffe80c9a4c905376720a339.tar.gz",
+        sha256 = "7487df7cf64ef85bdd5ffc6a0aff92c46ff7550a663c41b262d53f9dc90cd53d",
+        strip_prefix = "bazel_jar_jar-4e7bf26da8bc8c955578fd8c8a2c763757d344df",
+        url = "https://github.com/bazeltools/bazel_jar_jar/archive/4e7bf26da8bc8c955578fd8c8a2c763757d344df.tar.gz",
     )
 
     maybe(

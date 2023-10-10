@@ -13,16 +13,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "rules_java",
-    patch_args = ["-p1"],
-    patches = [
-        # https://github.com/bazelbuild/rules_java/pull/114
-        # Remove unnecessary dependency on a Java runtime for the target platform.
-        "//third_party:rules_java-use-bootstrap-runtime-toolchain-type.patch",
-    ],
-    sha256 = "fd1d5538c8e5bbf890e1e31e983139b89710aacd0a5327ddf9afe12090ed9c78",
-    strip_prefix = "rules_java-ca72739da10036e1d2cf2aaeab78fae87673e43f",
+    sha256 = "7b0d9ba216c821ee8697dedc0f9d0a705959ace462a3885fe9ba0347ba950111",
     urls = [
-        "https://github.com/bazelbuild/rules_java/archive/ca72739da10036e1d2cf2aaeab78fae87673e43f.tar.gz",
+        "https://github.com/bazelbuild/rules_java/releases/download/6.5.1/rules_java-6.5.1.tar.gz",
     ],
 )
 
@@ -94,14 +87,9 @@ http_archive(
 
 http_archive(
     name = "contrib_rules_jvm",
-    patch_args = ["-p1"],
-    patches = [
-        # https://github.com/bazel-contrib/rules_jvm/pull/194
-        "//third_party:rules_jvm-fix-junit5-for-early-access-builds.patch",
-    ],
-    sha256 = "90ecdf08d7e8817b2247eea77826db872db8866da84b3a824f58d6661aca917f",
-    strip_prefix = "rules_jvm-0.14.0",
-    url = "https://github.com/bazel-contrib/rules_jvm/releases/download/v0.14.0/rules_jvm-v0.14.0.tar.gz",
+    sha256 = "4d62589dc6a55e74bbe33930b826d593367fc777449a410604b2ad7c6c625ef7",
+    strip_prefix = "rules_jvm-0.19.0",
+    url = "https://github.com/bazel-contrib/rules_jvm/releases/download/v0.19.0/rules_jvm-v0.19.0.tar.gz",
 )
 
 http_archive(
