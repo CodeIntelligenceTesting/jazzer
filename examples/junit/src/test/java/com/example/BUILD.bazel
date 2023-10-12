@@ -72,11 +72,13 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "PerExecutionLifecycleFuzzTest",
     srcs = ["PerExecutionLifecycleFuzzTest.java"],
-    allowed_findings = ["com.example.TestSuccessfulException"],
+    expect_crash = True,
+    expected_warning_or_error = "ERROR: com.example.TestSuccessfulException: Lifecycle methods invoked as expected",
     fuzzer_args = [
         "-runs=3",
     ],
     target_class = "com.example.PerExecutionLifecycleFuzzTest",
+    verify_crash_input = False,
     verify_crash_reproducer = False,
     runtime_deps = [
         ":junit_runtime",
@@ -94,8 +96,8 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "PerExecutionLifecycleWithFindingFuzzTest",
     srcs = ["PerExecutionLifecycleWithFindingFuzzTest.java"],
-    # TODO: The TestSuccessfulException thrown in @AfterAll is swallowed when run from the CLI.
     allowed_findings = ["java.io.IOException"],
+    expected_warning_or_error = "ERROR: com.example.TestSuccessfulException: Lifecycle methods invoked as expected",
     fuzzer_args = [
         "-runs=3",
     ],
@@ -117,11 +119,13 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "PerTestLifecycleFuzzTest",
     srcs = ["PerTestLifecycleFuzzTest.java"],
-    allowed_findings = ["com.example.TestSuccessfulException"],
+    expect_crash = True,
+    expected_warning_or_error = "ERROR: com.example.TestSuccessfulException: Lifecycle methods invoked as expected",
     fuzzer_args = [
         "-runs=3",
     ],
     target_class = "com.example.PerTestLifecycleFuzzTest",
+    verify_crash_input = False,
     verify_crash_reproducer = False,
     runtime_deps = [
         ":junit_runtime",

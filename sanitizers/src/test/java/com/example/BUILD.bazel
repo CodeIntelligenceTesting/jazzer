@@ -48,6 +48,7 @@ java_fuzz_target_test(
         "ExpressionLanguageInjection.java",
     ],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
+    expected_warning_or_error = "WARN: Some hooks could not be applied to class files built for Java 7 or lower.",
     target_class = "com.example.ExpressionLanguageInjection",
     # The reproducer can't find jaz.Zer and thus doesn't crash.
     verify_crash_reproducer = False,

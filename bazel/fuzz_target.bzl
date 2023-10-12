@@ -35,6 +35,8 @@ def java_fuzz_target_test(
         allowed_findings = [],
         # By default, expect a crash iff allowed_findings isn't empty.
         expect_crash = None,
+        # If empty, expect no warnings or errors, if not empty, expect one matching the given regex.
+        expected_warning_or_error = "",
         **kwargs):
     if target_class:
         fuzzer_args = fuzzer_args + ["--target_class=" + target_class]
@@ -115,6 +117,7 @@ def java_fuzz_target_test(
             str(verify_crash_reproducer),
             str(expect_crash),
             str(launcher_variant == "java"),
+            "'" + expected_warning_or_error + "'",
             "'" + ",".join(allowed_findings) + "'",
         ] + fuzzer_args,
         data = [

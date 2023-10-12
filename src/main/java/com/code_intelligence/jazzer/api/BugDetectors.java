@@ -99,7 +99,7 @@ public final class BugDetectors {
       return (AtomicReference<BiPredicate<String, Integer>>)
           ssrfSanitizer.getField("connectionPermitted").get(null);
     } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-      System.err.println("WARNING: ");
+      System.err.println("WARN: ");
       e.printStackTrace();
       return null;
     }
