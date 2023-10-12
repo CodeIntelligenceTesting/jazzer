@@ -48,8 +48,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import sun.misc.Unsafe;
 
@@ -118,7 +119,7 @@ public final class FuzzTargetRunner {
   private static final boolean useFuzzedDataProvider;
   private static final ArgumentsMutator mutator;
   private static final ReproducerTemplate reproducerTemplate;
-  private static Predicate<Throwable> findingHandler;
+  private static Consumer<Throwable> fatalFindingHandlerForJUnit;
 
   static {
     FuzzTargetHolder.FuzzTarget fuzzTarget = FuzzTargetHolder.fuzzTarget;
@@ -136,7 +137,6 @@ public final class FuzzTargetRunner {
     if (!useFuzzedDataProvider && IS_ANDROID) {
       Log.error("Android fuzz targets must use " + FuzzedDataProvider.class.getName());
       exit(1);
-      throw new IllegalStateException("Not reached");
     }
 
     Class<?> fuzzTargetClass = fuzzTarget.method.getDeclaringClass();
@@ -147,9 +147,8 @@ public final class FuzzTargetRunner {
     try {
       lifecycleMethodsInvoker.beforeFirstExecution();
     } catch (Throwable t) {
-      Log.finding(t);
+      Log.finding(ExceptionUtils.preprocessThrowable(t));
       exit(1);
-      throw new IllegalStateException("Not reached");
     }
 
     if (useExperimentalMutator) {
@@ -166,11 +165,7 @@ public final class FuzzTargetRunner {
       CoverageRecorder.updateCoveredIdsWithCoverageMap();
     }
 
-    // When running with a custom finding handler, such as from within JUnit, we can't reason about
-    // when the JVM shuts down and thus don't use shutdown handlers.
-    if (findingHandler == null) {
-      Runtime.getRuntime().addShutdownHook(new Thread(FuzzTargetRunner::shutdown));
-    }
+    Runtime.getRuntime().addShutdownHook(new Thread(FuzzTargetRunner::shutdown));
   }
 
   /** A test-only convenience wrapper around {@link #runOne(long, int)}. */
@@ -215,7 +210,6 @@ public final class FuzzTargetRunner {
       data = copyToArray(dataPtr, dataLength);
       argument = data;
     }
-    Object fuzzTargetInstance;
     try {
       lifecycleMethodsInvoker.beforeEachExecution();
     } catch (Throwable uncaughtFinding) {
@@ -225,7 +219,7 @@ public final class FuzzTargetRunner {
     // always enter the try block that calls afterEachExecution in finally.
     if (finding == null) {
       try {
-        fuzzTargetInstance = lifecycleMethodsInvoker.getTestClassInstance();
+        Object fuzzTargetInstance = lifecycleMethodsInvoker.getTestClassInstance();
         if (useExperimentalMutator) {
           // No need to detach as we are currently reading in the mutator state from bytes in every
           // iteration.
@@ -237,7 +231,7 @@ public final class FuzzTargetRunner {
         }
       } catch (Throwable uncaughtFinding) {
         finding = uncaughtFinding;
-      } finally{
+      } finally {
         try {
           lifecycleMethodsInvoker.afterEachExecution();
         } catch (Throwable t) {
@@ -272,6 +266,12 @@ public final class FuzzTargetRunner {
     if (finding == null || finding.getClass().getName().equals(OPENTEST4J_TEST_ABORTED_EXCEPTION)) {
       return LIBFUZZER_CONTINUE;
     }
+
+    // The user-provided fuzz target method has returned. Any further exits, e.g. due to uncaught
+    // exceptions, are on us and should not result in a "fuzz target exited" warning being printed
+    // by libFuzzer.
+    temporarilyDisableLibfuzzerExitHook();
+
     if (useHooks) {
       finding = ExceptionUtils.preprocessThrowable(finding);
     }
@@ -280,40 +280,31 @@ public final class FuzzTargetRunner {
     if (emitDedupToken && !ignoredTokens.add(dedupToken)) {
       return LIBFUZZER_CONTINUE;
     }
-
-    if (findingHandler != null) {
-      // We still print the libFuzzer crashing input information, which also dumps the crashing
-      // input as a side effect.
-      printCrashingInput();
-      if (findingHandler.test(finding)) {
-        return LIBFUZZER_CONTINUE;
-      } else {
-        try {
-          // We have to call afterLastExecution here as we do not register the shutdown hook that
-          // would otherwise call it when findingHandler != null.
-          lifecycleMethodsInvoker.afterLastExecution();
-        } catch (Throwable t) {
-          // We already have a finding and do not know whether the fuzz target is in an expected
-          // state, so report this as a warning rather than an error or finding.
-          Log.warn("Failed to run @AfterAll or fuzzerTearDown methods", t);
-        }
-        return LIBFUZZER_RETURN_FROM_DRIVER;
-      }
+    boolean continueFuzzing =
+        emitDedupToken && Long.compareUnsigned(ignoredTokens.size(), keepGoing) < 0;
+    boolean isFuzzingFromCommandLine =
+        fatalFindingHandlerForJUnit == null || Opt.isJUnitAndCommandLine.get();
+    // In case of --keep_going, only the last finding is reported to JUnit as a Java object, all
+    // previous ones are merely printed. When fuzzing from the command line, we always print all
+    // findings.
+    if (isFuzzingFromCommandLine || continueFuzzing) {
+      Log.finding(finding);
     }
-
-    // The user-provided fuzz target method has returned. Any further exits are on us and should not
-    // result in a "fuzz target exited" warning being printed by libFuzzer.
-    temporarilyDisableLibfuzzerExitHook();
-
-    Log.finding(finding);
+    if (fatalFindingHandlerForJUnit != null && !continueFuzzing) {
+      fatalFindingHandlerForJUnit.accept(finding);
+    }
     if (emitDedupToken) {
       // Has to be printed to stdout as it is parsed by libFuzzer when minimizing a crash. It does
       // not necessarily have to appear at the beginning of a line.
       // https://github.com/llvm/llvm-project/blob/4c106c93eb68f8f9f201202677cd31e326c16823/compiler-rt/lib/fuzzer/FuzzerDriver.cpp#L342
       Log.structuredOutput(String.format(Locale.ROOT, "DEDUP_TOKEN: %016x", dedupToken));
     }
-    Log.println("== libFuzzer crashing input ==");
-    printCrashingInput();
+    if (isFuzzingFromCommandLine) {
+      // We emit this line for backwards compatibility when fuzzing on the CLI only.
+      Log.println("== libFuzzer crashing input ==");
+    }
+    printAndDumpCrashingInput();
+
     // dumpReproducer needs to be called after libFuzzer printed its final stats as otherwise it
     // would report incorrect coverage - the reproducer generation involved rerunning the fuzz
     // target.
@@ -321,13 +312,12 @@ public final class FuzzTargetRunner {
     // that satisfies the same purpose.
     // It also doesn't support the experimental mutator yet as that requires implementing Java code
     // generation for mutators.
-    if (findingHandler == null && !useExperimentalMutator) {
+    if (fatalFindingHandlerForJUnit == null && !useExperimentalMutator) {
       dumpReproducer(data);
     }
 
-    if (!emitDedupToken || Long.compareUnsigned(ignoredTokens.size(), keepGoing) >= 0) {
-      // Reached the maximum amount of findings to keep going for, crash after shutdown.
-      if (!Opt.autofuzz.get().isEmpty() && Opt.dedup.get()) {
+    if (!continueFuzzing) {
+      if (!Opt.autofuzz.get().isEmpty() && emitDedupToken) {
         Log.println("");
         Log.info(
             String.format(
@@ -342,8 +332,15 @@ public final class FuzzTargetRunner {
                         Opt.autofuzzIgnore.get().stream(), Stream.of(finding.getClass().getName()))
                     .collect(joining(","))));
       }
-      System.exit(JAZZER_FINDING_EXIT_CODE);
-      throw new IllegalStateException("Not reached");
+      if (fatalFindingHandlerForJUnit == null) {
+        // When running a legacy fuzzerTestOneInput test, exit now with the correct exit code.
+        // This will trigger the shutdown hook that runs fuzzerTearDown.
+        System.exit(JAZZER_FINDING_EXIT_CODE);
+      } else {
+        // When running within JUnit, pass control back to FuzzTestExecutor, which has received
+        // the finding via the handler.
+        return LIBFUZZER_RETURN_FROM_DRIVER;
+      }
     }
     return LIBFUZZER_CONTINUE;
   }
@@ -435,15 +432,8 @@ public final class FuzzTargetRunner {
         args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][]::new));
   }
 
-  /**
-   * Registers a custom handler for findings.
-   *
-   * @param findingHandler a consumer for the finding that returns true if the fuzzer should
-   *     continue fuzzing and false if it should return from {@link
-   *     FuzzTargetRunner#startLibFuzzer(List)}.
-   */
-  public static void registerFindingHandler(Predicate<Throwable> findingHandler) {
-    FuzzTargetRunner.findingHandler = findingHandler;
+  public static void registerFatalFindingHandlerForJUnit(Consumer<Throwable> findingHandler) {
+    FuzzTargetRunner.fatalFindingHandlerForJUnit = Objects.requireNonNull(findingHandler);
   }
 
   private static void shutdown() {
@@ -556,8 +546,8 @@ public final class FuzzTargetRunner {
    * Causes libFuzzer to write the current input to disk as a crashing input and emit some
    * information about it to stderr.
    */
-  public static void printCrashingInput() {
-    FuzzTargetRunnerNatives.printCrashingInput();
+  public static void printAndDumpCrashingInput() {
+    FuzzTargetRunnerNatives.printAndDumpCrashingInput();
   }
 
   /** Returns the debug string of the current mutator. If no mutator is used, returns null. */

@@ -17,7 +17,6 @@
 package com.code_intelligence.jazzer.driver.junit;
 
 import static com.code_intelligence.jazzer.driver.Constants.JAZZER_FINDING_EXIT_CODE;
-import static com.code_intelligence.jazzer.driver.FuzzTargetRunner.printCrashingInput;
 import static org.junit.platform.engine.FilterResult.includedIf;
 import static org.junit.platform.engine.TestExecutionResult.Status.ABORTED;
 import static org.junit.platform.engine.TestExecutionResult.Status.FAILED;
@@ -30,6 +29,7 @@ import com.code_intelligence.jazzer.utils.Log;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -91,7 +91,7 @@ public final class JUnitRunner {
             // all fuzz test invocations are combined in a single JUnit test method execution.
             // https://junit.org/junit5/docs/current/user-guide/#writing-tests-declarative-timeouts-mode
             .configurationParameter("junit.jupiter.execution.timeout.mode", "disabled")
-            .configurationParameter("jazzer.internal.commandLine", "true")
+            .configurationParameter("jazzer.internal.command_line", "true")
             .configurationParameters(indexedArgs)
             .selectors(selectClass(testClassName))
             .filters(includeTags("jazzer"));
@@ -118,28 +118,30 @@ public final class JUnitRunner {
   }
 
   public int run() {
-    AtomicReference<TestExecutionResult> resultHolder =
-        new AtomicReference<>(TestExecutionResult.successful());
+    AtomicReference<TestExecutionResult> testResultHolder = new AtomicReference<>();
+    AtomicBoolean sawContainerFailure = new AtomicBoolean();
     launcher.execute(
         testPlan,
         new TestExecutionListener() {
           @Override
           public void executionFinished(
               TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
-            // Lifecycle methods can fail too, which results in failed execution results on
-            // container
-            // nodes. We keep the last failing one with a stack trace. For tests, we also keep the
-            // stack
-            // traces of aborted tests so that we can show a warning. In JUnit Jupiter, tests and
-            // containers always fail with a throwable:
-            // https://github.com/junit-team/junit5/blob/ac31e9a7d58973db73496244dab4defe17ae563e/junit-platform-engine/src/main/java/org/junit/platform/engine/support/hierarchical/ThrowableCollector.java#LL176C37-L176C37
-            if ((testIdentifier.isTest() && testExecutionResult.getThrowable().isPresent())
-                || testExecutionResult.getStatus() == FAILED) {
-              resultHolder.set(testExecutionResult);
-            }
-            if (testExecutionResult.getStatus() == FAILED
-                && testExecutionResult.getThrowable().isPresent()) {
-              resultHolder.set(testExecutionResult);
+            if (testIdentifier.isTest()) {
+              testResultHolder.set(testExecutionResult);
+            } else {
+              // Lifecycle methods can fail too, which results in failed execution results on
+              // container nodes. We emit all these failures as errors, not findings, since the
+              // lifecycle methods invoked by JUnit, which don't include @BeforeEach and
+              // @AfterEach executed during individual fuzz test executions, usually aren't
+              // reproducible with any given input (e.g. @AfterAll methods).
+              testExecutionResult
+                  .getThrowable()
+                  .map(ExceptionUtils::preprocessThrowable)
+                  .ifPresent(
+                      throwable -> {
+                        sawContainerFailure.set(true);
+                        Log.error(throwable);
+                      });
             }
           }
 
@@ -149,28 +151,37 @@ public final class JUnitRunner {
           }
         });
 
-    TestExecutionResult result = resultHolder.get();
+    TestExecutionResult result = testResultHolder.get();
+    if (result == null) {
+      // This can only happen if a test container failed, in which case we will have printed a
+      // stack trace.
+      Log.error("Failed to run fuzz test");
+      return 1;
+    }
     if (result.getStatus() != FAILED) {
-      // We do not generate a finding for Aborted tests (i.e. tests whose preconditions were not
+      // We do not generate a finding for aborted tests (i.e. tests whose preconditions were not
       // met) as such tests also wouldn't make a test run fail.
       if (result.getStatus() == ABORTED) {
         Log.warn("Fuzz test aborted", result.getThrowable().orElse(null));
       }
+      if (sawContainerFailure.get()) {
+        // A failure in a test container indicates a setup error, so we don't return the finding
+        // exit code in this case.
+        return 1;
+      }
       return 0;
     }
 
-    // Safe to unwrap as result is either TestExecutionResult.successful() (initial value) or has
-    // a throwable (set in the TestExecutionListener above).
+    // Safe to unwrap as in JUnit Jupiter, tests and containers always fail with a Throwable:
+    // https://github.com/junit-team/junit5/blob/ac31e9a7d58973db73496244dab4defe17ae563e/junit-platform-engine/src/main/java/org/junit/platform/engine/support/hierarchical/ThrowableCollector.java#LL176C37-L176C37
     Throwable throwable = result.getThrowable().get();
     if (throwable instanceof ExitCodeException) {
-      // Jazzer found a regular finding and printed it, so just return the exit code.
+      // libFuzzer exited with a non-zero exit code, but Jazzer didn't produce a finding. Forward
+      // the exit code and assume that information has already been printed (e.g. a timeout).
       return ((ExitCodeException) throwable).exitCode;
     } else {
-      // Jazzer didn't report a finding, but an afterAll-type function threw an exception. Report it
-      // as a finding, cleaning up the stack trace.
-      Log.finding(ExceptionUtils.preprocessThrowable(throwable));
-      Log.println("== libFuzzer crashing input ==");
-      printCrashingInput();
+      // Non-fatal findings and exceptions in containers have already been printed, the fatal
+      // finding is passed to JUnit as the test result.
       return JAZZER_FINDING_EXIT_CODE;
     }
   }

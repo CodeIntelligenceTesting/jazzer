@@ -216,6 +216,10 @@ public final class Opt {
 
   // Internal options:
 
+  // Whether Jazzer is running a JUnit fuzz test from the command line.
+  public static final OptItem<Boolean> isJUnitAndCommandLine =
+      boolSetting("command_line", false, null);
+
   // Whether this is a subprocess created by libFuzzer's `-merge` mode.
   public static final OptItem<Boolean> mergeInner = boolSetting("merge_inner", false, null);
 
