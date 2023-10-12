@@ -236,7 +236,7 @@ class Utils {
 
   static boolean runFromCommandLine(ExtensionContext extensionContext) {
     return extensionContext
-        .getConfigurationParameter("jazzer.internal.commandLine")
+        .getConfigurationParameter("jazzer.internal.command_line")
         .map(Boolean::parseBoolean)
         .orElse(false);
   }

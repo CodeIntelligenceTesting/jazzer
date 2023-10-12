@@ -361,17 +361,9 @@ class FuzzTestExecutor {
               JUnitLifecycleMethodsInvoker.of(extensionContext, lifecycle));
     }
 
-    // Only register a finding handler in case the fuzz test is executed by JUnit.
-    // It short-circuits the handling in FuzzTargetRunner and prevents settings
-    // like --keep_going.
     AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
-    if (!isRunFromCommandLine) {
-      FuzzTargetRunner.registerFindingHandler(
-          t -> {
-            atomicFinding.set(t);
-            return false;
-          });
-    }
+    // Non-fatal findings (with --keep_going) are logged by FuzzTargetRunner.
+    FuzzTargetRunner.registerFatalFindingHandlerForJUnit(atomicFinding::set);
 
     int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
     javaSeedsDir.ifPresent(FuzzTestExecutor::deleteJavaSeedsDir);

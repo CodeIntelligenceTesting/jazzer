@@ -192,7 +192,7 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_startLibFuzze
 }
 
 [[maybe_unused]] void
-Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_printCrashingInput(
+Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_printAndDumpCrashingInput(
     JNIEnv *, jclass) {
   if (gLibfuzzerPrintCrashingInput == nullptr) {
     std::cerr << "<not available>" << std::endl;

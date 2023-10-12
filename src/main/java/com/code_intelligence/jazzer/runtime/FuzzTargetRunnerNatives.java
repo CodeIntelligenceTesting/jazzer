@@ -35,7 +35,7 @@ public class FuzzTargetRunnerNatives {
   public static native int startLibFuzzer(
       byte[][] args, Class<?> runner, boolean useExperimentalMutator);
 
-  public static native void printCrashingInput();
+  public static native void printAndDumpCrashingInput();
 
   public static native void temporarilyDisableLibfuzzerExitHook();
 }
