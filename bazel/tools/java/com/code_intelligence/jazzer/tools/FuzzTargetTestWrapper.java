@@ -269,7 +269,7 @@ public class FuzzTargetTestWrapper {
         throw new IllegalStateException(
             String.format(
                 "Got finding %s, but expected one of: %s",
-                findings.get(0), String.join(", ", expectedFindings)));
+                finding, String.join(", ", expectedFindings)));
       }
     }
     List<String> unexpectedFrames =
