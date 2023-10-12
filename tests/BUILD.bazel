@@ -205,6 +205,7 @@ java_fuzz_target_test(
     name = "NoCoverageFuzzer",
     timeout = "short",
     srcs = ["src/test/java/com/example/NoCoverageFuzzer.java"],
+    expected_warning_or_error = "WARNING: no interesting inputs were found so far. Is the code instrumented for coverage?",
     fuzzer_args = [
         "-runs=10",
         "--instrumentation_excludes=**",
@@ -485,6 +486,11 @@ java_fuzz_target_test(
     timeout = "short",
     srcs = ["src/test/java/com/example/OfflineInstrumentedFuzzer.java"],
     allowed_findings = ["java.lang.IllegalStateException"],
+    fuzzer_args = [
+        # Do not instrument the JaCoCo agent.
+        "--instrumentation_includes=com.example.*",
+        "--custom_hook_includes=com.example.*",
+    ],
     target_class = "com.example.OfflineInstrumentedFuzzer",
     deps = [
         ":OfflineInstrumentedTargetInstrumented",

@@ -57,6 +57,7 @@ java_fuzz_target_test(
     allowed_findings = ["native"],
     env = {"EXAMPLE_NATIVE_LIB": "native_asan"},
     env_inherit = ["CC"],
+    expected_warning_or_error = "WARN: Jazzer is not compatible with LeakSanitizer. Leaks are not reported.",
     fuzzer_args = [
         "--asan",
     ],
@@ -351,6 +352,7 @@ java_fuzz_target_test(
         "src/main/java/com/example/FastJsonFuzzer.java",
     ],
     allowed_findings = ["java.lang.NumberFormatException"],
+    expected_warning_or_error = "WARN: Some hooks could not be applied to class files built for Java 7 or lower.",
     target_class = "com.example.FastJsonFuzzer",
     deps = [
         "@maven//:com_alibaba_fastjson",
@@ -376,6 +378,7 @@ java_fuzz_target_test(
         "java.lang.NumberFormatException",
         "java.lang.NullPointerException",
     ],
+    expected_warning_or_error = "WARN: Some hooks could not be applied to class files built for Java 7 or lower.",
     fuzzer_args = [
         "--keep_going=7",
     ],

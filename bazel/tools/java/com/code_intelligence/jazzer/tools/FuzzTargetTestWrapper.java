@@ -13,7 +13,10 @@
 // limitations under the License.
 package com.code_intelligence.jazzer.tools;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.devtools.build.runfiles.AutoBazelRepository;
 import com.google.devtools.build.runfiles.Runfiles;
@@ -35,6 +38,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -47,13 +51,15 @@ import javax.tools.ToolProvider;
 
 @AutoBazelRepository
 public class FuzzTargetTestWrapper {
+  private static final Set<String> IGNORED_WARNINGS =
+      // Triggered by BatikTranscoderFuzzer on macOS in Github Actions.
+      Collections.singleton("WARNING: GL pipe is running in software mode (Renderer ID=0x1020400)");
   private static final String EXCEPTION_PREFIX = "== Java Exception: ";
   private static final String FRAME_PREFIX = "\tat ";
   private static final Pattern SANITIZER_FINDING = Pattern.compile("^SUMMARY: \\w*Sanitizer");
   private static final String THREAD_DUMP_HEADER = "Stack traces of all JVM threads:";
   private static final Set<String> PUBLIC_JAZZER_PACKAGES =
-      Collections.unmodifiableSet(
-          Stream.of("api", "replay", "sanitizers").collect(Collectors.toSet()));
+      unmodifiableSet(Stream.of("api", "replay", "sanitizers").collect(toSet()));
 
   public static void main(String[] args) {
     Runfiles runfiles;
@@ -65,6 +71,7 @@ public class FuzzTargetTestWrapper {
     boolean shouldVerifyCrashReproducer;
     boolean expectCrash;
     boolean usesJavaLauncher;
+    Optional<String> expectedWarningOrError;
     Set<String> allowedFindings;
     List<String> arguments;
     try {
@@ -78,12 +85,17 @@ public class FuzzTargetTestWrapper {
       shouldVerifyCrashReproducer = Boolean.parseBoolean(args[5]);
       expectCrash = Boolean.parseBoolean(args[6]);
       usesJavaLauncher = Boolean.parseBoolean(args[7]);
+      if (args[8].isEmpty()) {
+        expectedWarningOrError = Optional.empty();
+      } else {
+        expectedWarningOrError = Optional.of(args[8]);
+      }
       allowedFindings =
-          Arrays.stream(args[8].split(",")).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
+          Arrays.stream(args[9].split(",")).filter(s -> !s.isEmpty()).collect(toSet());
       // Map all files/dirs to real location
       arguments =
           Arrays.stream(args)
-              .skip(9)
+              .skip(10)
               .map(arg -> arg.startsWith("-") ? arg : runfiles.rlocation(arg))
               .collect(toList());
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
@@ -150,9 +162,14 @@ public class FuzzTargetTestWrapper {
 
     try {
       Process process = processBuilder.start();
+      boolean sawErrorWithStackTrace;
       try {
-        verifyFuzzerOutput(
-            process.getErrorStream(), allowedFindings, arguments.contains("--nohooks"));
+        sawErrorWithStackTrace =
+            verifyFuzzerOutput(
+                process.getErrorStream(),
+                allowedFindings,
+                arguments.contains("--nohooks"),
+                expectedWarningOrError);
       } finally {
         process.getErrorStream().close();
       }
@@ -166,10 +183,11 @@ public class FuzzTargetTestWrapper {
         System.exit(0);
       }
       // Assert that we either found a crash in Java (exit code 77), a sanitizer crash (exit code
-      // 76), or a timeout (exit code 70).
+      // 76), a timeout (exit code 70) or an error with stack trace (exit code 1).
       if (exitCode != 76
           && exitCode != 77
-          && !(allowedFindings.contains("timeout") && exitCode == 70)) {
+          && !(allowedFindings.contains("timeout") && exitCode == 70)
+          && !(sawErrorWithStackTrace && exitCode == 1)) {
         System.err.printf("Did expect a crash, but Jazzer exited with exit code %d%n", exitCode);
         System.exit(1);
       }
@@ -207,25 +225,58 @@ public class FuzzTargetTestWrapper {
     System.exit(0);
   }
 
-  private static void verifyFuzzerOutput(
-      InputStream fuzzerOutput, Set<String> expectedFindings, boolean noHooks) throws IOException {
-    List<String> stackTrace;
+  // Returns true if the fuzzer failed with an error and there was a stack trace.
+  private static boolean verifyFuzzerOutput(
+      InputStream fuzzerOutput,
+      Set<String> expectedFindings,
+      boolean noHooks,
+      Optional<String> expectedWarningOrError)
+      throws IOException {
+    List<String> lines;
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(fuzzerOutput))) {
-      stackTrace =
-          reader
-              .lines()
-              .peek(System.err::println)
-              .filter(
-                  line ->
-                      line.startsWith(EXCEPTION_PREFIX)
-                          || line.startsWith(FRAME_PREFIX)
-                          || line.equals(THREAD_DUMP_HEADER)
-                          || SANITIZER_FINDING.matcher(line).find())
-              .collect(toList());
+      lines = reader.lines().collect(toList());
     }
+
+    List<String> warningsAndErrors =
+        lines.stream()
+            .filter(line -> line.startsWith("WARN") || line.startsWith("ERROR"))
+            .filter(line -> !IGNORED_WARNINGS.contains(line))
+            .collect(toList());
+    boolean sawError = warningsAndErrors.stream().anyMatch(line -> line.startsWith("ERROR"));
+    if (!expectedWarningOrError.isPresent() && !warningsAndErrors.isEmpty()) {
+      throw new IllegalStateException(
+          "Did not expect warnings or errors, but got:\n" + String.join("\n", warningsAndErrors));
+    }
+    if (expectedWarningOrError.isPresent()) {
+      if (warningsAndErrors.isEmpty()) {
+        throw new IllegalStateException("Expected a warning or error, but did not get any");
+      }
+      String unexpectedWarningsAndErrors =
+          warningsAndErrors.stream()
+              .filter(line -> !expectedWarningOrError.get().equals(line))
+              .collect(Collectors.joining("\n"));
+      if (!unexpectedWarningsAndErrors.isEmpty()) {
+        throw new IllegalStateException(
+            "Got unexpected warnings or errors: " + unexpectedWarningsAndErrors);
+      }
+    }
+
+    List<String> stackTrace =
+        lines.stream()
+            .peek(System.err::println)
+            .filter(
+                line ->
+                    line.startsWith(EXCEPTION_PREFIX)
+                        || line.startsWith(FRAME_PREFIX)
+                        || line.equals(THREAD_DUMP_HEADER)
+                        || SANITIZER_FINDING.matcher(line).find())
+            .collect(toList());
     if (expectedFindings.isEmpty()) {
       if (stackTrace.isEmpty()) {
-        return;
+        return false;
+      }
+      if (!warningsAndErrors.isEmpty()) {
+        return sawError;
       }
       throw new IllegalStateException(
           String.format(
@@ -244,7 +295,7 @@ public class FuzzTargetTestWrapper {
       if (expectedFindings.size() != 1) {
         throw new IllegalStateException("Cannot expect both a native and other findings");
       }
-      return;
+      return false;
     }
     if (expectedFindings.contains("timeout")) {
       if (!stackTrace.contains(THREAD_DUMP_HEADER) || stackTrace.size() < 3) {
@@ -254,7 +305,7 @@ public class FuzzTargetTestWrapper {
       if (expectedFindings.size() != 1) {
         throw new IllegalStateException("Cannot expect both a timeout and other findings");
       }
-      return;
+      return false;
     }
     List<String> findings =
         stackTrace.stream()
@@ -291,6 +342,7 @@ public class FuzzTargetTestWrapper {
               "Unexpected strack trace frames:%n%n%s%n%nin:%n%s",
               String.join("\n", unexpectedFrames), String.join("\n", stackTrace)));
     }
+    return false;
   }
 
   private static void verifyCrashReproducer(
@@ -313,7 +365,7 @@ public class FuzzTargetTestWrapper {
     try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null)) {
       Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjects(source);
       List<String> options =
-          Arrays.asList(
+          asList(
               "-classpath", String.join(File.pathSeparator, api.toString(), targetJar.toString()));
       System.out.printf(
           "Compile crash reproducer %s with options %s%n", source.getAbsolutePath(), options);
