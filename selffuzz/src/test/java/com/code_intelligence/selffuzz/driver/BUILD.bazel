@@ -12,7 +12,6 @@ java_fuzz_target_test(
         "-runs=1000",
     ],
     target_class = "com.code_intelligence.selffuzz.driver.FuzzedDataProviderImplFuzzTest",
-    verify_crash_reproducer = False,
     deps = [
         "//selffuzz:jazzer_api_selffuzz",
         "//selffuzz:jazzer_selffuzz",
