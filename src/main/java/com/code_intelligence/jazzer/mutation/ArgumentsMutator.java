@@ -17,7 +17,6 @@
 package com.code_intelligence.jazzer.mutation;
 
 import static com.code_intelligence.jazzer.mutation.mutator.Mutators.validateAnnotationUsage;
-import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithReadExactly;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static java.lang.String.format;
@@ -31,7 +30,6 @@ import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
 import com.code_intelligence.jazzer.mutation.combinator.ProductMutator;
 import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
-import com.code_intelligence.jazzer.mutation.support.InputStreamSupport.ReadExactlyInputStream;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -116,15 +114,12 @@ public final class ArgumentsMutator {
   }
 
   /**
-   * @return if the given input stream was consumed exactly
    * @throws UncheckedIOException if the underlying InputStream throws
    */
-  public boolean read(ByteArrayInputStream data) {
+  public void read(ByteArrayInputStream data) {
     try {
-      ReadExactlyInputStream is = extendWithReadExactly(data);
-      arguments = productMutator.readExclusive(is);
+      arguments = productMutator.readExclusive(data);
       argumentsExposed = false;
-      return is.isConsumedExactly();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
