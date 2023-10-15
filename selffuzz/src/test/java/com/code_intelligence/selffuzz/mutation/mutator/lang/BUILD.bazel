@@ -12,7 +12,6 @@ java_fuzz_target_test(
         "-runs=1000",
     ],
     target_class = "com.code_intelligence.selffuzz.mutation.mutator.lang.StringMutatorFuzzTest",
-    verify_crash_reproducer = False,
     deps = [
         "//selffuzz:jazzer_selffuzz",
         "//selffuzz/src/test/java/com/code_intelligence/selffuzz:helpers",
@@ -32,7 +31,6 @@ java_fuzz_target_test(
         "-runs=1000",
     ],
     target_class = "com.code_intelligence.selffuzz.mutation.mutator.lang.FloatingPointMutatorFuzzTests",
-    verify_crash_reproducer = False,
     deps = [
         "//selffuzz:jazzer_selffuzz",
         "//selffuzz/src/test/java/com/code_intelligence/selffuzz:helpers",

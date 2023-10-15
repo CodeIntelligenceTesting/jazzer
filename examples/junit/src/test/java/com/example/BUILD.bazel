@@ -160,7 +160,6 @@ java_fuzz_target_test(
     ],
     tags = ["no-jdk8"],
     target_class = "com.example.MockitoFuzzTest",
-    verify_crash_reproducer = False,
     runtime_deps = [
         ":junit_runtime",
     ],
@@ -179,7 +178,6 @@ java_fuzz_target_test(
         "-runs=0",
     ],
     target_class = "com.example.AutofuzzLifecycleFuzzTest",
-    verify_crash_reproducer = False,
     runtime_deps = [
         ":junit_runtime",
     ],
