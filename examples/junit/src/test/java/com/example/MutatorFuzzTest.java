@@ -17,7 +17,6 @@
 package com.example;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import com.code_intelligence.jazzer.junit.FuzzTest;
@@ -39,7 +38,6 @@ class MutatorFuzzTest {
     // FuzzTargetRunner values are not set in JUnit engine tests.
     String jazzerFuzz = System.getenv("JAZZER_FUZZ");
     if (jazzerFuzz != null && !jazzerFuzz.isEmpty()) {
-      assertTrue(FuzzTargetRunner.invalidCorpusFilesPresent());
       assertEquals(FuzzTargetRunner.mutatorDebugString(), "Arguments[Nullable<List<String>>]");
     }
   }

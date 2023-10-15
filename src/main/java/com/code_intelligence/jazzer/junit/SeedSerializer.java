@@ -29,10 +29,6 @@ import java.util.Optional;
 interface SeedSerializer {
   Object[] read(byte[] bytes);
 
-  default boolean allReadsValid() {
-    return true;
-  }
-
   // Implementations can assume that the argument array contains valid arguments for the method that
   // this instance has been constructed for.
   byte[] write(Object[] args) throws UnsupportedOperationException;
@@ -95,7 +91,6 @@ final class FuzzedDataProviderSeedSerializer implements SeedSerializer {
 
 final class ArgumentsMutatorSeedSerializer implements SeedSerializer {
   private final ArgumentsMutator mutator;
-  private boolean allReadsValid;
 
   public ArgumentsMutatorSeedSerializer(ArgumentsMutator mutator) {
     this.mutator = mutator;
@@ -103,13 +98,8 @@ final class ArgumentsMutatorSeedSerializer implements SeedSerializer {
 
   @Override
   public Object[] read(byte[] bytes) {
-    allReadsValid &= mutator.read(new ByteArrayInputStream(bytes));
+    mutator.read(new ByteArrayInputStream(bytes));
     return mutator.getArguments();
-  }
-
-  @Override
-  public boolean allReadsValid() {
-    return allReadsValid;
   }
 
   @Override

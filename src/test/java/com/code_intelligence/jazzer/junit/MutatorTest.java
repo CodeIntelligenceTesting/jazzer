@@ -35,14 +35,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.assertj.core.api.Condition;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.platform.engine.reporting.ReportEntry;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.junit.platform.testkit.engine.Event;
 import org.junit.rules.TemporaryFolder;
 
 public class MutatorTest {
@@ -97,15 +94,6 @@ public class MutatorTest {
             event(type(STARTED), container(ENGINE)),
             event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
             event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-            // Invalid corpus input warning
-            event(
-                type(REPORTING_ENTRY_PUBLISHED),
-                container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ)),
-                new Condition<>(
-                    Event.byPayload(
-                        ReportEntry.class,
-                        (it) -> it.getKeyValuePairs().values().contains(INVALID_SIGNATURE_ENTRY)),
-                    "has invalid signature entry reporting entry")),
             event(
                 type(FINISHED),
                 container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ)),
@@ -170,10 +158,6 @@ public class MutatorTest {
             event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ))),
             event(type(STARTED), container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
             // Deactivated fuzzing warning
-            event(
-                type(REPORTING_ENTRY_PUBLISHED),
-                container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),
-            // Invalid corpus input warning
             event(
                 type(REPORTING_ENTRY_PUBLISHED),
                 container(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ))),

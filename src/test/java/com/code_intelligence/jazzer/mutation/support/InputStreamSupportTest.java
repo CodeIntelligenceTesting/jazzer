@@ -17,13 +17,11 @@
 package com.code_intelligence.jazzer.mutation.support;
 
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
-import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithReadExactly;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithZeros;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.infiniteZeros;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.readAllBytes;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.code_intelligence.jazzer.mutation.support.InputStreamSupport.ReadExactlyInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -117,30 +115,5 @@ class InputStreamSupportTest {
     InputStream input = new ByteArrayInputStream(bytes);
 
     assertThat(readAllBytes(input)).isEqualTo(bytes);
-  }
-
-  @Test
-  @SuppressWarnings("ResultOfMethodCallIgnored")
-  void testReadExactly() throws IOException {
-    ReadExactlyInputStream ce = extendWithReadExactly(new ByteArrayInputStream(new byte[] {0, 1}));
-    assertThat(ce.isConsumedExactly()).isFalse();
-    ce.read();
-    assertThat(ce.isConsumedExactly()).isFalse();
-    ce.read();
-    assertThat(ce.isConsumedExactly()).isTrue();
-    ce.read();
-    assertThat(ce.isConsumedExactly()).isFalse();
-  }
-
-  @Test
-  @SuppressWarnings("ResultOfMethodCallIgnored")
-  void testReadExactly_readBytes() throws IOException {
-    ReadExactlyInputStream ce =
-        extendWithReadExactly(new ByteArrayInputStream(new byte[] {0, 1, 2}));
-    assertThat(ce.isConsumedExactly()).isFalse();
-    ce.read(new byte[3]);
-    assertThat(ce.isConsumedExactly()).isTrue();
-    ce.read(new byte[1]);
-    assertThat(ce.isConsumedExactly()).isFalse();
   }
 }

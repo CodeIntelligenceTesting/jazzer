@@ -84,12 +84,6 @@ class SeedArgumentsProvider implements ArgumentsProvider {
                         + "To start fuzzing, run a test with the environment variable JAZZER_FUZZ"
                         + " set to a non-empty value.");
               }
-              if (!serializer.allReadsValid()) {
-                extensionContext.publishReportEntry(
-                    "Some files in the seed corpus do not match the fuzz target signature.\n"
-                        + "This indicates that they were generated with a different signature and"
-                        + " may cause issues reproducing previous findings.");
-              }
             });
   }
 
