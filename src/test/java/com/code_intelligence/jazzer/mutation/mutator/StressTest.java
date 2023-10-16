@@ -20,14 +20,19 @@ import static com.code_intelligence.jazzer.mutation.mutator.Mutators.validateAnn
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithZeros;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.asMap;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.lang.Math.floor;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.IntStream.rangeClosed;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -77,6 +82,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -179,10 +185,22 @@ public class StressTest {
             new TypeHolder<@NotNull Map<@NotNull Boolean, @NotNull Boolean>>() {}.annotatedType(),
             "Map<Boolean,Boolean>",
             false,
-            // 1 0-element map, 4 1-element maps
-            distinctElements(1 + 4),
-            // 1 0-element map, 4 1-element maps, 4 2-element maps
-            distinctElements(1 + 4 + 4)),
+            exactly(
+                asMap(),
+                asMap(false, false),
+                asMap(false, true),
+                asMap(true, false),
+                asMap(true, true)),
+            exactly(
+                asMap(),
+                asMap(false, false),
+                asMap(false, true),
+                asMap(true, false),
+                asMap(true, true),
+                asMap(false, false, true, false),
+                asMap(false, false, true, true),
+                asMap(false, true, true, false),
+                asMap(false, true, true, true))),
         arguments(
             asAnnotatedType(byte.class),
             "Byte",
@@ -567,20 +585,25 @@ public class StressTest {
                 SingleOptionOneOfField3.newBuilder().setBoolField(true).build())));
   }
 
-  @SafeVarargs
-  private static Consumer<List<Object>> all(Consumer<List<Object>>... checks) {
-    return list -> {
-      for (Consumer<List<Object>> check : checks) {
-        check.accept(list);
+  private static CloseableConsumer all(CloseableConsumer... checks) {
+    return new CloseableConsumer() {
+      @Override
+      public void close() throws Exception {
+        for (CloseableConsumer check : checks) {
+          check.close();
+        }
+      }
+
+      @Override
+      public void accept(Object value) {
+        for (CloseableConsumer check : checks) {
+          check.accept(value);
+        }
       }
     };
   }
 
-  private static Consumer<List<Object>> distinctElements(int num) {
-    return list -> assertThat(new HashSet<>(list).size()).isAtLeast(num);
-  }
-
-  private static Consumer<List<Object>> manyDistinctElements() {
+  private static CloseableConsumer manyDistinctElements() {
     return distinctElementsRatio(MANY_DISTINCT_ELEMENTS_RATIO);
   }
 
@@ -603,8 +626,7 @@ public class StressTest {
    * Asserts that a given list contains at least as many distinct elements as can be expected when
    * picking {@code picks} out of {@code domainSize} elements uniformly at random.
    */
-  private static Consumer<List<Object>> expectedNumberOfDistinctElements(
-      long domainSize, int picks) {
+  private static CloseableConsumer expectedNumberOfDistinctElements(long domainSize, int picks) {
     // https://www.randomservices.org/random/urn/Birthday.html#mom2
     double expectedValue = domainSize * (1 - pow(1 - 1.0 / domainSize, picks));
     double variance =
@@ -615,46 +637,108 @@ public class StressTest {
     // Allow missing the expected value by two standard deviations. For a normal distribution,
     // this would correspond to 95% of all cases.
     int almostCertainLowerBound = (int) floor(expectedValue - 2 * standardDeviation);
-    return list ->
+    HashSet<Integer> hashes = new HashSet<>();
+    return new CloseableConsumer() {
+      @Override
+      public void accept(Object value) {
+        hashes.add(Objects.hashCode(value));
+      }
+
+      @Override
+      public void close() {
         assertWithMessage(
                 "V=distinct elements among %s picked out of %s\nE[V]=%s\nσ[V]=%s",
                 picks, domainSize, expectedValue, standardDeviation)
-            .that(new HashSet<>(list).size())
+            .that(hashes.size())
             .isAtLeast(almostCertainLowerBound);
-  }
-
-  private static Consumer<List<Object>> distinctElementsRatio(double ratio) {
-    require(ratio > 0);
-    require(ratio <= 1);
-    return list -> assertThat(new HashSet<>(list).size() / (double) list.size()).isAtLeast(ratio);
-  }
-
-  private static Consumer<List<Object>> exactly(Object... expected) {
-    return list -> assertThat(new HashSet<>(list)).containsExactly(expected);
-  }
-
-  private static Consumer<List<Object>> contains(Object... expected) {
-    return list -> assertThat(new HashSet<>(list)).containsAtLeastElementsIn(expected);
-  }
-
-  private static Consumer<List<Object>> doesNotContain(Object... expected) {
-    return list -> assertThat(new HashSet<>(list)).containsNoneIn(expected);
-  }
-
-  private static Consumer<List<Object>> mapSizeInClosedRange(int min, int max) {
-    return list -> {
-      list.forEach(
-          map -> {
-            if (map instanceof Map) {
-              assertThat(((Map) map).size()).isAtLeast(min);
-              assertThat(((Map) map).size()).isAtMost(max);
-            } else {
-              throw new IllegalArgumentException(
-                  "Expected a list of maps, got list of" + map.getClass().getName());
-            }
-          });
+      }
     };
   }
+
+  private static CloseableConsumer distinctElementsRatio(double ratio) {
+    require(ratio > 0);
+    require(ratio <= 1);
+    List<Integer> hashes = new ArrayList<>();
+    return new CloseableConsumer() {
+      @Override
+      public void accept(Object value) {
+        hashes.add(Objects.hashCode(value));
+      }
+
+      @Override
+      public void close() {
+        assertThat(new HashSet<>(hashes).size() / (double) hashes.size()).isAtLeast(ratio);
+      }
+    };
+  }
+
+  private static CloseableConsumer exactly(Object... expected) {
+    return containsInternal(true, expected);
+  }
+
+  private static CloseableConsumer contains(Object... expected) {
+    return containsInternal(false, expected);
+  }
+
+  private static CloseableConsumer containsInternal(boolean exactly, Object... expected) {
+    Map<Object, Boolean> sawValue =
+        stream(expected)
+            .collect(
+                toMap(
+                    value -> value,
+                    value -> false,
+                    (a, b) -> {
+                      throw new IllegalStateException("Duplicate value " + a);
+                    },
+                    HashMap::new));
+    return new CloseableConsumer() {
+      @Override
+      public void accept(Object value) {
+        if (exactly) {
+          assertThat(value).isIn(sawValue.keySet());
+        }
+        sawValue.put(value, true);
+      }
+
+      @Override
+      public void close() {
+        assertThat(sawValue.entrySet().stream().filter(e -> !e.getValue()).collect(toList()))
+            .isEmpty();
+      }
+    };
+  }
+
+  private static CloseableConsumer doesNotContain(Object... expected) {
+    return new CloseableConsumer() {
+      @Override
+      public void accept(Object value) {
+        assertThat(value).isNotIn(asList(expected));
+      }
+
+      @Override
+      public void close() {}
+    };
+  }
+
+  private static CloseableConsumer mapSizeInClosedRange(int min, int max) {
+    return new CloseableConsumer() {
+      @Override
+      public void accept(Object map) {
+        if (map instanceof Map) {
+          assertThat(((Map) map).size()).isAtLeast(min);
+          assertThat(((Map) map).size()).isAtMost(max);
+        } else {
+          throw new IllegalArgumentException(
+              "Expected a list of maps, got list of" + map.getClass().getName());
+        }
+      }
+
+      @Override
+      public void close() {}
+    };
+  }
+
+  interface CloseableConsumer extends AutoCloseable, Consumer<Object> {}
 
   @ParameterizedTest(name = "{index} {0}, {1}")
   @MethodSource({"stressTestCases", "protoStressTestCases"})
@@ -662,9 +746,9 @@ public class StressTest {
       AnnotatedType type,
       String mutatorTree,
       boolean hasFixedSize,
-      Consumer<List<Object>> expectedInitValues,
-      Consumer<List<Object>> expectedMutatedValues)
-      throws IOException {
+      CloseableConsumer checkInitValues,
+      CloseableConsumer checkMutatedValues)
+      throws Exception {
     validateAnnotationUsage(type);
     SerializingMutator mutator = Mutators.newFactory().createOrThrow(type);
     assertThat(mutator.toString()).isEqualTo(mutatorTree);
@@ -678,8 +762,6 @@ public class StressTest {
 
     PseudoRandom rng = anyPseudoRandom();
 
-    List<Object> initValues = new ArrayList<>();
-    List<Object> mutatedValues = new ArrayList<>();
     for (int i = 0; i < NUM_INITS; i++) {
       Object value = mutator.init(rng);
 
@@ -689,7 +771,7 @@ public class StressTest {
       testReadWriteRoundtrip(mutator, fixedValue);
       testReadWriteExclusiveRoundtrip(mutator, fixedValue);
 
-      initValues.add(mutator.detach(value));
+      checkInitValues.accept(value);
       value = fixFloatingPointsForProtos(value);
 
       for (int mutation = 0; mutation < NUM_MUTATE_PER_INIT; mutation++) {
@@ -705,7 +787,7 @@ public class StressTest {
           }
         }
 
-        mutatedValues.add(mutator.detach(value));
+        checkMutatedValues.accept(value);
 
         // For proto messages, each float field with value -0.0f, and double field with value -0.0
         // will be converted to 0.0f and 0.0, respectively. This is because the values -0f and 0f
@@ -720,8 +802,8 @@ public class StressTest {
       }
     }
 
-    expectedInitValues.accept(initValues);
-    expectedMutatedValues.accept(mutatedValues);
+    checkInitValues.close();
+    checkMutatedValues.close();
   }
 
   private static <T> void testReadWriteExclusiveRoundtrip(Serializer<T> serializer, T value)
