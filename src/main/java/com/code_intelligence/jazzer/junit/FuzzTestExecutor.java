@@ -37,7 +37,13 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -115,11 +121,6 @@ class FuzzTestExecutor {
           Optional.of(addInputAndSeedDirs(context, libFuzzerArgs, createDefaultGeneratedCorpusDir));
     }
 
-    if (dictionaryPath.isPresent()) {
-      System.out.printf("USING DICTIONARY %s%n", dictionaryPath.get());
-    } else {
-      System.out.println("NO DICTIONARY");
-    }
     dictionaryPath.ifPresent(s -> libFuzzerArgs.add("-dict=" + s));
 
     libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
@@ -369,8 +370,6 @@ class FuzzTestExecutor {
           });
     }
 
-    System.out.println("STARTING LIBFUZZER");
-    System.out.printf("WITH ARGS %s%n", Arrays.toString(libFuzzerArgs.toArray()));
     int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
     javaSeedsDir.ifPresent(FuzzTestExecutor::deleteJavaSeedsDir);
     Throwable finding = atomicFinding.get();
