@@ -70,7 +70,8 @@ class FuzzTestExecutor {
     this.isRunFromCommandLine = isRunFromCommandLine;
   }
 
-  public static FuzzTestExecutor prepare(ExtensionContext context, String maxDuration, long maxRuns)
+  public static FuzzTestExecutor prepare(
+      ExtensionContext context, String maxDuration, long maxRuns, Optional<Path> dictionaryPath)
       throws IOException {
     if (!hasBeenPrepared.compareAndSet(false, true)) {
       throw new IllegalStateException(
@@ -119,6 +120,8 @@ class FuzzTestExecutor {
       javaSeedsDir =
           Optional.of(addInputAndSeedDirs(context, libFuzzerArgs, createDefaultGeneratedCorpusDir));
     }
+
+    dictionaryPath.ifPresent(s -> libFuzzerArgs.add("-dict=" + s));
 
     libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
     if (maxRuns > 0) {
@@ -275,13 +278,17 @@ class FuzzTestExecutor {
   }
 
   static void configureAndInstallAgent(
-      ExtensionContext extensionContext, String maxDuration, long maxExecutions)
+      ExtensionContext extensionContext,
+      String maxDuration,
+      long maxExecutions,
+      Optional<Path> dictionaryPath)
       throws IOException {
     if (!agentInstalled.compareAndSet(false, true)) {
       return;
     }
     if (Utils.isFuzzing(extensionContext)) {
-      FuzzTestExecutor executor = prepare(extensionContext, maxDuration, maxExecutions);
+      FuzzTestExecutor executor =
+          prepare(extensionContext, maxDuration, maxExecutions, dictionaryPath);
       extensionContext.getRoot().getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
       AgentConfigurator.forFuzzing(extensionContext);
     } else {

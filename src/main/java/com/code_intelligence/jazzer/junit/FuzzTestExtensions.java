@@ -14,9 +14,12 @@
 
 package com.code_intelligence.jazzer.junit;
 
+import static com.code_intelligence.jazzer.junit.FuzzerDictionary.createDictionaryFile;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -46,11 +49,13 @@ class FuzzTestExtensions
       throws Throwable {
     FuzzTest fuzzTest =
         AnnotationSupport.findAnnotation(invocationContext.getExecutable(), FuzzTest.class).get();
+    Optional<Path> dictionaryPath = createDictionaryFile(extensionContext.getRequiredTestMethod());
+
     // We need to call this method here in addition to the call in AgentConfiguringArgumentsProvider
     // as that provider isn't invoked before fuzz test executions for the arguments provided by
     // user-provided ArgumentsProviders ("Java seeds").
     FuzzTestExecutor.configureAndInstallAgent(
-        extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions());
+        extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions(), dictionaryPath);
     // Skip the invocation of the test method with the special arguments provided by
     // FuzzTestArgumentsProvider and start fuzzing instead.
     if (Utils.isMarkedInvocation(invocationContext)) {
