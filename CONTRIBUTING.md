@@ -14,6 +14,18 @@ It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) to a
 Simply download the release binary for your OS and architecture and ensure that it is available in the `PATH`.
 The instructions below will assume that this binary is called `bazel` - Bazelisk is a thin wrapper around the actual Bazel binary and can be used interchangeably.
 
+### Recommended settings
+
+If you regularly run builds and tests in the Jazzer repository, it is recommended to use Bazel's disk cache.
+This will speed up incremental builds and tests, especially when switching branches.
+
+Since a disk cache can be shared across Bazel projects, it is recommended to enable it by creating a file called `.bazelrc` in your home directory with the following contents:
+```
+common --disk_cache=$HOME/.cache/bazel-disk
+```
+
+Bazel currently doesn't remove old entries from the disk cache automatically, so you may want to do this manually from time to time (see https://github.com/bazelbuild/bazel/issues/5139#issuecomment-943534948).
+
 ### Building
 
 Assuming the dependencies are installed, build Jazzer from source and run it as follows:
