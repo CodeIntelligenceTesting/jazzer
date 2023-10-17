@@ -74,8 +74,8 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
  * <p>When no issue has been found after the configured {@link FuzzTest#maxDuration()}, the test
  * passes.
  *
- * <p>Only a single fuzz test per test run will be executed in fuzzing mode. All other fuzz tests
- * will be skipped.
+ * <p><b>In fuzzing mode, only a single fuzz test per test run will be executed.</b> All other fuzz
+ * tests will be skipped.
  *
  * <h3>Regression testing</h3>
  *

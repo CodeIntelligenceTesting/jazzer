@@ -65,6 +65,7 @@ The following steps assume that JUnit 5.9.0 or higher is set up for your project
 3. Assuming your test class is called `com.example.MyFuzzTests`, create the *inputs directory* `src/test/resources/com/example/MyFuzzTestsInputs`.
 4. Run a fuzz test with the environment variable `JAZZER_FUZZ` set to `1` to let the fuzzer rapidly try new sets of arguments.
    If the fuzzer finds arguments that make your fuzz test fail or even trigger a security issue, it will store them in the inputs directory.
+   In this mode, only a single fuzz test is executed per test run (see [#599](https://github.com/CodeIntelligenceTesting/jazzer/issues/599) for details).
 5. Run the fuzz test without `JAZZER_FUZZ` set to execute it only on the inputs in the inputs directory.
    This mode, which behaves just like a traditional unit test, ensures that issues previously found by the fuzzer remain fixed and can also be used to debug the fuzz test on individual inputs.
 
