@@ -39,11 +39,6 @@ jobs:
           chmod u+x cifuzz_installer
           ./cifuzz_installer --install-dir $CIFUZZ_INSTALL_DIR
 
-      - name: Mount Bazel disk cache
-        uses: actions/cache@v3
-        with:
-          path: "/home/runner/.cache/bazel-disk"
-          key: bazel-disk-cache-linux-8
       - name: Set Build Buddy config
         run: $CHECKOUT_DIR/.github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
         shell: bash
