@@ -13,16 +13,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "rules_java",
-    patch_args = ["-p1"],
-    patches = [
-        # https://github.com/bazelbuild/rules_java/pull/114
-        # Remove unnecessary dependency on a Java runtime for the target platform.
-        "//third_party:rules_java-use-bootstrap-runtime-toolchain-type.patch",
-    ],
-    sha256 = "fd1d5538c8e5bbf890e1e31e983139b89710aacd0a5327ddf9afe12090ed9c78",
-    strip_prefix = "rules_java-ca72739da10036e1d2cf2aaeab78fae87673e43f",
+    sha256 = "7b0d9ba216c821ee8697dedc0f9d0a705959ace462a3885fe9ba0347ba950111",
     urls = [
-        "https://github.com/bazelbuild/rules_java/archive/ca72739da10036e1d2cf2aaeab78fae87673e43f.tar.gz",
+        "https://github.com/bazelbuild/rules_java/releases/download/6.5.1/rules_java-6.5.1.tar.gz",
     ],
 )
 
@@ -35,10 +28,10 @@ rules_java_toolchains()
 http_archive(
     name = "com_google_protobuf",
     patches = ["//third_party:protobuf-disable-layering_check.patch"],
-    sha256 = "0930b1a6eb840a2295dfcb13bb5736d1292c3e0d61a90391181399327be7d8f1",
-    strip_prefix = "protobuf-24.1",
+    sha256 = "616bb3536ac1fff3fb1a141450fa28b875e985712170ea7f1bfe5e5fc41e2cd8",
+    strip_prefix = "protobuf-24.4",
     # Keep in sync with com_google_protobuf_protobuf_java in repositories.bzl.
-    urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v24.1/protobuf-24.1.tar.gz"],
+    urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v24.4/protobuf-24.4.tar.gz"],
 )
 
 http_archive(
@@ -94,14 +87,9 @@ http_archive(
 
 http_archive(
     name = "contrib_rules_jvm",
-    patch_args = ["-p1"],
-    patches = [
-        # https://github.com/bazel-contrib/rules_jvm/pull/194
-        "//third_party:rules_jvm-fix-junit5-for-early-access-builds.patch",
-    ],
-    sha256 = "90ecdf08d7e8817b2247eea77826db872db8866da84b3a824f58d6661aca917f",
-    strip_prefix = "rules_jvm-0.14.0",
-    url = "https://github.com/bazel-contrib/rules_jvm/releases/download/v0.14.0/rules_jvm-v0.14.0.tar.gz",
+    sha256 = "4d62589dc6a55e74bbe33930b826d593367fc777449a410604b2ad7c6c625ef7",
+    strip_prefix = "rules_jvm-0.19.0",
+    url = "https://github.com/bazel-contrib/rules_jvm/releases/download/v0.19.0/rules_jvm-v0.19.0.tar.gz",
 )
 
 http_archive(
@@ -129,15 +117,15 @@ http_file(
 http_file(
     name = "jacocoagent",
     downloaded_file_path = "jacocoagent.jar",
-    sha256 = "191734a0b7ef97606e6a09ae584c4acab47eb30fcb4c555d3d440d4e0d71d73d",
-    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/0.8.9/org.jacoco.agent-0.8.9-runtime.jar"],
+    sha256 = "40d25997de4c625769bf5d1283eb855b87c9caef4ca1fa03b8ef0b752ba4b54a",
+    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/0.8.10/org.jacoco.agent-0.8.10-runtime.jar"],
 )
 
 http_file(
     name = "jacococli",
     downloaded_file_path = "jacococli.jar",
-    sha256 = "29c7754338512599f742ebfedd095c9c93800fefbce407500eceb16f0ed5a20d",
-    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.cli/0.8.9/org.jacoco.cli-0.8.9-nodeps.jar"],
+    sha256 = "c821fe4f59dc5c1bb29341a259b6c9e49d6425f200f4ac0e373bf46bbfa54cf2",
+    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.cli/0.8.10/org.jacoco.cli-0.8.10-nodeps.jar"],
 )
 
 http_jar(
@@ -221,20 +209,6 @@ rules_pkg_dependencies()
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
 protobuf_deps()
-
-http_file(
-    name = "jacocoagent",
-    downloaded_file_path = "jacocoagent.jar",
-    sha256 = "67de51e9ca1db044f3a3d10613518befb02e8eee1015f2ff6d56cfb9d4506546",
-    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/0.8.8/org.jacoco.agent-0.8.8-runtime.jar"],
-)
-
-http_file(
-    name = "jacococli",
-    downloaded_file_path = "jacococli.jar",
-    sha256 = "c449591174982bbc003d1290003fcbc7b939215436922d2f0f25239d110d531a",
-    urls = ["https://repo1.maven.org/maven2/org/jacoco/org.jacoco.cli/0.8.8/org.jacoco.cli-0.8.8-nodeps.jar"],
-)
 
 load("//third_party/android:android_configure.bzl", "android_configure")
 
