@@ -178,6 +178,7 @@ class RuntimeInstrumentor(
         val className = internalClassName.replace('/', '.')
         val classfileBuffer = maybeClassfileBuffer ?: ClassGraph()
             .enableSystemJarsAndModules()
+            .acceptLibOrExtJars()
             .ignoreClassVisibility()
             .acceptClasses(className)
             .scan()

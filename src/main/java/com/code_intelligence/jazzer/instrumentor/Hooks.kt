@@ -52,6 +52,7 @@ data class Hooks(
             return ClassGraph()
                 .enableClassInfo()
                 .enableSystemJarsAndModules()
+                .acceptLibOrExtJars()
                 .rejectPackages("jaz.*", "com.code_intelligence.jazzer.*")
                 .scan()
                 .use { scanResult ->
