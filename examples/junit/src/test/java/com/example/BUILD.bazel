@@ -84,6 +84,7 @@ java_fuzz_target_test(
         ":junit_runtime",
     ],
     deps = [
+        ":lifecycle_recording_test_base",
         ":test_successful_exception",
         "//examples/junit/src/main/java/com/example:parser",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
@@ -107,6 +108,7 @@ java_fuzz_target_test(
         ":junit_runtime",
     ],
     deps = [
+        ":lifecycle_recording_test_base",
         ":test_successful_exception",
         "//examples/junit/src/main/java/com/example:parser",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
@@ -131,6 +133,7 @@ java_fuzz_target_test(
         ":junit_runtime",
     ],
     deps = [
+        ":lifecycle_recording_test_base",
         ":test_successful_exception",
         "//examples/junit/src/main/java/com/example:parser",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
@@ -308,6 +311,18 @@ java_fuzz_target_test(
         "mixedTest",
     ]
 ]
+
+java_library(
+    name = "lifecycle_recording_test_base",
+    testonly = True,
+    srcs = ["LifecycleRecordingTestBase.java"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:com_google_truth_extensions_truth_java8_extension",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
 
 java_library(
     name = "junit_runtime",
