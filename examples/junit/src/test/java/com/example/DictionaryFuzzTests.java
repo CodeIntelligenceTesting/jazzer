@@ -43,7 +43,7 @@ public class DictionaryFuzzTests {
     }
   }
 
-  @DictionaryFile(resourcePath = "com/example/test.dict")
+  @DictionaryFile(resourcePath = "test.dict")
   @FuzzTest
   public void fileTest(FuzzedDataProvider data)
       throws NoSuchAlgorithmException, TestSuccessfulException {
@@ -55,8 +55,8 @@ public class DictionaryFuzzTests {
   }
 
   @DictionaryEntries(tokens = {"a_"})
-  @DictionaryFile(resourcePath = "com/example/test2.dict")
-  @DictionaryFile(resourcePath = "com/example/test3.dict")
+  @DictionaryFile(resourcePath = "test2.dict")
+  @DictionaryFile(resourcePath = "/com/example/test3.dict")
   @FuzzTest
   public void mixedTest(FuzzedDataProvider data)
       throws NoSuchAlgorithmException, TestSuccessfulException {

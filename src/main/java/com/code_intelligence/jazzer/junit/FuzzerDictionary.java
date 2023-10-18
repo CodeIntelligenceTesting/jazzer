@@ -65,7 +65,8 @@ class FuzzerDictionary {
     List<DictionaryFile> fileDictionaries =
         AnnotationSupport.findRepeatableAnnotations(method, DictionaryFile.class);
 
-    return FuzzerDictionary.createDictionaryFile(inlineDictionaries, fileDictionaries);
+    return FuzzerDictionary.createDictionaryFile(
+        inlineDictionaries, fileDictionaries, method.getDeclaringClass());
   }
 
   /**
@@ -74,17 +75,20 @@ class FuzzerDictionary {
    *
    * @param inline list of {@link DictionaryEntries}
    * @param files list of {@link DictionaryFile}
+   * @param declaringClass class containing the method with these annotations
    * @return Optional of dictionaryPath if created
    * @throws IOException
    */
   private static Optional<Path> createDictionaryFile(
-      List<DictionaryEntries> inline, List<DictionaryFile> files) throws IOException {
+      List<DictionaryEntries> inline, List<DictionaryFile> files, Class<?> declaringClass)
+      throws IOException {
     int sources = inline.size() + files.size();
     if (sources == 0) {
       return Optional.empty();
     }
 
-    Stream<String> joined = Stream.concat(getInlineTokens(inline), getFileTokens(files));
+    Stream<String> joined =
+        Stream.concat(getInlineTokens(inline), getFileTokens(files, declaringClass));
 
     Path p = Files.createTempFile(DICTIONARY_PREFIX, DICTIONARY_SUFFIX);
     p.toFile().deleteOnExit();
@@ -120,26 +124,21 @@ class FuzzerDictionary {
   /**
    * Gets the individual lines from each of the specified dictionary files
    *
-   * @param files List of {@link DictionaryFile} annotations indicating which files to use
+   * @param files list of {@link DictionaryFile} annotations indicating which files to use
+   * @param declaringClass class containing the method with these annotations
    * @return stream of all lines from each of the files
    */
-  private static Stream<String> getFileTokens(List<DictionaryFile> files) {
+  private static Stream<String> getFileTokens(List<DictionaryFile> files, Class<?> declaringClass) {
     return files.stream()
         .map(DictionaryFile::resourcePath)
-        .map(FuzzerDictionary::tokensFromResource)
+        .map(resourcePath -> tokensFromResource(resourcePath, declaringClass))
         .flatMap(List::stream);
   }
 
-  private static List<String> tokensFromResource(String absoluteResourcePath) {
-    if (absoluteResourcePath.startsWith("/")) {
-      throw new IllegalArgumentException(
-          String.format(
-              "absolute resource path is must not have leading /: %s", absoluteResourcePath));
-    }
-    try (InputStream resourceFile =
-        FuzzerDictionary.class.getClassLoader().getResourceAsStream(absoluteResourcePath)) {
+  private static List<String> tokensFromResource(String resourcePath, Class<?> declaringClass) {
+    try (InputStream resourceFile = declaringClass.getResourceAsStream(resourcePath)) {
       if (resourceFile == null) {
-        throw new FileNotFoundException(absoluteResourcePath);
+        throw new FileNotFoundException(resourcePath);
       }
       List<String> tokens;
       try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceFile))) {
