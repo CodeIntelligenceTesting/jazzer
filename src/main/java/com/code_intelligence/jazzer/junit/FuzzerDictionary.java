@@ -117,7 +117,7 @@ class FuzzerDictionary {
    */
   private static Stream<String> getInlineTokens(List<DictionaryEntries> inline) {
     return inline.stream()
-        .map(DictionaryEntries::tokens)
+        .map(DictionaryEntries::value)
         .flatMap(Arrays::stream)
         .map(FuzzerDictionary::escapeForDictionary);
   }
