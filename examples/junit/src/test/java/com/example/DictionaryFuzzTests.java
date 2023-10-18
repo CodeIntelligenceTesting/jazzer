@@ -27,12 +27,12 @@ import java.util.Base64;
 
 public class DictionaryFuzzTests {
   // Generated via:
-  // printf 'a_53Cr3T_fl4G' | openssl dgst -binary -sha256 | openssl base64 -A
+  // printf 'a_53Cr"3T_fl4G' | openssl dgst -binary -sha256 | openssl base64 -A
   // Luckily the fuzzer can't read comments ;-)
   private static final byte[] FLAG_SHA256 =
-      Base64.getDecoder().decode("IT7goSzYg6MXLugHl9H4oCswA+OEb4bGZmKrDzlZjO4=");
+      Base64.getDecoder().decode("vCLInoVuMxJonT4UKjsMl0LPXTowkYS7t0uBpw0pRo8=");
 
-  @DictionaryEntries(tokens = {"a_", "53Cr3T_", "fl4G"})
+  @DictionaryEntries(tokens = {"a_", "53Cr\"3T_", "fl4G"})
   @FuzzTest
   public void inlineTest(FuzzedDataProvider data)
       throws NoSuchAlgorithmException, TestSuccessfulException {
