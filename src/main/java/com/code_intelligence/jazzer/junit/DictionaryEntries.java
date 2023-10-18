@@ -23,12 +23,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Defines a reference to a dictionary within the resources directory. These should follow <a
- * href="https://llvm.org/docs/LibFuzzer.html#dictionaries">libfuzzer's dictionary syntax</a>.
+ * Adds the given strings to the fuzzer's dictionary. This is particularly useful for adding tokens
+ * that have special meaning in the context of your fuzz test, but are difficult for the fuzzer to
+ * discover automatically.
+ *
+ * <p>Typical examples include valid credentials for mock accounts in a web application or a
+ * collection of valid HTML tags for an HTML parser.
  */
 @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(DictionaryEntriesList.class)
 public @interface DictionaryEntries {
+  /** Individual strings to add to the fuzzer dictionary. */
   String[] tokens();
 }

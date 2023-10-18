@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.platform.commons.support.AnnotationSupport;
 
@@ -118,7 +119,41 @@ class FuzzerDictionary {
     return inline.stream()
         .map(DictionaryEntries::tokens)
         .flatMap(Arrays::stream)
-        .map(token -> String.format("\"%s\"", token));
+        .map(FuzzerDictionary::escapeForDictionary);
+  }
+
+  static String escapeForDictionary(String rawString) {
+    // https://llvm.org/docs/LibFuzzer.html#dictionaries
+    String escapedString =
+        // libFuzzer reads raw byte strings and assumes that every non-printable, non-space
+        // character is escaped. Since our fuzzer generates UTF-8 strings, we decode the string with
+        // UTF-8 and encode it to ISO-8859-1 (aka Latin-1), which results in a string with one byte
+        // characters representing the UTF-8 encoded bytes.
+        new String(rawString.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1)
+            .chars()
+            .flatMap(FuzzerDictionary::escapeByteForDictionary)
+            .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+            .toString();
+    return '"' + escapedString + '"';
+  }
+
+  private static IntStream escapeByteForDictionary(int c) {
+    // Escape all characters that are not printable ASCII or whitespace as well as the backslash
+    // and double quote characters.
+    // https://github.com/llvm/llvm-project/blob/675231eb09ca37a8b76f748c0b73a1e26604ff20/compiler-rt/lib/fuzzer/FuzzerUtil.cpp#L81
+    if (c == '\\') {
+      return IntStream.of('\\', '\\');
+    } else if (c == '\"') {
+      return IntStream.of('\\', '\"');
+    } else if ((c < 32 && !Character.isWhitespace(c)) || c > 127) {
+      return IntStream.of(
+          '\\',
+          'x',
+          Character.toUpperCase(Character.forDigit(c >> 4, 16)),
+          Character.toUpperCase(Character.forDigit(c & 0x0F, 16)));
+    } else {
+      return IntStream.of(c);
+    }
   }
 
   /**
