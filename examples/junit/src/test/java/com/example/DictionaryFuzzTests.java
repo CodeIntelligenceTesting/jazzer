@@ -32,7 +32,7 @@ public class DictionaryFuzzTests {
   private static final byte[] FLAG_SHA256 =
       Base64.getDecoder().decode("vCLInoVuMxJonT4UKjsMl0LPXTowkYS7t0uBpw0pRo8=");
 
-  @DictionaryEntries(tokens = {"a_", "53Cr\"3T_", "fl4G"})
+  @DictionaryEntries({"a_", "53Cr\"3T_", "fl4G"})
   @FuzzTest
   public void inlineTest(FuzzedDataProvider data)
       throws NoSuchAlgorithmException, TestSuccessfulException {
@@ -54,7 +54,7 @@ public class DictionaryFuzzTests {
     }
   }
 
-  @DictionaryEntries(tokens = {"a_"})
+  @DictionaryEntries("a_")
   @DictionaryFile(resourcePath = "test2.dict")
   @DictionaryFile(resourcePath = "/com/example/test3.dict")
   @FuzzTest

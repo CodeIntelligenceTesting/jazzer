@@ -23,7 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Adds the given strings to the fuzzer's dictionary. This is particularly useful for adding tokens
+ * Adds the given strings to the fuzzer's dictionary. This is particularly useful for adding strings
  * that have special meaning in the context of your fuzz test, but are difficult for the fuzzer to
  * discover automatically.
  *
@@ -35,5 +35,5 @@ import java.lang.annotation.Target;
 @Repeatable(DictionaryEntriesList.class)
 public @interface DictionaryEntries {
   /** Individual strings to add to the fuzzer dictionary. */
-  String[] tokens();
+  String[] value();
 }
