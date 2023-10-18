@@ -234,7 +234,8 @@ public class FuzzTargetTestWrapper {
       throws IOException {
     List<String> lines;
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(fuzzerOutput))) {
-      lines = reader.lines().collect(toList());
+      // Print the lines as they are read to get live updates on the console.
+      lines = reader.lines().peek(System.err::println).collect(toList());
     }
 
     List<String> warningsAndErrors =
@@ -263,7 +264,6 @@ public class FuzzTargetTestWrapper {
 
     List<String> stackTrace =
         lines.stream()
-            .peek(System.err::println)
             .filter(
                 line ->
                     line.startsWith(EXCEPTION_PREFIX)
