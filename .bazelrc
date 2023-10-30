@@ -31,10 +31,6 @@ build:macos --host_crosstool_top=@local_config_apple_cc//:toolchain
 # https://bugs.openjdk.org/browse/JDK-8214165.
 build --java_language_version=8
 
-# Tools used during the build do not have compatibility requirements, so we can use the most recent
-# language features.
-build --tool_java_language_version=21
-
 # Targeting Java 8 with JDK 21 is deprecated and results in this warning:
 # warning: [options] source value 8 is obsolete and will be removed in a future release
 # warning: [options] target value 8 is obsolete and will be removed in a future release
@@ -42,7 +38,10 @@ build --tool_java_language_version=21
 # Internally, Bazel always runs javac on a Java 21 runtime, but uses the classpath obtained from the
 # runtime configured below.
 build --javacopt=-Xlint:-options
-build --host_javacopt=-Xlint:-options
+
+# Tools used during the build do not have compatibility requirements, so we can use the most recent
+# language features.
+build --tool_java_language_version=21
 
 # Compile for a hermetic JDK so that devs don't have to have a particular JDK installed and
 # configured locally.
