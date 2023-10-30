@@ -1,5 +1,5 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
-load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("//bazel:compat.bzl", "LINUX_ONLY", "SKIP_ON_MACOS", "SKIP_ON_WINDOWS")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 load("//bazel:kotlin.bzl", "ktlint")

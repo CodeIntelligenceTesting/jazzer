@@ -1,4 +1,4 @@
-load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("//bazel:kotlin.bzl", "ktlint")
 
 kt_jvm_library(
@@ -30,7 +30,6 @@ kt_jvm_library(
         "//src/main/java/com/code_intelligence/jazzer/utils:class_name_globber",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
         "@com_github_classgraph_classgraph//:classgraph",
-        "@com_github_jetbrains_kotlin//:kotlin-reflect",
         "@jazzer_jacoco//:jacoco_internal",
         "@org_ow2_asm_asm//jar",
         "@org_ow2_asm_asm_commons//jar",

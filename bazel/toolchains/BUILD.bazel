@@ -1,12 +1,6 @@
-load("@bazel_tools//tools/jdk:default_java_toolchain.bzl", "NONPREBUILT_TOOLCHAIN_CONFIGURATION", "default_java_toolchain")
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "define_kt_toolchain")
-load("@io_bazel_rules_kotlin//kotlin:lint.bzl", "ktlint_config")
-load("@io_bazel_rules_kotlin//kotlin/internal:opts.bzl", "kt_javac_options", "kt_kotlinc_options")
-
-default_java_toolchain(
-    name = "java_non_prebuilt",
-    configuration = NONPREBUILT_TOOLCHAIN_CONFIGURATION,
-)
+load("@rules_kotlin//kotlin:kotlin.bzl", "define_kt_toolchain")
+load("@rules_kotlin//kotlin:lint.bzl", "ktlint_config")
+load("@rules_kotlin//kotlin/internal:opts.bzl", "kt_javac_options", "kt_kotlinc_options")
 
 kt_kotlinc_options(
     name = "kotlinc_options",
@@ -18,11 +12,11 @@ kt_javac_options(
 
 define_kt_toolchain(
     name = "kotlin_toolchain",
-    api_version = "1.5",
+    api_version = "1.9",
     javac_options = ":default_javac_options",
     jvm_target = "1.8",
     kotlinc_options = ":kotlinc_options",
-    language_version = "1.5",
+    language_version = "1.9",
 )
 
 ktlint_config(

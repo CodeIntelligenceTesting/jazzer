@@ -37,9 +37,9 @@ def jazzer_dependencies(android = False):
 
     maybe(
         http_archive,
-        name = "io_bazel_rules_kotlin",
-        sha256 = "a630cda9fdb4f56cf2dc20a4bf873765c41cf00e9379e8d59cd07b24730f4fde",
-        url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.8.1/rules_kotlin_release.tgz",
+        name = "rules_kotlin",
+        sha256 = "5766f1e599acf551aa56f49dab9ab9108269b03c557496c54acaf41f98e2b8d6",
+        url = "https://github.com/bazelbuild/rules_kotlin/releases/download/v1.9.0/rules_kotlin-v1.9.0.tar.gz",
     )
 
     maybe(

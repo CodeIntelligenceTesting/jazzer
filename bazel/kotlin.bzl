@@ -7,8 +7,8 @@
 # located in the root directory of the project.
 #
 
-load("@io_bazel_rules_kotlin//kotlin:lint.bzl", "ktlint_fix", "ktlint_test")
-load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+load("@rules_kotlin//kotlin:lint.bzl", "ktlint_fix", "ktlint_test")
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 
 # A kt_jvm_test wrapped in a java_test for Windows compatibility.
