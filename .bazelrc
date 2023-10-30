@@ -1,5 +1,7 @@
 # Allow directories as sources.
 startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
+# TODO: Migrate to MODULE.bazel, the new external dependency management system.
+common --noenable_bzlmod
 build --incompatible_strict_action_env
 build --sandbox_tmpfs_path=/tmp
 build --enable_platform_specific_config
@@ -10,8 +12,6 @@ build --nozip_undeclared_test_outputs
 # C/C++
 # GCC is supported on a best-effort basis.
 common --repo_env=CC=clang
-# Required by abseil-cpp.
-build --cxxopt=-std=c++14
 # Silence protobuf compilation warnings.
 build --host_copt=-Wno-unused-function
 build --host_copt=-Wno-unknown-warning-option
@@ -33,11 +33,20 @@ build --tool_java_language_version=8
 # don't need to install a JDK to compile Jazzer.
 build --java_runtime_version=remotejdk_17
 build --tool_java_runtime_version=remotejdk_17
+
+# Targeting Java 8 with JDK 21 is deprecated and results in this warning:
+# warning: [options] source value 8 is obsolete and will be removed in a future release
+# warning: [options] target value 8 is obsolete and will be removed in a future release
+# warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+# Internally, Bazel always runs javac on a Java 21 runtime, but uses the classpath obtained from the
+# runtime configured below.
+build --javacopt=-Xlint:-options
+build --host_javacopt=-Xlint:-options
+
 # Speed up Java compilation by removing indirect deps from the compile classpath.
 build --experimental_java_classpath=bazel
 
 # Android
-build --incompatible_enable_android_toolchain_resolution
 build --android_platforms=//:android_arm64
 
 # Windows
