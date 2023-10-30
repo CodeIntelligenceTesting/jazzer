@@ -1,5 +1,5 @@
 load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
-load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 load("//bazel:kotlin.bzl", "ktlint")
 
 java_library(
