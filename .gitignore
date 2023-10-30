@@ -2,3 +2,7 @@
 .ijwb
 .clwb
 /coverage
+# The lockfile speeds up local builds, but is still quite verbose and potentially
+# platform-dependent. Ignore it for now.
+# https://github.com/bazelbuild/bazel/issues/20369
+MODULE.bazel.lock

@@ -59,7 +59,7 @@ buildifier_test(
     exclude_patterns = BUILDIFIER_EXCLUDE_PATTERNS,
     no_sandbox = True,
     target_compatible_with = SKIP_ON_WINDOWS,
-    workspace = "//:WORKSPACE.bazel",
+    workspace = "//:WORKSPACE.bzlmod",
 )
 
 alias(

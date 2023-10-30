@@ -1,14 +1,14 @@
-load("@build_bazel_apple_support//rules:universal_binary.bzl", "universal_binary")
+load("@apple_support//rules:universal_binary.bzl", "universal_binary")
 
 cc_library(
     name = "jazzer_main",
     srcs = ["jazzer_main.cpp"],
     deps = [
         ":jvm_tooling_lib",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
     ] + select({
         "@platforms//os:android": [],
-        "//conditions:default": ["@fmeum_rules_jni//jni:libjvm"],
+        "//conditions:default": ["@rules_jni//jni:libjvm"],
     }),
 )
 
@@ -24,10 +24,10 @@ cc_library(
         "//conditions:default": [],
     }),
     deps = [
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
         "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
-        "@fmeum_rules_jni//jni",
+        "@rules_jni//jni",
     ],
 )
 
@@ -95,7 +95,7 @@ cc_library(
     srcs = ["test_main.cpp"],
     linkstatic = True,
     deps = [
-        "@fmeum_rules_jni//jni:libjvm",
         "@googletest//:gtest",
+        "@rules_jni//jni:libjvm",
     ],
 )

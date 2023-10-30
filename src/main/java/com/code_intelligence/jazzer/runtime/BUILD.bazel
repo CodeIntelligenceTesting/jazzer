@@ -1,5 +1,5 @@
-load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
-load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+load("@bazel_jar_jar//:jar_jar.bzl", "jar_jar")
+load("@rules_jni//jni:defs.bzl", "java_jni_library")
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
 load("//bazel:jar.bzl", "strip_jar")
 
@@ -127,7 +127,7 @@ java_jni_library(
     visibility = [
         "//src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
     ],
-    deps = ["@org_ow2_asm_asm//jar"],
+    deps = ["@maven//:org_ow2_asm_asm"],
 )
 
 java_jni_library(

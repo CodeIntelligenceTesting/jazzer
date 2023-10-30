@@ -4,7 +4,7 @@ proto_library(
     name = "proto3_proto",
     srcs = ["proto3.proto"],
     deps = [
-        "@com_google_protobuf//:any_proto",
+        "@protobuf//:any_proto",
     ],
 )
 
@@ -56,6 +56,6 @@ java_test_suite(
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/proto",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
         "//src/test/java/com/code_intelligence/jazzer/mutation/support:test_support",
-        "@com_google_protobuf//java/core",
+        "@protobuf//java/core",
     ],
 )

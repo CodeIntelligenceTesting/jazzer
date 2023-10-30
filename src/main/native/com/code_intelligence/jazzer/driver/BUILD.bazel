@@ -1,4 +1,4 @@
-load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
+load("@rules_jni//jni:defs.bzl", "cc_jni_library")
 load("//bazel:compat.bzl", "MULTI_PLATFORM", "SKIP_ON_WINDOWS")
 
 cc_jni_library(
@@ -120,7 +120,7 @@ cc_library(
     srcs = ["libfuzzer_callbacks.cpp"],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
     ],
     # Symbols are only referenced dynamically via JNI.
     alwayslink = True,
@@ -139,7 +139,7 @@ cc_library(
     srcs = ["init_jazzer_preload.cpp"],
     linkopts = ["-ldl"],
     target_compatible_with = SKIP_ON_WINDOWS,
-    deps = ["@fmeum_rules_jni//jni"],
+    deps = ["@rules_jni//jni"],
     # Symbols are only referenced dynamically via JNI.
     alwayslink = True,
 )
@@ -167,8 +167,8 @@ cc_test(
     }),
     deps = [
         ":fuzzed_data_provider",
-        "@fmeum_rules_jni//jni",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@rules_jni//jni",
     ],
 )

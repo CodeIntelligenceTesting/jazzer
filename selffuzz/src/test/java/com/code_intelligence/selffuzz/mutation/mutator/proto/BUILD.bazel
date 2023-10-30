@@ -13,9 +13,9 @@ java_fuzz_target_test(
         "//selffuzz/src/test/java/com/code_intelligence/selffuzz:helpers",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/proto",
-        "@com_google_protobuf_protobuf_java//jar",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_engine",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
+        "@protobuf//java/core",
     ],
 )

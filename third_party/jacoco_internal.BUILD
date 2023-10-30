@@ -1,13 +1,13 @@
-load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
+load("@bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 
 java_import(
     name = "jacoco_internal",
     jars = ["jacoco_internal_shaded.jar"],
     visibility = ["//visibility:public"],
     deps = [
-        "@org_ow2_asm_asm//jar",
-        "@org_ow2_asm_asm_commons//jar",
-        "@org_ow2_asm_asm_tree//jar",
+        "@maven//:org_ow2_asm_asm",
+        "@maven//:org_ow2_asm_asm_commons",
+        "@maven//:org_ow2_asm_asm_tree",
     ],
 )
 
@@ -30,8 +30,8 @@ java_library(
         "org.jacoco.core/src/org/jacoco/core/**/*.properties",
     ]),
     deps = [
-        "@org_ow2_asm_asm//jar",
-        "@org_ow2_asm_asm_commons//jar",
-        "@org_ow2_asm_asm_tree//jar",
+        "@maven//:org_ow2_asm_asm",
+        "@maven//:org_ow2_asm_asm_commons",
+        "@maven//:org_ow2_asm_asm_tree",
     ],
 )

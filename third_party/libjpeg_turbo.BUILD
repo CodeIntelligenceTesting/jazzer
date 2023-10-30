@@ -39,7 +39,7 @@ cmake(
     ],
     deps = [
         ":libawt",
-        "@fmeum_rules_jni//jni",
+        "@rules_jni//jni",
     ],
 )
 
