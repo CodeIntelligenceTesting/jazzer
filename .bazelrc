@@ -24,17 +24,16 @@ build:macos --crosstool_top=@local_config_apple_cc//:toolchain
 build:macos --host_crosstool_top=@local_config_apple_cc//:toolchain
 
 # Java
-# Always build for Java 8, even with a newer JDK. This ensures that all
-# artifacts we release are compatible with Java 8 runtimes.
+# Always build for Java 8, even with a newer JDK. This ensures that all artifacts we release are
+# bytecode compatible with Java 8 runtimes. Runtime compatibility (e.g not using APIs that aren't
+# available in Java 8) is verified in CI.
 # Note: We would like to use --release, but can't due to
-#  https://bugs.openjdk.org/browse/JDK-8214165.
-build --javacopt=-target --javacopt=8
+# https://bugs.openjdk.org/browse/JDK-8214165.
 build --java_language_version=8
-build --tool_java_language_version=8
-# Use a hermetic JDK to compile Java code, which also means that contributors
-# don't need to install a JDK to compile Jazzer.
-build --java_runtime_version=remotejdk_17
-build --tool_java_runtime_version=remotejdk_17
+
+# Tools used during the build do not have compatibility requirements, so we can use the most recent
+# language features.
+build --tool_java_language_version=21
 
 # Targeting Java 8 with JDK 21 is deprecated and results in this warning:
 # warning: [options] source value 8 is obsolete and will be removed in a future release
@@ -45,7 +44,13 @@ build --tool_java_runtime_version=remotejdk_17
 build --javacopt=-Xlint:-options
 build --host_javacopt=-Xlint:-options
 
+# Compile for a hermetic JDK so that devs don't have to have a particular JDK installed and
+# configured locally.
+build --java_runtime_version=remotejdk_21
+build --tool_java_runtime_version=remotejdk_21
+
 # Speed up Java compilation by removing indirect deps from the compile classpath.
+# Only has an effect when used together with --disk_cache or --remote_cache.
 build --experimental_java_classpath=bazel
 
 # Android
