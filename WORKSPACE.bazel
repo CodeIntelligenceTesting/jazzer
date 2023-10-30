@@ -193,8 +193,8 @@ maven_install(
     fail_if_repin_required = True,
     maven_install_json = "//:maven_install.json",
     override_targets = {
-        "org.jetbrains.kotlin:kotlin-reflect": "@com_github_jetbrains_kotlin//:kotlin-reflect",
-        "org.jetbrains.kotlin:kotlin-stdlib": "@com_github_jetbrains_kotlin//:kotlin-stdlib",
+        "org.jetbrains.kotlin:kotlin-reflect": "@rules_kotlin//kotlin/compiler:kotlin-reflect",
+        "org.jetbrains.kotlin:kotlin-stdlib": "@rules_kotlin//kotlin/compiler:kotlin-stdlib",
         "com.google.errorprone:error_prone_annotations": "@com_google_errorprone_error_prone_annotations//jar",
     },
     repositories = [

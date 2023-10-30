@@ -1,5 +1,5 @@
 load("//bazel:kotlin.bzl", "ktlint", "wrapped_kt_jvm_test")
-load("@io_bazel_rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 kt_jvm_library(
     name = "patch_test_utils",
@@ -24,8 +24,8 @@ wrapped_kt_jvm_test(
     test_class = "com.code_intelligence.jazzer.instrumentor.TraceDataFlowInstrumentationTest",
     deps = [
         ":patch_test_utils",
-        "@com_github_jetbrains_kotlin//:kotlin-test",
         "@maven//:junit_junit",
+        "@rules_kotlin//kotlin/compiler:kotlin-test",
     ],
 )
 
@@ -45,8 +45,8 @@ wrapped_kt_jvm_test(
     deps = [
         ":patch_test_utils",
         "//src/main/java/com/code_intelligence/jazzer/runtime:coverage_map",
-        "@com_github_jetbrains_kotlin//:kotlin-test",
         "@maven//:junit_junit",
+        "@rules_kotlin//kotlin/compiler:kotlin-test",
     ],
 )
 
@@ -61,8 +61,8 @@ wrapped_kt_jvm_test(
     ],
     test_class = "com.code_intelligence.jazzer.instrumentor.DescriptorUtilsTest",
     deps = [
-        "@com_github_jetbrains_kotlin//:kotlin-test",
         "@maven//:junit_junit",
+        "@rules_kotlin//kotlin/compiler:kotlin-test",
     ],
 )
 
@@ -80,8 +80,8 @@ wrapped_kt_jvm_test(
     test_class = "com.code_intelligence.jazzer.instrumentor.HookValidationTest",
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/api",
-        "@com_github_jetbrains_kotlin//:kotlin-test",
         "@maven//:junit_junit",
+        "@rules_kotlin//kotlin/compiler:kotlin-test",
     ],
 )
 
@@ -101,8 +101,8 @@ wrapped_kt_jvm_test(
     deps = [
         ":patch_test_utils",
         "//src/main/java/com/code_intelligence/jazzer/api",
-        "@com_github_jetbrains_kotlin//:kotlin-test",
         "@maven//:junit_junit",
+        "@rules_kotlin//kotlin/compiler:kotlin-test",
     ],
 )
 
@@ -122,8 +122,8 @@ wrapped_kt_jvm_test(
     deps = [
         ":patch_test_utils",
         "//src/main/java/com/code_intelligence/jazzer/api",
-        "@com_github_jetbrains_kotlin//:kotlin-test",
         "@maven//:junit_junit",
+        "@rules_kotlin//kotlin/compiler:kotlin-test",
     ],
 )
 
@@ -144,8 +144,8 @@ wrapped_kt_jvm_test(
     deps = [
         ":patch_test_utils",
         "//src/main/java/com/code_intelligence/jazzer/api",
-        "@com_github_jetbrains_kotlin//:kotlin-test",
         "@maven//:junit_junit",
+        "@rules_kotlin//kotlin/compiler:kotlin-test",
     ],
 )
 
