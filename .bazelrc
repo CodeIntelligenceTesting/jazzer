@@ -13,6 +13,8 @@ build --nozip_undeclared_test_outputs
 # GCC is supported on a best-effort basis.
 common --repo_env=CC=clang
 # Silence protobuf compilation warnings.
+build --copt=-Wno-unused-function
+build --copt=-Wno-unknown-warning-option
 build --host_copt=-Wno-unused-function
 build --host_copt=-Wno-unknown-warning-option
 # Requires a relatively modern clang.
