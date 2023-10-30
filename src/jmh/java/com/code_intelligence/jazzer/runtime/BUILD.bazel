@@ -1,4 +1,4 @@
-load("@fmeum_rules_jni//jni:defs.bzl", "java_jni_library")
+load("@rules_jni//jni:defs.bzl", "java_jni_library")
 load("//src/jmh/java/com/code_intelligence/jazzer:jmh.bzl", "JMH_TEST_ARGS")
 
 package(default_testonly = True)

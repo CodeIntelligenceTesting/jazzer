@@ -15,8 +15,8 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/utils",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
         "//src/main/java/com/code_intelligence/jazzer/utils:simple_glob_matcher",
-        "@com_github_classgraph_classgraph//:classgraph",
-        "@com_github_jhalterman_typetools//:typetools",
-        "@org_ow2_asm_asm//jar",
+        "@maven//:io_github_classgraph_classgraph",
+        "@maven//:net_jodah_typetools",
+        "@maven//:org_ow2_asm_asm",
     ],
 )

@@ -19,6 +19,6 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/proto:__pkg__",
     ],
     exports = [
-        "@com_google_protobuf_protobuf_java//jar",
+        "@protobuf//java/core",
     ],
 )

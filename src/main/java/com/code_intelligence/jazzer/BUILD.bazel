@@ -1,4 +1,4 @@
-load("@com_github_johnynek_bazel_jar_jar//:jar_jar.bzl", "jar_jar")
+load("@bazel_jar_jar//:jar_jar.bzl", "jar_jar")
 load("@rules_jvm_external//:defs.bzl", "javadoc")
 load("//bazel:jar.bzl", "strip_jar")
 load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
@@ -127,7 +127,7 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/runtime:constants",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
         "//src/main/java/com/code_intelligence/jazzer/utils:zip_utils",
-        "@fmeum_rules_jni//jni/tools/native_loader",
+        "@rules_jni//jni/tools/native_loader",
     ],
 )
 

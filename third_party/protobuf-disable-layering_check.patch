@@ -1,129 +1,29 @@
-commit 0cb6965869ab94858d9b843ab5d94f7deaea5dc8
-Author: Fabian Meumertzheim <fabian@meumertzhe.im>
-Date:   Mon Jun 12 16:12:02 2023 +0200
+From f4444a81218ede5eb58306bd57eaefb5d9ffd9e2 Mon Sep 17 00:00:00 2001
+From: Fabian Meumertzheim <fabian@meumertzhe.im>
+Date: Mon, 8 Jan 2024 13:30:32 +0100
+Subject: [PATCH] Disable unsupported `layering_check` Bazel feature
 
-    Disable layering_check
-    
-    protobuf misses a sizeable number of dependency declarations, which
-    means that `layering_check` has to be disabled for it.
-    
-    Generated with:
-    ```
-    buildozer 'add features -layering_check' //src/...:__pkg__
-    ```
-    
-    Contains only the changes to `package` directives.
+This allows downstream projects to use `layering_check` without having
+to patch Protobuf to disable the feature for the repository.
+---
+ REPO.bazel | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+ create mode 100644 REPO.bazel
 
-diff --git src/BUILD.bazel src/BUILD.bazel
-index 0de1a4eb1..b7e405147 100644
---- src/BUILD.bazel
-+++ src/BUILD.bazel
-@@ -7,6 +7,8 @@ load("@rules_pkg//:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix")
- load("@upb//cmake:build_defs.bzl", "staleness_test")
- load("//conformance:defs.bzl", "conformance_test")
- 
-+package(features = ["-layering_check"])
-+
- pkg_files(
-     name = "dist_files",
-     srcs = glob(["**"]),
-diff --git src/google/protobuf/BUILD.bazel src/google/protobuf/BUILD.bazel
-index 77ed2309f..8c38fb872 100644
---- src/google/protobuf/BUILD.bazel
-+++ src/google/protobuf/BUILD.bazel
-@@ -13,6 +13,7 @@ package(
-         "//:__pkg__",  # "public" targets are alias rules in //.
-         "//json:__subpackages__",
-     ],
-+    features = ["-layering_check"],
- )
- 
- proto_library(
-diff --git src/google/protobuf/compiler/BUILD.bazel src/google/protobuf/compiler/BUILD.bazel
-index 9b4c243d1..e258c7298 100644
---- src/google/protobuf/compiler/BUILD.bazel
-+++ src/google/protobuf/compiler/BUILD.bazel
-@@ -14,6 +14,8 @@ load("//build_defs:arch_tests.bzl", "aarch64_test", "x86_64_test")
- load("//build_defs:cpp_opts.bzl", "COPTS")
- load("test_plugin_injection.bzl", "inject_plugin_paths")
-
-+package(features = ["-layering_check"])
-+
- proto_library(
-     name = "plugin_proto",
-     srcs = ["plugin.proto"],
-diff --git src/google/protobuf/io/BUILD.bazel src/google/protobuf/io/BUILD.bazel
-index 8f39625c2..fc2f8e002 100644
---- src/google/protobuf/io/BUILD.bazel
-+++ src/google/protobuf/io/BUILD.bazel
-@@ -6,6 +6,7 @@ load("//build_defs:cpp_opts.bzl", "COPTS")
- 
- package(
-     default_visibility = ["//visibility:public"],
-+    features = ["-layering_check"],
- )
- 
- cc_library(
-diff --git src/google/protobuf/json/BUILD.bazel src/google/protobuf/json/BUILD.bazel
-index d6019f939..83caca985 100644
---- src/google/protobuf/json/BUILD.bazel
-+++ src/google/protobuf/json/BUILD.bazel
-@@ -1,10 +1,13 @@
- load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
- load("//build_defs:cpp_opts.bzl", "COPTS")
- 
--package(default_visibility = [
--    "//pkg:__pkg__",
--    "//src/google/protobuf/json:__pkg__",
--])
-+package(
-+    default_visibility = [
-+        "//pkg:__pkg__",
-+        "//src/google/protobuf/json:__pkg__",
+diff --git a/REPO.bazel b/REPO.bazel
+new file mode 100644
+index 00000000000..a537ac745fa
+--- /dev/null
++++ b/REPO.bazel
+@@ -0,0 +1,11 @@
++# This file is read by Bazel 7 and newer, both if Protobuf is the main
++# repository and if it is an external repository.
++repo(
++    features = [
++        # Protobuf cc_* targets do not specify all dependencies from which they
++        # include headers. This causes builds of downstream projects with
++        # --feature=layering_check to fail, which can be avoided by disabling
++        # the feature for the entire repository.
++        "-layering_check",
 +    ],
-+    features = ["-layering_check"],
 +)
- 
- licenses(["notice"])
- 
-diff --git src/google/protobuf/stubs/BUILD.bazel src/google/protobuf/stubs/BUILD.bazel
-index c8fc3e9d0..9521f5103 100644
---- src/google/protobuf/stubs/BUILD.bazel
-+++ src/google/protobuf/stubs/BUILD.bazel
-@@ -7,6 +7,7 @@ load("//build_defs:cpp_opts.bzl", "COPTS", "LINK_OPTS")
- 
- package(
-     default_visibility = ["//:__subpackages__"],
-+    features = ["-layering_check"],
- )
- 
- cc_library(
-diff --git src/google/protobuf/testing/BUILD.bazel src/google/protobuf/testing/BUILD.bazel
-index 572c1f9f4..d10435cce 100644
---- src/google/protobuf/testing/BUILD.bazel
-+++ src/google/protobuf/testing/BUILD.bazel
-@@ -5,7 +5,10 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
- load("@rules_pkg//:mappings.bzl", "pkg_files", "strip_prefix")
- load("//build_defs:cpp_opts.bzl", "COPTS", "LINK_OPTS")
- 
--package(default_visibility = ["//:__subpackages__"])
-+package(
-+    default_visibility = ["//:__subpackages__"],
-+    features = ["-layering_check"],
-+)
- 
- cc_library(
-     name = "testing",
-diff --git src/google/protobuf/util/BUILD.bazel src/google/protobuf/util/BUILD.bazel
-index 3afe464cf..03a3045b3 100644
---- src/google/protobuf/util/BUILD.bazel
-+++ src/google/protobuf/util/BUILD.bazel
-@@ -7,6 +7,8 @@ load("@rules_pkg//:mappings.bzl", "pkg_files", "strip_prefix")
- load("@rules_proto//proto:defs.bzl", "proto_library")
- load("//build_defs:cpp_opts.bzl", "COPTS")
- 
-+package(features = ["-layering_check"])
-+
- cc_library(
-     name = "delimited_message_util",
-     srcs = ["delimited_message_util.cc"],

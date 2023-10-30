@@ -1,7 +1,5 @@
 # Allow directories as sources.
 startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
-# TODO: Migrate to MODULE.bazel, the new external dependency management system.
-common --noenable_bzlmod
 build --incompatible_strict_action_env
 build --sandbox_tmpfs_path=/tmp
 build --enable_platform_specific_config

@@ -57,7 +57,7 @@ java_library(
     ],
     deps = [
         ":unsafe_provider",
-        "@org_ow2_asm_asm//jar",
+        "@maven//:org_ow2_asm_asm",
     ],
 )
 

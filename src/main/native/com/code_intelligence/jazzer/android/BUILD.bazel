@@ -1,5 +1,5 @@
 load("//bazel:compat.bzl", "ANDROID_ONLY")
-load("@fmeum_rules_jni//jni:defs.bzl", "cc_jni_library")
+load("@rules_jni//jni:defs.bzl", "cc_jni_library")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 
 copy_file(
@@ -41,7 +41,7 @@ cc_jni_library(
     target_compatible_with = ANDROID_ONLY,
     visibility = ["//visibility:public"],
     deps = [
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
         "@jazzer_slicer",
     ],
 )

@@ -1,8 +1,5 @@
 """Repository rule for Android SKD and NDK autoconfigure"""
 
-load("@build_bazel_rules_android//android:rules.bzl", "android_sdk_repository")
-load("@rules_android_ndk//:rules.bzl", "android_ndk_repository")
-
 _ANDROID_SDK_HOME = "ANDROID_HOME"
 _ANDROID_NDK_HOME = "ANDROID_NDK_HOME"
 
@@ -41,7 +38,7 @@ def _android_autoconf_impl(repository_ctx):
 
     repository_ctx.file("BUILD.bazel", "")
     repository_ctx.file("android_configure.bzl", """
-load("@build_bazel_rules_android//android:rules.bzl", "android_sdk_repository")
+load("@rules_android//android:rules.bzl", "android_sdk_repository")
 load("@rules_android_ndk//:rules.bzl", "android_ndk_repository")
 
 def android_workspace():
