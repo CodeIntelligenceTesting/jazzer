@@ -323,8 +323,7 @@ class MutatorCombinatorsTest {
                 return null;
               }
             },
-            () -> combine(valueMutator, listMutator),
-            false);
+            () -> combine(valueMutator, listMutator));
 
     assertThat(mutator.toString()).isEqualTo("{Foo.Integer, Foo via List<Integer>}");
 
@@ -381,8 +380,7 @@ class MutatorCombinatorsTest {
                 return null;
               }
             },
-            () -> combine(valueMutator, listMutator),
-            false);
+            () -> combine(valueMutator, listMutator));
 
     Foo foo = new Foo(0, singletonList(0));
     Foo fooOther = new Foo(1, singletonList(1));
