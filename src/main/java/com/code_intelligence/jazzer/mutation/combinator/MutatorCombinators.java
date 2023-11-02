@@ -182,9 +182,10 @@ public final class MutatorCombinators {
       };
     }
 
-    boolean hasFixedSize = stream(partialMutators).allMatch(InPlaceMutator::hasFixedSize);
     final InPlaceMutator<T>[] mutators = Arrays.copyOf(partialMutators, partialMutators.length);
     return new InPlaceMutator<T>() {
+      private Boolean cachedHasFixedSize;
+
       @Override
       public void initInPlace(T reference, PseudoRandom prng) {
         for (InPlaceMutator<T> mutator : mutators) {
@@ -204,9 +205,15 @@ public final class MutatorCombinators {
         }
       }
 
+      /** See comment on {@link SerializingMutator#hasFixedSize()}. */
       @Override
       public boolean hasFixedSize() {
-        return hasFixedSize;
+        if (cachedHasFixedSize != null) {
+          return cachedHasFixedSize;
+        }
+        cachedHasFixedSize = false;
+        cachedHasFixedSize = stream(partialMutators).allMatch(InPlaceMutator::hasFixedSize);
+        return cachedHasFixedSize;
       }
 
       @Override
@@ -482,39 +489,33 @@ public final class MutatorCombinators {
    * @param serializer implementation of the {@link Serializer<T>} part
    * @param lazyMutator supplies the implementation of the {@link InPlaceMutator<T>} part. This is
    *     guaranteed to be invoked exactly once and only after {@code registerSelf}.
-   * @param hasFixedSize the value to return from the resulting mutators {@link
-   *     InPlaceMutator#hasFixedSize()}
    */
   public static <T> SerializingInPlaceMutator<T> assemble(
       Consumer<SerializingInPlaceMutator<T>> registerSelf,
       Supplier<T> makeDefaultInstance,
       Serializer<T> serializer,
-      Supplier<InPlaceMutator<T>> lazyMutator,
-      boolean hasFixedSize) {
+      Supplier<InPlaceMutator<T>> lazyMutator) {
     return new DelegatingSerializingInPlaceMutator<>(
-        registerSelf, makeDefaultInstance, serializer, lazyMutator, hasFixedSize);
+        registerSelf, makeDefaultInstance, serializer, lazyMutator);
   }
 
-  private static class DelegatingSerializingInPlaceMutator<T> extends SerializingInPlaceMutator<T> {
+  private static final class DelegatingSerializingInPlaceMutator<T>
+      extends SerializingInPlaceMutator<T> {
     private final Supplier<T> makeDefaultInstance;
     private final Serializer<T> serializer;
     private final InPlaceMutator<T> mutator;
-    private final boolean hasFixedSize;
 
     private DelegatingSerializingInPlaceMutator(
         Consumer<SerializingInPlaceMutator<T>> registerSelf,
         Supplier<T> makeDefaultInstance,
         Serializer<T> serializer,
-        Supplier<InPlaceMutator<T>> lazyMutator,
-        boolean hasFixedSize) {
+        Supplier<InPlaceMutator<T>> lazyMutator) {
       requireNonNull(makeDefaultInstance);
       requireNonNull(serializer);
 
       registerSelf.accept(this);
       this.makeDefaultInstance = makeDefaultInstance;
       this.serializer = serializer;
-      // Set before invoking the supplier as that can result in calls to hasFixedSize().
-      this.hasFixedSize = hasFixedSize;
       this.mutator = lazyMutator.get();
     }
 
@@ -534,10 +535,8 @@ public final class MutatorCombinators {
     }
 
     @Override
-    public boolean hasFixedSize() {
-      // This uses a fixed value rather than calling mutator.hasFixedSize() as this method is called
-      // before the constructor has finished, which is necessary in the case of a cycle.
-      return hasFixedSize;
+    protected boolean computeHasFixedSize() {
+      return mutator.hasFixedSize();
     }
 
     @Override

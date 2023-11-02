@@ -520,7 +520,7 @@ public class StressTest {
             "{Builder.Nullable<Builder.{Builder.Boolean} -> Message |"
                 + " Builder.{Builder.Nullable<(cycle) -> Message>} -> Message -> Message>} ->"
                 + " Message",
-            false,
+            true,
             exactly(
                 AnyField3.getDefaultInstance(),
                 AnyField3.newBuilder()
