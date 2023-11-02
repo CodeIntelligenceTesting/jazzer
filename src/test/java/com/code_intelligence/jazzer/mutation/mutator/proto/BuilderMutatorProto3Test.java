@@ -56,6 +56,7 @@ class BuilderMutatorProto3Test {
             FACTORY.createInPlaceOrThrow(
                 new TypeHolder<PrimitiveField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Boolean}");
+    assertThat(mutator.hasFixedSize()).isTrue();
 
     PrimitiveField3.Builder builder = PrimitiveField3.newBuilder();
 
@@ -77,6 +78,7 @@ class BuilderMutatorProto3Test {
             FACTORY.createInPlaceOrThrow(
                 new TypeHolder<EnumField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Enum<TestEnum>}");
+    assertThat(mutator.hasFixedSize()).isTrue();
     EnumField3.Builder builder = EnumField3.newBuilder();
     try (MockPseudoRandom prng = mockPseudoRandom(0)) {
       mutator.initInPlace(builder, prng);
@@ -95,6 +97,7 @@ class BuilderMutatorProto3Test {
             FACTORY.createInPlaceOrThrow(
                 new TypeHolder<EnumFieldOutside3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Enum<TestEnumOutside3>}");
+    assertThat(mutator.hasFixedSize()).isTrue();
     EnumFieldOutside3.Builder builder = EnumFieldOutside3.newBuilder();
     try (MockPseudoRandom prng = mockPseudoRandom(0)) {
       mutator.initInPlace(builder, prng);
@@ -113,6 +116,7 @@ class BuilderMutatorProto3Test {
             FACTORY.createInPlaceOrThrow(
                 new TypeHolder<EnumFieldOne3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.FixedValue(ONE)}");
+    assertThat(mutator.hasFixedSize()).isTrue();
     EnumFieldOne3.Builder builder = EnumFieldOne3.newBuilder();
     try (MockPseudoRandom prng = mockPseudoRandom()) {
       mutator.initInPlace(builder, prng);
@@ -131,6 +135,7 @@ class BuilderMutatorProto3Test {
             FACTORY.createInPlaceOrThrow(
                 new TypeHolder<EnumFieldRepeated3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder via List<Enum<TestEnumRepeated>>}");
+    assertThat(mutator.hasFixedSize()).isFalse();
     EnumFieldRepeated3.Builder builder = EnumFieldRepeated3.newBuilder();
     try (MockPseudoRandom prng =
         mockPseudoRandom(
@@ -166,6 +171,7 @@ class BuilderMutatorProto3Test {
             FACTORY.createInPlaceOrThrow(
                 new TypeHolder<OptionalPrimitiveField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<Boolean>}");
+    assertThat(mutator.hasFixedSize()).isTrue();
 
     OptionalPrimitiveField3.Builder builder = OptionalPrimitiveField3.newBuilder();
 
@@ -219,6 +225,7 @@ class BuilderMutatorProto3Test {
             FACTORY.createInPlaceOrThrow(
                 new TypeHolder<RepeatedPrimitiveField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder via List<Boolean>}");
+    assertThat(mutator.hasFixedSize()).isFalse();
 
     RepeatedPrimitiveField3.Builder builder = RepeatedPrimitiveField3.newBuilder();
 
@@ -270,6 +277,7 @@ class BuilderMutatorProto3Test {
             FACTORY.createInPlaceOrThrow(
                 new TypeHolder<MessageField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<{Builder.Boolean} -> Message>}");
+    assertThat(mutator.hasFixedSize()).isTrue();
 
     MessageField3.Builder builder = MessageField3.newBuilder();
 
@@ -317,6 +325,7 @@ class BuilderMutatorProto3Test {
             FACTORY.createInPlaceOrThrow(
                 new TypeHolder<RepeatedMessageField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder via List<{Builder.Boolean} -> Message>}");
+    assertThat(mutator.hasFixedSize()).isFalse();
 
     RepeatedMessageField3.Builder builder = RepeatedMessageField3.newBuilder();
 
@@ -381,6 +390,7 @@ class BuilderMutatorProto3Test {
                 new TypeHolder<RecursiveMessageField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
         .isEqualTo("{Builder.Boolean, WithoutInit(Builder.Nullable<(cycle) -> Message>)}");
+    assertThat(mutator.hasFixedSize()).isFalse();
     RecursiveMessageField3.Builder builder = RecursiveMessageField3.newBuilder();
 
     try (MockPseudoRandom prng =
@@ -449,6 +459,7 @@ class BuilderMutatorProto3Test {
         .isEqualTo(
             "{Builder.Boolean, Builder.Boolean, Builder.Nullable<Boolean> |"
                 + " Builder.Nullable<{Builder.Boolean} -> Message>}");
+    assertThat(mutator.hasFixedSize()).isTrue();
     OneOfField3.Builder builder = OneOfField3.newBuilder();
 
     try (MockPseudoRandom prng =
@@ -559,6 +570,7 @@ class BuilderMutatorProto3Test {
             FACTORY.createInPlaceOrThrow(
                 new TypeHolder<EmptyMessage3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{<empty>}");
+    assertThat(mutator.hasFixedSize()).isTrue();
     EmptyMessage3.Builder builder = EmptyMessage3.newBuilder();
 
     try (MockPseudoRandom prng = mockPseudoRandom()) {
@@ -584,6 +596,7 @@ class BuilderMutatorProto3Test {
         .isEqualTo(
             "{Builder.Nullable<Builder.{Builder.Boolean} -> Message |"
                 + " Builder.{Builder.Nullable<(cycle) -> Message>} -> Message -> Message>}");
+    assertThat(mutator.hasFixedSize()).isTrue();
     AnyField3.Builder builder = AnyField3.newBuilder();
 
     try (MockPseudoRandom prng =
