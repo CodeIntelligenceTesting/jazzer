@@ -34,13 +34,11 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
   private static final int INVERSE_PICK_VALUE_SUPPLIER_FREQUENCY = 100;
 
   private final SerializingMutator[] mutators;
-  private final boolean hasFixedSize;
 
   ProductMutator(SerializingMutator[] mutators) {
     requireNonNullElements(mutators);
     require(mutators.length > 0, "mutators must not be empty");
     this.mutators = Arrays.copyOf(mutators, mutators.length);
-    this.hasFixedSize = stream(mutators).allMatch(ValueMutator::hasFixedSize);
   }
 
   @Override
@@ -121,8 +119,8 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
   }
 
   @Override
-  public boolean hasFixedSize() {
-    return hasFixedSize;
+  protected boolean computeHasFixedSize() {
+    return stream(mutators).allMatch(ValueMutator::hasFixedSize);
   }
 
   @Override
