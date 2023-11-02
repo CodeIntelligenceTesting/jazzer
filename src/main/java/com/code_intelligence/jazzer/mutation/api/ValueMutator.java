@@ -80,6 +80,10 @@ public interface ValueMutator<T> extends Debuggable {
    *
    * <p>Examples of types with fixed size include primitive types, enums, and classes with only
    * primitive types and enums as members.
+   *
+   * <p>Note: Implementing classes should only override this method if the result does not depend on
+   * the value of {@code hasFixedSize()} for any child mutators. If it would, instead override
+   * {@link SerializingMutator#computeHasFixedSize()} to prevent issues when encountering a cycle.
    */
   boolean hasFixedSize();
 }

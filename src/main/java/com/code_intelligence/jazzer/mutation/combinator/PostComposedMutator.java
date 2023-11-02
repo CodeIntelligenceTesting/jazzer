@@ -55,7 +55,7 @@ abstract class PostComposedMutator<T, R> extends SerializingMutator<R> {
   }
 
   @Override
-  public boolean hasFixedSize() {
+  protected boolean computeHasFixedSize() {
     return mutator.hasFixedSize();
   }
 

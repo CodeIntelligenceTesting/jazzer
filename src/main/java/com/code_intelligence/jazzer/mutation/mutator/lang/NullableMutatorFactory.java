@@ -103,7 +103,7 @@ final class NullableMutatorFactory extends MutatorFactory {
     }
 
     @Override
-    public boolean hasFixedSize() {
+    protected boolean computeHasFixedSize() {
       return mutator.hasFixedSize();
     }
 
