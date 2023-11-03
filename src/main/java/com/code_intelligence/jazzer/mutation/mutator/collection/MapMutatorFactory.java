@@ -208,7 +208,7 @@ final class MapMutatorFactory extends MutatorFactory {
     public String toDebugString(Predicate<Debuggable> isInCycle) {
       return "Map<"
           + keyMutator.toDebugString(isInCycle)
-          + ","
+          + ", "
           + valueMutator.toDebugString(isInCycle)
           + ">";
     }
