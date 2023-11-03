@@ -53,7 +53,7 @@ class MapMutatorTest {
             @NotNull @WithSize(max = 3) Map<@NotNull String, @NotNull String>>() {}.annotatedType();
     SerializingMutator<Map<String, String>> mutator =
         (SerializingMutator<Map<String, String>>) FACTORY.createOrThrow(type);
-    assertThat(mutator.toString()).isEqualTo("Map<String,String>");
+    assertThat(mutator.toString()).isEqualTo("Map<String, String>");
 
     // Initialize new map
     Map<String, String> map;
@@ -107,7 +107,7 @@ class MapMutatorTest {
         new TypeHolder<@NotNull Map<@NotNull Integer, @NotNull Integer>>() {}.annotatedType();
     SerializingMutator<Map<Integer, Integer>> mutator =
         (SerializingMutator<Map<Integer, Integer>>) FACTORY.createOrThrow(type);
-    assertThat(mutator.toString()).isEqualTo("Map<Integer,Integer>");
+    assertThat(mutator.toString()).isEqualTo("Map<Integer, Integer>");
 
     Map<Integer, Integer> map = asMap(1, 10, 2, 20, 3, 30, 4, 40, 5, 50, 6, 60);
 
@@ -130,7 +130,7 @@ class MapMutatorTest {
         new TypeHolder<@NotNull Map<@NotNull Integer, @NotNull Integer>>() {}.annotatedType();
     SerializingMutator<Map<Integer, Integer>> mutator =
         (SerializingMutator<Map<Integer, Integer>>) FACTORY.createOrThrow(type);
-    assertThat(mutator.toString()).isEqualTo("Map<Integer,Integer>");
+    assertThat(mutator.toString()).isEqualTo("Map<Integer, Integer>");
 
     Map<Integer, Integer> map = asMap(1, 10, 2, 20, 3, 30, 4, 40, 5, 50, 6, 60);
 
@@ -163,7 +163,7 @@ class MapMutatorTest {
         new TypeHolder<@NotNull Map<@NotNull Integer, @NotNull Integer>>() {}.annotatedType();
     SerializingMutator<Map<Integer, Integer>> mutator =
         (SerializingMutator<Map<Integer, Integer>>) FACTORY.createOrThrow(type);
-    assertThat(mutator.toString()).isEqualTo("Map<Integer,Integer>");
+    assertThat(mutator.toString()).isEqualTo("Map<Integer, Integer>");
 
     Map<Integer, Integer> map = asMap(1, 10, 2, 20, 3, 30, 4, 40, 5, 50, 6, 60);
 
@@ -196,7 +196,7 @@ class MapMutatorTest {
         new TypeHolder<@NotNull Map<@NotNull Boolean, @NotNull Boolean>>() {}.annotatedType();
     SerializingMutator<Map<Boolean, Boolean>> mutator =
         (SerializingMutator<Map<Boolean, Boolean>>) FACTORY.createOrThrow(type);
-    assertThat(mutator.toString()).isEqualTo("Map<Boolean,Boolean>");
+    assertThat(mutator.toString()).isEqualTo("Map<Boolean, Boolean>");
 
     // No new keys can be generated for this map.
     Map<Boolean, Boolean> map = asMap(false, false, true, false);

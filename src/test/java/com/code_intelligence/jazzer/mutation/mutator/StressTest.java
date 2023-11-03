@@ -162,13 +162,13 @@ public class StressTest {
             distinctElementsRatio(0.30)),
         arguments(
             new TypeHolder<@NotNull Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
-            "Map<String,String>",
+            "Map<String, String>",
             false,
             distinctElementsRatio(0.45),
             distinctElementsRatio(0.45)),
         arguments(
             new TypeHolder<Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
-            "Nullable<Map<String,String>>",
+            "Nullable<Map<String, String>>",
             false,
             distinctElementsRatio(0.46),
             distinctElementsRatio(0.48)),
@@ -176,14 +176,14 @@ public class StressTest {
             new TypeHolder<
                 @WithSize(max = 3) @NotNull Map<
                     @NotNull Integer, @NotNull Integer>>() {}.annotatedType(),
-            "Map<Integer,Integer>",
+            "Map<Integer, Integer>",
             false,
             // Half of all maps are empty, the other half is heavily biased towards special values.
             all(mapSizeInClosedRange(0, 3), distinctElementsRatio(0.2)),
             all(mapSizeInClosedRange(0, 3), manyDistinctElements())),
         arguments(
             new TypeHolder<@NotNull Map<@NotNull Boolean, @NotNull Boolean>>() {}.annotatedType(),
-            "Map<Boolean,Boolean>",
+            "Map<Boolean, Boolean>",
             false,
             exactly(
                 asMap(),
@@ -438,13 +438,13 @@ public class StressTest {
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull MapField3>() {}.annotatedType(),
-            "{Builder.Map<Integer,String>} -> Message",
+            "{Builder.Map<Integer, String>} -> Message",
             false,
             distinctElementsRatio(0.46),
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull MessageMapField3>() {}.annotatedType(),
-            "{Builder.Map<String,{Builder.Map<Integer,String>} -> Message>} -> Message",
+            "{Builder.Map<String, {Builder.Map<Integer, String>} -> Message>} -> Message",
             false,
             distinctElementsRatio(0.45),
             distinctElementsRatio(0.45)),
@@ -485,7 +485,7 @@ public class StressTest {
                 + " List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via"
                 + " List<Float>, Builder via List<Double>, Builder via List<String>, Builder via"
                 + " List<Enum<Enum>>, WithoutInit(Builder via List<(cycle) -> Message>),"
-                + " Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>,"
+                + " Builder.Map<Integer, Integer>, Builder.Nullable<FixedValue(OnlyLabel)>,"
                 + " Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> |"
                 + " Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
             false,
@@ -507,7 +507,7 @@ public class StressTest {
                 + " List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via"
                 + " List<Float>, Builder via List<Double>, Builder via List<String>, Builder via"
                 + " List<Enum<Enum>>, WithoutInit(Builder via List<(cycle) -> Message>),"
-                + " Builder.Map<Integer,Integer>, Builder.Nullable<FixedValue(OnlyLabel)>,"
+                + " Builder.Map<Integer, Integer>, Builder.Nullable<FixedValue(OnlyLabel)>,"
                 + " Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> |"
                 + " Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
             false,
