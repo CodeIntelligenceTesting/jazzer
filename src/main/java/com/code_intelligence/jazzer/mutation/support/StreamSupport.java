@@ -9,10 +9,7 @@
 
 package com.code_intelligence.jazzer.mutation.support;
 
-import static java.util.stream.Collectors.toList;
-
 import java.util.AbstractMap.SimpleEntry;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.IntFunction;
@@ -20,15 +17,6 @@ import java.util.stream.Stream;
 
 public final class StreamSupport {
   private StreamSupport() {}
-
-  public static boolean[] toBooleanArray(Stream<Boolean> stream) {
-    List<Boolean> list = stream.collect(toList());
-    boolean[] array = new boolean[list.size()];
-    for (int i = 0; i < list.size(); i++) {
-      array[i] = list.get(i);
-    }
-    return array;
-  }
 
   /**
    * @return the first present value, otherwise {@link Optional#empty()}
