@@ -161,6 +161,9 @@ final class ListMutatorFactory extends MutatorFactory {
     }
 
     private int maxInitialSize() {
+      if (elementMutator.requiresRecursionBreaking()) {
+        return minInitialSize();
+      }
       return min(maxSize, minSize + 1);
     }
   }

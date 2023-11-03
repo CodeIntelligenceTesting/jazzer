@@ -69,7 +69,7 @@ final class NullableMutatorFactory extends MutatorFactory {
 
     @Override
     public T init(PseudoRandom prng) {
-      if (prng.trueInOneOutOf(INVERSE_FREQUENCY_NULL)) {
+      if (mutator.requiresRecursionBreaking() || prng.trueInOneOutOf(INVERSE_FREQUENCY_NULL)) {
         return null;
       } else {
         return mutator.init(prng);
