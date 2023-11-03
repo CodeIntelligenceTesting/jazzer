@@ -218,6 +218,9 @@ final class MapMutatorFactory extends MutatorFactory {
     }
 
     private int maxInitialSize() {
+      if (keyMutator.requiresRecursionBreaking() || valueMutator.requiresRecursionBreaking()) {
+        return minInitialSize();
+      }
       return min(maxSize, minSize + 1);
     }
   }

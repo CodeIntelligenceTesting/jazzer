@@ -23,4 +23,17 @@ public interface MutatorBase {
    * {@link SerializingMutator#computeHasFixedSize()} to prevent issues when encountering a cycle.
    */
   boolean hasFixedSize();
+
+  /**
+   * Whether the type {@code T} mutated by this mutator is recursive and requires cooperation from
+   * its parent mutator to prevent a blow-up of its expected nesting depth.
+   *
+   * <p>Container types such as lists or optionals should return an empty or minimally sized
+   * structure for such element types and themselves return {@code false} from this method.
+   *
+   * <p>Note: Implementing classes should always return a constant value.
+   */
+  default boolean requiresRecursionBreaking() {
+    return false;
+  }
 }

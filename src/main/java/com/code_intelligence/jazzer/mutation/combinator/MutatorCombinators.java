@@ -19,6 +19,7 @@ import static java.util.stream.Collectors.joining;
 
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
+import com.code_intelligence.jazzer.mutation.api.MutatorBase;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
@@ -393,6 +394,9 @@ public final class MutatorCombinators {
   }
 
   /**
+   * Use {@link #markAsRequiringRecursionBreaking(SerializingMutator)} instead for {@link
+   * com.code_intelligence.jazzer.mutation.api.ValueMutator}.
+   *
    * @return a mutator that behaves identically to the provided one except that its {@link
    *     InPlaceMutator#initInPlace(Object, PseudoRandom)} is a no-op
    */
@@ -420,6 +424,62 @@ public final class MutatorCombinators {
 
       @Override
       public boolean hasFixedSize() {
+        return mutator.hasFixedSize();
+      }
+    };
+  }
+
+  /**
+   * Preferably use {@link #withoutInit(InPlaceMutator)} instead for {@link InPlaceMutator}.
+   *
+   * @return a mutator that behaves identically to the provided one except that its {@link
+   *     MutatorBase#requiresRecursionBreaking()} method returns {@code true}.
+   */
+  public static <T> SerializingMutator<T> markAsRequiringRecursionBreaking(
+      SerializingMutator<T> mutator) {
+    return new SerializingMutator<T>() {
+      @Override
+      public boolean requiresRecursionBreaking() {
+        return true;
+      }
+
+      @Override
+      public T init(PseudoRandom prng) {
+        return mutator.init(prng);
+      }
+
+      @Override
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return "RecursionBreaking(" + mutator.toDebugString(isInCycle) + ")";
+      }
+
+      @Override
+      public T read(DataInputStream in) throws IOException {
+        return mutator.read(in);
+      }
+
+      @Override
+      public void write(T value, DataOutputStream out) throws IOException {
+        mutator.write(value, out);
+      }
+
+      @Override
+      public T detach(T value) {
+        return mutator.detach(value);
+      }
+
+      @Override
+      public T mutate(T value, PseudoRandom prng) {
+        return mutator.mutate(value, prng);
+      }
+
+      @Override
+      public T crossOver(T value, T otherValue, PseudoRandom prng) {
+        return mutator.crossOver(value, otherValue, prng);
+      }
+
+      @Override
+      protected boolean computeHasFixedSize() {
         return mutator.hasFixedSize();
       }
     };
