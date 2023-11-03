@@ -134,6 +134,9 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
 
   @Override
   public String toDebugString(Predicate<Debuggable> isInCycle) {
+    if (isInCycle.test(this)) {
+      return "(cycle)";
+    }
     return stream(mutators)
         .map(mutator -> mutator.toDebugString(isInCycle))
         .collect(joining(", ", "[", "]"));

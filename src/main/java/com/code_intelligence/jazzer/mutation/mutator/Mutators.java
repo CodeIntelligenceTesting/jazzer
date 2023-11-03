@@ -17,6 +17,7 @@ import static java.util.stream.Collectors.joining;
 import com.code_intelligence.jazzer.mutation.annotation.AppliesTo;
 import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import com.code_intelligence.jazzer.mutation.mutator.aggregate.AggregateMutators;
 import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutators;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutators;
@@ -32,7 +33,8 @@ public final class Mutators {
         LangMutators.newFactory(),
         CollectionMutators.newFactory(),
         ProtoMutators.newFactory(),
-        LibFuzzerMutators.newFactory());
+        LibFuzzerMutators.newFactory(),
+        AggregateMutators.newFactory());
   }
 
   /**

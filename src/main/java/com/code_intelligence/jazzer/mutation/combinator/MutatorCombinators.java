@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -259,7 +260,17 @@ public final class MutatorCombinators {
       Function<T, R> map,
       Function<R, T> inverse,
       Function<Predicate<Debuggable>, String> debug) {
-    return new PostComposedMutator<T, R>(mutator, map, inverse) {
+    return mutateThenMapToImmutable(
+        () -> mutator, map, inverse, (unused, isInCycle) -> debug.apply(isInCycle), unused -> {});
+  }
+
+  public static <T, @ImmutableTypeParameter R> SerializingMutator<R> mutateThenMapToImmutable(
+      Supplier<SerializingMutator<T>> mutator,
+      Function<T, R> map,
+      Function<R, T> inverse,
+      BiFunction<SerializingMutator<T>, Predicate<Debuggable>, String> debug,
+      Consumer<SerializingMutator<R>> registerSelf) {
+    return new PostComposedMutator<T, R>(mutator, map, inverse, registerSelf) {
       @Override
       public R detach(R value) {
         return value;
@@ -267,7 +278,7 @@ public final class MutatorCombinators {
 
       @Override
       public String toDebugString(Predicate<Debuggable> isInCycle) {
-        return debug.apply(isInCycle);
+        return debug.apply(this.mutator, isInCycle);
       }
     };
   }

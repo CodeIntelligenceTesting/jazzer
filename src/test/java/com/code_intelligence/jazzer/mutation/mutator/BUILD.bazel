@@ -7,13 +7,20 @@ java_junit5_test(
     size = "large",
     srcs = ["StressTest.java"],
     env = {"JAZZER_MOCK_LIBFUZZER_MUTATOR": "true"},
+    javacopts = [
+        "--release",
+        "17",
+    ],
     jvm_flags = [
         "-Djunit.jupiter.execution.parallel.enabled=true",
         "-Djunit.jupiter.execution.parallel.mode.default=concurrent",
         "-Djunit.jupiter.execution.parallel.config.strategy=fixed",
         "-Djunit.jupiter.execution.parallel.config.fixed.parallelism=" + str(TEST_PARALLELISM),
     ],
-    tags = ["cpu:" + str(TEST_PARALLELISM)],
+    tags = [
+        "cpu:" + str(TEST_PARALLELISM),
+        "no-jdk8",
+    ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
