@@ -19,17 +19,28 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import net.jodah.typetools.TypeResolver;
 
 abstract class PostComposedMutator<T, R> extends SerializingMutator<R> {
-  private final SerializingMutator<T> mutator;
+  protected final SerializingMutator<T> mutator;
   private final Function<T, R> map;
   private final Function<R, T> inverse;
 
   PostComposedMutator(SerializingMutator<T> mutator, Function<T, R> map, Function<R, T> inverse) {
-    this.mutator = requireNonNull(mutator);
+    this(() -> mutator, map, inverse, self -> {});
+  }
+
+  PostComposedMutator(
+      Supplier<SerializingMutator<T>> mutator,
+      Function<T, R> map,
+      Function<R, T> inverse,
+      Consumer<SerializingMutator<R>> registerSelf) {
+    registerSelf.accept(this);
+    this.mutator = requireNonNull(mutator).get();
     this.map = requireNonNull(map);
     this.inverse = requireNonNull(inverse);
   }

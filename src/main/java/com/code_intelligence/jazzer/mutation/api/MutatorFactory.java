@@ -73,4 +73,17 @@ public abstract class MutatorFactory {
   @CheckReturnValue
   public abstract Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, MutatorFactory factory);
+
+  /**
+   * This exception can be thrown in mutator constructors to indicate that they failed to construct
+   * a child mutator. This should be treated by callers as the equivalent of returning {@link
+   * Optional#empty()} from {@link #tryCreate(AnnotatedType, MutatorFactory)}, which may not be
+   * possible in mutator factories for recursive structures that need to create child mutators in a
+   * mutators constructor.
+   */
+  public static final class FailedToConstructChildMutatorException extends RuntimeException {
+    public FailedToConstructChildMutatorException() {
+      super("Failed to construct a mutator");
+    }
+  }
 }

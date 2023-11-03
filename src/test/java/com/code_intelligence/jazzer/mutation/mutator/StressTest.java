@@ -103,6 +103,12 @@ public class StressTest {
     C
   }
 
+  private record SimpleRecord(int i, boolean b) {}
+
+  private record RepeatedRecord(SimpleRecord first, SimpleRecord second) {}
+
+  private record LinkedListNode(SimpleRecord value, LinkedListNode next) {}
+
   @SuppressWarnings("unused")
   static Message getTestProtobufDefaultInstance() {
     return TestProtobuf.getDefaultInstance();
@@ -341,7 +347,31 @@ public class StressTest {
             "FuzzedDataProvider",
             false,
             distinctElementsRatio(0.45),
-            distinctElementsRatio(0.45)));
+            distinctElementsRatio(0.45)),
+        arguments(
+            new TypeHolder<@NotNull SimpleRecord>() {}.annotatedType(),
+            "[Integer, Boolean] -> SimpleRecord",
+            true,
+            contains(new SimpleRecord(0, false)),
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull RepeatedRecord>() {}.annotatedType(),
+            // TODO: This type is not recursive and should not use RecursionBreaking.
+            "[Nullable<[Integer, Boolean] -> SimpleRecord>, Nullable<RecursionBreaking((cycle) ->"
+                + " SimpleRecord)>] -> RepeatedRecord",
+            true,
+            // TODO: Low due to recursion breaking initializing nested records to null and integers
+            //  being biased towards special values. Revisit after fixing the TODO above.
+            distinctElementsRatio(0.19),
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull LinkedListNode>() {}.annotatedType(),
+            "[Nullable<[Integer, Boolean] -> SimpleRecord>, Nullable<RecursionBreaking((cycle) ->"
+                + " LinkedListNode)>] -> LinkedListNode",
+            false,
+            // Low due to recursion breaking initializing nested records to null.
+            distinctElementsRatio(0.23),
+            manyDistinctElements()));
   }
 
   public static Stream<Arguments> protoStressTestCases() {

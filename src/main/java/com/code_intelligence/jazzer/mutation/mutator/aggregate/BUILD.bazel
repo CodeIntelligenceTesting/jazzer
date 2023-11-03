@@ -1,0 +1,48 @@
+java_library(
+    name = "aggregate",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "AggregatesHelper.java",
+            "RecordMutatorFactory.java",
+        ],
+    ),
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator:__pkg__",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator:__subpackages__",
+    ],
+    runtime_deps = select({
+        "@platforms//os:android": [],
+        "//conditions:default": [
+            ":record_mutator_factory",
+        ],
+    }),
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+    ],
+)
+
+java_library(
+    name = "record_mutator_factory",
+    srcs = ["RecordMutatorFactory.java"],
+    javacopts = [
+        "--release",
+        "17",
+    ],
+    deps = [
+        ":aggregates_helper",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+    ],
+)
+
+java_library(
+    name = "aggregates_helper",
+    srcs = ["AggregatesHelper.java"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/combinator",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+        "@com_google_errorprone_error_prone_type_annotations//jar",
+    ],
+)
