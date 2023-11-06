@@ -54,4 +54,6 @@ public abstract class ExtendedMutatorFactory implements MutatorFactory {
   public final Optional<SerializingMutator<?>> tryCreate(AnnotatedType type) {
     return tryCreate(type, this);
   }
+
+  public abstract void internMutator(SerializingMutator<?> mutator);
 }
