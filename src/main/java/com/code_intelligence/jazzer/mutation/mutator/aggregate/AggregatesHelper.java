@@ -13,7 +13,6 @@ import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinator
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static java.util.Arrays.stream;
-import static java.util.Collections.unmodifiableList;
 
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory.FailedToConstructChildMutatorException;
@@ -27,19 +26,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 final class AggregatesHelper {
-
-  // Aggregate types can be recursive, so we have to reuse the mutator we are about to construct
-  // when constructing child mutators.
-  private final Map<List<Executable>, Optional<SerializingMutator<?>>> internedMutators =
-      new HashMap<>();
 
   @SuppressWarnings("Immutable")
   public Optional<SerializingMutator<?>> ofImmutable(
@@ -65,22 +54,7 @@ final class AggregatesHelper {
               "Parameter %d of %s does not match return type of %s", i, instantiator, getters[i]));
     }
 
-    Optional<SerializingMutator<?>> mutator =
-        internedMutators.get(getCacheKey(instantiator, getters));
-    if (mutator == null) {
-      mutator =
-          ofImmutableChecked(factory, instantiator, getters).map(m -> (SerializingMutator<?>) m);
-    } else {
-      // A mutator for this aggregate type has already been created, which is the case in particular
-      // if it is recursive, i.e., transitively has a field of the same type. We inform the parent
-      // mutator to prevent this structure from blowing up, e.g., due to the mutator for nullable
-      // types being biased to initialize to a non-null value.
-      // TODO: This results in false positives if e.g. a record A has two fields of type record B.
-      //  Instead of in a static field, we should intern mutators in a stack maintained by the
-      //  ChainedMutatorFactory, with push and pop operations matching the tryCreate calls.
-      mutator = mutator.map(MutatorCombinators::markAsRequiringRecursionBreaking);
-    }
-    return mutator;
+    return ofImmutableChecked(factory, instantiator, getters).map(m -> (SerializingMutator<?>) m);
   }
 
   private <@ImmutableTypeParameter T> Optional<SerializingMutator<T>> ofImmutableChecked(
@@ -154,18 +128,9 @@ final class AggregatesHelper {
                   productMutator.toDebugString(inCycle)
                       + " -> "
                       + instantiator.getDeclaringClass().getSimpleName(),
-              mutator ->
-                  internedMutators.put(getCacheKey(instantiator, getters), Optional.of(mutator))));
+              factory::internMutator));
     } catch (FailedToConstructChildMutatorException e) {
-      internedMutators.put(getCacheKey(instantiator, getters), Optional.empty());
       return Optional.empty();
     }
-  }
-
-  private static List<Executable> getCacheKey(Executable instantiator, Method... getters) {
-    List<Executable> key = new ArrayList<>();
-    key.add(instantiator);
-    key.addAll(Arrays.asList(getters));
-    return unmodifiableList(key);
   }
 }
