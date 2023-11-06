@@ -31,6 +31,8 @@ import java.util.stream.Stream;
 /** A {@link MutatorFactory} that delegates to the given factories in order. */
 public final class ChainedMutatorFactory extends ExtendedMutatorFactory {
   private final List<MutatorFactory> fixedFactories;
+  private final List<MutatorFactory> prependedFactories;
+  private AnnotatedType currentType;
 
   /**
    * Creates a {@link MutatorFactory} that delegates to the given factories in order.
@@ -39,6 +41,7 @@ public final class ChainedMutatorFactory extends ExtendedMutatorFactory {
    */
   public ChainedMutatorFactory(MutatorFactory... factories) {
     this.fixedFactories = unmodifiableList(asList(factories));
+    this.prependedFactories = new ArrayList<>();
   }
 
   @SafeVarargs
@@ -51,7 +54,40 @@ public final class ChainedMutatorFactory extends ExtendedMutatorFactory {
   @CheckReturnValue
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, ExtendedMutatorFactory parent) {
-      return findFirstPresent(fixedFactories.stream()
+    AnnotatedType previousType = currentType;
+    int currentPrependedFactoriesSize = prependedFactories.size();
+
+    currentType = type;
+    try {
+      // prependedFactories may be modified during the creation of child mutators. Go through an
+      // IntStream to allow for this and remove all factories prepended by child mutators before
+      // returning from this function.
+      return findFirstPresent(
+          Stream.concat(
+                  IntStream.range(0, currentPrependedFactoriesSize)
+                      .mapToObj(prependedFactories::get),
+                  fixedFactories.stream())
               .map(factory -> factory.tryCreate(type, parent)));
+    } finally {
+      currentType = previousType;
+      prependedFactories.subList(currentPrependedFactoriesSize, prependedFactories.size()).clear();
+    }
+  }
+
+  @Override
+  public void internMutator(SerializingMutator<?> mutator) {
+    AnnotatedType localCurrentType = currentType;
+    prependedFactories.add(
+        (type, factory) -> {
+          if (annotatedTypeEquals(type, localCurrentType)) {
+            // A mutator for this aggregate type has already been created, which is the case in
+            // particular if it is recursive, i.e., transitively has a field of the same type. We
+            // inform the parent mutator to prevent this structure from blowing up, e.g., due to the
+            // mutator for nullable types being biased to initialize to a non-null value.
+            return Optional.of(markAsRequiringRecursionBreaking(mutator));
+          } else {
+            return Optional.empty();
+          }
+        });
   }
 }
