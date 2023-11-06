@@ -112,7 +112,7 @@ class StringMutatorTest {
   void testMinLengthInit() {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(
                     new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
@@ -131,7 +131,7 @@ class StringMutatorTest {
   void testMaxLengthInit() {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(
                     new TypeHolder<@NotNull @WithUtf8Length(max = 50) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
@@ -150,7 +150,7 @@ class StringMutatorTest {
   void testMinLengthMutate() {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(
                     new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
@@ -172,7 +172,7 @@ class StringMutatorTest {
   void testMaxLengthMutate() {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(
                     new TypeHolder<@NotNull @WithUtf8Length(max = 15) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
@@ -197,7 +197,7 @@ class StringMutatorTest {
   void testMultibyteCharacters() {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(
                     new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");

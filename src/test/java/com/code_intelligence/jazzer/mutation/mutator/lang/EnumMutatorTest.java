@@ -46,7 +46,7 @@ class EnumMutatorTest {
   void testBoxed() {
     SerializingMutator<TestEnum> mutator =
         (SerializingMutator<TestEnum>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Enum<TestEnum>");
     TestEnum cl;
@@ -81,7 +81,7 @@ class EnumMutatorTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> {
-          LangMutators.newFactory()
+          LangMutators.newFactories()
               .createOrThrow(new TypeHolder<@NotNull TestEnumOne>() {}.annotatedType());
         },
         "When trying to build mutators for Enum with one value, an Exception should be thrown.");
@@ -91,7 +91,7 @@ class EnumMutatorTest {
   void testEnumBasedOnInvalidInput() throws IOException {
     SerializingMutator<TestEnum> mutator =
         (SerializingMutator<TestEnum>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
     ByteArrayOutputStream bo = new ByteArrayOutputStream();
     DataOutputStream os = new DataOutputStream(bo);

@@ -139,7 +139,7 @@ public final class BuilderMutatorFactory extends MutatorFactory {
             @Override
             public Optional<SerializingMutator<?>> tryCreate(
                 AnnotatedType type, MutatorFactory factory) {
-              return findFirstParentIfClass(type, EnumValueDescriptor.class)
+              return asSubclassOrEmpty(type, EnumValueDescriptor.class)
                   .map(
                       parent -> {
                         EnumDescriptor enumType = field.getEnumType();

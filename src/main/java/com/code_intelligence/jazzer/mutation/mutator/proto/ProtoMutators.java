@@ -16,19 +16,19 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
-import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import java.util.stream.Stream;
 
 public final class ProtoMutators {
   private ProtoMutators() {}
 
-  public static MutatorFactory newFactory() {
+  public static Stream<MutatorFactory> newFactories() {
     try {
       Class.forName("com.google.protobuf.Message");
-      return new ChainedMutatorFactory(
+      return Stream.of(
           new ByteStringMutatorFactory(), new MessageMutatorFactory(), new BuilderMutatorFactory());
     } catch (ClassNotFoundException e) {
-      return new ChainedMutatorFactory();
+      return Stream.empty();
     }
   }
 }

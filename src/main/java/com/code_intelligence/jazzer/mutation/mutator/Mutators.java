@@ -37,11 +37,11 @@ public final class Mutators {
 
   public static MutatorFactory newFactory() {
     return new ChainedMutatorFactory(
-        LangMutators.newFactory(),
-        CollectionMutators.newFactory(),
-        ProtoMutators.newFactory(),
-        LibFuzzerMutators.newFactory(),
-        AggregateMutators.newFactory());
+        LangMutators.newFactories(),
+        CollectionMutators.newFactories(),
+        ProtoMutators.newFactories(),
+        LibFuzzerMutators.newFactories(),
+        AggregateMutators.newFactories());
   }
 
   /**

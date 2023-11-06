@@ -24,10 +24,11 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import java.lang.reflect.AnnotatedType;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** A {@link MutatorFactory} that delegates to the given factories in order. */
 public final class ChainedMutatorFactory extends MutatorFactory {
-  private final List<MutatorFactory> factories;
+  private final List<MutatorFactory> fixedFactories;
 
   /**
    * Creates a {@link MutatorFactory} that delegates to the given factories in order.
@@ -35,12 +36,17 @@ public final class ChainedMutatorFactory extends MutatorFactory {
    * @param factories a possibly empty collection of factories
    */
   public ChainedMutatorFactory(MutatorFactory... factories) {
-    this.factories = unmodifiableList(asList(factories));
+    this.fixedFactories = unmodifiableList(asList(factories));
+  }
+
+  public static ChainedMutatorFactory of(Stream<MutatorFactory> factories) {
+    return new ChainedMutatorFactory(factories.toArray(MutatorFactory[]::new));
   }
 
   @Override
   @CheckReturnValue
   public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory parent) {
-    return findFirstPresent(factories.stream().map(factory -> factory.tryCreate(type, parent)));
+    return findFirstPresent(
+        fixedFactories.stream().map(factory -> factory.tryCreate(type, parent)));
   }
 }

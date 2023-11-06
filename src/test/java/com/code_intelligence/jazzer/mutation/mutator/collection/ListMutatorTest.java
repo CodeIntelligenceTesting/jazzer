@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("unchecked")
 public class ListMutatorTest {
   public static final MutatorFactory FACTORY =
-      new ChainedMutatorFactory(LangMutators.newFactory(), CollectionMutators.newFactory());
+      new ChainedMutatorFactory(LangMutators.newFactories(), CollectionMutators.newFactories());
 
   private static SerializingMutator<@NotNull List<@NotNull Integer>> defaultListMutator() {
     AnnotatedType type = new TypeHolder<@NotNull List<@NotNull Integer>>() {}.annotatedType();

@@ -43,7 +43,7 @@ public class ByteArrayMutatorTest {
   void testBasicFunction() {
     SerializingMutator<byte[]> mutator =
         (SerializingMutator<byte[]>)
-            LangMutators.newFactory().createOrThrow(new TypeHolder<byte[]>() {}.annotatedType());
+            LangMutators.newFactories().createOrThrow(new TypeHolder<byte[]>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Nullable<byte[]>");
 
     byte[] arr;
@@ -63,7 +63,7 @@ public class ByteArrayMutatorTest {
   void testMaxLength() {
     SerializingMutator<byte[]> mutator =
         (SerializingMutator<byte[]>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(
                     new TypeHolder<byte @NotNull @WithLength(max = 10) []>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("byte[]");
@@ -90,7 +90,7 @@ public class ByteArrayMutatorTest {
   void testMaxLengthInitClamp() {
     SerializingMutator<byte[]> mutator =
         (SerializingMutator<byte[]>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(
                     new TypeHolder<byte @NotNull @WithLength(max = 5) []>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("byte[]");
@@ -111,7 +111,7 @@ public class ByteArrayMutatorTest {
   void testMinLengthInitClamp() {
     SerializingMutator<byte[]> mutator =
         (SerializingMutator<byte[]>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(
                     new TypeHolder<byte @NotNull @WithLength(min = 5) []>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("byte[]");
@@ -132,7 +132,7 @@ public class ByteArrayMutatorTest {
   void testMinLength() {
     SerializingMutator<byte[]> mutator =
         (SerializingMutator<byte[]>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(
                     new TypeHolder<byte @NotNull @WithLength(min = 5) []>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("byte[]");
@@ -156,7 +156,7 @@ public class ByteArrayMutatorTest {
   void testCrossOver() {
     SerializingMutator<byte[]> mutator =
         (SerializingMutator<byte[]>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(new TypeHolder<byte @NotNull []>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("byte[]");
 

@@ -69,7 +69,7 @@ class IntegralMutatorTest {
   void testCrossOver() {
     SerializingMutator<Long> mutator =
         (SerializingMutator<Long>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(new TypeHolder<@NotNull Long>() {}.annotatedType());
     // cross over mean values
     try (MockPseudoRandom prng = mockPseudoRandom(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {

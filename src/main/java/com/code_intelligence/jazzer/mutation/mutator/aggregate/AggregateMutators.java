@@ -1,16 +1,13 @@
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
-import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.stream.Stream;
 
 public final class AggregateMutators {
   private AggregateMutators() {}
 
-  public static MutatorFactory newFactory() {
-    List<MutatorFactory> factories = new ArrayList<>();
+  public static Stream<MutatorFactory> newFactories() {
+    Stream.Builder<MutatorFactory> factories = Stream.builder();
 
     try {
       Class.forName("java.lang.Record");
@@ -18,6 +15,6 @@ public final class AggregateMutators {
     } catch (ClassNotFoundException ignored) {
     }
 
-    return new ChainedMutatorFactory(factories.toArray(MutatorFactory[]::new));
+    return factories.build();
   }
 }

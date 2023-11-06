@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 class BooleanMutatorTest {
   @Test
   void testPrimitive() {
-    SerializingMutator<Boolean> mutator = LangMutators.newFactory().createOrThrow(boolean.class);
+    SerializingMutator<Boolean> mutator = LangMutators.newFactories().createOrThrow(boolean.class);
     assertThat(mutator.toString()).isEqualTo("Boolean");
 
     boolean bool;
@@ -48,7 +48,7 @@ class BooleanMutatorTest {
   void testBoxed() {
     SerializingMutator<Boolean> mutator =
         (SerializingMutator<Boolean>)
-            LangMutators.newFactory()
+            LangMutators.newFactories()
                 .createOrThrow(new TypeHolder<@NotNull Boolean>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Boolean");
 
@@ -66,7 +66,7 @@ class BooleanMutatorTest {
 
   @Test
   void testCrossOver() {
-    SerializingMutator<Boolean> mutator = LangMutators.newFactory().createOrThrow(boolean.class);
+    SerializingMutator<Boolean> mutator = LangMutators.newFactories().createOrThrow(boolean.class);
     try (MockPseudoRandom prng = mockPseudoRandom(true, false)) {
       assertThat(mutator.crossOver(true, false, prng)).isTrue();
       assertThat(mutator.crossOver(true, false, prng)).isFalse();

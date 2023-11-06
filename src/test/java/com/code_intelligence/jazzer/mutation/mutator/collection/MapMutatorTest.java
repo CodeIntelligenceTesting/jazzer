@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("unchecked")
 class MapMutatorTest {
   public static final MutatorFactory FACTORY =
-      new ChainedMutatorFactory(LangMutators.newFactory(), CollectionMutators.newFactory());
+      new ChainedMutatorFactory(LangMutators.newFactories(), CollectionMutators.newFactories());
 
   private static SerializingMutator<Map<Integer, Integer>> defaultTestMapMutator() {
     AnnotatedType type =

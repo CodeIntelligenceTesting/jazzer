@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 class BuilderMutatorProto2Test {
   private static final MutatorFactory FACTORY =
       new ChainedMutatorFactory(
-          LangMutators.newFactory(), CollectionMutators.newFactory(), ProtoMutators.newFactory());
+          LangMutators.newFactories(), CollectionMutators.newFactories(), ProtoMutators.newFactories());
 
   @Test
   void testPrimitiveField() {

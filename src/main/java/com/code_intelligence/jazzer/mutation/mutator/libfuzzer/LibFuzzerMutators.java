@@ -18,10 +18,12 @@ package com.code_intelligence.jazzer.mutation.mutator.libfuzzer;
 
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 
+import java.util.stream.Stream;
+
 public final class LibFuzzerMutators {
   private LibFuzzerMutators() {}
 
-  public static MutatorFactory newFactory() {
-    return new FuzzedDataProviderMutatorFactory();
+  public static Stream<MutatorFactory> newFactories() {
+    return Stream.of(new FuzzedDataProviderMutatorFactory());
   }
 }
