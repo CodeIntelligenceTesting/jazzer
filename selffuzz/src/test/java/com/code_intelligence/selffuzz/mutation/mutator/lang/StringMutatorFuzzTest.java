@@ -14,7 +14,7 @@ import static com.code_intelligence.selffuzz.Helpers.assertMutator;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.selffuzz.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.selffuzz.jazzer.mutation.mutator.lang.LangMutators;
+import com.code_intelligence.selffuzz.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.selffuzz.jazzer.mutation.support.TypeHolder;
 import java.io.IOException;
 
@@ -24,7 +24,7 @@ class StringMutatorFuzzTest {
   void stringMutatorTest(long seed, byte @NotNull [] data) throws IOException {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            LangMutators.newFactory().createOrThrow(new TypeHolder<String>() {}.annotatedType());
+            Mutators.newFactory().createOrThrow(new TypeHolder<String>() {}.annotatedType());
     assertMutator(mutator, data, seed);
   }
 }

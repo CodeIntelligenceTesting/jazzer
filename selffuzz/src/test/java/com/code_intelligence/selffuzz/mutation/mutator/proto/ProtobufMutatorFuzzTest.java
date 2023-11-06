@@ -15,7 +15,7 @@ import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.proto.WithDefaultInstance;
 import com.code_intelligence.selffuzz.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.selffuzz.jazzer.mutation.mutator.proto.ProtoMutators;
+import com.code_intelligence.selffuzz.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.selffuzz.jazzer.mutation.support.TypeHolder;
 import com.google.protobuf.DescriptorProtos.DescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
@@ -54,7 +54,7 @@ class ProtobufMutatorFuzzTest {
     try {
       mutator =
           (SerializingMutator<DynamicMessage>)
-              ProtoMutators.newFactory()
+              Mutators.newFactory()
                   .createOrThrow(
                       new TypeHolder<
                           @WithDefaultInstance(

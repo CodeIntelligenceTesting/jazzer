@@ -44,7 +44,7 @@ public final class StreamSupport {
    * @return stream containing the optional value
    */
   public static <T> Stream<T> getOrEmpty(Optional<T> optional) {
-    return optional.isPresent() ? Stream.of(optional.get()) : Stream.empty();
+    return optional.map(Stream::of).orElseGet(Stream::empty);
   }
 
   public static <K, V> SimpleEntry<K, V> entry(K key, V value) {

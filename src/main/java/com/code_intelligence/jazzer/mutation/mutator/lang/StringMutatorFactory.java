@@ -15,6 +15,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.*;
 import com.code_intelligence.jazzer.mutation.annotation.Ascii;
 import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import java.lang.reflect.AnnotatedType;
@@ -22,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-final class StringMutatorFactory extends MutatorFactory {
+final class StringMutatorFactory implements MutatorFactory {
   private static final int HEADER_MASK = 0b1100_0000;
   private static final int BODY_MASK = 0b0011_1111;
   private static final int CONTINUATION_HEADER = 0b1000_0000;
@@ -135,7 +136,8 @@ final class StringMutatorFactory extends MutatorFactory {
   }
 
   @Override
-  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+  public Optional<SerializingMutator<?>> tryCreate(
+      AnnotatedType type, ExtendedMutatorFactory factory) {
     Optional<WithUtf8Length> utf8Length =
         Optional.ofNullable(type.getAnnotation(WithUtf8Length.class));
     int min = utf8Length.map(WithUtf8Length::min).orElse(DEFAULT_MIN_BYTES);

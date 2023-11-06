@@ -13,20 +13,29 @@ import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseu
 import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
-import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.lang.reflect.AnnotatedType;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("unchecked")
 class NullableMutatorTest {
+  ChainedMutatorFactory factory;
+
+  @BeforeEach
+  void createFactory() {
+    factory =
+        ChainedMutatorFactory.of(
+            Stream.of(new NullableMutatorFactory(), new BooleanMutatorFactory()));
+  }
+
   @Test
   void testNullable() {
-    SerializingMutator<Boolean> mutator =
-        new ChainedMutatorFactory(new NullableMutatorFactory(), new BooleanMutatorFactory())
-            .createOrThrow(Boolean.class);
+    SerializingMutator<Boolean> mutator = factory.createOrThrow(Boolean.class);
     assertThat(mutator.toString()).isEqualTo("Nullable<Boolean>");
 
     Boolean bool;
@@ -53,8 +62,6 @@ class NullableMutatorTest {
 
   @Test
   void testNotNull() {
-    ChainedMutatorFactory factory =
-        new ChainedMutatorFactory(new NullableMutatorFactory(), new BooleanMutatorFactory());
     AnnotatedType notNullBoolean = new TypeHolder<@NotNull Boolean>() {}.annotatedType();
     SerializingMutator<Boolean> mutator =
         (SerializingMutator<Boolean>) factory.createOrThrow(notNullBoolean);
@@ -63,17 +70,13 @@ class NullableMutatorTest {
 
   @Test
   void testPrimitive() {
-    ChainedMutatorFactory factory =
-        new ChainedMutatorFactory(new NullableMutatorFactory(), new BooleanMutatorFactory());
     SerializingMutator<Boolean> mutator = factory.createOrThrow(boolean.class);
     assertThat(mutator.toString()).isEqualTo("Boolean");
   }
 
   @Test
   void testCrossOver() {
-    SerializingMutator<Boolean> mutator =
-        new ChainedMutatorFactory(new NullableMutatorFactory(), new BooleanMutatorFactory())
-            .createOrThrow(Boolean.class);
+    SerializingMutator<Boolean> mutator = factory.createOrThrow(Boolean.class);
     try (MockPseudoRandom prng = mockPseudoRandom(true)) {
       Boolean valueCrossedOver = mutator.crossOver(Boolean.TRUE, Boolean.TRUE, prng);
       assertThat(valueCrossedOver).isNotNull();

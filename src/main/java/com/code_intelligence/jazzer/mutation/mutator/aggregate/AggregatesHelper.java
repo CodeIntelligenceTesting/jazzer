@@ -15,7 +15,7 @@ import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArra
 import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableList;
 
-import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory.FailedToConstructChildMutatorException;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
@@ -43,7 +43,7 @@ final class AggregatesHelper {
 
   @SuppressWarnings("Immutable")
   public Optional<SerializingMutator<?>> ofImmutable(
-      MutatorFactory factory, Executable instantiator, Method... getters) {
+      ExtendedMutatorFactory factory, Executable instantiator, Method... getters) {
     Preconditions.check(
         instantiator instanceof Constructor || Modifier.isStatic(instantiator.getModifiers()),
         String.format("Instantiator %s must be a static method or a constructor", instantiator));
@@ -84,7 +84,7 @@ final class AggregatesHelper {
   }
 
   private <@ImmutableTypeParameter T> Optional<SerializingMutator<T>> ofImmutableChecked(
-      MutatorFactory factory, Executable instantiator, Method... getters) {
+      ExtendedMutatorFactory factory, Executable instantiator, Method... getters) {
     // TODO: Ideally, we would have the mutator framework pass in a Lookup for the fuzz test class.
     instantiator.setAccessible(true);
     for (Method getter : getters) {

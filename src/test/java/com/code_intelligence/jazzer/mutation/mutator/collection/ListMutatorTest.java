@@ -15,9 +15,8 @@ import static java.util.Collections.emptyList;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
-import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
-import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
@@ -25,16 +24,22 @@ import java.lang.reflect.AnnotatedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("unchecked")
 public class ListMutatorTest {
-  public static final MutatorFactory FACTORY =
-      new ChainedMutatorFactory(LangMutators.newFactory(), CollectionMutators.newFactory());
+  ChainedMutatorFactory factory;
 
-  private static SerializingMutator<@NotNull List<@NotNull Integer>> defaultListMutator() {
+  @BeforeEach
+  void createFactory() {
+    factory =
+        ChainedMutatorFactory.of(LangMutators.newFactories(), CollectionMutators.newFactories());
+  }
+
+  private SerializingMutator<@NotNull List<@NotNull Integer>> defaultListMutator() {
     AnnotatedType type = new TypeHolder<@NotNull List<@NotNull Integer>>() {}.annotatedType();
-    return (SerializingMutator<@NotNull List<@NotNull Integer>>) FACTORY.createOrThrow(type);
+    return (SerializingMutator<@NotNull List<@NotNull Integer>>) factory.createOrThrow(type);
   }
 
   @Test
@@ -61,7 +66,7 @@ public class ListMutatorTest {
             @NotNull @WithSize(min = 2, max = 3) List<@NotNull Integer>>() {}.annotatedType();
 
     SerializingMutator<@NotNull List<@NotNull Integer>> mutator =
-        (SerializingMutator<@NotNull List<@NotNull Integer>>) FACTORY.createOrThrow(type);
+        (SerializingMutator<@NotNull List<@NotNull Integer>>) factory.createOrThrow(type);
 
     assertThat(mutator.toString()).isEqualTo("List<Integer>");
     List<Integer> list;

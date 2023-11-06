@@ -14,17 +14,19 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnota
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.google.protobuf.ByteString;
 import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
 
-final class ByteStringMutatorFactory extends MutatorFactory {
+final class ByteStringMutatorFactory implements MutatorFactory {
   ByteStringMutatorFactory() {}
 
   @Override
-  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+  public Optional<SerializingMutator<?>> tryCreate(
+      AnnotatedType type, ExtendedMutatorFactory factory) {
     return findFirstParentIfClass(type, ByteString.class)
         .flatMap(parent -> factory.tryCreate(notNull(asAnnotatedType(byte[].class))))
         .map(

@@ -14,6 +14,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnota
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.google.protobuf.Message;
@@ -22,10 +23,10 @@ import java.lang.reflect.AnnotatedType;
 import java.util.Arrays;
 import java.util.Optional;
 
-public final class MessageMutatorFactory extends MutatorFactory {
+public final class MessageMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType messageType, MutatorFactory factory) {
+      AnnotatedType messageType, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(messageType, Message.class)
         // If the Message class doesn't have a nested Builder class, it is not a concrete generated
         // message and we can't mutate it.

@@ -12,6 +12,7 @@ package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static java.util.Arrays.stream;
 
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import java.lang.reflect.AnnotatedType;
@@ -20,11 +21,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.RecordComponent;
 import java.util.Optional;
 
-final class RecordMutatorFactory extends MutatorFactory {
+final class RecordMutatorFactory implements MutatorFactory {
   private final AggregatesHelper aggregatesHelper = new AggregatesHelper();
 
   @Override
-  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+  public Optional<SerializingMutator<?>> tryCreate(
+      AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, Record.class)
         .flatMap(
             clazz -> {

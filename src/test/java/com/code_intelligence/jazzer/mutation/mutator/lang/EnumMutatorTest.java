@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.io.ByteArrayInputStream;
@@ -22,9 +23,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EnumMutatorTest {
+  ChainedMutatorFactory factory;
+
+  @BeforeEach
+  void createFactory() {
+    factory = ChainedMutatorFactory.of(LangMutators.newFactories());
+  }
+
   enum TestEnumOne {
     A
   }
@@ -39,8 +48,7 @@ class EnumMutatorTest {
   void testBoxed() {
     SerializingMutator<TestEnum> mutator =
         (SerializingMutator<TestEnum>)
-            LangMutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
+            factory.createOrThrow(new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Enum<TestEnum>");
     TestEnum cl;
     try (MockPseudoRandom prng = mockPseudoRandom(0)) {
@@ -74,8 +82,7 @@ class EnumMutatorTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> {
-          LangMutators.newFactory()
-              .createOrThrow(new TypeHolder<@NotNull TestEnumOne>() {}.annotatedType());
+          factory.createOrThrow(new TypeHolder<@NotNull TestEnumOne>() {}.annotatedType());
         },
         "When trying to build mutators for Enum with one value, an Exception should be thrown.");
   }
@@ -84,8 +91,7 @@ class EnumMutatorTest {
   void testEnumBasedOnInvalidInput() throws IOException {
     SerializingMutator<TestEnum> mutator =
         (SerializingMutator<TestEnum>)
-            LangMutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
+            factory.createOrThrow(new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
     ByteArrayOutputStream bo = new ByteArrayOutputStream();
     DataOutputStream os = new DataOutputStream(bo);
     // Valid values

@@ -12,6 +12,7 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
 
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -23,9 +24,10 @@ import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-final class BooleanMutatorFactory extends MutatorFactory {
+final class BooleanMutatorFactory implements MutatorFactory {
   @Override
-  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+  public Optional<SerializingMutator<?>> tryCreate(
+      AnnotatedType type, ExtendedMutatorFactory factory) {
     return findFirstParentIfClass(type, boolean.class, Boolean.class)
         .map(parent -> BooleanMutator.INSTANCE);
   }
