@@ -119,6 +119,9 @@ extern "C" [[maybe_unused]] bool __sanitizer_weak_is_relevant_pc(
 Java_com_code_1intelligence_jazzer_runtime_TraceDataFlowNativeCallbacks_handleLibraryLoad(
     JNIEnv *, jclass) {
   std::call_once(ignore_list_flag, [] {
+    // Force std::cout to be fully initialized.
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=26123
+    static std::ios_base::Init initIostreams;
     std::cout << "INFO: detected a native library load, enabling interception "
                  "for libc functions"
               << std::endl;
