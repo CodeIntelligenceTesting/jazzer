@@ -16,9 +16,11 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -26,6 +28,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings("unchecked")
 class IntegralMutatorTest {
+  ChainedMutatorFactory factory;
+
+  @BeforeEach
+  void createFactory() {
+    factory = ChainedMutatorFactory.of(LangMutators.newFactories());
+  }
+
   static Stream<Arguments> forceInRangeCases() {
     return Stream.of(
         arguments(0, 0, 1),
@@ -62,8 +71,7 @@ class IntegralMutatorTest {
   void testCrossOver() {
     SerializingMutator<Long> mutator =
         (SerializingMutator<Long>)
-            LangMutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull Long>() {}.annotatedType());
+            factory.createOrThrow(new TypeHolder<@NotNull Long>() {}.annotatedType());
     // cross over mean values
     try (MockPseudoRandom prng = mockPseudoRandom(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
       assertThat(mutator.crossOver(0L, 0L, prng)).isEqualTo(0);

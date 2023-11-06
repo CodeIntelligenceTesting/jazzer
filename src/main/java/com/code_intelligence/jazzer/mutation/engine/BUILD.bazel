@@ -3,11 +3,12 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = [
         "//src/jmh/java/com/code_intelligence/jazzer/mutation:__subpackages__",
-        "//src/main/java/com/code_intelligence/jazzer/mutation:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/mutation:__subpackages__",
         "//src/test/java/com/code_intelligence/jazzer/mutation:__subpackages__",
     ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+        "@com_google_errorprone_error_prone_annotations//jar",
     ],
 )

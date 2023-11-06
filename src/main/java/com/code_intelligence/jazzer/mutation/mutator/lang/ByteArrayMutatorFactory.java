@@ -14,6 +14,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirs
 
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -30,9 +31,10 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-final class ByteArrayMutatorFactory extends MutatorFactory {
+final class ByteArrayMutatorFactory implements MutatorFactory {
   @Override
-  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+  public Optional<SerializingMutator<?>> tryCreate(
+      AnnotatedType type, ExtendedMutatorFactory factory) {
     Optional<WithLength> withLength = Optional.ofNullable(type.getAnnotation(WithLength.class));
     int minLength = withLength.map(WithLength::min).orElse(ByteArrayMutator.DEFAULT_MIN_LENGTH);
     int maxLength = withLength.map(WithLength::max).orElse(ByteArrayMutator.DEFAULT_MAX_LENGTH);

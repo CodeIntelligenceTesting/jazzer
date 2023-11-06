@@ -13,9 +13,8 @@ import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseu
 import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
-import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
-import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutators;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
@@ -28,16 +27,24 @@ import com.code_intelligence.jazzer.protobuf.Proto3.PrimitiveField3;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class MessageMutatorTest {
-  private static final MutatorFactory FACTORY =
-      new ChainedMutatorFactory(
-          LangMutators.newFactory(), CollectionMutators.newFactory(), ProtoMutators.newFactory());
+  ChainedMutatorFactory factory;
+
+  @BeforeEach
+  void createFactory() {
+    factory =
+        ChainedMutatorFactory.of(
+            LangMutators.newFactories(),
+            CollectionMutators.newFactories(),
+            ProtoMutators.newFactories());
+  }
 
   @Test
   void testSimpleMessage() {
-    SerializingMutator<PrimitiveField3> mutator = FACTORY.createOrThrow(PrimitiveField3.class);
+    SerializingMutator<PrimitiveField3> mutator = factory.createOrThrow(PrimitiveField3.class);
 
     PrimitiveField3 msg;
 
@@ -74,7 +81,7 @@ class MessageMutatorTest {
 
     SerializingMutator<ExtendedMessage2> mutator =
         (SerializingMutator<ExtendedMessage2>)
-            FACTORY.createOrThrow(new TypeHolder<@NotNull ExtendedMessage2>() {}.annotatedType());
+            factory.createOrThrow(new TypeHolder<@NotNull ExtendedMessage2>() {}.annotatedType());
     ExtendedMessage2 extendedMessage = mutator.readExclusive(new ByteArrayInputStream(bytes));
     assertThat(extendedMessage)
         .isEqualTo(

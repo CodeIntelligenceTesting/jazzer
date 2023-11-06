@@ -16,7 +16,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
-import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
@@ -73,7 +73,8 @@ public final class ArgumentsMutator {
     return forMethod(Mutators.newFactory(), method);
   }
 
-  public static Optional<ArgumentsMutator> forMethod(MutatorFactory mutatorFactory, Method method) {
+  public static Optional<ArgumentsMutator> forMethod(
+      ExtendedMutatorFactory mutatorFactory, Method method) {
     require(method.getParameterCount() > 0, "Can't fuzz method without parameters: " + method);
     for (AnnotatedType parameter : method.getAnnotatedParameterTypes()) {
       validateAnnotationUsage(parameter);

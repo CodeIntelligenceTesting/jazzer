@@ -15,15 +15,17 @@ import static com.code_intelligence.jazzer.mutation.support.Preconditions.requir
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-final class EnumMutatorFactory extends MutatorFactory {
+final class EnumMutatorFactory implements MutatorFactory {
   @Override
-  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+  public Optional<SerializingMutator<?>> tryCreate(
+      AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, Enum.class)
         .map(
             parent -> {

@@ -14,15 +14,24 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("unchecked")
 class BooleanMutatorTest {
+  ChainedMutatorFactory factory;
+
+  @BeforeEach
+  void createFactory() {
+    factory = ChainedMutatorFactory.of(LangMutators.newFactories());
+  }
+
   @Test
   void testPrimitive() {
-    SerializingMutator<Boolean> mutator = LangMutators.newFactory().createOrThrow(boolean.class);
+    SerializingMutator<Boolean> mutator = factory.createOrThrow(boolean.class);
     assertThat(mutator.toString()).isEqualTo("Boolean");
 
     boolean bool;
@@ -41,8 +50,7 @@ class BooleanMutatorTest {
   void testBoxed() {
     SerializingMutator<Boolean> mutator =
         (SerializingMutator<Boolean>)
-            LangMutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull Boolean>() {}.annotatedType());
+            factory.createOrThrow(new TypeHolder<@NotNull Boolean>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Boolean");
 
     Boolean bool;
@@ -59,7 +67,7 @@ class BooleanMutatorTest {
 
   @Test
   void testCrossOver() {
-    SerializingMutator<Boolean> mutator = LangMutators.newFactory().createOrThrow(boolean.class);
+    SerializingMutator<Boolean> mutator = factory.createOrThrow(boolean.class);
     try (MockPseudoRandom prng = mockPseudoRandom(true, false)) {
       assertThat(mutator.crossOver(true, false, prng)).isTrue();
       assertThat(mutator.crossOver(true, false, prng)).isFalse();

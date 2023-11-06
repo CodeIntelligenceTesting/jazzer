@@ -15,6 +15,7 @@ import static java.lang.String.format;
 import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
 import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -32,7 +33,7 @@ import java.util.function.DoubleFunction;
 import java.util.function.Predicate;
 import java.util.stream.DoubleStream;
 
-final class FloatingPointMutatorFactory extends MutatorFactory {
+final class FloatingPointMutatorFactory implements MutatorFactory {
   @SuppressWarnings("unchecked")
   private static final DoubleFunction<Double>[] mathFunctions =
       new DoubleFunction[] {
@@ -64,7 +65,8 @@ final class FloatingPointMutatorFactory extends MutatorFactory {
       };
 
   @Override
-  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+  public Optional<SerializingMutator<?>> tryCreate(
+      AnnotatedType type, ExtendedMutatorFactory factory) {
     if (!(type.getType() instanceof Class)) {
       return Optional.empty();
     }

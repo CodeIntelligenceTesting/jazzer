@@ -9,14 +9,14 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
-import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import java.util.stream.Stream;
 
 public final class LangMutators {
   private LangMutators() {}
 
-  public static MutatorFactory newFactory() {
-    return new ChainedMutatorFactory(
+  public static Stream<MutatorFactory> newFactories() {
+    return Stream.of(
         new NullableMutatorFactory(),
         new BooleanMutatorFactory(),
         new FloatingPointMutatorFactory(),

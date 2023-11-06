@@ -17,6 +17,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
@@ -28,6 +29,13 @@ import java.util.SplittableRandom;
 import org.junit.jupiter.api.*;
 
 class StringMutatorTest {
+  ChainedMutatorFactory factory;
+
+  @BeforeEach
+  void createFactory() {
+    factory = ChainedMutatorFactory.of(LangMutators.newFactories());
+  }
+
   /**
    * Some tests may set {@link LibFuzzerMutate#MOCK_SIZE_KEY} which can interfere with other tests
    * unless cleared.
@@ -105,9 +113,8 @@ class StringMutatorTest {
   void testMinLengthInit() {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            LangMutators.newFactory()
-                .createOrThrow(
-                    new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
+            factory.createOrThrow(
+                new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
     try (MockPseudoRandom prng = mockPseudoRandom(5)) {
@@ -124,9 +131,8 @@ class StringMutatorTest {
   void testMaxLengthInit() {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            LangMutators.newFactory()
-                .createOrThrow(
-                    new TypeHolder<@NotNull @WithUtf8Length(max = 50) String>() {}.annotatedType());
+            factory.createOrThrow(
+                new TypeHolder<@NotNull @WithUtf8Length(max = 50) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
     try (MockPseudoRandom prng = mockPseudoRandom(60)) {
@@ -143,9 +149,8 @@ class StringMutatorTest {
   void testMinLengthMutate() {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            LangMutators.newFactory()
-                .createOrThrow(
-                    new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
+            factory.createOrThrow(
+                new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
     String s;
@@ -165,9 +170,8 @@ class StringMutatorTest {
   void testMaxLengthMutate() {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            LangMutators.newFactory()
-                .createOrThrow(
-                    new TypeHolder<@NotNull @WithUtf8Length(max = 15) String>() {}.annotatedType());
+            factory.createOrThrow(
+                new TypeHolder<@NotNull @WithUtf8Length(max = 15) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
     String s;
@@ -190,9 +194,8 @@ class StringMutatorTest {
   void testMultibyteCharacters() {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            LangMutators.newFactory()
-                .createOrThrow(
-                    new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
+            factory.createOrThrow(
+                new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
     String s;

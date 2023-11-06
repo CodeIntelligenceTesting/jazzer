@@ -15,8 +15,8 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
 import com.code_intelligence.jazzer.mutation.annotation.AppliesTo;
-import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
-import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.aggregate.AggregateMutators;
 import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutators;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
@@ -28,13 +28,13 @@ import java.lang.reflect.AnnotatedType;
 public final class Mutators {
   private Mutators() {}
 
-  public static MutatorFactory newFactory() {
-    return new ChainedMutatorFactory(
-        LangMutators.newFactory(),
-        CollectionMutators.newFactory(),
-        ProtoMutators.newFactory(),
-        LibFuzzerMutators.newFactory(),
-        AggregateMutators.newFactory());
+  public static ExtendedMutatorFactory newFactory() {
+    return ChainedMutatorFactory.of(
+        LangMutators.newFactories(),
+        CollectionMutators.newFactories(),
+        ProtoMutators.newFactories(),
+        LibFuzzerMutators.newFactories(),
+        AggregateMutators.newFactories());
   }
 
   /**

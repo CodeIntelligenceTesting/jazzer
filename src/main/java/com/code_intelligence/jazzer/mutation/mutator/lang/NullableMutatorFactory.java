@@ -14,6 +14,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 import static java.util.Arrays.stream;
 
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -25,7 +26,7 @@ import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-final class NullableMutatorFactory extends MutatorFactory {
+final class NullableMutatorFactory implements MutatorFactory {
   private static boolean isNotNullAnnotation(Annotation annotation) {
     // There are many NotNull annotations in the wild (including our own) and we want to recognize
     // them all.
@@ -33,12 +34,13 @@ final class NullableMutatorFactory extends MutatorFactory {
   }
 
   @Override
-  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+  public Optional<SerializingMutator<?>> tryCreate(
+      AnnotatedType type, ExtendedMutatorFactory factory) {
     if (isPrimitive(type)
         || stream(type.getAnnotations()).anyMatch(NullableMutatorFactory::isNotNullAnnotation)) {
       return Optional.empty();
     }
-    return factory.tryCreate(notNull(type), factory).map(NullableMutator::new);
+    return factory.tryCreate(notNull(type)).map(NullableMutator::new);
   }
 
   private static final class NullableMutator<T> extends SerializingMutator<T> {

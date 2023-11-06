@@ -9,6 +9,7 @@ java_test_suite(
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/engine",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/collection",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/lang",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",

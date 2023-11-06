@@ -17,16 +17,18 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-final class FuzzedDataProviderMutatorFactory extends MutatorFactory {
+final class FuzzedDataProviderMutatorFactory implements MutatorFactory {
   @Override
   @SuppressWarnings("unchecked")
-  public Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, MutatorFactory factory) {
+  public Optional<SerializingMutator<?>> tryCreate(
+      AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, FuzzedDataProvider.class)
         .flatMap(parent -> factory.tryCreate(notNull(asAnnotatedType(byte[].class))))
         .map(

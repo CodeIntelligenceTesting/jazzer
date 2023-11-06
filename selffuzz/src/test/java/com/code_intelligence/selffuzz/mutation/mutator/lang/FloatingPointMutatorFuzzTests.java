@@ -18,7 +18,7 @@ import com.code_intelligence.selffuzz.jazzer.mutation.annotation.DoubleInRange;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.selffuzz.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.selffuzz.jazzer.mutation.mutator.lang.LangMutators;
+import com.code_intelligence.selffuzz.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.selffuzz.jazzer.mutation.support.TypeHolder;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -32,7 +32,7 @@ class FloatingPointMutatorFuzzTests {
     assumeTrue(range != null);
     SerializingMutator<Double> mutator =
         (SerializingMutator<Double>)
-            LangMutators.newFactory()
+            Mutators.newFactory()
                 .createOrThrow(
                     withExtraAnnotations(
                         new TypeHolder<@NotNull Double>() {}.annotatedType(), range));
@@ -46,7 +46,7 @@ class FloatingPointMutatorFuzzTests {
     assumeTrue(range != null);
     SerializingMutator<Float> mutator =
         (SerializingMutator<Float>)
-            LangMutators.newFactory()
+            Mutators.newFactory()
                 .createOrThrow(
                     withExtraAnnotations(
                         new TypeHolder<@NotNull Float>() {}.annotatedType(), range));

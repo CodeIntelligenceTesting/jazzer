@@ -9,13 +9,13 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.collection;
 
-import com.code_intelligence.jazzer.mutation.api.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import java.util.stream.Stream;
 
 public final class CollectionMutators {
   private CollectionMutators() {}
 
-  public static MutatorFactory newFactory() {
-    return new ChainedMutatorFactory(new ListMutatorFactory(), new MapMutatorFactory());
+  public static Stream<MutatorFactory> newFactories() {
+    return Stream.of(new ListMutatorFactory(), new MapMutatorFactory());
   }
 }
