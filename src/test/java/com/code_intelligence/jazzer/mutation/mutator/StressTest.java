@@ -356,13 +356,10 @@ public class StressTest {
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull RepeatedRecord>() {}.annotatedType(),
-            // TODO: This type is not recursive and should not use RecursionBreaking.
-            "[Nullable<[Integer, Boolean] -> SimpleRecord>, Nullable<RecursionBreaking((cycle) ->"
-                + " SimpleRecord)>] -> RepeatedRecord",
+            "[Nullable<[Integer, Boolean] -> SimpleRecord>, Nullable<[Integer, Boolean] ->"
+                + " SimpleRecord>] -> RepeatedRecord",
             true,
-            // TODO: Low due to recursion breaking initializing nested records to null and integers
-            //  being biased towards special values. Revisit after fixing the TODO above.
-            distinctElementsRatio(0.19),
+            distinctElementsRatio(0.49),
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull LinkedListNode>() {}.annotatedType(),
