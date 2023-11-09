@@ -71,6 +71,9 @@ To run the tests, execute the following command:
 $ bazel test //...
 ```
 
+If you are bisecting a bug or otherwise want test execution to stop right after the first failure, use `--config=fail-fast`.
+This is especially useful with long-running or parameterized tests.
+
 #### Debugging
 
 If you need to debug an issue that can only be reproduced by an integration test (`java_fuzz_target_test`), you can start Jazzer in debug mode via `--config=debug`.
