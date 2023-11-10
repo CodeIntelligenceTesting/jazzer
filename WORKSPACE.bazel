@@ -74,6 +74,12 @@ http_archive(
 
 http_archive(
     name = "contrib_rules_jvm",
+    patch_args = ["-p1"],
+    patches = [
+        # Add support for --test_runner_fail_fast.
+        # https://github.com/bazel-contrib/rules_jvm/pull/221
+        "//third_party:rules_jvm-fail-fast.patch",
+    ],
     sha256 = "4d62589dc6a55e74bbe33930b826d593367fc777449a410604b2ad7c6c625ef7",
     strip_prefix = "rules_jvm-0.19.0",
     url = "https://github.com/bazel-contrib/rules_jvm/releases/download/v0.19.0/rules_jvm-v0.19.0.tar.gz",

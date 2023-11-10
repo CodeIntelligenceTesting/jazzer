@@ -118,3 +118,10 @@ coverage --test_tag_filters=-no-coverage
 # https://github.com/bazelbuild/bazel/issues/4867#issuecomment-830402410
 common:quiet --ui_event_filters=-info,-stderr
 common:quiet --noshow_progress
+
+# Use --config=fail-fast to speed up local iteration on tests by letting bazel test stop right on
+# the first failing test.
+# Let bazel test stop on the first failing test target.
+test:fail-fast --notest_keep_going
+# Instruct test runners to fail a test target on the first failing test.
+test:fail-fast --test_runner_fail_fast
