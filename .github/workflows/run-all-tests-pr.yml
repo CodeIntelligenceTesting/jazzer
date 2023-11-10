@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04, macos-12, windows-2019]
-        jdk: [8, 21]
+        jdk: [21]
         include:
           - jdk: 21
             # Workaround for https://github.com/bazelbuild/bazel/issues/14502
@@ -22,6 +22,9 @@ jobs:
           - os: ubuntu-20.04
             arch: "linux"
             bazel_args: "//launcher/android:jazzer_android //tests/benchmarks"
+          - os: ubuntu-20.04
+            # Use JDK 8 only on Ubuntu in PRs.
+            jdk: 8
           - os: macos-12
             arch: "macos-x86_64"
             bazel_args: "--xcode_version_config=//.github:host_xcodes //launcher/android:jazzer_android"
