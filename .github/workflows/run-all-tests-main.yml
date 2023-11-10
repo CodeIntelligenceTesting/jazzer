@@ -1,0 +1,28 @@
+name: CI Main
+on:
+  push:
+    branches: [ main ]
+  merge_group:
+
+  workflow_dispatch:
+
+jobs:
+
+  test_junit_springboot:
+    name: Spring Boot
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 17
+      - name: Run Spring Boot example
+        # The Spring Boot example project is built with Maven. The shell script builds the project
+        # against the local version of Jazzer and runs its unit and fuzz tests.
+        # Spring version 6 requires JDK 17.
+        run: |
+          cd examples/junit-spring-web
+          ./build-and-run-tests.sh
+        shell: bash
