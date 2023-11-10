@@ -275,18 +275,12 @@ public final class TestSupport {
 
     @Override
     public <T> int indexIn(T[] array) {
-      assertThat(array).isNotEmpty();
-
-      assertThat(elements).isNotEmpty();
-      return (int) elements.poll();
+      return indexIn(array.length);
     }
 
     @Override
     public <T> int indexIn(List<T> list) {
-      assertThat(list).isNotEmpty();
-
-      assertThat(elements).isNotEmpty();
-      return (int) elements.poll();
+      return indexIn(list.size());
     }
 
     @Override
@@ -294,7 +288,10 @@ public final class TestSupport {
       assertThat(range).isAtLeast(1);
 
       assertThat(elements).isNotEmpty();
-      return (int) elements.poll();
+      int result = (int) elements.poll();
+      assertThat(result).isAtLeast(0);
+      assertThat(result).isLessThan(range);
+      return result;
     }
 
     @Override
