@@ -32,7 +32,7 @@ package com.code_intelligence.jazzer.mutation.api;
  *
  * @param <T> the reference type this mutator operates on
  */
-public interface InPlaceMutator<T> extends Debuggable {
+public interface InPlaceMutator<T> extends Debuggable, MutatorBase {
   /**
    * Implementations
    *
@@ -68,13 +68,4 @@ public interface InPlaceMutator<T> extends Debuggable {
    * </ul>
    */
   void crossOverInPlace(T reference, T otherReference, PseudoRandom prng);
-
-  /**
-   * Whether the type {@code T} mutated by this mutator has a fixed size in memory. This information
-   * can be used by mutators for collections of {@code T}s.
-   *
-   * <p>Examples of types with fixed size include primitive types, enums, and classes with only
-   * primitive types and enums as members.
-   */
-  boolean hasFixedSize();
 }
