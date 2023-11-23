@@ -2,8 +2,6 @@ name: Release
 
 on:
   workflow_dispatch:
-  release:
-    types: [released]
 
 jobs:
   docker_push:
