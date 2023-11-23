@@ -45,9 +45,10 @@ def jazzer_dependencies(android = False):
     maybe(
         http_archive,
         name = "rules_jvm_external",
-        sha256 = "5061364ad9c53de3d2072975f6c14768f2982bbf4101442306270554b317772e",
-        strip_prefix = "rules_jvm_external-f0c92a5aa7a9ea457ec3b89c76c59ff72829d9d7",
-        url = "https://github.com/bazelbuild/rules_jvm_external/archive/f0c92a5aa7a9ea457ec3b89c76c59ff72829d9d7.tar.gz",
+        sha256 = "b8b9b3768ce1ec37cc63cab4944671b7a9bb1673e30db3429f6a05d82bf27180",
+        strip_prefix = "rules_jvm_external-9a4aa70bed415dc7b0ab7db7f642fef801dce5cc",
+        url = "https://github.com/bazelbuild/rules_jvm_external/archive/9a4aa70bed415dc7b0ab7db7f642fef801dce5cc.tar.gz",
+        patches = ["//third_party:rules_jvm_external-no-sources.patch"],
     )
 
     maybe(
