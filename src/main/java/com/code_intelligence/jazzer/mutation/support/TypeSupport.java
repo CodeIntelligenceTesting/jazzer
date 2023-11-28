@@ -28,12 +28,20 @@ import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.AnnotatedTypeVariable;
 import java.lang.reflect.AnnotatedWildcardType;
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public final class TypeSupport {
@@ -260,7 +268,7 @@ public final class TypeSupport {
 
           @Override
           public Type getOwnerType() {
-            // We require the class is top-level.
+            // We require the class to be top-level.
             return null;
           }
 
@@ -297,8 +305,8 @@ public final class TypeSupport {
       }
 
       // @Override as of Java 9
-      @SuppressWarnings("Since15")
       public AnnotatedType getAnnotatedOwnerType() {
+        // We require the class to be top-level.
         return null;
       }
 
@@ -328,17 +336,12 @@ public final class TypeSupport {
       }
 
       @Override
-      public boolean equals(Object obj) {
-        if (!(obj instanceof AnnotatedParameterizedType)) {
+      public boolean equals(Object other) {
+        if (other instanceof AnnotatedType) {
+          return annotatedTypeEquals(this, (AnnotatedType) other);
+        } else {
           return false;
         }
-        AnnotatedParameterizedType other = (AnnotatedParameterizedType) obj;
-        // Can't call getAnnotatedOwnerType on Java 8, but since our own implementation always
-        // returns null, comparing getType().getOwnerType() via getType() is sufficient.
-        return Objects.equals(getType(), other.getType())
-            && Arrays.equals(
-                getAnnotatedActualTypeArguments(), other.getAnnotatedActualTypeArguments())
-            && Arrays.equals(getAnnotations(), other.getAnnotations());
       }
 
       @Override
@@ -464,12 +467,6 @@ public final class TypeSupport {
     public AnnotatedType getAnnotatedGenericComponentType() {
       return ((AnnotatedArrayType) base).getAnnotatedGenericComponentType();
     }
-
-    // @Override as of Java 9
-    @SuppressWarnings("Since15")
-    public AnnotatedType getAnnotatedOwnerType() {
-      throw new UnsupportedOperationException("Not implemented");
-    }
   }
 
   private static class AugmentedParameterizedType extends AugmentedAnnotatedType
@@ -482,12 +479,6 @@ public final class TypeSupport {
     @Override
     public AnnotatedType[] getAnnotatedActualTypeArguments() {
       return ((AnnotatedParameterizedType) base).getAnnotatedActualTypeArguments();
-    }
-
-    // @Override as of Java 9
-    @SuppressWarnings("Since15")
-    public AnnotatedType getAnnotatedOwnerType() {
-      throw new UnsupportedOperationException("Not implemented");
     }
   }
 
@@ -551,9 +542,12 @@ public final class TypeSupport {
     }
 
     @Override
-    public boolean equals(Object obj) {
-      throw new UnsupportedOperationException(
-          "equals() is not supported as its behavior isn't specified");
+    public boolean equals(Object other) {
+      if (other instanceof AnnotatedType) {
+        return annotatedTypeEquals(this, (AnnotatedType) other);
+      } else {
+        return false;
+      }
     }
 
     @Override
@@ -561,5 +555,61 @@ public final class TypeSupport {
       throw new UnsupportedOperationException(
           "hashCode() is not supported as its behavior isn't specified");
     }
+
+    // @Override as of Java 9
+    public AnnotatedType getAnnotatedOwnerType() {
+      // This can only be invoked on Java 9+, where the method is available on base.
+      try {
+        return (AnnotatedType) AnnotatedType.class.getMethod("getAnnotatedOwnerType").invoke(base);
+      } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        throw new IllegalStateException(e);
+      }
+    }
+  }
+
+  // Workaround for https://bugs.java.com/bugdatabase/view_bug?bug_id=8058202, which is only fixed
+  // in JDK 12+: AnnotatedType does not override equals().
+  public static boolean annotatedTypeEquals(AnnotatedType left, AnnotatedType right) {
+    if (left instanceof AnnotatedParameterizedType) {
+      if (!(right instanceof AnnotatedParameterizedType)) {
+        return false;
+      }
+      AnnotatedType[] leftTypeArguments =
+          ((AnnotatedParameterizedType) left).getAnnotatedActualTypeArguments();
+      AnnotatedType[] rightTypeArguments =
+          ((AnnotatedParameterizedType) right).getAnnotatedActualTypeArguments();
+      if (leftTypeArguments.length != rightTypeArguments.length
+          || !IntStream.range(0, leftTypeArguments.length)
+              .allMatch(i -> annotatedTypeEquals(leftTypeArguments[i], rightTypeArguments[i]))) {
+        return false;
+      }
+    } else if (left instanceof AnnotatedArrayType) {
+      if (!(right instanceof AnnotatedArrayType)) {
+        return false;
+      }
+      if (!annotatedTypeEquals(
+          ((AnnotatedArrayType) left).getAnnotatedGenericComponentType(),
+          ((AnnotatedArrayType) right).getAnnotatedGenericComponentType())) {
+        return false;
+      }
+    } else if (left instanceof AnnotatedWildcardType || left instanceof AnnotatedTypeVariable) {
+      throw new UnsupportedOperationException(
+          "AnnotatedWildcardType and AnnotatedTypeVariable are not supported");
+    } else {
+      // Ensure that e.g. "Map" (AnnotatedType) and "Map<List, String>" (AnnotatedParameterizedType)
+      // are not equal.
+      if (right instanceof AnnotatedArrayType
+          || right instanceof AnnotatedParameterizedType
+          || right instanceof AnnotatedTypeVariable
+          || right instanceof AnnotatedWildcardType) {
+        return false;
+      }
+    }
+    // At this point, left and right implement the same subsets of all five interfaces and all the
+    // aspects of the more specific types are identical.
+    // Note: This ignores getAnnotatedOwnerType, which has been added in Java 9. For our purposes,
+    // the annotations on the owner don't matter and the owner itself is compared via Type.
+    return left.getType().equals(right.getType())
+        && Arrays.equals(left.getAnnotations(), right.getAnnotations());
   }
 }
