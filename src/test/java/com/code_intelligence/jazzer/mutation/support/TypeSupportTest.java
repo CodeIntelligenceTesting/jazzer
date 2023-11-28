@@ -9,10 +9,12 @@
 
 package com.code_intelligence.jazzer.mutation.support;
 
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.annotatedTypeEquals;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.containedInDirectedCycle;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.visitAnnotatedType;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withTypeArguments;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
@@ -20,6 +22,8 @@ import static java.util.Arrays.stream;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.WithSize;
+import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -30,6 +34,8 @@ import java.lang.reflect.ParameterizedType;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -287,5 +293,101 @@ class TypeSupportTest {
     assertThat(containedInDirectedCycle(3, successors)).isTrue();
     assertThat(containedInDirectedCycle(4, successors)).isTrue();
     assertThat(containedInDirectedCycle(5, successors)).isFalse();
+  }
+
+  void doTestWithExtraAnnotationsWithCustomEquality(
+      BiPredicate<AnnotatedType, AnnotatedType> equality) {
+    Annotation NOT_NULL =
+        new TypeHolder<@NotNull String>() {}.annotatedType().getAnnotation(NotNull.class);
+    Annotation WITH_SIZE =
+        new TypeHolder<@WithSize(min = 42) String>() {}.annotatedType()
+            .getAnnotation(WithSize.class);
+    assertThat(
+            equality.test(
+                withExtraAnnotations(new TypeHolder<Boolean>() {}.annotatedType(), NOT_NULL),
+                new TypeHolder<@NotNull Boolean>() {}.annotatedType()))
+        .isTrue();
+    assertThat(
+            equality.test(
+                withExtraAnnotations(new TypeHolder<Boolean>() {}.annotatedType()),
+                new TypeHolder<@NotNull Boolean>() {}.annotatedType()))
+        .isFalse();
+    assertThat(
+            equality.test(
+                withExtraAnnotations(
+                    new TypeHolder<@NotNull Map<String, @NotNull String>>() {}.annotatedType(),
+                    WITH_SIZE),
+                new TypeHolder<
+                    @NotNull @WithSize(min = 42) Map<
+                        String, @NotNull String>>() {}.annotatedType()))
+        .isTrue();
+    assertThat(
+            equality.test(
+                withExtraAnnotations(
+                    new TypeHolder<Map<String, @NotNull String>>() {}.annotatedType(),
+                    NOT_NULL,
+                    WITH_SIZE),
+                new TypeHolder<
+                    @NotNull @WithSize(min = 42) Map<
+                        String, @NotNull String>>() {}.annotatedType()))
+        .isTrue();
+    assertThat(
+            equality.test(
+                withExtraAnnotations(
+                    new TypeHolder<@NotNull Map<String, @NotNull String>>() {}.annotatedType(),
+                    WITH_SIZE),
+                new TypeHolder<
+                    @WithSize(min = 42) @NotNull Map<
+                        String, @NotNull String>>() {}.annotatedType()))
+        .isFalse();
+    assertThat(
+            equality.test(
+                withExtraAnnotations(
+                    new TypeHolder<Map<String, @NotNull String>>() {}.annotatedType(), NOT_NULL),
+                new TypeHolder<@NotNull Map>() {}.annotatedType()))
+        .isFalse();
+    assertThat(
+            equality.test(
+                withExtraAnnotations(
+                    new TypeHolder<@NotNull Byte[]>() {}.annotatedType(), NOT_NULL),
+                new TypeHolder<@NotNull Byte @NotNull []>() {}.annotatedType()))
+        .isTrue();
+    assertThat(
+            equality.test(
+                withExtraAnnotations(
+                    new TypeHolder<@NotNull Byte[]>() {}.annotatedType(), NOT_NULL),
+                new TypeHolder<@NotNull Byte @NotNull []>() {}.annotatedType()))
+        .isTrue();
+  }
+
+  @Test
+  void testWithExtraAnnotationsWithBackportedEquality() {
+    doTestWithExtraAnnotationsWithCustomEquality(TypeSupport::annotatedTypeEquals);
+  }
+
+  @Test
+  void testWithExtraAnnotationsWithBackportedEquality_flipped() {
+    doTestWithExtraAnnotationsWithCustomEquality((a, b) -> annotatedTypeEquals(b, a));
+  }
+
+  // The tests below verify that the equals implementation of the AnnotatedType implementations
+  // shipped with Java 12+ are compatible with our annotatedTypeEquals. While we do not use equals
+  // in our code, this is additional assurance that our custom implementation is correct and also
+  // allows us to migrate to the standard equals in the (far) future.
+
+  // Java <= 11 does not implement AnnotatedType#equals.
+  // https://github.com/openjdk/jdk/commit/ab0128ca51de59aaaa674654ca8d4e16b3b79965
+  @Test
+  @EnabledForJreRange(min = JRE.JAVA_12)
+  void testWithExtraAnnotationsWithEquals() {
+    doTestWithExtraAnnotationsWithCustomEquality(Objects::equals);
+  }
+
+  // Java <= 11 does not implement AnnotatedType#equals.
+  // https://github.com/openjdk/jdk/commit/ab0128ca51de59aaaa674654ca8d4e16b3b79965
+  @Test
+  @EnabledForJreRange(min = JRE.JAVA_12)
+  void testWithExtraAnnotationsWithEquals_flipped() {
+    doTestWithExtraAnnotationsWithCustomEquality((a, b) -> Objects.equals(b, a));
   }
 }
