@@ -16,6 +16,7 @@ import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
+import com.code_intelligence.jazzer.mutation.support.TestSupport.ParameterHolder;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,12 @@ class BooleanMutatorTest {
 
   @Test
   void testPrimitive() {
-    SerializingMutator<Boolean> mutator = factory.createOrThrow(boolean.class);
+    SerializingMutator<Boolean> mutator =
+        (SerializingMutator<Boolean>)
+            factory.createOrThrow(
+                new ParameterHolder() {
+                  void singleParam(boolean parameter) {}
+                }.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Boolean");
 
     boolean bool;
@@ -67,7 +73,12 @@ class BooleanMutatorTest {
 
   @Test
   void testCrossOver() {
-    SerializingMutator<Boolean> mutator = factory.createOrThrow(boolean.class);
+    SerializingMutator<Boolean> mutator =
+        (SerializingMutator<Boolean>)
+            factory.createOrThrow(
+                new ParameterHolder() {
+                  void singleParam(boolean parameter) {}
+                }.annotatedType());
     try (MockPseudoRandom prng = mockPseudoRandom(true, false)) {
       assertThat(mutator.crossOver(true, false, prng)).isTrue();
       assertThat(mutator.crossOver(true, false, prng)).isFalse();

@@ -20,7 +20,6 @@ import static java.util.stream.Collectors.toSet;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import java.lang.annotation.Annotation;
-import java.lang.annotation.Inherited;
 import java.lang.reflect.AnnotatedArrayType;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.AnnotatedParameterizedType;
@@ -61,10 +60,6 @@ public final class TypeSupport {
     return ((Class<?>) type).isPrimitive();
   }
 
-  public static boolean isInheritable(Annotation annotation) {
-    return annotation.annotationType().getDeclaredAnnotation(Inherited.class) != null;
-  }
-
   /**
    * Returns {@code type} as a {@code Class<? extends T>} if it is a subclass of T, otherwise empty.
    *
@@ -83,56 +78,6 @@ public final class TypeSupport {
     }
 
     return Optional.of(actualClazz.asSubclass(superclass));
-  }
-
-  public static AnnotatedType asAnnotatedType(Class<?> clazz) {
-    requireNonNull(clazz);
-    return new AnnotatedType() {
-      @Override
-      public Type getType() {
-        return clazz;
-      }
-
-      @Override
-      public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        return annotatedElementGetAnnotation(this, annotationClass);
-      }
-
-      @Override
-      public Annotation[] getAnnotations() {
-        // No directly present annotations, look for inheritable present annotations on the
-        // superclass.
-        if (clazz.getSuperclass() == null) {
-          return new Annotation[0];
-        }
-        return stream(clazz.getSuperclass().getAnnotations())
-            .filter(TypeSupport::isInheritable)
-            .toArray(Annotation[]::new);
-      }
-
-      @Override
-      public Annotation[] getDeclaredAnnotations() {
-        // No directly present annotations.
-        return new Annotation[0];
-      }
-
-      @Override
-      public String toString() {
-        return annotatedTypeToString(this);
-      }
-
-      @Override
-      public int hashCode() {
-        throw new UnsupportedOperationException(
-            "hashCode() is not supported as its behavior isn't specified");
-      }
-
-      @Override
-      public boolean equals(Object obj) {
-        throw new UnsupportedOperationException(
-            "equals() is not supported as its behavior isn't specified");
-      }
-    };
   }
 
   /**

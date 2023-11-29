@@ -9,6 +9,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.createOrThrow;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -44,7 +45,8 @@ class MessageMutatorTest {
 
   @Test
   void testSimpleMessage() {
-    SerializingMutator<PrimitiveField3> mutator = factory.createOrThrow(PrimitiveField3.class);
+    SerializingMutator<PrimitiveField3> mutator =
+        createOrThrow(factory, new TypeHolder<PrimitiveField3>() {});
 
     PrimitiveField3 msg;
 

@@ -18,6 +18,7 @@ import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.lang.reflect.AnnotatedType;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -143,7 +144,8 @@ final class StringMutatorFactory implements MutatorFactory {
     int min = utf8Length.map(WithUtf8Length::min).orElse(DEFAULT_MIN_BYTES);
     int max = utf8Length.map(WithUtf8Length::max).orElse(DEFAULT_MAX_BYTES);
 
-    AnnotatedType innerByteArray = notNull(withLength(asAnnotatedType(byte[].class), min, max));
+    AnnotatedType innerByteArray =
+        notNull(withLength(new TypeHolder<byte[]>() {}.annotatedType(), min, max));
 
     return findFirstParentIfClass(type, String.class)
         .flatMap(parent -> factory.tryCreate(innerByteArray))

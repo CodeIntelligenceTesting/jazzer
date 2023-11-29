@@ -9,6 +9,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.createOrThrow;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -16,6 +17,7 @@ import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
+import com.code_intelligence.jazzer.mutation.support.TestSupport.ParameterHolder;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.lang.reflect.AnnotatedType;
 import java.util.stream.Stream;
@@ -35,7 +37,7 @@ class NullableMutatorTest {
 
   @Test
   void testNullable() {
-    SerializingMutator<Boolean> mutator = factory.createOrThrow(Boolean.class);
+    SerializingMutator<Boolean> mutator = createOrThrow(factory, new TypeHolder<Boolean>() {});
     assertThat(mutator.toString()).isEqualTo("Nullable<Boolean>");
 
     Boolean bool;
@@ -70,13 +72,18 @@ class NullableMutatorTest {
 
   @Test
   void testPrimitive() {
-    SerializingMutator<Boolean> mutator = factory.createOrThrow(boolean.class);
+    SerializingMutator<Boolean> mutator =
+        (SerializingMutator<Boolean>)
+            factory.createOrThrow(
+                new ParameterHolder() {
+                  void singleParam(boolean parameter) {}
+                }.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Boolean");
   }
 
   @Test
   void testCrossOver() {
-    SerializingMutator<Boolean> mutator = factory.createOrThrow(Boolean.class);
+    SerializingMutator<Boolean> mutator = createOrThrow(factory, new TypeHolder<Boolean>() {});
     try (MockPseudoRandom prng = mockPseudoRandom(true)) {
       Boolean valueCrossedOver = mutator.crossOver(Boolean.TRUE, Boolean.TRUE, prng);
       assertThat(valueCrossedOver).isNotNull();
