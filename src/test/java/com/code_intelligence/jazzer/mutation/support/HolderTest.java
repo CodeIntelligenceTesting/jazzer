@@ -11,6 +11,7 @@ package com.code_intelligence.jazzer.mutation.support;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.code_intelligence.jazzer.mutation.support.TestSupport.ParameterHolder;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -56,7 +57,7 @@ class HolderTest {
   void testParameterHolder_rawType() {
     Type type =
         new ParameterHolder() {
-          void foo(List<String> parameter) {}
+          void singleParam(List<String> parameter) {}
         }.type();
     assertThat(type).isInstanceOf(ParameterizedType.class);
 
@@ -69,7 +70,7 @@ class HolderTest {
   void testParameterHolder_annotatedType() {
     AnnotatedType type =
         new ParameterHolder() {
-          void foo(@ParameterAnnotation @Foo List<@Bar String> parameter) {}
+          void singleParam(@ParameterAnnotation @Foo List<@Bar String> parameter) {}
         }.annotatedType();
     assertThat(type).isInstanceOf(AnnotatedParameterizedType.class);
 
@@ -90,7 +91,7 @@ class HolderTest {
   void testParameterHolder_parameterAnnotations() {
     Annotation[] annotations =
         new ParameterHolder() {
-          void foo(@ParameterAnnotation @Foo List<@Bar String> parameter) {}
+          void singleParam(@ParameterAnnotation @Foo List<@Bar String> parameter) {}
         }.parameterAnnotations();
     assertThat(annotations).hasLength(1);
     assertThat(annotations[0]).isInstanceOf(ParameterAnnotation.class);

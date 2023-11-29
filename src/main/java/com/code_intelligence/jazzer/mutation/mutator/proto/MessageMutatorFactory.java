@@ -10,7 +10,6 @@
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 
@@ -20,7 +19,6 @@ import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import java.lang.reflect.AnnotatedType;
-import java.util.Arrays;
 import java.util.Optional;
 
 public final class MessageMutatorFactory implements MutatorFactory {
@@ -28,19 +26,12 @@ public final class MessageMutatorFactory implements MutatorFactory {
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType messageType, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(messageType, Message.class)
-        // If the Message class doesn't have a nested Builder class, it is not a concrete generated
-        // message and we can't mutate it.
+        .flatMap(TypeLibrary::getBuilderType)
         .flatMap(
-            messageClass ->
-                Arrays.stream(messageClass.getDeclaredClasses())
-                    .filter(clazz -> clazz.getSimpleName().equals("Builder"))
-                    .findFirst())
-        .flatMap(
-            builderClass ->
+            builderType ->
                 // Forward the annotations (e.g. @NotNull) on the Message type to the Builder type.
                 factory.tryCreateInPlace(
-                    withExtraAnnotations(
-                        asAnnotatedType(builderClass), messageType.getAnnotations())))
+                    withExtraAnnotations(builderType, messageType.getAnnotations())))
         .map(
             builderMutator ->
                 mutateThenMapToImmutable(

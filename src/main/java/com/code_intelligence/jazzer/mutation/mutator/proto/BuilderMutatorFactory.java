@@ -23,9 +23,9 @@ import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapter
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setFieldWithPresence;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.BuilderAdapters.setMapField;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.getDefaultInstance;
+import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.getMessageType;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.withoutInitIfRecursive;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
@@ -168,20 +168,19 @@ public final class BuilderMutatorFactory implements MutatorFactory {
       return new ChainedMutatorFactory(
           originalFactory,
           (type, factory) ->
-              asSubclassOrEmpty(type, Builder.class)
+              asSubclassOrEmpty(type, Message.Builder.class)
                   .flatMap(
                       clazz -> {
-                        // BuilderMutatorFactory only handles subclasses of Message.Builder and
-                        // requests
-                        // Message.Builder itself for message fields, which we handle here.
+                        // BuilderMutatorFactory only handles concrete subclasses of Message.Builder
+                        // and requests Message.Builder itself for message fields, which we handle
+                        // here.
                         if (clazz != Message.Builder.class) {
                           return Optional.empty();
                         }
                         // It is important that we use originalFactory here instead of factory:
-                        // factory has this
-                        // field-specific message mutator appended, but this mutator should only be
-                        // used for
-                        // this particular field and not any message subfields.
+                        // factory has this field-specific message mutator appended, but this
+                        // mutator should only be used for this particular field and not any message
+                        // subfields.
                         return Optional.of(
                             makeBuilderMutator(
                                 originalFactory,
@@ -334,7 +333,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
                                   factory.createOrThrow(
                                       notNull(
                                           withExtraAnnotations(
-                                              asAnnotatedType(messageClass), anySource)));
+                                              getMessageType(messageClass), anySource)));
                           return mutateProperty(
                               (Any.Builder anyBuilder) -> {
                                 try {
@@ -362,7 +361,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, ExtendedMutatorFactory factory) {
-    return asSubclassOrEmpty(type, Builder.class)
+    return asSubclassOrEmpty(type, Message.Builder.class)
         .flatMap(
             builderClass -> {
               Message defaultInstance;
@@ -379,8 +378,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
                 // Handled by a custom mutator factory for message fields that is created in
                 // withDescriptorDependentMutatorFactoryIfNeeded. Without @WithDefaultInstance,
                 // BuilderMutatorFactory only handles proper subclasses, which correspond to
-                // generated
-                // message types.
+                // generated message types.
                 return Optional.empty();
               } else {
                 defaultInstance =

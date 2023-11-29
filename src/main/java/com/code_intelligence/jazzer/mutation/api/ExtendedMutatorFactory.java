@@ -10,7 +10,6 @@
 package com.code_intelligence.jazzer.mutation.api;
 
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static java.lang.String.format;
 
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -18,10 +17,6 @@ import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
 
 public abstract class ExtendedMutatorFactory implements MutatorFactory {
-
-  public final <T> SerializingMutator<T> createOrThrow(Class<T> clazz) {
-    return (SerializingMutator<T>) createOrThrow(asAnnotatedType(clazz));
-  }
 
   public final SerializingMutator<?> createOrThrow(AnnotatedType type) {
     Optional<SerializingMutator<?>> maybeMutator = tryCreate(type);

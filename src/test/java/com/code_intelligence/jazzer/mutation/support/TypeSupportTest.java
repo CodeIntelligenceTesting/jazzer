@@ -10,7 +10,6 @@
 package com.code_intelligence.jazzer.mutation.support;
 
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.annotatedTypeEquals;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.containedInDirectedCycle;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.visitAnnotatedType;
@@ -211,16 +210,18 @@ class TypeSupportTest {
         IllegalArgumentException.class,
         () ->
             withTypeArguments(
-                new TypeHolder<List<?>>() {}.annotatedType(), asAnnotatedType(String.class)));
+                new TypeHolder<List<?>>() {}.annotatedType(),
+                new TypeHolder<String>() {}.annotatedType()));
   }
 
   @Test
   void testAsSubclassOrEmpty() {
-    assertThat(asSubclassOrEmpty(asAnnotatedType(String.class), String.class))
+    assertThat(asSubclassOrEmpty(new TypeHolder<String>() {}.annotatedType(), String.class))
         .hasValue(String.class);
-    assertThat(asSubclassOrEmpty(asAnnotatedType(String.class), CharSequence.class))
+    assertThat(asSubclassOrEmpty(new TypeHolder<String>() {}.annotatedType(), CharSequence.class))
         .hasValue(String.class);
-    assertThat(asSubclassOrEmpty(asAnnotatedType(CharSequence.class), String.class)).isEmpty();
+    assertThat(asSubclassOrEmpty(new TypeHolder<CharSequence>() {}.annotatedType(), String.class))
+        .isEmpty();
     assertThat(asSubclassOrEmpty(new TypeHolder<List<String>>() {}.annotatedType(), List.class))
         .isEmpty();
   }

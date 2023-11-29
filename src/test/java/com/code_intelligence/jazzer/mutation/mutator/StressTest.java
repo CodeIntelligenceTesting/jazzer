@@ -14,7 +14,6 @@ import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.e
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.asMap;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.lang.Math.floor;
@@ -41,6 +40,7 @@ import com.code_intelligence.jazzer.mutation.annotation.proto.WithDefaultInstanc
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.support.TestSupport.ParameterHolder;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.code_intelligence.jazzer.protobuf.Proto2.TestProtobuf;
 import com.code_intelligence.jazzer.protobuf.Proto3.AnyField3;
@@ -117,7 +117,9 @@ public class StressTest {
   public static Stream<Arguments> stressTestCases() {
     return Stream.of(
         arguments(
-            asAnnotatedType(boolean.class),
+            new ParameterHolder() {
+              void singleParam(boolean parameter) {}
+            }.annotatedType(),
             "Boolean",
             true,
             exactly(false, true),
@@ -201,7 +203,9 @@ public class StressTest {
                 asMap(false, true, true, false),
                 asMap(false, true, true, true))),
         arguments(
-            asAnnotatedType(byte.class),
+            new ParameterHolder() {
+              void singleParam(byte parameter) {}
+            }.annotatedType(),
             "Byte",
             true,
             // init is heavily biased towards special values and only returns a uniformly random
@@ -212,7 +216,9 @@ public class StressTest {
             // With mutations, we expect to reach all possible bytes.
             exactly(rangeClosed(Byte.MIN_VALUE, Byte.MAX_VALUE).mapToObj(i -> (byte) i).toArray())),
         arguments(
-            asAnnotatedType(short.class),
+            new ParameterHolder() {
+              void singleParam(short parameter) {}
+            }.annotatedType(),
             "Short",
             true,
             // init is heavily biased towards special values and only returns a uniformly random
@@ -226,7 +232,9 @@ public class StressTest {
             expectedNumberOfDistinctElements(
                 1 << Short.SIZE, NUM_INITS * NUM_MUTATE_PER_INIT * 9 / 10)),
         arguments(
-            asAnnotatedType(int.class),
+            new ParameterHolder() {
+              void singleParam(int parameter) {}
+            }.annotatedType(),
             "Integer",
             true,
             // init is heavily biased towards special values and only returns a uniformly random
@@ -257,13 +265,13 @@ public class StressTest {
             exactly(rangeClosed(Integer.MIN_VALUE, Integer.MIN_VALUE + 5).boxed().toArray()),
             exactly(rangeClosed(Integer.MIN_VALUE, Integer.MIN_VALUE + 5).boxed().toArray())),
         arguments(
-            asAnnotatedType(TestEnumTwo.class),
+            new TypeHolder<TestEnumTwo>() {}.annotatedType(),
             "Nullable<Enum<TestEnumTwo>>",
             true,
             exactly(null, TestEnumTwo.A, TestEnumTwo.B),
             exactly(null, TestEnumTwo.A, TestEnumTwo.B)),
         arguments(
-            asAnnotatedType(TestEnumThree.class),
+            new TypeHolder<TestEnumThree>() {}.annotatedType(),
             "Nullable<Enum<TestEnumThree>>",
             true,
             exactly(null, TestEnumThree.A, TestEnumThree.B, TestEnumThree.C),

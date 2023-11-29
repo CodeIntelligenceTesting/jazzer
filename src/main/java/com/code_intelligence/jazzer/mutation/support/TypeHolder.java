@@ -20,6 +20,10 @@ import java.lang.reflect.Type;
  *
  * <p>Example: {@code new TypeHolder<List<String>> {}.annotatedType}
  *
+ * <p>For primitive types {@link
+ * com.code_intelligence.jazzer.mutation.support.TestSupport.ParameterHolder} has to be used
+ * instead.
+ *
  * @param <T> the type to hold
  */
 public abstract class TypeHolder<T> {

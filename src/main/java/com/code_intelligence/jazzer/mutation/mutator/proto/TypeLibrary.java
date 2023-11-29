@@ -12,7 +12,6 @@ package com.code_intelligence.jazzer.mutation.mutator.proto;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.withoutInit;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.entry;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.containedInDirectedCycle;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withTypeArguments;
@@ -35,10 +34,12 @@ import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 final class TypeLibrary {
@@ -46,18 +47,18 @@ final class TypeLibrary {
   private static final AnnotatedType RAW_MAP = new TypeHolder<@NotNull Map>() {}.annotatedType();
   private static final Map<JavaType, AnnotatedType> BASE_TYPE_WITH_PRESENCE =
       Stream.of(
-              entry(JavaType.BOOLEAN, Boolean.class),
-              entry(JavaType.BYTE_STRING, ByteString.class),
-              entry(JavaType.DOUBLE, Double.class),
-              entry(JavaType.ENUM, EnumValueDescriptor.class),
-              entry(JavaType.FLOAT, Float.class),
-              entry(JavaType.INT, Integer.class),
-              entry(JavaType.LONG, Long.class),
-              entry(JavaType.MESSAGE, Message.class),
-              entry(JavaType.STRING, String.class))
+              entry(JavaType.BOOLEAN, new TypeHolder<Boolean>() {}.annotatedType()),
+              entry(JavaType.BYTE_STRING, new TypeHolder<ByteString>() {}.annotatedType()),
+              entry(JavaType.DOUBLE, new TypeHolder<Double>() {}.annotatedType()),
+              entry(JavaType.ENUM, new TypeHolder<EnumValueDescriptor>() {}.annotatedType()),
+              entry(JavaType.FLOAT, new TypeHolder<Float>() {}.annotatedType()),
+              entry(JavaType.INT, new TypeHolder<Integer>() {}.annotatedType()),
+              entry(JavaType.LONG, new TypeHolder<Long>() {}.annotatedType()),
+              entry(JavaType.MESSAGE, new TypeHolder<Message>() {}.annotatedType()),
+              entry(JavaType.STRING, new TypeHolder<String>() {}.annotatedType()))
           .collect(
               collectingAndThen(
-                  toMap(Entry::getKey, e -> asAnnotatedType(e.getValue())),
+                  toMap(SimpleEntry::getKey, SimpleEntry::getValue),
                   map -> unmodifiableMap(new EnumMap<>(map))));
 
   private TypeLibrary() {}
@@ -182,5 +183,25 @@ final class TypeLibrary {
               withDefaultInstance.value()),
           e);
     }
+  }
+
+  static Optional<AnnotatedType> getBuilderType(Class<? extends Message> messageClass) {
+    return Arrays.stream(messageClass.getDeclaredMethods())
+        // Message#newBuilderForType() has return type Message.Builder, but overrides
+        // MessageLite#newBuilderForType(), which has return type MessageLite.Builder. The Java
+        // compiler adds a synthetic default method with return type MessageLite.Builder that we
+        // don't want to pick up here.
+        .filter(method -> !method.isSynthetic())
+        .filter(method -> method.getName().equals("newBuilderForType"))
+        .map(Method::getAnnotatedReturnType)
+        .findFirst();
+  }
+
+  static AnnotatedType getMessageType(Class<? extends Message> messageClass) {
+    return Arrays.stream(messageClass.getDeclaredMethods())
+        .filter(method -> method.getName().equals("getDefaultInstance"))
+        .map(Method::getAnnotatedReturnType)
+        .findFirst()
+        .get();
   }
 }
