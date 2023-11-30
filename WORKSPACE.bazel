@@ -188,6 +188,7 @@ maven_install(
         "org.jetbrains.kotlin:kotlin-reflect": "@rules_kotlin//kotlin/compiler:kotlin-reflect",
         "org.jetbrains.kotlin:kotlin-stdlib": "@rules_kotlin//kotlin/compiler:kotlin-stdlib",
         "com.google.errorprone:error_prone_annotations": "@com_google_errorprone_error_prone_annotations//jar",
+        "com.google.protobuf:protobuf-java": "@com_google_protobuf//java/core",
     },
     repositories = [
         "https://repo1.maven.org/maven2",
