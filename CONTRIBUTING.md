@@ -79,6 +79,13 @@ This is especially useful with long-running or parameterized tests.
 If you need to debug an issue that can only be reproduced by an integration test (`java_fuzz_target_test`), you can start Jazzer in debug mode via `--config=debug`.
 The JVM running Jazzer will suspend until a debugger connects on port 5005 (or the port specified via `DEFAULT_JVM_DEBUG_PORT`).
 
+Jazzer also has a number of environment variables that enable additional debug logging when set to `1`:
+
+* `JAZZER_AUTOFUZZ_DEBUG`: Print stack traces and generated code while using Autofuzz.
+* `JAZZER_MUTATOR_DEBUG`: Print a tree representation of attempts to construct a structured mutator.
+* `JAZZER_REFLECTION_DEBUG`: Print stack traces when reflective access from sanitizers fails.
+* `RULES_JNI_TRACE`: Let the native launcher emit trace level information while locating a JDK.
+
 ### Formatting
 
 Run `./format.sh` to format all source files in the way enforced by the "Check formatting" CI job.
