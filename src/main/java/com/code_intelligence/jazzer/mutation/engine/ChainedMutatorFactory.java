@@ -12,8 +12,10 @@ package com.code_intelligence.jazzer.mutation.engine;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.markAsRequiringRecursionBreaking;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.findFirstPresent;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.annotatedTypeEquals;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
+import static java.util.Collections.nCopies;
 import static java.util.Collections.unmodifiableList;
 import static java.util.function.Function.identity;
 
@@ -30,9 +32,13 @@ import java.util.stream.Stream;
 
 /** A {@link MutatorFactory} that delegates to the given factories in order. */
 public final class ChainedMutatorFactory extends ExtendedMutatorFactory {
+  private static final boolean JAZZER_MUTATOR_DEBUG =
+      "1".equals(System.getenv("JAZZER_MUTATOR_DEBUG"));
+
   private final List<MutatorFactory> fixedFactories;
   private final List<MutatorFactory> prependedFactories;
   private AnnotatedType currentType;
+  private int level = -1;
 
   /**
    * Creates a {@link MutatorFactory} that delegates to the given factories in order.
@@ -58,17 +64,26 @@ public final class ChainedMutatorFactory extends ExtendedMutatorFactory {
     int currentPrependedFactoriesSize = prependedFactories.size();
 
     currentType = type;
+    level++;
     try {
+      debugLog("attempt");
       // prependedFactories may be modified during the creation of child mutators. Go through an
       // IntStream to allow for this and remove all factories prepended by child mutators before
       // returning from this function.
-      return findFirstPresent(
-          Stream.concat(
-                  IntStream.range(0, currentPrependedFactoriesSize)
-                      .mapToObj(prependedFactories::get),
-                  fixedFactories.stream())
-              .map(factory -> factory.tryCreate(type, parent)));
+      Optional<SerializingMutator<?>> result =
+          findFirstPresent(
+              Stream.concat(
+                      IntStream.range(0, currentPrependedFactoriesSize)
+                          .mapToObj(prependedFactories::get),
+                      fixedFactories.stream())
+                  .map(factory -> factory.tryCreate(type, parent)));
+      debugLog(result.isPresent() ? "success" : "failure");
+      return result;
     } finally {
+      level--;
+      if (level == -1) {
+        System.err.println();
+      }
       currentType = previousType;
       prependedFactories.subList(currentPrependedFactoriesSize, prependedFactories.size()).clear();
     }
@@ -89,5 +104,13 @@ public final class ChainedMutatorFactory extends ExtendedMutatorFactory {
             return Optional.empty();
           }
         });
+  }
+
+  private void debugLog(String status) {
+    if (!JAZZER_MUTATOR_DEBUG) {
+      return;
+    }
+    String indent = join("", nCopies(level, "    "));
+    System.err.printf("%s%s: %s%n", indent, currentType, status);
   }
 }
