@@ -340,18 +340,31 @@ public final class TraceCmpHooks {
       type = HookType.AFTER,
       targetClassName = "java.lang.String",
       targetMethod = "startsWith")
-  @MethodHook(
-      type = HookType.AFTER,
-      targetClassName = "java.lang.String",
-      targetMethod = "endsWith")
   public static void startsWith(
       MethodHandle method,
       String thisObject,
       Object[] arguments,
       int hookId,
-      Boolean doesStartOrEndsWith) {
-    if (!doesStartOrEndsWith && arguments.length >= 1 && arguments[0] instanceof String) {
-      TraceDataFlowNativeCallbacks.traceStrstr(thisObject, (String) arguments[0], hookId);
+      Boolean doesStartWith) {
+    if (!doesStartWith && arguments.length >= 1 && arguments[0] instanceof String) {
+      String needle = (String) arguments[0];
+      String haystack = thisObject.substring(0, Math.min(thisObject.length(), needle.length()));
+      TraceDataFlowNativeCallbacks.traceStrcmp(haystack, needle, 1, hookId);
+      TraceDataFlowNativeCallbacks.traceStrstr(thisObject, needle, 31 * hookId + 11);
+    }
+  }
+
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.lang.String",
+      targetMethod = "endsWith")
+  public static void endsWith(
+      MethodHandle method, String thisObject, Object[] arguments, int hookId, Boolean doesEndWith) {
+    if (!doesEndWith && arguments.length >= 1 && arguments[0] instanceof String) {
+      String needle = (String) arguments[0];
+      String haystack = thisObject.substring(Math.min(thisObject.length(), needle.length()));
+      TraceDataFlowNativeCallbacks.traceStrcmp(haystack, needle, 1, hookId);
+      TraceDataFlowNativeCallbacks.traceStrstr(thisObject, needle, 31 * hookId + 11);
     }
   }
 
@@ -445,14 +458,6 @@ public final class TraceCmpHooks {
   @MethodHook(
       type = HookType.AFTER,
       targetClassName = "kotlin.text.StringsKt ",
-      targetMethod = "endsWith")
-  @MethodHook(
-      type = HookType.AFTER,
-      targetClassName = "kotlin.text.StringsKt ",
-      targetMethod = "endsWith$default")
-  @MethodHook(
-      type = HookType.AFTER,
-      targetClassName = "kotlin.text.StringsKt ",
       targetMethod = "startsWith")
   @MethodHook(
       type = HookType.AFTER,
@@ -463,13 +468,42 @@ public final class TraceCmpHooks {
       Object alwaysNull,
       Object[] arguments,
       int hookId,
-      Boolean doesStartOrEndsWith) {
-    if (!doesStartOrEndsWith
+      Boolean doesStartsWith) {
+    if (!doesStartsWith
         && arguments.length >= 2
         && arguments[0] instanceof CharSequence
         && arguments[1] instanceof CharSequence) {
-      TraceDataFlowNativeCallbacks.traceStrstr(
-          arguments[0].toString(), arguments[1].toString(), hookId);
+      String target = ((CharSequence) arguments[0]).toString();
+      String needle = ((CharSequence) arguments[1]).toString();
+      String haystack = target.substring(0, Math.min(target.length(), needle.length()));
+      TraceDataFlowNativeCallbacks.traceStrcmp(haystack, needle, 1, hookId);
+      TraceDataFlowNativeCallbacks.traceStrstr(target, needle, 31 * hookId + 11);
+    }
+  }
+
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "endsWith")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "kotlin.text.StringsKt ",
+      targetMethod = "endsWith$default")
+  public static void endsWithKt(
+      MethodHandle method,
+      Object alwaysNull,
+      Object[] arguments,
+      int hookId,
+      Boolean doesEndsWith) {
+    if (!doesEndsWith
+        && arguments.length >= 2
+        && arguments[0] instanceof CharSequence
+        && arguments[1] instanceof CharSequence) {
+      String target = ((CharSequence) arguments[0]).toString();
+      String needle = ((CharSequence) arguments[1]).toString();
+      String haystack = target.substring(Math.min(target.length(), needle.length()));
+      TraceDataFlowNativeCallbacks.traceStrcmp(haystack, needle, 1, hookId);
+      TraceDataFlowNativeCallbacks.traceStrstr(target, needle, 31 * hookId + 11);
     }
   }
 
