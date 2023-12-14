@@ -628,4 +628,29 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "StringCompareFuzzer",
+    srcs = ["src/test/java/com/example/StringCompareFuzzer.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    fuzzer_args = [
+        "-use_value_profile=1",
+    ],
+    target_class = "com.example.StringCompareFuzzer",
+)
+
+kt_jvm_library(
+    name = "kotlin_string_compare_fuzzer",
+    srcs = ["src/test/java/com/example/KotlinStringCompareFuzzer.kt"],
+)
+
+java_fuzz_target_test(
+    name = "KotlinStringCompareFuzzer",
+    allowed_findings = ["java.io.IOException"],
+    fuzzer_args = [
+        "-use_value_profile=1",
+    ],
+    target_class = "com.example.KotlinStringCompareFuzzer",
+    runtime_deps = [":kotlin_string_compare_fuzzer"],
+)
+
 ktlint()
