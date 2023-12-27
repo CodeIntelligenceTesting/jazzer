@@ -18,7 +18,9 @@ java_library(
         ],
     }),
     deps = [
+        ":aggregates_helper",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
     ],
 )
 

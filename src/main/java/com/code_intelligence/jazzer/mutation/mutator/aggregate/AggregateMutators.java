@@ -17,6 +17,11 @@ public final class AggregateMutators {
   private AggregateMutators() {}
 
   public static Stream<MutatorFactory> newFactories() {
+    // Register the record mutator first as it is more specific.
+    return Stream.concat(newRecordMutatorFactoryIfSupported(), Stream.of(new BeanMutatorFactory()));
+  }
+
+  private static Stream<MutatorFactory> newRecordMutatorFactoryIfSupported() {
     if (!supportsRecords()) {
       return Stream.empty();
     }

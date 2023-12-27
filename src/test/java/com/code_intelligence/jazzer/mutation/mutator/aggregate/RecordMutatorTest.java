@@ -43,6 +43,7 @@ class RecordMutatorTest {
 
       EmptyRecord mutated = mutator.mutate(inited, prng);
       assertThat(mutated).isEqualTo(expected);
+      assertThat(mutator.detach(mutated)).isSameInstanceAs(mutated);
     }
   }
 
@@ -71,6 +72,7 @@ class RecordMutatorTest {
 
       SimpleTypesRecord mutated = mutator.mutate(inited, prng);
       assertThat(mutated.baz()).isEqualTo(23);
+      assertThat(mutator.detach(mutated)).isSameInstanceAs(mutated);
     }
   }
 
@@ -107,6 +109,7 @@ class RecordMutatorTest {
       ContainerTypesRecord mutated = mutator.mutate(inited, prng);
       assertThat(mutated.map).isEqualTo(inited.map);
       assertThat(mutated.list).containsExactly(0);
+      assertThat(mutator.detach(mutated)).isSameInstanceAs(mutated);
     }
   }
 
@@ -144,6 +147,7 @@ class RecordMutatorTest {
             )) {
       record = mutator.mutate(record, prng);
       assertThat(record).isEqualTo(new RecursiveTypesRecord(1, new RecursiveTypesRecord(0, null)));
+      assertThat(mutator.detach(record)).isSameInstanceAs(record);
     }
   }
 }
