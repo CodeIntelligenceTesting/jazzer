@@ -10,7 +10,6 @@
 package com.code_intelligence.jazzer.mutation.combinator;
 
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.extendWithZeros;
-import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.requireNonNullElements;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
@@ -37,7 +36,6 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
 
   ProductMutator(SerializingMutator[] mutators) {
     requireNonNullElements(mutators);
-    require(mutators.length > 0, "mutators must not be empty");
     this.mutators = Arrays.copyOf(mutators, mutators.length);
   }
 
@@ -93,6 +91,9 @@ public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
 
   @Override
   public void mutateInPlace(Object[] reference, PseudoRandom prng) {
+    if (mutators.length == 0) {
+      return;
+    }
     int i = prng.indexIn(mutators);
     reference[i] = mutators[i].mutate(reference[i], prng);
   }

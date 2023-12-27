@@ -22,8 +22,6 @@ import java.lang.reflect.RecordComponent;
 import java.util.Optional;
 
 final class RecordMutatorFactory implements MutatorFactory {
-  private final AggregatesHelper aggregatesHelper = new AggregatesHelper();
-
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, ExtendedMutatorFactory factory) {
@@ -31,7 +29,7 @@ final class RecordMutatorFactory implements MutatorFactory {
         .flatMap(
             clazz -> {
               try {
-                return aggregatesHelper.ofImmutable(
+                return AggregatesHelper.ofImmutable(
                     factory,
                     getCanonicalConstructor(clazz),
                     stream(clazz.getRecordComponents())

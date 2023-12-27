@@ -32,7 +32,7 @@ class RecordMutatorTest {
         (SerializingMutator<EmptyRecord>)
             Mutators.newFactory()
                 .createOrThrow(new TypeHolder<@NotNull EmptyRecord>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("FixedValue(EmptyRecord[])");
+    assertThat(mutator.toString()).isEqualTo("[] -> EmptyRecord");
     assertThat(mutator.hasFixedSize()).isTrue();
 
     try (MockPseudoRandom prng = mockPseudoRandom()) {

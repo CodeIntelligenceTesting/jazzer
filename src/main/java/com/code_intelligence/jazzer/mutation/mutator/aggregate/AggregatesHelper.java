@@ -9,7 +9,6 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
-import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.fixedValue;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static java.util.Arrays.stream;
@@ -22,6 +21,7 @@ import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import com.google.errorprone.annotations.ImmutableTypeParameter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
@@ -31,14 +31,8 @@ import java.util.Optional;
 final class AggregatesHelper {
 
   @SuppressWarnings("Immutable")
-  public Optional<SerializingMutator<?>> ofImmutable(
+  public static Optional<SerializingMutator<?>> ofImmutable(
       ExtendedMutatorFactory factory, Executable instantiator, Method... getters) {
-    Preconditions.check(
-        instantiator instanceof Constructor || Modifier.isStatic(instantiator.getModifiers()),
-        String.format("Instantiator %s must be a static method or a constructor", instantiator));
-    Preconditions.check(
-        instantiator.getAnnotatedReturnType().getType() != Void.class,
-        String.format("Return type of %s must not be void", instantiator));
     Preconditions.check(
         getters.length == instantiator.getParameterCount(),
         String.format(
@@ -54,70 +48,45 @@ final class AggregatesHelper {
               "Parameter %d of %s does not match return type of %s", i, instantiator, getters[i]));
     }
 
-    return ofImmutableChecked(factory, instantiator, getters).map(m -> (SerializingMutator<?>) m);
+    // TODO: Ideally, we would have the mutator framework pass in a Lookup for the fuzz test class.
+    MethodHandles.Lookup lookup = MethodHandles.lookup();
+    return ofImmutableChecked(
+            factory,
+            unreflectNewInstance(lookup, instantiator),
+            instantiator.getAnnotatedParameterTypes(),
+            instantiator.getDeclaringClass(),
+            unreflectMethods(lookup, getters))
+        .map(m -> (SerializingMutator<?>) m);
   }
 
-  private <@ImmutableTypeParameter T> Optional<SerializingMutator<T>> ofImmutableChecked(
-      ExtendedMutatorFactory factory, Executable instantiator, Method... getters) {
-    // TODO: Ideally, we would have the mutator framework pass in a Lookup for the fuzz test class.
-    instantiator.setAccessible(true);
-    for (Method getter : getters) {
-      getter.setAccessible(true);
-    }
-    MethodHandles.Lookup lookup = MethodHandles.lookup();
-    MethodHandle instantiatorHandle;
-    try {
-      if (instantiator instanceof Method) {
-        instantiatorHandle = lookup.unreflect((Method) instantiator);
-      } else {
-        instantiatorHandle = lookup.unreflectConstructor((Constructor<?>) instantiator);
-      }
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
-    MethodHandle[] getterHandles =
-        stream(getters)
-            .map(
-                getter -> {
-                  try {
-                    return lookup.unreflect(getter);
-                  } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
-            .toArray(MethodHandle[]::new);
-
-    if (getters.length == 0) {
-      try {
-        return Optional.of(fixedValue((T) instantiatorHandle.invoke()));
-      } catch (Throwable e) {
-        throw new RuntimeException(e);
-      }
-    }
-
+  private static <@ImmutableTypeParameter T> Optional<SerializingMutator<T>> ofImmutableChecked(
+      ExtendedMutatorFactory factory,
+      MethodHandle instantiator,
+      AnnotatedType[] instantiatorParameterTypes,
+      Class<?> instantiatedClass,
+      MethodHandle... getters) {
     try {
       return Optional.of(
           mutateThenMapToImmutable(
               () ->
                   ((Optional<SerializingMutator<?>[]>)
                           toArrayOrEmpty(
-                              stream(instantiator.getAnnotatedParameterTypes())
-                                  .map(factory::tryCreate),
+                              stream(instantiatorParameterTypes).map(factory::tryCreate),
                               SerializingMutator[]::new))
                       .map(MutatorCombinators::mutateProduct)
                       .orElseThrow(FailedToConstructChildMutatorException::new),
               components -> {
                 try {
-                  return (T) instantiatorHandle.invokeWithArguments(components);
+                  return (T) instantiator.invokeWithArguments(components);
                 } catch (Throwable e) {
                   throw new RuntimeException(e);
                 }
               },
               object -> {
-                Object[] objects = new Object[getterHandles.length];
-                for (int i = 0; i < getterHandles.length; i++) {
+                Object[] objects = new Object[getters.length];
+                for (int i = 0; i < getters.length; i++) {
                   try {
-                    objects[i] = getterHandles[i].invoke(object);
+                    objects[i] = getters[i].invoke(object);
                   } catch (Throwable e) {
                     throw new RuntimeException(e);
                   }
@@ -127,10 +96,47 @@ final class AggregatesHelper {
               (productMutator, inCycle) ->
                   productMutator.toDebugString(inCycle)
                       + " -> "
-                      + instantiator.getDeclaringClass().getSimpleName(),
+                      + instantiatedClass.getSimpleName(),
               factory::internMutator));
     } catch (FailedToConstructChildMutatorException e) {
       return Optional.empty();
     }
   }
+
+  private static MethodHandle unreflectNewInstance(
+      MethodHandles.Lookup lookup, Executable newInstance) {
+    Preconditions.check(
+        newInstance instanceof Constructor || Modifier.isStatic(newInstance.getModifiers()),
+        String.format(
+            "New instance method %s must be a static method or a constructor", newInstance));
+    Preconditions.check(
+        newInstance.getAnnotatedReturnType().getType() != Void.class,
+        String.format("Return type of %s must not be void", newInstance));
+    newInstance.setAccessible(true);
+    try {
+      if (newInstance instanceof Method) {
+        return lookup.unreflect((Method) newInstance);
+      } else {
+        return lookup.unreflectConstructor((Constructor<?>) newInstance);
+      }
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static MethodHandle[] unreflectMethods(MethodHandles.Lookup lookup, Method... methods) {
+    return stream(methods)
+        .map(
+            method -> {
+              method.setAccessible(true);
+              try {
+                return lookup.unreflect(method);
+              } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+              }
+            })
+        .toArray(MethodHandle[]::new);
+  }
+
+  private AggregatesHelper() {}
 }
