@@ -9,16 +9,20 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
+import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMap;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
+import static java.lang.invoke.MethodHandles.collectArguments;
+import static java.lang.invoke.MethodHandles.identity;
+import static java.lang.invoke.MethodHandles.permuteArguments;
 import static java.util.Arrays.stream;
 
+import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory.FailedToConstructChildMutatorException;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
-import com.google.errorprone.annotations.ImmutableTypeParameter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AnnotatedType;
@@ -26,7 +30,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 final class AggregatesHelper {
 
@@ -50,57 +59,131 @@ final class AggregatesHelper {
 
     // TODO: Ideally, we would have the mutator framework pass in a Lookup for the fuzz test class.
     MethodHandles.Lookup lookup = MethodHandles.lookup();
-    return ofImmutableChecked(
+    return createChecked(
             factory,
             unreflectNewInstance(lookup, instantiator),
             instantiator.getAnnotatedParameterTypes(),
             instantiator.getDeclaringClass(),
+            /* isImmutable= */ true,
             unreflectMethods(lookup, getters))
         .map(m -> (SerializingMutator<?>) m);
   }
 
-  private static <@ImmutableTypeParameter T> Optional<SerializingMutator<T>> ofImmutableChecked(
+  public static Optional<SerializingMutator<?>> ofMutable(
+      ExtendedMutatorFactory factory, Executable newInstance, Method[] getters, Method[] setters) {
+    Preconditions.check(
+        getters.length == setters.length,
+        String.format(
+            "Number of getters (%d) does not match number of setters (%d)",
+            getters.length, setters.length));
+    for (int i = 0; i < getters.length; i++) {
+      Preconditions.check(
+          getters[i]
+              .getAnnotatedReturnType()
+              .getType()
+              .equals(setters[i].getAnnotatedParameterTypes()[0].getType()),
+          String.format(
+              "Parameter of %s does not match return type of %s", setters[i], getters[i]));
+    }
+
+    // TODO: Ideally, we would have the mutator framework pass in a Lookup for the fuzz test class.
+    MethodHandles.Lookup lookup = MethodHandles.lookup();
+    AnnotatedType[] instantiatorParameterTypes =
+        stream(setters)
+            .map(Method::getAnnotatedParameterTypes)
+            .flatMap(Arrays::stream)
+            .toArray(AnnotatedType[]::new);
+    return createChecked(
+            factory,
+            makeInstantiator(
+                unreflectNewInstance(lookup, newInstance), unreflectMethods(lookup, setters)),
+            instantiatorParameterTypes,
+            newInstance.getDeclaringClass(),
+            /* isImmutable= */ false,
+            unreflectMethods(lookup, getters))
+        .map(m -> (SerializingMutator<?>) m);
+  }
+
+  @SuppressWarnings("Immutable")
+  private static <R> Optional<SerializingMutator<R>> createChecked(
       ExtendedMutatorFactory factory,
       MethodHandle instantiator,
       AnnotatedType[] instantiatorParameterTypes,
       Class<?> instantiatedClass,
+      boolean isImmutable,
       MethodHandle... getters) {
+    Supplier<SerializingMutator<Object[]>> mutator =
+        () ->
+            toArrayOrEmpty(
+                    stream(instantiatorParameterTypes).map(factory::tryCreate),
+                    SerializingMutator<?>[]::new)
+                .map(MutatorCombinators::mutateProduct)
+                .orElseThrow(FailedToConstructChildMutatorException::new);
+    Function<Object[], R> map =
+        components -> {
+          try {
+            return (R) instantiator.invokeWithArguments(components);
+          } catch (Throwable e) {
+            throw new RuntimeException(e);
+          }
+        };
+    Function<R, Object[]> inverse =
+        object -> {
+          Object[] objects = new Object[getters.length];
+          for (int i = 0; i < getters.length; i++) {
+            try {
+              objects[i] = getters[i].invoke(object);
+            } catch (Throwable e) {
+              throw new RuntimeException(e);
+            }
+          }
+          return objects;
+        };
+    BiFunction<SerializingMutator<Object[]>, Predicate<Debuggable>, String> debug =
+        (productMutator, inCycle) ->
+            productMutator.toDebugString(inCycle) + " -> " + instantiatedClass.getSimpleName();
     try {
-      return Optional.of(
-          mutateThenMapToImmutable(
-              () ->
-                  ((Optional<SerializingMutator<?>[]>)
-                          toArrayOrEmpty(
-                              stream(instantiatorParameterTypes).map(factory::tryCreate),
-                              SerializingMutator[]::new))
-                      .map(MutatorCombinators::mutateProduct)
-                      .orElseThrow(FailedToConstructChildMutatorException::new),
-              components -> {
-                try {
-                  return (T) instantiator.invokeWithArguments(components);
-                } catch (Throwable e) {
-                  throw new RuntimeException(e);
-                }
-              },
-              object -> {
-                Object[] objects = new Object[getters.length];
-                for (int i = 0; i < getters.length; i++) {
-                  try {
-                    objects[i] = getters[i].invoke(object);
-                  } catch (Throwable e) {
-                    throw new RuntimeException(e);
-                  }
-                }
-                return objects;
-              },
-              (productMutator, inCycle) ->
-                  productMutator.toDebugString(inCycle)
-                      + " -> "
-                      + instantiatedClass.getSimpleName(),
-              factory::internMutator));
+      if (isImmutable) {
+        return Optional.of(
+            mutateThenMapToImmutable(mutator, map, inverse, debug, factory::internMutator));
+      } else {
+        return Optional.of(mutateThenMap(mutator, map, inverse, debug, factory::internMutator));
+      }
     } catch (FailedToConstructChildMutatorException e) {
       return Optional.empty();
     }
+  }
+
+  private static MethodHandle makeInstantiator(MethodHandle newInstance, MethodHandle... setters) {
+    MethodHandle chain = newInstance;
+    Class<?> instanceType = newInstance.type().returnType();
+    for (MethodHandle setter : setters) {
+      // The setter may be defined on a superclass of instanceType.
+      setter = setter.asType(setter.type().changeParameterType(0, instanceType));
+      MethodHandle chainableSetter;
+      if (setter.type().returnType() == void.class) {
+        // Turn setter into
+        // T withDuplicatedThis(T this1, T this2, V value) {
+        //   setter(this2, value);
+        //   return this1;
+        // }
+        MethodHandle withDuplicatedThis = collectArguments(identity(instanceType), 1, setter);
+        // Turn withDuplicatedThis into
+        // T chainableSetter(T this, V value) {
+        //   setter(this, value);
+        //   return this;
+        // }
+        chainableSetter =
+            permuteArguments(
+                withDuplicatedThis, setter.type().changeReturnType(instanceType), 0, 0, 1);
+      } else {
+        // The caller has to ensure that the setter returns the "this" object if it returns
+        // anything.
+        chainableSetter = setter;
+      }
+      chain = collectArguments(chainableSetter, 0, chain);
+    }
+    return chain;
   }
 
   private static MethodHandle unreflectNewInstance(

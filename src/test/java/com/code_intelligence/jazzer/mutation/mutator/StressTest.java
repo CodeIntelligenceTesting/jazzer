@@ -109,6 +109,108 @@ public class StressTest {
 
   private record LinkedListNode(SimpleRecord value, LinkedListNode next) {}
 
+  public static class SomeBean {
+    protected long quz;
+
+    public long getQuz() {
+      return quz;
+    }
+
+    public void setQuz(long quz) {
+      this.quz = quz;
+    }
+  }
+
+  public static class BeanWithParent extends SomeBean {
+    private boolean foo;
+    private String bar;
+    private int baz;
+
+    public boolean isFoo() {
+      return foo;
+    }
+
+    public void setFoo(boolean foo) {
+      this.foo = foo;
+    }
+
+    public String getBar() {
+      return bar;
+    }
+
+    public int getBaz() {
+      return baz;
+    }
+
+    // Out-of-order setters are supported.
+    public void setBaz(int baz) {
+      this.baz = baz;
+    }
+
+    // Chainable setters are supported.
+    public BeanWithParent setBar(String bar) {
+      this.bar = bar;
+      return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      BeanWithParent that = (BeanWithParent) o;
+      return quz == that.quz && foo == that.foo && baz == that.baz && Objects.equals(bar, that.bar);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(quz, foo, bar, baz);
+    }
+
+    @Override
+    public String toString() {
+      return "BeanWithParent{quz=" + quz + ", foo=" + foo + ", bar='" + bar + "', baz=" + baz + '}';
+    }
+  }
+
+  public static class LinkedListBean {
+    private LinkedListBean next;
+    private int value;
+
+    public LinkedListBean getNext() {
+      return next;
+    }
+
+    public void setNext(LinkedListBean next) {
+      this.next = next;
+    }
+
+    public int getValue() {
+      return value;
+    }
+
+    public void setValue(int value) {
+      this.value = value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      LinkedListBean that = (LinkedListBean) o;
+      return value == that.value && Objects.equals(next, that.next);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(next, value);
+    }
+
+    @Override
+    public String toString() {
+      return "LinkedListBean{" + "next=" + next + ", value=" + value + '}';
+    }
+  }
+
   @SuppressWarnings("unused")
   static Message getTestProtobufDefaultInstance() {
     return TestProtobuf.getDefaultInstance();
@@ -376,6 +478,19 @@ public class StressTest {
             false,
             // Low due to recursion breaking initializing nested records to null.
             distinctElementsRatio(0.23),
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull BeanWithParent>() {}.annotatedType(),
+            "[Nullable<String>, Integer, Boolean, Long] -> BeanWithParent",
+            false,
+            manyDistinctElements(),
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull LinkedListBean>() {}.annotatedType(),
+            "[Nullable<RecursionBreaking((cycle) -> LinkedListBean)>, Integer] -> LinkedListBean",
+            false,
+            // Low due to recursion breaking initializing nested structs to null.
+            distinctElementsRatio(0.22),
             manyDistinctElements()));
   }
 
