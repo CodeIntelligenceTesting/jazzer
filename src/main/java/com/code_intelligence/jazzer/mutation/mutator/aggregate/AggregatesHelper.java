@@ -12,9 +12,6 @@ package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMap;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
-import static java.lang.invoke.MethodHandles.collectArguments;
-import static java.lang.invoke.MethodHandles.identity;
-import static java.lang.invoke.MethodHandles.permuteArguments;
 import static java.util.Arrays.stream;
 
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
@@ -61,7 +58,13 @@ final class AggregatesHelper {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     return createChecked(
             factory,
-            unreflectNewInstance(lookup, instantiator),
+            components -> {
+              try {
+                return unreflectNewInstance(lookup, instantiator).invokeWithArguments(components);
+              } catch (Throwable e) {
+                throw new RuntimeException(e);
+              }
+            },
             instantiator.getAnnotatedParameterTypes(),
             instantiator.getDeclaringClass(),
             /* isImmutable= */ true,
@@ -107,7 +110,7 @@ final class AggregatesHelper {
   @SuppressWarnings("Immutable")
   private static <R> Optional<SerializingMutator<R>> createChecked(
       ExtendedMutatorFactory factory,
-      MethodHandle instantiator,
+      Function<Object[], R> instantiator,
       AnnotatedType[] instantiatorParameterTypes,
       Class<?> instantiatedClass,
       boolean isImmutable,
@@ -122,7 +125,7 @@ final class AggregatesHelper {
     Function<Object[], R> map =
         components -> {
           try {
-            return (R) instantiator.invokeWithArguments(components);
+            return (R) instantiator.apply(components);
           } catch (Throwable e) {
             throw new RuntimeException(e);
           }
@@ -154,36 +157,19 @@ final class AggregatesHelper {
     }
   }
 
-  private static MethodHandle makeInstantiator(MethodHandle newInstance, MethodHandle... setters) {
-    MethodHandle chain = newInstance;
-    Class<?> instanceType = newInstance.type().returnType();
-    for (MethodHandle setter : setters) {
-      // The setter may be defined on a superclass of instanceType.
-      setter = setter.asType(setter.type().changeParameterType(0, instanceType));
-      MethodHandle chainableSetter;
-      if (setter.type().returnType() == void.class) {
-        // Turn setter into
-        // T withDuplicatedThis(T this1, T this2, V value) {
-        //   setter(this2, value);
-        //   return this1;
-        // }
-        MethodHandle withDuplicatedThis = collectArguments(identity(instanceType), 1, setter);
-        // Turn withDuplicatedThis into
-        // T chainableSetter(T this, V value) {
-        //   setter(this, value);
-        //   return this;
-        // }
-        chainableSetter =
-            permuteArguments(
-                withDuplicatedThis, setter.type().changeReturnType(instanceType), 0, 0, 1);
-      } else {
-        // The caller has to ensure that the setter returns the "this" object if it returns
-        // anything.
-        chainableSetter = setter;
+  private static <R> Function<Object[], R> makeInstantiator(
+      MethodHandle newInstance, MethodHandle... setters) {
+    return objects -> {
+      try {
+        R instance = (R) newInstance.invoke();
+        for (int i = 0; i < setters.length; i++) {
+          setters[i].invoke(instance, objects[i]);
+        }
+        return instance;
+      } catch (Throwable e) {
+        throw new RuntimeException(e);
       }
-      chain = collectArguments(chainableSetter, 0, chain);
-    }
-    return chain;
+    };
   }
 
   private static MethodHandle unreflectNewInstance(
