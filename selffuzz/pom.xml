@@ -135,10 +135,16 @@
       <artifactId>protobuf-java</artifactId>
       <version>3.23.2</version>
     </dependency>
-
   </dependencies>
 
   <build>
+    <extensions>
+      <extension>
+        <groupId>com.code-intelligence</groupId>
+        <artifactId>cifuzz-maven-extension</artifactId>
+        <version>1.2.0</version>
+      </extension>
+    </extensions>
     <plugins>
       <plugin>
         <groupId>org.jacoco</groupId>
@@ -161,5 +167,18 @@
       </plugin>
     </plugins>
   </build>
-</project>
 
+  <repositories>
+    <repository>
+      <id>code-intelligence</id>
+      <url>https://gitlab.code-intelligence.com/api/v4/projects/89/packages/maven</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>code-intelligence</id>
+      <url>https://gitlab.code-intelligence.com/api/v4/projects/89/packages/maven</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+</project>
