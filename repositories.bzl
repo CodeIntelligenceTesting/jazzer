@@ -46,11 +46,16 @@ def jazzer_dependencies(android = False):
         http_archive,
         name = "rules_jvm_external",
         sha256 = "89bd386e33b7bf1c761e83f567335c841e20039b8449e10bf3a4fa323fd2b8ce",
-        # Don't update to latest main commit, as #971 breaks compatibility with contrib_rules_jvm.
+        # Don't update to latest main commit, as #971 breaks compatibility with contrib_rules_jvm,
+        # as it removes "jetify". Wait for updated contrib_rules_jvm release.
         strip_prefix = "rules_jvm_external-65183c73e4fc735cc0b473cbccf15a3c9aa3d1cd",
         url = "https://github.com/bazelbuild/rules_jvm_external/archive/65183c73e4fc735cc0b473cbccf15a3c9aa3d1cd.tar.gz",
-        # https://github.com/bazelbuild/rules_jvm_external/pull/1002
-        patches = ["//third_party:rules_jvm_external-no-sources.patch"],
+        patches = [
+            # https://github.com/bazelbuild/rules_jvm_external/pull/1002
+            "//third_party:rules_jvm_external-no-sources.patch",
+            # https://github.com/bazelbuild/rules_jvm_external/pull/1011
+            "//third_party:rules_jvm_external-without-classifier.patch",
+        ],
     )
 
     maybe(
