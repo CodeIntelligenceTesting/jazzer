@@ -17,6 +17,11 @@ sh_binary(
     deps = ["@bazel_tools//tools/bash/runfiles"],
 )
 
+sh_binary(
+    name = "deploy_local",
+    srcs = ["deploy_local.sh"],
+)
+
 string_flag(
     name = "jazzer_version",
     build_setting_default = "0.0.0-dev",
