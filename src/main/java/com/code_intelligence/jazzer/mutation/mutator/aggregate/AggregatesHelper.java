@@ -22,6 +22,7 @@ import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -159,17 +160,39 @@ final class AggregatesHelper {
 
   private static <R> Function<Object[], R> makeInstantiator(
       MethodHandle newInstance, MethodHandle... setters) {
-    return objects -> {
-      try {
-        R instance = (R) newInstance.invoke();
-        for (int i = 0; i < setters.length; i++) {
-          setters[i].invoke(instance, objects[i]);
+    boolean settersAreChainable =
+        stream(setters)
+            .map(MethodHandle::type)
+            .map(MethodType::returnType)
+            .allMatch(returnType -> returnType.equals(newInstance.type().returnType()));
+    // If all setters are chainable, it's possible that the object is actually immutable and the
+    // setters return a new instance. In that case, we need to chain the setters in the instantiator
+    // or we will always return the default instance.
+    if (settersAreChainable) {
+      return objects -> {
+        try {
+          R instance = (R) newInstance.invoke();
+          for (int i = 0; i < setters.length; i++) {
+            instance = (R) setters[i].invoke(instance, objects[i]);
+          }
+          return instance;
+        } catch (Throwable e) {
+          throw new RuntimeException(e);
         }
-        return instance;
-      } catch (Throwable e) {
-        throw new RuntimeException(e);
-      }
-    };
+      };
+    } else {
+      return objects -> {
+        try {
+          R instance = (R) newInstance.invoke();
+          for (int i = 0; i < setters.length; i++) {
+            setters[i].invoke(instance, objects[i]);
+          }
+          return instance;
+        } catch (Throwable e) {
+          throw new RuntimeException(e);
+        }
+      };
+    }
   }
 
   private static MethodHandle unreflectNewInstance(
