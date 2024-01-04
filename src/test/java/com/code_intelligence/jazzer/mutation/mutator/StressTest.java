@@ -87,6 +87,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings({"unused", "unchecked", "rawtypes", "SameParameterValue"})
 public class StressTest {
   private static final int NUM_INITS = 400;
   private static final int NUM_MUTATE_PER_INIT = 80;
@@ -109,7 +110,7 @@ public class StressTest {
 
   private record LinkedListNode(SimpleRecord value, LinkedListNode next) {}
 
-  public static class SomeBean {
+  public static class SomeSetterBasedBean {
     protected long quz;
 
     public long getQuz() {
@@ -121,7 +122,7 @@ public class StressTest {
     }
   }
 
-  public static class BeanWithParent extends SomeBean {
+  public static class SetterBasedBeanWithParent extends SomeSetterBasedBean {
     private boolean foo;
     private String bar;
     private int baz;
@@ -148,7 +149,7 @@ public class StressTest {
     }
 
     // Chainable setters are supported.
-    public BeanWithParent setBar(String bar) {
+    public SetterBasedBeanWithParent setBar(String bar) {
       this.bar = bar;
       return this;
     }
@@ -157,7 +158,7 @@ public class StressTest {
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      BeanWithParent that = (BeanWithParent) o;
+      SetterBasedBeanWithParent that = (SetterBasedBeanWithParent) o;
       return quz == that.quz && foo == that.foo && baz == that.baz && Objects.equals(bar, that.bar);
     }
 
@@ -168,7 +169,15 @@ public class StressTest {
 
     @Override
     public String toString() {
-      return "BeanWithParent{quz=" + quz + ", foo=" + foo + ", bar='" + bar + "', baz=" + baz + '}';
+      return "SetterBasedBeanWithParent{quz="
+          + quz
+          + ", foo="
+          + foo
+          + ", bar='"
+          + bar
+          + "', baz="
+          + baz
+          + '}';
     }
   }
 
@@ -257,6 +266,48 @@ public class StressTest {
     @Override
     public String toString() {
       return "ImmutableBuilder{" + "i=" + i + ", b=" + b + '}';
+    }
+  }
+
+  public static class ConstructorBasedBean {
+    private final boolean foo;
+    private final String bar;
+    private final int baz;
+
+    ConstructorBasedBean(boolean foo, String bar, int baz) {
+      this.foo = foo;
+      this.bar = bar;
+      this.baz = baz;
+    }
+
+    boolean isFoo() {
+      return foo;
+    }
+
+    public String getBar() {
+      return bar;
+    }
+
+    public int getBaz() {
+      return baz;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      ConstructorBasedBean that = (ConstructorBasedBean) o;
+      return foo == that.foo && baz == that.baz && Objects.equals(bar, that.bar);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(foo, bar, baz);
+    }
+
+    @Override
+    public String toString() {
+      return "ConstructorBasedBean{" + "foo=" + foo + ", bar='" + bar + '\'' + ", baz=" + baz + '}';
     }
   }
 
@@ -529,8 +580,8 @@ public class StressTest {
             distinctElementsRatio(0.23),
             manyDistinctElements()),
         arguments(
-            new TypeHolder<@NotNull BeanWithParent>() {}.annotatedType(),
-            "[Nullable<String>, Integer, Boolean, Long] -> BeanWithParent",
+            new TypeHolder<@NotNull SetterBasedBeanWithParent>() {}.annotatedType(),
+            "[Nullable<String>, Integer, Boolean, Long] -> SetterBasedBeanWithParent",
             false,
             manyDistinctElements(),
             manyDistinctElements()),
@@ -547,6 +598,12 @@ public class StressTest {
             true,
             // Low due to int and boolean fields having very few common values during init.
             distinctElementsRatio(0.23),
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull ConstructorBasedBean>() {}.annotatedType(),
+            "[Boolean, Nullable<String>, Integer] -> ConstructorBasedBean",
+            false,
+            manyDistinctElements(),
             manyDistinctElements()));
   }
 
@@ -924,8 +981,8 @@ public class StressTest {
       @Override
       public void accept(Object map) {
         if (map instanceof Map) {
-          assertThat(((Map) map).size()).isAtLeast(min);
-          assertThat(((Map) map).size()).isAtMost(max);
+          assertThat(((Map<?, ?>) map).size()).isAtLeast(min);
+          assertThat(((Map<?, ?>) map).size()).isAtMost(max);
         } else {
           throw new IllegalArgumentException(
               "Expected a list of maps, got list of" + map.getClass().getName());

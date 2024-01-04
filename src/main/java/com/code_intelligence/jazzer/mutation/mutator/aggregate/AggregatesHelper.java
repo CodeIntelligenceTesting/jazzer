@@ -37,9 +37,21 @@ import java.util.function.Supplier;
 
 final class AggregatesHelper {
 
-  @SuppressWarnings("Immutable")
   public static Optional<SerializingMutator<?>> ofImmutable(
       ExtendedMutatorFactory factory, Executable instantiator, Method... getters) {
+    return createConstructorBasedMutator(factory, instantiator, getters, true);
+  }
+
+  public static Optional<SerializingMutator<?>> ofMutable(
+      ExtendedMutatorFactory factory, Executable instantiator, Method... getters) {
+    return createConstructorBasedMutator(factory, instantiator, getters, false);
+  }
+
+  private static Optional<SerializingMutator<?>> createConstructorBasedMutator(
+      ExtendedMutatorFactory factory,
+      Executable instantiator,
+      Method[] getters,
+      boolean isImmutable) {
     Preconditions.check(
         getters.length == instantiator.getParameterCount(),
         String.format(
@@ -68,9 +80,9 @@ final class AggregatesHelper {
             },
             instantiator.getAnnotatedParameterTypes(),
             instantiator.getDeclaringClass(),
-            /* isImmutable= */ true,
+            isImmutable,
             unreflectMethods(lookup, getters))
-        .map(m -> (SerializingMutator<?>) m);
+        .map(m -> m);
   }
 
   public static Optional<SerializingMutator<?>> ofMutable(
@@ -105,7 +117,7 @@ final class AggregatesHelper {
             newInstance.getDeclaringClass(),
             /* isImmutable= */ false,
             unreflectMethods(lookup, getters))
-        .map(m -> (SerializingMutator<?>) m);
+        .map(m -> m);
   }
 
   @SuppressWarnings("Immutable")

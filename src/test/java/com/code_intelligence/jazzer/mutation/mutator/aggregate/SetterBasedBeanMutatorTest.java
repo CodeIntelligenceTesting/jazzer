@@ -22,7 +22,8 @@ import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.util.Objects;
 import org.junit.jupiter.api.Test;
 
-class BeanMutatorTest {
+@SuppressWarnings("unchecked")
+class SetterBasedBeanMutatorTest {
 
   static class EmptyBean {
     @Override
@@ -63,11 +64,11 @@ class BeanMutatorTest {
     private String bar;
     private int baz;
 
-    public boolean isFoo() {
+    boolean isFoo() {
       return foo;
     }
 
-    public void setFoo(boolean foo) {
+    void setFoo(boolean foo) {
       this.foo = foo;
     }
 
@@ -127,5 +128,101 @@ class BeanMutatorTest {
     SimpleTypeBean detached = mutator.detach(mutated);
     assertThat(detached).isEqualTo(mutated);
     assertThat(detached).isNotSameInstanceAs(mutated);
+  }
+
+  static class RecursiveTypeBean {
+    private final int foo;
+    private final RecursiveTypeBean bar;
+
+    public RecursiveTypeBean() {
+      this(0, null);
+    }
+
+    private RecursiveTypeBean(int foo, RecursiveTypeBean bar) {
+      this.foo = foo;
+      this.bar = bar;
+    }
+
+    public int getFoo() {
+      return foo;
+    }
+
+    public RecursiveTypeBean setFoo(int foo) {
+      return new RecursiveTypeBean(foo, bar);
+    }
+
+    public RecursiveTypeBean withBar(RecursiveTypeBean bar) {
+      return new RecursiveTypeBean(foo, bar);
+    }
+
+    public RecursiveTypeBean getBar() {
+      return bar;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      RecursiveTypeBean that = (RecursiveTypeBean) o;
+      return foo == that.foo && Objects.equals(bar, that.bar);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(foo, bar);
+    }
+
+    @Override
+    public String toString() {
+      return "RecursiveTypeBean{" + "foo=" + foo + ", bar=" + bar + '}';
+    }
+  }
+
+  @Test
+  void testRecursiveTypeBean() {
+    SerializingMutator<RecursiveTypeBean> mutator =
+        (SerializingMutator<RecursiveTypeBean>)
+            Mutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull RecursiveTypeBean>() {}.annotatedType());
+    assertThat(mutator.toString())
+        .startsWith(
+            "[Integer, Nullable<RecursionBreaking((cycle) -> RecursiveTypeBean)>] ->"
+                + " RecursiveTypeBean");
+    assertThat(mutator.hasFixedSize()).isFalse();
+
+    PseudoRandom prng = anyPseudoRandom();
+    RecursiveTypeBean inited = mutator.init(prng);
+
+    RecursiveTypeBean mutated = mutator.mutate(inited, prng);
+    assertThat(mutated).isNotEqualTo(inited);
+  }
+
+  public static class BeanWithParent extends SimpleTypeBean {
+    protected long quz;
+
+    public long getQuz() {
+      return quz;
+    }
+
+    public void setQuz(long quz) {
+      this.quz = quz;
+    }
+  }
+
+  @Test
+  void testBeanWithParent() {
+    SerializingMutator<BeanWithParent> mutator =
+        (SerializingMutator<BeanWithParent>)
+            Mutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull BeanWithParent>() {}.annotatedType());
+    assertThat(mutator.toString())
+        .startsWith("[Nullable<String>, Integer, Boolean, Long] -> BeanWithParent");
+    assertThat(mutator.hasFixedSize()).isFalse();
+
+    PseudoRandom prng = anyPseudoRandom();
+    BeanWithParent inited = mutator.init(prng);
+
+    BeanWithParent mutated = mutator.mutate(inited, prng);
+    assertThat(mutated).isNotEqualTo(inited);
   }
 }
