@@ -211,6 +211,55 @@ public class StressTest {
     }
   }
 
+  public static class ImmutableBuilder {
+    private final int i;
+    private final boolean b;
+
+    public ImmutableBuilder() {
+      this(0, false);
+    }
+
+    private ImmutableBuilder(int i, boolean b) {
+      this.i = i;
+      this.b = b;
+    }
+
+    public int getI() {
+      return i;
+    }
+
+    public boolean isB() {
+      return b;
+    }
+
+    public ImmutableBuilder withI(int i) {
+      return new ImmutableBuilder(i, b);
+    }
+
+    // Both withX and setX are supported on immutable builders.
+    public ImmutableBuilder setB(boolean b) {
+      return new ImmutableBuilder(i, b);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (!(o instanceof ImmutableBuilder)) return false;
+      ImmutableBuilder that = (ImmutableBuilder) o;
+      return i == that.i && b == that.b;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(i, b);
+    }
+
+    @Override
+    public String toString() {
+      return "ImmutableBuilder{" + "i=" + i + ", b=" + b + '}';
+    }
+  }
+
   @SuppressWarnings("unused")
   static Message getTestProtobufDefaultInstance() {
     return TestProtobuf.getDefaultInstance();
@@ -491,6 +540,13 @@ public class StressTest {
             false,
             // Low due to recursion breaking initializing nested structs to null.
             distinctElementsRatio(0.22),
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull ImmutableBuilder>() {}.annotatedType(),
+            "[Boolean, Integer] -> ImmutableBuilder",
+            true,
+            // Low due to int and boolean fields having very few common values during init.
+            distinctElementsRatio(0.23),
             manyDistinctElements()));
   }
 

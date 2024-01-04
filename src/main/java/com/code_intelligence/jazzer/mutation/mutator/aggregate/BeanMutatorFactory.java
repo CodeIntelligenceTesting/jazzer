@@ -9,6 +9,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
+import static com.code_intelligence.jazzer.mutation.support.StreamSupport.getOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static java.util.Arrays.stream;
@@ -24,6 +25,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 final class BeanMutatorFactory implements MutatorFactory {
   @Override
@@ -50,12 +52,18 @@ final class BeanMutatorFactory implements MutatorFactory {
               Method[] setters =
                   stream(clazz.getMethods())
                       .filter(method -> method.getParameterCount() == 1)
-                      // Allow chainable setters.
+                      // Allow chainable setters. The "withX" setters are commonly used on immutable
+                      // types and return a new instance, so for those we need to assert that the
+                      // return type is the same as the class.
                       .filter(
                           method ->
                               method.getReturnType().equals(void.class)
                                   || method.getReturnType().equals(clazz))
-                      .filter(method -> method.getName().startsWith("set"))
+                      .filter(
+                          method ->
+                              method.getName().startsWith("set")
+                                  || (method.getName().startsWith("with")
+                                      && method.getReturnType().equals(clazz)))
                       // Sort for deterministic ordering.
                       .sorted(comparing(Method::getName))
                       .toArray(Method[]::new);
@@ -111,15 +119,17 @@ final class BeanMutatorFactory implements MutatorFactory {
   }
 
   private static String getPropertyName(Method method) {
-    String name = method.getName();
-    if (name.startsWith("get")) {
-      return name.substring("get".length());
-    } else if (name.startsWith("set")) {
-      return name.substring("set".length());
-    } else if (name.startsWith("is")) {
-      return name.substring("is".length());
+    return Stream.of("get", "set", "is", "with")
+        .flatMap(prefix -> getOrEmpty(trimPrefix(method.getName(), prefix)))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Unexpected method name: " + method.getName()));
+  }
+
+  private static Optional<String> trimPrefix(String name, String prefix) {
+    if (name.startsWith(prefix)) {
+      return Optional.of(name.substring(prefix.length()));
     } else {
-      throw new AssertionError("Unexpected method name: " + name);
+      return Optional.empty();
     }
   }
 }
