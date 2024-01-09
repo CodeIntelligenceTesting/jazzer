@@ -1,0 +1,36 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    "config:recommended",
+    ":dependencyDashboard",
+    "group:all",
+    "schedule:weekly"
+  ],
+  customManagers: [
+    {
+      description: "Maven dependencies managed by rules_jvm_external",
+      customType: "regex",
+      fileMatch: [
+        "^MODULE.bazel$"
+      ],
+      matchStringsStrategy: "recursive",
+      matchStrings: [
+        // First narrow down the search to those dependencies in a Starlark list annotated with
+        // a special comment.
+        "# renovate: keep updated[^\\]]*]",
+        // Match all lines of the form:
+        // "com.google.guava:guava:jar:28.2-jre",
+        "\\n\\s*\"(?<depName>[^:]+:[^:]+):(?:jar:)?(?<currentValue>\\d[^\"]*)\","
+      ],
+      datasourceTemplate: "maven"
+    }
+  ],
+  packageRules: [
+    {
+      // Assign regex matches to a separate group since these PRs require manual lockfile updates.
+      matchManagers: ["regex"],
+      groupName: "rules_jvm_external",
+      groupSlug: "rules_jvm_external",
+    }
+  ]
+}
