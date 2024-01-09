@@ -11,7 +11,7 @@ jobs:
       name: Deploy
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Docker login
         run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login --username ${{ secrets.DOCKER_USER }} --password-stdin
@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build documentation
         run: |
@@ -34,7 +34,7 @@ jobs:
           cp $(bazel cquery --output=files //deploy:jazzer-junit-docs) ./jazzer-junit-docs.jar
 
       - name: Upload jars
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jazzer_docs_jars
           path: |
@@ -52,13 +52,13 @@ jobs:
 
     steps:
       - name: checkout docs
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'CodeIntelligenceTesting/jazzer-docs'
           ssh-key: "${{ secrets.JAZZER_DOCS_SSH_KEY_PRIVATE }}"
 
       - name: Download jar
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: jazzer_docs_jars
           path: .
