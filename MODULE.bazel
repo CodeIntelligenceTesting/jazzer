@@ -60,9 +60,10 @@ single_version_override(
 ################################################################################
 
 # Runtime dependencies of Jazzer that are shaded to prevent classpath pollution.
-# Keep these versions up-to-date manually.
+# Keep these versions up-to-date (automated by Renovate).
 SHADED_RUNTIME_MAVEN_ARTIFACTS = [
     # keep sorted
+    # renovate: keep updated
     "com.github.jsqlparser:jsqlparser:4.7",
     "com.google.errorprone:error_prone_annotations:2.18.0",
     "com.google.errorprone:error_prone_type_annotations:2.18.0",
@@ -88,9 +89,10 @@ PROVIDED_RUNTIME_MAVEN_ARTIFACTS = [
 ]
 
 # Dependencies used to support Jazzer's own tests.
-# Keep these versions up-to-date as needed.
+# Keep these versions up-to-date (automated by Renovate).
 TEST_MAVEN_ARTIFACTS = [
     # keep sorted
+    # renovate: keep updated
     "com.google.truth.extensions:truth-java8-extension:1.1.3",
     "com.google.truth.extensions:truth-liteproto-extension:1.1.3",
     "com.google.truth.extensions:truth-proto-extension:1.1.3",
