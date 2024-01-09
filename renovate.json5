@@ -29,8 +29,8 @@
     {
       // Assign regex matches to a separate group since these PRs require manual lockfile updates.
       matchManagers: ["regex"],
-      groupName: "rules_jvm_external",
-      groupSlug: "rules_jvm_external",
+      groupName: "Maven deps",
+      groupSlug: "maven",
     }
   ]
 }
