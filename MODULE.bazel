@@ -11,7 +11,7 @@ bazel_dep(name = "apple_support", version = "1.11.1")
 bazel_dep(name = "bazel_jar_jar", version = "0.1.0")
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
 bazel_dep(name = "buildifier_prebuilt", version = "6.4.0")
-bazel_dep(name = "contrib_rules_jvm")
+bazel_dep(name = "contrib_rules_jvm", version = "0.21.4")
 bazel_dep(name = "googletest", version = "1.14.0.bcr.1")
 bazel_dep(name = "platforms", version = "0.0.8")
 bazel_dep(name = "protobuf")
@@ -31,16 +31,6 @@ archive_override(
     strip_prefix = "rules_jvm_external-80ce39ad50ed49c00ca7cd26e66107fbbde98483",
     urls = [
         "https://github.com/bazelbuild/rules_jvm_external/archive/80ce39ad50ed49c00ca7cd26e66107fbbde98483.tar.gz",
-    ],
-)
-
-# TODO: Remove after the next release to the Bazel Central Registry.
-archive_override(
-    module_name = "contrib_rules_jvm",
-    integrity = "sha256-kiSZsWfJRrLC5eTqzvD7Z840ndqiMB36p7yXs59HZ4Y=",
-    strip_prefix = "rules_jvm-0.21.0",
-    urls = [
-        "https://github.com/bazel-contrib/rules_jvm/releases/download/v0.21.0/rules_jvm-v0.21.0.tar.gz",
     ],
 )
 
