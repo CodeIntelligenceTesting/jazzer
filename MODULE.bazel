@@ -64,11 +64,11 @@ single_version_override(
 SHADED_RUNTIME_MAVEN_ARTIFACTS = [
     # keep sorted
     # renovate: keep updated
-    "com.github.jsqlparser:jsqlparser:4.7",
-    "com.google.errorprone:error_prone_annotations:2.18.0",
-    "com.google.errorprone:error_prone_type_annotations:2.18.0",
-    "io.github.classgraph:classgraph:jar:4.8.162",
-    "net.bytebuddy:byte-buddy-agent:1.14.8",
+    "com.github.jsqlparser:jsqlparser:4.8",
+    "com.google.errorprone:error_prone_annotations:2.24.1",
+    "com.google.errorprone:error_prone_type_annotations:2.24.1",
+    "io.github.classgraph:classgraph:jar:4.8.165",
+    "net.bytebuddy:byte-buddy-agent:1.14.11",
     "net.jodah:typetools:jar:0.6.3",
     "org.ow2.asm:asm:9.6",
     "org.ow2.asm:asm-commons:9.6",
@@ -93,18 +93,18 @@ PROVIDED_RUNTIME_MAVEN_ARTIFACTS = [
 TEST_MAVEN_ARTIFACTS = [
     # keep sorted
     # renovate: keep updated
-    "com.google.truth.extensions:truth-java8-extension:1.1.3",
-    "com.google.truth.extensions:truth-liteproto-extension:1.1.3",
-    "com.google.truth.extensions:truth-proto-extension:1.1.3",
-    "com.google.truth:truth:1.1.3",
-    "junit:junit:4.12",
-    "org.assertj:assertj-core:3.23.1",
-    "org.jacoco:org.jacoco.core:0.8.8",
-    "org.junit.platform:junit-platform-reporting:1.8.2",
-    "org.junit.platform:junit-platform-testkit:1.8.2",
-    "org.mockito:mockito-core:5.4.0",
-    "org.openjdk.jmh:jmh-core:1.34",
-    "org.openjdk.jmh:jmh-generator-annprocess:1.34",
+    "com.google.truth.extensions:truth-java8-extension:1.2.0",
+    "com.google.truth.extensions:truth-liteproto-extension:1.2.0",
+    "com.google.truth.extensions:truth-proto-extension:1.2.0",
+    "com.google.truth:truth:1.2.0",
+    "junit:junit:4.13.2",
+    "org.assertj:assertj-core:3.25.1",
+    "org.jacoco:org.jacoco.core:0.8.11",
+    "org.junit.platform:junit-platform-reporting:1.10.1",
+    "org.junit.platform:junit-platform-testkit:1.10.1",
+    "org.mockito:mockito-core:5.8.0",
+    "org.openjdk.jmh:jmh-core:1.37",
+    "org.openjdk.jmh:jmh-generator-annprocess:1.37",
 ]
 
 # **WARNING**: These Maven dependencies may have known vulnerabilities that Jazzer is supposed to
