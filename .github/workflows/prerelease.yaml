@@ -20,10 +20,10 @@ jobs:
             name: windows
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: 21
@@ -48,14 +48,14 @@ jobs:
           cp -L $(bazel cquery --output=files :jazzer_release) jazzer-${{ matrix.name }}.tar.gz
 
       - name: Upload jazzer.jar
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jazzer_tmp
           path: jazzer-${{ matrix.name }}.jar
           if-no-files-found: error
 
       - name: Upload release archive
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jazzer_releases
           path: jazzer-${{ matrix.name }}.tar.gz
@@ -66,10 +66,10 @@ jobs:
     needs: build_release
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download individual jars
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: jazzer_tmp
           path: _tmp/
@@ -81,7 +81,7 @@ jobs:
             $(find "$(pwd)/_tmp/" -name '*.jar' -printf "--sources %h/%f ")
 
       - name: Upload merged jar
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jazzer
           path: _tmp/jazzer.jar
@@ -90,17 +90,17 @@ jobs:
   maven_predeploy:
     # TODO: Our hermetic toolchain doesn't support ubuntu-latest yet and fails with:
     # external/llvm_toolchain_llvm/bin/clang: error while loading shared libraries: libtinfo.so.5: cannot open shared object file: No such file or directory
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: merge_jars
 
     environment:
       name: Deploy
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: 8
@@ -116,7 +116,7 @@ jobs:
           echo "build:linux --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux" >> .bazelrc
 
       - name: Download merged jar
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: jazzer
           path: _tmp/
@@ -136,10 +136,10 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download individual tar.gzs
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: jazzer_releases
           path: _releases/

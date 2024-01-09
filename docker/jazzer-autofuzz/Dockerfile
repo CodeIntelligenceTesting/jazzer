@@ -14,7 +14,7 @@
 
 FROM cifuzz/jazzer as jazzer
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y curl openjdk-17-jdk-headless
