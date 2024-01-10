@@ -31,6 +31,12 @@
       matchManagers: ["regex"],
       groupName: "Maven deps",
       groupSlug: "maven",
+    },
+    {
+      // System scoped Maven dependencies are build locally.
+      matchDepTypes: ["system"],
+      matchManagers: ["maven"],
+      enabled: false
     }
   ]
 }
