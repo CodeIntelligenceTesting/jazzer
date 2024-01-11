@@ -6,7 +6,7 @@ on:
 
 jobs:
   send-release-event:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Send Release Event
         run: |
