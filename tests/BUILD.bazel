@@ -530,7 +530,7 @@ java_fuzz_target_test(
         "--instrumentation_includes=com.example.**",
         "--custom_hook_includes=com.example.**",
         # Limit runs to catch regressions in mutator efficiency and speed up test runs.
-        "-runs=1500000",
+        "-runs=1300000",
     ],
     target_class = "com.example.ExperimentalMutatorComplexProtoFuzzer",
     verify_crash_reproducer = False,
