@@ -5,7 +5,7 @@ on:
 
 jobs:
   docker_push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     environment:
       name: Deploy
@@ -20,7 +20,7 @@ jobs:
         run: docker/push_all.sh
 
   generate_docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: checkout
@@ -44,7 +44,7 @@ jobs:
           if-no-files-found: error
 
   update_docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: generate_docs
 
     environment:
