@@ -35,8 +35,6 @@ jobs:
           echo "build --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }}" >> .bazelrc
           echo "build --config=ci" >> .bazelrc
           echo "build --//deploy:jazzer_version=${TAG#v}" >> .bazelrc
-          echo "build:linux --config=toolchain" >> .bazelrc
-          echo "build:linux --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux" >> .bazelrc
 
       - name: Build
         shell: bash
@@ -110,8 +108,6 @@ jobs:
           echo "build --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }}" >> .bazelrc
           echo "build --config=ci" >> .bazelrc
           echo "build --//deploy:jazzer_version=${TAG#v}" >> .bazelrc
-          echo "build:linux --config=toolchain" >> .bazelrc
-          echo "build:linux --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux" >> .bazelrc
 
       - name: Download merged jar
         uses: actions/download-artifact@v4
