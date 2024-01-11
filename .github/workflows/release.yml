@@ -4,20 +4,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  docker_push:
-    runs-on: ubuntu-22.04
-
-    environment:
-      name: Deploy
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Docker login
-        run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login --username ${{ secrets.DOCKER_USER }} --password-stdin
-
-      - name: Push docker containers
-        run: docker/push_all.sh
 
   generate_docs:
     runs-on: ubuntu-22.04

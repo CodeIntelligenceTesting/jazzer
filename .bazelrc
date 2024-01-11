@@ -95,10 +95,6 @@ build:ci --experimental_profile_include_primary_output
 build:ci --nolegacy_important_outputs
 common:ci --announce_rc
 
-# Docker images
-common:docker --config=toolchain
-common:docker --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux
-
 # Generic coverage configuration taken from https://github.com/fmeum/rules_jni
 coverage --combined_report=lcov
 coverage --experimental_use_llvm_covmap
