@@ -48,14 +48,14 @@ jobs:
       - name: Upload jazzer.jar
         uses: actions/upload-artifact@v4
         with:
-          name: jazzer_tmp
+          name: jazzer_tmp_${{ matrix.name }}
           path: jazzer-${{ matrix.name }}.jar
           if-no-files-found: error
 
       - name: Upload release archive
         uses: actions/upload-artifact@v4
         with:
-          name: jazzer_releases
+          name: jazzer_releases_${{ matrix.name }}
           path: jazzer-${{ matrix.name }}.tar.gz
           if-no-files-found: error
 
@@ -69,7 +69,8 @@ jobs:
       - name: Download individual jars
         uses: actions/download-artifact@v4
         with:
-          name: jazzer_tmp
+          pattern: jazzer_tmp_*
+          merge-multiple: true
           path: _tmp/
 
       - name: Merge jars
@@ -135,7 +136,8 @@ jobs:
       - name: Download individual tar.gzs
         uses: actions/download-artifact@v4
         with:
-          name: jazzer_releases
+          pattern: jazzer_releases_*
+          merge-multiple: true
           path: _releases/
 
       - name: create release
