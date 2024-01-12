@@ -124,7 +124,7 @@ jobs:
 
   create_release:
     needs: build_release
-    runs-on: ubuntu-22.m04
+    runs-on: ubuntu-22.04
 
     permissions:
       contents: write # for creating releases
