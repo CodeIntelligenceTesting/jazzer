@@ -15,7 +15,7 @@ java_library(
     ],
     deps = [
         ":utils",
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
+        "//deploy:jazzer",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 )
@@ -54,7 +54,7 @@ java_library(
         ":lifecycle",
         ":seed_serializer",
         ":utils",
-        "//src/main/java/com/code_intelligence/jazzer/utils:log",
+        "//deploy:jazzer",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
         "@maven//:org_junit_platform_junit_platform_commons",
@@ -81,16 +81,8 @@ java_jni_library(
         ":lifecycle",
         ":seed_serializer",
         ":utils",
-        "//src/main/java/com/code_intelligence/jazzer/agent:agent_installer",
-        "//src/main/java/com/code_intelligence/jazzer/api",
-        "//src/main/java/com/code_intelligence/jazzer/autofuzz",
-        "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_holder",
-        "//src/main/java/com/code_intelligence/jazzer/driver:fuzz_target_runner",
-        "//src/main/java/com/code_intelligence/jazzer/driver:lifecycle_methods_invoker",
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
-        "//src/main/java/com/code_intelligence/jazzer/driver/junit:exit_code_exception",
-        "//src/main/java/com/code_intelligence/jazzer/mutation",
-        "//src/main/java/com/code_intelligence/jazzer/utils",
+        "//deploy:jazzer",
+        "//deploy:jazzer-api",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
         "@maven//:org_junit_platform_junit_platform_commons",
@@ -117,8 +109,9 @@ java_library(
     deps = [
         ":junit_internals_compile_only",
         ":lifecycle",
-        "//src/main/java/com/code_intelligence/jazzer/driver:lifecycle_methods_invoker",
+        # Unsafe provider is included in bootstrap jar and not available during compilation.
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
+        "//deploy:jazzer",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 )
@@ -133,11 +126,8 @@ java_library(
     srcs = ["SeedSerializer.java"],
     deps = [
         ":fuzz_test_configuration_error",
-        "//src/main/java/com/code_intelligence/jazzer/api",
-        "//src/main/java/com/code_intelligence/jazzer/autofuzz",
-        "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
-        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
-        "//src/main/java/com/code_intelligence/jazzer/mutation",
+        "//deploy:jazzer",
+        "//deploy:jazzer-api",
     ],
 )
 
@@ -146,8 +136,9 @@ java_library(
     srcs = ["Utils.java"],
     visibility = ["//src/test/java/com/code_intelligence/jazzer/junit:__pkg__"],
     deps = [
+        "//deploy:jazzer",
+        # Unsafe provider is included in bootstrap jar and not available during compilation.
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
-        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_utils",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
     ],
