@@ -79,6 +79,15 @@ PROVIDED_RUNTIME_MAVEN_ARTIFACTS = [
 ]
 
 # Dependencies used to support Jazzer's own tests.
+# Keep these versions in sync with the ones in PROVIDED_RUNTIME_MAVEN_ARTIFACTS,
+# as Bazel would use "Minimal Version Selection" and choose a different version
+# than the ones defined above.
+TEST_MAVEN_ARTIFACTS_FIXED = [
+    "org.junit.platform:junit-platform-reporting:1.9.0",
+    "org.junit.platform:junit-platform-testkit:1.9.0",
+]
+
+# Dependencies used to support Jazzer's own tests.
 # Keep these versions up-to-date (automated by Renovate).
 TEST_MAVEN_ARTIFACTS = [
     # keep sorted
@@ -90,8 +99,6 @@ TEST_MAVEN_ARTIFACTS = [
     "junit:junit:4.13.2",
     "org.assertj:assertj-core:3.25.1",
     "org.jacoco:org.jacoco.core:0.8.11",
-    "org.junit.platform:junit-platform-reporting:1.10.1",
-    "org.junit.platform:junit-platform-testkit:1.10.1",
     "org.mockito:mockito-core:5.8.0",
     "org.openjdk.jmh:jmh-core:1.37",
     "org.openjdk.jmh:jmh-generator-annprocess:1.37",
@@ -156,7 +163,7 @@ maven.override(
         group = coordinate.split(":")[0],
         version = coordinate.split(":")[2],
     )
-    for coordinate in TEST_MAVEN_ARTIFACTS + VULNERABLE_TEST_MAVEN_ARTIFACTS
+    for coordinate in TEST_MAVEN_ARTIFACTS + TEST_MAVEN_ARTIFACTS_FIXED + VULNERABLE_TEST_MAVEN_ARTIFACTS
 ]
 
 maven.install(
