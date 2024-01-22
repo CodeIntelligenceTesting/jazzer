@@ -21,8 +21,16 @@ import java.util.function.BiPredicate;
 
 public class ServerSideRequestForgery {
   // Set via reflection by Jazzer's BugDetectors API.
+  // Allow connections to all hosts and ports until before a fuzz target is executed for the first
+  // time. This allows the fuzzing setup to connect anywhere without triggering an SSRF-finding
+  // during initialization.
   public static final AtomicReference<BiPredicate<String, Integer>> connectionPermitted =
-      new AtomicReference<>((host, port) -> false);
+      new AtomicReference<>((host, port) -> true);
+
+  // Disallow all connections right before the first fuzz target is executed.
+  static {
+    Jazzer.onFuzzTargetReady(() -> connectionPermitted.set((host, port) -> false));
+  }
 
   /**
    * {@link java.net.Socket} is used in many JDK classes to open network connections. Internally it
