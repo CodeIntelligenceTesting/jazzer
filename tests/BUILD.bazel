@@ -333,6 +333,64 @@ java_fuzz_target_test(
     deps = ["@maven//:org_junit_jupiter_junit_jupiter_api"],
 )
 
+java_fuzz_target_test(
+    name = "JUnitSsrfFindingFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/JUnitSsrfFindingFuzzer.java"],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
+    ],
+    fuzzer_args = [
+        "-runs=1",
+    ],
+    target_class = "com.example.JUnitSsrfFindingFuzzer",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "JUnitSsrfAllowListFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/JUnitSsrfAllowListFuzzer.java"],
+    fuzzer_args = [
+        "-runs=1",
+    ],
+    target_class = "com.example.JUnitSsrfAllowListFuzzer",
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "JUnitSsrfAllowConnectionsBeforeFuzzingFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/JUnitSsrfAllowConnectionsBeforeFuzzingFuzzer.java"],
+    fuzzer_args = [
+        "-runs=1",
+    ],
+    target_class = "com.example.JUnitSsrfAllowConnectionsBeforeFuzzingFuzzer",
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
 java_library(
     name = "autofuzz_ignore_target",
     srcs = ["src/test/java/com/example/AutofuzzIgnoreTarget.java"],
