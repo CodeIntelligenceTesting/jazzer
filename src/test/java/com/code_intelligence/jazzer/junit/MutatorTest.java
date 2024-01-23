@@ -71,7 +71,6 @@ public class MutatorTest {
   private EngineExecutionResults executeTests() {
     return EngineTestKit.engine("junit-jupiter")
         .selectors(selectClass(CLASS_NAME))
-        .configurationParameter("jazzer.experimental_mutator", "true")
         .configurationParameter("jazzer.instrument", "com.example.**")
         .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
         .execute();

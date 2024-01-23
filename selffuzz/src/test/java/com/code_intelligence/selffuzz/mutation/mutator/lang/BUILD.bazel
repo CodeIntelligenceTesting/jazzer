@@ -8,7 +8,6 @@ java_fuzz_target_test(
     name = "StringMutatorFuzzTest",
     srcs = ["StringMutatorFuzzTest.java"],
     fuzzer_args = [
-        "--experimental_mutator",
         "-runs=1000",
     ],
     target_class = "com.code_intelligence.selffuzz.mutation.mutator.lang.StringMutatorFuzzTest",
@@ -26,7 +25,6 @@ java_fuzz_target_test(
     name = "FloatingPointMutatorFuzzTests_" + method,
     srcs = ["FloatingPointMutatorFuzzTests.java"],
     fuzzer_args = [
-        "--experimental_mutator",
         "--target_method=" + method,
         "-runs=1000",
     ],

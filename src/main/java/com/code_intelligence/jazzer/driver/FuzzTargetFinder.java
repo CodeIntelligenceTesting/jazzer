@@ -66,7 +66,7 @@ class FuzzTargetFinder {
   // Finds the traditional static fuzzerTestOneInput fuzz target method.
   private static FuzzTarget findFuzzTargetByMethodName(Class<?> clazz) {
     Method fuzzTargetMethod;
-    if (Opt.experimentalMutator.get()) {
+    if (Opt.mutatorFramework.get()) {
       List<Method> fuzzTargetMethods =
           Arrays.stream(clazz.getMethods())
               .filter(method -> "fuzzerTestOneInput".equals(method.getName()))

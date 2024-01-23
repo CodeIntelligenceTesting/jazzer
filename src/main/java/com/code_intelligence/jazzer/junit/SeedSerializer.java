@@ -32,8 +32,8 @@ interface SeedSerializer {
    * <ul>
    *   <li>{@code byte[]}
    *   <li>{@code FuzzDataProvider}
-   *   <li>Any other types will attempt to be created using either Autofuzz or the experimental
-   *       mutator framework if {@link Opt}'s {@code experimentalMutator} is set.
+   *   <li>Any other types will attempt to be created using either the mutator framework, if not
+   *       deactivated via {@link Opt}'s {@code mutatorFramework}, or Autofuzz.
    * </ul>
    */
   static SeedSerializer of(Method method) {
@@ -48,7 +48,7 @@ interface SeedSerializer {
       return new FuzzedDataProviderSeedSerializer();
     } else {
       Optional<ArgumentsMutator> argumentsMutator =
-          Opt.experimentalMutator.get() ? ArgumentsMutator.forMethod(method) : Optional.empty();
+          Opt.mutatorFramework.get() ? ArgumentsMutator.forMethod(method) : Optional.empty();
       return argumentsMutator
           .<SeedSerializer>map(ArgumentsMutatorSeedSerializer::new)
           .orElseGet(() -> new AutofuzzSeedSerializer(method));

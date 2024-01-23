@@ -22,11 +22,9 @@ import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Message;
 
-public class ExperimentalMutatorDynamicProtoFuzzer {
+public class MutatorDynamicProtoFuzzer {
   public static void fuzzerTestOneInput(
-      @NotNull
-          @WithDefaultInstance(
-              "com.example.ExperimentalMutatorDynamicProtoFuzzer#getDefaultInstance")
+      @NotNull @WithDefaultInstance("com.example.MutatorDynamicProtoFuzzer#getDefaultInstance")
           Message proto) {
     FieldDescriptor I32 = proto.getDescriptorForType().findFieldByName("i32");
     FieldDescriptor STR = proto.getDescriptorForType().findFieldByName("str");

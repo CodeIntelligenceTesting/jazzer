@@ -69,6 +69,7 @@ public class AutofuzzTest {
                 selectMethod(
                     "com.example.AutofuzzFuzzTest#autofuzz(java.lang.String,com.example.AutofuzzFuzzTest$IntHolder)"))
             .configurationParameter("jazzer.internal.basedir", baseDir.toAbsolutePath().toString())
+            .configurationParameter("jazzer.mutator_framework", "false")
             .execute();
 
     final String engine = "engine:junit-jupiter";
@@ -146,6 +147,7 @@ public class AutofuzzTest {
 
     EngineExecutionResults results =
         EngineTestKit.engine("junit-jupiter")
+            .configurationParameter("jazzer.mutator_framework", "false")
             .selectors(
                 selectMethod(
                     "com.example.AutofuzzWithCorpusFuzzTest#autofuzzWithCorpus(java.lang.String,int)"))

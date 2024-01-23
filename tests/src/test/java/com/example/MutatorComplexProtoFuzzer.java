@@ -13,7 +13,7 @@ import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.protobuf.Proto2.TestProtobuf;
 
-public class ExperimentalMutatorComplexProtoFuzzer {
+public class MutatorComplexProtoFuzzer {
   public static void fuzzerTestOneInput(@NotNull TestProtobuf proto) {
     if (proto.getI32() == 1234 && proto.getStr().equals("abcd")) {
       throw new FuzzerSecurityIssueMedium("Secret proto is found!");

@@ -65,6 +65,7 @@ public class RegressionTestTest {
         .selectors(selectPackage("com.example"))
         .configurationParameter(
             "jazzer.instrument", "com.other.package.**,com.example.**,com.yet.another.package.*")
+        .configurationParameter("jazzer.mutator_framework", "false")
         .execute();
   }
 
