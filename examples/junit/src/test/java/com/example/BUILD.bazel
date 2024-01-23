@@ -231,7 +231,6 @@ java_fuzz_target_test(
         "JAZZER_FUZZ": "1",
     },
     fuzzer_args = [
-        "--experimental_mutator",
         "$(rlocationpaths //examples/junit/src/test/resources:MutatorFuzzTestInputs)",
     ],
     target_class = "com.example.MutatorFuzzTest",
@@ -252,9 +251,6 @@ java_fuzz_target_test(
     srcs = ["JavaSeedFuzzTest.java"],
     allowed_findings = ["java.lang.Error"],
     env = {"JAZZER_FUZZ": "1"},
-    fuzzer_args = [
-        "--experimental_mutator",
-    ],
     target_class = "com.example.JavaSeedFuzzTest",
     verify_crash_reproducer = False,
     runtime_deps = [

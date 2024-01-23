@@ -129,16 +129,17 @@ public final class Opt {
           "dump_classes_dir",
           "",
           "Directory to dump instrumented .class files into (if non-empty)");
-  public static final OptItem<Boolean> experimentalMutator =
-      boolSetting("experimental_mutator", false, "Use an experimental structured mutator");
-  public static final OptItem<Long> experimentalCrossOverFrequency =
+  public static final OptItem<Boolean> mutatorFramework =
+      boolSetting(
+          "mutator_framework", true, "Use the internal mutator framework to generate inputs");
+  public static final OptItem<Long> mutatorCrossOverFrequency =
       uint64Setting(
-          "experimental_cross_over_frequency",
+          "mutator_cross_over_frequency",
           100,
-          "(Used in experimental mutator) Frequency of cross-over mutations actually being executed"
+          "(Used in mutator framework) Frequency of cross-over mutations actually being executed"
               + " when the cross-over function is picked by the underlying fuzzing engine (~1/2 of"
               + " all mutations), other invocations perform type specific mutations via the"
-              + " experimental mutator. (0 = disabled, 1 = every call, 2 = every other call,"
+              + " mutator framework. (0 = disabled, 1 = every call, 2 = every other call,"
               + " etc.).");
   public static final OptItem<Boolean> fuzzNative =
       boolSetting(

@@ -41,6 +41,11 @@ public class FuzzTargetHolder {
       this.lifecycleMethodsInvoker = lifecycleMethodsInvoker;
     }
 
+    public boolean usesPrimitiveByteArray() {
+      return this.method.getParameterCount() == 1
+          && this.method.getParameterTypes()[0] == byte[].class;
+    }
+
     public boolean usesFuzzedDataProvider() {
       return this.method.getParameterCount() == 1
           && this.method.getParameterTypes()[0] == FuzzedDataProvider.class;

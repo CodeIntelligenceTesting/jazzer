@@ -500,11 +500,10 @@ java_fuzz_target_test(
 
 # TODO: Move to //examples eventually.
 java_fuzz_target_test(
-    name = "ExperimentalMutatorFuzzer",
-    srcs = ["src/test/java/com/example/ExperimentalMutatorFuzzer.java"],
+    name = "MutatorFuzzer",
+    srcs = ["src/test/java/com/example/MutatorFuzzer.java"],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
     fuzzer_args = [
-        "--experimental_mutator",
         "--instrumentation_includes=com.example.**",
         "--custom_hook_includes=com.example.**",
         # TODO: Investigate whether we can automatically exclude protos.
@@ -513,7 +512,7 @@ java_fuzz_target_test(
         # Limit runs to catch regressions in mutator efficiency and speed up test runs.
         "-runs=40000",
     ],
-    target_class = "com.example.ExperimentalMutatorFuzzer",
+    target_class = "com.example.MutatorFuzzer",
     verify_crash_reproducer = False,
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
@@ -522,17 +521,17 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
-    name = "ExperimentalMutatorComplexProtoFuzzer",
-    srcs = ["src/test/java/com/example/ExperimentalMutatorComplexProtoFuzzer.java"],
+    name = "MutatorComplexProtoFuzzer",
+    srcs = ["src/test/java/com/example/MutatorComplexProtoFuzzer.java"],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
     fuzzer_args = [
-        "--experimental_mutator",
         "--instrumentation_includes=com.example.**",
         "--custom_hook_includes=com.example.**",
         # Limit runs to catch regressions in mutator efficiency and speed up test runs.
-        "-runs=1300000",
+        # Especially on Windows this test needs way more iterations than on other platforms.
+        "-runs=2000000",
     ],
-    target_class = "com.example.ExperimentalMutatorComplexProtoFuzzer",
+    target_class = "com.example.MutatorComplexProtoFuzzer",
     verify_crash_reproducer = False,
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
@@ -555,11 +554,10 @@ cc_binary(
 )
 
 java_fuzz_target_test(
-    name = "ExperimentalMutatorDynamicProtoFuzzer",
-    srcs = ["src/test/java/com/example/ExperimentalMutatorDynamicProtoFuzzer.java"],
+    name = "MutatorDynamicProtoFuzzer",
+    srcs = ["src/test/java/com/example/MutatorDynamicProtoFuzzer.java"],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
     fuzzer_args = [
-        "--experimental_mutator",
         "--instrumentation_includes=com.example.**",
         "--custom_hook_includes=com.example.**",
     ] + select({
@@ -569,7 +567,7 @@ java_fuzz_target_test(
         #       significantly worse than Linux.
         "//conditions:default": ["-runs=1200000"],
     }),
-    target_class = "com.example.ExperimentalMutatorDynamicProtoFuzzer",
+    target_class = "com.example.MutatorDynamicProtoFuzzer",
     verify_crash_reproducer = False,
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
@@ -583,7 +581,6 @@ java_fuzz_target_test(
     srcs = ["src/test/java/com/example/MapFuzzer.java"],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
     fuzzer_args = [
-        "--experimental_mutator",
         "-use_value_profile=1",
     ],
     target_class = "com.example.MapFuzzer",

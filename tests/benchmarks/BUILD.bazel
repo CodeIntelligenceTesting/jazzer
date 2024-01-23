@@ -29,7 +29,6 @@ fuzzer_benchmark(
     ],
     allowed_findings = ["com.example.StructuredMutatorMazeFuzzer$$TreasureFoundException"],
     fuzzer_args = [
-        "--experimental_mutator",
         "-use_value_profile=1",
     ],
     max_runs = 37000,

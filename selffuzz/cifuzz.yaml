@@ -31,8 +31,7 @@
 
 ## Command-line arguments to pass to libFuzzer.
 ## See https://llvm.org/docs/LibFuzzer.html#options
-engine-args:
- - --experimental_mutator
+#engine-args:
 
 ## Maximum time to run fuzz tests. The default is to run indefinitely.
 timeout: 5m

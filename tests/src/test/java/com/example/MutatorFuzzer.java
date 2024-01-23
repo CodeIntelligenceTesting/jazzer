@@ -13,7 +13,7 @@ import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 
-public class ExperimentalMutatorFuzzer {
+public class MutatorFuzzer {
   public static void fuzzerTestOneInput(
       @InRange(max = -42) short num, @NotNull SimpleProto.MyProto proto) {
     if (num > -42) {
