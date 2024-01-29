@@ -88,14 +88,6 @@ class ParserTests {
 
 A complete Maven example project can be found in [`examples/junit`](examples/junit).
 
-### CI Fuzz
-
-The open-source CLI tool [cifuzz](https://github.com/CodeIntelligenceTesting/cifuzz) makes
-it easy to set up Maven and Gradle projects for fuzzing with Jazzer.
-It provides a command-line UI for fuzzing runs, deduplicates and manages findings, and
-provides coverage reports for fuzz tests. Moreover, you can use CI Fuzz to run your fuzz
-tests at scale in the [CI App](https://app.code-intelligence.com).
-
 ### GitHub releases
 
 You can also use GitHub release archives to run a standalone Jazzer binary that starts its own JVM configured for fuzzing:

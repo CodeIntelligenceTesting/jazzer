@@ -190,8 +190,7 @@ class FuzzTestExecutor {
             .toAbsolutePath();
 
     // Use the specified corpus dir, if given, otherwise store the generated corpus in a per-class
-    // directory under the project root, just like cifuzz:
-    // https://github.com/CodeIntelligenceTesting/cifuzz/blob/bf410dcfbafbae2a73cf6c5fbed031cdfe234f2f/internal/cmd/run/run.go#L381
+    // directory under the project root.
     // The path is specified relative to the current working directory, which with JUnit is the
     // project directory.
     Path generatedCorpusDir = baseDir.resolve(generatedCorpusPath(fuzzTestClass, fuzzTestMethod));
