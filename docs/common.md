@@ -12,7 +12,7 @@
 ### Recommended JVM options
 
 The following JVM settings are recommended for running Jazzer within JUnit.
-Both `cifuzz` and the `jazzer` launcher binary set them automatically.
+The `jazzer` launcher binary sets them automatically.
 
 * `-XX:-OmitStackTraceInFastThrow` ensures that stack traces are emitted even on hot code paths.
   This may hurt performance if your fuzz test frequently throws and catches exceptions, but also helps find flaky bugs.

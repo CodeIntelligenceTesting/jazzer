@@ -78,7 +78,7 @@ The tests from the resources directory are gathered by `walkInputs`. This will l
 JUnit will use the file's name as the name of the test case for its reporting. It also accepts .jar files where it will
 search with the given directory in the jar.
 
-### CIFuzz Corpus
+### Corpus
 
 The corpus kept in `.cifuzz-corpus/<test class name>/<test method name>` holds any inputs that libfuzzer found worth
 saving and not necessarily just inputs that caused a crash. Jazzer is able to set the directory but the contents of
