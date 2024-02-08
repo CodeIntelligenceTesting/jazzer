@@ -21,9 +21,9 @@ public final class LangMutators {
         new BooleanMutatorFactory(),
         new FloatingPointMutatorFactory(),
         new IntegralMutatorFactory(),
-        new ByteArrayMutatorFactory(),
         new StringMutatorFactory(),
         new EnumMutatorFactory(),
-        new InputStreamMutatorFactory());
+        new InputStreamMutatorFactory(),
+        new PrimitiveArrayMutatorFactory());
   }
 }

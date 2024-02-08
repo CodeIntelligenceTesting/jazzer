@@ -34,6 +34,7 @@ import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
 import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.annotation.proto.AnySource;
 import com.code_intelligence.jazzer.mutation.annotation.proto.WithDefaultInstance;
@@ -74,6 +75,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -362,6 +364,57 @@ public class StressTest {
             false,
             exactly(
                 null, emptyList(), singletonList(null), singletonList(false), singletonList(true)),
+            distinctElementsRatio(0.30)),
+        arguments(
+            new TypeHolder<@NotNull Boolean @NotNull []>() {}.annotatedType(),
+            "Boolean[]",
+            false,
+            containsArrays(emptyList(), singletonList(false), singletonList(true)),
+            distinctElementsRatio(0.45)),
+        arguments(
+            new TypeHolder<boolean @NotNull []>() {}.annotatedType(),
+            "boolean[]",
+            false,
+            containsArrays(emptyList(), singletonList(false), singletonList(true)),
+            distinctElementsRatio(0.45)),
+        arguments(
+            new TypeHolder<
+                @InRange(min = 5, max = 6) @NotNull Integer @NotNull []>() {}.annotatedType(),
+            "Integer[]",
+            false,
+            containsArrays(emptyList(), singletonList(5), singletonList(6)),
+            distinctElementsRatio(0.30)),
+        arguments(
+            new TypeHolder<@InRange(min = 5, max = 6) int[]>() {}.annotatedType(),
+            "Nullable<int[]>",
+            false,
+            containsArrays(emptyList(), singletonList(5), singletonList(6)),
+            distinctElementsRatio(0.45)),
+        arguments(
+            new TypeHolder<@NotNull String @NotNull []>() {}.annotatedType(),
+            "String[]",
+            false,
+            distinctElementsRatio(0.45),
+            distinctElementsRatio(0.45)),
+        arguments(
+            new TypeHolder<byte @NotNull []>() {}.annotatedType(),
+            "byte[]",
+            false,
+            distinctElementsRatio(0.30),
+            distinctElementsRatio(0.30)),
+        arguments(
+            new TypeHolder<@NotNull TestEnumThree @NotNull []>() {}.annotatedType(),
+            "Enum<TestEnumThree>[]",
+            false,
+            distinctElementsRatio(0.30),
+            distinctElementsRatio(0.30)),
+        arguments(
+            new TypeHolder<
+                @NotNull ConstructorBasedBean @NotNull @WithLength(max = 10)
+                    []>() {}.annotatedType(),
+            "[Boolean, Nullable<String>, Integer] -> ConstructorBasedBean[]",
+            false,
+            distinctElementsRatio(0.30),
             distinctElementsRatio(0.30)),
         arguments(
             new TypeHolder<@NotNull Map<@NotNull String, @NotNull String>>() {}.annotatedType(),
@@ -932,8 +985,16 @@ public class StressTest {
     return containsInternal(true, expected);
   }
 
+  private static CloseableConsumer exactlyArrays(Object... expected) {
+    return containsArraysInternal(true, expected);
+  }
+
   private static CloseableConsumer contains(Object... expected) {
     return containsInternal(false, expected);
+  }
+
+  private static <T> CloseableConsumer containsArrays(T... expected) {
+    return containsArraysInternal(false, expected);
   }
 
   private static CloseableConsumer containsInternal(boolean exactly, Object... expected) {
@@ -954,6 +1015,42 @@ public class StressTest {
           assertThat(value).isIn(sawValue.keySet());
         }
         sawValue.put(value, true);
+      }
+
+      @Override
+      public void close() {
+        assertThat(sawValue.entrySet().stream().filter(e -> !e.getValue()).collect(toList()))
+            .isEmpty();
+      }
+    };
+  }
+
+  private static <T, K> CloseableConsumer containsArraysInternal(boolean exactly, T... expected) {
+    Map<List<K>, Boolean> sawValue =
+        (Map<List<K>, Boolean>)
+            stream(expected)
+                .collect(
+                    toMap(
+                        value -> value,
+                        value -> false,
+                        (a, b) -> {
+                          throw new IllegalStateException("Duplicate value " + a);
+                        },
+                        HashMap::new));
+    return new CloseableConsumer() {
+      @Override
+      public void accept(Object value) {
+        List<K> list = new ArrayList<>();
+        if (value != null) {
+          for (int i = 0; i < Array.getLength(value); i++) {
+            list.add((K) Array.get(value, i));
+          }
+        }
+
+        if (exactly) {
+          assertThat(list).isIn(sawValue.keySet());
+        }
+        sawValue.put(list, true);
       }
 
       @Override

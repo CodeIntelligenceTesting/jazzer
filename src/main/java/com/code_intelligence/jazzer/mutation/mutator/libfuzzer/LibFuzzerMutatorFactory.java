@@ -7,19 +7,17 @@
  * located in the root directory of the project.
  */
 
-package com.code_intelligence.jazzer.mutation.mutator.lang;
+package com.code_intelligence.jazzer.mutation.mutator.libfuzzer;
 
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.readAllBytes;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
 
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
-import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
-import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
+import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Immutable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -31,28 +29,27 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-final class ByteArrayMutatorFactory implements MutatorFactory {
-  @Override
-  public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+public final class LibFuzzerMutatorFactory {
+  private static final int DEFAULT_MIN_LENGTH = 0;
+  private static final int DEFAULT_MAX_LENGTH = 1000;
+
+  @CheckReturnValue
+  public static Optional<SerializingMutator<?>> tryCreate(AnnotatedType type) {
     Optional<WithLength> withLength = Optional.ofNullable(type.getAnnotation(WithLength.class));
-    int minLength = withLength.map(WithLength::min).orElse(ByteArrayMutator.DEFAULT_MIN_LENGTH);
-    int maxLength = withLength.map(WithLength::max).orElse(ByteArrayMutator.DEFAULT_MAX_LENGTH);
+    int minLength = withLength.map(WithLength::min).orElse(DEFAULT_MIN_LENGTH);
+    int maxLength = withLength.map(WithLength::max).orElse(DEFAULT_MAX_LENGTH);
 
     return findFirstParentIfClass(type, byte[].class)
-        .map(parent -> new ByteArrayMutator(minLength, maxLength));
+        .map(parent -> new LibFuzzerMutator(minLength, maxLength));
   }
 
   @Immutable
-  private static final class ByteArrayMutator extends SerializingMutator<byte[]> {
-    private static final int DEFAULT_MIN_LENGTH = 0;
-    private static final int DEFAULT_MAX_LENGTH = 1000;
-
+  private static final class LibFuzzerMutator extends SerializingMutator<byte[]> {
     private final int minLength;
 
     private final int maxLength;
 
-    private ByteArrayMutator(int min, int max) {
+    private LibFuzzerMutator(int min, int max) {
       this.minLength = min;
       this.maxLength = max;
     }
