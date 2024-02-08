@@ -45,8 +45,6 @@ final class SetterBasedBeanMutatorFactory implements MutatorFactory {
 
               Method[] setters = getSetters(clazz).toArray(Method[]::new);
 
-              stream(setters).forEach(System.out::println);
-
               // A Java bean can have additional getters corresponding to computed properties, but
               // we require that all setters have a corresponding getter.
               // TODO: Should we also allow setters without a corresponding getter, as common on
