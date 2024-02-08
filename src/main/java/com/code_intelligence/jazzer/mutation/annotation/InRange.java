@@ -27,6 +27,7 @@ import java.lang.annotation.Target;
   long.class,
   Long.class
 })
+@ValidateMinMax
 public @interface InRange {
   long min() default Long.MIN_VALUE;
 

@@ -18,6 +18,19 @@ import java.lang.annotation.Target;
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo(byte[].class)
+@AppliesTo(
+    value = {
+      byte[].class,
+      int[].class,
+      long[].class,
+      float[].class,
+      double[].class,
+      char[].class,
+      short[].class,
+      boolean[].class
+    },
+    subClassesOf = Object[].class)
+@ValidateContainerDimensions
 public @interface WithLength {
   int min() default 0;
 

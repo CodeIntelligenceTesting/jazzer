@@ -18,6 +18,7 @@ import java.lang.annotation.Target;
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo({double.class, Double.class})
+@ValidateMinMax
 public @interface DoubleInRange {
   double min() default Double.NEGATIVE_INFINITY;
 

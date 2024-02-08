@@ -31,6 +31,7 @@ import java.lang.annotation.Target;
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo(String.class)
+@ValidateContainerDimensions
 public @interface WithUtf8Length {
   int min() default 0;
 

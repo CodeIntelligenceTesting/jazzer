@@ -10,6 +10,7 @@
 package com.code_intelligence.jazzer.mutation.engine;
 
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
+import static java.lang.String.format;
 
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
@@ -86,7 +87,11 @@ public final class SeededPseudoRandom implements PseudoRandom {
 
   @Override
   public int closedRange(int lowerInclusive, int upperInclusive) {
-    require(lowerInclusive <= upperInclusive);
+    require(
+        lowerInclusive <= upperInclusive,
+        format(
+            "closedRange(%d, %d): lowerInclusive should be <= upperInclusive",
+            lowerInclusive, upperInclusive));
     int range = upperInclusive - lowerInclusive + 1;
     if (range > 0) {
       return lowerInclusive + random.nextInt(range);
