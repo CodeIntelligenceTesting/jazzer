@@ -9,7 +9,7 @@
 
 package com.code_intelligence.jazzer.mutation;
 
-import static com.code_intelligence.jazzer.mutation.mutator.Mutators.validateAnnotationUsage;
+import static com.code_intelligence.jazzer.mutation.support.AnnotationSupport.validateAnnotationUsage;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static java.lang.String.format;

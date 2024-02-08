@@ -18,6 +18,7 @@ import java.lang.annotation.Target;
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo({float.class, Float.class})
+@ValidateMinMax
 public @interface FloatInRange {
   float min() default Float.NEGATIVE_INFINITY;
 

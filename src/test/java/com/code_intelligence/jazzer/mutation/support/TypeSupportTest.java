@@ -12,16 +12,22 @@ package com.code_intelligence.jazzer.mutation.support;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.annotatedTypeEquals;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.containedInDirectedCycle;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.forwardAnnotations;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.visitAnnotatedType;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withTypeArguments;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 import static java.util.Arrays.stream;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
+import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
+import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
+import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -40,6 +46,9 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class TypeSupportTest {
   @Test
@@ -390,5 +399,111 @@ class TypeSupportTest {
   @EnabledForJreRange(min = JRE.JAVA_12)
   void testWithExtraAnnotationsWithEquals_flipped() {
     doTestWithExtraAnnotationsWithCustomEquality((a, b) -> Objects.equals(b, a));
+  }
+
+  // isEqualTo is not invariant to the order of annotations--sometimes the annotations should be
+  // arranged in a specific order.
+  static Stream<Arguments> forwardAnnotationCases() {
+    return Stream.of(
+        arguments(
+            new TypeHolder<
+                @NotNull List<@WithLength(min = 10, max = 20) String>>() {}.annotatedType(),
+            new TypeHolder<String[]>() {}.annotatedType(),
+            new TypeHolder<String @NotNull []>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@NotNull @WithSize(min = 0, max = 1) List<String>>() {}.annotatedType(),
+            new TypeHolder<@WithSize(min = 200, max = 300) List<String>>() {}.annotatedType(),
+            new TypeHolder<
+                @WithSize(min = 200, max = 300) @NotNull List<String>>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<int @NotNull @WithLength(min = 100, max = 200) []>() {}.annotatedType(),
+            new TypeHolder<byte[]>() {}.annotatedType(),
+            new TypeHolder<
+                byte @NotNull @WithLength(min = 100, max = 200) []>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@DoubleInRange(min = 10.0, max = 20.0) Integer>() {}.annotatedType(),
+            new TypeHolder<@NotNull Double>() {}.annotatedType(),
+            new TypeHolder<
+                @NotNull @DoubleInRange(min = 10.0, max = 20.0) Double>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@FloatInRange(min = 10.0f, max = 20.0f) Integer>() {}.annotatedType(),
+            new TypeHolder<@NotNull Float>() {}.annotatedType(),
+            new TypeHolder<
+                @NotNull @FloatInRange(min = 10.0f, max = 20.0f) Float>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType(),
+            new TypeHolder<String>() {}.annotatedType(),
+            new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@NotNull @InRange(min = 10) Integer>() {}.annotatedType(),
+            new TypeHolder<@InRange(min = 20) Integer>() {}.annotatedType(),
+            new TypeHolder<@InRange(min = 20) @NotNull Integer>() {}.annotatedType()));
+  }
+
+  @ParameterizedTest
+  @EnabledForJreRange(min = JRE.JAVA_12)
+  @MethodSource("forwardAnnotationCases")
+  void testForwardAnnotations(AnnotatedType type1, AnnotatedType type2, AnnotatedType expected) {
+    assertThat(forwardAnnotations(type1, type2)).isEqualTo(expected);
+  }
+
+  static Stream<Arguments> forwardAnnotationExceptionCases() {
+    return Stream.of(
+        arguments(
+            new TypeHolder<@WithLength(min = 10) List<Double>>() {}.annotatedType(),
+            new TypeHolder<@NotNull Double>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@NotNull @WithSize(min = 10) List<Double>>() {}.annotatedType(),
+            new TypeHolder<Double[]>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<Integer @NotNull @WithLength(min = 10) []>() {}.annotatedType(),
+            new TypeHolder<List<Short>>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@WithUtf8Length(min = 10) String>() {}.annotatedType(),
+            new TypeHolder<List<Short>>() {}.annotatedType()));
+  }
+
+  @ParameterizedTest
+  @EnabledForJreRange(min = JRE.JAVA_12)
+  @MethodSource("forwardAnnotationExceptionCases")
+  void testForwardAnnotations_violateAppliesTo(AnnotatedType type1, AnnotatedType type2) {
+    assertThrows(IllegalArgumentException.class, () -> forwardAnnotations(type1, type2));
+  }
+
+  // Some annotations would be invalid if used in Jazzer, however in these tests {@code src} is not
+  // validated, only {@code target} is.
+  static Stream<Arguments> forwardAnnotationCases_withExcludes() {
+    return Stream.of(
+        arguments(
+            new TypeHolder<
+                @NotNull List<@WithLength(min = 10, max = 20) String>>() {}.annotatedType(),
+            new TypeHolder<String[]>() {}.annotatedType(),
+            // exclude @NotNull
+            new TypeHolder<@NotNull String>() {}.annotatedType().getAnnotations(),
+            new TypeHolder<String[]>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<
+                @NotNull @WithSize(min = 10, max = 100) @WithLength(min = 1, max = 2)
+                @WithUtf8Length(min = 1, max = 2) @InRange(min = 10, max = 20)
+                @FloatInRange(min = 1f, max = 2f) @DoubleInRange(min = 1.0, max = 2.0)
+                Integer>() {}.annotatedType(),
+            new TypeHolder<String @WithLength(min = 200, max = 201) []>() {}.annotatedType(),
+            // exclude @WithSize, @WithLength, @WithUtf8Length, @InRange, @FloatInRange,
+            // @DoubleInRange
+            new TypeHolder<
+                @FloatInRange @WithSize @WithUtf8Length @InRange @DoubleInRange
+                String>() {}.annotatedType().getAnnotations(),
+            // @WithLength was already present, so it should stay unchanged. @NotNull should be
+            // added.
+            new TypeHolder<
+                String @WithLength(min = 200, max = 201) @NotNull []>() {}.annotatedType()));
+  }
+
+  @ParameterizedTest
+  @EnabledForJreRange(min = JRE.JAVA_12)
+  @MethodSource("forwardAnnotationCases_withExcludes")
+  void testForwardAnnotations_withExcludes(
+      AnnotatedType src, AnnotatedType target, Annotation[] excludes, AnnotatedType expected) {
+    assertThat(forwardAnnotations(src, target, excludes)).isEqualTo(expected);
   }
 }

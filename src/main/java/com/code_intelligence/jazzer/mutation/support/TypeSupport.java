@@ -9,6 +9,7 @@
 
 package com.code_intelligence.jazzer.mutation.support;
 
+import static com.code_intelligence.jazzer.mutation.support.AnnotationSupport.validateAnnotationUsage;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.requireNonNullElements;
@@ -46,6 +47,8 @@ import java.util.stream.Stream;
 public final class TypeSupport {
   private static final Annotation NOT_NULL =
       new TypeHolder<@NotNull String>() {}.annotatedType().getAnnotation(NotNull.class);
+
+  private static final Annotation[] EMPTY_ANNOTATIONS = {};
 
   private TypeSupport() {}
 
@@ -129,6 +132,44 @@ public final class TypeSupport {
       visitor.accept(clazz, type.getDeclaredAnnotations());
     }
     return clazz;
+  }
+
+  /**
+   * Forward annotations from src to target that are not already present on target.
+   *
+   * @param src the source of annotations
+   * @param target the target for annotations
+   * @return {@code target} with annotations from {@code src} that are not already present on {@code
+   *     target} and are not excluded by {@code exclude}
+   */
+  public static AnnotatedType forwardAnnotations(AnnotatedType src, AnnotatedType target) {
+    return forwardAnnotations(src, target, EMPTY_ANNOTATIONS);
+  }
+
+  /**
+   * Forward annotations from src to target that are not already present on target, and are not
+   * excluded.
+   *
+   * @param src the source of annotations
+   * @param target the target for annotations
+   * @param exclude annotations to exclude from the transfer
+   * @return {@code target} with annotations from {@code src} that are not already present on {@code
+   *     target} and are not excluded by {@code exclude}
+   */
+  public static AnnotatedType forwardAnnotations(
+      AnnotatedType src, AnnotatedType target, Annotation... exclude) {
+    Set<Class<? extends Annotation>> excluded =
+        Stream.concat(stream(target.getAnnotations()), stream(exclude))
+            .map(Annotation::annotationType)
+            .collect(toSet());
+    AnnotatedType result =
+        withExtraAnnotations(
+            target,
+            Arrays.stream(src.getAnnotations())
+                .filter(annotation -> !excluded.contains(annotation.annotationType()))
+                .toArray(Annotation[]::new));
+    validateAnnotationUsage(result);
+    return result;
   }
 
   public static AnnotatedType notNull(AnnotatedType type) {
