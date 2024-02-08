@@ -67,6 +67,22 @@ class IntegralMutatorTest {
     }
   }
 
+  static Stream<Arguments> forceInRangeMinMaxCases() {
+    return Stream.of(
+        arguments(Long.MAX_VALUE, 0, Long.MAX_VALUE, Long.MAX_VALUE),
+        arguments(Long.MAX_VALUE, Long.MIN_VALUE, Long.MAX_VALUE, Long.MAX_VALUE),
+        arguments(Long.MIN_VALUE, Long.MIN_VALUE, Long.MAX_VALUE, Long.MIN_VALUE),
+        arguments(0, Long.MIN_VALUE, Long.MAX_VALUE, 0),
+        arguments(0, 0, 0, 0),
+        arguments(1, 0, 1, 1));
+  }
+
+  @ParameterizedTest
+  @MethodSource("forceInRangeMinMaxCases")
+  void testForceInRangeMinMax(long value, long minValue, long maxValue, long expected) {
+    assertThat(forceInRange(value, minValue, maxValue)).isEqualTo(expected);
+  }
+
   @Test
   void testCrossOver() {
     SerializingMutator<Long> mutator =

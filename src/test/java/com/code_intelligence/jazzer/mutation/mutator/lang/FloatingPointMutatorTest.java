@@ -185,6 +185,20 @@ class FloatingPointMutatorTest {
     }
   }
 
+  @Test
+  void testFloatForceInRangeMinMax() {
+    boolean allowNaN = true;
+    assertThat(FloatMutator.forceInRange(1.0f, 0.0f, 1.0f, allowNaN)).isEqualTo(1.0f);
+    assertThat(FloatMutator.forceInRange(0.0f, 0.0f, 1.0f, allowNaN)).isEqualTo(0.0f);
+    assertThat(DoubleMutator.forceInRange(Double.MAX_VALUE, 10.0, Double.MAX_VALUE, allowNaN))
+        .isEqualTo(Double.MAX_VALUE);
+    assertThat(DoubleMutator.forceInRange(0.0, 0.0, Double.MAX_VALUE, allowNaN)).isEqualTo(0.0);
+    assertThat(
+            DoubleMutator.forceInRange(
+                -Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, allowNaN))
+        .isEqualTo(-Double.MAX_VALUE);
+  }
+
   @ParameterizedTest
   @MethodSource("doubleForceInRangeCases")
   void testDoubleForceInRange(double value, double minValue, double maxValue, boolean allowNaN) {

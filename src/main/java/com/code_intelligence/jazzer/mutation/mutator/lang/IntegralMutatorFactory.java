@@ -338,7 +338,7 @@ final class IntegralMutatorFactory implements MutatorFactory {
 
     // Visible for testing.
     static long forceInRange(long value, long minValue, long maxValue) {
-      long range = maxValue - minValue;
+      long range = maxValue - minValue + 1;
       if (range > 0) {
         return minValue + Math.abs((value - minValue) % range);
       } else {
