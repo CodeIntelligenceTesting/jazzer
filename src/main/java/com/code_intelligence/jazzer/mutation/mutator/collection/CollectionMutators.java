@@ -16,6 +16,6 @@ public final class CollectionMutators {
   private CollectionMutators() {}
 
   public static Stream<MutatorFactory> newFactories() {
-    return Stream.of(new ListMutatorFactory(), new MapMutatorFactory());
+    return Stream.of(new ListMutatorFactory(), new MapMutatorFactory(), new ArrayMutatorFactory());
   }
 }

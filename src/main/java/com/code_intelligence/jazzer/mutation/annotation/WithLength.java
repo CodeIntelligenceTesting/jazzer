@@ -19,7 +19,6 @@ import java.lang.annotation.Target;
 
 @Target(TYPE_USE)
 @Retention(RUNTIME)
-@AppliesTo(byte[].class)
 @AppliesTo(
     value = {
       byte[].class,
