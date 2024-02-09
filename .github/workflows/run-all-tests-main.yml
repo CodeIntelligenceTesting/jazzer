@@ -36,13 +36,13 @@ jobs:
     name: Build & Test
     strategy:
       matrix:
-        os: [ macos-12, windows-2019 ]
+        os: [ selfhosted-macos, windows-2019 ]
         # Test JDK 8 on Windows and mac only on main.
         jdk: [8]
         include:
-          - os: macos-12
-            arch: "macos-x86_64"
-            bazel_args: "--xcode_version_config=//.github:host_xcodes //launcher/android:jazzer_android"
+          - os: selfhosted-macos
+            arch: "macos-arm64"
+            bazel_args: "--xcode_version_config=//.github:host_xcodes"
           - os: windows-2019
             arch: "windows"
 
