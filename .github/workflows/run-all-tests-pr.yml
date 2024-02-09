@@ -17,7 +17,7 @@ jobs:
     name: Build & Test
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-12, windows-2019]
+        os: [ubuntu-22.04, windows-2019, selfhosted-macos]
         jdk: [21]
         include:
           - jdk: 21
@@ -29,9 +29,9 @@ jobs:
           - os: ubuntu-22.04
             # Use JDK 8 only on Ubuntu in PRs.
             jdk: 8
-          - os: macos-12
-            arch: "macos-x86_64"
-            bazel_args: "--xcode_version_config=//.github:host_xcodes //launcher/android:jazzer_android"
+          - os: selfhosted-macos
+            arch: "macos-arm64"
+            bazel_args: "--xcode_version_config=//.github:host_xcodes"
           - os: windows-2019
             arch: "windows"
 
@@ -44,18 +44,12 @@ jobs:
           distribution: zulu
           java-version: 21
 
-      # The java binary has the necessary entitlements to allow tests to pass, but that requires
-      # user interaction (clicking through Gatekeeper warnings) that we can't simulate in CI.
-      - name: Remove codesign signature on java binary
-        if: contains(matrix.os, 'mac')
-        run: codesign --remove-signature "$JAVA_HOME"/bin/java
-
       - name: Set Build Buddy config
         run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
         shell: bash
 
       - name: Build & Test
-        run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=remotejdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} ${{ matrix.extra_bazel_args }} --build_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" --test_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
+        run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=remotejdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} ${{ matrix.extra_bazel_args }} --build_tag_filters="-no-${{ matrix.arch }},-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" --test_tag_filters="-no-${{ matrix.arch }},-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
 
       - name: Copy Bazel log
         if: always()
