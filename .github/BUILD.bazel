@@ -3,6 +3,7 @@
 
 package(default_visibility = ["//visibility:public"])
 
+# Xcode version on public GitHub Actions runners
 xcode_version(
     name = "version14_2_0_14C18",
     aliases = [
@@ -19,8 +20,28 @@ xcode_version(
     version = "14.2.0.14C18",
 )
 
+# Xcode version on self-hosted macOS runners
+xcode_version(
+    name = "version15_2_0_15C500b",
+    aliases = [
+        "15.2.0.15C500b",
+        "15C500b",
+        "15.2.0",
+        "15.2",
+        "15",
+    ],
+    default_ios_sdk_version = "17.2",
+    default_macos_sdk_version = "14.2",
+    default_tvos_sdk_version = "17.1",
+    default_watchos_sdk_version = "10.2",
+    version = "15.2.0.15C500b",
+)
+
 xcode_config(
     name = "host_xcodes",
-    default = ":version14_2_0_14C18",
-    versions = [":version14_2_0_14C18"],
+    default = ":version15_2_0_15C500b",
+    versions = [
+        ":version15_2_0_15C500b",
+        ":version14_2_0_14C18",
+    ],
 )
