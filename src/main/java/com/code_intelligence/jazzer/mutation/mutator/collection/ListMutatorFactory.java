@@ -16,6 +16,7 @@ import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkCros
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.MutationAction.pickRandomMutationAction;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.deleteRandomChunk;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.insertRandomChunk;
+import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.mutateRandomAt;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.mutateRandomChunk;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.parameterTypeIfParameterized;
@@ -115,7 +116,12 @@ final class ListMutatorFactory implements MutatorFactory {
           insertRandomChunk(list, maxSize, elementMutator, prng);
           break;
         case MUTATE_CHUNK:
-          mutateRandomChunk(list, elementMutator, prng);
+          // Prioritize mutating a single element over a chunk mutation 70% of the time.
+          if (prng.indexIn(10) < 7) {
+            mutateRandomAt(list, elementMutator, prng);
+          } else {
+            mutateRandomChunk(list, elementMutator, prng);
+          }
           break;
         default:
           throw new IllegalStateException("unsupported action");

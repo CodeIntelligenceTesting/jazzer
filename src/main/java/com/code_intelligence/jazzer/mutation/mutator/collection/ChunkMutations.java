@@ -97,6 +97,11 @@ final class ChunkMutations {
     }
   }
 
+  static <T> void mutateRandomAt(List<T> list, ValueMutator<T> mutator, PseudoRandom prng) {
+    int index = prng.indexIn(list.size());
+    list.set(index, mutator.mutate(list.get(index), prng));
+  }
+
   static <K, V, KW, VW> boolean mutateRandomKeysChunk(
       Map<K, V> map, SerializingMutator<K> keyMutator, PseudoRandom prng) {
     int originalSize = map.size();
