@@ -189,6 +189,8 @@ public class ListMutatorTest {
         mockPseudoRandom(
             // action
             2,
+            // Mutate a chunk instead of a single element.
+            8,
             // number of elements to mutate
             2,
             // first index to mutate at
