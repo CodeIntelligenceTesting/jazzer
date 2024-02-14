@@ -33,6 +33,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Queue;
@@ -248,6 +249,10 @@ public final class TestSupport {
     private MockPseudoRandom(Object... objects) {
       requireNonNullElements(objects);
       this.elements = stream(objects).collect(toCollection(ArrayDeque::new));
+    }
+
+    public String toString() {
+      return "PRNG: " + Arrays.toString(elements.toArray());
     }
 
     @Override
