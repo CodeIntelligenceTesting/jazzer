@@ -39,6 +39,23 @@ fuzzer_benchmark(
     ],
 )
 
+fuzzer_benchmark(
+    name = "ListOfIntegersFuzzerBenchmark",
+    srcs = [
+        "src/test/java/com/example/ListOfIntegersFuzzer.java",
+    ],
+    allowed_findings = ["com.example.StructuredMutatorMazeFuzzer$$TreasureFoundException"],
+    fuzzer_args = [
+        "-use_value_profile=1",
+    ],
+    max_runs = 4000000,
+    num_seeds = 15,
+    target_class = "com.example.StructuredMutatorMazeFuzzer",
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+    ],
+)
+
 # Keep at the bottom for existing_rules() to capture everything else in this package.
 test_suite(
     name = "benchmarks",
