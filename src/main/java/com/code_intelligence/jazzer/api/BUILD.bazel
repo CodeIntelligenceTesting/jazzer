@@ -52,3 +52,9 @@ java_library(
     ],
     visibility = ["//visibility:public"],
 )
+
+java_library(
+    name = "jazzer",
+    srcs = ["Jazzer.java"],
+    visibility = ["//visibility:public"],
+)

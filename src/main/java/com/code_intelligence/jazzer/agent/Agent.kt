@@ -16,18 +16,24 @@
 
 package com.code_intelligence.jazzer.agent
 
+import com.code_intelligence.jazzer.api.Jazzer
 import com.code_intelligence.jazzer.driver.Opt
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hooks
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
+import com.code_intelligence.jazzer.runtime.StateExplorer
 import com.code_intelligence.jazzer.sanitizers.Constants
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import com.code_intelligence.jazzer.utils.Log
 import com.code_intelligence.jazzer.utils.ManifestUtils
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileReader
 import java.lang.instrument.Instrumentation
 import java.nio.file.Paths
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
+import kotlin.system.exitProcess
 
 fun install(instrumentation: Instrumentation) {
     installInternal(instrumentation)
@@ -109,6 +115,26 @@ fun installInternal(
         FileSyncCoverageIdStrategy(idSyncFilePath)
     } else {
         MemSyncCoverageIdStrategy()
+    }
+
+    // Parse static analysis file and set state explorer instance field if necessary.
+    // This is done to avoid dependency conflicts between the agent and driver.
+    val staticAnalysisInputFile = Opt.experimentalStaticAnalysisFile.get()
+    if (staticAnalysisInputFile.isNotEmpty()) {
+        try {
+            val relatedCoverageIds = File(staticAnalysisInputFile)
+                .bufferedReader()
+                .readLines()
+                .map { line -> line.split(",") }
+                .map { ids -> ids.map { it.trim().toInt() }.toIntArray() }
+                .toTypedArray()
+            StateExplorer.INSTANCE = StateExplorer(relatedCoverageIds, Jazzer::exploreState)
+        } catch (e: Exception) {
+            Log.error("Could not parse static analysis file $staticAnalysisInputFile. Make sure the file exists and is readable.", e)
+            exitProcess(1)
+        }
+    } else {
+        Log.info("No static analysis file provided")
     }
 
     // If we don't append the JARs containing the custom hooks to the bootstrap class loader,

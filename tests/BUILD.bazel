@@ -628,4 +628,20 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "StateTrackerFuzzer",
+    srcs = [
+        "src/test/java/com/example/StateTrackerFuzzer.java",
+        "src/test/java/com/example/StateTrackerTarget.java"
+    ],
+    data = ["src/test/java/com/example/StateTrackerTargetAnalysis.txt"],
+    fuzzer_args = [
+        "-runs=1000",
+        "--instrumentation_includes=com.example.StateTrackerTarget",
+#        "--dump_classes_dir=/tmp/codegen",
+        "--experimental_static_analysis_file=$(rootpath src/test/java/com/example/StateTrackerTargetAnalysis.txt)",
+    ],
+    target_class = "com.example.StateTrackerFuzzer",
+)
+
 ktlint()

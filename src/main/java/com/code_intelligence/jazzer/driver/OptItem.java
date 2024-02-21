@@ -147,6 +147,15 @@ public abstract class OptItem<T> implements Supplier<T> {
     }
   }
 
+  /**
+   * Returns whether the value of this item has been set explicitly.
+   *
+   * @return {@code true} if the value of this item has been set explicitly, {@code false} otherwise.
+   */
+  public final boolean isExplicitlySet() {
+    return value != null;
+  }
+
   final boolean isInternal() {
     return description == null;
   }

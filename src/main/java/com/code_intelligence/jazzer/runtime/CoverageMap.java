@@ -18,6 +18,7 @@ import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import com.github.fmeum.rules_jni.RulesJni;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -83,6 +84,9 @@ public final class CoverageMap {
     registerNewCounters(0, INITIAL_NUM_COUNTERS);
   }
 
+  // Use eventually set stateExplorer instance as static field to enable inlining.
+  private static final StateExplorer stateExplorer = StateExplorer.INSTANCE;
+
   /**
    * The number of coverage counters that are currently registered with libFuzzer. This number grows
    * dynamically as classes are instrumented and should be kept as low as possible as libFuzzer has
@@ -121,6 +125,9 @@ public final class CoverageMap {
     if (IS_ANDROID) {
       enlargeIfNeeded(id);
     }
+    if (stateExplorer != null) {
+      stateExplorer.recordCoverage(id);
+    }
 
     final long address = countersAddress + id;
     final byte counter = UNSAFE.getByte(address);
@@ -135,12 +142,6 @@ public final class CoverageMap {
       }
     }
     return Collections.unmodifiableSet(coveredIds);
-  }
-
-  public static void replayCoveredIds(Set<Integer> coveredIds) {
-    for (int id : coveredIds) {
-      UNSAFE.putByte(countersAddress + id, (byte) 1);
-    }
   }
 
   private static void logInfo(String message) {

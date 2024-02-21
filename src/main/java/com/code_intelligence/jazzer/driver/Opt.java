@@ -214,6 +214,13 @@ public final class Opt {
       boolSetting(
           "ubsan", false, "Allow fuzzing of native libraries compiled with '-fsanitize=undefined'");
 
+  // Experimental static analysis input
+  public static final OptItem<String> experimentalStaticAnalysisFile =
+          stringSetting(
+                  "experimental_static_analysis_file",
+                  "",
+                  "(Experimental) Path to the static analysis input file");
+
   // Internal options:
 
   // Whether Jazzer is running a JUnit fuzz test from the command line.

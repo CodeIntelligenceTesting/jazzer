@@ -105,7 +105,7 @@ java_library(
 
 java_jni_library(
     name = "coverage_map",
-    srcs = ["CoverageMap.java"],
+    srcs = ["CoverageMap.java", "StateExplorer.java"],
     native_libs = select({
         "@platforms//os:android": ["//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver"],
         "//conditions:default": [],
@@ -116,6 +116,8 @@ java_jni_library(
         "//src/test:__subpackages__",
     ],
     deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api:jazzer",
+        "//src/main/java/com/code_intelligence/jazzer/driver:opt",
         "//src/main/java/com/code_intelligence/jazzer/runtime:constants",
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
     ],
@@ -183,5 +185,11 @@ java_library(
 java_library(
     name = "constants",
     srcs = ["Constants.java"],
+    visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "state_explorer",
+    srcs = ["StateExplorer.java"],
     visibility = ["//visibility:public"],
 )
