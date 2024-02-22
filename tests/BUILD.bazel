@@ -587,7 +587,8 @@ java_fuzz_target_test(
         "--custom_hook_includes=com.example.**",
         # Limit runs to catch regressions in mutator efficiency and speed up test runs.
         # Especially on Windows this test needs way more iterations than on other platforms.
-        "-runs=2000000",
+        "-runs=3000000",
+        "-seed=123",
     ],
     target_class = "com.example.MutatorComplexProtoFuzzer",
     verify_crash_reproducer = False,
