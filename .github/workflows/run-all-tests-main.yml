@@ -55,18 +55,12 @@ jobs:
           distribution: zulu
           java-version: 21
 
-      # The java binary has the necessary entitlements to allow tests to pass, but that requires
-      # user interaction (clicking through Gatekeeper warnings) that we can't simulate in CI.
-      - name: Remove codesign signature on java binary
-        if: contains(matrix.os, 'mac')
-        run: codesign --remove-signature "$JAVA_HOME"/bin/java
-
       - name: Set Build Buddy config
         run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
         shell: bash
 
       - name: Build & Test
-        run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=remotejdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} ${{ matrix.extra_bazel_args }} --build_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" --test_tag_filters="-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
+        run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=remotejdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} ${{ matrix.extra_bazel_args }} --build_tag_filters="-no-${{ matrix.arch }},-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" --test_tag_filters="-no-${{ matrix.arch }},-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
 
       - name: Copy Bazel log
         if: always()
