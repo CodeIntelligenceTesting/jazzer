@@ -5,6 +5,7 @@ java_library(
     deps = [
         ":protobuf_runtime_compile_only",
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/utils",
     ],
 )
 

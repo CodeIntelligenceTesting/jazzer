@@ -13,6 +13,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.code_intelligence.jazzer.mutation.utils.AppliesTo;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
