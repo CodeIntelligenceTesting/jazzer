@@ -7,7 +7,7 @@
  * located in the root directory of the project.
  */
 
-package com.code_intelligence.jazzer.mutation.annotation;
+package com.code_intelligence.jazzer.mutation.utils;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;

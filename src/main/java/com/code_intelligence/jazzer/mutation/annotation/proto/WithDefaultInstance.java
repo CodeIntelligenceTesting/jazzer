@@ -12,7 +12,7 @@ package com.code_intelligence.jazzer.mutation.annotation.proto;
 import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.code_intelligence.jazzer.mutation.annotation.AppliesTo;
+import com.code_intelligence.jazzer.mutation.utils.AppliesTo;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Message;
 import java.lang.annotation.Retention;

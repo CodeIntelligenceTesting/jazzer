@@ -15,9 +15,9 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
-import com.code_intelligence.jazzer.mutation.annotation.AppliesTo;
-import com.code_intelligence.jazzer.mutation.annotation.ValidateContainerDimensions;
-import com.code_intelligence.jazzer.mutation.annotation.ValidateMinMax;
+import com.code_intelligence.jazzer.mutation.utils.AppliesTo;
+import com.code_intelligence.jazzer.mutation.utils.ValidateContainerDimensions;
+import com.code_intelligence.jazzer.mutation.utils.ValidateMinMax;
 import com.code_intelligence.jazzer.utils.Log;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
@@ -32,44 +32,47 @@ public class AnnotationSupport {
     visitAnnotatedType(
         type,
         (clazz, annotations) -> {
-          outer:
           for (Annotation annotation : annotations) {
+            ensureDeepAppliesTo(annotation, clazz);
             ensureMinLessThanOrEqualsMax(annotation);
             validateContainerDimensions(annotation);
-            AppliesTo appliesTo = annotation.annotationType().getAnnotation(AppliesTo.class);
-            if (appliesTo == null) {
-              continue;
-            }
-            for (Class<?> allowedClass : appliesTo.value()) {
-              if (allowedClass == clazz) {
-                continue outer;
-              }
-            }
-            for (Class<?> allowedSuperClass : appliesTo.subClassesOf()) {
-              if (allowedSuperClass.isAssignableFrom(clazz)) {
-                continue outer;
-              }
-            }
-
-            String helpText = "";
-            if (appliesTo.value().length != 0) {
-              helpText = stream(appliesTo.value()).map(Class::getName).collect(joining(", "));
-            }
-            if (appliesTo.subClassesOf().length != 0) {
-              if (!helpText.isEmpty()) {
-                helpText += "as well as ";
-              }
-              helpText += "subclasses of ";
-              helpText +=
-                  stream(appliesTo.subClassesOf()).map(Class::getName).collect(joining(", "));
-            }
-            // Use the simple name as our annotations live in a single package.
-            throw new IllegalArgumentException(
-                format(
-                    "@%s does not apply to %s, only applies to %s",
-                    annotation.annotationType().getSimpleName(), clazz.getName(), helpText));
           }
         });
+  }
+
+  private static void ensureDeepAppliesTo(Annotation annotation, Class<?> clazz) {
+    AppliesTo appliesTo = annotation.annotationType().getAnnotation(AppliesTo.class);
+    if (appliesTo == null) {
+      return;
+    }
+
+    for (Class<?> allowedClass : appliesTo.value()) {
+      if (allowedClass == clazz) {
+        return;
+      }
+    }
+    for (Class<?> allowedSuperClass : appliesTo.subClassesOf()) {
+      if (allowedSuperClass.isAssignableFrom(clazz)) {
+        return;
+      }
+    }
+
+    String helpText = "";
+    if (appliesTo.value().length != 0) {
+      helpText = stream(appliesTo.value()).map(Class::getName).collect(joining(", "));
+    }
+    if (appliesTo.subClassesOf().length != 0) {
+      if (!helpText.isEmpty()) {
+        helpText += "as well as ";
+      }
+      helpText += "subclasses of ";
+      helpText += stream(appliesTo.subClassesOf()).map(Class::getName).collect(joining(", "));
+    }
+    // Use the simple name as our annotations live in a single package.
+    throw new IllegalArgumentException(
+        format(
+            "@%s does not apply to %s, only applies to %s",
+            annotation.annotationType().getSimpleName(), clazz.getName(), helpText));
   }
 
   private static void ensureMinLessThanOrEqualsMax(Annotation annotation) {

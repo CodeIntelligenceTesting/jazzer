@@ -12,6 +12,8 @@ package com.code_intelligence.jazzer.mutation.annotation;
 import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.code_intelligence.jazzer.mutation.utils.AppliesTo;
+import com.code_intelligence.jazzer.mutation.utils.ValidateMinMax;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
