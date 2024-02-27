@@ -58,13 +58,10 @@ class FuzzTestExecutor {
 
   private final List<String> libFuzzerArgs;
   private final Optional<Path> javaSeedsDir;
-  private final boolean isRunFromCommandLine;
 
-  private FuzzTestExecutor(
-      List<String> libFuzzerArgs, Optional<Path> javaSeedsDir, boolean isRunFromCommandLine) {
+  private FuzzTestExecutor(List<String> libFuzzerArgs, Optional<Path> javaSeedsDir) {
     this.libFuzzerArgs = libFuzzerArgs;
     this.javaSeedsDir = javaSeedsDir;
-    this.isRunFromCommandLine = isRunFromCommandLine;
   }
 
   public static FuzzTestExecutor prepare(
@@ -138,7 +135,7 @@ class FuzzTestExecutor {
     // Prefer original libFuzzerArgs set via command line by appending them last.
     libFuzzerArgs.addAll(originalLibFuzzerArgs);
 
-    return new FuzzTestExecutor(libFuzzerArgs, javaSeedsDir, Utils.runFromCommandLine(context));
+    return new FuzzTestExecutor(libFuzzerArgs, javaSeedsDir);
   }
 
   private static Optional<String> translateJUnitTimeoutToLibFuzzerFlag(ExtensionContext context) {
