@@ -9,6 +9,8 @@
 
 package com.example;
 
+import static com.code_intelligence.jazzer.junit.SpringFuzzTestHelper.collectApiStats;
+import static com.code_intelligence.jazzer.junit.SpringFuzzTestHelper.statusIsNot5xxServerError;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,11 +25,14 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest
+@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 public class JunitSpringWebApplicationTests {
   private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -46,12 +51,12 @@ public class JunitSpringWebApplicationTests {
 
   @Test
   public void unitTestShouldPass() throws Exception {
-    mockMvc.perform(get("/hello").param("name", "Maven"));
+    mockMvc.perform(get("/hello").param("name", "Maven")).andDo(collectApiStats());
   }
 
   @Test
   public void unitTestShouldFail() throws Exception {
-    mockMvc.perform(get("/buggy-hello").param("name", "error"));
+    mockMvc.perform(get("/buggy-hello").param("name", "error")).andDo(collectApiStats());
   }
 
   @FuzzTest(maxDuration = "10s")
@@ -61,7 +66,7 @@ public class JunitSpringWebApplicationTests {
     }
 
     String name = data.consumeRemainingAsString();
-    mockMvc.perform(get("/hello").param("name", name));
+    mockMvc.perform(get("/hello").param("name", name)).andDo(collectApiStats());
   }
 
   @FuzzTest(maxDuration = "10s")
@@ -73,7 +78,8 @@ public class JunitSpringWebApplicationTests {
     String name = data.consumeRemainingAsString();
     mockMvc
         .perform(get("/buggy-hello").param("name", name))
-        .andExpect(content().string(containsString(name)));
+        .andExpect(content().string(containsString(name)))
+        .andDo(collectApiStats());
   }
 
   @FuzzTest(maxDuration = "10s")
@@ -89,6 +95,8 @@ public class JunitSpringWebApplicationTests {
             post("/hello")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(helloRequest)))
-        .andExpect(content().string(containsString(helloRequest.name)));
+        .andExpect(content().string(containsString(helloRequest.name)))
+        .andExpect(statusIsNot5xxServerError())
+        .andDo(collectApiStats());
   }
 }

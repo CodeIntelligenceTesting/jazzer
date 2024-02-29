@@ -13,17 +13,12 @@
 
 set -e
 ( cd ../../ &&
- bazel build //deploy:all
+ bazel run //deploy:deploy_local
 )
-
-# Add locally-built Jazzer to the Maven repository
-./mvnw install:install-file -Dfile=../../bazel-bin/deploy/jazzer-junit-project.jar -DpomFile=../../bazel-bin/deploy/jazzer-junit-pom.xml
-./mvnw install:install-file -Dfile=../../bazel-bin/deploy/jazzer-project.jar       -DpomFile=../../bazel-bin/deploy/jazzer-pom.xml
-./mvnw install:install-file -Dfile=../../bazel-bin/deploy/jazzer-api-project.jar   -DpomFile=../../bazel-bin/deploy/jazzer-api-pom.xml
 
 ## Regression and unit tests
 echo "[SPRINGBOOT-JUNIT]: These unit and regression fuzz tests should pass"
-./mvnw test -Dtest="JunitSpringWebApplicationTests#unitTestShouldPass+fuzzTestShouldPass"
+./mvnw test -Dtest="JunitSpringWebApplicationTests#unitTestShouldPass+fuzzTestShouldPass" 2>&1 | tee /dev/tty | grep -v "==API STATS=="
 
 echo "[SPRINGBOOT-JUNIT]: This regression fuzz test should fail."
 # Temporarily disable exit on error.
@@ -43,7 +38,7 @@ fi
 
 ## Fuzz tests
 echo "[SPRINGBOOT-JUNIT]: This fuzz test should pass"
-JAZZER_FUZZ=1 ./mvnw test -Dtest="JunitSpringWebApplicationTests#fuzzTestShouldPass"
+JAZZER_FUZZ=1 ./mvnw test -Dtest="JunitSpringWebApplicationTests#fuzzTestShouldPass" 2>&1 | tee /dev/tty | grep "==API STATS=="
 
 echo "[SPRINGBOOT-JUNIT]: This fuzz test should fail"
 set +e
