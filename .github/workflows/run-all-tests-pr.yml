@@ -41,7 +41,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: zulu
+          distribution: corretto
           java-version: 21
 
       - name: Set Build Buddy config
