@@ -177,6 +177,18 @@ public final class TraceCmpHooks {
     }
   }
 
+  @MethodHook(type = HookType.AFTER, targetClassName = "java.util.Objects", targetMethod = "equals")
+  public static void genericObjectsEquals(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean areEqual) {
+    if (!areEqual
+        && arguments.length == 2
+        && arguments[0] != null
+        && arguments[1] != null
+        && arguments[0].getClass() == arguments[1].getClass()) {
+      TraceDataFlowNativeCallbacks.traceGenericCmp(arguments[0], arguments[1], hookId);
+    }
+  }
+
   @MethodHook(type = HookType.AFTER, targetClassName = "java.lang.Object", targetMethod = "equals")
   @MethodHook(
       type = HookType.AFTER,
