@@ -16,6 +16,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.code_intelligence.jazzer.driver.Opt;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -31,6 +32,7 @@ class AgentConfigurator {
 
     // Add logic to the hook instrumentation that allows us to enable and disable hooks at runtime.
     Opt.conditionalHooks.setIfDefault(true);
+    Opt.instrument.setIfDefault(determineInstrumentationFilters(extensionContext));
     // Apply all hooks, but no coverage or compare instrumentation.
     Opt.instrumentationExcludes.setIfDefault(singletonList("**"));
     Opt.customHookIncludes.setIfDefault(Opt.instrument.get());
@@ -43,12 +45,14 @@ class AgentConfigurator {
 
     applyCommonConfiguration(extensionContext);
 
-    Opt.instrument.setIfDefault(
-        getClassPathBasedInstrumentationFilter(System.getProperty("java.class.path"))
-            .orElseGet(
-                () -> getLegacyInstrumentationFilter(extensionContext.getRequiredTestClass())));
+    Opt.instrument.setIfDefault(determineInstrumentationFilters(extensionContext));
     Opt.customHookIncludes.setIfDefault(Opt.instrument.get());
     Opt.instrumentationIncludes.setIfDefault(Opt.instrument.get());
+  }
+
+  private static List<String> determineInstrumentationFilters(ExtensionContext extensionContext) {
+    return getClassPathBasedInstrumentationFilter(System.getProperty("java.class.path"))
+        .orElseGet(() -> getLegacyInstrumentationFilter(extensionContext.getRequiredTestClass()));
   }
 
   private static void applyCommonConfiguration(ExtensionContext extensionContext) {
