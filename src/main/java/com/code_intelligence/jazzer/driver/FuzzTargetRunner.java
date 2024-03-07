@@ -282,7 +282,8 @@ public final class FuzzTargetRunner {
       return LIBFUZZER_CONTINUE;
     }
     boolean continueFuzzing =
-        emitDedupToken && Long.compareUnsigned(ignoredTokens.size(), keepGoing) < 0;
+        emitDedupToken
+            && (keepGoing == 0 || Long.compareUnsigned(ignoredTokens.size(), keepGoing) < 0);
     boolean isFuzzingFromCommandLine =
         fatalFindingHandlerForJUnit == null || Opt.isJUnitAndCommandLine.get();
     // In case of --keep_going, only the last finding is reported to JUnit as a Java object, all
