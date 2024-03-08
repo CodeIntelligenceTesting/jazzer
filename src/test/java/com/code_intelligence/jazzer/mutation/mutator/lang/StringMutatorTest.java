@@ -10,12 +10,16 @@
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.mutator.lang.StringMutatorFactory.fixUpAscii;
+import static com.code_intelligence.jazzer.mutation.mutator.lang.StringMutatorFactory.fixUpPchar;
 import static com.code_intelligence.jazzer.mutation.mutator.lang.StringMutatorFactory.fixUpUtf8;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.UrlSegment;
 import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
+import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
@@ -106,6 +110,40 @@ class StringMutatorTest {
       byte[] copy = Arrays.copyOf(validUtf8, validUtf8.length);
       fixUpUtf8(copy);
       assertThat(copy).isEqualTo(validUtf8);
+    }
+  }
+
+  @RepeatedTest(10)
+  void testFixPchar_randomInputFixed(RepetitionInfo info) {
+    SplittableRandom random =
+        new SplittableRandom(
+            (long) "testFixPchar_randomInputFixed".hashCode() * info.getCurrentRepetition());
+
+    for (int length = 0; length < 1000; length++) {
+      byte[] randomBytes = generateRandomBytes(random, length);
+      byte[] copy = Arrays.copyOf(randomBytes, randomBytes.length);
+      fixUpPchar(copy);
+      if (isValidPathVariable(randomBytes)) {
+        assertThat(copy).isEqualTo(randomBytes);
+      } else {
+        assertThat(isValidAscii(copy)).isTrue();
+      }
+    }
+  }
+
+  @Test
+  void testUrlSegmentInit() {
+    SerializingMutator<String> mutator =
+        (SerializingMutator<String>)
+            factory.createOrThrow(
+                new TypeHolder<
+                    @NotNull @UrlSegment @WithUtf8Length(min = 10) String>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("String");
+    PseudoRandom prng = anyPseudoRandom();
+    for (int i = 0; i < 1000; i++) {
+      String urlSegment = mutator.init(prng);
+      assertThat(urlSegment.length()).isAtLeast(10);
+      assertThat(isValidPathVariable(urlSegment.getBytes(StandardCharsets.UTF_8))).isTrue();
     }
   }
 
@@ -218,6 +256,27 @@ class StringMutatorTest {
       }
     }
     return true;
+  }
+
+  private static final byte[] VALID_PCHAR =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:@!$&'()*+,;=".getBytes();
+
+  private static boolean isValidPathVariable(byte[] data) {
+    for (byte b : data) {
+      if (!isValidPathChar(b)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean isValidPathChar(byte b) {
+    for (byte valid : VALID_PCHAR) {
+      if (b == valid) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static byte[] generateRandomBytes(SplittableRandom random, int length) {
