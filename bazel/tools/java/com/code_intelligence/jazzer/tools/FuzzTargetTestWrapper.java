@@ -66,6 +66,7 @@ public class FuzzTargetTestWrapper {
     boolean shouldVerifyCrashReproducer;
     boolean expectCrash;
     boolean usesJavaLauncher;
+    int expectedNumberOfFindings;
     Optional<String> expectedWarningOrError;
     Set<String> allowedFindings;
     List<String> arguments;
@@ -80,23 +81,25 @@ public class FuzzTargetTestWrapper {
       shouldVerifyCrashReproducer = Boolean.parseBoolean(args[5]);
       expectCrash = Boolean.parseBoolean(args[6]);
       usesJavaLauncher = Boolean.parseBoolean(args[7]);
-      if (args[8].isEmpty()) {
-        expectedWarningOrError = Optional.empty();
-      } else {
-        expectedWarningOrError = Optional.of(args[8]);
-      }
+      expectedNumberOfFindings = Integer.parseInt(args[8]);
+      expectedWarningOrError = args[9].isEmpty() ? Optional.empty() : Optional.of(args[9]);
       allowedFindings =
-          Arrays.stream(args[9].split(",")).filter(s -> !s.isEmpty()).collect(toSet());
+          Arrays.stream(args[10].split(",")).filter(s -> !s.isEmpty()).collect(toSet());
       // Map all files/dirs to real location
       arguments =
           Arrays.stream(args)
-              .skip(10)
+              .skip(11)
               .map(arg -> arg.startsWith("-") ? arg : runfiles.rlocation(arg))
               .collect(toList());
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
       e.printStackTrace();
       System.exit(1);
       return;
+    }
+
+    if (expectedNumberOfFindings > 1
+        && (allowedFindings.contains("timeout") || allowedFindings.contains("native"))) {
+      throw new IllegalArgumentException("Cannot expect multiple native or timeout findings");
     }
 
     ProcessBuilder processBuilder = new ProcessBuilder();
@@ -164,7 +167,8 @@ public class FuzzTargetTestWrapper {
                 process.getErrorStream(),
                 allowedFindings,
                 arguments.contains("--nohooks"),
-                expectedWarningOrError);
+                expectedWarningOrError,
+                expectedNumberOfFindings);
       } finally {
         process.getErrorStream().close();
       }
@@ -225,7 +229,8 @@ public class FuzzTargetTestWrapper {
       InputStream fuzzerOutput,
       Set<String> expectedFindings,
       boolean noHooks,
-      Optional<String> expectedWarningOrError)
+      Optional<String> expectedWarningOrError,
+      int expectedNumberOfFindings)
       throws IOException {
     List<String> lines;
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(fuzzerOutput))) {
@@ -309,6 +314,12 @@ public class FuzzTargetTestWrapper {
             .collect(toList());
     if (findings.isEmpty()) {
       throw new IllegalStateException("Expected a crash, but did not get a stack trace");
+    }
+    if (expectedNumberOfFindings > 0 && (findings.size() != expectedNumberOfFindings)) {
+      throw new IllegalStateException(
+          String.format(
+              "Expected %d findings, but got %d:%n%s",
+              expectedNumberOfFindings, findings.size(), String.join("\n", findings)));
     }
     for (String finding : findings) {
       if (!expectedFindings.contains(finding)) {

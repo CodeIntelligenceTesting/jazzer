@@ -28,6 +28,7 @@ def java_fuzz_target_test(
         # Superset of the findings the fuzzer is expected to find. Since fuzzing runs are not
         # deterministic across OSes, pinpointing the exact set of findings is difficult.
         allowed_findings = [],
+        expect_number_of_findings = 0,
         # By default, expect a crash iff allowed_findings isn't empty.
         expect_crash = None,
         # If empty, expect no warnings or errors, if not empty, expect one matching the given regex.
@@ -112,6 +113,7 @@ def java_fuzz_target_test(
             str(verify_crash_reproducer),
             str(expect_crash),
             str(launcher_variant == "java"),
+            str(expect_number_of_findings),
             "'" + expected_warning_or_error + "'",
             "'" + ",".join(allowed_findings) + "'",
         ] + fuzzer_args,
