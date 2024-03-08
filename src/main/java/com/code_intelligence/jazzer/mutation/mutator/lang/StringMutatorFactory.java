@@ -13,6 +13,7 @@ import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinator
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.*;
 
 import com.code_intelligence.jazzer.mutation.annotation.Ascii;
+import com.code_intelligence.jazzer.mutation.annotation.UrlSegment;
 import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
@@ -136,6 +137,24 @@ final class StringMutatorFactory implements MutatorFactory {
     }
   }
 
+  // Based on pchar definition at https://datatracker.ietf.org/doc/html/rfc3986#appendix-A
+  // Don't generate '%' as it needs to be followed by two hex characters.
+  //
+  // The following array maps all byte values to valid pchars, leaving the initial valid ones
+  // untouched.
+  // This enables a constant time mapping of individual characters with a uniform distribution.
+  // Code to generate the array is located in
+  // com.code_intelligence.jazzer.mutation.mutator.lang.PCharGenerator.
+  static final byte[] BYTE_TO_PCHAR =
+      "!$&'()*+,-.0123456789:;=@ABCDEFGH!IJ$K&'()*+,-.L0123456789:;M=NO@ABCDEFGHIJKLMNOPQRSTUVWXYZPQRS_TabcdefghijklmnopqrstuvwxyzUVW~XYZ_abcdefghijklmnopqrstuvwxyz~!$&'()*+,-.0123456789:;=@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~!$&'()*+,-.01234567"
+          .getBytes(StandardCharsets.UTF_8);
+
+  static void fixUpPchar(byte[] bytes) {
+    for (int i = 0; i < bytes.length; i++) {
+      bytes[i] = BYTE_TO_PCHAR[bytes[i] & 0xFF];
+    }
+  }
+
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, ExtendedMutatorFactory factory) {
@@ -152,10 +171,13 @@ final class StringMutatorFactory implements MutatorFactory {
         .map(
             byteArrayMutator -> {
               boolean fixUpAscii = type.getDeclaredAnnotation(Ascii.class) != null;
+              boolean fixUpPchar = type.getDeclaredAnnotation(UrlSegment.class) != null;
               return mutateThenMapToImmutable(
                   (SerializingMutator<byte[]>) byteArrayMutator,
                   bytes -> {
-                    if (fixUpAscii) {
+                    if (fixUpPchar) {
+                      fixUpPchar(bytes);
+                    } else if (fixUpAscii) {
                       fixUpAscii(bytes);
                     } else {
                       fixUpUtf8(bytes);
