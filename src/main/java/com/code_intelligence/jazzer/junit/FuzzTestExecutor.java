@@ -10,6 +10,7 @@
 package com.code_intelligence.jazzer.junit;
 
 import static com.code_intelligence.jazzer.driver.FuzzTargetHolder.autofuzzFuzzTarget;
+import static com.code_intelligence.jazzer.junit.SpringFuzzTestHelper.printApiStats;
 import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
@@ -356,9 +357,15 @@ class FuzzTestExecutor {
     // Non-fatal findings (with --keep_going) are logged by FuzzTargetRunner.
     FuzzTargetRunner.registerFatalFindingHandlerForJUnit(atomicFinding::set);
 
+    SpringFuzzTestHelper.apiStats = new ApiStatsInterval();
+
     int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
     javaSeedsDir.ifPresent(FuzzTestExecutor::deleteJavaSeedsDir);
     Throwable finding = atomicFinding.get();
+
+    // Print the API stats after the test has finished, so that we get the most recent API stats.
+    printApiStats();
+
     if (finding != null) {
       return Optional.of(finding);
     } else if (exitCode != 0) {

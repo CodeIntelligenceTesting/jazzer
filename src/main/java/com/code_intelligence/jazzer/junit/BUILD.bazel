@@ -24,6 +24,7 @@ java_library(
     name = "fuzz_test",
     srcs = [
         "AgentConfiguringArgumentsProvider.java",
+        "ApiStatsInterval.java",
         "DictionaryEntries.java",
         "DictionaryEntriesList.java",
         "DictionaryFile.java",
@@ -33,6 +34,7 @@ java_library(
         "FuzzerDictionary.java",
         "FuzzingArgumentsProvider.java",
         "SeedArgumentsProvider.java",
+        "SpringFuzzTestHelper.java",
     ],
     visibility = [
         "//examples/junit/src/test/java/com/example:__pkg__",
@@ -55,9 +57,12 @@ java_library(
         ":seed_serializer",
         ":utils",
         "//deploy:jazzer",
+        "@maven//:jakarta_servlet_jakarta_servlet_api",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
         "@maven//:org_junit_platform_junit_platform_commons",
+        "@maven//:org_springframework_spring_test",
+        "@maven//:org_springframework_spring_web",
     ],
 )
 
@@ -70,11 +75,16 @@ java_library(
 java_jni_library(
     name = "fuzz_test_executor",
     srcs = [
+        "ApiStats.java",
+        "ApiStatsInterval.java",
+        "ApiStatsNoop.java",
         "FuzzTestExecutor.java",
+        "SpringFuzzTestHelper.java",
     ],
     native_libs = [
         "//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
     ],
+    visibility = ["//src/test/java/com/code_intelligence/jazzer/junit:__pkg__"],
     deps = [
         ":agent_configurator",
         ":junit_lifecycle_methods_invoker",
@@ -83,9 +93,12 @@ java_jni_library(
         ":utils",
         "//deploy:jazzer",
         "//deploy:jazzer-api",
+        "@maven//:jakarta_servlet_jakarta_servlet_api",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
         "@maven//:org_junit_platform_junit_platform_commons",
+        "@maven//:org_springframework_spring_test",
+        "@maven//:org_springframework_spring_web",
     ],
 )
 
