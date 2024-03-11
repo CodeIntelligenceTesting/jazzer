@@ -215,8 +215,8 @@ fuzzing is done. The main entrypoints for the actual integration code are found 
 on `FuzzTest`: `@ArgumentsSource(FuzzTestArgumentsProvider.class)` and `@ExtendsWith(FuzzTestExtensions.class)`.
 
 Because these same files and functions are involved in two mostly separate sets of functionality, this will look at the
-flow of the different methods involved in integrating with JUnit in fuzzing mode (when `JAZZER_FUZZ` is set to any
-non-empty value) and in regression mode (when `JAZZER_FUZZ` is not set) separately.
+flow of the different methods involved in integrating with JUnit in fuzzing mode (when `JAZZER_FUZZ` is set to a truthy 
+value (`true`, `1`, `yes`)) and in regression mode (when `JAZZER_FUZZ` is not set) separately.
 
 ### Fuzzing Flow
 
