@@ -92,7 +92,7 @@ java_test(
     )
     for JAZZER_FUZZ in [
         "",
-        "_fuzzing",
+        "1",
     ]
 ]
 
@@ -121,7 +121,7 @@ java_test(
     )
     for JAZZER_FUZZ in [
         "",
-        "_fuzzing",
+        "1",
     ]
 ]
 
@@ -188,7 +188,7 @@ java_test(
     )
     for JAZZER_FUZZ in [
         "",
-        "_fuzzing",
+        "1",
     ]
 ]
 
@@ -222,7 +222,7 @@ java_test(
     )
     for JAZZER_FUZZ in [
         "",
-        "_fuzzing",
+        "1",
     ]
 ]
 
@@ -250,7 +250,7 @@ java_test(
     )
     for JAZZER_FUZZ in [
         "",
-        "_fuzzing",
+        "1",
     ]
 ]
 
@@ -276,7 +276,7 @@ java_test(
     )
     for JAZZER_FUZZ in [
         "",
-        "_fuzzing",
+        "1",
     ]
 ]
 
@@ -322,7 +322,7 @@ java_test(
     )
     for JAZZER_FUZZ in [
         "",
-        "_fuzzing",
+        "1",
     ]
 ]
 
@@ -386,6 +386,6 @@ java_test(
     )
     for JAZZER_FUZZ in [
         "",
-        "_fuzzing",
+        "1",
     ]
 ]
