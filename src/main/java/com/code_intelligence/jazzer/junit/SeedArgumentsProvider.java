@@ -39,7 +39,7 @@ class SeedArgumentsProvider implements ArgumentsProvider {
   @Override
   public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext)
       throws IOException {
-    if (runFromCommandLine(extensionContext)) {
+    if (runFromCommandLine(extensionContext) && isFuzzing(extensionContext)) {
       // libFuzzer always runs on the file-based seeds first anyway and the additional visual
       // indication provided by test invocations for seeds isn't effective on the command line, so
       // we skip these invocations.

@@ -222,11 +222,12 @@ class Utils {
         .anyMatch(s -> COVERAGE_AGENT_ARG.matcher(s).matches());
   }
 
+  private static final boolean SET_FUZZING_ENV = System.getenv("JAZZER_FUZZ") != null;
   private static final boolean IS_FUZZING_ENV =
-      System.getenv("JAZZER_FUZZ") != null && !System.getenv("JAZZER_FUZZ").isEmpty();
+      SET_FUZZING_ENV && permissivelyParseBoolean(System.getenv("JAZZER_FUZZ"));
 
   static boolean isFuzzing(ExtensionContext extensionContext) {
-    return IS_FUZZING_ENV || runFromCommandLine(extensionContext);
+    return SET_FUZZING_ENV ? IS_FUZZING_ENV : runFromCommandLine(extensionContext);
   }
 
   static boolean runFromCommandLine(ExtensionContext extensionContext) {

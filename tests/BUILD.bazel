@@ -747,4 +747,22 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "RegressionModeTest",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/RegressionModeTest.java"],
+    env = {
+        "JAZZER_FUZZ": "0",
+    },
+    target_class = "com.example.RegressionModeTest",
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
 ktlint()
