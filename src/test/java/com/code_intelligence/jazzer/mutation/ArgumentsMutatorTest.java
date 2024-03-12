@@ -11,7 +11,6 @@ package com.code_intelligence.jazzer.mutation;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 import static java.util.Collections.singletonList;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;

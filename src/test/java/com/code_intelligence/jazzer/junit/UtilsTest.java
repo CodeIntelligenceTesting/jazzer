@@ -16,7 +16,6 @@ import static com.code_intelligence.jazzer.junit.Utils.isMarkedInstance;
 import static com.code_intelligence.jazzer.junit.Utils.isMarkedInvocation;
 import static com.code_intelligence.jazzer.junit.Utils.parseJUnitTimeoutValueToSeconds;
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.createFile;
 import static java.util.Arrays.asList;

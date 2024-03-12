@@ -44,11 +44,11 @@ single_version_override(
 SHADED_RUNTIME_MAVEN_ARTIFACTS = [
     # keep sorted
     # renovate: keep updated
-    "com.github.jsqlparser:jsqlparser:4.8",
-    "com.google.errorprone:error_prone_annotations:2.24.1",
-    "com.google.errorprone:error_prone_type_annotations:2.24.1",
-    "io.github.classgraph:classgraph:jar:4.8.165",
-    "net.bytebuddy:byte-buddy-agent:1.14.11",
+    "com.github.jsqlparser:jsqlparser:4.9",
+    "com.google.errorprone:error_prone_annotations:2.26.1",
+    "com.google.errorprone:error_prone_type_annotations:2.26.1",
+    "io.github.classgraph:classgraph:jar:4.8.168",
+    "net.bytebuddy:byte-buddy-agent:1.14.12",
     "net.jodah:typetools:jar:0.6.3",
     "org.ow2.asm:asm:9.6",
     "org.ow2.asm:asm-commons:9.6",
@@ -85,14 +85,14 @@ TEST_MAVEN_ARTIFACTS_FIXED = [
 TEST_MAVEN_ARTIFACTS = [
     # keep sorted
     # renovate: keep updated
-    "com.google.truth.extensions:truth-java8-extension:1.4.0",
-    "com.google.truth.extensions:truth-liteproto-extension:1.4.0",
-    "com.google.truth.extensions:truth-proto-extension:1.4.0",
-    "com.google.truth:truth:1.4.0",
+    "com.google.truth.extensions:truth-java8-extension:1.4.2",
+    "com.google.truth.extensions:truth-liteproto-extension:1.4.2",
+    "com.google.truth.extensions:truth-proto-extension:1.4.2",
+    "com.google.truth:truth:1.4.2",
     "junit:junit:4.13.2",
     "org.assertj:assertj-core:3.25.3",
     "org.jacoco:org.jacoco.core:0.8.11",
-    "org.mockito:mockito-core:5.10.0",
+    "org.mockito:mockito-core:5.11.0",
     "org.openjdk.jmh:jmh-core:1.37",
     "org.openjdk.jmh:jmh-generator-annprocess:1.37",
 ]

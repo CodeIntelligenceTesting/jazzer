@@ -10,7 +10,6 @@
 package com.code_intelligence.jazzer.junit;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod;
