@@ -800,4 +800,202 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "SwitchOnIntegersFuzzer",
+    timeout = "short",
+    srcs = [
+        "src/test/java/com/example/SwitchCoverageHelper.java",
+        "src/test/java/com/example/SwitchOnIntegersFuzzer.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+    ],
+    fuzzer_args = [
+        "-print_final_stats=1",
+    ] + select({
+        # Windows needs significantly more executions in this test.
+        # Maybe on Windows, the call to __sanitizer_cov_trace_switch does something different?
+        "@platforms//os:windows": ["-runs=10000000"],
+        "//conditions:default": ["-runs=300000"],
+    }),
+    target_class = "com.example.SwitchOnIntegersFuzzer",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "//deploy:jazzer-project",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "SwitchOnStringsFuzzer",
+    timeout = "short",
+    srcs = [
+        "src/test/java/com/example/SwitchCoverageHelper.java",
+        "src/test/java/com/example/SwitchOnStringsFuzzer.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+    ],
+    fuzzer_args = [
+        "-print_final_stats=1",
+        "-runs=300000",
+    ],
+    target_class = "com.example.SwitchOnStringsFuzzer",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "//deploy:jazzer-project",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "SwitchStatementOnStringsFuzzer",
+    timeout = "short",
+    srcs = [
+        "src/test/java/com/example/SwitchCoverageHelper.java",
+        "src/test/java/com/example/SwitchStatementOnStringsFuzzer.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+    ],
+    fuzzer_args = [
+        "-print_final_stats=1",
+        "-runs=300000",
+    ],
+    javacopts = [
+        "--release",
+        "17",
+    ],
+    tags = [
+        "no-jdk8",
+    ],
+    target_class = "com.example.SwitchStatementOnStringsFuzzer",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "//deploy:jazzer-project",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "SwitchStatementOnIntegersFuzzer",
+    timeout = "short",
+    srcs = [
+        "src/test/java/com/example/SwitchCoverageHelper.java",
+        "src/test/java/com/example/SwitchStatementOnIntegersFuzzer.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+    ],
+    fuzzer_args = [
+        "-print_final_stats=1",
+    ] + select({
+        # Windows needs significantly more executions in this test.
+        # Maybe on Windows, the call to __sanitizer_cov_trace_switch does something different?
+        "@platforms//os:windows": ["-runs=10000000"],
+        "//conditions:default": ["-runs=1000000"],
+    }),
+    javacopts = [
+        "--release",
+        "17",
+    ],
+    tags = [
+        "no-jdk8",
+    ],
+    target_class = "com.example.SwitchStatementOnIntegersFuzzer",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "//deploy:jazzer-project",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "SwitchMultipleCaseLabelsOfStrings",
+    timeout = "short",
+    srcs = [
+        "src/test/java/com/example/SwitchCoverageHelper.java",
+        "src/test/java/com/example/SwitchMultipleCaseLabelsOfStrings.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+    ],
+    fuzzer_args = [
+        "-print_final_stats=1",
+        "-runs=1000000",
+    ],
+    javacopts = [
+        "--release",
+        "17",
+    ],
+    tags = [
+        "no-jdk8",
+    ],
+    target_class = "com.example.SwitchMultipleCaseLabelsOfStrings",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "//deploy:jazzer-project",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "SwitchPatternMatchingWithGuardOverTypes",
+    timeout = "short",
+    srcs = [
+        "src/test/java/com/example/SwitchCoverageHelper.java",
+        "src/test/java/com/example/SwitchPatternMatchingWithGuardOverTypes.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+    ],
+    fuzzer_args = [
+        "-print_final_stats=1",
+        "-runs=1000000",
+    ],
+    javacopts = [
+        "--release",
+        "21",
+    ],
+    tags = [
+        "no-jdk8",
+    ],
+    target_class = "com.example.SwitchPatternMatchingWithGuardOverTypes",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "//deploy:jazzer-project",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
 ktlint()
