@@ -78,12 +78,20 @@ public final class JUnitRunner {
             .boxed()
             .collect(Collectors.toMap(i -> "jazzer.internal.arg." + i, libFuzzerArgs::get));
 
+    // This class is only invoked via CLI, hence the timeout mode can be set solely based on the
+    // fuzzing mode parameter.
+    // The timeout mode is set to "disabled" in fuzzing mode, as libFuzzer handles timeouts.
+    // In non-fuzzing mode, the timeout mode is set to "enabled" to ensure that JUnit handles
+    // timeouts.
+    String timeoutMode = Opt.isFuzzing.get() ? "disabled" : "enabled";
+    Log.debug("JUnit timeout mode: " + timeoutMode);
+
     LauncherDiscoveryRequestBuilder requestBuilder =
         LauncherDiscoveryRequestBuilder.request()
             // JUnit's timeout handling interferes with libFuzzer as from the point of view of JUnit
             // all fuzz test invocations are combined in a single JUnit test method execution.
             // https://junit.org/junit5/docs/current/user-guide/#writing-tests-declarative-timeouts-mode
-            .configurationParameter("junit.jupiter.execution.timeout.mode", "disabled")
+            .configurationParameter("junit.jupiter.execution.timeout.mode", timeoutMode)
             .configurationParameter("jazzer.internal.command_line", "true")
             .configurationParameters(indexedArgs)
             .selectors(selectClass(testClassName))
