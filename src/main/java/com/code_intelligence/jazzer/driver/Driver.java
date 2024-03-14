@@ -13,6 +13,7 @@ package com.code_intelligence.jazzer.driver;
 
 import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 import static java.lang.System.exit;
+import static java.util.stream.Collectors.toList;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.junit.JUnitRunner;
@@ -28,6 +29,18 @@ import java.util.Optional;
 
 public class Driver {
   public static int start(List<String> args, boolean spawnsSubprocesses) throws IOException {
+    Log.debug("User: " + System.getProperty("user.name"));
+    Log.debug("OS: " + System.getProperty("os.name") + " " + System.getProperty("os.version"));
+    Log.debug("Version: " + System.getProperty("java.runtime.version"));
+    Log.debug("JAVA_HOME: " + System.getProperty("java.home"));
+    Log.debug("Command line: " + String.join(" ", args));
+    Log.debug("Classpath: " + System.getProperty("java.class.path"));
+    Log.debug(
+        "JAZZER environment variables: "
+            + System.getenv().entrySet().stream()
+                .filter(e -> e.getKey().startsWith("JAZZER_"))
+                .collect(toList()));
+
     if (IS_ANDROID) {
       if (!Opt.autofuzz.get().isEmpty()) {
         Log.error("--autofuzz is not supported on Android");
