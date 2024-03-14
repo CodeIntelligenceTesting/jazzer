@@ -60,6 +60,14 @@ public final class Opt {
         "Arguments to pass to the JVM (separator can be escaped with '\\', native launcher only)");
   }
 
+  // Whether Jazzer is running in fuzzing or regression test mode.
+  // As this part is only used by CLI or native launcher, default to true.
+  public static final OptItem<Boolean> isFuzzing =
+      boolSetting(
+          "fuzz",
+          true,
+          "Run in fuzzing mode (use 'false' for regression tests). Only used for JUnit fuzz tests");
+
   public static final OptItem<List<String>> additionalClassesExcludes =
       stringListSetting(
           "additional_classes_excludes",
