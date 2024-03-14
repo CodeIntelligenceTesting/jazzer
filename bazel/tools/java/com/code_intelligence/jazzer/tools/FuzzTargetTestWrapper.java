@@ -65,6 +65,7 @@ public class FuzzTargetTestWrapper {
     boolean shouldVerifyCrashInput;
     boolean shouldVerifyCrashReproducer;
     boolean expectCrash;
+    int expectNonCrashExitCode;
     boolean usesJavaLauncher;
     int expectedNumberOfFindings;
     Optional<String> expectedWarningOrError;
@@ -80,15 +81,16 @@ public class FuzzTargetTestWrapper {
       shouldVerifyCrashInput = Boolean.parseBoolean(args[4]);
       shouldVerifyCrashReproducer = Boolean.parseBoolean(args[5]);
       expectCrash = Boolean.parseBoolean(args[6]);
-      usesJavaLauncher = Boolean.parseBoolean(args[7]);
-      expectedNumberOfFindings = Integer.parseInt(args[8]);
-      expectedWarningOrError = args[9].isEmpty() ? Optional.empty() : Optional.of(args[9]);
+      expectNonCrashExitCode = Integer.parseInt(args[7]);
+      usesJavaLauncher = Boolean.parseBoolean(args[8]);
+      expectedNumberOfFindings = Integer.parseInt(args[9]);
+      expectedWarningOrError = args[10].isEmpty() ? Optional.empty() : Optional.of(args[10]);
       allowedFindings =
-          Arrays.stream(args[10].split(",")).filter(s -> !s.isEmpty()).collect(toSet());
+          Arrays.stream(args[11].split(",")).filter(s -> !s.isEmpty()).collect(toSet());
       // Map all files/dirs to real location
       arguments =
           Arrays.stream(args)
-              .skip(11)
+              .skip(12)
               .map(arg -> arg.startsWith("-") ? arg : runfiles.rlocation(arg))
               .collect(toList());
     } catch (IOException | ArrayIndexOutOfBoundsException e) {
@@ -129,7 +131,7 @@ public class FuzzTargetTestWrapper {
                   "-XX:+IgnoreUnrecognizedVMOptions",
                   "-XX:+CriticalJNINatives",
                   "-XX:+EnableDynamicAgentLoading"));
-      if (System.getenv("JAZZER_DEBUG") != null) {
+      if (System.getenv("JAZZER_DEBUG") != null && System.getenv("JAZZER_DEBUG").equals("1")) {
         command.add("--debug");
       }
     } else {
@@ -174,7 +176,14 @@ public class FuzzTargetTestWrapper {
       }
       int exitCode = process.waitFor();
       if (!expectCrash) {
-        if (exitCode != 0) {
+        if (expectNonCrashExitCode >= 0) {
+          if (expectNonCrashExitCode != exitCode) {
+            System.err.printf(
+                "Expected exit code %d, but Jazzer exited with exit code %d%n",
+                expectNonCrashExitCode, exitCode);
+            System.exit(1);
+          }
+        } else if (exitCode != 0) {
           System.err.printf(
               "Did not expect a crash, but Jazzer exited with exit code %d%n", exitCode);
           System.exit(1);
