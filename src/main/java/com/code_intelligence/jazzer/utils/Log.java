@@ -26,6 +26,9 @@ public class Log {
   private static PrintStream fixedOut;
   private static PrintStream fixedErr;
 
+  // Whether to print debug messages. This is controlled by the JAZZER_DEBUG environment variable.
+  private static final boolean isDebug = System.getenv("JAZZER_DEBUG") != null;
+
   /** The {@link PrintStream}s to use for all output from this call on. */
   public static void fixOutErr(PrintStream out, PrintStream err) {
     if (out == null) {
@@ -44,6 +47,12 @@ public class Log {
 
   public static void structuredOutput(String output) {
     getOut().println(output);
+  }
+
+  public static void debug(String message) {
+    if (isDebug) {
+      println("DEBUG: ", message, null);
+    }
   }
 
   public static void info(String message) {

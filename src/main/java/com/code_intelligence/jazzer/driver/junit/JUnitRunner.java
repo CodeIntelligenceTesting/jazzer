@@ -117,6 +117,27 @@ public final class JUnitRunner {
         testPlan,
         new TestExecutionListener() {
           @Override
+          public void testPlanExecutionStarted(TestPlan testPlan) {
+            Log.debug("Fuzzing started for " + testPlan);
+          }
+
+          @Override
+          public void executionStarted(TestIdentifier testIdentifier) {
+            Log.debug("Fuzz test started: " + testIdentifier.getDisplayName());
+          }
+
+          @Override
+          public void executionSkipped(TestIdentifier testIdentifier, String reason) {
+            Log.debug(
+                "Fuzz test skipped: " + testIdentifier.getDisplayName() + " (" + reason + ")");
+          }
+
+          @Override
+          public void testPlanExecutionFinished(TestPlan testPlan) {
+            Log.debug("Fuzzing finished for " + testPlan);
+          }
+
+          @Override
           public void executionFinished(
               TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
             if (testIdentifier.isTest()) {
@@ -145,6 +166,7 @@ public final class JUnitRunner {
         });
 
     TestExecutionResult result = testResultHolder.get();
+    Log.debug("Fuzz test result: " + result);
     if (result == null) {
       // This can only happen if a test container failed, in which case we will have printed a
       // stack trace.
