@@ -270,9 +270,9 @@ http_jar(
 
 http_jar(
     name = "google-java-format",
-    sha256 = "33068bbbdce1099982ec1171f5e202898eb35f2919cf486141e439fc6e3a4203",
+    sha256 = "1e69f8b63c39a5124a8efb7bad213eb9ac03944339eb9580ae210b0c60565d9b",
     urls = [
-        "https://github.com/google/google-java-format/releases/download/v1.17.0/google-java-format-1.17.0-all-deps.jar",
+        "https://github.com/google/google-java-format/releases/download/v1.21.0/google-java-format-1.21.0-all-deps.jar",
     ],
 )
 
