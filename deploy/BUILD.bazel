@@ -89,7 +89,12 @@ java_export(
     ],
     maven_coordinates = "com.code-intelligence:jazzer-junit:$(JAZZER_VERSION)",
     pom_template = "jazzer-junit.pom",
-    tags = ["no-sources"],
+    tags = [
+        "no-sources",
+        # Generating javadocs breaks the build due to weird dependency issues.
+        # Deactivate it for now.
+        "no-javadocs",
+    ],
     toolchains = [":jazzer_version"],
     visibility = ["//visibility:public"],
     runtime_deps = [
