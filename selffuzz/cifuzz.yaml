@@ -31,7 +31,8 @@
 
 ## Command-line arguments to pass to libFuzzer.
 ## See https://llvm.org/docs/LibFuzzer.html#options
-#engine-args:
+engine-args:
+  - -print_final_stats=1
 
 ## Maximum time to run fuzz tests. The default is to run indefinitely.
 timeout: 5m
@@ -45,15 +46,13 @@ timeout: 5m
 #print-json: true
 
 ## Set to true to disable desktop notifications.
-#no-notifications: true
+no-notifications: true
 
-## Set URL of the CI App.
+## Set URL of CI Sense.
 #server: https://app.code-intelligence.com
 
-## Set the project name on the CI App.
-#project: my-project-1a2b3c4d
+## Set the project name on CI Sense.
+project: Jazzer-39e8ed3a
 
 ## Style for CI Fuzz.
 #style: plain
-
-project: Jazzer-39e8ed3a
