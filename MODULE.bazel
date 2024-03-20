@@ -59,14 +59,20 @@ SHADED_RUNTIME_MAVEN_ARTIFACTS = [
 # Keep these versions as low as possible for maximum compatibility with user setups.
 PROVIDED_RUNTIME_MAVEN_ARTIFACTS = [
     # keep sorted
-    "jakarta.servlet:jakarta.servlet-api:jar:6.0.0",
     "org.junit.jupiter:junit-jupiter-api:5.9.0",
     "org.junit.jupiter:junit-jupiter-engine:5.9.0",
     "org.junit.jupiter:junit-jupiter-params:5.9.0",
-    "org.junit.platform:junit-platform-commons:jar:1.9.0",
-    "org.junit.platform:junit-platform-engine:jar:1.9.0",
-    "org.junit.platform:junit-platform-launcher:jar:1.9.0",
+    "org.junit.platform:junit-platform-commons:1.9.0",
+    "org.junit.platform:junit-platform-engine:1.9.0",
+    "org.junit.platform:junit-platform-launcher:1.9.0",
     "org.opentest4j:opentest4j:1.2.0",
+]
+
+# Runtime dependencies of Jazzer that should not be included in the generated pom.
+# Keep these versions as low as possible for maximum compatibility with user setups.
+HIDDEN_RUNTIME_MAVEN_ARTIFACTS = [
+    # keep sorted
+    "jakarta.servlet:jakarta.servlet-api:6.0.0",
     "org.springframework:spring-test:6.1.4",
     "org.springframework:spring-web:6.1.4",
 ]
@@ -157,6 +163,16 @@ maven.override(
         version = coordinate.split(":")[2],
     )
     for coordinate in TEST_MAVEN_ARTIFACTS + TEST_MAVEN_ARTIFACTS_FIXED + VULNERABLE_TEST_MAVEN_ARTIFACTS
+]
+
+[
+    maven.artifact(
+        artifact = coordinate.split(":")[1],
+        group = coordinate.split(":")[0],
+        neverlink = True,
+        version = coordinate.split(":")[2],
+    )
+    for coordinate in HIDDEN_RUNTIME_MAVEN_ARTIFACTS
 ]
 
 maven.install(

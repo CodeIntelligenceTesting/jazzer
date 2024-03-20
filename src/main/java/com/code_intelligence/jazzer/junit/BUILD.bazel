@@ -24,7 +24,6 @@ java_library(
     name = "fuzz_test",
     srcs = [
         "AgentConfiguringArgumentsProvider.java",
-        "ApiStatsInterval.java",
         "DictionaryEntries.java",
         "DictionaryEntriesList.java",
         "DictionaryFile.java",
