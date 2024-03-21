@@ -81,9 +81,6 @@ public final class ChainedMutatorFactory extends ExtendedMutatorFactory {
       return result;
     } finally {
       level--;
-      if (level == -1) {
-        System.err.println();
-      }
       currentType = previousType;
       prependedFactories.subList(currentPrependedFactoriesSize, prependedFactories.size()).clear();
     }
