@@ -17,6 +17,7 @@ import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
 import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.UrlSegment;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
@@ -34,7 +35,8 @@ public class AnnotationSupportTest {
         arguments(new TypeHolder<@WithSize(min = 10) List<Double>>() {}.annotatedType()),
         arguments(new TypeHolder<@NotNull @WithSize(min = 10) List<Double>>() {}.annotatedType()),
         arguments(new TypeHolder<Integer @NotNull @WithLength(min = 10) []>() {}.annotatedType()),
-        arguments(new TypeHolder<@WithUtf8Length(min = 10) String>() {}.annotatedType()));
+        arguments(new TypeHolder<@WithUtf8Length(min = 10) String>() {}.annotatedType()),
+        arguments(new TypeHolder<@UrlSegment String>() {}.annotatedType()));
   }
 
   @ParameterizedTest
@@ -68,6 +70,8 @@ public class AnnotationSupportTest {
         arguments(new TypeHolder<@WithLength(min = 10) List<String>>() {}.annotatedType()),
         arguments(new TypeHolder<@InRange(min = 10) List<String>>() {}.annotatedType()),
         arguments(new TypeHolder<String @InRange(min = 10) []>() {}.annotatedType()),
+        arguments(new TypeHolder<@UrlSegment Integer>() {}.annotatedType()),
+        arguments(new TypeHolder<@UrlSegment List<String>>() {}.annotatedType()),
         // deep
         arguments(
             new TypeHolder<

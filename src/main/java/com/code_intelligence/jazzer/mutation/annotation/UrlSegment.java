@@ -13,7 +13,6 @@ import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.code_intelligence.jazzer.mutation.utils.AppliesTo;
-import com.code_intelligence.jazzer.mutation.utils.ValidateContainerDimensions;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -26,5 +25,4 @@ import java.lang.annotation.Target;
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo(String.class)
-@ValidateContainerDimensions
 public @interface UrlSegment {}
