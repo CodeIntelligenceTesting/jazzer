@@ -77,8 +77,13 @@ public final class ArgumentsMutator {
   public static Optional<ArgumentsMutator> forMethod(
       ExtendedMutatorFactory mutatorFactory, Method method) {
     require(method.getParameterCount() > 0, "Can't fuzz method without parameters: " + method);
-    for (AnnotatedType parameter : method.getAnnotatedParameterTypes()) {
-      validateAnnotationUsage(parameter);
+    try {
+      for (AnnotatedType parameter : method.getAnnotatedParameterTypes()) {
+        validateAnnotationUsage(parameter);
+      }
+    } catch (RuntimeException validationError) {
+      Log.error(validationError.getMessage());
+      throw validationError;
     }
     return toArrayOrEmpty(
             stream(method.getAnnotatedParameterTypes())

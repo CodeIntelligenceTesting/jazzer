@@ -1008,11 +1008,31 @@ java_fuzz_target_test(
     target_class = "com.example.InvalidMutatorTest",
     target_method = "invalidParameter",
     runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "InvalidMutatorAnnotationTest",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/InvalidMutatorTest.java"],
+    expect_crash = False,
+    expect_non_crash_exit_code = 1,
+    expected_warning_or_error = "ERROR: @UrlSegment does not apply to java.lang.Integer, only applies to java.lang.String",
+    target_class = "com.example.InvalidMutatorTest",
+    target_method = "invalidAnnotation",
     runtime_deps = [
         "@maven//:org_junit_jupiter_junit_jupiter_engine",
     ],
     deps = [
         "//deploy:jazzer-junit",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
     ],
