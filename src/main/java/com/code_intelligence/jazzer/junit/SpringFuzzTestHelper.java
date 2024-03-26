@@ -27,12 +27,10 @@ public final class SpringFuzzTestHelper {
     };
   }
 
-  public static ResultHandler collectApiStats() {
+  public static ResultHandler collectApiStats(String requestURI) {
     return result -> {
       apiStats.addStat(
-          result.getRequest().getRequestURI(),
-          result.getRequest().getMethod(),
-          result.getResponse().getStatus());
+          requestURI, result.getRequest().getMethod(), result.getResponse().getStatus());
     };
   }
 
