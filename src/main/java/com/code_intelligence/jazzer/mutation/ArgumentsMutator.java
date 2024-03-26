@@ -24,6 +24,7 @@ import com.code_intelligence.jazzer.mutation.combinator.ProductMutator;
 import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
+import com.code_intelligence.jazzer.utils.Log;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,7 +81,18 @@ public final class ArgumentsMutator {
       validateAnnotationUsage(parameter);
     }
     return toArrayOrEmpty(
-            stream(method.getAnnotatedParameterTypes()).map(mutatorFactory::tryCreate),
+            stream(method.getAnnotatedParameterTypes())
+                .map(
+                    type -> {
+                      Optional<SerializingMutator<?>> mutator = mutatorFactory.tryCreate(type);
+                      if (!mutator.isPresent()) {
+                        Log.error(
+                            String.format(
+                                "Unsupported fuzz test parameter type %s in %s",
+                                type.getType().getTypeName(), prettyPrintMethod(method)));
+                      }
+                      return mutator;
+                    }),
             SerializingMutator<?>[]::new)
         .map(MutatorCombinators::mutateProduct)
         .map(productMutator -> ArgumentsMutator.create(method, productMutator));

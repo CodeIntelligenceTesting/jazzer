@@ -35,6 +35,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
@@ -83,10 +85,13 @@ public class RegressionTestTest {
     for (String line : stderrLines) {
       System.err.println(line);
     }
-    assertThat(
-            Arrays.stream(stderrLines)
-                .filter(line -> line.startsWith("WARN:") || line.startsWith("ERROR:")))
-        .isEmpty();
+    List<String> warningsAndErrors =
+        Arrays.stream(stderrLines)
+            .filter(line -> line.startsWith("WARN:") || line.startsWith("ERROR:"))
+            .collect(Collectors.toList());
+    assertThat(warningsAndErrors).hasSize(1);
+    assertThat(warningsAndErrors.get(0))
+        .contains("ERROR: Unsupported fuzz test parameter type org.junit.jupiter.api.TestInfo");
 
     results
         .containerEvents()
@@ -145,9 +150,10 @@ public class RegressionTestTest {
                 finishedWithFailure(
                     instanceOf(FuzzTestConfigurationError.class),
                     message(
-                        "Failed to construct mutator for"
-                            + " com.example.InvalidFuzzTests.invalidParameterResolverFuzz(com.code_intelligence.jazzer.api.FuzzedDataProvider,"
-                            + " org.junit.jupiter.api.TestInfo)"))),
+                        message ->
+                            message.contains(
+                                "Failed to construct mutator for"
+                                    + " com.example.InvalidFuzzTests.invalidParameterResolverFuzz")))),
             event(
                 type(FINISHED),
                 container(uniqueIdSubstrings(ENGINE, INVALID_FUZZ_TESTS)),
