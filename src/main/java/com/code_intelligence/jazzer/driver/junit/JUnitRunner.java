@@ -18,6 +18,7 @@ import static org.junit.platform.launcher.TagFilter.includeTags;
 
 import com.code_intelligence.jazzer.driver.ExceptionUtils;
 import com.code_intelligence.jazzer.driver.Opt;
+import com.code_intelligence.jazzer.junit.ExitCodeException;
 import com.code_intelligence.jazzer.utils.Log;
 import java.util.List;
 import java.util.Map;
