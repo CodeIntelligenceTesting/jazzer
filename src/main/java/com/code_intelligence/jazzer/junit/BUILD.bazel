@@ -68,7 +68,11 @@ java_library(
 java_library(
     name = "fuzz_test_configuration_error",
     srcs = ["FuzzTestConfigurationError.java"],
-    visibility = ["//src/test/java/com/code_intelligence/jazzer/junit:__pkg__"],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/driver/junit:__pkg__",
+        "//src/test/java/com/code_intelligence/jazzer/junit:__pkg__",
+    ],
+)
 
 java_library(
     name = "exit_code_exception",
@@ -94,6 +98,7 @@ java_jni_library(
     visibility = ["//src/test/java/com/code_intelligence/jazzer/junit:__pkg__"],
     deps = [
         ":agent_configurator",
+        ":fuzz_test_configuration_error",
         ":junit_lifecycle_methods_invoker",
         ":lifecycle",
         ":seed_serializer",

@@ -361,3 +361,29 @@ java_test(
         "1",
     ]
 ]
+
+[
+    java_test(
+        name = "InvalidMutatorTest" + JAZZER_FUZZ,
+        srcs = ["InvalidMutatorTest.java"],
+        env = {
+            "JAZZER_FUZZ": JAZZER_FUZZ,
+        },
+        test_class = "com.code_intelligence.jazzer.junit.InvalidMutatorTest",
+        runtime_deps = [
+            "//examples/junit/src/test/java/com/example:ExampleFuzzTests_deploy.jar",
+            "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        ],
+        deps = [
+            "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+            "@maven//:junit_junit",
+            "@maven//:org_assertj_assertj_core",
+            "@maven//:org_junit_platform_junit_platform_engine",
+            "@maven//:org_junit_platform_junit_platform_testkit",
+        ],
+    )
+    for JAZZER_FUZZ in [
+        "",
+        "1",
+    ]
+]

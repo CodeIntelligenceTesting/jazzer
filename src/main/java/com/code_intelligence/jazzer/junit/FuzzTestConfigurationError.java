@@ -13,7 +13,7 @@ package com.code_intelligence.jazzer.junit;
  * An {@link Error} thrown when a {@link FuzzTest} is not configured correctly, for example due to
  * unsupported parameters or invalid settings.
  */
-class FuzzTestConfigurationError extends Error {
+public class FuzzTestConfigurationError extends Error {
   public FuzzTestConfigurationError(String message) {
     super(message);
   }
