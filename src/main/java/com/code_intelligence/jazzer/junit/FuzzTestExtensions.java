@@ -119,11 +119,7 @@ class FuzzTestExtensions
     invocation.skip();
     Optional<Throwable> throwable =
         FuzzTestExecutor.fromContext(extensionContext)
-            .execute(
-                invocationContext,
-                extensionContext,
-                getOrCreateSeedSerializer(extensionContext),
-                lifecycle);
+            .execute(invocationContext, extensionContext, lifecycle);
     if (throwable.isPresent()) {
       throw throwable.get();
     }

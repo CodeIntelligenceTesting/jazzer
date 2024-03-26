@@ -9,24 +9,22 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import static com.code_intelligence.jazzer.driver.FuzzTargetHolder.autofuzzFuzzTarget;
 import static com.code_intelligence.jazzer.junit.SpringFuzzTestHelper.printApiStats;
 import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
-import static java.util.Collections.emptySet;
+import static java.lang.String.format;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
-import com.code_intelligence.jazzer.driver.LifecycleMethodsInvoker;
 import com.code_intelligence.jazzer.driver.Opt;
-import com.code_intelligence.jazzer.driver.junit.ExitCodeException;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -38,9 +36,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -320,38 +316,14 @@ class FuzzTestExecutor {
     Files.move(tmpSeed, seed, StandardCopyOption.REPLACE_EXISTING);
   }
 
-  @SuppressWarnings("OptionalGetWithoutIsPresent")
   public Optional<Throwable> execute(
       ReflectiveInvocationContext<Method> invocationContext,
       ExtensionContext extensionContext,
-      SeedSerializer seedSerializer,
       Lifecycle lifecycle) {
-    if (seedSerializer instanceof AutofuzzSeedSerializer) {
-      if (lifecycle != Lifecycle.PER_TEST) {
-        throw new IllegalArgumentException(
-            "Values for @FuzzTest#lifecycle other than Lifecycle.PER_TEST are not supported with "
-                + "Autofuzz. Either use Lifecycle.PER_TEST or modify your test to accept a "
-                + "FuzzedDataProvider parameter.");
-      }
-      Map<Executable, Class<?>[]> throwsDeclarations = new HashMap<>(1);
-      throwsDeclarations.put(invocationContext.getExecutable(), new Class[0]);
-
-      // Provide an empty throws declaration to prevent autofuzz from
-      // ignoring the defined test exceptions. All exceptions in tests
-      // should cause them to fail.
-      com.code_intelligence.jazzer.autofuzz.FuzzTarget.setTarget(
-          new Executable[] {invocationContext.getExecutable()},
-          invocationContext.getTarget().get(),
-          invocationContext.getExecutable().toString(),
-          emptySet(),
-          throwsDeclarations);
-      FuzzTargetHolder.fuzzTarget = autofuzzFuzzTarget(LifecycleMethodsInvoker.noop(null));
-    } else {
-      FuzzTargetHolder.fuzzTarget =
-          new FuzzTargetHolder.FuzzTarget(
-              invocationContext.getExecutable(),
-              JUnitLifecycleMethodsInvoker.of(extensionContext, lifecycle));
-    }
+    FuzzTargetHolder.fuzzTarget =
+        new FuzzTargetHolder.FuzzTarget(
+            invocationContext.getExecutable(),
+            JUnitLifecycleMethodsInvoker.of(extensionContext, lifecycle));
 
     AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
     // Non-fatal findings (with --keep_going) are logged by FuzzTargetRunner.

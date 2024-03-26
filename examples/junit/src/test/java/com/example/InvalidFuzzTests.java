@@ -18,7 +18,7 @@ class InvalidFuzzTests {
   void invalidParameterCountFuzz() {}
 
   @FuzzTest
-  void parameterResolverFuzz(FuzzedDataProvider data, TestInfo testInfo) {
+  void invalidParameterResolverFuzz(FuzzedDataProvider data, TestInfo testInfo) {
     throw new RuntimeException(testInfo.getDisplayName());
   }
 }

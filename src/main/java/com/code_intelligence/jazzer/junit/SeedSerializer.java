@@ -10,14 +10,11 @@
 package com.code_intelligence.jazzer.junit;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import com.code_intelligence.jazzer.autofuzz.Meta;
 import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
-import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.mutation.ArgumentsMutator;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
-import java.util.Optional;
 
 interface SeedSerializer {
   Object[] read(byte[] bytes);
@@ -32,8 +29,7 @@ interface SeedSerializer {
    * <ul>
    *   <li>{@code byte[]}
    *   <li>{@code FuzzDataProvider}
-   *   <li>Any other types will attempt to be created using either the mutator framework, if not
-   *       deactivated via {@link Opt}'s {@code mutatorFramework}, or Autofuzz.
+   *   <li>Any other types will attempt to be created using the mutator framework
    * </ul>
    */
   static SeedSerializer of(Method method) {
@@ -47,84 +43,59 @@ interface SeedSerializer {
         && method.getParameterTypes()[0] == FuzzedDataProvider.class) {
       return new FuzzedDataProviderSeedSerializer();
     } else {
-      Optional<ArgumentsMutator> argumentsMutator =
-          Opt.mutatorFramework.get() ? ArgumentsMutator.forMethod(method) : Optional.empty();
-      return argumentsMutator
-          .<SeedSerializer>map(ArgumentsMutatorSeedSerializer::new)
-          .orElseGet(() -> new AutofuzzSeedSerializer(method));
-    }
-  }
-}
-
-final class ByteArraySeedSerializer implements SeedSerializer {
-  @Override
-  public Object[] read(byte[] bytes) {
-    return new Object[] {bytes};
-  }
-
-  @Override
-  public byte[] write(Object[] args) {
-    return (byte[]) args[0];
-  }
-}
-
-final class FuzzedDataProviderSeedSerializer implements SeedSerializer {
-  @Override
-  public Object[] read(byte[] bytes) {
-    return new Object[] {FuzzedDataProviderImpl.withJavaData(bytes)};
-  }
-
-  @Override
-  public byte[] write(Object[] args) throws UnsupportedOperationException {
-    // While we could get the underlying bytes, it's not possible to provide Java seeds for fuzz
-    // tests with a FuzzedDataProvider parameter.
-    throw new UnsupportedOperationException();
-  }
-}
-
-final class ArgumentsMutatorSeedSerializer implements SeedSerializer {
-  private final ArgumentsMutator mutator;
-
-  public ArgumentsMutatorSeedSerializer(ArgumentsMutator mutator) {
-    this.mutator = mutator;
-  }
-
-  @Override
-  public Object[] read(byte[] bytes) {
-    mutator.read(new ByteArrayInputStream(bytes));
-    return mutator.getArguments();
-  }
-
-  @Override
-  public byte[] write(Object[] args) {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    mutator.writeAny(out, args);
-    return out.toByteArray();
-  }
-}
-
-final class AutofuzzSeedSerializer implements SeedSerializer {
-  private final Meta meta;
-  private final Method method;
-
-  public AutofuzzSeedSerializer(Method method) {
-    this.meta = new Meta(method.getDeclaringClass());
-    this.method = method;
-  }
-
-  @Override
-  public Object[] read(byte[] bytes) {
-    try (FuzzedDataProviderImpl data = FuzzedDataProviderImpl.withJavaData(bytes)) {
-      // The Autofuzz FuzzTarget uses data to construct an instance of the test class before
-      // it constructs the fuzz test arguments. We don't need the instance here, but still
-      // generate it as that mutates the FuzzedDataProvider state.
-      meta.consumeNonStatic(data, method.getDeclaringClass());
-      return meta.consumeArguments(data, method, null);
+      try {
+        return new ArgumentsMutatorSeedSerializer(ArgumentsMutator.forMethodOrThrow(method));
+      } catch (IllegalArgumentException e) {
+        // Wrap exception message from ArgumentsMutator in JUnit specific exception type.
+        throw new FuzzTestConfigurationError(e.getMessage());
+      }
     }
   }
 
-  @Override
-  public byte[] write(Object[] args) throws UnsupportedOperationException {
-    throw new UnsupportedOperationException();
+  final class ByteArraySeedSerializer implements SeedSerializer {
+    @Override
+    public Object[] read(byte[] bytes) {
+      return new Object[] {bytes};
+    }
+
+    @Override
+    public byte[] write(Object[] args) {
+      return (byte[]) args[0];
+    }
+  }
+
+  final class FuzzedDataProviderSeedSerializer implements SeedSerializer {
+    @Override
+    public Object[] read(byte[] bytes) {
+      return new Object[] {FuzzedDataProviderImpl.withJavaData(bytes)};
+    }
+
+    @Override
+    public byte[] write(Object[] args) throws UnsupportedOperationException {
+      // While we could get the underlying bytes, it's not possible to provide Java seeds for fuzz
+      // tests with a FuzzedDataProvider parameter.
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  final class ArgumentsMutatorSeedSerializer implements SeedSerializer {
+    private final ArgumentsMutator mutator;
+
+    public ArgumentsMutatorSeedSerializer(ArgumentsMutator mutator) {
+      this.mutator = mutator;
+    }
+
+    @Override
+    public Object[] read(byte[] bytes) {
+      mutator.read(new ByteArrayInputStream(bytes));
+      return mutator.getArguments();
+    }
+
+    @Override
+    public byte[] write(Object[] args) {
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      mutator.writeAny(out, args);
+      return out.toByteArray();
+    }
   }
 }

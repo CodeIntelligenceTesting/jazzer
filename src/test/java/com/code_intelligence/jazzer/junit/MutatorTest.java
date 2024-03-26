@@ -43,10 +43,6 @@ public class MutatorTest {
   private static final String CLAZZ = "class:" + CLASS_NAME;
   private static final String LIFECYCLE_FUZZ = "test-template:mutatorFuzz(java.util.List)";
   private static final String INVOCATION = "test-template-invocation:#";
-  private static final String INVALID_SIGNATURE_ENTRY =
-      "Some files in the seed corpus do not match the fuzz target signature.\n"
-          + "This indicates that they were generated with a different signature and may cause"
-          + " issues reproducing previous findings.";
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   private Path baseDir;
