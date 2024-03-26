@@ -51,12 +51,14 @@ public class JunitSpringWebApplicationTests {
 
   @Test
   public void unitTestShouldPass() throws Exception {
-    mockMvc.perform(get("/hello").param("name", "Maven")).andDo(collectApiStats());
+    mockMvc.perform(get("/hello").param("name", "Maven")).andDo(collectApiStats("/hello"));
   }
 
   @Test
   public void unitTestShouldFail() throws Exception {
-    mockMvc.perform(get("/buggy-hello").param("name", "error")).andDo(collectApiStats());
+    mockMvc
+        .perform(get("/buggy-hello").param("name", "error"))
+        .andDo(collectApiStats("/buggy-hello"));
   }
 
   @FuzzTest(maxDuration = "10s")
@@ -66,7 +68,7 @@ public class JunitSpringWebApplicationTests {
     }
 
     String name = data.consumeRemainingAsString();
-    mockMvc.perform(get("/hello").param("name", name)).andDo(collectApiStats());
+    mockMvc.perform(get("/hello").param("name", name)).andDo(collectApiStats("/hello"));
   }
 
   @FuzzTest(maxDuration = "10s")
@@ -79,7 +81,7 @@ public class JunitSpringWebApplicationTests {
     mockMvc
         .perform(get("/buggy-hello").param("name", name))
         .andExpect(content().string(containsString(name)))
-        .andDo(collectApiStats());
+        .andDo(collectApiStats("/buggy-hello"));
   }
 
   @FuzzTest(maxDuration = "10s")
@@ -97,6 +99,6 @@ public class JunitSpringWebApplicationTests {
                 .content(mapper.writeValueAsString(helloRequest)))
         .andExpect(content().string(containsString(helloRequest.name)))
         .andExpect(statusIsNot5xxServerError())
-        .andDo(collectApiStats());
+        .andDo(collectApiStats("/hello"));
   }
 }
