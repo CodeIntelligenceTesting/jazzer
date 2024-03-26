@@ -10,6 +10,7 @@
 package com.example;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import com.code_intelligence.jazzer.mutation.annotation.UrlSegment;
 
 public class InvalidMutatorTest {
 
@@ -18,4 +19,8 @@ public class InvalidMutatorTest {
     throw new IllegalStateException("This method should not be executed");
   }
 
+  @FuzzTest
+  public void invalidAnnotation(@UrlSegment Integer ignored) {
+    throw new IllegalStateException("This method should not be executed");
+  }
 }
