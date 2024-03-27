@@ -207,6 +207,10 @@ public final class JUnitRunner {
       // libFuzzer exited with a non-zero exit code, but Jazzer didn't produce a finding. Forward
       // the exit code and assume that information has already been printed (e.g. a timeout).
       return ((ExitCodeException) throwable).exitCode;
+    } else if (throwable instanceof ExceptionInInitializerError) {
+      // Exception in static initializer. These are not logged by JUnit, so do in here.
+      Log.error(throwable);
+      return 1;
     } else {
       // Non-fatal findings and exceptions in containers have already been printed, the fatal
       // finding is passed to JUnit as the test result.
