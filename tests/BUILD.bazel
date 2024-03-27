@@ -1038,4 +1038,22 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "InitializationErrorTest",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/InitializationErrorTest.java"],
+    expect_crash = False,
+    expect_non_crash_exit_code = 1,
+    expected_warning_or_error = "ERROR: java.lang.ExceptionInInitializerError",
+    target_class = "com.example.InitializationErrorTest",
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
 ktlint()
