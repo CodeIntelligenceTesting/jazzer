@@ -16,6 +16,7 @@ import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutato
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutators;
 import com.code_intelligence.jazzer.mutation.mutator.proto.ProtoMutators;
+import com.code_intelligence.jazzer.mutation.mutator.time.TimeMutators;
 
 public final class Mutators {
   private Mutators() {}
@@ -26,6 +27,7 @@ public final class Mutators {
         CollectionMutators.newFactories(),
         ProtoMutators.newFactories(),
         LibFuzzerMutators.newFactories(),
-        AggregateMutators.newFactories());
+        AggregateMutators.newFactories(),
+        TimeMutators.newFactories());
   }
 }

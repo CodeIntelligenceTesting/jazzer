@@ -76,6 +76,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Array;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -500,6 +501,14 @@ public class StressTest {
             // See "Short" case.
             expectedNumberOfDistinctElements(
                 1L << Integer.SIZE, NUM_INITS * NUM_MUTATE_PER_INIT * 9 / 10)),
+        arguments(
+            new TypeHolder<@NotNull LocalDate>() {}.annotatedType(),
+            "LocalDate",
+            true,
+            // We set the ratio relatively low because the long mutator is biased towards special
+            // values.
+            distinctElementsRatio(0.15),
+            distinctElementsRatio(0.15)),
         arguments(
             new TypeHolder<@NotNull @InRange(min = 0) Long>() {}.annotatedType(),
             "Long",
