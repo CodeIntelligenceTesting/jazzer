@@ -16,6 +16,6 @@ public final class TimeMutators {
   private TimeMutators() {}
 
   public static Stream<MutatorFactory> newFactories() {
-    return Stream.of(new LocalDateMutatorFactory());
+    return Stream.of(new LocalDateMutatorFactory(), new LocalDateTimeMutatorFactory());
   }
 }
