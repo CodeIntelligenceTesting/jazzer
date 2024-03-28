@@ -19,6 +19,7 @@ public final class TimeMutators {
     return Stream.of(
         new LocalDateMutatorFactory(),
         new LocalDateTimeMutatorFactory(),
+        new LocalTimeMutatorFactory(),
         new ZonedDateTimeMutatorFactory());
   }
 }
