@@ -78,6 +78,7 @@ import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Array;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -513,6 +514,14 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull LocalDateTime>() {}.annotatedType(),
             "LocalDateTime",
+            true,
+            // We set the ratio relatively low because the long mutator is biased towards special
+            // values.
+            distinctElementsRatio(0.15),
+            distinctElementsRatio(0.15)),
+        arguments(
+            new TypeHolder<@NotNull ZonedDateTime>() {}.annotatedType(),
+            "ZonedDateTime",
             true,
             // We set the ratio relatively low because the long mutator is biased towards special
             // values.
