@@ -9,7 +9,9 @@
 
 package com.code_intelligence.jazzer.driver.junit;
 
+import static com.code_intelligence.jazzer.driver.Constants.JAZZER_ERROR_EXIT_CODE;
 import static com.code_intelligence.jazzer.driver.Constants.JAZZER_FINDING_EXIT_CODE;
+import static com.code_intelligence.jazzer.driver.Constants.JAZZER_SUCCESS_EXIT_CODE;
 import static org.junit.platform.engine.FilterResult.includedIf;
 import static org.junit.platform.engine.TestExecutionResult.Status.ABORTED;
 import static org.junit.platform.engine.TestExecutionResult.Status.FAILED;
@@ -76,7 +78,7 @@ public final class JUnitRunner {
             .build();
 
     Map<String, String> indexedArgs =
-        IntStream.range(0, libFuzzerArgs.size())
+        IntStream.range(JAZZER_SUCCESS_EXIT_CODE, libFuzzerArgs.size())
             .boxed()
             .collect(Collectors.toMap(i -> "jazzer.internal.arg." + i, libFuzzerArgs::get));
 
@@ -181,7 +183,7 @@ public final class JUnitRunner {
       // This can only happen if a test container failed, in which case we will have printed a
       // stack trace.
       Log.error("Failed to run fuzz test");
-      return 1;
+      return JAZZER_ERROR_EXIT_CODE;
     }
     if (result.getStatus() != FAILED) {
       // We do not generate a finding for aborted tests (i.e. tests whose preconditions were not
@@ -192,9 +194,9 @@ public final class JUnitRunner {
       if (sawContainerFailure.get()) {
         // A failure in a test container indicates a setup error, so we don't return the finding
         // exit code in this case.
-        return 1;
+        return JAZZER_ERROR_EXIT_CODE;
       }
-      return 0;
+      return JAZZER_SUCCESS_EXIT_CODE;
     }
 
     // Safe to unwrap as in JUnit Jupiter, tests and containers always fail with a Throwable:
@@ -202,7 +204,7 @@ public final class JUnitRunner {
     Throwable throwable = result.getThrowable().get();
     if (throwable instanceof FuzzTestConfigurationError) {
       // Error configuring JUnit for fuzzing, e.g. due to unsupported fuzz test parameter.
-      return 1;
+      return JAZZER_ERROR_EXIT_CODE;
     } else if (throwable instanceof ExitCodeException) {
       // libFuzzer exited with a non-zero exit code, but Jazzer didn't produce a finding. Forward
       // the exit code and assume that information has already been printed (e.g. a timeout).
@@ -210,7 +212,7 @@ public final class JUnitRunner {
     } else if (throwable instanceof ExceptionInInitializerError) {
       // Exception in static initializer. These are not logged by JUnit, so do in here.
       Log.error(throwable);
-      return 1;
+      return JAZZER_ERROR_EXIT_CODE;
     } else {
       // Non-fatal findings and exceptions in containers have already been printed, the fatal
       // finding is passed to JUnit as the test result.
