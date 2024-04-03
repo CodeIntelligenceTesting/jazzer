@@ -783,6 +783,25 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "LocalDateTimeFuzzer",
+    timeout = "short",
+    srcs = ["src/test/java/com/example/LocalDateTimeFuzzer.java"],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
+    ],
+    target_class = "com.example.LocalDateTimeFuzzer",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
+java_fuzz_target_test(
     name = "RegressionModeTest",
     timeout = "short",
     srcs = ["src/test/java/com/example/RegressionModeTest.java"],
