@@ -11,7 +11,7 @@ package com.code_intelligence.jazzer.junit;
 
 import static com.code_intelligence.jazzer.junit.Utils.getClassPathBasedInstrumentationFilter;
 import static com.code_intelligence.jazzer.junit.Utils.getLegacyInstrumentationFilter;
-import static com.code_intelligence.jazzer.junit.Utils.isCoverageAgentPresent;
+import static com.code_intelligence.jazzer.junit.Utils.isGatheringCoverage;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -74,7 +74,7 @@ class AgentConfigurator {
             "org.mockito.**",
             "org.apache.maven.**",
             "org.gradle.**"));
-    if (isCoverageAgentPresent()) {
+    if (isGatheringCoverage()) {
       // The IntelliJ coverage agent uses regular expressions in its instrumentor to determine which
       // classes to instrument and thus triggers our regex hook when it is asked to instrument
       // JazzerInternal, which in turn loads JazzerInternal and thus results in a

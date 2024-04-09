@@ -53,7 +53,7 @@ class SeedArgumentsProvider implements ArgumentsProvider {
         Stream.of(new SimpleImmutableEntry<>("<empty input>", new byte[0]));
     rawSeeds = Stream.concat(rawSeeds, walkInputs(testClass, testMethod));
 
-    if (Utils.isCoverageAgentPresent()
+    if (Utils.isGatheringCoverage()
         && Files.isDirectory(Utils.generatedCorpusPath(testClass, testMethod))) {
       rawSeeds =
           Stream.concat(

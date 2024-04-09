@@ -218,9 +218,15 @@ class Utils {
   private static final Pattern COVERAGE_AGENT_ARG =
       Pattern.compile("-javaagent:.*(?:intellij-coverage-agent|jacoco).*");
 
-  static boolean isCoverageAgentPresent() {
+  private static boolean isCoverageAgentPresent() {
     return ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
         .anyMatch(s -> COVERAGE_AGENT_ARG.matcher(s).matches());
+  }
+
+  static boolean isGatheringCoverage() {
+    return isCoverageAgentPresent()
+        || (System.getenv("JAZZER_COVERAGE") != null
+            && permissivelyParseBoolean(System.getenv("JAZZER_COVERAGE")));
   }
 
   private static final boolean SET_FUZZING_ENV = System.getenv("JAZZER_FUZZ") != null;
