@@ -35,6 +35,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -226,6 +227,11 @@ class Utils {
   private static final boolean IS_FUZZING_ENV =
       SET_FUZZING_ENV && permissivelyParseBoolean(System.getenv("JAZZER_FUZZ"));
 
+  /** Returns true if and only if the value is equal to "true", "1", or "yes" case-insensitively. */
+  static boolean permissivelyParseBoolean(String value) {
+    return value.equalsIgnoreCase("true") || value.equals("1") || value.equalsIgnoreCase("yes");
+  }
+
   static boolean isFuzzing(ExtensionContext extensionContext) {
     return SET_FUZZING_ENV ? IS_FUZZING_ENV : runFromCommandLine(extensionContext);
   }
@@ -237,9 +243,24 @@ class Utils {
         .orElse(false);
   }
 
-  /** Returns true if and only if the value is equal to "true", "1", or "yes" case-insensitively. */
-  static boolean permissivelyParseBoolean(String value) {
-    return value.equalsIgnoreCase("true") || value.equals("1") || value.equalsIgnoreCase("yes");
+  static List<String> getLibFuzzerArgs(ExtensionContext extensionContext) {
+    List<String> args = new ArrayList<>();
+    for (int i = 0; ; i++) {
+      Optional<String> arg = extensionContext.getConfigurationParameter("jazzer.internal.arg." + i);
+      if (!arg.isPresent()) {
+        break;
+      }
+      args.add(arg.get());
+    }
+    return args;
+  }
+
+  static List<String> getCorpusFilesOrDirs(ExtensionContext context) {
+    return getLibFuzzerArgs(context).stream()
+        // Skip first parameter (executable name)
+        .skip(1)
+        .filter(arg -> !arg.startsWith("-"))
+        .collect(toList());
   }
 
   /**

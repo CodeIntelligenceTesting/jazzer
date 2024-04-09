@@ -14,7 +14,6 @@ import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
-import static java.util.stream.Collectors.toList;
 
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
@@ -80,7 +79,7 @@ class FuzzTestExecutor {
               + lastSource);
     }
 
-    List<String> originalLibFuzzerArgs = getLibFuzzerArgs(context);
+    List<String> originalLibFuzzerArgs = Utils.getLibFuzzerArgs(context);
     String argv0 = originalLibFuzzerArgs.isEmpty() ? "fake_argv0" : originalLibFuzzerArgs.remove(0);
 
     ArrayList<String> libFuzzerArgs = new ArrayList<>();
@@ -89,8 +88,7 @@ class FuzzTestExecutor {
     // Add passed in corpus directories (and files) at the beginning of the arguments list.
     // libFuzzer uses the first directory to store discovered inputs, whereas all others are
     // only used to provide additional seeds and aren't written into.
-    List<String> corpusFilesOrDirs =
-        originalLibFuzzerArgs.stream().filter(arg -> !arg.startsWith("-")).collect(toList());
+    List<String> corpusFilesOrDirs = Utils.getCorpusFilesOrDirs(context);
     originalLibFuzzerArgs.removeAll(corpusFilesOrDirs);
     libFuzzerArgs.addAll(corpusFilesOrDirs);
 
@@ -249,19 +247,6 @@ class FuzzTestExecutor {
             "-artifact_prefix=%s%c",
             findingsDirectory.orElse(baseDir).toAbsolutePath(), File.separatorChar));
     return javaSeedsDir;
-  }
-
-  /** Returns the list of arguments set on the command line. */
-  private static List<String> getLibFuzzerArgs(ExtensionContext extensionContext) {
-    List<String> args = new ArrayList<>();
-    for (int i = 0; ; i++) {
-      Optional<String> arg = extensionContext.getConfigurationParameter("jazzer.internal.arg." + i);
-      if (!arg.isPresent()) {
-        break;
-      }
-      args.add(arg.get());
-    }
-    return args;
   }
 
   static void configureAndInstallAgent(
