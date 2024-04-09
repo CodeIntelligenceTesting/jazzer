@@ -90,6 +90,13 @@ public final class JUnitRunner {
     String timeoutMode = Opt.isFuzzing.get() ? "disabled" : "enabled";
     Log.debug("JUnit timeout mode: " + timeoutMode);
 
+    // If fuzzing is enabled, set the JAZZER_FUZZ environment variable to propagate the mode
+    // to the JUnit integration, as that can't access Opt and the setting can not be
+    // passed on easily in other ways.
+    if (Opt.isFuzzing.get()) {
+      System.setProperty("JAZZER_FUZZ", "true");
+    }
+
     LauncherDiscoveryRequestBuilder requestBuilder =
         LauncherDiscoveryRequestBuilder.request()
             // JUnit's timeout handling interferes with libFuzzer as from the point of view of JUnit
@@ -201,6 +208,7 @@ public final class JUnitRunner {
 
     // Safe to unwrap as in JUnit Jupiter, tests and containers always fail with a Throwable:
     // https://github.com/junit-team/junit5/blob/ac31e9a7d58973db73496244dab4defe17ae563e/junit-platform-engine/src/main/java/org/junit/platform/engine/support/hierarchical/ThrowableCollector.java#LL176C37-L176C37
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     Throwable throwable = result.getThrowable().get();
     if (throwable instanceof FuzzTestConfigurationError) {
       // Error configuring JUnit for fuzzing, e.g. due to unsupported fuzz test parameter.
