@@ -15,3 +15,12 @@ filegroup(
     srcs = ["com/example/MutatorFuzzTestInputs"],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "additional_seed_directories",
+    srcs = [
+        "additional/dir1",
+        "additional/dir2",
+    ],
+    visibility = ["//examples/junit/src/test/java/com/example:__pkg__"],
+)

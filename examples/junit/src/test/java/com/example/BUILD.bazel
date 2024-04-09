@@ -331,3 +331,27 @@ java_library(
         "@maven//:org_junit_platform_junit_platform_launcher",
     ],
 )
+
+java_fuzz_target_test(
+    name = "CoverageFuzzTest",
+    srcs = ["CoverageFuzzTest.java"],
+    data = [
+        "//examples/junit/src/test/resources:additional_seed_directories",
+    ],
+    env = {
+        "JAZZER_FUZZ": "0",
+        "JAZZER_COVERAGE": "1",
+    },
+    fuzzer_args = [
+        "$(rlocationpaths //examples/junit/src/test/resources:additional_seed_directories)",
+    ],
+    target_class = "com.example.CoverageFuzzTest",
+    runtime_deps = [
+        ":junit_runtime",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
