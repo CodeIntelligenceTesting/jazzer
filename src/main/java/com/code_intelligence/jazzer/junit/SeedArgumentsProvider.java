@@ -53,13 +53,20 @@ class SeedArgumentsProvider implements ArgumentsProvider {
         Stream.of(new SimpleImmutableEntry<>("<empty input>", new byte[0]));
     rawSeeds = Stream.concat(rawSeeds, walkInputs(testClass, testMethod));
 
-    if (Utils.isGatheringCoverage()
-        && Files.isDirectory(Utils.generatedCorpusPath(testClass, testMethod))) {
-      rawSeeds =
-          Stream.concat(
-              rawSeeds,
-              walkInputsInPath(
-                  Utils.generatedCorpusPath(testClass, testMethod), Integer.MAX_VALUE));
+    if (Utils.isGatheringCoverage()) {
+      Path generatedCorpusPath = Utils.generatedCorpusPath(testClass, testMethod);
+      // Generated corpus entries are automatically created and should be available,
+      // except when no fuzzing was performed until now.
+      if (Files.isDirectory(generatedCorpusPath)) {
+        rawSeeds =
+            Stream.concat(rawSeeds, walkInputsInPath(generatedCorpusPath, Integer.MAX_VALUE));
+      }
+      // Also add additionally specified files and directories to the input list,
+      // e.g. cifuzz uses this feature to specify additional seed directories.
+      for (String filesOrDir : Utils.getCorpusFilesOrDirs(extensionContext)) {
+        rawSeeds =
+            Stream.concat(rawSeeds, walkInputsInPath(Paths.get(filesOrDir), Integer.MAX_VALUE));
+      }
     }
 
     SeedSerializer serializer = SeedSerializer.of(testMethod);
