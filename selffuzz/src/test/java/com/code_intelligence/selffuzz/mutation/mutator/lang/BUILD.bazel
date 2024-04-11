@@ -33,6 +33,7 @@ java_fuzz_target_test(
         "//selffuzz:jazzer_selffuzz",
         "//selffuzz/src/test/java/com/code_intelligence/selffuzz:helpers",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/utils",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_engine",
         "@maven//:org_junit_platform_junit_platform_launcher",

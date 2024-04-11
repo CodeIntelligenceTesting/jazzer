@@ -14,10 +14,19 @@ import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.code_intelligence.jazzer.mutation.utils.AppliesTo;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 @Target({PARAMETER, TYPE_USE})
 @Retention(RUNTIME)
 @AppliesTo(subClassesOf = Object.class)
-public @interface NotNull {}
+@PropertyConstraint
+public @interface NotNull {
+
+  /**
+   * Defines the scope of the annotation. Possible values are defined in {@link
+   * com.code_intelligence.jazzer.mutation.utils.PropertyConstraint}.
+   */
+  String constraint() default PropertyConstraint.DECLARATION;
+}
