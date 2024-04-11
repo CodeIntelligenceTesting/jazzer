@@ -13,6 +13,7 @@ import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.code_intelligence.jazzer.mutation.utils.AppliesTo;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import com.code_intelligence.jazzer.mutation.utils.ValidateMinMax;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -21,10 +22,17 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @AppliesTo({float.class, Float.class})
 @ValidateMinMax
+@PropertyConstraint
 public @interface FloatInRange {
   float min() default Float.NEGATIVE_INFINITY;
 
   float max() default Float.POSITIVE_INFINITY;
 
   boolean allowNaN() default true;
+
+  /**
+   * Defines the scope of the annotation. Possible values are defined in {@link
+   * com.code_intelligence.jazzer.mutation.utils.PropertyConstraint}.
+   */
+  String constraint() default PropertyConstraint.DECLARATION;
 }

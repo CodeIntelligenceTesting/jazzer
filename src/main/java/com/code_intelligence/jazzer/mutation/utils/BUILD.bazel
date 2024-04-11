@@ -2,6 +2,7 @@ java_library(
     name = "utils",
     srcs = glob(["*.java"]),
     visibility = [
+        "//selffuzz/src/test/java/com/code_intelligence/selffuzz/mutation/mutator/lang:__pkg__",
         "//src/main/java/com/code_intelligence/jazzer/mutation:__pkg__",
         "//src/main/java/com/code_intelligence/jazzer/mutation:__subpackages__",
         "//src/test/java/com/code_intelligence/jazzer/mutation:__subpackages__",

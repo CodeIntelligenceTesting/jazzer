@@ -14,6 +14,7 @@ import static com.code_intelligence.selffuzz.jazzer.mutation.support.TypeSupport
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.DoubleInRange;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
@@ -77,6 +78,11 @@ class FloatingPointMutatorFuzzTests {
       }
 
       @Override
+      public String constraint() {
+        return PropertyConstraint.DECLARATION;
+      }
+
+      @Override
       public Class<? extends Annotation> annotationType() {
         return DoubleInRange.class;
       }
@@ -124,6 +130,11 @@ class FloatingPointMutatorFuzzTests {
       @Override
       public boolean allowNaN() {
         return true;
+      }
+
+      @Override
+      public String constraint() {
+        return PropertyConstraint.DECLARATION;
       }
 
       @Override
