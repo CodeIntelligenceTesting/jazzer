@@ -15,22 +15,18 @@ import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
+import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutators;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
-import com.code_intelligence.jazzer.protobuf.Proto2.MessageField2;
-import com.code_intelligence.jazzer.protobuf.Proto2.OneOfField2;
-import com.code_intelligence.jazzer.protobuf.Proto2.PrimitiveField2;
-import com.code_intelligence.jazzer.protobuf.Proto2.RecursiveMessageField2;
-import com.code_intelligence.jazzer.protobuf.Proto2.RepeatedMessageField2;
-import com.code_intelligence.jazzer.protobuf.Proto2.RepeatedOptionalMessageField2;
-import com.code_intelligence.jazzer.protobuf.Proto2.RepeatedPrimitiveField2;
-import com.code_intelligence.jazzer.protobuf.Proto2.RequiredPrimitiveField2;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
+import com.code_intelligence.jazzer.protobuf.Proto2.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("unchecked")
 class BuilderMutatorProto2Test {
   ChainedMutatorFactory factory;
 
@@ -492,5 +488,16 @@ class BuilderMutatorProto2Test {
     }
     assertThat(builder.build()).isEqualTo(OneOfField2.newBuilder().setOtherField(true).build());
     assertThat(builder.build().hasMessageField()).isFalse();
+  }
+
+  @Test
+  void propagateConstraint() {
+    SerializingMutator<TestProtobuf> mutator =
+        (SerializingMutator<TestProtobuf>)
+            factory.createOrThrow(
+                new TypeHolder<
+                    @NotNull(constraint = PropertyConstraint.RECURSIVE)
+                    TestProtobuf>() {}.annotatedType());
+    assertThat(mutator.toString()).doesNotContain("Nullable");
   }
 }

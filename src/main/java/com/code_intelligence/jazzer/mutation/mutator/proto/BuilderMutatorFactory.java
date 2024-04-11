@@ -46,6 +46,7 @@ import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
+import com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport;
 import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
@@ -77,10 +78,17 @@ import java.util.stream.Stream;
 
 public final class BuilderMutatorFactory implements MutatorFactory {
   private <T extends Builder, U> InPlaceMutator<T> mutatorForField(
-      FieldDescriptor field, Annotation[] annotations, ExtendedMutatorFactory factory) {
+      AnnotatedType initialType,
+      FieldDescriptor field,
+      Annotation[] annotations,
+      ExtendedMutatorFactory factory) {
     factory = withDescriptorDependentMutatorFactoryIfNeeded(factory, field, annotations);
     AnnotatedType typeToMutate = TypeLibrary.getTypeToMutate(field);
     requireNonNull(typeToMutate, () -> "Java class not specified for " + field);
+
+    // Propagate constraints from the field to the type to mutate.
+    typeToMutate =
+        PropertyConstraintSupport.propagatePropertyConstraints(initialType, typeToMutate);
 
     InPlaceMutator<T> mutator;
     if (field.isMapField()) {
@@ -183,6 +191,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
                         // subfields.
                         return Optional.of(
                             makeBuilderMutator(
+                                type,
                                 originalFactory,
                                 DynamicMessage.getDefaultInstance(messageDescriptor),
                                 annotations));
@@ -193,6 +202,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
   }
 
   private <T extends Builder> Stream<InPlaceMutator<T>> mutatorsForFields(
+      AnnotatedType initialType,
       Optional<OneofDescriptor> oneofField,
       List<FieldDescriptor> fields,
       Annotation[] annotations,
@@ -222,12 +232,13 @@ public final class BuilderMutatorFactory implements MutatorFactory {
               // Mutating to the unset (-1) state is handled by the individual field mutators, which
               // are created nullable as oneof fields report that they track presence.
               fields.stream()
-                  .map(field -> mutatorForField(field, annotations, factory))
+                  .map(field -> mutatorForField(initialType, field, annotations, factory))
                   .toArray(InPlaceMutator[]::new)));
     } else {
       // All non-oneof fields are mutated independently, using the order in which they are declared
       // in the .proto file (which may not coincide with the order by field number).
-      return fields.stream().map(field -> mutatorForField(field, annotations, factory));
+      return fields.stream()
+          .map(field -> mutatorForField(initialType, field, annotations, factory));
     }
   }
 
@@ -386,12 +397,16 @@ public final class BuilderMutatorFactory implements MutatorFactory {
               }
 
               return Optional.of(
-                  makeBuilderMutator(factory, defaultInstance, type.getDeclaredAnnotations()));
+                  makeBuilderMutator(
+                      type, factory, defaultInstance, type.getDeclaredAnnotations()));
             });
   }
 
   private SerializingMutator<?> makeBuilderMutator(
-      ExtendedMutatorFactory factory, Message defaultInstance, Annotation[] annotations) {
+      AnnotatedType initialType,
+      ExtendedMutatorFactory factory,
+      Message defaultInstance,
+      Annotation[] annotations) {
     AnySource anySource =
         (AnySource)
             stream(annotations)
@@ -442,6 +457,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
                     .flatMap(
                         entry ->
                             mutatorsForFields(
+                                initialType,
                                 entry.getKey(),
                                 entry.getValue(),
                                 anySource == null
