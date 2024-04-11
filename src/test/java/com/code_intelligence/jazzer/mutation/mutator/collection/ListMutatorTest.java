@@ -20,6 +20,7 @@ import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.reflect.AnnotatedType;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -308,5 +309,16 @@ public class ListMutatorTest {
       list = mutator.crossOver(list, otherList, prng);
     }
     assertThat(list).containsExactly(0, 1, 7, 8, 9, 5, 6, 7, 8, 9).inOrder();
+  }
+
+  @Test
+  void propagateConstraint() {
+    SerializingMutator<@NotNull List<List<Integer>>> mutator =
+        (SerializingMutator<@NotNull List<List<Integer>>>)
+            factory.createOrThrow(
+                new TypeHolder<
+                    @NotNull(constraint = PropertyConstraint.RECURSIVE) List<
+                        List<Integer>>>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("List<List<Integer>>");
   }
 }

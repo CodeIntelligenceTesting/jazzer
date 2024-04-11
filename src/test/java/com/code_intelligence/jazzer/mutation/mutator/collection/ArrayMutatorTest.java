@@ -19,6 +19,7 @@ import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.reflect.AnnotatedType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -232,5 +233,16 @@ public class ArrayMutatorTest {
       // chooses mutation?
       assertThat(arr).asList().containsExactly(0, 1, 5, 6, 2, 3, 4, 7).inOrder();
     }
+  }
+
+  @Test
+  void propagateConstraint() {
+    SerializingMutator<@NotNull Integer[]> mutator =
+        (SerializingMutator<@NotNull Integer[]>)
+            factory.createOrThrow(
+                new TypeHolder<
+                    Integer @NotNull(constraint = PropertyConstraint.RECURSIVE)
+                        []>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("Integer[]");
   }
 }

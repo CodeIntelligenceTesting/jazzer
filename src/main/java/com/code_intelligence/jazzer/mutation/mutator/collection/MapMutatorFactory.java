@@ -21,6 +21,7 @@ import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMuta
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.mutateRandomValuesChunk;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.check;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
+import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.parameterTypesIfParameterized;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -54,6 +55,7 @@ final class MapMutatorFactory implements MutatorFactory {
         .map(
             parameterTypes ->
                 parameterTypes.stream()
+                    .map(innerType -> propagatePropertyConstraints(type, innerType))
                     .map(factory::tryCreate)
                     .flatMap(StreamSupport::getOrEmpty)
                     .collect(Collectors.toList()))

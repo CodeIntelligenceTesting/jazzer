@@ -11,6 +11,7 @@ package com.code_intelligence.jazzer.mutation.mutator.collection;
 
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.MutationAction.pickRandomMutationAction;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
+import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -42,13 +43,15 @@ final class ArrayMutatorFactory implements MutatorFactory {
     Optional<WithLength> withLength = Optional.ofNullable(type.getAnnotation(WithLength.class));
     int minLength = withLength.map(WithLength::min).orElse(ArrayMutator.DEFAULT_MIN_LENGTH);
     int maxLength = withLength.map(WithLength::max).orElse(ArrayMutator.DEFAULT_MAX_LENGTH);
+
     AnnotatedType elementType = ((AnnotatedArrayType) type).getAnnotatedGenericComponentType();
-    Class<?> elementClazz = (Class<?>) elementType.getType();
-    return Optional.of(elementType)
+    AnnotatedType propagatedElementType = propagatePropertyConstraints(type, elementType);
+    Class<?> propagatedElementClazz = (Class<?>) propagatedElementType.getType();
+    return Optional.of(propagatedElementType)
         .flatMap(factory::tryCreate)
         .map(
             elementMutator ->
-                new ArrayMutator<>(elementMutator, elementClazz, minLength, maxLength));
+                new ArrayMutator<>(elementMutator, propagatedElementClazz, minLength, maxLength));
   }
 
   enum CrossOverAction {

@@ -22,6 +22,7 @@ import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.reflect.AnnotatedType;
 import java.util.List;
 import java.util.Map;
@@ -456,5 +457,16 @@ class MapMutatorTest {
               asMutableList(6))
           .inOrder();
     }
+  }
+
+  @Test
+  void propagateConstraint() {
+    SerializingMutator<@NotNull Map<String, List<Integer>>> mutator =
+        (SerializingMutator<@NotNull Map<String, List<Integer>>>)
+            factory.createOrThrow(
+                new TypeHolder<
+                    @NotNull(constraint = PropertyConstraint.RECURSIVE) Map<
+                        String, List<Integer>>>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("Map<String, List<Integer>>");
   }
 }

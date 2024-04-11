@@ -13,6 +13,7 @@ java_test_suite(
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/collection",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/lang",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/utils",
         "//src/test/java/com/code_intelligence/jazzer/mutation/support:test_support",
     ],
 )

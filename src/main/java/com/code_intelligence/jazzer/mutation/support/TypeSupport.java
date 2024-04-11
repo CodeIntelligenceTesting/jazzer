@@ -20,6 +20,7 @@ import static java.util.stream.Collectors.toSet;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedArrayType;
 import java.lang.reflect.AnnotatedElement;
@@ -200,6 +201,11 @@ public final class TypeSupport {
       @Override
       public int max() {
         return max;
+      }
+
+      @Override
+      public String constraint() {
+        return PropertyConstraint.DECLARATION;
       }
 
       @Override
