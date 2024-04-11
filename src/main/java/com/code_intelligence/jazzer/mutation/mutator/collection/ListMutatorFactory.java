@@ -19,6 +19,7 @@ import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMuta
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.mutateRandomAt;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.mutateRandomChunk;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
+import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.parameterTypeIfParameterized;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -48,7 +49,9 @@ final class ListMutatorFactory implements MutatorFactory {
     Optional<WithSize> withSize = Optional.ofNullable(type.getAnnotation(WithSize.class));
     int minSize = withSize.map(WithSize::min).orElse(ListMutator.DEFAULT_MIN_SIZE);
     int maxSize = withSize.map(WithSize::max).orElse(ListMutator.DEFAULT_MAX_SIZE);
+
     return parameterTypeIfParameterized(type, List.class)
+        .map(innerType -> propagatePropertyConstraints(type, innerType))
         .flatMap(factory::tryCreate)
         .map(elementMutator -> new ListMutator<>(elementMutator, minSize, maxSize));
   }
