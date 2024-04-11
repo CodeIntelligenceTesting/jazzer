@@ -224,18 +224,19 @@ class Utils {
   }
 
   static boolean isGatheringCoverage() {
-    return isCoverageAgentPresent()
-        || (System.getenv("JAZZER_COVERAGE") != null
-            && permissivelyParseBoolean(System.getenv("JAZZER_COVERAGE")));
+    return isCoverageAgentPresent() || permissivelyParseBoolean(System.getenv("JAZZER_COVERAGE"));
   }
 
-  private static final boolean SET_FUZZING_ENV = System.getenv("JAZZER_FUZZ") != null;
+  private static final boolean SET_FUZZING_ENV =
+      System.getenv("JAZZER_FUZZ") != null || System.getProperty("JAZZER_FUZZ") != null;
   private static final boolean IS_FUZZING_ENV =
-      SET_FUZZING_ENV && permissivelyParseBoolean(System.getenv("JAZZER_FUZZ"));
+      permissivelyParseBoolean(System.getenv("JAZZER_FUZZ"))
+          || permissivelyParseBoolean(System.getProperty("JAZZER_FUZZ"));
 
   /** Returns true if and only if the value is equal to "true", "1", or "yes" case-insensitively. */
   static boolean permissivelyParseBoolean(String value) {
-    return value.equalsIgnoreCase("true") || value.equals("1") || value.equalsIgnoreCase("yes");
+    return value != null
+        && (value.equalsIgnoreCase("true") || value.equals("1") || value.equalsIgnoreCase("yes"));
   }
 
   static boolean isFuzzing(ExtensionContext extensionContext) {
