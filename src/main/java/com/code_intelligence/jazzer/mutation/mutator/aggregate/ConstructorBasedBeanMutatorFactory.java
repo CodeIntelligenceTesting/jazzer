@@ -68,7 +68,7 @@ final class ConstructorBasedBeanMutatorFactory implements MutatorFactory {
                                           // if not all parameters are supported by the mutation
                                           // framework, empty is returned.
                                           return AggregatesHelper.ofMutable(
-                                              factory, constructor, getters);
+                                              factory, type, constructor, getters);
                                         }))));
   }
 

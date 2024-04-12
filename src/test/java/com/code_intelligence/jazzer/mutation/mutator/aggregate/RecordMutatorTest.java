@@ -17,6 +17,7 @@ import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -149,5 +150,22 @@ class RecordMutatorTest {
       assertThat(record).isEqualTo(new RecursiveTypesRecord(1, new RecursiveTypesRecord(0, null)));
       assertThat(mutator.detach(record)).isSameInstanceAs(record);
     }
+  }
+
+  record PropagateInnerTypeRecord(List<Integer> list) {}
+
+  record PropagateTypeRecord(PropagateInnerTypeRecord inner) {}
+
+  @Test
+  void propagateConstraint() {
+    SerializingMutator<@NotNull PropagateTypeRecord> mutator =
+        (SerializingMutator<@NotNull PropagateTypeRecord>)
+            Mutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull(constraint = PropertyConstraint.RECURSIVE)
+                        PropagateTypeRecord>() {}.annotatedType());
+    assertThat(mutator.toString())
+        .isEqualTo("[[List<Integer>] -> PropagateInnerTypeRecord] -> PropagateTypeRecord");
   }
 }

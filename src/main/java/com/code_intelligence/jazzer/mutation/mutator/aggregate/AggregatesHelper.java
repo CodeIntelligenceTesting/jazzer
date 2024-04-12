@@ -11,6 +11,7 @@ package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMap;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
+import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static java.util.Arrays.stream;
 
@@ -38,17 +39,24 @@ import java.util.function.Supplier;
 final class AggregatesHelper {
 
   public static Optional<SerializingMutator<?>> ofImmutable(
-      ExtendedMutatorFactory factory, Executable instantiator, Method... getters) {
-    return createConstructorBasedMutator(factory, instantiator, getters, true);
+      ExtendedMutatorFactory factory,
+      AnnotatedType initialType,
+      Executable instantiator,
+      Method... getters) {
+    return createConstructorBasedMutator(factory, initialType, instantiator, getters, true);
   }
 
   public static Optional<SerializingMutator<?>> ofMutable(
-      ExtendedMutatorFactory factory, Executable instantiator, Method... getters) {
-    return createConstructorBasedMutator(factory, instantiator, getters, false);
+      ExtendedMutatorFactory factory,
+      AnnotatedType initialType,
+      Executable instantiator,
+      Method... getters) {
+    return createConstructorBasedMutator(factory, initialType, instantiator, getters, false);
   }
 
   private static Optional<SerializingMutator<?>> createConstructorBasedMutator(
       ExtendedMutatorFactory factory,
+      AnnotatedType initialType,
       Executable instantiator,
       Method[] getters,
       boolean isImmutable) {
@@ -71,6 +79,7 @@ final class AggregatesHelper {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     return createChecked(
             factory,
+            initialType,
             components -> {
               try {
                 return unreflectNewInstance(lookup, instantiator).invokeWithArguments(components);
@@ -86,7 +95,11 @@ final class AggregatesHelper {
   }
 
   public static Optional<SerializingMutator<?>> ofMutable(
-      ExtendedMutatorFactory factory, Executable newInstance, Method[] getters, Method[] setters) {
+      ExtendedMutatorFactory factory,
+      AnnotatedType initialType,
+      Executable newInstance,
+      Method[] getters,
+      Method[] setters) {
     Preconditions.check(
         getters.length == setters.length,
         String.format(
@@ -111,6 +124,7 @@ final class AggregatesHelper {
             .toArray(AnnotatedType[]::new);
     return createChecked(
             factory,
+            initialType,
             makeInstantiator(
                 unreflectNewInstance(lookup, newInstance), unreflectMethods(lookup, setters)),
             instantiatorParameterTypes,
@@ -123,6 +137,7 @@ final class AggregatesHelper {
   @SuppressWarnings("Immutable")
   private static <R> Optional<SerializingMutator<R>> createChecked(
       ExtendedMutatorFactory factory,
+      AnnotatedType initialType,
       Function<Object[], R> instantiator,
       AnnotatedType[] instantiatorParameterTypes,
       Class<?> instantiatedClass,
@@ -131,7 +146,9 @@ final class AggregatesHelper {
     Supplier<SerializingMutator<Object[]>> mutator =
         () ->
             toArrayOrEmpty(
-                    stream(instantiatorParameterTypes).map(factory::tryCreate),
+                    stream(instantiatorParameterTypes)
+                        .map(type -> propagatePropertyConstraints(initialType, type))
+                        .map(factory::tryCreate),
                     SerializingMutator<?>[]::new)
                 .map(MutatorCombinators::mutateProduct)
                 .orElseThrow(FailedToConstructChildMutatorException::new);

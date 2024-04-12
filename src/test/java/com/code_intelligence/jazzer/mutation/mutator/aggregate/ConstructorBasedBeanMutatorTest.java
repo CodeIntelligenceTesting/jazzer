@@ -17,6 +17,7 @@ import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.beans.ConstructorProperties;
 import java.util.Objects;
 import org.junit.jupiter.api.Test;
@@ -207,5 +208,18 @@ class ConstructorBasedBeanMutatorTest {
 
     BeanWithParent mutated = mutator.mutate(inited, prng);
     assertThat(mutated).isNotEqualTo(inited);
+  }
+
+  @Test
+  void propagateConstraint() {
+    SerializingMutator<@NotNull ConstructorPropertiesAnnotatedBean> mutator =
+        (SerializingMutator<@NotNull ConstructorPropertiesAnnotatedBean>)
+            Mutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull(constraint = PropertyConstraint.RECURSIVE)
+                        ConstructorPropertiesAnnotatedBean>() {}.annotatedType());
+    assertThat(mutator.toString())
+        .isEqualTo("[Boolean, String, Integer] -> ConstructorPropertiesAnnotatedBean");
   }
 }
