@@ -61,7 +61,7 @@ final class SetterBasedBeanMutatorFactory implements MutatorFactory {
                                   .toArray(Type[]::new)))
                   .flatMap(
                       getters ->
-                          AggregatesHelper.ofMutable(factory, constructor, getters, setters));
+                          AggregatesHelper.ofMutable(factory, type, constructor, getters, setters));
             });
   }
 }

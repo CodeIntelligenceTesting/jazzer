@@ -19,6 +19,7 @@ import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.util.Objects;
 import org.junit.jupiter.api.Test;
 
@@ -224,5 +225,19 @@ class SetterBasedBeanMutatorTest {
 
     BeanWithParent mutated = mutator.mutate(inited, prng);
     assertThat(mutated).isNotEqualTo(inited);
+  }
+
+  @Test
+  void propagateConstraint() {
+    SerializingMutator<@NotNull RecursiveTypeBean> mutator =
+        (SerializingMutator<@NotNull RecursiveTypeBean>)
+            Mutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        @NotNull(constraint = PropertyConstraint.RECURSIVE)
+                        RecursiveTypeBean>() {}.annotatedType());
+    assertThat(mutator.toString())
+        .isEqualTo(
+            "[Integer, RecursionBreaking((cycle) -> RecursiveTypeBean)] -> RecursiveTypeBean");
   }
 }

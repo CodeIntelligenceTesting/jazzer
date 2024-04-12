@@ -31,6 +31,7 @@ final class RecordMutatorFactory implements MutatorFactory {
               try {
                 return AggregatesHelper.ofImmutable(
                     factory,
+                    type,
                     getCanonicalConstructor(clazz),
                     stream(clazz.getRecordComponents())
                         .map(RecordComponent::getAccessor)
