@@ -19,10 +19,13 @@ import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.reflect.AnnotatedType;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class PropertyConstraintSupportTest {
   @Test
+  @EnabledForJreRange(min = JRE.JAVA_12)
   void doNotPropagateDeclarationConstraint() {
     AnnotatedType sourceType = new TypeHolder<@NotNull List<@Ascii String>>() {}.annotatedType();
     AnnotatedType targetType = parameterTypeIfParameterized(sourceType, List.class).get();
