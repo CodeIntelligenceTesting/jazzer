@@ -9,7 +9,7 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import static com.code_intelligence.jazzer.junit.SpringFuzzTestHelper.printApiStats;
+import static com.code_intelligence.jazzer.junit.ApiStatsHolder.printApiStats;
 import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
@@ -321,7 +321,7 @@ class FuzzTestExecutor {
       throw throwable;
     }
 
-    SpringFuzzTestHelper.apiStats = new ApiStatsInterval();
+    ApiStatsHolder.apiStats = new ApiStatsInterval();
 
     int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
     javaSeedsDir.ifPresent(FuzzTestExecutor::deleteJavaSeedsDir);

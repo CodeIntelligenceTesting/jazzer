@@ -62,6 +62,7 @@ java_library(
         "@maven//:org_junit_platform_junit_platform_commons",
         "@maven//:org_springframework_spring_test",
         "@maven//:org_springframework_spring_web",
+        "@maven//:org_springframework_spring_webmvc",
     ],
 )
 
@@ -90,6 +91,7 @@ java_jni_library(
     name = "fuzz_test_executor",
     srcs = [
         "ApiStats.java",
+        "ApiStatsHolder.java",
         "ApiStatsInterval.java",
         "ApiStatsNoop.java",
         "FuzzTestExecutor.java",
@@ -114,6 +116,7 @@ java_jni_library(
         "@maven//:org_junit_platform_junit_platform_commons",
         "@maven//:org_springframework_spring_test",
         "@maven//:org_springframework_spring_web",
+        "@maven//:org_springframework_spring_webmvc",
     ],
 )
 

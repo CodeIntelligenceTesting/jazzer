@@ -9,7 +9,7 @@
 
 package com.example;
 
-import static com.code_intelligence.jazzer.junit.SpringFuzzTestHelper.collectApiStats;
+import static com.code_intelligence.jazzer.junit.SpringFuzzTestHelper.apiTest;
 import static com.code_intelligence.jazzer.junit.SpringFuzzTestHelper.statusIsNot5xxServerError;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -51,14 +51,12 @@ public class JunitSpringWebApplicationTests {
 
   @Test
   public void unitTestShouldPass() throws Exception {
-    mockMvc.perform(get("/hello").param("name", "Maven")).andDo(collectApiStats("/hello"));
+    apiTest(mockMvc, "/hello", get("/hello").param("name", "Maven"));
   }
 
   @Test
   public void unitTestShouldFail() throws Exception {
-    mockMvc
-        .perform(get("/buggy-hello").param("name", "error"))
-        .andDo(collectApiStats("/buggy-hello"));
+    apiTest(mockMvc, "/buggy-hello", get("/buggy-hello").param("name", "error"));
   }
 
   @FuzzTest(maxDuration = "10s")
@@ -68,7 +66,7 @@ public class JunitSpringWebApplicationTests {
     }
 
     String name = data.consumeRemainingAsString();
-    mockMvc.perform(get("/hello").param("name", name)).andDo(collectApiStats("/hello"));
+    apiTest(mockMvc, "/hello", get("/hello").param("name", name));
   }
 
   @FuzzTest(maxDuration = "10s")
@@ -78,10 +76,8 @@ public class JunitSpringWebApplicationTests {
     }
 
     String name = data.consumeRemainingAsString();
-    mockMvc
-        .perform(get("/buggy-hello").param("name", name))
-        .andExpect(content().string(containsString(name)))
-        .andDo(collectApiStats("/buggy-hello"));
+    apiTest(mockMvc, "/buggy-hello", get("/buggy-hello").param("name", name))
+        .andExpect(content().string(containsString(name)));
   }
 
   @FuzzTest(maxDuration = "10s")
@@ -92,13 +88,13 @@ public class JunitSpringWebApplicationTests {
     Assumptions.assumeTrue(
         helloRequest != null && helloRequest.name != null && !helloRequest.name.isBlank());
 
-    mockMvc
-        .perform(
+    apiTest(
+            mockMvc,
+            "/hello",
             post("/hello")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(helloRequest)))
         .andExpect(content().string(containsString(helloRequest.name)))
-        .andExpect(statusIsNot5xxServerError())
-        .andDo(collectApiStats("/hello"));
+        .andExpect(statusIsNot5xxServerError());
   }
 }
