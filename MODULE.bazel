@@ -75,6 +75,7 @@ HIDDEN_RUNTIME_MAVEN_ARTIFACTS = [
     "jakarta.servlet:jakarta.servlet-api:6.0.0",
     "org.springframework:spring-test:6.1.4",
     "org.springframework:spring-web:6.1.4",
+    "org.springframework:spring-webmvc:6.1.4",
 ]
 
 # Dependencies used to support Jazzer's own tests.
