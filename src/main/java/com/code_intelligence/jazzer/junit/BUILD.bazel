@@ -75,8 +75,11 @@ java_library(
 )
 
 java_library(
-    name = "exit_code_exception",
-    srcs = ["ExitCodeException.java"],
+    name = "common_exceptions",
+    srcs = [
+        "ExitCodeException.java",
+        "FuzzTestFindingException.java",
+    ],
     visibility = [
         "//src/main/java/com/code_intelligence/jazzer/driver/junit:__pkg__",
         "//src/test/java/com/code_intelligence/jazzer/junit:__pkg__",

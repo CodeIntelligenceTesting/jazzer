@@ -26,6 +26,7 @@ import static org.junit.platform.testkit.engine.EventType.FINISHED;
 import static org.junit.platform.testkit.engine.EventType.REPORTING_ENTRY_PUBLISHED;
 import static org.junit.platform.testkit.engine.EventType.SKIPPED;
 import static org.junit.platform.testkit.engine.EventType.STARTED;
+import static org.junit.platform.testkit.engine.TestExecutionResultConditions.cause;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
 import java.io.IOException;
@@ -134,7 +135,9 @@ public class FuzzingWithCrashTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, CLAZZ, BYTE_FUZZ.getDescriptorId(), INVOCATION)),
                 displayName("Fuzzing..."),
-                finishedWithFailure(instanceOf(AssertionFailedError.class))));
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(AssertionFailedError.class)))));
 
     // Jazzer first tries the empty input, which doesn't crash the ByteFuzzTest. The second input is
     // the seed we planted, which is crashing, so verify that a crash file with the same content is

@@ -24,6 +24,7 @@ import static org.junit.platform.testkit.engine.EventType.FINISHED;
 import static org.junit.platform.testkit.engine.EventType.REPORTING_ENTRY_PUBLISHED;
 import static org.junit.platform.testkit.engine.EventType.SKIPPED;
 import static org.junit.platform.testkit.engine.EventType.STARTED;
+import static org.junit.platform.testkit.engine.TestExecutionResultConditions.cause;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
 import com.example.TestSuccessfulException;
@@ -112,6 +113,8 @@ public class PerExecutionLifecycleWithFindingTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, CLAZZ, LIFECYCLE_FUZZ, INVOCATION + 2)),
                 displayName("Fuzzing..."),
-                finishedWithFailure(instanceOf(IOException.class))));
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(IOException.class)))));
   }
 }

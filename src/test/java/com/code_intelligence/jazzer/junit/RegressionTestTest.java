@@ -24,6 +24,7 @@ import static org.junit.platform.testkit.engine.EventType.DYNAMIC_TEST_REGISTERE
 import static org.junit.platform.testkit.engine.EventType.FINISHED;
 import static org.junit.platform.testkit.engine.EventType.REPORTING_ENTRY_PUBLISHED;
 import static org.junit.platform.testkit.engine.EventType.STARTED;
+import static org.junit.platform.testkit.engine.TestExecutionResultConditions.cause;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.message;
 
@@ -176,7 +177,9 @@ public class RegressionTestTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, VALID_FUZZ_TESTS, DATA_FUZZ, INVOCATION)),
                 displayName("<empty input>"),
-                finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))),
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(FuzzerSecurityIssueMedium.class)))),
             event(
                 type(DYNAMIC_TEST_REGISTERED),
                 test(uniqueIdSubstrings(ENGINE, VALID_FUZZ_TESTS, DATA_FUZZ, INVOCATION)),
@@ -202,7 +205,9 @@ public class RegressionTestTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, VALID_FUZZ_TESTS, DATA_FUZZ, INVOCATION)),
                 displayName("assert"),
-                finishedWithFailure(instanceOf(AssertionFailedError.class))),
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(AssertionFailedError.class)))),
             event(
                 type(DYNAMIC_TEST_REGISTERED),
                 test(uniqueIdSubstrings(ENGINE, VALID_FUZZ_TESTS, DATA_FUZZ, INVOCATION)),
@@ -215,7 +220,9 @@ public class RegressionTestTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, VALID_FUZZ_TESTS, DATA_FUZZ, INVOCATION)),
                 displayName("honeypot"),
-                finishedWithFailure(instanceOf(FuzzerSecurityIssueHigh.class))),
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(FuzzerSecurityIssueHigh.class)))),
             event(
                 type(DYNAMIC_TEST_REGISTERED),
                 test(uniqueIdSubstrings(ENGINE, VALID_FUZZ_TESTS, DATA_FUZZ, INVOCATION)),
@@ -228,7 +235,9 @@ public class RegressionTestTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, VALID_FUZZ_TESTS, DATA_FUZZ, INVOCATION)),
                 displayName("sanitizer_internal_class"),
-                finishedWithFailure(instanceOf(FuzzerSecurityIssueCritical.class))),
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(FuzzerSecurityIssueCritical.class)))),
             event(
                 type(DYNAMIC_TEST_REGISTERED),
                 test(uniqueIdSubstrings(ENGINE, VALID_FUZZ_TESTS, DATA_FUZZ, INVOCATION)),
@@ -241,7 +250,9 @@ public class RegressionTestTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, VALID_FUZZ_TESTS, DATA_FUZZ, INVOCATION)),
                 displayName("sanitizer_user_class"),
-                finishedWithFailure(instanceOf(FuzzerSecurityIssueLow.class))),
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(FuzzerSecurityIssueLow.class)))),
             event(
                 type(DYNAMIC_TEST_REGISTERED),
                 test(uniqueIdSubstrings(ENGINE, BYTE_FUZZ_TEST, BYTE_FUZZ, INVOCATION)),
@@ -280,6 +291,8 @@ public class RegressionTestTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, BYTE_FUZZ_TEST, BYTE_FUZZ, INVOCATION)),
                 displayName("fails"),
-                finishedWithFailure(instanceOf(AssertionFailedError.class))));
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(AssertionFailedError.class)))));
   }
 }

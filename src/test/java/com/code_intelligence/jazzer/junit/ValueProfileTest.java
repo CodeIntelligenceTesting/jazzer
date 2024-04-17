@@ -24,6 +24,7 @@ import static org.junit.platform.testkit.engine.EventConditions.uniqueIdSubstrin
 import static org.junit.platform.testkit.engine.EventType.DYNAMIC_TEST_REGISTERED;
 import static org.junit.platform.testkit.engine.EventType.FINISHED;
 import static org.junit.platform.testkit.engine.EventType.STARTED;
+import static org.junit.platform.testkit.engine.TestExecutionResultConditions.cause;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
@@ -141,7 +142,9 @@ public class ValueProfileTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, CLAZZ, VALUE_PROFILE_FUZZ, INVOCATION + 3)),
                 displayName("Fuzzing..."),
-                finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(FuzzerSecurityIssueMedium.class)))));
 
     // Should crash on the exact input "Jazzer", with the crash emitted into the seed corpus.
     try (Stream<Path> crashFiles =

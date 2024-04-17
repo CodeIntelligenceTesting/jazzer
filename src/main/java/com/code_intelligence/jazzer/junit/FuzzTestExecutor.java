@@ -331,7 +331,7 @@ class FuzzTestExecutor {
     printApiStats();
 
     if (finding != null) {
-      return Optional.of(finding);
+      return Optional.of(new FuzzTestFindingException(finding));
     } else if (exitCode != 0) {
       return Optional.of(
           new ExitCodeException("Jazzer exited with exit code " + exitCode, exitCode));
