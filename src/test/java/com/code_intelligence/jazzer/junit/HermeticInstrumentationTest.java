@@ -23,6 +23,7 @@ import static org.junit.platform.testkit.engine.EventType.DYNAMIC_TEST_REGISTERE
 import static org.junit.platform.testkit.engine.EventType.FINISHED;
 import static org.junit.platform.testkit.engine.EventType.REPORTING_ENTRY_PUBLISHED;
 import static org.junit.platform.testkit.engine.EventType.STARTED;
+import static org.junit.platform.testkit.engine.TestExecutionResultConditions.cause;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
@@ -102,7 +103,9 @@ public class HermeticInstrumentationTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_1, INVOCATION)),
                 displayName("<empty input>"),
-                finishedWithFailure(instanceOf(FuzzerSecurityIssueLow.class))),
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(FuzzerSecurityIssueLow.class)))),
             event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, UNIT_TEST_1))),
             event(
                 type(FINISHED),
@@ -119,7 +122,9 @@ public class HermeticInstrumentationTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, CLAZZ, FUZZ_TEST_2, INVOCATION)),
                 displayName("<empty input>"),
-                finishedWithFailure(instanceOf(FuzzerSecurityIssueLow.class))),
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(FuzzerSecurityIssueLow.class)))),
             event(type(STARTED), test(uniqueIdSubstrings(ENGINE, CLAZZ, UNIT_TEST_2))),
             event(
                 type(FINISHED),

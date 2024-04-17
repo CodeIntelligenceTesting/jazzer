@@ -22,6 +22,7 @@ import com.code_intelligence.jazzer.driver.ExceptionUtils;
 import com.code_intelligence.jazzer.driver.Opt;
 import com.code_intelligence.jazzer.junit.ExitCodeException;
 import com.code_intelligence.jazzer.junit.FuzzTestConfigurationError;
+import com.code_intelligence.jazzer.junit.FuzzTestFindingException;
 import com.code_intelligence.jazzer.utils.Log;
 import java.util.List;
 import java.util.Map;
@@ -210,21 +211,21 @@ public final class JUnitRunner {
     // https://github.com/junit-team/junit5/blob/ac31e9a7d58973db73496244dab4defe17ae563e/junit-platform-engine/src/main/java/org/junit/platform/engine/support/hierarchical/ThrowableCollector.java#LL176C37-L176C37
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     Throwable throwable = result.getThrowable().get();
-    if (throwable instanceof FuzzTestConfigurationError) {
+    if (throwable instanceof FuzzTestFindingException) {
+      // Non-fatal findings and exceptions in containers have already been printed, the fatal
+      // finding is passed to JUnit as the test result.
+      return JAZZER_FINDING_EXIT_CODE;
+    } else if (throwable instanceof FuzzTestConfigurationError) {
       // Error configuring JUnit for fuzzing, e.g. due to unsupported fuzz test parameter.
       return JAZZER_ERROR_EXIT_CODE;
     } else if (throwable instanceof ExitCodeException) {
       // libFuzzer exited with a non-zero exit code, but Jazzer didn't produce a finding. Forward
       // the exit code and assume that information has already been printed (e.g. a timeout).
       return ((ExitCodeException) throwable).exitCode;
-    } else if (throwable instanceof ExceptionInInitializerError) {
-      // Exception in static initializer. These are not logged by JUnit, so do in here.
+    } else {
+      // None-finding exceptions are not already handled, so need to be printed here.
       Log.error(throwable);
       return JAZZER_ERROR_EXIT_CODE;
-    } else {
-      // Non-fatal findings and exceptions in containers have already been printed, the fatal
-      // finding is passed to JUnit as the test result.
-      return JAZZER_FINDING_EXIT_CODE;
     }
   }
 }

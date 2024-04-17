@@ -25,6 +25,7 @@ import static org.junit.platform.testkit.engine.EventType.DYNAMIC_TEST_REGISTERE
 import static org.junit.platform.testkit.engine.EventType.FINISHED;
 import static org.junit.platform.testkit.engine.EventType.REPORTING_ENTRY_PUBLISHED;
 import static org.junit.platform.testkit.engine.EventType.STARTED;
+import static org.junit.platform.testkit.engine.TestExecutionResultConditions.cause;
 import static org.junit.platform.testkit.engine.TestExecutionResultConditions.instanceOf;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium;
@@ -146,7 +147,9 @@ public class CorpusDirectoryTest {
                 type(FINISHED),
                 test(uniqueIdSubstrings(ENGINE, CLAZZ, INPUTS_FUZZ, INVOCATION + 3)),
                 displayName("Fuzzing..."),
-                finishedWithFailure(instanceOf(FuzzerSecurityIssueMedium.class))));
+                finishedWithFailure(
+                    instanceOf(FuzzTestFindingException.class),
+                    cause(instanceOf(FuzzerSecurityIssueMedium.class)))));
 
     // Crash file should be emitted into the artifacts directory and not into corpus directory.
     assertCrashFileExistsIn(artifactsDirectory);

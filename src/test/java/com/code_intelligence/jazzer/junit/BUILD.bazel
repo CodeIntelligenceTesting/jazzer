@@ -54,6 +54,7 @@ java_test(
     ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/junit:common_exceptions",
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test_configuration_error",
         "@maven//:com_google_truth_extensions_truth_java8_extension",
         "@maven//:com_google_truth_truth",
@@ -79,6 +80,7 @@ java_test(
         ],
         deps = [
             "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+            "//src/main/java/com/code_intelligence/jazzer/junit:common_exceptions",
             "//src/test/java/com/code_intelligence/jazzer/junit:test-method",
             "@maven//:com_google_truth_extensions_truth_java8_extension",
             "@maven//:com_google_truth_truth",
@@ -145,6 +147,7 @@ java_test(
         ],
         deps = [
             "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+            "//src/main/java/com/code_intelligence/jazzer/junit:common_exceptions",
             "@maven//:com_google_truth_extensions_truth_java8_extension",
             "@maven//:com_google_truth_truth",
             "@maven//:junit_junit",
@@ -179,6 +182,7 @@ java_test(
         ],
         deps = [
             "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+            "//src/main/java/com/code_intelligence/jazzer/junit:common_exceptions",
             "@maven//:com_google_truth_extensions_truth_java8_extension",
             "@maven//:com_google_truth_truth",
             "@maven//:junit_junit",
@@ -213,6 +217,7 @@ java_test(
         ],
         deps = [
             "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+            "//src/main/java/com/code_intelligence/jazzer/junit:common_exceptions",
             "@maven//:com_google_truth_extensions_truth_java8_extension",
             "@maven//:com_google_truth_truth",
             "@maven//:junit_junit",
@@ -266,6 +271,7 @@ java_test(
     deps = [
         "//examples/junit/src/test/java/com/example:test_successful_exception",
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/junit:common_exceptions",
         "@maven//:junit_junit",
         "@maven//:org_junit_platform_junit_platform_engine",
         "@maven//:org_junit_platform_junit_platform_testkit",
@@ -308,6 +314,7 @@ java_test(
     ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/junit:common_exceptions",
         "@maven//:com_google_truth_truth",
         "@maven//:junit_junit",
         "@maven//:org_junit_platform_junit_platform_engine",
@@ -350,6 +357,7 @@ java_test(
         ],
         deps = [
             "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+            "//src/main/java/com/code_intelligence/jazzer/junit:common_exceptions",
             "@maven//:junit_junit",
             "@maven//:org_assertj_assertj_core",
             "@maven//:org_junit_platform_junit_platform_engine",

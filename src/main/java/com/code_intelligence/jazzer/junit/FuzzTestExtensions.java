@@ -104,9 +104,9 @@ class FuzzTestExtensions
     }
     Throwable stored = (Throwable) getLastFindingField().get(null);
     if (stored != null) {
-      throw stored;
+      throw new FuzzTestFindingException(stored);
     } else if (thrown != null) {
-      throw thrown;
+      throw new FuzzTestFindingException(thrown);
     }
   }
 

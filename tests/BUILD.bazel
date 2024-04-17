@@ -496,7 +496,8 @@ java_fuzz_target_test(
         "JAZZER_FUZZ": "0",
     },
     expect_crash = False,
-    expect_non_crash_exit_code = 77,
+    expect_non_crash_exit_code = 1,
+    expected_warning_or_error = "ERROR: java.util.concurrent.TimeoutException",
     target_class = "com.example.TimeoutTest",
     runtime_deps = [
         "@maven//:org_junit_jupiter_junit_jupiter_engine",
