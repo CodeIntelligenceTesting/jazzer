@@ -13,6 +13,7 @@ import static com.code_intelligence.jazzer.mutation.support.AnnotationSupport.va
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.code_intelligence.jazzer.mutation.annotation.Ascii;
 import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
 import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
@@ -21,6 +22,7 @@ import com.code_intelligence.jazzer.mutation.annotation.UrlSegment;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.reflect.AnnotatedType;
 import java.util.List;
 import java.util.stream.Stream;
@@ -36,7 +38,11 @@ public class AnnotationSupportTest {
         arguments(new TypeHolder<@NotNull @WithSize(min = 10) List<Double>>() {}.annotatedType()),
         arguments(new TypeHolder<Integer @NotNull @WithLength(min = 10) []>() {}.annotatedType()),
         arguments(new TypeHolder<@WithUtf8Length(min = 10) String>() {}.annotatedType()),
-        arguments(new TypeHolder<@UrlSegment String>() {}.annotatedType()));
+        arguments(new TypeHolder<@UrlSegment String>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<
+                @Ascii(constraint = PropertyConstraint.RECURSIVE) List<
+                    String>>() {}.annotatedType()));
   }
 
   @ParameterizedTest

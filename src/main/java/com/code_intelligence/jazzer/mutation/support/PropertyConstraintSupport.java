@@ -24,22 +24,24 @@ public final class PropertyConstraintSupport {
         stream(src.getAnnotations())
             .filter(
                 annotation ->
-                    isConstraintAnnotation(annotation)
-                        && PropertyConstraint.RECURSIVE.equals(constraintFrom(annotation))
+                    isRecursiveConstraintAnnotation(annotation)
                         && !hasConstraint(target, annotation))
             .toArray(Annotation[]::new);
     return withExtraAnnotations(target, annotationsToPropagate);
+  }
+
+  public static boolean isRecursiveConstraintAnnotation(Annotation annotation) {
+    return PropertyConstraint.RECURSIVE.equals(constraintFrom(annotation));
   }
 
   private static boolean isConstraintAnnotation(Annotation annotation) {
     return annotation.annotationType().getAnnotation(PropertyConstraint.class) != null;
   }
 
-  private static boolean hasConstraint(AnnotatedType target, Annotation constraint) {
-    return target.getAnnotation(constraint.annotationType()) != null;
-  }
-
   private static String constraintFrom(Annotation constraint) {
+    if (!isConstraintAnnotation(constraint)) {
+      return null;
+    }
     try {
       return (String)
           constraint.annotationType().getDeclaredMethod("constraint").invoke(constraint);
@@ -47,4 +49,10 @@ public final class PropertyConstraintSupport {
       return "";
     }
   }
+
+  private static boolean hasConstraint(AnnotatedType target, Annotation constraint) {
+    return target.getAnnotation(constraint.annotationType()) != null;
+  }
+
+  private PropertyConstraintSupport() {}
 }

@@ -10,6 +10,7 @@
 package com.code_intelligence.jazzer.mutation.support;
 
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
+import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.isRecursiveConstraintAnnotation;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.visitAnnotatedType;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
@@ -43,6 +44,9 @@ public class AnnotationSupport {
   private static void ensureDeepAppliesTo(Annotation annotation, Class<?> clazz) {
     AppliesTo appliesTo = annotation.annotationType().getAnnotation(AppliesTo.class);
     if (appliesTo == null) {
+      return;
+    }
+    if (isRecursiveConstraintAnnotation(annotation)) {
       return;
     }
 
