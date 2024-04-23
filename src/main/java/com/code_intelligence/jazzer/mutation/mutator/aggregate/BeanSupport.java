@@ -11,22 +11,44 @@ package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.getOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
+import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 import java.beans.Introspector;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class BeanSupport {
+
+  // Sort constructors by parameter count descending, then type names.
+  private static final Comparator<Constructor<?>> byDescParameterCountAndTypes =
+      comparingInt((Constructor<?> c) -> c.getParameterCount())
+          .reversed()
+          .thenComparing(c -> Arrays.toString(c.getParameterTypes()));
+
+  static List<Constructor<?>> findConstructorsByParameterCount(Class<?> clazz) {
+    return stream(clazz.getDeclaredConstructors())
+        .filter(constructor -> !Modifier.isPrivate(constructor.getModifiers()))
+        .filter(constructor -> constructor.getParameterCount() > 0)
+        // If multiple constructors are defined, prefer the one with the most
+        // parameters.
+        .sorted(byDescParameterCountAndTypes)
+        .collect(Collectors.toList());
+  }
 
   static Optional<Method[]> findGettersByPropertyNames(
       Class<?> clazz, Stream<String> propertyNames) {

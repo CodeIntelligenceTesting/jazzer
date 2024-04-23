@@ -9,6 +9,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
+import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.findConstructorsByParameterCount;
 import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.findGettersByPropertyNames;
 import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.findGettersByPropertyTypes;
 import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.matchingReturnTypes;
@@ -47,14 +48,7 @@ final class ConstructorBasedBeanMutatorFactory implements MutatorFactory {
         .flatMap(
             clazz ->
                 findFirstPresent(
-                    stream(clazz.getDeclaredConstructors())
-                        .filter(constructor -> !Modifier.isPrivate(constructor.getModifiers()))
-                        // Constructors need parameters, default constructors are handled by the
-                        // setter based approach.
-                        .filter(constructor -> constructor.getParameterCount() > 0)
-                        // If multiple constructors are defined, prefer the one with the most
-                        // parameters.
-                        .sorted(byDescParameterCountAndTypes)
+                    findConstructorsByParameterCount(clazz).stream()
                         .map(
                             constructor ->
                                 findParameterGetters(clazz, constructor)
