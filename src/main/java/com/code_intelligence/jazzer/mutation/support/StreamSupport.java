@@ -13,6 +13,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.IntFunction;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public final class StreamSupport {
@@ -23,6 +24,18 @@ public final class StreamSupport {
    */
   public static <T> Optional<T> findFirstPresent(Stream<Optional<T>> stream) {
     return stream.filter(Optional::isPresent).map(Optional::get).findFirst();
+  }
+
+  /**
+   * Returns the supplier provided value wrapped in {@link Optional} or, if an exception is thrown,
+   * {@code empty}.
+   */
+  public static <T> Optional<T> suppliedOrEmpty(Supplier<T> supplier) {
+    try {
+      return Optional.of(supplier.get());
+    } catch (Exception e) {
+      return Optional.empty();
+    }
   }
 
   /**
