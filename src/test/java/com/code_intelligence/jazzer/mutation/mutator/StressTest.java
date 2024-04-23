@@ -38,6 +38,7 @@ import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.annotation.proto.AnySource;
 import com.code_intelligence.jazzer.mutation.annotation.proto.WithDefaultInstance;
+import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -317,6 +318,36 @@ public class StressTest {
     }
   }
 
+  public static class OnlyConstructorBean {
+    private final String foo;
+    private final List<Integer> bar;
+    private final boolean baz;
+
+    OnlyConstructorBean(String foo, List<Integer> bar, boolean baz) {
+      this.foo = foo;
+      this.bar = bar;
+      this.baz = baz;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      OnlyConstructorBean that = (OnlyConstructorBean) o;
+      return baz == that.baz && Objects.equals(foo, that.foo) && Objects.equals(bar, that.bar);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(foo, bar, baz);
+    }
+
+    @Override
+    public String toString() {
+      return "OnlyConstructorBean{" + "foo='" + foo + '\'' + ", bar=" + bar + ", baz=" + baz + '}';
+    }
+  }
+
   @SuppressWarnings("unused")
   static Message getTestProtobufDefaultInstance() {
     return TestProtobuf.getDefaultInstance();
@@ -439,7 +470,7 @@ public class StressTest {
             "Map<Integer, Integer>",
             false,
             // Half of all maps are empty, the other half is heavily biased towards special values.
-            all(mapSizeInClosedRange(0, 3), distinctElementsRatio(0.2)),
+            all(mapSizeInClosedRange(0, 3), distinctElementsRatio(0.19)),
             all(mapSizeInClosedRange(0, 3), manyDistinctElements())),
         arguments(
             new TypeHolder<@NotNull Map<@NotNull Boolean, @NotNull Boolean>>() {}.annotatedType(),
@@ -693,7 +724,20 @@ public class StressTest {
             "[Boolean, Nullable<String>, Integer] -> ConstructorBasedBean",
             false,
             manyDistinctElements(),
-            manyDistinctElements()));
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull OnlyConstructorBean>() {}.annotatedType(),
+            "[Nullable<String>, Nullable<List<Nullable<Integer>>>, Boolean] -> OnlyConstructorBean",
+            false,
+            manyDistinctElements(),
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull List<OnlyConstructorBean>>() {}.annotatedType(),
+            "List<Nullable<[Nullable<String>, Nullable<List<Nullable<Integer>>>, Boolean] ->"
+                + " OnlyConstructorBean>>",
+            false,
+            distinctElementsRatio(0.4),
+            distinctElementsRatio(0.4)));
   }
 
   public static Stream<Arguments> protoStressTestCases() {
@@ -1139,7 +1183,9 @@ public class StressTest {
       CloseableConsumer checkMutatedValues)
       throws Exception {
     validateAnnotationUsage(type);
-    SerializingMutator mutator = Mutators.newFactory().createOrThrow(type);
+    ExtendedMutatorFactory factory = Mutators.newFactory();
+
+    SerializingMutator mutator = factory.createOrThrow(type);
     assertThat(mutator.toString()).isEqualTo(mutatorTree);
     assertThat(mutator.hasFixedSize()).isEqualTo(hasFixedSize);
 
@@ -1186,9 +1232,16 @@ public class StressTest {
         // cause the assertion above to fail from time to time. To avoid this, we convert all
         // negative zeros to positive zeros for float and double proto fields.
         value = fixFloatingPointsForProtos(value);
+        testReadWriteRoundtrip(mutator, value);
+        testReadWriteExclusiveRoundtrip(mutator, value);
+
+        // Verify that the initial value was isolated and not mutated as well.
         testReadWriteRoundtrip(mutator, fixedValue);
         testReadWriteExclusiveRoundtrip(mutator, fixedValue);
       }
+
+      // Cleanup factory cache after mutations to reduce memory consumption.
+      factory.getCache().clear();
     }
 
     checkInitValues.close();

@@ -20,7 +20,10 @@ public final class AggregateMutators {
     // Register the record mutator first as it is more specific.
     return Stream.concat(
         newRecordMutatorFactoryIfSupported(),
-        Stream.of(new SetterBasedBeanMutatorFactory(), new ConstructorBasedBeanMutatorFactory()));
+        Stream.of(
+            new SetterBasedBeanMutatorFactory(),
+            new ConstructorBasedBeanMutatorFactory(),
+            new CachedConstructorMutatorFactory()));
   }
 
   private static Stream<MutatorFactory> newRecordMutatorFactoryIfSupported() {
