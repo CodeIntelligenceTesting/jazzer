@@ -12,6 +12,7 @@ package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMap;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
 import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
+import static com.code_intelligence.jazzer.mutation.support.StreamSupport.suppliedOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static java.util.Arrays.stream;
 
@@ -175,16 +176,14 @@ final class AggregatesHelper {
     BiFunction<SerializingMutator<Object[]>, Predicate<Debuggable>, String> debug =
         (productMutator, inCycle) ->
             productMutator.toDebugString(inCycle) + " -> " + instantiatedClass.getSimpleName();
-    try {
-      if (isImmutable) {
-        return Optional.of(
-            mutateThenMapToImmutable(mutator, map, inverse, debug, factory::internMutator));
-      } else {
-        return Optional.of(mutateThenMap(mutator, map, inverse, debug, factory::internMutator));
-      }
-    } catch (FailedToConstructChildMutatorException e) {
-      return Optional.empty();
-    }
+    return suppliedOrEmpty(
+        () -> {
+          if (isImmutable) {
+            return mutateThenMapToImmutable(mutator, map, inverse, debug, factory::internMutator);
+          } else {
+            return mutateThenMap(mutator, map, inverse, debug, factory::internMutator);
+          }
+        });
   }
 
   private static <R> Function<Object[], R> makeInstantiator(
