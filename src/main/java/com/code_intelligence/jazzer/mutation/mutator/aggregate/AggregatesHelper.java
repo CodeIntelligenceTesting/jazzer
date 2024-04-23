@@ -20,8 +20,8 @@ import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory.FailedToConstructChildMutatorException;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
-import com.code_intelligence.jazzer.mutation.combinator.InPlaceProductMutator;
 import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
+import com.code_intelligence.jazzer.mutation.combinator.ProductMutator;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -217,8 +217,7 @@ final class AggregatesHelper {
     }
   }
 
-  private static MethodHandle unreflectNewInstance(
-      MethodHandles.Lookup lookup, Executable newInstance) {
+  static MethodHandle unreflectNewInstance(MethodHandles.Lookup lookup, Executable newInstance) {
     Preconditions.check(
         newInstance instanceof Constructor || Modifier.isStatic(newInstance.getModifiers()),
         String.format(
@@ -252,14 +251,14 @@ final class AggregatesHelper {
         .toArray(MethodHandle[]::new);
   }
 
-  static InPlaceProductMutator buildProductMutatorForParameters(
+  static ProductMutator buildProductMutatorForParameters(
       AnnotatedType initialType, AnnotatedType[] types, ExtendedMutatorFactory factory) {
     return toArrayOrEmpty(
             stream(types)
                 .map(type -> propagatePropertyConstraints(initialType, type))
                 .map(factory::tryCreate),
             SerializingMutator<?>[]::new)
-        .map(MutatorCombinators::mutateProductInPlace)
+        .map(MutatorCombinators::mutateProduct)
         .orElseThrow(FailedToConstructChildMutatorException::new);
   }
 
