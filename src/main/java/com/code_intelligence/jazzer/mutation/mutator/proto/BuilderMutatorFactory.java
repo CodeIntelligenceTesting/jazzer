@@ -134,32 +134,31 @@ public final class BuilderMutatorFactory implements MutatorFactory {
     if (field.getJavaType() == JavaType.ENUM) {
       // Proto enum fields are special as their type (EnumValueDescriptor) does not encode their
       // domain - we need the actual EnumDescriptor instance.
-      return new ChainedMutatorFactory(
-          originalFactory,
-          (type, factory) ->
-              asSubclassOrEmpty(type, EnumValueDescriptor.class)
-                  .map(
-                      unused -> {
-                        EnumDescriptor enumType = field.getEnumType();
-                        List<EnumValueDescriptor> values = enumType.getValues();
-                        String name = enumType.getName();
-                        if (values.size() == 1) {
-                          // While we generally prefer to error out instead of creating a mutator
-                          // that can't
-                          // actually mutate its domain, we can't do that for proto enum fields as
-                          // the user
-                          // creating the fuzz test may not be in a position to modify the existing
-                          // proto
-                          // definition.
-                          return fixedValue(values.get(0));
-                        } else {
-                          return mutateThenMapToImmutable(
-                              mutateIndices(values.size()),
-                              values::get,
-                              EnumValueDescriptor::getIndex,
-                              unused2 -> "Enum<" + name + ">");
-                        }
-                      }));
+      return ChainedMutatorFactory.of(
+          originalFactory.getCache(),
+          Stream.of(
+              originalFactory,
+              (type, factory) ->
+                  asSubclassOrEmpty(type, EnumValueDescriptor.class)
+                      .map(
+                          unused -> {
+                            EnumDescriptor enumType = field.getEnumType();
+                            List<EnumValueDescriptor> values = enumType.getValues();
+                            String name = enumType.getName();
+                            if (values.size() == 1) {
+                              // While we generally prefer to error out instead of creating a
+                              // mutator that can't actually mutate its domain, we can't do that for
+                              // proto enum fields as the user creating the fuzz test may not be in
+                              // a position to modify the existing proto definition.
+                              return fixedValue(values.get(0));
+                            } else {
+                              return mutateThenMapToImmutable(
+                                  mutateIndices(values.size()),
+                                  values::get,
+                                  EnumValueDescriptor::getIndex,
+                                  unused2 -> "Enum<" + name + ">");
+                            }
+                          })));
     } else if (field.getJavaType() == JavaType.MESSAGE) {
       Descriptor messageDescriptor;
       if (field.isMapField()) {
@@ -173,29 +172,34 @@ public final class BuilderMutatorFactory implements MutatorFactory {
       } else {
         messageDescriptor = field.getMessageType();
       }
-      return new ChainedMutatorFactory(
-          originalFactory,
-          (type, factory) ->
-              asSubclassOrEmpty(type, Message.Builder.class)
-                  .flatMap(
-                      clazz -> {
-                        // BuilderMutatorFactory only handles concrete subclasses of Message.Builder
-                        // and requests Message.Builder itself for message fields, which we handle
-                        // here.
-                        if (clazz != Message.Builder.class) {
-                          return Optional.empty();
-                        }
-                        // It is important that we use originalFactory here instead of factory:
-                        // factory has this field-specific message mutator appended, but this
-                        // mutator should only be used for this particular field and not any message
-                        // subfields.
-                        return Optional.of(
-                            makeBuilderMutator(
-                                type,
-                                originalFactory,
-                                DynamicMessage.getDefaultInstance(messageDescriptor),
-                                annotations));
-                      }));
+      return ChainedMutatorFactory.of(
+          originalFactory.getCache(),
+          Stream.of(
+              originalFactory,
+              (type, factory) ->
+                  asSubclassOrEmpty(type, Message.Builder.class)
+                      .flatMap(
+                          clazz -> {
+                            // BuilderMutatorFactory only handles concrete subclasses of
+                            // Message.Builder
+                            // and requests Message.Builder itself for message fields, which we
+                            // handle
+                            // here.
+                            if (clazz != Message.Builder.class) {
+                              return Optional.empty();
+                            }
+                            // It is important that we use originalFactory here instead of factory:
+                            // factory has this field-specific message mutator appended, but this
+                            // mutator should only be used for this particular field and not any
+                            // message
+                            // subfields.
+                            return Optional.of(
+                                makeBuilderMutator(
+                                    type,
+                                    originalFactory,
+                                    DynamicMessage.getDefaultInstance(messageDescriptor),
+                                    annotations));
+                          })));
     } else {
       return originalFactory;
     }

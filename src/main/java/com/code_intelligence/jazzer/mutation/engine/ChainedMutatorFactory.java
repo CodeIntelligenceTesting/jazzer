@@ -19,6 +19,7 @@ import static java.util.Collections.nCopies;
 import static java.util.Collections.unmodifiableList;
 import static java.util.function.Function.identity;
 
+import com.code_intelligence.jazzer.mutation.api.Cache;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -43,17 +44,24 @@ public final class ChainedMutatorFactory extends ExtendedMutatorFactory {
   /**
    * Creates a {@link MutatorFactory} that delegates to the given factories in order.
    *
+   * @param cache fuzzing session cache to provide to mutators
    * @param factories a possibly empty collection of factories
    */
-  public ChainedMutatorFactory(MutatorFactory... factories) {
+  private ChainedMutatorFactory(Cache cache, MutatorFactory... factories) {
+    super(cache);
     this.fixedFactories = unmodifiableList(asList(factories));
     this.prependedFactories = new ArrayList<>();
   }
 
   @SafeVarargs
   public static ChainedMutatorFactory of(Stream<MutatorFactory>... factories) {
+    return of(new IdentityCache(), factories);
+  }
+
+  @SafeVarargs
+  public static ChainedMutatorFactory of(Cache cache, Stream<MutatorFactory>... factories) {
     return new ChainedMutatorFactory(
-        stream(factories).flatMap(identity()).toArray(MutatorFactory[]::new));
+        cache, stream(factories).flatMap(identity()).toArray(MutatorFactory[]::new));
   }
 
   @Override

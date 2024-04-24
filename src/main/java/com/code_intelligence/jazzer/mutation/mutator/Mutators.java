@@ -11,6 +11,7 @@ package com.code_intelligence.jazzer.mutation.mutator;
 
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
+import com.code_intelligence.jazzer.mutation.engine.IdentityCache;
 import com.code_intelligence.jazzer.mutation.mutator.aggregate.AggregateMutators;
 import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutators;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
@@ -23,6 +24,7 @@ public final class Mutators {
 
   public static ExtendedMutatorFactory newFactory() {
     return ChainedMutatorFactory.of(
+        new IdentityCache(),
         LangMutators.newFactories(),
         CollectionMutators.newFactories(),
         ProtoMutators.newFactories(),

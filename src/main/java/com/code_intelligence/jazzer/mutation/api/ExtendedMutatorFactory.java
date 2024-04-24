@@ -18,6 +18,16 @@ import java.util.Optional;
 
 public abstract class ExtendedMutatorFactory implements MutatorFactory {
 
+  public final Cache cache;
+
+  public ExtendedMutatorFactory(Cache cache) {
+    this.cache = cache;
+  }
+
+  public Cache getCache() {
+    return cache;
+  }
+
   public final SerializingMutator<?> createOrThrow(AnnotatedType type) {
     Optional<SerializingMutator<?>> maybeMutator = tryCreate(type);
     require(maybeMutator.isPresent(), "Failed to create mutator for " + type);
