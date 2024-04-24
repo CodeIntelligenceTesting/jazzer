@@ -19,8 +19,8 @@ import static java.util.stream.Collectors.joining;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.combinator.InPlaceProductMutator;
 import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
-import com.code_intelligence.jazzer.mutation.combinator.ProductMutator;
 import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
@@ -38,21 +38,22 @@ import java.util.Optional;
 public final class ArgumentsMutator {
   private final ExtendedMutatorFactory mutatorFactory;
   private final Method method;
-  private final ProductMutator productMutator;
+  private final InPlaceProductMutator productMutator;
 
   private Object[] arguments;
 
   /**
    * True if the arguments array has already been passed to a user-provided function or exposed via
-   * {@link #getArguments()} without going through {@link ProductMutator#detach(Object[])}. In this
-   * case the arguments may have been modified externally, which interferes with mutation, or could
-   * have been stored in static state that would be affected by future mutations. Arguments should
-   * either be detached or not be reused after being exposed, which is enforced by this variable.
+   * {@link #getArguments()} without going through {@link InPlaceProductMutator#detach(Object[])}.
+   * In this case the arguments may have been modified externally, which interferes with mutation,
+   * or could have been stored in static state that would be affected by future mutations. Arguments
+   * should either be detached or not be reused after being exposed, which is enforced by this
+   * variable.
    */
   private boolean argumentsExposed;
 
   private ArgumentsMutator(
-      ExtendedMutatorFactory mutatorFactory, Method method, ProductMutator productMutator) {
+      ExtendedMutatorFactory mutatorFactory, Method method, InPlaceProductMutator productMutator) {
     this.mutatorFactory = mutatorFactory;
     this.method = method;
     this.productMutator = productMutator;
@@ -103,12 +104,12 @@ public final class ArgumentsMutator {
                       return mutator;
                     }),
             SerializingMutator<?>[]::new)
-        .map(MutatorCombinators::mutateProduct)
+        .map(MutatorCombinators::mutateProductInPlace)
         .map(productMutator -> create(mutatorFactory, method, productMutator));
   }
 
   private static ArgumentsMutator create(
-      ExtendedMutatorFactory mutatorFactory, Method method, ProductMutator productMutator) {
+      ExtendedMutatorFactory mutatorFactory, Method method, InPlaceProductMutator productMutator) {
     method.setAccessible(true);
     return new ArgumentsMutator(mutatorFactory, method, productMutator);
   }

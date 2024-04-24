@@ -11,7 +11,7 @@ package com.code_intelligence.jazzer.mutation.combinator;
 
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.assemble;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.combine;
-import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateProduct;
+import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateProductInPlace;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateProperty;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateSumInPlace;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
@@ -457,7 +457,7 @@ class MutatorCombinatorsTest {
   void testCrossOverProduct() {
     SerializingMutator<Boolean> mutator1 = mockCrossOver((a, b) -> true);
     SerializingMutator<Integer> mutator2 = mockCrossOver((a, b) -> 42);
-    ProductMutator mutator = mutateProduct(mutator1, mutator2);
+    InPlaceProductMutator mutator = mutateProductInPlace(mutator1, mutator2);
 
     try (MockPseudoRandom prng =
         mockPseudoRandom(

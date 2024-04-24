@@ -28,13 +28,13 @@ import java.util.Arrays;
 import java.util.function.Predicate;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
-public final class ProductMutator extends SerializingInPlaceMutator<Object[]> {
+public final class InPlaceProductMutator extends SerializingInPlaceMutator<Object[]> {
   // Inverse frequency in which product type mutators should be used in cross over.
   private static final int INVERSE_PICK_VALUE_SUPPLIER_FREQUENCY = 100;
 
   private final SerializingMutator[] mutators;
 
-  ProductMutator(SerializingMutator[] mutators) {
+  InPlaceProductMutator(SerializingMutator[] mutators) {
     requireNonNullElements(mutators);
     this.mutators = Arrays.copyOf(mutators, mutators.length);
   }
