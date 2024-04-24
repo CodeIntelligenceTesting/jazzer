@@ -36,8 +36,10 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 
 public final class ArgumentsMutator {
+  private final ExtendedMutatorFactory mutatorFactory;
   private final Method method;
   private final ProductMutator productMutator;
+
   private Object[] arguments;
 
   /**
@@ -49,7 +51,9 @@ public final class ArgumentsMutator {
    */
   private boolean argumentsExposed;
 
-  private ArgumentsMutator(Method method, ProductMutator productMutator) {
+  private ArgumentsMutator(
+      ExtendedMutatorFactory mutatorFactory, Method method, ProductMutator productMutator) {
+    this.mutatorFactory = mutatorFactory;
     this.method = method;
     this.productMutator = productMutator;
   }
@@ -100,13 +104,13 @@ public final class ArgumentsMutator {
                     }),
             SerializingMutator<?>[]::new)
         .map(MutatorCombinators::mutateProduct)
-        .map(productMutator -> ArgumentsMutator.create(method, productMutator));
+        .map(productMutator -> create(mutatorFactory, method, productMutator));
   }
 
-  private static ArgumentsMutator create(Method method, ProductMutator productMutator) {
+  private static ArgumentsMutator create(
+      ExtendedMutatorFactory mutatorFactory, Method method, ProductMutator productMutator) {
     method.setAccessible(true);
-
-    return new ArgumentsMutator(method, productMutator);
+    return new ArgumentsMutator(mutatorFactory, method, productMutator);
   }
 
   /**
@@ -195,6 +199,10 @@ public final class ArgumentsMutator {
   public Object[] getArguments() {
     argumentsExposed = true;
     return arguments;
+  }
+
+  public void finishFuzzingIteration() {
+    mutatorFactory.getCache().clear();
   }
 
   @Override

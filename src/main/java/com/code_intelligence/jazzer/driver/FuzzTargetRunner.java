@@ -233,6 +233,9 @@ public final class FuzzTargetRunner {
       } catch (Throwable uncaughtFinding) {
         finding = uncaughtFinding;
       } finally {
+        if (useMutatorFramework) {
+          mutator.finishFuzzingIteration();
+        }
         try {
           lifecycleMethodsInvoker.afterEachExecution();
         } catch (Throwable t) {
