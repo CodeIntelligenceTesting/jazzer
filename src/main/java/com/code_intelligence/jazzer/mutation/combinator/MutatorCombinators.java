@@ -347,8 +347,8 @@ public final class MutatorCombinators {
    * Object[]} containing one instance per mutator.
    */
   @SuppressWarnings("rawtypes")
-  public static ProductMutator mutateProduct(SerializingMutator... mutators) {
-    return new ProductMutator(mutators);
+  public static InPlaceProductMutator mutateProductInPlace(SerializingMutator... mutators) {
+    return new InPlaceProductMutator(mutators);
   }
 
   /**
