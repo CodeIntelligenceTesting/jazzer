@@ -35,7 +35,9 @@
 > But we'd be happy to try and understand what you're trying to achieve with it, and help you if we can! 
 >
 > We already added significant new value to our CI Fuzz solution, which includes Jazzer and Jazzer.js.
-> You can see more here at [code-intelligence.com](https://code-intelligence.com), or get in contact with us via [sales@code-intelligence.com](mailto:sales@code-intelligence.com)
+> Learn more on how to turbocharge your Java Fuzz Testing with [Jazzer Pro](https://www.code-intelligence.com/introducing-jazzer-pro).
+> 
+> Visit [code-intelligence.com](https://code-intelligence.com) for more information, or get in contact with us via [sales@code-intelligence.com](mailto:sales@code-intelligence.com).
 >
 > Thanks,
 >
