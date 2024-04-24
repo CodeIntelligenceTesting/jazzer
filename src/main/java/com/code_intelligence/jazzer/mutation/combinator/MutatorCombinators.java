@@ -351,6 +351,11 @@ public final class MutatorCombinators {
     return new InPlaceProductMutator(mutators);
   }
 
+  @SuppressWarnings("rawtypes")
+  public static ProductMutator mutateProduct(SerializingMutator... mutators) {
+    return new ProductMutator(mutators);
+  }
+
   /**
    * Mutates a sum type (e.g. a Protobuf oneof) in place, preferring to mutate the current state but
    * occasionally switching to a different state.
