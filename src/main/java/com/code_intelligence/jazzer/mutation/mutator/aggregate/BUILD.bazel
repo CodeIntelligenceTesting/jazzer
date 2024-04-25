@@ -4,6 +4,7 @@ java_library(
         ["*.java"],
         exclude = [
             "AggregatesHelper.java",
+            "BeanSupport.java",
             "RecordMutatorFactory.java",
         ],
     ),
@@ -41,7 +42,10 @@ java_library(
 
 java_library(
     name = "aggregates_helper",
-    srcs = ["AggregatesHelper.java"],
+    srcs = [
+        "AggregatesHelper.java",
+        "BeanSupport.java",
+    ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/combinator",
