@@ -11,8 +11,8 @@ package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMap;
 import static com.code_intelligence.jazzer.mutation.mutator.aggregate.AggregatesHelper.buildProductMutatorForParameters;
-import static com.code_intelligence.jazzer.mutation.mutator.aggregate.AggregatesHelper.unreflectNewInstance;
 import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.findConstructorsByParameterCount;
+import static com.code_intelligence.jazzer.mutation.support.ReflectionSupport.unreflectNewInstance;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.findFirstPresent;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.suppliedOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;

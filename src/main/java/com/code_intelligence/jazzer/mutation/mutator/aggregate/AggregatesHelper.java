@@ -12,6 +12,8 @@ package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMap;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
 import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
+import static com.code_intelligence.jazzer.mutation.support.ReflectionSupport.unreflectMethods;
+import static com.code_intelligence.jazzer.mutation.support.ReflectionSupport.unreflectNewInstance;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.suppliedOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static java.util.Arrays.stream;
@@ -27,10 +29,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -215,40 +215,6 @@ final class AggregatesHelper {
         }
       };
     }
-  }
-
-  static MethodHandle unreflectNewInstance(MethodHandles.Lookup lookup, Executable newInstance) {
-    Preconditions.check(
-        newInstance instanceof Constructor || Modifier.isStatic(newInstance.getModifiers()),
-        String.format(
-            "New instance method %s must be a static method or a constructor", newInstance));
-    Preconditions.check(
-        newInstance.getAnnotatedReturnType().getType() != Void.class,
-        String.format("Return type of %s must not be void", newInstance));
-    newInstance.setAccessible(true);
-    try {
-      if (newInstance instanceof Method) {
-        return lookup.unreflect((Method) newInstance);
-      } else {
-        return lookup.unreflectConstructor((Constructor<?>) newInstance);
-      }
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static MethodHandle[] unreflectMethods(MethodHandles.Lookup lookup, Method... methods) {
-    return stream(methods)
-        .map(
-            method -> {
-              method.setAccessible(true);
-              try {
-                return lookup.unreflect(method);
-              } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-              }
-            })
-        .toArray(MethodHandle[]::new);
   }
 
   static ProductMutator buildProductMutatorForParameters(
