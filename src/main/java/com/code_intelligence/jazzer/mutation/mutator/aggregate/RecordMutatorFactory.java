@@ -29,13 +29,14 @@ final class RecordMutatorFactory implements MutatorFactory {
         .flatMap(
             clazz -> {
               try {
-                return AggregatesHelper.ofImmutable(
+                return AggregatesHelper.createMutator(
                     factory,
                     type,
                     getCanonicalConstructor(clazz),
                     stream(clazz.getRecordComponents())
                         .map(RecordComponent::getAccessor)
-                        .toArray(Method[]::new));
+                        .toArray(Method[]::new),
+                    true);
               } catch (NoSuchMethodException e) {
                 throw new IllegalStateException(e);
               }

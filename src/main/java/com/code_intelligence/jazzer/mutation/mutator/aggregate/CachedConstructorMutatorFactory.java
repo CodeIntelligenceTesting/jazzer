@@ -9,27 +9,19 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
-import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMap;
-import static com.code_intelligence.jazzer.mutation.mutator.aggregate.AggregatesHelper.buildProductMutatorForParameters;
+import static com.code_intelligence.jazzer.mutation.mutator.aggregate.AggregatesHelper.asInstantiationFunction;
 import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.findConstructorsByParameterCount;
-import static com.code_intelligence.jazzer.mutation.support.ReflectionSupport.unreflectNewInstance;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.findFirstPresent;
-import static com.code_intelligence.jazzer.mutation.support.StreamSupport.suppliedOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 
-import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 final class CachedConstructorMutatorFactory implements MutatorFactory {
 
@@ -37,27 +29,23 @@ final class CachedConstructorMutatorFactory implements MutatorFactory {
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, Object.class)
+        .filter(BeanSupport::isConcreteClass)
         .flatMap(
             clazz ->
                 findFirstPresent(
                     findConstructorsByParameterCount(clazz).stream()
-                        .map(
-                            constructor ->
-                                suppliedOrEmpty(() -> buildMutator(constructor, type, factory)))));
+                        .map(constructor -> buildMutator(constructor, type, factory))));
   }
 
-  private static SerializingMutator<Object> buildMutator(
-      Constructor<?> constructor, AnnotatedType type, ExtendedMutatorFactory factory) {
-    MethodHandle instantiator = unreflectNewInstance(MethodHandles.lookup(), constructor);
+  private static Optional<SerializingMutator<?>> buildMutator(
+      Constructor<?> constructor, AnnotatedType initialType, ExtendedMutatorFactory factory) {
 
-    Supplier<SerializingMutator<Object[]>> parametersMutator =
-        () ->
-            buildProductMutatorForParameters(
-                type, constructor.getAnnotatedParameterTypes(), factory);
+    Function<Object[], Object> instantiator =
+        asInstantiationFunction(MethodHandles.lookup(), constructor);
 
     Function<Object[], Object> fromParametersToObject =
         parameters -> {
-          Object instance = instantiate(instantiator, parameters);
+          Object instance = instantiator.apply(parameters);
           factory.getCache().put(instance, parameters);
           return instance;
         };
@@ -65,25 +53,13 @@ final class CachedConstructorMutatorFactory implements MutatorFactory {
     Function<Object, Object[]> fromObjectToParameters =
         instance -> factory.getCache().get(instance);
 
-    BiFunction<SerializingMutator<Object[]>, Predicate<Debuggable>, String> debug =
-        (productMutator, inCycle) ->
-            productMutator.toDebugString(inCycle)
-                + " -> "
-                + constructor.getDeclaringClass().getSimpleName();
-
-    return mutateThenMap(
-        parametersMutator,
+    return AggregatesHelper.createMutator(
+        factory,
+        constructor.getDeclaringClass(),
+        constructor.getAnnotatedParameterTypes(),
         fromParametersToObject,
         fromObjectToParameters,
-        debug,
-        factory::internMutator);
-  }
-
-  private static Object instantiate(MethodHandle constructor, Object[] parameters) {
-    try {
-      return constructor.invokeWithArguments(parameters);
-    } catch (Throwable e) {
-      throw new RuntimeException(e);
-    }
+        initialType,
+        false);
   }
 }
