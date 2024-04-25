@@ -25,7 +25,6 @@ import java.beans.ConstructorProperties;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -43,8 +42,7 @@ final class ConstructorBasedBeanMutatorFactory implements MutatorFactory {
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, Object.class)
-        // Only concrete classes can be mutated.
-        .filter(clazz -> !Modifier.isAbstract(clazz.getModifiers()))
+        .filter(BeanSupport::isConcreteClass)
         .flatMap(
             clazz ->
                 findFirstPresent(

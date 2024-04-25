@@ -29,10 +29,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class BeanSupport {
+
+  static Optional<Class<?>> optionalClassForName(String targetClassName) {
+    Optional<Class<?>> targetClass;
+    try {
+      targetClass = Optional.of(Class.forName(targetClassName));
+    } catch (ClassNotFoundException ignored) {
+      targetClass = Optional.empty();
+    }
+    return targetClass;
+  }
+
+  static boolean isConcreteClass(Class<?> clazz) {
+    return !Modifier.isAbstract(clazz.getModifiers());
+  }
 
   // Sort constructors by parameter count descending, then type names.
   private static final Comparator<Constructor<?>> byDescParameterCountAndTypes =
@@ -50,10 +65,23 @@ class BeanSupport {
         .collect(Collectors.toList());
   }
 
+  static Optional<Constructor<?>> findDefaultConstructor(Class<?> clazz) {
+    try {
+      // Find constructors with default visibility by not using getConstructors().
+      Constructor<?> constructor = clazz.getDeclaredConstructor();
+      if (Modifier.isPrivate(constructor.getModifiers())) {
+        return Optional.empty();
+      }
+      return Optional.of(constructor);
+    } catch (NoSuchMethodException e) {
+      return Optional.empty();
+    }
+  }
+
   static Optional<Method[]> findGettersByPropertyNames(
       Class<?> clazz, Stream<String> propertyNames) {
     Map<String, Method> gettersByPropertyName =
-        getGetters(clazz)
+        findMethods(clazz, BeanSupport::isGetter)
             .collect(toMap(BeanSupport::toPropertyName, method -> method, (a, b) -> a));
     return toArrayOrEmpty(
         propertyNames.map(gettersByPropertyName::get).map(Optional::ofNullable), Method[]::new);
@@ -61,7 +89,7 @@ class BeanSupport {
 
   static Optional<Method[]> findGettersByPropertyTypes(Class<?> clazz, Stream<Class<?>> types) {
     Map<Class<?>, List<Method>> gettersByType =
-        getGetters(clazz).collect(groupingBy(Method::getReturnType));
+        findMethods(clazz, BeanSupport::isGetter).collect(groupingBy(Method::getReturnType));
     return toArrayOrEmpty(
         types.map(
             type -> {
@@ -75,43 +103,6 @@ class BeanSupport {
               }
             }),
         Method[]::new);
-  }
-
-  static Stream<Method> getGetters(Class<?> clazz) {
-    return allMethods(clazz)
-        .filter(BeanSupport::isGetter)
-        // If there are both a getX and an isX method, sorting is required for the
-        // getX method to be picked deterministically in the following collection.
-        .sorted(comparing(Method::getName));
-  }
-
-  private static boolean isGetter(Method method) {
-    return method.getParameterCount() == 0
-        && !method.getReturnType().equals(void.class)
-        && !Modifier.isPrivate(method.getModifiers())
-        && !method.getName().equals("getClass")
-        && (method.getName().startsWith("get")
-            || (method.getName().startsWith("is")
-                && (method.getReturnType().equals(boolean.class)
-                    || method.getReturnType().equals(Boolean.class))));
-  }
-
-  static Stream<Method> getSetters(Class<?> clazz) {
-    return allMethods(clazz)
-        .filter(BeanSupport::isSetter)
-        // Sort for deterministic ordering.
-        .sorted(comparing(Method::getName));
-  }
-
-  private static boolean isSetter(Method method) {
-    return method.getParameterCount() == 1
-        && !Modifier.isPrivate(method.getModifiers())
-        // Allow chainable setters. The "withX" setters are commonly used on immutable
-        // types and return a new instance, so for those we need to assert that the
-        // return type is the same as the class.
-        && (method.getReturnType().equals(void.class)
-            || method.getReturnType().isAssignableFrom(method.getDeclaringClass()))
-        && (method.getName().startsWith("set") || (method.getName().startsWith("with")));
   }
 
   static String toPropertyName(Method method) {
@@ -140,7 +131,7 @@ class BeanSupport {
     return true;
   }
 
-  private static Stream<Method> allMethods(Class<?> clazz) {
+  static Stream<Method> allMethods(Class<?> clazz) {
     return allMethods(clazz, new HashMap<>());
   }
 
@@ -152,6 +143,32 @@ class BeanSupport {
       methods.putIfAbsent(declaredMethod.toString(), declaredMethod);
     }
     return allMethods(clazz.getSuperclass(), methods);
+  }
+
+  static Stream<Method> findMethods(Class<?> clazz, Predicate<Method> check) {
+    return allMethods(clazz).filter(check).sorted(comparing(Method::getName));
+  }
+
+  static boolean isGetter(Method method) {
+    return method.getParameterCount() == 0
+        && !method.getReturnType().equals(void.class)
+        && !Modifier.isPrivate(method.getModifiers())
+        && !method.getName().equals("getClass")
+        && (method.getName().startsWith("get")
+            || (method.getName().startsWith("is")
+                && (method.getReturnType().equals(boolean.class)
+                    || method.getReturnType().equals(Boolean.class))));
+  }
+
+  static boolean isSetter(Method method) {
+    return method.getParameterCount() == 1
+        && !Modifier.isPrivate(method.getModifiers())
+        // Allow chainable setters. The "withX" setters are commonly used on immutable
+        // types and return a new instance, so for those we need to assert that the
+        // return type is the same as the class.
+        && (method.getReturnType().equals(void.class)
+            || method.getReturnType().isAssignableFrom(method.getDeclaringClass()))
+        && (method.getName().startsWith("set") || (method.getName().startsWith("with")));
   }
 
   private BeanSupport() {}

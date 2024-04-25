@@ -17,9 +17,7 @@ import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Optional;
 
@@ -28,28 +26,15 @@ final class SetterBasedBeanMutatorFactory implements MutatorFactory {
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, Object.class)
-        // Only concrete classes can be mutated.
-        .filter(clazz -> !Modifier.isAbstract(clazz.getModifiers()))
+        .filter(BeanSupport::isConcreteClass)
+        .flatMap(BeanSupport::findDefaultConstructor)
         .flatMap(
-            clazz -> {
-              Constructor<?> constructor;
-              try {
-                // Find constructors with default visibility by not using getConstructors().
-                constructor = clazz.getDeclaredConstructor();
-                if (Modifier.isPrivate(constructor.getModifiers())) {
-                  return Optional.empty();
-                }
-              } catch (NoSuchMethodException e) {
-                return Optional.empty();
-              }
-
-              Method[] setters = getSetters(clazz).toArray(Method[]::new);
+            constructor -> {
+              Class<?> clazz = constructor.getDeclaringClass();
+              Method[] setters = findMethods(clazz, BeanSupport::isSetter).toArray(Method[]::new);
 
               // A Java bean can have additional getters corresponding to computed properties, but
               // we require that all setters have a corresponding getter.
-              // TODO: Should we also allow setters without a corresponding getter, as common on
-              //  builders? The getters could be replaced with a WeakIdentityHashMap storing the
-              //  values passed into the instantiator.
               return findGettersByPropertyNames(
                       clazz, stream(setters).map(BeanSupport::toPropertyName))
                   .filter(
