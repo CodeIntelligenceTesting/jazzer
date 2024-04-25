@@ -12,6 +12,7 @@ package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMap;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
 import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
+import static com.code_intelligence.jazzer.mutation.support.ReflectionSupport.unreflectMethod;
 import static com.code_intelligence.jazzer.mutation.support.ReflectionSupport.unreflectMethods;
 import static com.code_intelligence.jazzer.mutation.support.ReflectionSupport.unreflectNewInstance;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.suppliedOrEmpty;
@@ -23,7 +24,6 @@ import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory.FailedToConstructChildMutatorException;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
-import com.code_intelligence.jazzer.mutation.combinator.ProductMutator;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -40,23 +40,7 @@ import java.util.function.Supplier;
 
 final class AggregatesHelper {
 
-  public static Optional<SerializingMutator<?>> ofImmutable(
-      ExtendedMutatorFactory factory,
-      AnnotatedType initialType,
-      Executable instantiator,
-      Method... getters) {
-    return createConstructorBasedMutator(factory, initialType, instantiator, getters, true);
-  }
-
-  public static Optional<SerializingMutator<?>> ofMutable(
-      ExtendedMutatorFactory factory,
-      AnnotatedType initialType,
-      Executable instantiator,
-      Method... getters) {
-    return createConstructorBasedMutator(factory, initialType, instantiator, getters, false);
-  }
-
-  private static Optional<SerializingMutator<?>> createConstructorBasedMutator(
+  static Optional<SerializingMutator<?>> createMutator(
       ExtendedMutatorFactory factory,
       AnnotatedType initialType,
       Executable instantiator,
@@ -79,24 +63,18 @@ final class AggregatesHelper {
 
     // TODO: Ideally, we would have the mutator framework pass in a Lookup for the fuzz test class.
     MethodHandles.Lookup lookup = MethodHandles.lookup();
-    return createChecked(
+    return createMutator(
             factory,
-            initialType,
-            components -> {
-              try {
-                return unreflectNewInstance(lookup, instantiator).invokeWithArguments(components);
-              } catch (Throwable e) {
-                throw new RuntimeException(e);
-              }
-            },
-            instantiator.getAnnotatedParameterTypes(),
             instantiator.getDeclaringClass(),
-            isImmutable,
-            unreflectMethods(lookup, getters))
+            instantiator.getAnnotatedParameterTypes(),
+            asInstantiationFunction(lookup, instantiator),
+            makeSingleGetter(unreflectMethods(lookup, getters)),
+            initialType,
+            isImmutable)
         .map(m -> m);
   }
 
-  public static Optional<SerializingMutator<?>> ofMutable(
+  static Optional<SerializingMutator<?>> createMutator(
       ExtendedMutatorFactory factory,
       AnnotatedType initialType,
       Executable newInstance,
@@ -119,54 +97,35 @@ final class AggregatesHelper {
 
     // TODO: Ideally, we would have the mutator framework pass in a Lookup for the fuzz test class.
     MethodHandles.Lookup lookup = MethodHandles.lookup();
-    AnnotatedType[] instantiatorParameterTypes =
-        stream(setters)
-            .map(Method::getAnnotatedParameterTypes)
-            .flatMap(Arrays::stream)
-            .toArray(AnnotatedType[]::new);
-    return createChecked(
+    return createMutator(
             factory,
-            initialType,
-            makeInstantiator(
-                unreflectNewInstance(lookup, newInstance), unreflectMethods(lookup, setters)),
-            instantiatorParameterTypes,
             newInstance.getDeclaringClass(),
-            /* isImmutable= */ false,
-            unreflectMethods(lookup, getters))
+            parameterTypes(setters),
+            asInstantiationFunction(lookup, newInstance, setters),
+            makeSingleGetter(unreflectMethods(lookup, getters)),
+            initialType,
+            /* isImmutable= */ false)
         .map(m -> m);
   }
 
   @SuppressWarnings("Immutable")
-  private static <R> Optional<SerializingMutator<R>> createChecked(
+  static <R> Optional<SerializingMutator<?>> createMutator(
       ExtendedMutatorFactory factory,
-      AnnotatedType initialType,
-      Function<Object[], R> instantiator,
-      AnnotatedType[] instantiatorParameterTypes,
       Class<?> instantiatedClass,
-      boolean isImmutable,
-      MethodHandle... getters) {
+      AnnotatedType[] instantiatorParameterTypes,
+      Function<Object[], R> map,
+      Function<R, Object[]> inverse,
+      AnnotatedType initialType,
+      boolean isImmutable) {
     Supplier<SerializingMutator<Object[]>> mutator =
-        () -> buildProductMutatorForParameters(initialType, instantiatorParameterTypes, factory);
-    Function<Object[], R> map =
-        components -> {
-          try {
-            return (R) instantiator.apply(components);
-          } catch (Throwable e) {
-            throw new RuntimeException(e);
-          }
-        };
-    Function<R, Object[]> inverse =
-        object -> {
-          Object[] objects = new Object[getters.length];
-          for (int i = 0; i < getters.length; i++) {
-            try {
-              objects[i] = getters[i].invoke(object);
-            } catch (Throwable e) {
-              throw new RuntimeException(e);
-            }
-          }
-          return objects;
-        };
+        () ->
+            toArrayOrEmpty(
+                    stream(instantiatorParameterTypes)
+                        .map(type -> propagatePropertyConstraints(initialType, type))
+                        .map(factory::tryCreate),
+                    SerializingMutator<?>[]::new)
+                .map(MutatorCombinators::mutateProduct)
+                .orElseThrow(FailedToConstructChildMutatorException::new);
     BiFunction<SerializingMutator<Object[]>, Predicate<Debuggable>, String> debug =
         (productMutator, inCycle) ->
             productMutator.toDebugString(inCycle) + " -> " + instantiatedClass.getSimpleName();
@@ -180,7 +139,45 @@ final class AggregatesHelper {
         });
   }
 
-  private static <R> Function<Object[], R> makeInstantiator(
+  private static <R> Function<R, Object[]> makeSingleGetter(MethodHandle[] getters) {
+    return object -> {
+      Object[] objects = new Object[getters.length];
+      for (int i = 0; i < getters.length; i++) {
+        try {
+          objects[i] = getters[i].invoke(object);
+        } catch (Throwable e) {
+          throw new RuntimeException(e);
+        }
+      }
+      return objects;
+    };
+  }
+
+  static Function<Object[], Object> asInstantiationFunction(
+      MethodHandles.Lookup lookup, Executable instantiator) {
+    MethodHandle instantiatorHandle = unreflectNewInstance(lookup, instantiator);
+    return components -> {
+      try {
+        return instantiatorHandle.invokeWithArguments(components);
+      } catch (Throwable e) {
+        throw new RuntimeException(e);
+      }
+    };
+  }
+
+  static Function<Object[], Object> asInstantiationFunction(
+      MethodHandles.Lookup lookup, Executable instantiator, Method[] setters) {
+    return asInstantiatorFunction(
+        unreflectNewInstance(lookup, instantiator), unreflectMethods(lookup, setters));
+  }
+
+  static Function<Object[], Object> asInstantiationFunction(
+      MethodHandles.Lookup lookup, Method instantiator, Method[] setters) {
+    return asInstantiatorFunction(
+        unreflectMethod(lookup, instantiator), unreflectMethods(lookup, setters));
+  }
+
+  private static <R> Function<Object[], R> asInstantiatorFunction(
       MethodHandle newInstance, MethodHandle... setters) {
     boolean settersAreChainable =
         stream(setters)
@@ -217,15 +214,11 @@ final class AggregatesHelper {
     }
   }
 
-  static ProductMutator buildProductMutatorForParameters(
-      AnnotatedType initialType, AnnotatedType[] types, ExtendedMutatorFactory factory) {
-    return toArrayOrEmpty(
-            stream(types)
-                .map(type -> propagatePropertyConstraints(initialType, type))
-                .map(factory::tryCreate),
-            SerializingMutator<?>[]::new)
-        .map(MutatorCombinators::mutateProduct)
-        .orElseThrow(FailedToConstructChildMutatorException::new);
+  static AnnotatedType[] parameterTypes(Method[] methods) {
+    return stream(methods)
+        .map(Method::getAnnotatedParameterTypes)
+        .flatMap(Arrays::stream)
+        .toArray(AnnotatedType[]::new);
   }
 
   private AggregatesHelper() {}
