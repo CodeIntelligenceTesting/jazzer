@@ -94,7 +94,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings({"unused", "unchecked", "rawtypes", "SameParameterValue"})
+@SuppressWarnings({"unused", "unchecked", "SameParameterValue"})
 public class StressTest {
   private static final int NUM_INITS = 400;
   private static final int NUM_MUTATE_PER_INIT = 80;
@@ -258,6 +258,7 @@ public class StressTest {
     }
 
     @Override
+    @SuppressWarnings("PatternVariableCanBeUsed")
     public boolean equals(Object o) {
       if (this == o) return true;
       if (!(o instanceof ImmutableBuilder)) return false;
@@ -345,6 +346,64 @@ public class StressTest {
     @Override
     public String toString() {
       return "OnlyConstructorBean{" + "foo='" + foo + '\'' + ", bar=" + bar + ", baz=" + baz + '}';
+    }
+  }
+
+  public static class SuperBuilderTarget {
+    private final String foo;
+
+    protected SuperBuilderTarget(SuperBuilderTargetBuilder<?, ?> b) {
+      this.foo = b.foo;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      SuperBuilderTarget that = (SuperBuilderTarget) o;
+      return Objects.equals(foo, that.foo);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(foo);
+    }
+
+    public static SuperBuilderTargetBuilder<?, ?> builder() {
+      return new SuperBuilderTargetBuilderImpl();
+    }
+
+    public abstract static class SuperBuilderTargetBuilder<
+        C extends SuperBuilderTarget, B extends SuperBuilderTargetBuilder<C, B>> {
+      private String foo;
+
+      public SuperBuilderTargetBuilder() {}
+
+      public B foo(String foo) {
+        this.foo = foo;
+        return this.self();
+      }
+
+      protected abstract B self();
+
+      public abstract C build();
+
+      public String toString() {
+        return "SuperBuilderTargetBuilder(foo=" + this.foo + ")";
+      }
+    }
+
+    private static final class SuperBuilderTargetBuilderImpl
+        extends SuperBuilderTargetBuilder<SuperBuilderTarget, SuperBuilderTargetBuilderImpl> {
+      private SuperBuilderTargetBuilderImpl() {}
+
+      protected SuperBuilderTargetBuilderImpl self() {
+        return this;
+      }
+
+      public SuperBuilderTarget build() {
+        return new SuperBuilderTarget(this);
+      }
     }
   }
 
@@ -737,6 +796,12 @@ public class StressTest {
                 + " OnlyConstructorBean>>",
             false,
             distinctElementsRatio(0.4),
+            distinctElementsRatio(0.4)),
+        arguments(
+            new TypeHolder<SuperBuilderTarget>() {}.annotatedType(),
+            "Nullable<[[Nullable<String>] -> SuperBuilderTargetBuilder] -> SuperBuilderTarget>",
+            false,
+            distinctElementsRatio(0.4),
             distinctElementsRatio(0.4)));
   }
 
@@ -1007,6 +1072,7 @@ public class StressTest {
     double standardDeviation = sqrt(variance);
     // Allow missing the expected value by two standard deviations. For a normal distribution,
     // this would correspond to 95% of all cases.
+    @SuppressWarnings("UnnecessaryLocalVariable")
     int almostCertainLowerBound = (int) floor(expectedValue - 2 * standardDeviation);
     return almostCertainLowerBound;
   }
@@ -1173,6 +1239,7 @@ public class StressTest {
 
   interface CloseableConsumer extends AutoCloseable, Consumer<Object> {}
 
+  @SuppressWarnings("rawtypes")
   @ParameterizedTest(name = "{index} {0}, {1}")
   @MethodSource({"stressTestCases", "protoStressTestCases"})
   void genericMutatorStressTest(
