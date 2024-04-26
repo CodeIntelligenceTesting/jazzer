@@ -229,9 +229,9 @@ class TypeSupportTest {
         .hasValue(String.class);
     assertThat(asSubclassOrEmpty(new TypeHolder<String>() {}.annotatedType(), CharSequence.class))
         .hasValue(String.class);
-    assertThat(asSubclassOrEmpty(new TypeHolder<CharSequence>() {}.annotatedType(), String.class))
-        .isEmpty();
     assertThat(asSubclassOrEmpty(new TypeHolder<List<String>>() {}.annotatedType(), List.class))
+        .hasValue(List.class);
+    assertThat(asSubclassOrEmpty(new TypeHolder<CharSequence>() {}.annotatedType(), String.class))
         .isEmpty();
   }
 

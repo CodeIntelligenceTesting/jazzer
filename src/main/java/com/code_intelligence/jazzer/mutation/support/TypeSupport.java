@@ -65,22 +65,25 @@ public final class TypeSupport {
   }
 
   /**
-   * Returns {@code type} as a {@code Class<? extends T>} if it is a subclass of T, otherwise empty.
+   * Returns {@code annotatedType} as a {@code Class<? extends T>} if it is a subclass of T,
+   * otherwise empty.
    *
    * <p>This function also returns an empty {@link Optional} for more complex (e.g. parameterized)
    * types.
    */
   public static <T> Optional<Class<? extends T>> asSubclassOrEmpty(
-      AnnotatedType type, Class<T> superclass) {
-    if (!(type.getType() instanceof Class<?>)) {
+      AnnotatedType annotatedType, Class<T> superclass) {
+    Type type = annotatedType.getType();
+    if (type instanceof ParameterizedType) {
+      type = ((ParameterizedType) type).getRawType();
+    }
+    if (!(type instanceof Class<?>)) {
       return Optional.empty();
     }
-
-    Class<?> actualClazz = (Class<?>) type.getType();
+    Class<?> actualClazz = (Class<?>) type;
     if (!superclass.isAssignableFrom(actualClazz)) {
       return Optional.empty();
     }
-
     return Optional.of(actualClazz.asSubclass(superclass));
   }
 
