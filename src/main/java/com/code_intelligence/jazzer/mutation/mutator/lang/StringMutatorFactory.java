@@ -158,16 +158,19 @@ final class StringMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, ExtendedMutatorFactory factory) {
-    Optional<WithUtf8Length> utf8Length =
-        Optional.ofNullable(type.getAnnotation(WithUtf8Length.class));
-    int min = utf8Length.map(WithUtf8Length::min).orElse(DEFAULT_MIN_BYTES);
-    int max = utf8Length.map(WithUtf8Length::max).orElse(DEFAULT_MAX_BYTES);
-
-    AnnotatedType innerByteArray =
-        notNull(withLength(new TypeHolder<byte[]>() {}.annotatedType(), min, max));
-
     return findFirstParentIfClass(type, String.class)
-        .flatMap(parent -> factory.tryCreate(innerByteArray))
+        .flatMap(
+            parent -> {
+              Optional<WithUtf8Length> utf8Length =
+                  Optional.ofNullable(type.getAnnotation(WithUtf8Length.class));
+              int min = utf8Length.map(WithUtf8Length::min).orElse(DEFAULT_MIN_BYTES);
+              int max = utf8Length.map(WithUtf8Length::max).orElse(DEFAULT_MAX_BYTES);
+
+              AnnotatedType innerByteArray =
+                  notNull(withLength(new TypeHolder<byte[]>() {}.annotatedType(), min, max));
+
+              return factory.tryCreate(innerByteArray);
+            })
         .map(
             byteArrayMutator -> {
               boolean fixUpAscii = type.getDeclaredAnnotation(Ascii.class) != null;
