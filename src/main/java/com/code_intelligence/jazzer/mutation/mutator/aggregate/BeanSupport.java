@@ -36,13 +36,11 @@ import java.util.stream.Stream;
 class BeanSupport {
 
   static Optional<Class<?>> optionalClassForName(String targetClassName) {
-    Optional<Class<?>> targetClass;
     try {
-      targetClass = Optional.of(Class.forName(targetClassName));
+      return Optional.of(Class.forName(targetClassName));
     } catch (ClassNotFoundException ignored) {
-      targetClass = Optional.empty();
+      return Optional.empty();
     }
-    return targetClass;
   }
 
   static boolean isConcreteClass(Class<?> clazz) {
