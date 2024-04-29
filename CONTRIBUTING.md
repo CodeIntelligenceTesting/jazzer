@@ -21,10 +21,14 @@ This will speed up incremental builds and tests, especially when switching branc
 
 Since a disk cache can be shared across Bazel projects, it is recommended to enable it by creating a file called `.bazelrc` in your home directory with the following contents:
 ```
-common --disk_cache=$HOME/.cache/bazel-disk
+common --disk_cache=<ABSOLUTE_HOME_PATH>/.cache/bazel-disk
 ```
 
 Bazel currently doesn't remove old entries from the disk cache automatically, so you may want to do this manually from time to time (see https://github.com/bazelbuild/bazel/issues/5139#issuecomment-943534948).
+
+```bash
+find ~/.cache/bazel-disk -type f -mtime +15 -delete && find ~/.cache/bazel-disk -type f -size +500M -delete
+```
 
 ### Building
 
@@ -76,8 +80,26 @@ This is especially useful with long-running or parameterized tests.
 
 #### Debugging
 
+##### Internal debugging
+
 If you need to debug an issue that can only be reproduced by an integration test (`java_fuzz_target_test`), you can start Jazzer in debug mode via `--config=debug`.
-The JVM running Jazzer will suspend until a debugger connects on port 5005 (or the port specified via `DEFAULT_JVM_DEBUG_PORT`).
+The JVM running Jazzer will suspend until a debugger connects on port `5005` (or the port specified via `DEFAULT_JVM_DEBUG_PORT`).
+
+##### External debugging
+
+If you need to debug an issue in an external project or application add the normal JVM debug flags to the `java` command. 
+A JVM started with these settings will halt on startup until a debugger is connected.
+
+```
+-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005
+```
+
+Connect to the waiting application via your favourite IDE from within the opened Jazzer project. 
+In IntelliJ, you could do so by adding a new `Remote JVM Debug` run configuration and leave the settings as is.
+
+![Remote Debug Settings](docs/images/remote-debug.jpeg)
+
+##### Debug logs 
 
 Jazzer also has a number of environment variables that enable additional debug logging when set to `1`:
 
@@ -85,6 +107,8 @@ Jazzer also has a number of environment variables that enable additional debug l
 * `JAZZER_MUTATOR_DEBUG`: Print a tree representation of attempts to construct a structured mutator.
 * `JAZZER_REFLECTION_DEBUG`: Print stack traces when reflective access from sanitizers fails.
 * `RULES_JNI_TRACE`: Let the native launcher emit trace level information while locating a JDK.
+
+
 
 ### Formatting
 
