@@ -1,0 +1,10 @@
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+
+java_library(
+    name = "test_utils",
+    srcs = ["CapturedOutput.java"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/utils:log",
+    ],
+)
