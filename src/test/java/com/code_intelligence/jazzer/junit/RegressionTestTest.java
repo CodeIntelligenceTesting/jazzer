@@ -90,8 +90,11 @@ public class RegressionTestTest {
         Arrays.stream(stderrLines)
             .filter(line -> line.startsWith("WARN:") || line.startsWith("ERROR:"))
             .collect(Collectors.toList());
-    assertThat(warningsAndErrors).hasSize(1);
+    assertThat(warningsAndErrors).hasSize(2);
     assertThat(warningsAndErrors.get(0))
+        .contains(
+            "ERROR: Could not find suitable mutator for type: org.junit.jupiter.api.TestInfo");
+    assertThat(warningsAndErrors.get(1))
         .contains("ERROR: Unsupported fuzz test parameter type org.junit.jupiter.api.TestInfo");
 
     results

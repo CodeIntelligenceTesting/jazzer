@@ -3,8 +3,9 @@ load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 java_fuzz_target_test(
     name = "ProtobufMutatorFuzzTest",
     srcs = ["ProtobufMutatorFuzzTest.java"],
+    expected_warning_or_error = "ERROR: Could not find suitable mutator for type: com.google.protobuf.DynamicMessage",
     fuzzer_args = [
-        "-runs=1000",
+        "-runs=5000",
     ],
     target_class = "com.code_intelligence.selffuzz.mutation.mutator.proto.ProtobufMutatorFuzzTest",
     deps = [

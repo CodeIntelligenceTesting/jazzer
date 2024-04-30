@@ -26,6 +26,7 @@ import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.ge
 import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.getMessageType;
 import static com.code_intelligence.jazzer.mutation.mutator.proto.TypeLibrary.withoutInitIfRecursive;
 import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.cap;
+import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
@@ -46,7 +47,6 @@ import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
-import com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport;
 import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
@@ -87,8 +87,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
     requireNonNull(typeToMutate, () -> "Java class not specified for " + field);
 
     // Propagate constraints from the field to the type to mutate.
-    typeToMutate =
-        PropertyConstraintSupport.propagatePropertyConstraints(initialType, typeToMutate);
+    typeToMutate = propagatePropertyConstraints(initialType, typeToMutate);
 
     InPlaceMutator<T> mutator;
     if (field.isMapField()) {

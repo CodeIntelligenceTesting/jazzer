@@ -1,13 +1,30 @@
-load("@contrib_rules_jvm//java:defs.bzl", "java_test_suite")
+load("@contrib_rules_jvm//java:defs.bzl", "java_junit5_test", "java_test_suite")
 
 java_test_suite(
     name = "EngineTests",
     size = "small",
-    srcs = glob(["*.java"]),
+    srcs = [
+        "SeededPseudoRandomTest.java",
+    ],
     runner = "junit5",
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/engine",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
         "//src/test/java/com/code_intelligence/jazzer/mutation/support:test_support",
+    ],
+)
+
+java_junit5_test(
+    name = "ChainedMutatorFactoryTest",
+    srcs = ["ChainedMutatorFactoryTest.java"],
+    test_class = "com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactoryTest",
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/engine",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/support:test_support",
+        "//src/test/java/com/code_intelligence/jazzer/utils:test_utils",
     ],
 )
