@@ -263,7 +263,7 @@ public class FuzzTargetTestWrapper {
       }
       String unexpectedWarningsAndErrors =
           warningsAndErrors.stream()
-              .filter(line -> !line.contains(expectedWarningOrError.get()))
+              .filter(line -> !line.matches(expectedWarningOrError.get() + ".*$"))
               .collect(Collectors.joining("\n"));
       if (!unexpectedWarningsAndErrors.isEmpty()) {
         throw new IllegalStateException(

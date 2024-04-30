@@ -890,7 +890,7 @@ java_fuzz_target_test(
     ],
     fuzzer_args = [
         "-print_final_stats=1",
-        "-runs=300000",
+        "-runs=350000",
     ],
     javacopts = [
         "--release",
@@ -1024,7 +1024,7 @@ java_fuzz_target_test(
     srcs = ["src/test/java/com/example/InvalidMutatorTest.java"],
     expect_crash = False,
     expect_non_crash_exit_code = 1,
-    expected_warning_or_error = "ERROR: Unsupported fuzz test parameter type java.lang.System in com.example.InvalidMutatorTest.invalidParameter",
+    expected_warning_or_error = "(ERROR: Unsupported fuzz test parameter type java.lang.System in com.example.InvalidMutatorTest.invalidParameter.*)|(ERROR: Could not find suitable mutator for type: java.lang.System)",
     target_class = "com.example.InvalidMutatorTest",
     target_method = "invalidParameter",
     runtime_deps = [

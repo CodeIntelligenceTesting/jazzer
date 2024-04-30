@@ -46,7 +46,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public final class TypeSupport {
-  private static final Annotation NOT_NULL =
+  public static final Annotation NOT_NULL =
       new TypeHolder<@NotNull String>() {}.annotatedType().getAnnotation(NotNull.class);
 
   private static final Annotation[] EMPTY_ANNOTATIONS = {};
