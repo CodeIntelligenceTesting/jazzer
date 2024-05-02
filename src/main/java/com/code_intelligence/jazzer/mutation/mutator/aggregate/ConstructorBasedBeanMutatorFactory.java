@@ -16,7 +16,6 @@ import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSuppor
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.findFirstPresent;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static java.util.Arrays.stream;
-import static java.util.Comparator.comparingInt;
 
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
@@ -26,17 +25,9 @@ import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Optional;
 
 final class ConstructorBasedBeanMutatorFactory implements MutatorFactory {
-
-  // Sort constructors by parameter count descending, then type names.
-  private static final Comparator<Constructor<?>> byDescParameterCountAndTypes =
-      comparingInt((Constructor<?> c) -> c.getParameterCount())
-          .reversed()
-          .thenComparing(c -> Arrays.toString(c.getParameterTypes()));
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
@@ -46,7 +37,10 @@ final class ConstructorBasedBeanMutatorFactory implements MutatorFactory {
         .flatMap(
             clazz ->
                 findFirstPresent(
-                    findConstructorsByParameterCount(clazz).stream()
+                    findConstructorsByParameterCount(clazz)
+                        // Classes with only a default constructor are handled by the
+                        // CashedConstructorMutatorFactory.
+                        .filter(constructor -> constructor.getParameterCount() > 0)
                         .map(
                             constructor ->
                                 findParameterGetters(clazz, constructor)

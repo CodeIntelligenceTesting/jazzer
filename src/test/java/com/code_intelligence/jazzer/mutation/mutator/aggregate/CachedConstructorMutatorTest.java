@@ -15,15 +15,27 @@ import static com.google.common.truth.Truth.assertThat;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"unchecked", "unused", "FieldCanBeLocal"})
 class CachedConstructorMutatorTest {
+
+  static class EmptyBean {}
+
+  @Test
+  void testEmptyBean() {
+    assertThat(
+            ChainedMutatorFactory.of(Stream.of(new CachedConstructorMutatorFactory()))
+                .tryCreate(new TypeHolder<@NotNull EmptyBean>() {}.annotatedType()))
+        .isPresent();
+  }
 
   static class SimpleClass {
     private final String foo;
@@ -145,5 +157,9 @@ class CachedConstructorMutatorTest {
 
     BeanWithParent mutated = mutator.mutate(inited, prng);
     assertThat(mutated).isNotEqualTo(inited);
+  }
+
+  static void emptyInputMethod(SimpleClass simpleClass) {
+    // Nothing to do here, only needed for the method reference.
   }
 }

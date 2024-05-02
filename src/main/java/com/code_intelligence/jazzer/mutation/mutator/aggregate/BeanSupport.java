@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class BeanSupport {
@@ -53,14 +52,11 @@ class BeanSupport {
           .reversed()
           .thenComparing(c -> Arrays.toString(c.getParameterTypes()));
 
-  static List<Constructor<?>> findConstructorsByParameterCount(Class<?> clazz) {
+  static Stream<Constructor<?>> findConstructorsByParameterCount(Class<?> clazz) {
     return stream(clazz.getDeclaredConstructors())
         .filter(constructor -> !Modifier.isPrivate(constructor.getModifiers()))
-        .filter(constructor -> constructor.getParameterCount() > 0)
-        // If multiple constructors are defined, prefer the one with the most
-        // parameters.
-        .sorted(byDescParameterCountAndTypes)
-        .collect(Collectors.toList());
+        // If multiple constructors are defined, prefer the one with the most parameters.
+        .sorted(byDescParameterCountAndTypes);
   }
 
   static Optional<Constructor<?>> findDefaultConstructor(Class<?> clazz) {

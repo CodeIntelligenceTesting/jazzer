@@ -33,7 +33,7 @@ final class CachedConstructorMutatorFactory implements MutatorFactory {
         .flatMap(
             clazz ->
                 findFirstPresent(
-                    findConstructorsByParameterCount(clazz).stream()
+                    findConstructorsByParameterCount(clazz)
                         .map(constructor -> buildMutator(constructor, type, factory))));
   }
 
