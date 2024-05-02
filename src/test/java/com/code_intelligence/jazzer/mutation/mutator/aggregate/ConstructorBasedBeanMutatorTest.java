@@ -15,15 +15,27 @@ import static com.google.common.truth.Truth.assertThat;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.beans.ConstructorProperties;
 import java.util.Objects;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"unchecked", "unused"})
 class ConstructorBasedBeanMutatorTest {
+
+  static class EmptyBean {}
+
+  @Test
+  void testEmptyBean() {
+    assertThat(
+            ChainedMutatorFactory.of(Stream.of(new ConstructorBasedBeanMutatorFactory()))
+                .tryCreate(new TypeHolder<@NotNull EmptyBean>() {}.annotatedType()))
+        .isEmpty();
+  }
 
   // This class is used to test constructors annotated with @ConstructorProperties,
   // which has precedence over property name and property type based getter detection.

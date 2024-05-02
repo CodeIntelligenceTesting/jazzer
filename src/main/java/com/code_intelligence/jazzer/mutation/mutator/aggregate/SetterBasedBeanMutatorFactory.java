@@ -33,6 +33,12 @@ final class SetterBasedBeanMutatorFactory implements MutatorFactory {
               Class<?> clazz = constructor.getDeclaringClass();
               Method[] setters = findMethods(clazz, BeanSupport::isSetter).toArray(Method[]::new);
 
+              // Classes with a default constructor but without setters are handled by the
+              // CachedConstructorMutator.
+              if (setters.length == 0) {
+                return Optional.empty();
+              }
+
               // A Java bean can have additional getters corresponding to computed properties, but
               // we require that all setters have a corresponding getter.
               return findGettersByPropertyNames(

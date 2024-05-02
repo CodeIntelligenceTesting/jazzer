@@ -10,54 +10,30 @@
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
-import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
-import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.util.Objects;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("unchecked")
 class SetterBasedBeanMutatorTest {
 
-  static class EmptyBean {
-    @Override
-    public int hashCode() {
-      return super.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      return obj instanceof EmptyBean;
-    }
-  }
+  static class EmptyBean {}
 
   @Test
   void testEmptyBean() {
-    SerializingMutator<EmptyBean> mutator =
-        (SerializingMutator<EmptyBean>)
-            Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull EmptyBean>() {}.annotatedType());
-    assertThat(mutator.toString()).startsWith("[] -> EmptyBean");
-    assertThat(mutator.hasFixedSize()).isTrue();
-
-    try (MockPseudoRandom prng = mockPseudoRandom()) {
-      // Mutator creates a new instance on init.
-      EmptyBean inited = mutator.init(prng);
-      assertThat(inited).isEqualTo(new EmptyBean());
-      assertThat(inited).isNotSameInstanceAs(new EmptyBean());
-
-      // Create a new instance on mutate as EmptyBean may have hidden state.
-      EmptyBean mutated = mutator.mutate(inited, prng);
-      assertThat(mutated).isEqualTo(inited);
-      assertThat(mutated).isNotSameInstanceAs(inited);
-    }
+    assertThat(
+            ChainedMutatorFactory.of(Stream.of(new SetterBasedBeanMutatorFactory()))
+                .tryCreate(new TypeHolder<@NotNull EmptyBean>() {}.annotatedType()))
+        .isEmpty();
   }
 
   public static class SimpleTypeBean {
