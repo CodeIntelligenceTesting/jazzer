@@ -46,14 +46,16 @@ final class ListMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, ExtendedMutatorFactory factory) {
-    Optional<WithSize> withSize = Optional.ofNullable(type.getAnnotation(WithSize.class));
-    int minSize = withSize.map(WithSize::min).orElse(ListMutator.DEFAULT_MIN_SIZE);
-    int maxSize = withSize.map(WithSize::max).orElse(ListMutator.DEFAULT_MAX_SIZE);
-
     return parameterTypeIfParameterized(type, List.class)
         .map(innerType -> propagatePropertyConstraints(type, innerType))
         .flatMap(factory::tryCreate)
-        .map(elementMutator -> new ListMutator<>(elementMutator, minSize, maxSize));
+        .map(
+            elementMutator -> {
+              Optional<WithSize> withSize = Optional.ofNullable(type.getAnnotation(WithSize.class));
+              int minSize = withSize.map(WithSize::min).orElse(ListMutator.DEFAULT_MIN_SIZE);
+              int maxSize = withSize.map(WithSize::max).orElse(ListMutator.DEFAULT_MAX_SIZE);
+              return new ListMutator<>(elementMutator, minSize, maxSize);
+            });
   }
 
   private static final class ListMutator<T> extends SerializingInPlaceMutator<List<T>> {
