@@ -30,6 +30,7 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator:__pkg__",
     ],
     deps = [
+        "libfuzzermutate",
         "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",

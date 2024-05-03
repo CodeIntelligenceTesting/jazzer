@@ -11,7 +11,6 @@ package com.code_intelligence.jazzer.mutation.mutator.libfuzzer;
 
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMap;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
@@ -30,7 +29,9 @@ final class FuzzedDataProviderMutatorFactory implements MutatorFactory {
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, FuzzedDataProvider.class)
-        .flatMap(parent -> factory.tryCreate(notNull(new TypeHolder<byte[]>() {}.annotatedType())))
+        .flatMap(
+            parent ->
+                LibFuzzerMutatorFactory.tryCreate(new TypeHolder<byte[]>() {}.annotatedType()))
         .map(
             byteArrayMutator ->
                 mutateThenMap(

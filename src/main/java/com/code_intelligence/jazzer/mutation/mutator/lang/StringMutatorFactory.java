@@ -19,6 +19,7 @@ import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutatorFactory;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.lang.reflect.AnnotatedType;
 import java.nio.charset.StandardCharsets;
@@ -168,8 +169,7 @@ final class StringMutatorFactory implements MutatorFactory {
 
               AnnotatedType innerByteArray =
                   notNull(withLength(new TypeHolder<byte[]>() {}.annotatedType(), min, max));
-
-              return factory.tryCreate(innerByteArray);
+              return LibFuzzerMutatorFactory.tryCreate(innerByteArray);
             })
         .map(
             byteArrayMutator -> {
