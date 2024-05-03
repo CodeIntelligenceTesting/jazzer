@@ -232,6 +232,19 @@ public final class TypeSupport {
         hash += ("max".hashCode() * 127) ^ Integer.valueOf(this.max()).hashCode();
         return hash;
       }
+
+      @Override
+      public String toString() {
+        return "@"
+            + WithLength.class.getName()
+            + "{min="
+            + min()
+            + ", max="
+            + max()
+            + ", constraint="
+            + constraint()
+            + "}";
+      }
     };
   }
 
