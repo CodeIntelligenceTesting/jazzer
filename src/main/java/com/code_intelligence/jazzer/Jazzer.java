@@ -11,6 +11,7 @@
 
 package com.code_intelligence.jazzer;
 
+import static com.code_intelligence.jazzer.Constants.JAZZER_VERSION;
 import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 import static java.lang.System.exit;
 import static java.util.Arrays.asList;
@@ -78,7 +79,7 @@ public class Jazzer {
     Log.fixOutErr(System.out, System.err);
 
     Opt.registerAndValidateCommandLineArgs(parseJazzerArgs(args));
-    Opt.handleHelpAndVersionArgs();
+    handleTerminatingCommands();
 
     // --asan and --ubsan imply --native by default, but --native can also be used by itself to fuzz
     // native libraries without sanitizers (e.g. to quickly grow a corpus).
@@ -188,6 +189,17 @@ public class Jazzer {
     processBuilder.inheritIO();
 
     exit(processBuilder.start().waitFor());
+  }
+
+  private static void handleTerminatingCommands() {
+    if (Opt.help.get()) {
+      Log.println(Opt.generateHelpText());
+      exit(0);
+    }
+    if (Opt.version.get()) {
+      Log.println("Jazzer v" + JAZZER_VERSION);
+      exit(0);
+    }
   }
 
   private static List<Map.Entry<String, String>> parseJazzerArgs(List<String> args) {
@@ -328,7 +340,7 @@ public class Jazzer {
         nativeAgentOptions += ",bootstrapClassOverrides=" + bootclassClassOverrides;
       }
 
-      // ManagementFactory wont work with Android
+      // ManagementFactory won't work with Android
       Stream<String> stream =
           Stream.of(
               "app_process",
