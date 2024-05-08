@@ -11,14 +11,11 @@
 
 package com.code_intelligence.jazzer.driver;
 
-import static com.code_intelligence.jazzer.Constants.JAZZER_VERSION;
 import static com.code_intelligence.jazzer.driver.OptParser.boolSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.stringListSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.stringSetting;
 import static com.code_intelligence.jazzer.driver.OptParser.uint64Setting;
-import static java.lang.System.exit;
 
-import com.code_intelligence.jazzer.utils.Log;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -232,16 +229,18 @@ public final class Opt {
   public static final OptItem<Boolean> conditionalHooks =
       boolSetting("conditional_hooks", false, null);
 
-  // Special driver options:
-
-  private static final OptItem<Boolean> help =
-      boolSetting("help", false, "Show this list of all available arguments");
   public static final OptItem<List<String>> instrumentOnly =
       stringListSetting(
           "instrument_only",
           ',',
           "Comma separated list of jar files to instrument. No fuzzing is performed.");
-  private static final OptItem<Boolean> version =
+
+  // Special driver options:
+
+  public static final OptItem<Boolean> help =
+      boolSetting("help", false, "Show this list of all available arguments");
+
+  public static final OptItem<Boolean> version =
       boolSetting("version", false, "Print version information");
 
   public static void registerAndValidateCommandLineArgs(List<Map.Entry<String, String>> cliArgs) {
@@ -253,14 +252,7 @@ public final class Opt {
     OptParser.registerConfigurationParameters(configurationParameterGetter);
   }
 
-  public static void handleHelpAndVersionArgs() {
-    if (help.get()) {
-      Log.println(OptParser.getHelpText());
-      exit(0);
-    }
-    if (version.get()) {
-      Log.println("Jazzer v" + JAZZER_VERSION);
-      exit(0);
-    }
+  public static String generateHelpText() {
+    return OptParser.getHelpText();
   }
 }
