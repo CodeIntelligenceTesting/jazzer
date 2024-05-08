@@ -11,13 +11,16 @@ package com.code_intelligence.jazzer.junit;
 
 import static com.code_intelligence.jazzer.junit.FuzzerDictionary.createDictionaryFile;
 
+import com.code_intelligence.jazzer.utils.Log;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -128,9 +131,29 @@ class FuzzTestExtensions
   private void recordSeedForFuzzing(List<Object> arguments, ExtensionContext extensionContext)
       throws IOException {
     SeedSerializer seedSerializer = getOrCreateSeedSerializer(extensionContext);
+    byte[] seed;
     try {
-      FuzzTestExecutor.fromContext(extensionContext)
-          .addSeed(seedSerializer.write(arguments.toArray()));
+      seed = seedSerializer.write(arguments.toArray());
+    } catch (Exception ignored) {
+      String argumentTypes =
+          arguments.stream()
+              .filter(Objects::nonNull)
+              .map(obj -> obj.getClass().getName())
+              .collect(Collectors.joining(","));
+      String argumentValues =
+          arguments.stream()
+              .filter(Objects::nonNull)
+              .map(Object::toString)
+              .collect(Collectors.joining(", "));
+      Log.warn(
+          String.format(
+              "JUnit arguments of type(s) %s with value(s) %s can not be serialized as fuzzing"
+                  + " inputs. Skipped.",
+              argumentTypes, argumentValues));
+      return;
+    }
+    try {
+      FuzzTestExecutor.fromContext(extensionContext).addSeed(seed);
     } catch (UnsupportedOperationException ignored) {
     }
   }
