@@ -295,4 +295,49 @@ class ArgumentsMutatorTest {
     assertThat(arguments).isNotEmpty();
     assertThat((List<Boolean>) arguments[0]).isNotEmpty();
   }
+
+  public static class EmptyBeanWithRuntimeError {
+    static boolean throwInConstructor = false;
+
+    public EmptyBeanWithRuntimeError() {
+      if (throwInConstructor) throw new RuntimeException("Runtime error in constructor");
+    }
+
+    public static void throwErrorInConstructor(boolean val) {
+      throwInConstructor = val;
+    }
+  }
+
+  public void readEmptyBeanWithRuntimeError(@NotNull EmptyBeanWithRuntimeError data) {}
+
+  @Test
+  void testReadEmptyBeanWithRuntimeError() throws NoSuchMethodException {
+    Method method =
+        ArgumentsMutatorTest.class.getMethod(
+            "readEmptyBeanWithRuntimeError", EmptyBeanWithRuntimeError.class);
+    Optional<ArgumentsMutator> maybeMutator =
+        ArgumentsMutator.forMethod(Mutators.newFactory(), method);
+    assertThat(maybeMutator).isPresent();
+    ArgumentsMutator mutator = maybeMutator.get();
+
+    mutator.init(12345);
+    Object[] arguments = mutator.getArguments();
+    assertThat(arguments).isNotEmpty();
+    assertThat(arguments[0]).isInstanceOf(EmptyBeanWithRuntimeError.class);
+
+    // @NotNull EmptyBean should be read without error.
+    mutator.read(new ByteArrayInputStream(new byte[1]));
+    arguments = mutator.getArguments();
+    assertThat(arguments).isNotEmpty();
+    assertThat(arguments[0]).isInstanceOf(EmptyBeanWithRuntimeError.class);
+
+    // Error in constructor results in a finding---the user should fix the fuzz test or
+    // fuzz with JAZZER_KEEP_GOING.
+    EmptyBeanWithRuntimeError.throwErrorInConstructor(true);
+    try {
+      mutator.read(new ByteArrayInputStream(new byte[1]));
+    } catch (RuntimeException e) {
+      // expected
+    }
+  }
 }

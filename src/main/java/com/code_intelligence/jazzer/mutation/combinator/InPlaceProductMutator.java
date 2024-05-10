@@ -51,6 +51,13 @@ public final class InPlaceProductMutator extends SerializingInPlaceMutator<Objec
   @Override
   public Object[] readExclusive(InputStream in) throws IOException {
     Object[] value = new Object[mutators.length];
+    // mutators can be an empty array. This can so far only happen when an empty Java Bean mutator
+    // is used.
+    // Returning an empty array and not reading anything from `in` is fine in this case, since the
+    // bean cannot be mutated anyway.
+    if (mutators.length == 0) {
+      return value;
+    }
     int lastIndex = mutators.length - 1;
     DataInputStream endlessData = new DataInputStream(extendWithZeros(in));
     for (int i = 0; i < lastIndex; i++) {
