@@ -140,6 +140,16 @@ public abstract class OptItem<T> implements Supplier<T> {
     }
   }
 
+  /**
+   * Checks if the given option was set externally via one of the provided methods, e.g. via
+   * environment variable or command line parameter.
+   *
+   * @return true if set via a parameter, else false
+   */
+  public boolean isSet() {
+    return getExplicitValue().isPresent();
+  }
+
   final boolean isInternal() {
     return description == null;
   }

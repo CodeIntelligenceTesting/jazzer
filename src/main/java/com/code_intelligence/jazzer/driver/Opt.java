@@ -214,6 +214,12 @@ public final class Opt {
   public static final OptItem<Boolean> ubsan =
       boolSetting(
           "ubsan", false, "Allow fuzzing of native libraries compiled with '-fsanitize=undefined'");
+  public static final OptItem<List<String>> listFuzzTests =
+      stringListSetting(
+          "list_fuzz_tests",
+          "Prints all fuzz test names in the given classes. If no classes are provided, all"
+              + " directories (but not JAR files) on the classpath are scanned for tests. If this"
+              + " parameter is given, all others are ignored. Only used for JUnit fuzz tests.");
 
   // Internal options:
 

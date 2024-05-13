@@ -23,6 +23,8 @@ import static java.util.stream.Collectors.toSet;
 import com.code_intelligence.jazzer.android.AndroidRuntime;
 import com.code_intelligence.jazzer.driver.Driver;
 import com.code_intelligence.jazzer.driver.Opt;
+import com.code_intelligence.jazzer.driver.junit.FuzzTestLister;
+import com.code_intelligence.jazzer.driver.junit.JUnitRunner;
 import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.ZipUtils;
 import com.github.fmeum.rules_jni.RulesJni;
@@ -200,6 +202,29 @@ public class Jazzer {
       Log.println("Jazzer v" + JAZZER_VERSION);
       exit(0);
     }
+    if (Opt.listFuzzTests.isSet()) {
+      handleListFuzzTests();
+    }
+  }
+
+  private static void handleListFuzzTests() {
+    if (JUnitRunner.isSupported()) {
+      try {
+        List<String> classes = Opt.listFuzzTests.get();
+        List<String> fuzzTests = FuzzTestLister.listFuzzTests(classes);
+        if (!fuzzTests.isEmpty()) {
+          fuzzTests.forEach(Log::println);
+          exit(0);
+        } else {
+          Log.error("Could not find any fuzz tests in " + classes);
+        }
+      } catch (RuntimeException e) {
+        Log.error("Could not list fuzz tests", e);
+      }
+    } else {
+      Log.error("Could not list fuzz tests, as JUnit is not available on the classpath");
+    }
+    exit(1);
   }
 
   private static List<Map.Entry<String, String>> parseJazzerArgs(List<String> args) {
