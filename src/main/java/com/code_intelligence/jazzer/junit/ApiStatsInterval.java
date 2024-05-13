@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ApiStatsInterval implements ApiStats {
+  public static final String NO_STATS = "";
+
   private static final long timeIntervalForStatsPrint = 5000;
   private final Map<String, Stat> stats;
   private long currentTime;
@@ -48,6 +50,9 @@ public class ApiStatsInterval implements ApiStats {
   // {"endpoints":[{"method":"PUT","URL":"/v3/user/{id}/details","statusCodes":{"200":32,"403":104,"500":43}}]}
   @Override
   public String stringify() {
+    if (stats.isEmpty()) {
+      return NO_STATS;
+    }
     StringBuilder sb = new StringBuilder("==API STATS== {\"endpoints\":[");
     // sort the stats by method and then by URL so that the output is deterministic
     List<Stat> sortedValues =

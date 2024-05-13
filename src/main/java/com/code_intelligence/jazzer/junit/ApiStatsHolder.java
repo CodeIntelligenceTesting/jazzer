@@ -16,7 +16,11 @@ public final class ApiStatsHolder {
   public static ApiStats apiStats = new ApiStatsNoop();
 
   public static void printApiStats() {
-    Log.println(apiStats.stringify());
+    String stats = apiStats.stringify();
+    if (ApiStatsInterval.NO_STATS.equals(stats)) {
+      return;
+    }
+    Log.println(stats);
   }
 
   public static void collectApiStats(String requestURI, String method, int statusCode) {

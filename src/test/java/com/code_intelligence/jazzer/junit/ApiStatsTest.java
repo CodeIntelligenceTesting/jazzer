@@ -19,7 +19,7 @@ class ApiStatsTest {
   void addNoStat() {
     ApiStats apiStats = new ApiStatsInterval();
 
-    String expected = "==API STATS==" + " {\"endpoints\":[]}";
+    String expected = ApiStatsInterval.NO_STATS;
     assertEquals(expected, apiStats.stringify());
   }
 
