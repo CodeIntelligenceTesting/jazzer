@@ -1093,4 +1093,46 @@ java_fuzz_target_test(
     ],
 )
 
+filegroup(
+    name = "fuzz_test_lister_classes",
+    srcs = ["src/test/data/fuzz_test_lister_test"],
+)
+
+sh_test(
+    name = "fuzz_test_lister_test",
+    size = "enormous",
+    srcs = ["src/test/shell/fuzz_test_lister_test.sh"],
+    args = [
+        "$(rlocationpath //deploy:jazzer)",
+        "$(rlocationpath //deploy:jazzer-junit)",
+        "$(rlocationpath :fuzz_test_lister_classes)",
+        "$(rlocationpath @maven//:org_junit_jupiter_junit_jupiter_api)",
+        "$(rlocationpath @maven//:org_junit_jupiter_junit_jupiter_engine)",
+        "$(rlocationpath @maven//:org_junit_jupiter_junit_jupiter_params)",
+        "$(rlocationpath @maven//:org_junit_platform_junit_platform_commons)",
+        "$(rlocationpath @maven//:org_junit_platform_junit_platform_engine)",
+        "$(rlocationpath @maven//:org_junit_platform_junit_platform_launcher)",
+    ],
+    data = [
+        ":fuzz_test_lister_classes",
+        ":src/test/data/fuzz_test_lister_test",
+        "//deploy:jazzer",
+        "//deploy:jazzer-junit",
+        "@bazel_tools//tools/jdk:current_host_java_runtime",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+        "@maven//:org_junit_platform_junit_platform_commons",
+        "@maven//:org_junit_platform_junit_platform_engine",
+        "@maven//:org_junit_platform_junit_platform_launcher",
+    ],
+    env = {
+        "JAVA_EXECPATH": "$(JAVA)",
+        "JAZZER_DEBUG": "1",
+    },
+    target_compatible_with = SKIP_ON_WINDOWS,
+    toolchains = ["@bazel_tools//tools/jdk:current_host_java_runtime"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
 ktlint()
