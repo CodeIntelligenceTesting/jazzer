@@ -122,7 +122,9 @@ final class ArrayMutatorFactory implements MutatorFactory {
 
     @Override
     public T[] detach(T[] value) {
-      return (T[]) Arrays.stream(value).map(elementMutator::detach).toArray();
+      return Arrays.stream(value)
+          .map(elementMutator::detach)
+          .toArray(len -> (T[]) Array.newInstance(elementClazz, len));
     }
 
     @Override

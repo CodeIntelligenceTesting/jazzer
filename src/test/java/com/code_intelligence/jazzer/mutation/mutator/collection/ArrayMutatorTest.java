@@ -61,6 +61,31 @@ public class ArrayMutatorTest {
   }
 
   @Test
+  void testDetach() {
+    SerializingMutator<Integer[]> mutator =
+        (SerializingMutator<Integer[]>)
+            factory.createOrThrow(
+                new TypeHolder<@NotNull Integer @NotNull []>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("Integer[]");
+
+    Integer[] inited;
+    Integer[] detached;
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // targetSize
+            1,
+            // elementMutator.init
+            1)) {
+      inited = mutator.init(prng);
+      detached = mutator.detach(inited);
+    }
+
+    assertThat(detached).isInstanceOf(Integer[].class);
+    assertThat(detached).isEqualTo(inited);
+    assertThat(detached).isNotSameInstanceAs(inited);
+  }
+
+  @Test
   void testInitMaxLength() {
     AnnotatedType type =
         new TypeHolder<
