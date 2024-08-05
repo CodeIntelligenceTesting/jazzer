@@ -1,47 +1,10 @@
-// Copyright 2021 Code Intelligence GmbH
+// Copyright 2024 Code Intelligence GmbH
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// By downloading, you agree to the Code Intelligence Jazzer Terms and
+// Conditions.
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// Modified from
-// https://raw.githubusercontent.com/google/atheris/034284dc4bb1ad4f4ab6ba5d34fb4dca7c633660/fuzzed_data_provider.cc
-//
-// Original license and copyright notices:
-//
-// Copyright 2020 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// Modified from
-// https://github.com/llvm/llvm-project/blob/70de7e0d9a95b7fcd7c105b06bd90fdf4e01f563/compiler-rt/include/fuzzer/FuzzedDataProvider.h
-//
-// Original license and copyright notices:
-//
-//===- FuzzedDataProvider.h - Utility header for fuzz targets ---*- C++ -* ===//
-//
-// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-// See https://llvm.org/LICENSE.txt for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
+// The Code Intelligence Jazzer Terms and Conditions are provided in
+// LICENSE-JAZZER.txt located in the root directory of the project.
 
 #include <algorithm>
 #include <cstdint>
