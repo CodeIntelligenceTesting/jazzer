@@ -1,4 +1,5 @@
 /bazel-*
+.idea
 .ijwb
 .clwb
 /coverage
