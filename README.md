@@ -15,9 +15,6 @@
   <a href="https://github.com/CodeIntelligenceTesting/jazzer/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/CodeIntelligenceTesting/jazzer" alt="License">
   </a>
-  <a href="https://github.com/CodeIntelligenceTesting/jazzer/blob/main/CONTRIBUTING.md">
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome" />
-  </a>
 
   <br />
 
@@ -35,22 +32,6 @@ Jazzer currently supports the following platforms:
 * Linux x86_64
 * macOS 12+ x86_64 & arm64
 * Windows x86_64
-
-## Quick start
-
-You can use Docker to try out Jazzer's Autofuzz mode, in which it automatically generates arguments to a given Java function and reports unexpected exceptions and detected security issues:
-
-```
-docker run -it cifuzz/jazzer-autofuzz \
-   com.mikesamuel:json-sanitizer:1.2.0 \
-   com.google.json.JsonSanitizer::sanitize \
-   --autofuzz_ignore=java.lang.ArrayIndexOutOfBoundsException
-```
-
-Here, the first two arguments are the Maven coordinates of the Java library and the fully qualified name of the Java function to be fuzzed in "method reference" form.
-The optional `--autofuzz_ignore` flag takes a list of uncaught exception classes to ignore.
-
-After a few seconds, Jazzer should trigger an `AssertionError`, reproducing a bug it found in this library that has since been fixed.
 
 ## Using Jazzer via...
 
@@ -104,17 +85,6 @@ You can also use GitHub release archives to run a standalone Jazzer binary that 
 If you see an error saying that `libjvm.so` has not been found, make sure that `JAVA_HOME` points to a JDK.
 
 The [`examples`](examples/src/main/java/com/example) directory includes both toy and real-world examples of fuzz tests.
-
-### Docker
-
-The "distroless" Docker image [cifuzz/jazzer](https://hub.docker.com/r/cifuzz/jazzer) includes a recent Jazzer release together with OpenJDK 17.
-Mount a directory containing your compiled fuzz target into the container under `/fuzzing` and use it like a GitHub release binary by running:
-
-```sh
-docker run -v path/containing/the/application:/fuzzing cifuzz/jazzer --cp=<classpath> --target_class=<fuzz test class>
-```
-
-If Jazzer produces a finding, the input that triggered it will be available in the same directory.
 
 ### Bazel
 

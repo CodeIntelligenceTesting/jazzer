@@ -6,6 +6,7 @@
 * [Minimizing a crashing input](#minimizing-a-crashing-input)
 * [Parallel execution](#parallel-execution)
 * [Autofuzz mode](#autofuzz-mode)
+* [Docker](#docker)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
 
@@ -81,3 +82,33 @@ Creating objects from fuzzer input can lead to many reported exceptions.
 Jazzer addresses this issue by ignoring exceptions that the target method declares to throw.
 In addition to that, you can provide a list of exceptions to be ignored during fuzzing via the `--autofuzz_ignore` flag in the form of a comma-separated list.
 You can specify concrete exceptions (e.g., `java.lang.NullPointerException`), in which case also subclasses of these exception classes will be ignored, or glob patterns to ignore all exceptions in a specific package (e.g. `java.lang.*` or `com.company.**`).
+
+### Docker
+
+**Outdated: The public docker images are outdated and the whole approach needs to be validated.** 
+
+The "distroless" Docker image [cifuzz/jazzer](https://hub.docker.com/r/cifuzz/jazzer) includes a recent Jazzer release together with OpenJDK 17.
+Mount a directory containing your compiled fuzz target into the container under `/fuzzing` and use it like a GitHub release binary by running:
+
+```sh
+docker run -v path/containing/the/application:/fuzzing cifuzz/jazzer --cp=<classpath> --target_class=<fuzz test class>
+```
+
+If Jazzer produces a finding, the input that triggered it will be available in the same directory.
+
+
+#### Autofuzz
+
+You can use Docker to try out Jazzer's Autofuzz mode, in which it automatically generates arguments to a given Java function and reports unexpected exceptions and detected security issues:
+
+```
+docker run -it cifuzz/jazzer-autofuzz \
+   com.mikesamuel:json-sanitizer:1.2.0 \
+   com.google.json.JsonSanitizer::sanitize \
+   --autofuzz_ignore=java.lang.ArrayIndexOutOfBoundsException
+```
+
+Here, the first two arguments are the Maven coordinates of the Java library and the fully qualified name of the Java function to be fuzzed in "method reference" form.
+The optional `--autofuzz_ignore` flag takes a list of uncaught exception classes to ignore.
+
+After a few seconds, Jazzer should trigger an `AssertionError`, reproducing a bug it found in this library that has since been fixed.
