@@ -402,7 +402,7 @@ java_fuzz_target_test(
     fuzzer_args = [
         "--autofuzz=com.example.AutofuzzIgnoreTarget::doStuff",
         "--autofuzz_ignore=java.lang.NullPointerException",
-        "--ignore=bdde2af8735993f3,0123456789ABCDEF",
+        "--ignore=5e595e58d76956b7,0123456789ABCDEF",
     ],
     runtime_deps = [
         ":autofuzz_ignore_target",
