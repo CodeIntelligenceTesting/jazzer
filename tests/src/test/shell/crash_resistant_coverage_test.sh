@@ -67,6 +67,7 @@ grep -o -P '<class name="(?!com\/example\/CrashResistantCoverageTarget)[^"]*"' "
 # tag and a child <counter> tag - (?:[^<]|<[^\/]).* matches everything but </, so there can't be a
 # </method> between the two.
 # Similarly, verify that <init> isn't covered as the default constructor is never invoked.
-grep -q -P '\Q<method name="<init>" desc="()V" line="19">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="1" covered="0"/>\E' "$xml_report" && fail "<init> has been covered"
-grep -q -P '\Q<method name="fuzzerTestOneInput" desc="([B)V" line="21">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="0" covered="5"/>\E' "$xml_report" || fail "fuzzerTestOneInput hasn't been covered"
-grep -q -P '\Q<method name="someFunction" desc="()V" line="33">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="0" covered="3"/>\E' "$xml_report" || fail "someFunction hasn't been covered"
+cat "$xml_report"
+grep -q -P '\Q<method name="&lt;init&gt;" desc="()V" line="14">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="1" covered="0"/>\E' "$xml_report" || fail "<init> has been covered"
+grep -q -P '\Q<method name="fuzzerTestOneInput" desc="([B)V" line="16">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="0" covered="5"/>\E' "$xml_report" || fail "fuzzerTestOneInput hasn't been covered"
+grep -q -P '\Q<method name="someFunction" desc="()V" line="28">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="0" covered="3"/>\E' "$xml_report" || fail "someFunction hasn't been covered"
