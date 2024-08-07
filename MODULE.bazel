@@ -16,6 +16,7 @@ bazel_dep(name = "googletest", version = "1.14.0.bcr.1")
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "protobuf")
 bazel_dep(name = "rules_android", version = "0.1.1")
+bazel_dep(name = "rules_android_ndk", version = "0.1.2")
 bazel_dep(name = "rules_foreign_cc", version = "0.10.1")
 bazel_dep(name = "rules_java", version = "7.7.0")
 bazel_dep(name = "rules_jni", version = "0.9.1")
@@ -411,11 +412,6 @@ use_repo(llvm, "llvm_toolchain")
 # Required by the reference to the Windows toolchain in @local_config_cc from .bazelrc.
 cc_configure = use_extension("@bazel_tools//tools/cpp:cc_configure.bzl", "cc_configure_extension")
 use_repo(cc_configure, "local_config_cc")
-
-# The Android SDK setup in WORKSPACE.bzlmod requires these repos.
-# TODO: Remove this when the Android SDK setup is available with Bzlmod.
-remote_android_extensions = use_extension("@bazel_tools//tools/android:android_extensions.bzl", "remote_android_tools_extensions")
-use_repo(remote_android_extensions, "android_gmaven_r8", "android_tools")
 
 # Referenced in BUILD files.
 java_toolchains = use_extension("@rules_java//java:extensions.bzl", "toolchains")
