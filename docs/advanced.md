@@ -1,25 +1,44 @@
 ## Advanced options
 
-* [Passing JVM arguments](#passing-jvm-arguments)
-* [Coverage instrumentation](#coverage-instrumentation)
-* [Trace instrumentation](#trace-instrumentation)
-* [Value profile](#value-profile)
-* [Custom hooks](#custom-hooks)
-* [Suppressing stack traces](#suppressing-stack-traces)
-* [Export coverage information](#export-coverage-information)
-* [Native libraries](#native-libraries)
-* [Fuzzing mutators](#fuzzing-mutators)
+* [Using Jazzer Standalone](#using-jazzer-standalone)
+* [Passing JVM Arguments](#passing-jvm-arguments)
+* [Coverage Instrumentation](#coverage-instrumentation)
+* [Trace Instrumentation](#trace-instrumentation)
+* [Value Profile](#value-profile)
+* [Custom Hooks](#custom-hooks)
+* [Keep Going](#keep-going)
+* [Export Coverage Information](#export-coverage-information)
+* [Native Libraries](#native-libraries)
 
-<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
+**Note**: These settings apply to the old fuzzing approach using a `fuzzerTestOneInput` method and the native Jazzer binary. They don't work in the new JUnit integration.
+
+## Using Jazzer Standalone
+There are two ways to use Jazzer standalone: by using the `jazzer` binary or by calling the Jazzer main class directly.
+
+### Using the `jazzer` binary
+Jazzer is available as a standalone libFuzzer-compiled binary. To call `jazzer` you need to pass it the project
+classpath and target class that contains the Fuzz Test.
+
+```shell
+jazzer --cp=<classpath> --target_class=<fuzz test class>
+```
+
+### Calling the Jazzer main class directly
+To call Jazzer directly you need to pass it the project classpath, the path to the `jazzer.jar` and `jazzer-junit.jar`
+along with the Jazzer main class `com.code_intelligence.jazzer.Jazzer` and target class that contains the Fuzz Test.
+
+```shell
+java -cp <classpath>;<path/to/jazzer.jar>;<path/to/jazzer-junit.jar> com.code_intelligence.jazzer.Jazzer --target_class=<fuzz-test-class> [args...]
+```
+
+Optionally you can add other Jazzer arguments with double dash command-line flags.
+Because Jazzer is based on libFuzzer, all available libFuzzer arguments can be added with single dash command-line flags.
+Please refer to [libFuzzer](https://llvm.org/docs/LibFuzzer.html) for documentation.
 
 Various command line options are available to control the instrumentation and fuzzer execution.
-Since Jazzer is a libFuzzer-compiled binary, all positional and single dash command-line options are parsed by libFuzzer.
-Therefore, all Jazzer options are passed via double dash command-line flags, i.e., as `--option=value` (note the `=` instead of a space).
-
 A full list of command-line flags can be printed with the `--help` flag.
-For the available libFuzzer options please refer to [its documentation](https://llvm.org/docs/LibFuzzer.html) for a detailed description.
 
-### Passing JVM arguments
+### Passing JVM Arguments
 
 When Jazzer is started using the `jazzer` binary, it starts a JVM in which it executes the fuzz target.
 Arguments for this JVM can be provided via the `JAVA_OPTS` environment variable.
@@ -37,13 +56,12 @@ For example, to enable preview features as well as set a maximum heap size, add 
 
 Arguments specified with `--jvm_args` take precedence over those in `JAVA_OPTS`.
 
-### Coverage instrumentation
+## Coverage Instrumentation
 
 The Jazzer agent inserts coverage markers into the JVM bytecode during class loading.
-libFuzzer uses this information to guide its input mutations towards increased coverage.
-
 It is possible to restrict instrumentation to only a subset of classes with the `--instrumentation_includes` flag.
-This is especially useful if coverage inside specific packages is of higher interest, e.g., the user library under test rather than an external parsing library in which the fuzzer is likely to get lost.
+This is especially useful if coverage inside specific packages is of higher interest,
+e.g., the user library under test rather than an external parsing library in which the fuzzer is likely to get lost.
 Similarly, there is `--instrumentation_excludes` to exclude specific classes from instrumentation.
 Both flags take a list of glob patterns for the java class name separated by colon:
 
@@ -51,9 +69,10 @@ Both flags take a list of glob patterns for the java class name separated by col
 --instrumentation_includes=com.my_com.**:com.other_com.** --instrumentation_excludes=com.my_com.crypto.**
 ```
 
-By default, JVM-internal classes and Java as well as Kotlin standard library classes are not instrumented, so these do not need to be excluded manually.
+By default, JVM-internal classes and Java as well as Kotlin standard library classes are not instrumented,
+so these do not need to be excluded manually.
 
-### Trace instrumentation
+### Trace Instrumentation
 
 The agent adds additional hooks for tracing compares, integer divisions, switch statements and array indices.
 These hooks correspond to [clang's data flow hooks](https://clang.llvm.org/docs/SanitizerCoverage.html#tracing-data-flow).
@@ -68,7 +87,7 @@ The particular instrumentation types to apply can be specified using the `--trac
 
 Multiple instrumentation types can be combined with a colon (Linux, macOS) or a semicolon (Windows).
 
-### Value profile
+### Value Profile
 
 The run-time flag `-use_value_profile=1` enables [libFuzzer's value profiling mode](https://llvm.org/docs/LibFuzzer.html#value-profile).
 When running with this flag, the feedback about compares and constants received from Jazzer's trace instrumentation is associated with the particular bytecode location and used to provide additional coverage instrumentation.
@@ -88,13 +107,17 @@ To use the compiled method hooks, they have to be available on the classpath pro
 Hooks have to be loaded from separate JAR files so that Jazzer can [add it to the bootstrap class loader search](https://docs.oracle.com/javase/8/docs/api/java/lang/instrument/Instrumentation.html#appendToBootstrapClassLoaderSearch-java.util.jar.JarFile-).
 The list of custom hooks can alternatively be specified via the `Jazzer-Hook-Classes` attribute in the fuzz target JAR's manifest.
 
-### Suppressing stack traces
+### Keep Going
 
 With the flag `--keep_going=N` Jazzer continues fuzzing until `N` unique stack traces have been encountered.
+Specifically `--keep-going=0` will keep the fuzzer running until another stop condition (e.g. maximum runtime) is met.
 
-Particular stack traces can also be ignored based on their `DEDUP_TOKEN` by passing a comma-separated list of tokens via `--ignore=<token_1>,<token2>`.
+Particular stack traces can also be ignored based on their `DEDUP_TOKEN` by passing a comma-separated list of tokens via
+`--ignore=<token_1>,<token2>`.
 
-### Export coverage information
+### Export Coverage Information
+
+**Note**: This feature is deprecated. The standalone JaCoCo agent should be used to generate coverage reports.
 
 The internally gathered JaCoCo coverage information can be exported in human-readable and JaCoCo execution data format (`.exec`).
 These can help identify code areas that have not been covered by the fuzzer and thus may require more comprehensive fuzz targets or a more extensive initial corpus to reach.
@@ -118,7 +141,7 @@ java -jar path/to/jacococli.jar report coverage.exec \
   --name FuzzCoverageReport
 ```
 
-### Native libraries
+### Native Libraries
 
 Jazzer supports fuzzing of native libraries loaded by the JVM, for example via `System.load()`.
 For the fuzzer to get coverage feedback, these libraries have to be compiled with `-fsanitize=fuzzer-no-link`.
@@ -140,17 +163,3 @@ Furthermore, due to the nature of the JVM's GC, LeakSanitizer reports too many f
 
 The fuzz targets `ExampleFuzzerWithASan` and `ExampleFuzzerWithUBSan` in the [`examples`](../examples/src/main/java/com/example) directory contain minimal working examples for fuzzing with native libraries.
 Also see `TurboJpegFuzzer` for a real-world example.
-
-### Fuzzing mutators
-
-LibFuzzer API offers two functions to customize the mutation strategy which is especially useful when fuzzing functions that require structured input.
-Jazzer does not define `LLVMFuzzerCustomMutator` nor `LLVMFuzzerCustomCrossOver` and leaves the mutation strategy entirely to libFuzzer.
-However, custom mutators can easily be integrated by compiling a mutator library which defines `LLVMFuzzerCustomMutator` (and optionally `LLVMFuzzerCustomCrossOver`) and pre-loading the mutator library:
-
-```bash
-# Using Bazel:
-LD_PRELOAD=libcustom_mutator.so bazel run //:jazzer -- <arguments>
-# Using the binary release:
-LD_PRELOAD=libcustom_mutator.so ./jazzer <arguments>
-```
-
