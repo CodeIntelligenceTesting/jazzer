@@ -57,44 +57,103 @@ created.
 
 Currently supported types are:
 
-| Mutator                    | Type(s)                                                                                                | Notes                                                                                                                                                                    |
-|----------------------------|--------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Boolean                    | `boolean`, `Boolean`                                                                                   |                                                                                                                                                                          |
-| Integral                   | `byte`, `Byte`, `short`, `Short`, `int`, `Int`, `long`, `Long`                                         |                                                                                                                                                                          |
-| Floating point             | `float`, `Float`, `double`, `Double`                                                                   |                                                                                                                                                                          |
-| String                     | `java.lang.String`                                                                                     |                                                                                                                                                                          |
-| Enum                       | `java.lang.Enum`                                                                                       |                                                                                                                                                                          |
-| InputStream                | `java.io.InputStream`                                                                                  |                                                                                                                                                                          |
-| Time                       | `java.time.LocalDate`, `java.time.LocalDateTime`, `java.time.LocalTime`, `java.time.ZonedDateTime`     |                                                                                                                                                                          |
-| Array                      | Arrays holding any other supported type (e.g. `byte[]`, `Integer[]`, `Map[]`, `String[]`, etc.)        |                                                                                                                                                                          |
-| List                       | `java.util.List`                                                                                       |                                                                                                                                                                          |
-| Map                        | `java.util.Map`                                                                                        |                                                                                                                                                                          |
-| Record                     | `java.lang.Record`                                                                                     | Arbitrary Java Records, if supported by JVM version                                                                                                                      |
-| Setter-based JavaBean      |                                                                                                        | Any class adhering to the [JavaBeans Spec](https://www.oracle.com/java/technologies/javase/javabeans-spec.html), see [JavaBeans Mutator](#javabeans-mutator) for details |
-| Constructor-based JavaBean |                                                                                                        | Any class adhering to the [JavaBeans Spec](https://www.oracle.com/java/technologies/javase/javabeans-spec.html), see [JavaBeans Mutator](#javabeans-mutator) for details |      
-| FuzzedDataProvider         | `com.code_intelligence.jazzer.api.FuzzedDataProvider`                                                  |                                                                                                                                                                          |
-| Protobuf                   | `com.google.protobuf.Message`, `com.google.protobuf.Message.Builder`, `com.google.protobuf.ByteString` | Classes generated by the Protobuf toolchain                                                                                                                              | 
-| Nullable                   |                                                                                                        | Any reference type will occasionally be set to `null`                                                                                                                    | 
+| Mutator                        | Type(s)                                                                                                | Notes                                                                                                                                                                    |
+|--------------------------------|--------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Boolean                        | `boolean`, `Boolean`                                                                                   |                                                                                                                                                                          |
+| Integral                       | `byte`, `Byte`, `short`, `Short`, `int`, `Int`, `long`, `Long`                                         |                                                                                                                                                                          |
+| Floating point                 | `float`, `Float`, `double`, `Double`                                                                   |                                                                                                                                                                          |
+| String                         | `java.lang.String`                                                                                     |                                                                                                                                                                          |
+| Enum                           | `java.lang.Enum`                                                                                       |                                                                                                                                                                          |
+| InputStream                    | `java.io.InputStream`                                                                                  |                                                                                                                                                                          |
+| Time                           | `java.time.LocalDate`, `java.time.LocalDateTime`, `java.time.LocalTime`, `java.time.ZonedDateTime`     |                                                                                                                                                                          |
+| Array                          | Arrays holding any other supported type (e.g. `byte[]`, `Integer[]`, `Map[]`, `String[]`, etc.)        |                                                                                                                                                                          |
+| List                           | `java.util.List`                                                                                       |                                                                                                                                                                          |
+| Map                            | `java.util.Map`                                                                                        |                                                                                                                                                                          |
+| Record                         | `java.lang.Record`                                                                                     | Arbitrary Java Records, if supported by JVM version                                                                                                                      |
+| Setter-based JavaBean          |                                                                                                        | Any class adhering to the [JavaBeans Spec](https://www.oracle.com/java/technologies/javase/javabeans-spec.html), see [JavaBeans Support](#javabeans-support) for details |
+| Constructor-based JavaBean     |                                                                                                        | Any class adhering to the [JavaBeans Spec](https://www.oracle.com/java/technologies/javase/javabeans-spec.html), see [JavaBeans Support](#javabeans-support) for details |
+| Constructor-based Java Classes |                                                                                                        | Any class requiring constructor parameters, but not offering getter methods, see [constructor-based classes](#constructor-based-classes) for details                     |
+| Builder                        |                                                                                                        | See [Builder pattern support](#builder-pattern-support) for details                                                                                                      |
+| FuzzedDataProvider             | `com.code_intelligence.jazzer.api.FuzzedDataProvider`                                                  |                                                                                                                                                                          |
+| Protobuf                       | `com.google.protobuf.Message`, `com.google.protobuf.Message.Builder`, `com.google.protobuf.ByteString` | Classes generated by the Protobuf toolchain                                                                                                                              |
+| Nullable                       |                                                                                                        | Any reference type will occasionally be set to `null`                                                                                                                    |
 
-#### JavaBeans Mutator
+### Annotations
 
-The JavaBeans Mutator can generate and mutate instances of classes adhering to
-the [JavaBeans Spec](https://www.oracle.com/java/technologies/javase/javabeans-spec.html).
+It is sometimes helpful to provide additional information about the Fuzz Test
+parameters, e.g. to specify the range of integers, or the maximum length of a
+string. This is done using annotations directly on the parameters.
 
-As the mutation framework needs to serialize and deserialize Java objects to and from corpus entries, the mutator
-needs a way to pass values to a JavaBean and also extract them back out from it. This is typically done via
-two approaches: setters and getters, or a constructors and getters, hence, two dedicated mutators exist.
+**Note**: Annotations are used on best effort basis, meaning that the fuzzer
+will try to honor specified constraints, but can not guarantee it.
 
-##### Setter-based JavaBean Mutator
+All annotations reside in the `com.code_intelligence.jazzer.mutation.annotation`
+package.
 
-The setter-based JavaBean mutator requires a class to provide a default constructor (no arguments) and uses setter and
-getter pairs to mutate the object.
+| Annotation        | Applies To                                                     | Notes                                                                                                       |
+|-------------------|----------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `@Ascii`          | `java.lang.String`                                             | `String` should only contain ASCII characters                                                               |
+| `@InRange`        | `byte`, `Byte`, `short`, `Short`, `int`, `Int`, `long`, `Long` | Specifies `min` and `max` values of generated integrals                                                     |
+| `@InRangeFloat`   | `float`, `Float`                                               | Specifies `min` and `max` values of generated floats                                                        |
+| `@InRangeDouble`  | `double`, `Double`                                             | Specifies `min` and `max` values of generated doubles                                                       |
+| `@NotNull`        |                                                                | Specifies that a reference type should not be `null`                                                        |
+| `@WithLength`     | `byte[]`                                                       | Specifies the length of the generated byte array                                                            |
+| `@WithUtf8Length` | `java.lang.String`                                             | Specifies the length of the generated string in UTF-8 bytes, see annotation Javadoc for further information |
+| `@WithSize`       | `java.util.List`, `java.util.Map`                              | Specifies the size of the generated collection                                                              |
+| `@UrlSegment`     | `java.lang.String`                                             | `String` should only contain valid URL segment characters                                                   |
 
-The corresponding methods are looked up by name and must adhere to the JavaBeans Spec naming convention, meaning `setXX`
-and `getXX`/`isXX` methods for property `XX`. A JavaBean can have additional getters corresponding to computed
-properties, but the mutator requires that all setters have a corresponding getter.
+The example below shows how Fuzz Test parameters can be annotated to provide
+additional information to the mutation framework.
 
-```java
+```java title="Example" showLineNumbers
+record SimpleTypesRecord(boolean bar, int baz) {}
+
+@FuzzTest
+public void testSimpleTypeRecord(@NotNull @WithSize(min = 3, max = 100) List<SimpleTypesRecord> records) {
+    doSomethingWithRecord(record);
+}
+```
+
+#### Annotation constraints
+
+Often, annotations should be applied to a type and all it's nested component
+types. This use-case is supported by the annotation's `constraint` property. It
+can be set to `PropertyConstraint.RECURSIVE` so that the annotation is
+propagated down to all subcomponent types.  
+All above-mentioned annotations support this feature.
+
+For example, if a Fuzz Test expects a `List` of `List` of `Integer` as
+parameter, and both the lists and their values must not be `null`, the
+annotation `@NotNull(constraint = PropertyConstraint.RECURSIVE)` could be added
+on the root type.
+
+```java title="Example" showLineNumbers
+@FuzzTest
+public void fuzz(@NotNull(constraint = PropertyConstraint.RECURSIVE) List<List<Integer>> list) {
+    // list is not null and does not contain null entries on any level
+    assertDeepNotNull(list);
+}
+```
+
+### JavaBeans support
+
+Jazzer can generate and mutate instances of classes adhering to the
+[JavaBeans Spec](https://www.oracle.com/java/technologies/javase/javabeans-spec.html).
+
+To serialize and deserialize Java objects to and from corpus entries, Jazzer can
+use setters, constructors and getters to pass values to a JavaBean and extract
+them back out from it.
+
+#### Setter-based approach
+
+The setter-based approach requires a class to provide a default constructor with
+no arguments. The corresponding methods are looked up by name and must adhere to
+the JavaBeans Spec naming convention, meaning `setXX` and `getXX`/`isXX` methods
+for property `XX`. A JavaBean can have additional getters corresponding to
+computed properties, but it is required that all setters have a corresponding
+getter.
+
+```java title="Example" showLineNumbers
 public static class FooBean {
     private String foo;
 
@@ -113,21 +172,20 @@ public void testFooBean(FooBean fooBean) {
 }
 ```
 
-##### Constructor-based JavaBean Mutator
+#### Constructor-based approach
 
-The constructor-based JavaBean mutator requires a class to provide a constructor with arguments and uses corresponding
-getters to extract values back out. If multiple constructors are available, the one with the most (supported) parameters
-will be preferred. As these types of JavaBeans are usually immutable, the mutator constructs a new instance on every
-mutation.
+The constructor-based approach requires a class to provide a constructor with
+arguments. If multiple constructors are available, the one with the most
+supported parameters will be preferred.
 
-The lookup of matching getters relies on the Java bean's property names. As a class can have further properties or
-internal state, the mutator relies on the constructor parameter names. Parameter names are not always available at
-runtime, they explicitly have to be compiled into the class file, hence the mutator also supports the use of the
-JavaBeans `@ConstructorProperties` annotation, to specify property names explicitly. Lastly, the mutator falls back to
-looking up getters by parameter type. In this case the return type of only one getter method may match each parameter
-type.
+The lookup of matching getters relies on the Java bean's property names. As a
+class can have further properties or internal states, this approach relies on
+the constructor parameter names. Since parameter names are not always available
+at runtime, they explicitly have to be compiled into the class file with the use
+of the JavaBeans `@ConstructorProperties` annotation, to specify property names
+explicitly.
 
-```java
+```java title="Example" showLineNumbers
 public static class PropertyNamesBean {
     private final String bar;
 
@@ -171,40 +229,121 @@ public void testBeans(PropertyNamesBean propertyNamesBean, ConstructorProperties
 }
 ```
 
-### Annotations
+### Constructor-based classes
 
-It is sometimes helpful to provide additional information about the fuzz test parameters, e.g. to specify the range of
-integers, or the maximum length of a string. This is done using annotations directly on the parameters.
+Jazzer can generate and mutate instances of classes that build up their internal
+state via constructor parameters, and, in contrast to
+[JavaBeans](#javabeans-support), don't offer getter methods.
 
-**Note**: Annotations are used on best effort basis, meaning that the mutation framework will try to honor specified
-constraints, but can not guarantee it.
+The following class would fall into this category:
 
-Annotations are located in the `com.code_intelligence.jazzer.mutation.annotation` package.
+```java title="Constructor-based class" showLineNumbers
+class ImmutableClassTest {
 
-| Annotation        | Applies To                                                     | Notes                                                                                                       | 
-|-------------------|----------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| `@Ascii`          | `java.lang.String`                                             | `String` should only contain ASCII characters                                                               |
-| `@InRange`        | `byte`, `Byte`, `short`, `Short`, `int`, `Int`, `long`, `Long` | Specifies `min` and `max` values of generated integrals                                                     |
-| `@InRangeFloat`   | `float`, `Float`                                               | Specifies `min` and `max` values of generated floats                                                        |
-| `@InRangeDouble`  | `double`, `Double`                                             | Specifies `min` and `max` values of generated doubles                                                       |
-| `@NotNull`        |                                                                | Specifies that a reference type should not be `null`                                                        |
-| `@WithLength`     | `byte[]`                                                       | Specifies the length of the generated byte array                                                            |
-| `@WithUtf8Length` | `java.lang.String`                                             | Specifies the length of the generated string in UTF-8 bytes, see annotation Javadoc for further information |
-| `@WithSize`       | `java.util.List`, `java.util.Map`                              | Specifies the size of the generated collection                                                              |
-| `@UrlSegment`     | `java.lang.String`                                             | `String` should only contain valid URL segment characters                                                   |
+    static class ImmutableClass {
+        private final int bar;
+        public ImmutableClass(int foo) {
+            this.bar = foo * 2;
+        }
+        String barAsString() {
+            return String.valueOf(bar);
+        }
+    }
 
-The example below shows how fuzz test parameters can be annotated to provide additional information to the mutation
-framework.
-
-```java
-record SimpleTypesRecord(boolean bar, int baz) {
+    @FuzzTest
+    void fuzzImmutableClassFunction(ImmutableClass immutableClass) {
+        if (immutableClass != null && "42".equals(immutableClass.barAsString())) {
+            throw new RuntimeException("42!");
+        }
+    }
 }
+```
 
-@FuzzTest
-public void testSimpleTypeRecord(@NotNull @WithSize(min = 3, max = 100) List<SimpleTypesRecord> records) {
-    doSomethingWithRecord(record);
+### Builder pattern support
+
+The [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern) is a common
+[design pattern](https://en.wikipedia.org/wiki/Software_design_pattern) to
+simplify the construction of complex objects.
+
+- A common implementation gathers all required parameters in the `builder` and
+  passes them to the constructor of the target class.
+- Another approach is used for `builder`s supporting a nested type hierarchy in
+  the target class. In this situation the `builder` itself is passed into the
+  constructor of the target class.
+
+**Note**: These pattern are generated by the commonly used
+[Lombok](https://projectlombok.org/) `@Builder` and `@SuperBuilder` annotations.
+
+The examples below use [Lombok](https://projectlombok.org/) to generate
+appropriate `builder` classes:
+
+```java title="@Builder pattern support" showLineNumbers
+class SimpleClassFuzzTests {
+
+    @Builder
+    static class SimpleClass {
+        String foo;
+        List<Integer> bar;
+        boolean baz;
+    }
+
+    @FuzzTest
+    void fuzzSimpleClassFunction(@NotNull SimpleClass simpleClass) {
+        someFunctionToFuzz(simpleClass);
+    }
 }
-``` 
+```
+
+```java title="@SuperBuilder pattern support" showLineNumbers
+class SimpleClassFuzzTests {
+
+    @SuperBuilder
+    static class ParentClass {
+        String foo;
+    }
+
+    @SuperBuilder
+    static class ChildClass extends ParentClass {
+        List<Integer> bar;
+    }
+
+    @FuzzTest
+    void fuzzChildClassFunction(@NotNull ChildClass childClass) {
+        someChildFunctionToFuzz(childClass);
+    }
+}
+```
+
+### FuzzedDataProvider
+
+The `FuzzedDataProvider` is an alternative approach commonly used in programming
+languages like C and C++. It provides an intuitive interface to deconstruct
+fuzzer input with type-specific functions, e.g. `consumeString`,
+`consumeBoolean` or `consumeInt`. Jazzer's Java implementation follows the
+`FuzzedDataProvider` of the [LLVM Project](https://llvm.org/).
+
+This programmatic approach offers very fine-grained control, but requires much
+more effort to build up needed data structures.
+
+Below is an example of a simple Fuzz Test using the `FuzzedDataProvider`:
+
+```java title="Example" showLineNumbers
+import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.junit.FuzzTest;
+
+class ParserTests {
+   @Test
+   void unitTest() {
+      assertEquals("foobar", SomeScheme.decode(SomeScheme.encode("foobar")));
+   }
+
+   @FuzzTest
+   void fuzzTest(FuzzedDataProvider data) {
+      String input = data.consumeRemainingAsString();
+      assertEquals(input, SomeScheme.decode(SomeScheme.encode(input)));
+   }
+}
+```
 
 ## Implementation
 

@@ -1,26 +1,26 @@
 ## Common options and workflows
 
-* [Recommended JVM options](#recommended-jvm-options)
-* [Passing arguments](#passing-arguments)
-* [Reproducing a finding](#reproducing-a-finding)
-* [Minimizing a crashing input](#minimizing-a-crashing-input)
-* [Parallel execution](#parallel-execution)
-* [Autofuzz mode](#autofuzz-mode)
+* [Recommended JVM Options](#recommended-jvm-options)
+* [Passing Arguments](#passing-arguments)
+* [Reproducing a Finding](#reproducing-a-finding)
+* [Parallel Execution](#parallel-execution)
+* [Autofuzz Mode](#autofuzz-mode)
 
-<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
+**Note**: These settings apply to the old fuzzing approach using a `fuzzerTestOneInput` method and the native Jazzer binary. They don't work in the new JUnit integration.
 
-### Recommended JVM options
+## Recommended JVM Options
 
-The following JVM settings are recommended for running Jazzer within JUnit.
-The `jazzer` launcher binary sets them automatically.
+The following JVM settings are recommended for running Jazzer:
 
-* `-XX:-OmitStackTraceInFastThrow` ensures that stack traces are emitted even on hot code paths.
-  This may hurt performance if your fuzz test frequently throws and catches exceptions, but also helps find flaky bugs.
-* `-XX:+UseParallelGC` optimizes garbage collection for high throughput rather than low latency.
-* `-XX:+CriticalJNINatives` is supported with JDK 17 and earlier and improves the runtime performance of Jazzer's instrumentation.
-* `-XX:+EnableDynamicAgentLoading` silences a warning with JDK 21 and later triggered by the Java agent that Jazzer attaches to instrument the fuzzed code.
+* `-XX:-OmitStackTraceInFastThrow`: Ensures that stack traces are emitted even on hot code paths.
+  This may hurt performance if your Fuzz Test frequently throws and catches exceptions, but also helps find flaky bugs.
+* `-XX:+UseParallelGC`: Optimizes garbage collection for high throughput rather than low latency.
+* `-XX:+CriticalJNINatives`: Is supported with JDK 17 and earlier and improves the runtime performance of Jazzer's
+  instrumentation.
+* `-XX:+EnableDynamicAgentLoading`: Silences a warning with JDK 21 and later triggered by the Java agent that Jazzer
+  attaches to instrument the fuzzed code.
 
-### Passing arguments
+## Passing Arguments
 
 Jazzer provides many configuration settings. An up-to-date list can be found by running Jazzer with the `--help` flag.
 
@@ -45,9 +45,7 @@ When Jazzer manages to find an input that causes an uncaught exception or a fail
 
 ### Minimizing a crashing input
 
-Every crash stack trace is accompanied by a `DEDUP_TOKEN` that uniquely identifies the relevant parts of the stack trace.
-This value is used by libFuzzer while minimizing a crashing input to ensure that the smaller inputs reproduce the "same" bug.
-To minimize a crashing input, execute Jazzer with the following arguments in addition to `--cp` and `--target_class`:
+With the following argument you can minimize a crashing input to find the smallest input that reproduces the same "bug":
 
 ```bash
 -minimize_crash=1 <path/to/crashing_input>
