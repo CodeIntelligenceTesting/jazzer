@@ -2688,5 +2688,174 @@
       "xml-apis:xml-apis-ext"
     ]
   },
+  "services": {
+    "com.alibaba:fastjson": {
+      "javax.ws.rs.ext.MessageBodyReader": [
+        "com.alibaba.fastjson.support.jaxrs.FastJsonProvider"
+      ],
+      "javax.ws.rs.ext.MessageBodyWriter": [
+        "com.alibaba.fastjson.support.jaxrs.FastJsonProvider"
+      ],
+      "javax.ws.rs.ext.Providers": [
+        "com.alibaba.fastjson.support.jaxrs.FastJsonProvider"
+      ],
+      "org.glassfish.jersey.internal.spi.AutoDiscoverable": [
+        "com.alibaba.fastjson.support.jaxrs.FastJsonAutoDiscoverable"
+      ]
+    },
+    "com.fasterxml.jackson.core:jackson-core": {
+      "com.fasterxml.jackson.core.JsonFactory": [
+        "com.fasterxml.jackson.core.JsonFactory"
+      ]
+    },
+    "com.fasterxml.jackson.core:jackson-databind": {
+      "com.fasterxml.jackson.core.ObjectCodec": [
+        "com.fasterxml.jackson.databind.ObjectMapper"
+      ]
+    },
+    "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
+      "com.fasterxml.jackson.core.JsonFactory": [
+        "com.fasterxml.jackson.dataformat.cbor.CBORFactory"
+      ]
+    },
+    "com.h2database:h2": {
+      "java.sql.Driver": [
+        "org.h2.Driver"
+      ]
+    },
+    "io.micrometer:micrometer-observation": {
+      "io.micrometer.context.ThreadLocalAccessor": [
+        "io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor"
+      ]
+    },
+    "org.apache.logging.log4j:log4j-api": {
+      "org.apache.logging.log4j.util.PropertySource": [
+        "org.apache.logging.log4j.util.EnvironmentPropertySource",
+        "org.apache.logging.log4j.util.SystemPropertiesPropertySource"
+      ]
+    },
+    "org.apache.logging.log4j:log4j-core": {
+      "javax.annotation.processing.Processor": [
+        "org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor"
+      ],
+      "org.apache.logging.log4j.core.util.ContextDataProvider": [
+        "org.apache.logging.log4j.core.impl.ThreadContextDataProvider"
+      ],
+      "org.apache.logging.log4j.message.ThreadDumpMessage$ThreadInfoFactory": [
+        "org.apache.logging.log4j.core.message.ExtendedThreadInfoFactory"
+      ],
+      "org.apache.logging.log4j.spi.Provider": [
+        "org.apache.logging.log4j.core.impl.Log4jProvider"
+      ]
+    },
+    "org.apache.xmlgraphics:batik-script": {
+      "org.apache.batik.script.InterpreterFactory": [
+        "org.apache.batik.bridge.RhinoInterpreterFactory"
+      ]
+    },
+    "org.apache.xmlgraphics:xmlgraphics-commons": {
+      "javax.xml.transform.URIResolver": [
+        "org.apache.xmlgraphics.util.uri.DataURIResolver"
+      ],
+      "org.apache.xmlgraphics.image.loader.spi.ImageConverter": [
+        "org.apache.xmlgraphics.image.loader.impl.ImageConverterBitmap2G2D",
+        "org.apache.xmlgraphics.image.loader.impl.ImageConverterBuffered2Rendered",
+        "org.apache.xmlgraphics.image.loader.impl.ImageConverterG2D2Bitmap",
+        "org.apache.xmlgraphics.image.loader.impl.ImageConverterRendered2PNG"
+      ],
+      "org.apache.xmlgraphics.image.loader.spi.ImageLoaderFactory": [
+        "org.apache.xmlgraphics.image.loader.impl.ImageLoaderFactoryEPS",
+        "org.apache.xmlgraphics.image.loader.impl.ImageLoaderFactoryInternalTIFF",
+        "org.apache.xmlgraphics.image.loader.impl.ImageLoaderFactoryPNG",
+        "org.apache.xmlgraphics.image.loader.impl.ImageLoaderFactoryRaw",
+        "org.apache.xmlgraphics.image.loader.impl.ImageLoaderFactoryRawCCITTFax",
+        "org.apache.xmlgraphics.image.loader.impl.imageio.ImageLoaderFactoryImageIO"
+      ],
+      "org.apache.xmlgraphics.image.loader.spi.ImagePreloader": [
+        "org.apache.xmlgraphics.image.loader.impl.PreloaderBMP",
+        "org.apache.xmlgraphics.image.loader.impl.PreloaderEMF",
+        "org.apache.xmlgraphics.image.loader.impl.PreloaderEPS",
+        "org.apache.xmlgraphics.image.loader.impl.PreloaderGIF",
+        "org.apache.xmlgraphics.image.loader.impl.PreloaderJPEG",
+        "org.apache.xmlgraphics.image.loader.impl.PreloaderRawPNG",
+        "org.apache.xmlgraphics.image.loader.impl.PreloaderTIFF",
+        "org.apache.xmlgraphics.image.loader.impl.imageio.PreloaderImageIO"
+      ],
+      "org.apache.xmlgraphics.image.writer.ImageWriter": [
+        "org.apache.xmlgraphics.image.writer.imageio.ImageIOJPEGImageWriter",
+        "org.apache.xmlgraphics.image.writer.imageio.ImageIOPNGImageWriter",
+        "org.apache.xmlgraphics.image.writer.imageio.ImageIOTIFFImageWriter",
+        "org.apache.xmlgraphics.image.writer.internal.PNGImageWriter",
+        "org.apache.xmlgraphics.image.writer.internal.TIFFImageWriter"
+      ]
+    },
+    "org.hibernate:hibernate-validator": {
+      "javax.validation.spi.ValidationProvider": [
+        "org.hibernate.validator.HibernateValidator"
+      ]
+    },
+    "org.jetbrains.kotlin:kotlin-reflect": {
+      "kotlin.reflect.jvm.internal.impl.builtins.BuiltInsLoader": [
+        "kotlin.reflect.jvm.internal.impl.serialization.deserialization.builtins.BuiltInsLoaderImpl"
+      ],
+      "kotlin.reflect.jvm.internal.impl.resolve.ExternalOverridabilityCondition": [
+        "kotlin.reflect.jvm.internal.impl.load.java.ErasedOverridabilityCondition",
+        "kotlin.reflect.jvm.internal.impl.load.java.FieldOverridabilityCondition",
+        "kotlin.reflect.jvm.internal.impl.load.java.JavaIncompatibilityRulesOverridabilityCondition"
+      ]
+    },
+    "org.junit.jupiter:junit-jupiter-engine": {
+      "org.junit.platform.engine.TestEngine": [
+        "org.junit.jupiter.engine.JupiterTestEngine"
+      ]
+    },
+    "org.junit.platform:junit-platform-launcher": {
+      "org.junit.platform.launcher.TestExecutionListener": [
+        "org.junit.platform.launcher.listeners.UniqueIdTrackingListener"
+      ]
+    },
+    "org.junit.platform:junit-platform-reporting": {
+      "org.junit.platform.launcher.TestExecutionListener": [
+        "org.junit.platform.reporting.open.xml.OpenTestReportGeneratingListener"
+      ]
+    },
+    "org.openjdk.jmh:jmh-generator-annprocess": {
+      "javax.annotation.processing.Processor": [
+        "org.openjdk.jmh.generators.BenchmarkProcessor"
+      ]
+    },
+    "org.springframework:spring-core": {
+      "reactor.blockhound.integration.BlockHoundIntegration": [
+        "org.springframework.core.ReactiveAdapterRegistry$SpringCoreBlockHoundIntegration"
+      ]
+    },
+    "org.springframework:spring-jcl": {
+      "org.apache.commons.logging.LogFactory": [
+        "org.apache.commons.logging.LogFactoryService"
+      ]
+    },
+    "org.springframework:spring-web": {
+      "jakarta.servlet.ServletContainerInitializer": [
+        "org.springframework.web.SpringServletContainerInitializer"
+      ],
+      "reactor.blockhound.integration.BlockHoundIntegration": [
+        "org.springframework.web.server.adapter.WebHttpHandlerBuilder$SpringWebBlockHoundIntegration"
+      ]
+    },
+    "xalan:xalan": {
+      "javax.xml.transform.TransformerFactory": [
+        "org.apache.xalan.processor.TransformerFactoryImpl"
+      ],
+      "javax.xml.xpath.XPathFactory": [
+        "org.apache.xpath.jaxp.XPathFactoryImpl"
+      ],
+      "org.apache.xalan.extensions.bsf.BSFManager": [
+        "org.apache.bsf.BSFManager"
+      ],
+      "org.apache.xml.dtm.DTMManager": [
+        "org.apache.xml.dtm.ref.DTMManagerDefault"
+      ]
+    }
+  },
   "version": "2"
 }
