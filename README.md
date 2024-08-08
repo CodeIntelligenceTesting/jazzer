@@ -28,21 +28,6 @@
 <a href="https://twitter.com/CI_Fuzz" target="_blank">Twitter</a>
 </div>
 
-> [!IMPORTANT]
-> Hello Jazzer/Jazzer.js users!
->
-> We stopped maintaining Jazzer/Jazzer.js as open source.
-> But we'd be happy to try and understand what you're trying to achieve with it, and help you if we can! 
->
-> We already added significant new value to our CI Fuzz solution, which includes Jazzer and Jazzer.js.
-> Learn more on how to turbocharge your Java Fuzz Testing with [Jazzer Pro](https://www.code-intelligence.com/introducing-jazzer-pro).
-> 
-> Visit [code-intelligence.com](https://code-intelligence.com) for more information, or get in contact with us via [sales@code-intelligence.com](mailto:sales@code-intelligence.com).
->
-> Thanks,
->
-> The Code Intelligence team
-
 Jazzer is a coverage-guided, in-process fuzzer for the JVM platform developed by [Code Intelligence](https://code-intelligence.com).
 It is based on [libFuzzer](https://llvm.org/docs/LibFuzzer.html) and brings many of its instrumentation-powered mutation features to the JVM.
 
@@ -138,8 +123,11 @@ See [the README](https://github.com/bazelbuild/rules_fuzzing#java-fuzzing) for i
 
 ### OSS-Fuzz
 
-[Code Intelligence](https://code-intelligence.com) and Google have teamed up to bring support for Java, Kotlin, and other JVM-based languages to [OSS-Fuzz](https://github.com/google/oss-fuzz), Google's project for large-scale fuzzing of open-souce software.
+[Code Intelligence](https://code-intelligence.com) and Google have teamed up to bring support for Java, Kotlin, and other JVM-based languages to [OSS-Fuzz](https://github.com/google/oss-fuzz), Google's project for large-scale fuzzing of open-source software.
 Read [the OSS-Fuzz guide](https://google.github.io/oss-fuzz/getting-started/new-project-guide/jvm-lang/) to learn how to set up a Java project.
+
+**Note**: projects accepted in OSS-Fuzz can use Jazzer for free and benefit from the OSS-Fuzz infrastructure and 
+licensing for automated analysis and continuous integration.
 
 ## Building from source
 
@@ -154,6 +142,17 @@ Information on building and testing Jazzer for development can be found in [CONT
 
 A list of security issues and bugs found by Jazzer is maintained [here](docs/findings.md).
 If you found something interesting and the information is public, please send a PR to add it to the list.
+
+## License
+By using Jazzer, you agree to the Code Intelligence [Terms & Conditions](LICENSE).
+
+Jazzer can only be used for code bases that are released under an OSI-approved open source license, 
+or to perform academic research. It cannot be used to fuzz projects for or during automated analysis, 
+continuous integration or continuous delivery, whether as part of normal software engineering processes or otherwise. 
+For these use cases, get in contact with us via [sales@code-intelligence.com](mailto:sales@code-intelligence.com).
+
+You can find the latest version released under the Apache 2 license [here](https://github.com/CodeIntelligenceTesting/jazzer/tree/d2cbfdcfc5363593f36cd972b849cc3ab070c90a).
+
 
 ## Credit
 
