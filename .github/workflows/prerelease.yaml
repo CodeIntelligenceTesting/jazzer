@@ -14,7 +14,7 @@ jobs:
         include:
           - os: ubuntu-22.04
             name: linux
-          - os: selfhosted-macos
+          - os: macos-13
             name: macos
           - os: windows-2019
             name: windows
