@@ -1,6 +1,14 @@
 load("@buildifier_prebuilt//:rules.bzl", "buildifier", "buildifier_test")
+load("@rules_license//rules:license.bzl", "license")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+
+license(
+    name = "license",
+    copyright_notice = "Copyright 2024 Code Intelligence GmbH",
+    license_text = "LICENSE",
+    visibility = ["//visibility:public"],
+)
 
 exports_files(["LICENSE"])
 
