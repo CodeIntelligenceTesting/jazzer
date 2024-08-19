@@ -118,6 +118,8 @@ jobs:
 
       - name: Run Deployment
         env:
+          RELEASE_SIGNING_KEY_ID: ${{ secrets.RELEASE_SIGNING_KEY_ID }}
+          RELEASE_SIGNING_KEY_PRIVATE: ${{ secrets.RELEASE_SIGNING_KEY_PRIVATE }}
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         run: JAZZER_JAR_PATH="$(pwd)/_tmp/jazzer.jar" bazel run deploy
