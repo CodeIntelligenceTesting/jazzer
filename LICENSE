@@ -46,9 +46,13 @@ below:
   * Perform analysis on the Open Source Codebase but without automated
     analysis / fuzzing, CI, or CD.
 
-  * Perform analysis on Open Source Codebases, including automated 
-    analysis / fuzzing, CI, or CD only through the OSS-Fuzz Infrastructure
-    operated by Google (https://github.com/google/oss-fuzz).
+
+  * Perform analysis on Open Source Codebases, including automated analysis / fuzzing,
+  CI, or CD only in the following cases:
+  (a) through the OSS-Fuzz Infrastructure operated by Google, and/or
+  (b) Your codebase is listed as an accepted project for OSS-Fuzz by Google, and/or
+  (c) test contributions to OSS-Fuzz by Google to confirm that your 
+      modifications work as intended.
 
 License Restrictions
 --------------------
