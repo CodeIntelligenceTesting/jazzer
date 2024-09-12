@@ -46,7 +46,6 @@ below:
   * Perform analysis on the Open Source Codebase but without automated
     analysis / fuzzing, CI, or CD.
 
-
   * Perform analysis on Open Source Codebases, including automated analysis / fuzzing,
   CI, or CD only in the following cases:
   (a) through the OSS-Fuzz Infrastructure operated by Google, and/or
