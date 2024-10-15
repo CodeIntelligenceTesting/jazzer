@@ -96,8 +96,10 @@ See [the README](https://github.com/bazelbuild/rules_fuzzing#java-fuzzing) for i
 [Code Intelligence](https://code-intelligence.com) and Google have teamed up to bring support for Java, Kotlin, and other JVM-based languages to [OSS-Fuzz](https://github.com/google/oss-fuzz), Google's project for large-scale fuzzing of open-source software.
 Read [the OSS-Fuzz guide](https://google.github.io/oss-fuzz/getting-started/new-project-guide/jvm-lang/) to learn how to set up a Java project.
 
-**Note**: projects accepted in OSS-Fuzz can use Jazzer for free and benefit from the OSS-Fuzz infrastructure and 
-licensing for automated analysis and continuous integration.
+**Note**: Open source projects can use Jazzer for free and benefit from the 
+OSS-Fuzz infrastructure, including ClusterFuzzLite and OSS-Fuzz-Gen for
+automated analysis and continuous integration. There is no risk of accidental 
+license violation as long as Jazzer is used for testing open-source code.
 
 ## Building from source
 
