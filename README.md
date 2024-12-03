@@ -25,6 +25,24 @@
 <a href="https://twitter.com/CI_Fuzz" target="_blank">Twitter</a>
 </div>
 
+> [!IMPORTANT]
+> Hello users!
+>
+> We are thrilled to announce that **Jazzer** is now back under the **Apache 2.0 license**!
+
+> A year ago, we temporarilty stopped maintaining Jazzer as open source. 
+> During this time, we received incredible feedback, support, and ideas from
+> the community, which motivated us to find a way to bring Jazzer back to the
+> open-source world.
+
+> Thanks to your enthusiasm and contributions, and a special callout to the 
+> [OSS-Fuzz](https://github.com/google/oss-fuzz) team 🚀.
+> 
+> Visit [code-intelligence.com](https://code-intelligence.com) for more 
+> information.
+>
+> The Code Intelligence team
+
 Jazzer is a coverage-guided, in-process fuzzer for the JVM platform developed by [Code Intelligence](https://code-intelligence.com).
 It is based on [libFuzzer](https://llvm.org/docs/LibFuzzer.html) and brings many of its instrumentation-powered mutation features to the JVM.
 
