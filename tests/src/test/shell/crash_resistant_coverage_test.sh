@@ -2,12 +2,17 @@
 #
 # Copyright 2024 Code Intelligence GmbH
 #
-# By downloading, you agree to the Code Intelligence Jazzer Terms and Conditions.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# The Code Intelligence Jazzer Terms and Conditions are provided in LICENSE-JAZZER.txt
-# located in the root directory of the project.
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
-# This file also contains code licensed under Apache2 license.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 # This test verifies that Jazzer's --nohook mode can be used to measure code coverage using the
@@ -68,6 +73,6 @@ grep -o -P '<class name="(?!com\/example\/CrashResistantCoverageTarget)[^"]*"' "
 # </method> between the two.
 # Similarly, verify that <init> isn't covered as the default constructor is never invoked.
 cat "$xml_report"
-grep -q -P '\Q<method name="&lt;init&gt;" desc="()V" line="14">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="1" covered="0"/>\E' "$xml_report" || fail "<init> has been covered"
-grep -q -P '\Q<method name="fuzzerTestOneInput" desc="([B)V" line="16">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="0" covered="5"/>\E' "$xml_report" || fail "fuzzerTestOneInput hasn't been covered"
-grep -q -P '\Q<method name="someFunction" desc="()V" line="28">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="0" covered="3"/>\E' "$xml_report" || fail "someFunction hasn't been covered"
+grep -q -P '\Q<method name="&lt;init&gt;" desc="()V" line="21">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="1" covered="0"/>\E' "$xml_report" || fail "<init> has been covered"
+grep -q -P '\Q<method name="fuzzerTestOneInput" desc="([B)V" line="23">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="0" covered="5"/>\E' "$xml_report" || fail "fuzzerTestOneInput hasn't been covered"
+grep -q -P '\Q<method name="someFunction" desc="()V" line="35">\E(?:[^<]|<[^\/])*\Q<counter type="LINE" missed="0" covered="3"/>\E' "$xml_report" || fail "someFunction hasn't been covered"
