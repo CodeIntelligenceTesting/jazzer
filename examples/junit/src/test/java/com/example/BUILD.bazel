@@ -189,7 +189,7 @@ java_fuzz_target_test(
     allowed_findings = ["java.lang.Error"],
     fuzzer_args = [
         # Ignore the first two findings.
-        "--ignore=76c72ac5a3616147,f51a22215678f4d1",
+        "--ignore=d5e250a5298b81e6,d86371e6d41739ec",
     ],
     target_class = "com.example.CommandLineFuzzTest",
     verify_crash_reproducer = False,
