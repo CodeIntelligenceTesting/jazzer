@@ -29,12 +29,12 @@
 > Hello users!
 >
 > We are thrilled to announce that **Jazzer** is now back under the **Apache 2.0 license**!
-
-> A year ago, we temporarilty stopped maintaining Jazzer as open source. 
+>
+> A year ago, we temporarily stopped maintaining Jazzer as open source. 
 > During this time, we received incredible feedback, support, and ideas from
 > the community, which motivated us to find a way to bring Jazzer back to the
 > open-source world.
-
+>
 > Thanks to your enthusiasm and contributions, and a special callout to the 
 > [OSS-Fuzz](https://github.com/google/oss-fuzz) team 🚀.
 > 
