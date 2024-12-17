@@ -20,7 +20,7 @@ xcode_version(
     version = "14.2.0.14C18",
 )
 
-# Xcode version on public GitHub Actions macos-13 runners
+# Xcode version on public GitHub Actions macos-13 and macos-14 runners
 xcode_version(
     name = "version15_2_0_15C500b",
     aliases = [
