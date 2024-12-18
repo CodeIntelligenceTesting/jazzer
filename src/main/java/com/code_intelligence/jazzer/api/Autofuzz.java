@@ -157,7 +157,7 @@ public final class Autofuzz {
    *     The {@link Throwable} is thrown unchecked.
    */
   @SuppressWarnings("unchecked")
-  public static <T1, R> R autofuzz(FuzzedDataProvider data, Function1<T1, R> func) {
+  public static <T1, R> R autofuzz(FuzzedDataProvider data, Function1<T1, R> func) throws Throwable {
     try {
       return (R) AUTOFUZZ_FUNCTION_1.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
@@ -187,7 +187,7 @@ public final class Autofuzz {
    *     The {@link Throwable} is thrown unchecked.
    */
   @SuppressWarnings("unchecked")
-  public static <T1, T2, R> R autofuzz(FuzzedDataProvider data, Function2<T1, T2, R> func) {
+  public static <T1, T2, R> R autofuzz(FuzzedDataProvider data, Function2<T1, T2, R> func) throws Throwable {
     try {
       return (R) AUTOFUZZ_FUNCTION_2.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
@@ -217,7 +217,7 @@ public final class Autofuzz {
    *     The {@link Throwable} is thrown unchecked.
    */
   @SuppressWarnings("unchecked")
-  public static <T1, T2, T3, R> R autofuzz(FuzzedDataProvider data, Function3<T1, T2, T3, R> func) {
+  public static <T1, T2, T3, R> R autofuzz(FuzzedDataProvider data, Function3<T1, T2, T3, R> func) throws Throwable {
     try {
       return (R) AUTOFUZZ_FUNCTION_3.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
@@ -248,7 +248,7 @@ public final class Autofuzz {
    */
   @SuppressWarnings("unchecked")
   public static <T1, T2, T3, T4, R> R autofuzz(
-      FuzzedDataProvider data, Function4<T1, T2, T3, T4, R> func) {
+      FuzzedDataProvider data, Function4<T1, T2, T3, T4, R> func) throws Throwable  {
     try {
       return (R) AUTOFUZZ_FUNCTION_4.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
@@ -279,7 +279,7 @@ public final class Autofuzz {
    */
   @SuppressWarnings("unchecked")
   public static <T1, T2, T3, T4, T5, R> R autofuzz(
-      FuzzedDataProvider data, Function5<T1, T2, T3, T4, T5, R> func) {
+      FuzzedDataProvider data, Function5<T1, T2, T3, T4, T5, R> func) throws Throwable  {
     try {
       return (R) AUTOFUZZ_FUNCTION_5.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
@@ -306,7 +306,7 @@ public final class Autofuzz {
    *     AutofuzzConstructionException} if autofuzz failed to construct the arguments for the call.
    *     The {@link Throwable} is thrown unchecked.
    */
-  public static <T1> void autofuzz(FuzzedDataProvider data, Consumer1<T1> func) {
+  public static <T1> void autofuzz(FuzzedDataProvider data, Consumer1<T1> func) throws Throwable {
     try {
       AUTOFUZZ_CONSUMER_1.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
@@ -331,7 +331,7 @@ public final class Autofuzz {
    *     AutofuzzConstructionException} if autofuzz failed to construct the arguments for the call.
    *     The {@link Throwable} is thrown unchecked.
    */
-  public static <T1, T2> void autofuzz(FuzzedDataProvider data, Consumer2<T1, T2> func) {
+  public static <T1, T2> void autofuzz(FuzzedDataProvider data, Consumer2<T1, T2> func) throws Throwable {
     try {
       AUTOFUZZ_CONSUMER_2.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
@@ -356,7 +356,7 @@ public final class Autofuzz {
    *     AutofuzzConstructionException} if autofuzz failed to construct the arguments for the call.
    *     The {@link Throwable} is thrown unchecked.
    */
-  public static <T1, T2, T3> void autofuzz(FuzzedDataProvider data, Consumer3<T1, T2, T3> func) {
+  public static <T1, T2, T3> void autofuzz(FuzzedDataProvider data, Consumer3<T1, T2, T3> func) throws Throwable {
     try {
       AUTOFUZZ_CONSUMER_3.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
@@ -382,7 +382,7 @@ public final class Autofuzz {
    *     The {@link Throwable} is thrown unchecked.
    */
   public static <T1, T2, T3, T4> void autofuzz(
-      FuzzedDataProvider data, Consumer4<T1, T2, T3, T4> func) {
+      FuzzedDataProvider data, Consumer4<T1, T2, T3, T4> func) throws Throwable  {
     try {
       AUTOFUZZ_CONSUMER_4.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
@@ -408,7 +408,7 @@ public final class Autofuzz {
    *     The {@link Throwable} is thrown unchecked.
    */
   public static <T1, T2, T3, T4, T5> void autofuzz(
-      FuzzedDataProvider data, Consumer5<T1, T2, T3, T4, T5> func) {
+      FuzzedDataProvider data, Consumer5<T1, T2, T3, T4, T5> func) throws Throwable  {
     try {
       AUTOFUZZ_CONSUMER_5.invoke(data, func);
     } catch (AutofuzzInvocationException e) {
