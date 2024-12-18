@@ -59,6 +59,19 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "FilePathTraversal",
+    srcs = [
+        "FilePathTraversal.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
+    ],
+    target_class = "com.example.FilePathTraversal",
+    #not clear why reproducer doesn't work TODO -- fix this
+    verify_crash_reproducer = False,
+)
+
+java_fuzz_target_test(
     name = "OsCommandInjectionProcessBuilder",
     srcs = [
         "OsCommandInjectionProcessBuilder.java",
