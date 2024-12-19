@@ -120,8 +120,8 @@ jobs:
         env:
           RELEASE_SIGNING_KEY_ID: ${{ secrets.RELEASE_SIGNING_KEY_ID }}
           RELEASE_SIGNING_KEY_PRIVATE: ${{ secrets.RELEASE_SIGNING_KEY_PRIVATE }}
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_USER: ${{ secrets.MAVEN_USER_TEST_NEW_CREDS }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD_TEST_NEW_CREDS }}
         run: JAZZER_JAR_PATH="$(pwd)/_tmp/jazzer.jar" bazel run deploy
 
   create_release:
