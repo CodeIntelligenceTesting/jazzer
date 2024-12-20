@@ -38,7 +38,6 @@ java_export(
     ],
     maven_coordinates = "com.code-intelligence:jazzer-api:$(JAZZER_VERSION)",
     pom_template = "//deploy:jazzer-api.pom",
-    tags = ["no-sources"],
     toolchains = [":jazzer_version"],
     visibility = ["//visibility:public"],
     runtime_deps = ["//src/main/java/com/code_intelligence/jazzer/api"],
@@ -75,7 +74,11 @@ java_export(
     name = "jazzer-junit",
     # Exclude the unshaded classes comprising com.code-intelligence:jazzer since the java_library
     # target comprising jazzer-junit depend on the individual libraries, not the shaded jar.
-    deploy_env = ["//src/main/java/com/code_intelligence/jazzer:jazzer_lib"],
+    deploy_env = [
+        "//src/main/java/com/code_intelligence/jazzer:jazzer_lib",
+        "@maven//:org_springframework_spring_test",
+        "@maven//:org_springframework_spring_web",
+    ],
     doc_deps = [
         ":jazzer-api-docs",
         ":jazzer-docs",
@@ -89,12 +92,6 @@ java_export(
     ],
     maven_coordinates = "com.code-intelligence:jazzer-junit:$(JAZZER_VERSION)",
     pom_template = "jazzer-junit.pom",
-    tags = [
-        "no-sources",
-        # Generating javadocs breaks the build due to weird dependency issues.
-        # Deactivate it for now.
-        "no-javadocs",
-    ],
     toolchains = [":jazzer_version"],
     visibility = ["//visibility:public"],
     runtime_deps = [
