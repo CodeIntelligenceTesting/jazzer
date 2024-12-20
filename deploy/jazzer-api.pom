@@ -38,4 +38,25 @@
     <scm>
         <url>https://github.com/CodeIntelligenceTesting/jazzer</url>
     </scm>
+
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Fabian Meumertzheim</name>
+        </developer>
+        <developer>
+            <name>Norbert Schneider</name>
+        </developer>
+        <developer>
+            <name>Khaled Yakdan</name>
+        </developer>
+        <developer>
+            <name>Peter Samarin</name>
+        </developer>
+    </developers>
 </project>
