@@ -67,12 +67,20 @@ JAZZER_DOCS_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-docs)
 JAZZER_SOURCES_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-sources)
 JAZZER_POM_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-pom)
 
+## For Junit we currently have to do similar tricks because the docs will not build automatically
+bazel build //deploy:jazzer-junit //deploy:jazzer-junit-docs //deploy:jazzer-junit-sources //deploy:jazzer-junit-pom
+
+JAZZER_JUNIT_JAR_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-junit-maven-artifact)
+JAZZER_JUNIT_DOCS_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-junit-docs)
+JAZZER_JUNIT_SOURCES_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-junit-maven-source)
+JAZZER_JUNIT_POM_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-junit-pom)
+
 bazel run --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}" \
   --define "maven_password=${MAVEN_PASSWORD}" --define gpg_sign=true \
   //deploy:jazzer-api.publish
 MAVEN_REPO="$MAVEN_REPO" GPG_SIGN="true" MAVEN_USER="$MAVEN_USER" MAVEN_PASSWORD="$MAVEN_PASSWORD" \
   bazel run @rules_jvm_external//private/tools/java/com/github/bazelbuild/rules_jvm_external/maven:MavenPublisher -- \
   "$JAZZER_COORDINATES" "$JAZZER_POM_PATH" "$JAZZER_JAR_PATH" "sources=${JAZZER_SOURCES_PATH},javadoc=${JAZZER_DOCS_PATH}"
-bazel run --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}" \
-  --define "maven_password=${MAVEN_PASSWORD}" --define gpg_sign=true \
-  //deploy:jazzer-junit.publish
+MAVEN_REPO="$MAVEN_REPO" GPG_SIGN="true" MAVEN_USER="$MAVEN_USER" MAVEN_PASSWORD="$MAVEN_PASSWORD" \
+  bazel run @rules_jvm_external//private/tools/java/com/github/bazelbuild/rules_jvm_external/maven:MavenPublisher -- \
+  "$JAZZER_COORDINATES" "$JAZZER_JUNIT_POM_PATH" "$JAZZER_JUNIT_JAR_PATH" "sources=${JAZZER_JUNIT_SOURCES_PATH},javadoc=${JAZZER_JUNIT_DOCS_PATH}"
