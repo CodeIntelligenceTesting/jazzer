@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 
 /**
  * Meta-annotation intended to be used internally by Jazzer for annotations that have min and max
- * fields. For all such annotations, Jazzer will assert that min <= max.
+ * fields. For all such annotations, Jazzer will assert that {@code min <= max}.
  */
 @Target(ANNOTATION_TYPE)
 @Retention(RUNTIME)
