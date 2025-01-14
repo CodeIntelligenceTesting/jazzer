@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 /**
  * Meta-annotation intended to be used internally by Jazzer for container annotations with min and
  * max fields. Annotations annotated with @ValidateContainerDimensions will be validated to ensure
- * that min and max are both >= 0, and that min <= max.
+ * that min and max are both {@code >= 0}, and that {@code min <= max}.
  */
 @Target(ANNOTATION_TYPE)
 @Retention(RUNTIME)

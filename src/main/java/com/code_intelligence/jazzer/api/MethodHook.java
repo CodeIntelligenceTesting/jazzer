@@ -119,6 +119,8 @@ import java.lang.invoke.MethodType;
  *             reference a target method, no other types allowed. Attention must be paid to not
  *             guide the Fuzzer in different directions via {@link Jazzer}'s {@code guideTowardsXY}
  *             methods in the different hooks.
+ *       </ul>
+ * </dl>
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
