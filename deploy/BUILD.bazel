@@ -40,7 +40,11 @@ java_export(
     pom_template = "//deploy:jazzer-api.pom",
     toolchains = [":jazzer_version"],
     visibility = ["//visibility:public"],
-    runtime_deps = ["//src/main/java/com/code_intelligence/jazzer/api"],
+    exports = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation/proto",
+    ],
 )
 
 java_export(
@@ -95,12 +99,15 @@ java_export(
     pom_template = "jazzer-junit.pom",
     toolchains = [":jazzer_version"],
     visibility = ["//visibility:public"],
-    runtime_deps = [
-        # These deps' only effect is to include a dependency on the 'jazzer' and 'jazzer-api' Maven artifacts in the
-        # POM.
-        "//deploy:jazzer",
+    exports = [
+        # Maven users should not need to depend on jazzer-api directly if they already directly depend on jazzer-junit,
+        # both for convenience and backwards compatibility.
         "//deploy:jazzer-api",
         "//src/main/java/com/code_intelligence/jazzer/junit",
+    ],
+    runtime_deps = [
+        # This dep's only effect is to include a dependency on the 'jazzer' Maven artifacts in the POM.
+        "//deploy:jazzer",
     ],
 )
 

@@ -27,6 +27,9 @@ JAR="$2/bin/jar"
     -e '^com/code_intelligence/$' \
     -e '^com/code_intelligence/jazzer/$' \
     -e '^com/code_intelligence/jazzer/api/' \
+    -e '^com/code_intelligence/jazzer/mutation/$' \
+    -e '^com/code_intelligence/jazzer/mutation/annotation/' \
+    -e '^com/code_intelligence/jazzer/mutation/utils/' \
     -e '^jaz/' \
     -e '^META-INF/$' \
     -e '^META-INF/MANIFEST.MF$'
