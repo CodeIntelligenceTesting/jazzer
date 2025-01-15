@@ -29,6 +29,7 @@ import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Inherited;
 import java.lang.reflect.AnnotatedArrayType;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.AnnotatedParameterizedType;
@@ -92,6 +93,65 @@ public final class TypeSupport {
       return Optional.empty();
     }
     return Optional.of(actualClazz.asSubclass(superclass));
+  }
+
+  /**
+   * Synthesizes an {@link AnnotatedType} for the given {@link Class}.
+   *
+   * <p>Usage of this method should be avoided in favor of obtaining annotated types in a natural
+   * way if possible (e.g. prefer {@link Class#getAnnotatedSuperclass()} to {@link
+   * Class#getSuperclass()}.
+   */
+  public static AnnotatedType asAnnotatedType(Class<?> clazz) {
+    requireNonNull(clazz);
+    return new AnnotatedType() {
+      @Override
+      public Type getType() {
+        return clazz;
+      }
+
+      @Override
+      public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        return annotatedElementGetAnnotation(this, annotationClass);
+      }
+
+      @Override
+      public Annotation[] getAnnotations() {
+        // No directly present annotations, look for inheritable present annotations on the
+        // superclass.
+        if (clazz.getSuperclass() == null) {
+          return new Annotation[0];
+        }
+        return stream(clazz.getSuperclass().getAnnotations())
+            .filter(
+                annotation ->
+                    annotation.annotationType().getDeclaredAnnotation(Inherited.class) != null)
+            .toArray(Annotation[]::new);
+      }
+
+      @Override
+      public Annotation[] getDeclaredAnnotations() {
+        // No directly present annotations.
+        return new Annotation[0];
+      }
+
+      @Override
+      public String toString() {
+        return annotatedTypeToString(this);
+      }
+
+      @Override
+      public int hashCode() {
+        throw new UnsupportedOperationException(
+            "hashCode() is not supported as its behavior isn't specified");
+      }
+
+      @Override
+      public boolean equals(Object obj) {
+        throw new UnsupportedOperationException(
+            "equals() is not supported as its behavior isn't specified");
+      }
+    };
   }
 
   /**

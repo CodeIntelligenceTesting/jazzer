@@ -40,8 +40,9 @@ public final class Mutators {
         CollectionMutators.newFactories(),
         ProtoMutators.newFactories(),
         LibFuzzerMutators.newFactories(),
-        AggregateMutators.newFactories(),
-        TimeMutators.newFactories());
+        TimeMutators.newFactories(),
+        // Keep generic aggregate mutators last in case a concrete type is also an aggregate type.
+        AggregateMutators.newFactories());
   }
 
   // Mutators for which the NullableMutatorFactory
