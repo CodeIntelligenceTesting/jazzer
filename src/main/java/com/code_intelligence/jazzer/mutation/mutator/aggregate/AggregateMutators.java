@@ -25,41 +25,49 @@ public final class AggregateMutators {
 
   public static Stream<MutatorFactory> newFactories() {
     // Register the record mutator first as it is more specific.
-    return Stream.concat(
-        newRecordMutatorFactoryIfSupported(),
-        Stream.of(
-            new SetterBasedBeanMutatorFactory(),
-            new ConstructorBasedBeanMutatorFactory(),
-            new CachedConstructorMutatorFactory()));
+    return Stream.of(
+            newRecordMutatorFactoryIfSupported(),
+            newSealedClassMutatorFactoryIfSupported(),
+            Stream.of(
+                new SetterBasedBeanMutatorFactory(),
+                new ConstructorBasedBeanMutatorFactory(),
+                new CachedConstructorMutatorFactory()))
+        .flatMap(s -> s);
   }
 
   private static Stream<MutatorFactory> newRecordMutatorFactoryIfSupported() {
-    if (!supportsRecords()) {
+    try {
+      Class.forName("java.lang.Record");
+      return Stream.of(instantiateMutatorFactory("RecordMutatorFactory"));
+    } catch (ClassNotFoundException ignored) {
       return Stream.empty();
     }
+  }
+
+  private static Stream<MutatorFactory> newSealedClassMutatorFactoryIfSupported() {
     try {
-      // Instantiate RecordMutatorFactory via reflection as making it a compile time dependency
-      // breaks the r8 step in the Android build.
-      Class<? extends MutatorFactory> recordMutatorFactory;
-      recordMutatorFactory =
-          Class.forName(AggregateMutators.class.getPackage().getName() + ".RecordMutatorFactory")
+      Class.class.getMethod("getPermittedSubclasses");
+      return Stream.of(instantiateMutatorFactory("SealedClassMutatorFactory"));
+    } catch (NoSuchMethodException e) {
+      return Stream.empty();
+    }
+  }
+
+  private static MutatorFactory instantiateMutatorFactory(String simpleClassName) {
+    try {
+      // Instantiate factory via reflection as making it a compile time dependency breaks the r8
+      // step in the Android build.
+      Class<? extends MutatorFactory> factory;
+      factory =
+          Class.forName(AggregateMutators.class.getPackage().getName() + "." + simpleClassName)
               .asSubclass(MutatorFactory.class);
-      return Stream.of(recordMutatorFactory.getDeclaredConstructor().newInstance());
+      return factory.getDeclaredConstructor().newInstance();
     } catch (ClassNotFoundException
         | NoSuchMethodException
         | InstantiationException
         | IllegalAccessException
         | InvocationTargetException e) {
       throw new IllegalStateException(e);
-    }
-  }
-
-  private static boolean supportsRecords() {
-    try {
-      Class.forName("java.lang.Record");
-      return true;
-    } catch (ClassNotFoundException ignored) {
-      return false;
     }
   }
 }

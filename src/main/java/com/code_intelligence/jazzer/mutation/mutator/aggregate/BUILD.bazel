@@ -6,6 +6,7 @@ java_library(
             "AggregatesHelper.java",
             "BeanSupport.java",
             "RecordMutatorFactory.java",
+            "SealedClassMutatorFactory.java",
         ],
     ),
     visibility = [
@@ -16,6 +17,7 @@ java_library(
         "@platforms//os:android": [],
         "//conditions:default": [
             ":record_mutator_factory",
+            ":sealed_class_mutator_factory",
         ],
     }),
     deps = [
@@ -36,6 +38,20 @@ java_library(
     deps = [
         ":aggregates_helper",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+    ],
+)
+
+java_library(
+    name = "sealed_class_mutator_factory",
+    srcs = ["SealedClassMutatorFactory.java"],
+    javacopts = [
+        "--release",
+        "17",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/combinator",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
     ],
 )

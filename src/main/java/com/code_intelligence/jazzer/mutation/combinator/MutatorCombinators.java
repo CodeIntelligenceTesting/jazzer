@@ -29,6 +29,7 @@ import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import com.google.errorprone.annotations.ImmutableTypeParameter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -424,6 +425,102 @@ public final class MutatorCombinators {
         return stream(mutators)
             .map(mutator -> mutator.toDebugString(isInCycle))
             .collect(joining(" | "));
+      }
+    };
+  }
+
+  /**
+   * Mutates a sum type (e.g. a sealed interface), preferring to mutate the current state but
+   * occasionally switching to a different state.
+   *
+   * @param getState a function that returns the current state of the sum type as an index into
+   *     {@code perStateMutators}, or -1 if the state is indeterminate.
+   * @param perStateMutators the mutators for each state
+   * @return a mutator that mutates the sum type
+   */
+  @SafeVarargs
+  public static <T> SerializingMutator<?> mutateSum(
+      ToIntFunction<T> getState, SerializingMutator<T>... perStateMutators) {
+    Preconditions.require(perStateMutators.length > 0, "At least one mutator must be provided");
+    if (perStateMutators.length == 1) {
+      return perStateMutators[0];
+    }
+    boolean hasFixedSize = stream(perStateMutators).allMatch(SerializingMutator::hasFixedSize);
+    final SerializingMutator<T>[] mutators =
+        Arrays.copyOf(perStateMutators, perStateMutators.length);
+    return new SerializingMutator<T>() {
+      @Override
+      public T init(PseudoRandom prng) {
+        return mutators[prng.indexIn(mutators)].init(prng);
+      }
+
+      @Override
+      public T mutate(T value, PseudoRandom prng) {
+        int currentState = getState.applyAsInt(value);
+        if (currentState == -1) {
+          // The value is in an indeterminate state, initialize it.
+          return init(prng);
+        }
+        if (prng.trueInOneOutOf(100)) {
+          // Initialize to a different state.
+          return mutators[prng.otherIndexIn(mutators, currentState)].init(prng);
+        }
+        // Mutate within the current state.
+        return mutators[currentState].mutate(value, prng);
+      }
+
+      @Override
+      public T crossOver(T value, T otherValue, PseudoRandom prng) {
+        // Try to cross over in current state and leave state changes to the mutate step.
+        int currentState = getState.applyAsInt(value);
+        int otherState = getState.applyAsInt(otherValue);
+        if (currentState == -1) {
+          // If reference is not initialized to a concrete state yet, try to do so in
+          // the state of other reference, as that's at least some progress.
+          if (otherState == -1) {
+            // If both states are indeterminate, cross over can not be performed.
+            return value;
+          }
+          return mutators[otherState].init(prng);
+        }
+        if (currentState == otherState) {
+          return mutators[currentState].crossOver(value, otherValue, prng);
+        }
+        return value;
+      }
+
+      @Override
+      public T detach(T value) {
+        int currentState = getState.applyAsInt(value);
+        if (currentState == -1) {
+          return value;
+        }
+        return mutators[currentState].detach(value);
+      }
+
+      @Override
+      public T read(DataInputStream in) throws IOException {
+        int currentState = Math.floorMod(in.readInt(), mutators.length);
+        return mutators[currentState].read(in);
+      }
+
+      @Override
+      public void write(T value, DataOutputStream out) throws IOException {
+        int currentState = getState.applyAsInt(value);
+        out.writeInt(currentState);
+        mutators[currentState].write(value, out);
+      }
+
+      @Override
+      public boolean hasFixedSize() {
+        return hasFixedSize;
+      }
+
+      @Override
+      public String toDebugString(Predicate<Debuggable> isInCycle) {
+        return stream(mutators)
+            .map(mutator -> mutator.toDebugString(isInCycle))
+            .collect(joining(" | ", "(", ")"));
       }
     };
   }
