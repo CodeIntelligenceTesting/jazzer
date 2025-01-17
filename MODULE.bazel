@@ -6,7 +6,7 @@ module(name = "jazzer")
 # Kept up-to-date by Renovate
 ################################################################################
 
-bazel_dep(name = "abseil-cpp", version = "20230802.0.bcr.1")
+bazel_dep(name = "abseil-cpp", version = "20230802.1")
 bazel_dep(name = "apple_support", version = "1.11.1")
 bazel_dep(name = "bazel_jar_jar", version = "0.1.0")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
@@ -18,11 +18,20 @@ bazel_dep(name = "protobuf")
 bazel_dep(name = "rules_android", version = "0.1.1")
 bazel_dep(name = "rules_android_ndk", version = "0.1.2")
 bazel_dep(name = "rules_foreign_cc", version = "0.11.1")
-bazel_dep(name = "rules_java", version = "7.7.0")
+bazel_dep(name = "rules_java", version = "7.12.2")
 bazel_dep(name = "rules_jni", version = "0.9.1")
-bazel_dep(name = "rules_jvm_external", version = "6.2")
-bazel_dep(name = "rules_kotlin", version = "1.9.5")
-bazel_dep(name = "rules_license", version = "0.0.8")
+bazel_dep(name = "rules_jvm_external")
+
+# TODO: Remove after the next release.
+archive_override(
+    module_name = "rules_jvm_external",
+    integrity = "sha256-7AerLOLhQ+oIDH2id7OE8WJmbH01MqBWV4CbqJ6Nh68=",
+    strip_prefix = "rules_jvm_external-a1d4e4f4267c1797b686719aa385e707b732c541",
+    urls = ["https://github.com/bazelbuild/rules_jvm_external/archive/a1d4e4f4267c1797b686719aa385e707b732c541.tar.gz"],
+)
+
+bazel_dep(name = "rules_kotlin", version = "1.9.6")
+bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_pkg", version = "0.9.1")
 bazel_dep(name = "toolchains_llvm", version = "0.10.3")
 
