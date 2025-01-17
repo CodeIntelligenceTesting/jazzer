@@ -124,6 +124,82 @@ public class StressTest {
 
   private record LinkedListNode(SimpleRecord value, LinkedListNode next) {}
 
+  private sealed interface Sealed {
+    sealed interface A extends Sealed {
+      record A1(@NotNull boolean b) implements A {}
+    }
+
+    abstract sealed class B implements Sealed {
+      static final class B1 extends B {
+        private final boolean b;
+
+        B1(boolean b) {
+          this.b = b;
+        }
+
+        @NotNull
+        public boolean b() {
+          return b;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+          if (this == o) return true;
+          if (o == null || getClass() != o.getClass()) return false;
+          B1 b1 = (B1) o;
+          return b == b1.b;
+        }
+
+        @Override
+        public int hashCode() {
+          return Objects.hash(b);
+        }
+
+        @Override
+        public String toString() {
+          return "B1{" + "b=" + b + '}';
+        }
+      }
+
+      static final class B2 extends B {
+        private final boolean b;
+
+        B2(boolean b) {
+          this.b = b;
+        }
+
+        @NotNull
+        public boolean b() {
+          return b;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+          if (this == o) return true;
+          if (o == null || getClass() != o.getClass()) return false;
+          B2 b1 = (B2) o;
+          return b == b1.b;
+        }
+
+        @Override
+        public int hashCode() {
+          return Objects.hash(b);
+        }
+
+        @Override
+        public String toString() {
+          return "B2{" + "b=" + b + '}';
+        }
+      }
+    }
+
+    sealed interface C extends Sealed {
+      record C1(@NotNull boolean b) implements C {}
+
+      record C2(@NotNull int i) implements C {}
+    }
+  }
+
   public static class SomeSetterBasedBean {
     protected long quz;
 
@@ -809,7 +885,31 @@ public class StressTest {
             "Nullable<[[Nullable<String>] -> SuperBuilderTargetBuilder] -> SuperBuilderTarget>",
             false,
             distinctElementsRatio(0.4),
-            distinctElementsRatio(0.4)));
+            distinctElementsRatio(0.4)),
+        arguments(
+            new TypeHolder<Sealed>() {}.annotatedType(),
+            "Nullable<([Boolean] -> A1 | ([Boolean] -> B1 | [Boolean] -> B2) | ([Boolean] -> C1 |"
+                + " [Integer] -> C2))>",
+            true,
+            contains(
+                null,
+                new Sealed.A.A1(false),
+                new Sealed.B.B1(false),
+                new Sealed.B.B2(false),
+                new Sealed.C.C1(false),
+                new Sealed.C.C2(0)),
+            contains(
+                null,
+                new Sealed.A.A1(false),
+                new Sealed.B.B1(false),
+                new Sealed.B.B2(false),
+                new Sealed.C.C1(false),
+                new Sealed.C.C2(0),
+                new Sealed.A.A1(true),
+                new Sealed.B.B1(true),
+                new Sealed.B.B2(true),
+                new Sealed.C.C1(true),
+                new Sealed.C.C2(1))));
   }
 
   public static Stream<Arguments> protoStressTestCases() {
