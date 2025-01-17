@@ -35,9 +35,9 @@ if [[ "${CI:-0}" == 0 ]]; then
     # Check which ktlint_tests failed and run the corresponding fix targets. This is much faster than
     # running all ktlint_fix targets when e.g. only a few or no .kt files changed.
     # shellcheck disable=SC2046
-    TARGETS_TO_RUN=$(bazel test --config=quiet $(bazel query --config=quiet 'kind(ktlint_test, //...)') | { grep FAILED || true; } | cut -f1 -d' ' | sed -e 's/:ktlint_test/:ktlint_fix/g')
+    TARGETS_TO_RUN=$(bazel test --config=quiet $(bazel query --config=quiet 'kind(ktlint_test, //...)') | { grep FAILED || true; } | cut -f1 -d' ' | sed -e 's/:ktlint_test/:ktlint_fix/g' || true)
     if [[ -n "${TARGETS_TO_RUN}" ]]; then
-        echo "$TARGETS_TO_RUN" | xargs -n 1 bazel run --config=quiet
+        echo "$TARGETS_TO_RUN" | xargs -I '{}' -n 1 bazel run --config=quiet {} -- --format
     fi
 
     # BUILD files
