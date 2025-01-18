@@ -52,6 +52,7 @@ private fun getPatchedReplaceHooksTargetInstance(classWithHooksEnabledField: Cla
     return patchedClass.getDeclaredConstructor().newInstance() as ReplaceHooksTargetContract
 }
 
+@Suppress("ktlint:standard:property-naming")
 class ReplaceHooksPatchTest {
     @Test
     fun testOriginal() {

@@ -52,6 +52,7 @@ private fun getPatchedBeforeHooksTargetInstance(classWithHooksEnabledField: Clas
     return patchedClass.getDeclaredConstructor().newInstance() as BeforeHooksTargetContract
 }
 
+@Suppress("ktlint:standard:property-naming")
 class BeforeHooksPatchTest {
     @Test
     fun testOriginal() {
