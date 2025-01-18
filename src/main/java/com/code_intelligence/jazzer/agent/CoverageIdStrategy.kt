@@ -27,8 +27,9 @@ import java.util.UUID
 /**
  * Indicates a fatal failure to generate synchronized coverage IDs.
  */
-class CoverageIdException(cause: Throwable? = null) :
-    RuntimeException("Failed to synchronize coverage IDs", cause)
+class CoverageIdException(
+    cause: Throwable? = null,
+) : RuntimeException("Failed to synchronize coverage IDs", cause)
 
 /**
  * [CoverageIdStrategy] provides an abstraction to switch between context specific coverage ID generation.
@@ -38,13 +39,15 @@ class CoverageIdException(cause: Throwable? = null) :
  * This precludes us from generating them simply as hashes of class names.
  */
 interface CoverageIdStrategy {
-
     /**
      * [withIdForClass] provides the initial coverage ID of the given [className] as parameter to the
      * [block] to execute. [block] has to return the number of additionally used IDs.
      */
     @Throws(CoverageIdException::class)
-    fun withIdForClass(className: String, block: (Int) -> Int)
+    fun withIdForClass(
+        className: String,
+        block: (Int) -> Int,
+    )
 }
 
 /**
@@ -60,7 +63,10 @@ class MemSyncCoverageIdStrategy : CoverageIdStrategy {
     private var nextEdgeId = 0
 
     @Synchronized
-    override fun withIdForClass(className: String, block: (Int) -> Int) {
+    override fun withIdForClass(
+        className: String,
+        block: (Int) -> Int,
+    ) {
         nextEdgeId += block(nextEdgeId)
     }
 }
@@ -71,7 +77,9 @@ class MemSyncCoverageIdStrategy : CoverageIdStrategy {
  * This class takes care of synchronizing the access to the file between multiple processes as long as the general
  * contract of [CoverageIdStrategy] is followed.
  */
-class FileSyncCoverageIdStrategy(private val idSyncFile: Path) : CoverageIdStrategy {
+class FileSyncCoverageIdStrategy(
+    private val idSyncFile: Path,
+) : CoverageIdStrategy {
     private val uuid: UUID = UUID.randomUUID()
     private var idFileLock: FileLock? = null
 
@@ -85,7 +93,10 @@ class FileSyncCoverageIdStrategy(private val idSyncFile: Path) : CoverageIdStrat
      * is always committed back again to the sync file by [commitIdCount].
      */
     @Synchronized
-    override fun withIdForClass(className: String, block: (Int) -> Int) {
+    override fun withIdForClass(
+        className: String,
+        block: (Int) -> Int,
+    ) {
         var actualNumEdgeIds = 0
         try {
             val firstId = obtainFirstId(className)
@@ -108,32 +119,36 @@ class FileSyncCoverageIdStrategy(private val idSyncFile: Path) : CoverageIdStrat
     private fun obtainFirstId(className: String): Int {
         try {
             check(idFileLock == null) { "Already holding a lock on the ID file" }
-            val localIdFile = FileChannel.open(
-                idSyncFile,
-                StandardOpenOption.WRITE,
-                StandardOpenOption.READ,
-            )
+            val localIdFile =
+                FileChannel.open(
+                    idSyncFile,
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.READ,
+                )
             // Wait until we have obtained the lock on the sync file. We hold the lock from this point until we have
             // finished reading and writing (if necessary) to the file.
             val localIdFileLock = localIdFile.lock()
             check(localIdFileLock.isValid && !localIdFileLock.isShared)
             // Parse the sync file, which consists of lines of the form
             // <class name>:<first ID>:<num IDs>
-            val idInfo = localIdFileLock.channel().readFully()
-                .lineSequence()
-                .filterNot { it.isBlank() }
-                .map { line ->
-                    val parts = line.split(':')
-                    check(parts.size == 4) {
-                        "Expected ID file line to be of the form  '<class name>:<first ID>:<num IDs>:<uuid>', got '$line'"
-                    }
-                    val lineClassName = parts[0]
-                    val lineFirstId = parts[1].toInt()
-                    check(lineFirstId >= 0) { "Negative first ID in line: $line" }
-                    val lineIdCount = parts[2].toInt()
-                    check(lineIdCount >= 0) { "Negative ID count in line: $line" }
-                    Triple(lineClassName, lineFirstId, lineIdCount)
-                }.toList()
+            val idInfo =
+                localIdFileLock
+                    .channel()
+                    .readFully()
+                    .lineSequence()
+                    .filterNot { it.isBlank() }
+                    .map { line ->
+                        val parts = line.split(':')
+                        check(parts.size == 4) {
+                            "Expected ID file line to be of the form  '<class name>:<first ID>:<num IDs>:<uuid>', got '$line'"
+                        }
+                        val lineClassName = parts[0]
+                        val lineFirstId = parts[1].toInt()
+                        check(lineFirstId >= 0) { "Negative first ID in line: $line" }
+                        val lineIdCount = parts[2].toInt()
+                        check(lineIdCount >= 0) { "Negative ID count in line: $line" }
+                        Triple(lineClassName, lineFirstId, lineIdCount)
+                    }.toList()
             cachedClassName = className
             val idInfoForClass = idInfo.filter { it.first == className }
             return when (idInfoForClass.size) {

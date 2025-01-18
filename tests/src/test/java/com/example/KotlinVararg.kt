@@ -16,7 +16,9 @@
 
 package com.example
 
-class KotlinVararg(vararg opts: String) {
+class KotlinVararg(
+    vararg opts: String,
+) {
     private val allOpts = opts.toList().joinToString(", ")
 
     fun doStuff() = allOpts

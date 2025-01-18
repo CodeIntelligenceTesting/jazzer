@@ -20,7 +20,6 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 class DescriptorUtilsTest {
-
     @Test
     fun testClassDescriptor() {
         assertEquals("V", java.lang.Void::class.javaPrimitiveType?.descriptor)
@@ -38,33 +37,47 @@ class DescriptorUtilsTest {
 
     @Test
     fun testExtractTypeDescriptors() {
-        val testCases = listOf(
-            Triple(
-                String::class.java.getMethod("equals", Object::class.java),
-                listOf("Ljava/lang/Object;"),
-                "Z",
-            ),
-            Triple(
-                String::class.java.getMethod("regionMatches", Boolean::class.javaPrimitiveType, Int::class.javaPrimitiveType, String::class.java, Int::class.javaPrimitiveType, Integer::class.javaPrimitiveType),
-                listOf("Z", "I", "Ljava/lang/String;", "I", "I"),
-                "Z",
-            ),
-            Triple(
-                String::class.java.getMethod("getChars", Integer::class.javaPrimitiveType, Int::class.javaPrimitiveType, CharArray::class.java, Int::class.javaPrimitiveType),
-                listOf("I", "I", "[C", "I"),
-                "V",
-            ),
-            Triple(
-                String::class.java.getMethod("subSequence", Integer::class.javaPrimitiveType, Integer::class.javaPrimitiveType),
-                listOf("I", "I"),
-                "Ljava/lang/CharSequence;",
-            ),
-            Triple(
-                String::class.java.getConstructor(),
-                emptyList(),
-                "V",
-            ),
-        )
+        val testCases =
+            listOf(
+                Triple(
+                    String::class.java.getMethod("equals", Object::class.java),
+                    listOf("Ljava/lang/Object;"),
+                    "Z",
+                ),
+                Triple(
+                    String::class.java.getMethod(
+                        "regionMatches",
+                        Boolean::class.javaPrimitiveType,
+                        Int::class.javaPrimitiveType,
+                        String::class.java,
+                        Int::class.javaPrimitiveType,
+                        Integer::class.javaPrimitiveType,
+                    ),
+                    listOf("Z", "I", "Ljava/lang/String;", "I", "I"),
+                    "Z",
+                ),
+                Triple(
+                    String::class.java.getMethod(
+                        "getChars",
+                        Integer::class.javaPrimitiveType,
+                        Int::class.javaPrimitiveType,
+                        CharArray::class.java,
+                        Int::class.javaPrimitiveType,
+                    ),
+                    listOf("I", "I", "[C", "I"),
+                    "V",
+                ),
+                Triple(
+                    String::class.java.getMethod("subSequence", Integer::class.javaPrimitiveType, Integer::class.javaPrimitiveType),
+                    listOf("I", "I"),
+                    "Ljava/lang/CharSequence;",
+                ),
+                Triple(
+                    String::class.java.getConstructor(),
+                    emptyList(),
+                    "V",
+                ),
+            )
         for ((executable, parameterDescriptors, returnTypeDescriptor) in testCases) {
             val descriptor = executable.descriptor
             assertEquals(extractParameterTypeDescriptors(descriptor), parameterDescriptors)

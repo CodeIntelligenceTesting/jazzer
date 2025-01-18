@@ -63,55 +63,61 @@ fun installInternal(
     val customHookClassNameGlobber = ClassNameGlobber(customHookIncludes, customHookExcludes + customHookNames)
     // FIXME: Setting trace to the empty string explicitly results in all rather than no trace types
     //  being applied - this is unintuitive.
-    val instrumentationTypes = (trace.takeIf { it.isNotEmpty() } ?: listOf("all")).flatMap {
-        when (it) {
-            "cmp" -> setOf(InstrumentationType.CMP)
-            "cov" -> setOf(InstrumentationType.COV)
-            "div" -> setOf(InstrumentationType.DIV)
-            "gep" -> setOf(InstrumentationType.GEP)
-            "indir" -> setOf(InstrumentationType.INDIR)
-            "native" -> setOf(InstrumentationType.NATIVE)
-            // Disable GEP instrumentation by default as it appears to negatively affect fuzzing
-            // performance. Our current GEP instrumentation only reports constant indices, but even
-            // when we instead reported non-constant indices, they tended to completely fill up the
-            // table of recent compares and value profile map.
-            "all" -> InstrumentationType.values().toSet() - InstrumentationType.GEP
-            else -> {
-                println("WARN: Skipping unknown instrumentation type $it")
-                emptySet()
-            }
-        }
-    }.toSet()
+    val instrumentationTypes =
+        (trace.takeIf { it.isNotEmpty() } ?: listOf("all"))
+            .flatMap {
+                when (it) {
+                    "cmp" -> setOf(InstrumentationType.CMP)
+                    "cov" -> setOf(InstrumentationType.COV)
+                    "div" -> setOf(InstrumentationType.DIV)
+                    "gep" -> setOf(InstrumentationType.GEP)
+                    "indir" -> setOf(InstrumentationType.INDIR)
+                    "native" -> setOf(InstrumentationType.NATIVE)
+                    // Disable GEP instrumentation by default as it appears to negatively affect fuzzing
+                    // performance. Our current GEP instrumentation only reports constant indices, but even
+                    // when we instead reported non-constant indices, they tended to completely fill up the
+                    // table of recent compares and value profile map.
+                    "all" -> InstrumentationType.values().toSet() - InstrumentationType.GEP
+                    else -> {
+                        println("WARN: Skipping unknown instrumentation type $it")
+                        emptySet()
+                    }
+                }
+            }.toSet()
 
-    val idSyncFilePath = idSyncFile.takeUnless { it.isEmpty() }?.let {
-        Paths.get(it).also { path ->
-            Log.info("Synchronizing coverage IDs in ${path.toAbsolutePath()}")
-        }
-    }
-    val dumpClassesDirPath = dumpClassesDir.takeUnless { it.isEmpty() }?.let {
-        Paths.get(it).toAbsolutePath().also { path ->
-            if (path.exists() && path.isDirectory()) {
-                Log.info("Dumping instrumented classes into $path")
-            } else {
-                Log.error("Cannot dump instrumented classes into $path; does not exist or not a directory")
+    val idSyncFilePath =
+        idSyncFile.takeUnless { it.isEmpty() }?.let {
+            Paths.get(it).also { path ->
+                Log.info("Synchronizing coverage IDs in ${path.toAbsolutePath()}")
             }
         }
-    }
-    val includedHookNames = instrumentationTypes
-        .mapNotNull { type ->
-            when (type) {
-                InstrumentationType.CMP -> "com.code_intelligence.jazzer.runtime.TraceCmpHooks"
-                InstrumentationType.DIV -> "com.code_intelligence.jazzer.runtime.TraceDivHooks"
-                InstrumentationType.INDIR -> "com.code_intelligence.jazzer.runtime.TraceIndirHooks"
-                InstrumentationType.NATIVE -> "com.code_intelligence.jazzer.runtime.NativeLibHooks"
-                else -> null
+    val dumpClassesDirPath =
+        dumpClassesDir.takeUnless { it.isEmpty() }?.let {
+            Paths.get(it).toAbsolutePath().also { path ->
+                if (path.exists() && path.isDirectory()) {
+                    Log.info("Dumping instrumented classes into $path")
+                } else {
+                    Log.error("Cannot dump instrumented classes into $path; does not exist or not a directory")
+                }
             }
         }
-    val coverageIdSynchronizer = if (idSyncFilePath != null) {
-        FileSyncCoverageIdStrategy(idSyncFilePath)
-    } else {
-        MemSyncCoverageIdStrategy()
-    }
+    val includedHookNames =
+        instrumentationTypes
+            .mapNotNull { type ->
+                when (type) {
+                    InstrumentationType.CMP -> "com.code_intelligence.jazzer.runtime.TraceCmpHooks"
+                    InstrumentationType.DIV -> "com.code_intelligence.jazzer.runtime.TraceDivHooks"
+                    InstrumentationType.INDIR -> "com.code_intelligence.jazzer.runtime.TraceIndirHooks"
+                    InstrumentationType.NATIVE -> "com.code_intelligence.jazzer.runtime.NativeLibHooks"
+                    else -> null
+                }
+            }
+    val coverageIdSynchronizer =
+        if (idSyncFilePath != null) {
+            FileSyncCoverageIdStrategy(idSyncFilePath)
+        } else {
+            MemSyncCoverageIdStrategy()
+        }
 
     // If we don't append the JARs containing the custom hooks to the bootstrap class loader,
     // third-party hooks not contained in the agent JAR will not be able to instrument Java standard
@@ -121,39 +127,39 @@ fun installInternal(
     Hooks.appendHooksToBootstrapClassLoaderSearch(instrumentation, customHookNames.toSet())
     val (includedHooks, customHooks) = Hooks.loadHooks(additionalClassesExcludes, includedHookNames.toSet(), customHookNames.toSet())
 
-    val runtimeInstrumentor = RuntimeInstrumentor(
-        instrumentation,
-        classNameGlobber,
-        customHookClassNameGlobber,
-        instrumentOnly.isNotEmpty(),
-        instrumentationTypes,
-        includedHooks.hooks,
-        customHooks.hooks,
-        conditionalHooks,
-        customHooks.additionalHookClassNameGlobber,
-        coverageIdSynchronizer,
-        dumpClassesDirPath,
-    )
+    val runtimeInstrumentor =
+        RuntimeInstrumentor(
+            instrumentation,
+            classNameGlobber,
+            customHookClassNameGlobber,
+            instrumentOnly.isNotEmpty(),
+            instrumentationTypes,
+            includedHooks.hooks,
+            customHooks.hooks,
+            conditionalHooks,
+            customHooks.additionalHookClassNameGlobber,
+            coverageIdSynchronizer,
+            dumpClassesDirPath,
+        )
 
     // These classes are e.g. dependencies of the RuntimeInstrumentor or hooks and thus were loaded
     // before the instrumentor was ready. Since we haven't enabled it yet, they can safely be
     // "retransformed": They haven't been transformed yet.
-    val classesToRetransform = instrumentation.allLoadedClasses
-        .filter {
-            // Always exclude internal Jazzer classes from retransformation, as even attempting to
-            // retransform those caused broken class definitions in older JVM versions. This points
-            // to a JDK bug that was not backported.
-            !it.name.startsWith("com.code_intelligence.jazzer.") &&
-                (
-                    classNameGlobber.includes(it.name) ||
-                        customHookClassNameGlobber.includes(it.name) ||
-                        customHooks.additionalHookClassNameGlobber.includes(it.name)
+    val classesToRetransform =
+        instrumentation.allLoadedClasses
+            .filter {
+                // Always exclude internal Jazzer classes from retransformation, as even attempting to
+                // retransform those caused broken class definitions in older JVM versions. This points
+                // to a JDK bug that was not backported.
+                !it.name.startsWith("com.code_intelligence.jazzer.") &&
+                    (
+                        classNameGlobber.includes(it.name) ||
+                            customHookClassNameGlobber.includes(it.name) ||
+                            customHooks.additionalHookClassNameGlobber.includes(it.name)
                     )
-        }
-        .filter {
-            instrumentation.isModifiableClass(it)
-        }
-        .toTypedArray()
+            }.filter {
+                instrumentation.isModifiableClass(it)
+            }.toTypedArray()
 
     instrumentation.addTransformer(runtimeInstrumentor, true)
 
@@ -164,7 +170,10 @@ fun installInternal(
     }
 }
 
-private fun retransformClassesWithRetry(instrumentation: Instrumentation, classesToRetransform: Array<Class<*>>) {
+private fun retransformClassesWithRetry(
+    instrumentation: Instrumentation,
+    classesToRetransform: Array<Class<*>>,
+) {
     try {
         instrumentation.retransformClasses(*classesToRetransform)
     } catch (e: Throwable) {
@@ -174,11 +183,16 @@ private fun retransformClassesWithRetry(instrumentation: Instrumentation, classe
             // The docs state that no transformation was performed if an exception is thrown.
             // Try again in a binary search fashion, until the not transformable classes have been isolated and reported.
             retransformClassesWithRetry(instrumentation, classesToRetransform.copyOfRange(0, classesToRetransform.size / 2))
-            retransformClassesWithRetry(instrumentation, classesToRetransform.copyOfRange(classesToRetransform.size / 2, classesToRetransform.size))
+            retransformClassesWithRetry(
+                instrumentation,
+                classesToRetransform.copyOfRange(classesToRetransform.size / 2, classesToRetransform.size),
+            )
         }
     }
 }
 
-private fun findManifestCustomHookNames() = ManifestUtils.combineManifestValues(ManifestUtils.HOOK_CLASSES)
-    .flatMap { it.split(':') }
-    .filter { it.isNotBlank() }
+private fun findManifestCustomHookNames() =
+    ManifestUtils
+        .combineManifestValues(ManifestUtils.HOOK_CLASSES)
+        .flatMap { it.split(':') }
+        .filter { it.isNotBlank() }

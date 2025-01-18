@@ -51,7 +51,12 @@ object RegexInjection {
         targetMethodDescriptor = "(Ljava/lang/String;I)Ljava/util/regex/Pattern;",
     )
     @JvmStatic
-    fun compileWithFlagsHook(method: MethodHandle, alwaysNull: Any?, args: Array<Any?>, hookId: Int): Any? {
+    fun compileWithFlagsHook(
+        method: MethodHandle,
+        alwaysNull: Any?,
+        args: Array<Any?>,
+        hookId: Int,
+    ): Any? {
         val pattern = args[0] as String?
         val hasCanonEqFlag = ((args[1] as Int) and Pattern.CANON_EQ) != 0
         return hookInternal(method, pattern, hasCanonEqFlag, hookId, *args)
@@ -72,9 +77,12 @@ object RegexInjection {
         ),
     )
     @JvmStatic
-    fun patternHook(method: MethodHandle, alwaysNull: Any?, args: Array<Any?>, hookId: Int): Any? {
-        return hookInternal(method, args[0] as String?, false, hookId, *args)
-    }
+    fun patternHook(
+        method: MethodHandle,
+        alwaysNull: Any?,
+        args: Array<Any?>,
+        hookId: Int,
+    ): Any? = hookInternal(method, args[0] as String?, false, hookId, *args)
 
     @MethodHooks(
         MethodHook(
@@ -109,9 +117,12 @@ object RegexInjection {
         ),
     )
     @JvmStatic
-    fun stringHook(method: MethodHandle, thisObject: Any?, args: Array<Any?>, hookId: Int): Any? {
-        return hookInternal(method, args[0] as String?, false, hookId, thisObject, *args)
-    }
+    fun stringHook(
+        method: MethodHandle,
+        thisObject: Any?,
+        args: Array<Any?>,
+        hookId: Int,
+    ): Any? = hookInternal(method, args[0] as String?, false, hookId, thisObject, *args)
 
     private fun hookInternal(
         method: MethodHandle,

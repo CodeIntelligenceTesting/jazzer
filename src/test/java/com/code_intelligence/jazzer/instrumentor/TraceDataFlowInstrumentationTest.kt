@@ -21,20 +21,19 @@ import com.code_intelligence.jazzer.instrumentor.PatchTestUtils.classToBytecode
 import org.junit.Test
 import java.io.File
 
-private fun getOriginalInstrumentationTargetInstance(): DynamicTestContract {
-    return TraceDataFlowInstrumentationTarget()
-}
+private fun getOriginalInstrumentationTargetInstance(): DynamicTestContract = TraceDataFlowInstrumentationTarget()
 
 private fun getInstrumentedInstrumentationTargetInstance(): DynamicTestContract {
     val originalBytecode = classToBytecode(TraceDataFlowInstrumentationTarget::class.java)
-    val patchedBytecode = TraceDataFlowInstrumentor(
-        setOf(
-            InstrumentationType.CMP,
-            InstrumentationType.DIV,
-            InstrumentationType.GEP,
-        ),
-        MockTraceDataFlowCallbacks::class.java.name.replace('.', '/'),
-    ).instrument(TraceDataFlowInstrumentationTarget::class.java.name.replace('.', '/'), originalBytecode)
+    val patchedBytecode =
+        TraceDataFlowInstrumentor(
+            setOf(
+                InstrumentationType.CMP,
+                InstrumentationType.DIV,
+                InstrumentationType.GEP,
+            ),
+            MockTraceDataFlowCallbacks::class.java.name.replace('.', '/'),
+        ).instrument(TraceDataFlowInstrumentationTarget::class.java.name.replace('.', '/'), originalBytecode)
     // Make the patched class available in bazel-testlogs/.../test.outputs for manual inspection.
     val outDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR")
     File("$outDir/${TraceDataFlowInstrumentationTarget::class.simpleName}.class").writeBytes(originalBytecode)
@@ -44,7 +43,6 @@ private fun getInstrumentedInstrumentationTargetInstance(): DynamicTestContract 
 }
 
 class TraceDataFlowInstrumentationTest {
-
     @Test
     fun testOriginal() {
         MockTraceDataFlowCallbacks.init()
@@ -101,7 +99,6 @@ class TraceDataFlowInstrumentationTest {
             // shortArray[8] == 8
             "GEP: 8",
             "ICMP: 8, 8",
-
             "GEP: 2",
             "GEP: 3",
             "GEP: 4",

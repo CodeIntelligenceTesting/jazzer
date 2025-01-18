@@ -25,12 +25,11 @@ import java.io.InputStream
 const val HONEYPOT_CLASS_NAME = "jaz.Zer"
 const val HONEYPOT_LIBRARY_NAME = "jazzer_honeypot"
 
-internal fun Short.toBytes(): ByteArray {
-    return byteArrayOf(
+internal fun Short.toBytes(): ByteArray =
+    byteArrayOf(
         ((toInt() shr 8) and 0xFF).toByte(),
         (toInt() and 0xFF).toByte(),
     )
-}
 
 // Runtime is only O(size * needle.size), only use for small arrays.
 internal fun ByteArray.indexOf(needle: ByteArray): Int {
@@ -45,8 +44,15 @@ internal fun ByteArray.indexOf(needle: ByteArray): Int {
     return -1
 }
 
-internal fun guideMarkableInputStreamTowardsEquality(stream: InputStream, target: ByteArray, id: Int) {
-    fun readBytes(stream: InputStream, size: Int): ByteArray {
+internal fun guideMarkableInputStreamTowardsEquality(
+    stream: InputStream,
+    target: ByteArray,
+    id: Int,
+) {
+    fun readBytes(
+        stream: InputStream,
+        size: Int,
+    ): ByteArray {
         val current = ByteArray(size)
         var n = 0
         while (n < size) {

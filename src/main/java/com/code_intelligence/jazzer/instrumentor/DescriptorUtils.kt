@@ -25,40 +25,39 @@ val Class<*>.descriptor: String
     get() = Type.getDescriptor(this)
 
 val Executable.descriptor: String
-    get() = if (this is Method) {
-        Type.getMethodDescriptor(this)
-    } else {
-        Type.getConstructorDescriptor(this as Constructor<*>?)
-    }
+    get() =
+        if (this is Method) {
+            Type.getMethodDescriptor(this)
+        } else {
+            Type.getConstructorDescriptor(this as Constructor<*>?)
+        }
 
-internal fun isPrimitiveType(typeDescriptor: String): Boolean {
-    return typeDescriptor in arrayOf("B", "C", "D", "F", "I", "J", "S", "V", "Z")
-}
+internal fun isPrimitiveType(typeDescriptor: String): Boolean = typeDescriptor in arrayOf("B", "C", "D", "F", "I", "J", "S", "V", "Z")
 
 private fun isPrimitiveType(typeDescriptor: Char) = isPrimitiveType(typeDescriptor.toString())
 
-internal fun getWrapperTypeDescriptor(typeDescriptor: String): String = when (typeDescriptor) {
-    "B" -> "Ljava/lang/Byte;"
-    "C" -> "Ljava/lang/Character;"
-    "D" -> "Ljava/lang/Double;"
-    "F" -> "Ljava/lang/Float;"
-    "I" -> "Ljava/lang/Integer;"
-    "J" -> "Ljava/lang/Long;"
-    "S" -> "Ljava/lang/Short;"
-    "V" -> "Ljava/lang/Void;"
-    "Z" -> "Ljava/lang/Boolean;"
-    else -> typeDescriptor
-}
+internal fun getWrapperTypeDescriptor(typeDescriptor: String): String =
+    when (typeDescriptor) {
+        "B" -> "Ljava/lang/Byte;"
+        "C" -> "Ljava/lang/Character;"
+        "D" -> "Ljava/lang/Double;"
+        "F" -> "Ljava/lang/Float;"
+        "I" -> "Ljava/lang/Integer;"
+        "J" -> "Ljava/lang/Long;"
+        "S" -> "Ljava/lang/Short;"
+        "V" -> "Ljava/lang/Void;"
+        "Z" -> "Ljava/lang/Boolean;"
+        else -> typeDescriptor
+    }
 
 // Removes the 'L' and ';' prefix/suffix from signatures to get the full class name.
 // Note that array signatures '[Ljava/lang/String;' already have the correct form.
-internal fun extractInternalClassName(typeDescriptor: String): String {
-    return if (typeDescriptor.startsWith("L") && typeDescriptor.endsWith(";")) {
+internal fun extractInternalClassName(typeDescriptor: String): String =
+    if (typeDescriptor.startsWith("L") && typeDescriptor.endsWith(";")) {
         typeDescriptor.substring(1, typeDescriptor.length - 1)
     } else {
         typeDescriptor
     }
-}
 
 internal fun extractParameterTypeDescriptors(methodDescriptor: String): List<String> {
     require(methodDescriptor.startsWith('(')) { "Method descriptor must start with '('" }

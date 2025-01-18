@@ -36,7 +36,6 @@ import javax.xml.xpath.XPathExpressionException
  */
 @Suppress("unused_parameter", "unused")
 object XPathInjection {
-
     // Characters that should be escaped in user input.
     // https://owasp.org/www-community/attacks/XPATH_Injection
     private const val CHARACTERS_TO_ESCAPE = "'\""
@@ -49,7 +48,12 @@ object XPathInjection {
         MethodHook(type = HookType.REPLACE, targetClassName = "javax.xml.xpath.XPath", targetMethod = "evaluateExpression"),
     )
     @JvmStatic
-    fun checkXpathExecute(method: MethodHandle, thisObject: Any?, arguments: Array<Any>, hookId: Int): Any {
+    fun checkXpathExecute(
+        method: MethodHandle,
+        thisObject: Any?,
+        arguments: Array<Any>,
+        hookId: Int,
+    ): Any {
         if (arguments.isNotEmpty() && arguments[0] is String) {
             val query = arguments[0] as String
             Jazzer.guideTowardsContainment(query, CHARACTERS_TO_ESCAPE, hookId)
@@ -67,8 +71,8 @@ object XPathInjection {
                 Jazzer.reportFindingFromHook(
                     FuzzerSecurityIssueHigh(
                         """
-                    XPath Injection
-                    Injected query: ${arguments[0]}
+                        XPath Injection
+                        Injected query: ${arguments[0]}
                         """.trimIndent(),
                         exception,
                     ),

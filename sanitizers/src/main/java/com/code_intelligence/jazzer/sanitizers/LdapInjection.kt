@@ -44,7 +44,6 @@ import javax.naming.directory.InvalidSearchFilterException
  */
 @Suppress("unused_parameter", "unused")
 object LdapInjection {
-
     // Characters to escape in DNs
     private const val NAME_CHARACTERS = "\\+<>,;\"="
 
@@ -67,7 +66,6 @@ object LdapInjection {
             targetMethodDescriptor = "(Ljava/lang/String;Ljavax/naming.directory/Attributes;[Ljava/lang/Sting;)Ljavax/naming/NamingEnumeration;",
             additionalClassesToHook = ["javax.naming.directory.InitialDirContext"],
         ),
-
         // Object search, possible DN and search filter injection
         MethodHook(
             type = HookType.REPLACE,
@@ -92,7 +90,12 @@ object LdapInjection {
         ),
     )
     @JvmStatic
-    fun searchLdapContext(method: MethodHandle, thisObject: Any?, args: Array<Any>, hookId: Int): Any? {
+    fun searchLdapContext(
+        method: MethodHandle,
+        thisObject: Any?,
+        args: Array<Any>,
+        hookId: Int,
+    ): Any? {
         try {
             return method.invokeWithArguments(thisObject, *args).also {
                 (args[0] as? String)?.let { name ->

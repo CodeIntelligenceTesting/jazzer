@@ -29,17 +29,18 @@ enum class InstrumentationType {
 }
 
 internal interface Instrumentor {
-    fun instrument(internalClassName: String, bytecode: ByteArray): ByteArray
+    fun instrument(
+        internalClassName: String,
+        bytecode: ByteArray,
+    ): ByteArray
 
-    fun shouldInstrument(access: Int): Boolean {
-        return (access and Opcodes.ACC_ABSTRACT == 0) &&
+    fun shouldInstrument(access: Int): Boolean =
+        (access and Opcodes.ACC_ABSTRACT == 0) &&
             (access and Opcodes.ACC_NATIVE == 0)
-    }
 
-    fun shouldInstrument(method: MethodNode): Boolean {
-        return shouldInstrument(method.access) &&
+    fun shouldInstrument(method: MethodNode): Boolean =
+        shouldInstrument(method.access) &&
             method.instructions.size() > 0
-    }
 
     companion object {
         const val ASM_API_VERSION = Opcodes.ASM9

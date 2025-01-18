@@ -26,7 +26,6 @@ import javax.naming.CommunicationException
 
 @Suppress("unused")
 object NamingContextLookup {
-
     // The particular URL g.co is used here since it is:
     // - short, which makes it easier for the fuzzer to incorporate into the input;
     // - valid, which means that a `lookup` call on it could actually result in RCE;
@@ -50,7 +49,12 @@ object NamingContextLookup {
         ),
     )
     @JvmStatic
-    fun lookupHook(method: MethodHandle?, thisObject: Any?, args: Array<Any?>, hookId: Int): Any {
+    fun lookupHook(
+        method: MethodHandle?,
+        thisObject: Any?,
+        args: Array<Any?>,
+        hookId: Int,
+    ): Any {
         val name = args[0] as? String ?: throw CommunicationException()
         if (name.startsWith(RMI_MARKER) || name.startsWith(LDAP_MARKER)) {
             Jazzer.reportFindingFromHook(
