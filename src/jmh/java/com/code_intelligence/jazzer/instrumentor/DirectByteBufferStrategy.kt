@@ -20,7 +20,6 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 
 object DirectByteBufferStrategy : EdgeCoverageStrategy {
-
     override fun instrumentControlFlowEdge(
         mv: MethodVisitor,
         edgeId: Int,
@@ -66,7 +65,11 @@ object DirectByteBufferStrategy : EdgeCoverageStrategy {
 
     override val localVariableType get() = "java/nio/ByteBuffer"
 
-    override fun loadLocalVariable(mv: MethodVisitor, variable: Int, coverageMapInternalClassName: String) {
+    override fun loadLocalVariable(
+        mv: MethodVisitor,
+        variable: Int,
+        coverageMapInternalClassName: String,
+    ) {
         mv.apply {
             visitFieldInsn(
                 Opcodes.GETSTATIC,

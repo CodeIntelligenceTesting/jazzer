@@ -22,7 +22,6 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider
 
 // Reproduces https://github.com/cbeust/klaxon/pull/330
 object KlaxonFuzzer {
-
     @JvmStatic
     fun fuzzerTestOneInput(data: FuzzedDataProvider) {
         try {

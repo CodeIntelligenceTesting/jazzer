@@ -21,17 +21,16 @@ import com.code_intelligence.jazzer.instrumentor.PatchTestUtils.classToBytecode
 import org.junit.Test
 import java.io.File
 
-private fun getOriginalAfterHooksTargetInstance(): AfterHooksTargetContract {
-    return AfterHooksTarget()
-}
+private fun getOriginalAfterHooksTargetInstance(): AfterHooksTargetContract = AfterHooksTarget()
 
 private fun getNoHooksAfterHooksTargetInstance(): AfterHooksTargetContract {
     val originalBytecode = classToBytecode(AfterHooksTarget::class.java)
     // Let the bytecode pass through the hooking logic, but don't apply any hooks.
-    val patchedBytecode = HookInstrumentor(emptyList(), false, null).instrument(
-        AfterHooksTarget::class.java.name.replace('.', '/'),
-        originalBytecode,
-    )
+    val patchedBytecode =
+        HookInstrumentor(emptyList(), false, null).instrument(
+            AfterHooksTarget::class.java.name.replace('.', '/'),
+            originalBytecode,
+        )
     val patchedClass = bytecodeToClass(AfterHooksTarget::class.java.name, patchedBytecode)
     return patchedClass.getDeclaredConstructor().newInstance() as AfterHooksTargetContract
 }
@@ -39,11 +38,12 @@ private fun getNoHooksAfterHooksTargetInstance(): AfterHooksTargetContract {
 private fun getPatchedAfterHooksTargetInstance(classWithHooksEnabledField: Class<*>?): AfterHooksTargetContract {
     val originalBytecode = classToBytecode(AfterHooksTarget::class.java)
     val hooks = Hooks.loadHooks(emptyList(), setOf(AfterHooks::class.java.name)).first().hooks
-    val patchedBytecode = HookInstrumentor(
-        hooks,
-        false,
-        classWithHooksEnabledField = classWithHooksEnabledField?.name?.replace('.', '/'),
-    ).instrument(AfterHooksTarget::class.java.name.replace('.', '/'), originalBytecode)
+    val patchedBytecode =
+        HookInstrumentor(
+            hooks,
+            false,
+            classWithHooksEnabledField = classWithHooksEnabledField?.name?.replace('.', '/'),
+        ).instrument(AfterHooksTarget::class.java.name.replace('.', '/'), originalBytecode)
     // Make the patched class available in bazel-testlogs/.../test.outputs for manual inspection.
     val outDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR")
     File("$outDir/${AfterHooksTarget::class.java.simpleName}.class").writeBytes(originalBytecode)
@@ -53,7 +53,6 @@ private fun getPatchedAfterHooksTargetInstance(classWithHooksEnabledField: Class
 }
 
 class AfterHooksPatchTest {
-
     @Test
     fun testOriginal() {
         assertSelfCheck(getOriginalAfterHooksTargetInstance(), false)

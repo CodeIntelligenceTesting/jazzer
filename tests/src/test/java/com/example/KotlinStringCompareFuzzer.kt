@@ -25,7 +25,8 @@ object KotlinStringCompareFuzzer {
     @OptIn(ExperimentalEncodingApi::class)
     fun fuzzerTestOneInput(data: ByteArray) {
         val text = Base64.encode(data)
-        if (text.startsWith("aGVsbG8K") && // hello
+        if (text.startsWith("aGVsbG8K") &&
+            // hello
             text.endsWith("d29ybGQK") // world
         ) {
             throw IOException("Found the secret message!")

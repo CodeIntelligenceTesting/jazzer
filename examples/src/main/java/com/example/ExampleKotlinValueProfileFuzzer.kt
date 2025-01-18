@@ -20,7 +20,6 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium
 
 object ExampleKotlinValueProfileFuzzer {
-
     @JvmStatic
     fun fuzzerTestOneInput(data: FuzzedDataProvider) {
         if (data.consumeInt().compareTo(0x11223344) != 0) {
@@ -33,7 +32,5 @@ object ExampleKotlinValueProfileFuzzer {
         }
     }
 
-    private fun encrypt(n: Long): Long {
-        return n.xor(0x1122334455667788)
-    }
+    private fun encrypt(n: Long): Long = n.xor(0x1122334455667788)
 }

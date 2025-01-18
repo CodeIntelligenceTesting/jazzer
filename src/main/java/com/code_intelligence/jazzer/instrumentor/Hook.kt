@@ -38,21 +38,28 @@ class Hook private constructor(
     val hookMethodName: String,
     val hookMethodDescriptor: String,
 ) {
-
-    override fun toString(): String {
-        return "$hookType $targetClassName.$targetMethodName: $hookClassName.$hookMethodName $additionalClassesToHook"
-    }
+    override fun toString(): String =
+        "$hookType $targetClassName.$targetMethodName: $hookClassName.$hookMethodName $additionalClassesToHook"
 
     companion object {
-        fun createAndVerifyHook(hookMethod: Method, hookData: MethodHook, className: String): Hook {
-            return createHook(hookMethod, hookData, className).also {
+        fun createAndVerifyHook(
+            hookMethod: Method,
+            hookData: MethodHook,
+            className: String,
+        ): Hook =
+            createHook(hookMethod, hookData, className).also {
                 verify(hookMethod, it)
             }
-        }
 
-        private fun createHook(hookMethod: Method, annotation: MethodHook, targetClassName: String): Hook {
-            val targetReturnTypeDescriptor = annotation.targetMethodDescriptor
-                .takeIf { it.isNotBlank() }?.let { extractReturnTypeDescriptor(it) }
+        private fun createHook(
+            hookMethod: Method,
+            annotation: MethodHook,
+            targetClassName: String,
+        ): Hook {
+            val targetReturnTypeDescriptor =
+                annotation.targetMethodDescriptor
+                    .takeIf { it.isNotBlank() }
+                    ?.let { extractReturnTypeDescriptor(it) }
             val hookClassName: String = hookMethod.declaringClass.name
             return Hook(
                 targetClassName = targetClassName,
@@ -70,7 +77,10 @@ class Hook private constructor(
             )
         }
 
-        private fun verify(hookMethod: Method, potentialHook: Hook) {
+        private fun verify(
+            hookMethod: Method,
+            potentialHook: Hook,
+        ) {
             // Verify the hook method's modifiers (public static).
             require(Modifier.isPublic(hookMethod.modifiers)) { "$potentialHook: hook method must be public" }
             require(Modifier.isStatic(hookMethod.modifiers)) { "$potentialHook: hook method must be static" }
@@ -78,39 +88,49 @@ class Hook private constructor(
             // Verify the hook method's parameter count.
             val numParameters = hookMethod.parameters.size
             when (potentialHook.hookType) {
-                HookType.BEFORE, HookType.REPLACE -> require(numParameters == 4) { "$potentialHook: incorrect number of parameters (expected 4)" }
+                HookType.BEFORE, HookType.REPLACE ->
+                    require(
+                        numParameters == 4,
+                    ) { "$potentialHook: incorrect number of parameters (expected 4)" }
                 HookType.AFTER -> require(numParameters == 5) { "$potentialHook: incorrect number of parameters (expected 5)" }
             }
 
             // Verify the hook method's parameter types.
             val parameterTypes = hookMethod.parameterTypes
             require(parameterTypes[0] == MethodHandle::class.java) { "$potentialHook: first parameter must have type MethodHandle" }
-            require(parameterTypes[1] == Object::class.java || parameterTypes[1].name == potentialHook.targetClassName) { "$potentialHook: second parameter must have type Object or ${potentialHook.targetClassName}" }
+            require(parameterTypes[1] == Object::class.java || parameterTypes[1].name == potentialHook.targetClassName) {
+                "$potentialHook: second parameter must have type Object or ${potentialHook.targetClassName}"
+            }
             require(parameterTypes[2] == Array<Object>::class.java) { "$potentialHook: third parameter must have type Object[]" }
             require(parameterTypes[3] == Int::class.javaPrimitiveType) { "$potentialHook: fourth parameter must have type int" }
 
             // Verify the hook method's return type if possible.
             when (potentialHook.hookType) {
-                HookType.BEFORE, HookType.AFTER -> require(hookMethod.returnType == Void.TYPE) {
-                    "$potentialHook: return type must be void"
-                }
-                HookType.REPLACE -> if (potentialHook.targetReturnTypeDescriptor != null) {
-                    if (potentialHook.targetMethodName == "<init>") {
-                        require(hookMethod.returnType.name == potentialHook.targetClassName) { "$potentialHook: return type must be ${potentialHook.targetClassName} to match target constructor" }
-                    } else if (potentialHook.targetReturnTypeDescriptor == "V") {
-                        require(hookMethod.returnType.descriptor == "V") { "$potentialHook: return type must be void" }
-                    } else {
-                        require(
-                            hookMethod.returnType.descriptor in listOf(
-                                java.lang.Object::class.java.descriptor,
-                                potentialHook.targetReturnTypeDescriptor,
-                                potentialHook.targetWrappedReturnTypeDescriptor,
-                            ),
-                        ) {
-                            "$potentialHook: return type must have type Object or match the descriptors ${potentialHook.targetReturnTypeDescriptor} or ${potentialHook.targetWrappedReturnTypeDescriptor}"
+                HookType.BEFORE, HookType.AFTER ->
+                    require(hookMethod.returnType == Void.TYPE) {
+                        "$potentialHook: return type must be void"
+                    }
+                HookType.REPLACE ->
+                    if (potentialHook.targetReturnTypeDescriptor != null) {
+                        if (potentialHook.targetMethodName == "<init>") {
+                            require(hookMethod.returnType.name == potentialHook.targetClassName) {
+                                "$potentialHook: return type must be ${potentialHook.targetClassName} to match target constructor"
+                            }
+                        } else if (potentialHook.targetReturnTypeDescriptor == "V") {
+                            require(hookMethod.returnType.descriptor == "V") { "$potentialHook: return type must be void" }
+                        } else {
+                            require(
+                                hookMethod.returnType.descriptor in
+                                    listOf(
+                                        java.lang.Object::class.java.descriptor,
+                                        potentialHook.targetReturnTypeDescriptor,
+                                        potentialHook.targetWrappedReturnTypeDescriptor,
+                                    ),
+                            ) {
+                                "$potentialHook: return type must have type Object or match the descriptors ${potentialHook.targetReturnTypeDescriptor} or ${potentialHook.targetWrappedReturnTypeDescriptor}"
+                            }
                         }
                     }
-                }
             }
 
             // AfterMethodHook only: Verify the type of the last parameter if known. Even if not

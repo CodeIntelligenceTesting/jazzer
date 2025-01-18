@@ -41,17 +41,16 @@ private fun makeTestable(strategy: EdgeCoverageStrategy): EdgeCoverageStrategy =
         }
     }
 
-private fun getOriginalInstrumentationTargetInstance(): DynamicTestContract {
-    return CoverageInstrumentationTarget()
-}
+private fun getOriginalInstrumentationTargetInstance(): DynamicTestContract = CoverageInstrumentationTarget()
 
 private fun getInstrumentedInstrumentationTargetInstance(): DynamicTestContract {
     val originalBytecode = classToBytecode(CoverageInstrumentationTarget::class.java)
-    val patchedBytecode = EdgeCoverageInstrumentor(
-        makeTestable(ClassInstrumentor.defaultEdgeCoverageStrategy),
-        MockCoverageMap::class.java,
-        0,
-    ).instrument(CoverageInstrumentationTarget::class.java.name.replace('.', '/'), originalBytecode)
+    val patchedBytecode =
+        EdgeCoverageInstrumentor(
+            makeTestable(ClassInstrumentor.defaultEdgeCoverageStrategy),
+            MockCoverageMap::class.java,
+            0,
+        ).instrument(CoverageInstrumentationTarget::class.java.name.replace('.', '/'), originalBytecode)
     // Make the patched class available in bazel-testlogs/.../test.outputs for manual inspection.
     val outDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR")
     File("$outDir/${CoverageInstrumentationTarget::class.java.simpleName}.class").writeBytes(originalBytecode)
@@ -66,7 +65,6 @@ private fun assertControlFlow(expectedLocations: List<Int>) {
 
 @Suppress("unused")
 class CoverageInstrumentationTest {
-
     private val constructorReturn = 0
 
     private val mapConstructor = 1
@@ -105,26 +103,31 @@ class CoverageInstrumentationTest {
 
         val mapControlFlow = listOf(mapConstructor, addFor0, addFor1, addFor2, addFor3, addFor4, addFoobar)
         val ifControlFlow = listOf(ifTrueBranch, addBlock1, ifEnd)
-        val forFirstRunControlFlow = mutableListOf<Int>().apply {
-            add(outerForCondition)
-            repeat(5) {
-                addAll(listOf(innerForCondition, innerForBodyIfFalseBranch, innerForBodyPutInvocation))
-            }
-            add(outerForIncrementCounter)
-        }.toList()
-        val forSecondRunControlFlow = mutableListOf<Int>().apply {
-            add(outerForCondition)
-            repeat(5) {
-                addAll(listOf(innerForCondition, innerForBodyIfTrueBranch, innerForBodyPutInvocation))
-            }
-            add(outerForIncrementCounter)
-        }.toList()
+        val forFirstRunControlFlow =
+            mutableListOf<Int>()
+                .apply {
+                    add(outerForCondition)
+                    repeat(5) {
+                        addAll(listOf(innerForCondition, innerForBodyIfFalseBranch, innerForBodyPutInvocation))
+                    }
+                    add(outerForIncrementCounter)
+                }.toList()
+        val forSecondRunControlFlow =
+            mutableListOf<Int>()
+                .apply {
+                    add(outerForCondition)
+                    repeat(5) {
+                        addAll(listOf(innerForCondition, innerForBodyIfTrueBranch, innerForBodyPutInvocation))
+                    }
+                    add(outerForIncrementCounter)
+                }.toList()
         val forControlFlow = forFirstRunControlFlow + forSecondRunControlFlow
-        val fooCallControlFlow = listOf(
-            barAfterPutInvocation,
-            fooAfterBarInvocation,
-            afterFooInvocation,
-        )
+        val fooCallControlFlow =
+            listOf(
+                barAfterPutInvocation,
+                fooAfterBarInvocation,
+                afterFooInvocation,
+            )
         assertControlFlow(
             listOf(constructorReturn) +
                 mapControlFlow +
@@ -149,8 +152,9 @@ class CoverageInstrumentationTest {
             assertSelfCheck(target)
             assertEquals(1, MockCoverageMap.counters[takenOnceEdge])
             // Verify that the counter increments, but is never zero.
-            val expectedCounter = (lastCounter + 1U).toUByte().takeUnless { it == 0.toUByte() }
-                ?: (lastCounter + 2U).toUByte()
+            val expectedCounter =
+                (lastCounter + 1U).toUByte().takeUnless { it == 0.toUByte() }
+                    ?: (lastCounter + 2U).toUByte()
             lastCounter = expectedCounter
             val actualCounter = MockCoverageMap.counters[takenOnEveryRunEdge].toUByte()
             assertEquals(expectedCounter, actualCounter, "After $i runs:")
@@ -160,11 +164,12 @@ class CoverageInstrumentationTest {
     @Test
     fun testSpecialCases() {
         val originalBytecode = classToBytecode(CoverageInstrumentationSpecialCasesTarget::class.java)
-        val patchedBytecode = EdgeCoverageInstrumentor(
-            makeTestable(ClassInstrumentor.defaultEdgeCoverageStrategy),
-            MockCoverageMap::class.java,
-            0,
-        ).instrument(CoverageInstrumentationSpecialCasesTarget::class.java.name.replace('.', '/'), originalBytecode)
+        val patchedBytecode =
+            EdgeCoverageInstrumentor(
+                makeTestable(ClassInstrumentor.defaultEdgeCoverageStrategy),
+                MockCoverageMap::class.java,
+                0,
+            ).instrument(CoverageInstrumentationSpecialCasesTarget::class.java.name.replace('.', '/'), originalBytecode)
         // Make the patched class available in bazel-testlogs/.../test.outputs for manual inspection.
         val outDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR")
         File("$outDir/${CoverageInstrumentationSpecialCasesTarget::class.simpleName}.class").writeBytes(originalBytecode)

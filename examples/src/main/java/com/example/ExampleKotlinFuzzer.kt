@@ -20,13 +20,16 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium
 
 object ExampleKotlinFuzzer {
-
     @JvmStatic
     fun fuzzerTestOneInput(data: FuzzedDataProvider) {
         exploreMe(data.consumeString(8), data.consumeInt(), data.consumeRemainingAsString())
     }
 
-    private fun exploreMe(prefix: String, n: Int, suffix: String) {
+    private fun exploreMe(
+        prefix: String,
+        n: Int,
+        suffix: String,
+    ) {
         if (prefix.findAnyOf(arrayListOf("Fuzz", "Test")) != null) {
             if (n >= 2000000) {
                 if (suffix.startsWith("@")) {

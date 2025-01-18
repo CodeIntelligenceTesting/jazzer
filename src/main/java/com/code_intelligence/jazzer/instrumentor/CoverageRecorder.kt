@@ -44,16 +44,22 @@ object CoverageRecorder {
     private var startTimestamp: Instant? = null
     private val additionalCoverage = mutableSetOf<Int>()
 
-    fun recordInstrumentedClass(internalClassName: String, bytecode: ByteArray, firstId: Int, numIds: Int) {
+    fun recordInstrumentedClass(
+        internalClassName: String,
+        bytecode: ByteArray,
+        firstId: Int,
+        numIds: Int,
+    ) {
         if (startTimestamp == null) {
             startTimestamp = Instant.now()
         }
-        instrumentedClassInfo[internalClassName] = InstrumentedClassInfo(
-            CRC64.classId(bytecode),
-            firstId,
-            firstId + numIds,
-            bytecode,
-        )
+        instrumentedClassInfo[internalClassName] =
+            InstrumentedClassInfo(
+                CRC64.classId(bytecode),
+                firstId,
+                firstId + numIds,
+                bytecode,
+            )
     }
 
     /**
@@ -70,7 +76,10 @@ object CoverageRecorder {
      */
     @JvmStatic
     @JvmOverloads
-    fun dumpCoverageReport(dumpFileName: String, coveredIds: IntArray = CoverageMap.getEverCoveredIds()) {
+    fun dumpCoverageReport(
+        dumpFileName: String,
+        coveredIds: IntArray = CoverageMap.getEverCoveredIds(),
+    ) {
         File(dumpFileName).bufferedWriter().use { writer ->
             writer.write(computeFileCoverage(coveredIds))
         }
@@ -87,32 +96,39 @@ object CoverageRecorder {
             val counter = fileCoverage.branchCounter
             val percentage = 100 * counter.coveredRatio
             "${fileCoverage.name}: ${counter.coveredCount}/${counter.totalCount} (${percentage.format(2)}%)"
-        } + coverage.sourceFiles.joinToString(
-            "\n",
-            prefix = "Line coverage:\n",
-            postfix = "\n\n",
-        ) { fileCoverage ->
-            val counter = fileCoverage.lineCounter
-            val percentage = 100 * counter.coveredRatio
-            "${fileCoverage.name}: ${counter.coveredCount}/${counter.totalCount} (${percentage.format(2)}%)"
-        } + coverage.sourceFiles.joinToString(
-            "\n",
-            prefix = "Incompletely covered lines:\n",
-            postfix = "\n\n",
-        ) { fileCoverage ->
-            "${fileCoverage.name}: " + (fileCoverage.firstLine..fileCoverage.lastLine).filter {
-                val instructions = fileCoverage.getLine(it).instructionCounter
-                instructions.coveredCount in 1 until instructions.totalCount
-            }.toString()
-        } + coverage.sourceFiles.joinToString(
-            "\n",
-            prefix = "Missed lines:\n",
-        ) { fileCoverage ->
-            "${fileCoverage.name}: " + (fileCoverage.firstLine..fileCoverage.lastLine).filter {
-                val instructions = fileCoverage.getLine(it).instructionCounter
-                instructions.coveredCount == 0 && instructions.totalCount > 0
-            }.toString()
-        }
+        } +
+            coverage.sourceFiles.joinToString(
+                "\n",
+                prefix = "Line coverage:\n",
+                postfix = "\n\n",
+            ) { fileCoverage ->
+                val counter = fileCoverage.lineCounter
+                val percentage = 100 * counter.coveredRatio
+                "${fileCoverage.name}: ${counter.coveredCount}/${counter.totalCount} (${percentage.format(2)}%)"
+            } +
+            coverage.sourceFiles.joinToString(
+                "\n",
+                prefix = "Incompletely covered lines:\n",
+                postfix = "\n\n",
+            ) { fileCoverage ->
+                "${fileCoverage.name}: " +
+                    (fileCoverage.firstLine..fileCoverage.lastLine)
+                        .filter {
+                            val instructions = fileCoverage.getLine(it).instructionCounter
+                            instructions.coveredCount in 1 until instructions.totalCount
+                        }.toString()
+            } +
+            coverage.sourceFiles.joinToString(
+                "\n",
+                prefix = "Missed lines:\n",
+            ) { fileCoverage ->
+                "${fileCoverage.name}: " +
+                    (fileCoverage.firstLine..fileCoverage.lastLine)
+                        .filter {
+                            val instructions = fileCoverage.getLine(it).instructionCounter
+                            instructions.coveredCount == 0 && instructions.totalCount > 0
+                        }.toString()
+            }
     }
 
     /**
@@ -122,7 +138,10 @@ object CoverageRecorder {
      */
     @JvmStatic
     @JvmOverloads
-    fun dumpJacocoCoverage(dumpFileName: String, coveredIds: IntArray = CoverageMap.getEverCoveredIds()) {
+    fun dumpJacocoCoverage(
+        dumpFileName: String,
+        coveredIds: IntArray = CoverageMap.getEverCoveredIds(),
+    ) {
         FileOutputStream(dumpFileName).use { outStream ->
             dumpJacocoCoverage(outStream, coveredIds)
         }
@@ -132,7 +151,10 @@ object CoverageRecorder {
      * [dumpJacocoCoverage] dumps the JaCoCo coverage of files using any [coveredIds] to [outStream].
      */
     @JvmStatic
-    fun dumpJacocoCoverage(outStream: OutputStream, coveredIds: IntArray) {
+    fun dumpJacocoCoverage(
+        outStream: OutputStream,
+        coveredIds: IntArray,
+    ) {
         // Return if no class has been instrumented.
         val startTimestamp = startTimestamp ?: return
 
@@ -173,12 +195,12 @@ object CoverageRecorder {
             }
             // Generate a probes array for the current class only, i.e., mapping info.initialEdgeId to 0.
             val probes = BooleanArray(info.nextEdgeId - info.initialEdgeId)
-            (coveredIdsStart until coveredIdsEnd).asSequence()
+            (coveredIdsStart until coveredIdsEnd)
+                .asSequence()
                 .map {
                     val globalEdgeId = sortedCoveredIds[it]
                     globalEdgeId - info.initialEdgeId
-                }
-                .forEach { classLocalEdgeId ->
+                }.forEach { classLocalEdgeId ->
                     probes[classLocalEdgeId] = true
                 }
             executionDataStore.visitClassExecution(ExecutionData(info.classId, internalClassName, probes))
@@ -189,8 +211,8 @@ object CoverageRecorder {
     /**
      * Create a [CoverageBuilder] containing all classes matching the include/exclude pattern and their coverage statistics.
      */
-    fun analyzeCoverage(coveredIds: Set<Int>): CoverageBuilder? {
-        return try {
+    fun analyzeCoverage(coveredIds: Set<Int>): CoverageBuilder? =
+        try {
             val coverage = CoverageBuilder()
             analyzeAllUncoveredClasses(coverage)
             val executionDataStore = analyzeJacocoCoverage(coveredIds)
@@ -208,7 +230,6 @@ object CoverageRecorder {
             e.printStackTrace()
             null
         }
-    }
 
     /**
      * Traverses the entire classpath and analyzes all uncovered classes that match the include/exclude pattern.
@@ -216,11 +237,12 @@ object CoverageRecorder {
      * those that were loaded while the fuzzer ran.
      */
     private fun analyzeAllUncoveredClasses(coverage: CoverageBuilder): CoverageBuilder {
-        val coveredClassNames = instrumentedClassInfo
-            .keys
-            .asSequence()
-            .map { it.replace('/', '.') }
-            .toSet()
+        val coveredClassNames =
+            instrumentedClassInfo
+                .keys
+                .asSequence()
+                .map { it.replace('/', '.') }
+                .toSet()
         ClassGraph()
             .enableClassInfo()
             .ignoreClassVisibility()
@@ -229,8 +251,8 @@ object CoverageRecorder {
                 // from the Java standard library are never traversed.
                 "com.code_intelligence.jazzer.*",
                 "jaz",
-            )
-            .scan().use { result ->
+            ).scan()
+            .use { result ->
                 // ExecutionDataStore is used to look up existing coverage during analysis of the class files,
                 // no entries are added during that. Passing in an empty store is fine for uncovered files.
                 val emptyExecutionDataStore = ExecutionDataStore()
@@ -240,7 +262,11 @@ object CoverageRecorder {
                     .filterNot { classInfo -> classInfo.name in coveredClassNames }
                     .forEach { classInfo ->
                         classInfo.resource.use { resource ->
-                            EdgeCoverageInstrumentor(ClassInstrumentor.defaultEdgeCoverageStrategy, ClassInstrumentor.defaultCoverageMap, 0).analyze(
+                            EdgeCoverageInstrumentor(
+                                ClassInstrumentor.defaultEdgeCoverageStrategy,
+                                ClassInstrumentor.defaultCoverageMap,
+                                0,
+                            ).analyze(
                                 emptyExecutionDataStore,
                                 coverage,
                                 resource.load(),

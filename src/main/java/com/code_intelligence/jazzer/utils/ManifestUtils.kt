@@ -19,18 +19,19 @@ package com.code_intelligence.jazzer.utils
 import java.util.jar.Manifest
 
 object ManifestUtils {
-
     private const val FUZZ_TARGET_CLASS = "Jazzer-Fuzz-Target-Class"
     const val HOOK_CLASSES = "Jazzer-Hook-Classes"
 
     fun combineManifestValues(attribute: String): List<String> {
         val manifests = ManifestUtils::class.java.classLoader.getResources("META-INF/MANIFEST.MF")
-        return manifests.asSequence().mapNotNull { url ->
-            url.openStream().use { inputStream ->
-                val manifest = Manifest(inputStream)
-                manifest.mainAttributes.getValue(attribute)
-            }
-        }.toList()
+        return manifests
+            .asSequence()
+            .mapNotNull { url ->
+                url.openStream().use { inputStream ->
+                    val manifest = Manifest(inputStream)
+                    manifest.mainAttributes.getValue(attribute)
+                }
+            }.toList()
     }
 
     /**

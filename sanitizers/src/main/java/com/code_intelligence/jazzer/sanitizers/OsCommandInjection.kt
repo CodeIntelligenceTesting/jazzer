@@ -33,7 +33,6 @@ import java.lang.invoke.MethodHandle
  */
 @Suppress("unused_parameter", "unused")
 object OsCommandInjection {
-
     // Short and probably non-existing command name
     private const val COMMAND = "jazze"
 
@@ -44,8 +43,15 @@ object OsCommandInjection {
         additionalClassesToHook = ["java.lang.ProcessBuilder"],
     )
     @JvmStatic
-    fun processImplStartHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
-        if (args.isEmpty()) { return }
+    fun processImplStartHook(
+        method: MethodHandle?,
+        alwaysNull: Any?,
+        args: Array<Any?>,
+        hookId: Int,
+    ) {
+        if (args.isEmpty()) {
+            return
+        }
         // Calling ProcessBuilder already checks if command array is empty
         @Suppress("UNCHECKED_CAST")
         (args[0] as? Array<String>)?.first().let { cmd ->

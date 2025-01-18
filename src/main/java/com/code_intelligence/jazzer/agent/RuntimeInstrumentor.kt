@@ -52,7 +52,6 @@ class RuntimeInstrumentor(
     private val coverageIdSynchronizer: CoverageIdStrategy,
     private val dumpClassesDir: Path?,
 ) : ClassFileTransformer {
-
     @kotlin.time.ExperimentalTime
     override fun transform(
         loader: ClassLoader?,
@@ -67,10 +66,16 @@ class RuntimeInstrumentor(
         // https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/ClassFileTransformer.html
         return try {
             if (instrumentOnly && protectionDomain != null) {
-                var outputPathPrefix = protectionDomain.getCodeSource().getLocation().getFile().toString()
+                var outputPathPrefix =
+                    protectionDomain
+                        .getCodeSource()
+                        .getLocation()
+                        .getFile()
+                        .toString()
                 if (outputPathPrefix.isNotEmpty()) {
                     if (outputPathPrefix.contains(File.separator)) {
-                        outputPathPrefix = outputPathPrefix.substring(outputPathPrefix.lastIndexOf(File.separator) + 1, outputPathPrefix.length)
+                        outputPathPrefix =
+                            outputPathPrefix.substring(outputPathPrefix.lastIndexOf(File.separator) + 1, outputPathPrefix.length)
                     }
 
                     if (outputPathPrefix.endsWith(".jar")) {
@@ -116,7 +121,12 @@ class RuntimeInstrumentor(
         }
     }
 
-    private fun dumpToClassFile(internalClassName: String, bytecode: ByteArray, basenameSuffix: String = "", pathPrefix: String = "") {
+    private fun dumpToClassFile(
+        internalClassName: String,
+        bytecode: ByteArray,
+        basenameSuffix: String = "",
+        pathPrefix: String = "",
+    ) {
         val relativePath = "$pathPrefix$internalClassName$basenameSuffix.class"
         val absolutePath = dumpClassesDir!!.resolve(relativePath)
         val dumpFile = absolutePath.toFile()
@@ -167,38 +177,44 @@ class RuntimeInstrumentor(
     }
 
     @kotlin.time.ExperimentalTime
-    fun transformInternal(internalClassName: String, maybeClassfileBuffer: ByteArray?): ByteArray? {
-        val (fullInstrumentation, printInfo) = when {
-            classesToFullyInstrument.includes(internalClassName) -> Pair(true, true)
-            classesToHookInstrument.includes(internalClassName) -> Pair(false, true)
-            // The classes to hook specified by hooks are more of an implementation detail of the hook. The list is
-            // always the same unless the set of hooks changes and doesn't help the user judge whether their classes are
-            // being instrumented, so we don't print info for them.
-            additionalClassesToHookInstrument.includes(internalClassName) -> Pair(false, false)
-            else -> return null
-        }
+    fun transformInternal(
+        internalClassName: String,
+        maybeClassfileBuffer: ByteArray?,
+    ): ByteArray? {
+        val (fullInstrumentation, printInfo) =
+            when {
+                classesToFullyInstrument.includes(internalClassName) -> Pair(true, true)
+                classesToHookInstrument.includes(internalClassName) -> Pair(false, true)
+                // The classes to hook specified by hooks are more of an implementation detail of the hook. The list is
+                // always the same unless the set of hooks changes and doesn't help the user judge whether their classes are
+                // being instrumented, so we don't print info for them.
+                additionalClassesToHookInstrument.includes(internalClassName) -> Pair(false, false)
+                else -> return null
+            }
         val className = internalClassName.replace('/', '.')
-        val classfileBuffer = maybeClassfileBuffer ?: ClassGraph()
-            .enableSystemJarsAndModules()
-            .acceptLibOrExtJars()
-            .ignoreClassVisibility()
-            .acceptClasses(className)
-            .scan()
-            .use {
-                it.getClassInfo(className)?.resource?.load() ?: run {
-                    Log.warn("Failed to load bytecode of class $className")
-                    return null
+        val classfileBuffer =
+            maybeClassfileBuffer ?: ClassGraph()
+                .enableSystemJarsAndModules()
+                .acceptLibOrExtJars()
+                .ignoreClassVisibility()
+                .acceptClasses(className)
+                .scan()
+                .use {
+                    it.getClassInfo(className)?.resource?.load() ?: run {
+                        Log.warn("Failed to load bytecode of class $className")
+                        return null
+                    }
+                }
+        val (instrumentedBytecode, duration) =
+            measureTimedValue {
+                try {
+                    instrument(internalClassName, classfileBuffer, fullInstrumentation)
+                } catch (e: CoverageIdException) {
+                    Log.error("Coverage IDs are out of sync")
+                    e.printStackTrace()
+                    exitProcess(1)
                 }
             }
-        val (instrumentedBytecode, duration) = measureTimedValue {
-            try {
-                instrument(internalClassName, classfileBuffer, fullInstrumentation)
-            } catch (e: CoverageIdException) {
-                Log.error("Coverage IDs are out of sync")
-                e.printStackTrace()
-                exitProcess(1)
-            }
-        }
         val durationInMs = duration.inWholeMilliseconds
         val sizeIncrease = ((100.0 * (instrumentedBytecode.size - classfileBuffer.size)) / classfileBuffer.size).roundToInt()
         if (printInfo) {
@@ -211,14 +227,19 @@ class RuntimeInstrumentor(
         return instrumentedBytecode
     }
 
-    private fun instrument(internalClassName: String, bytecode: ByteArray, fullInstrumentation: Boolean): ByteArray {
-        val classWithHooksEnabledField = if (conditionalHooks) {
-            // Let the hook instrumentation emit additional logic that checks the value of the
-            // hooksEnabled field on this class and skips the hook if it is false.
-            "com/code_intelligence/jazzer/runtime/JazzerInternal"
-        } else {
-            null
-        }
+    private fun instrument(
+        internalClassName: String,
+        bytecode: ByteArray,
+        fullInstrumentation: Boolean,
+    ): ByteArray {
+        val classWithHooksEnabledField =
+            if (conditionalHooks) {
+                // Let the hook instrumentation emit additional logic that checks the value of the
+                // hooksEnabled field on this class and skips the hook if it is false.
+                "com/code_intelligence/jazzer/runtime/JazzerInternal"
+            } else {
+                null
+            }
         return ClassInstrumentor(internalClassName, bytecode).run {
             if (fullInstrumentation) {
                 // Coverage instrumentation must be performed before any other code updates

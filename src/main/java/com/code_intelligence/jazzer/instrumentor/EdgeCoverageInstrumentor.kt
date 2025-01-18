@@ -41,7 +41,6 @@ import kotlin.math.max
  * hold the collected coverage data at runtime.
  */
 interface EdgeCoverageStrategy {
-
     /**
      * Inject bytecode instrumentation on a control flow edge with ID [edgeId], with access to the
      * local variable [variable] that is populated at the beginning of each method by the
@@ -71,7 +70,11 @@ interface EdgeCoverageStrategy {
      * Inject bytecode that loads the coverage counters of the coverage map class described by
      * [coverageMapInternalClassName] into the local variable [variable].
      */
-    fun loadLocalVariable(mv: MethodVisitor, variable: Int, coverageMapInternalClassName: String)
+    fun loadLocalVariable(
+        mv: MethodVisitor,
+        variable: Int,
+        coverageMapInternalClassName: String,
+    )
 
     /**
      * The maximal number of stack elements used by [loadLocalVariable].
@@ -103,19 +106,28 @@ class EdgeCoverageInstrumentor(
             ),
         )
 
-    override fun instrument(internalClassName: String, bytecode: ByteArray): ByteArray {
+    override fun instrument(
+        internalClassName: String,
+        bytecode: ByteArray,
+    ): ByteArray {
         val reader = InstrSupport.classReaderFor(bytecode)
         val writer = ClassWriter(reader, 0)
         val version = InstrSupport.getMajorVersion(reader)
-        val visitor = EdgeCoverageClassProbesAdapter(
-            ClassInstrumenter(edgeCoverageProbeArrayStrategy, edgeCoverageProbeInserterFactory, writer),
-            InstrSupport.needsFrames(version),
-        )
+        val visitor =
+            EdgeCoverageClassProbesAdapter(
+                ClassInstrumenter(edgeCoverageProbeArrayStrategy, edgeCoverageProbeInserterFactory, writer),
+                InstrSupport.needsFrames(version),
+            )
         reader.accept(visitor, ClassReader.EXPAND_FRAMES)
         return writer.toByteArray()
     }
 
-    fun analyze(executionData: ExecutionDataStore, coverageVisitor: ICoverageVisitor, bytecode: ByteArray, internalClassName: String) {
+    fun analyze(
+        executionData: ExecutionDataStore,
+        coverageVisitor: ICoverageVisitor,
+        bytecode: ByteArray,
+        internalClassName: String,
+    ) {
         Analyzer(executionData, coverageVisitor, edgeCoverageClassProbesAdapterFactory).run {
             analyzeClass(bytecode, internalClassName)
         }
@@ -144,7 +156,10 @@ class EdgeCoverageInstrumentor(
             strategy.instrumentControlFlowEdge(mv, id, variable, coverageMapInternalClassName)
         }
 
-        override fun visitMaxs(maxStack: Int, maxLocals: Int) {
+        override fun visitMaxs(
+            maxStack: Int,
+            maxLocals: Int,
+        ) {
             val newMaxStack = max(maxStack + strategy.instrumentControlFlowEdgeStackSize, strategy.loadLocalVariableStackSize)
             val newMaxLocals = maxLocals + if (strategy.localVariableType != null) 1 else 0
             mv.visitMaxs(newMaxStack, newMaxLocals)
@@ -158,8 +173,10 @@ class EdgeCoverageInstrumentor(
             EdgeCoverageProbeInserter(access, name, desc, mv, arrayStrategy)
         }
 
-    private inner class EdgeCoverageClassProbesAdapter(private val cpv: ClassProbesVisitor, trackFrames: Boolean) :
-        ClassProbesAdapter(cpv, trackFrames) {
+    private inner class EdgeCoverageClassProbesAdapter(
+        private val cpv: ClassProbesVisitor,
+        trackFrames: Boolean,
+    ) : ClassProbesAdapter(cpv, trackFrames) {
         override fun nextId(): Int = nextEdgeId()
 
         override fun visitEnd() {
@@ -170,18 +187,27 @@ class EdgeCoverageInstrumentor(
         }
     }
 
-    private val edgeCoverageClassProbesAdapterFactory = IClassProbesAdapterFactory { probesVisitor, trackFrames ->
-        EdgeCoverageClassProbesAdapter(probesVisitor, trackFrames)
-    }
-
-    private val edgeCoverageProbeArrayStrategy = object : IProbeArrayStrategy {
-        override fun storeInstance(mv: MethodVisitor, clinit: Boolean, variable: Int): Int {
-            strategy.loadLocalVariable(mv, variable, coverageMapInternalClassName)
-            return strategy.loadLocalVariableStackSize
+    private val edgeCoverageClassProbesAdapterFactory =
+        IClassProbesAdapterFactory { probesVisitor, trackFrames ->
+            EdgeCoverageClassProbesAdapter(probesVisitor, trackFrames)
         }
 
-        override fun addMembers(cv: ClassVisitor, probeCount: Int) {}
-    }
+    private val edgeCoverageProbeArrayStrategy =
+        object : IProbeArrayStrategy {
+            override fun storeInstance(
+                mv: MethodVisitor,
+                clinit: Boolean,
+                variable: Int,
+            ): Int {
+                strategy.loadLocalVariable(mv, variable, coverageMapInternalClassName)
+                return strategy.loadLocalVariableStackSize
+            }
+
+            override fun addMembers(
+                cv: ClassVisitor,
+                probeCount: Int,
+            ) {}
+        }
 }
 
 fun MethodVisitor.push(value: Int) {

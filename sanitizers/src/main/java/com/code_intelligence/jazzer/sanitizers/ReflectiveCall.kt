@@ -30,25 +30,64 @@ import java.lang.invoke.MethodHandle
  */
 @Suppress("unused_parameter", "unused")
 object ReflectiveCall {
-
     @MethodHooks(
-        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Class", targetMethod = "forName", targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Class;"),
-        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Class", targetMethod = "forName", targetMethodDescriptor = "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;"),
-        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.ClassLoader", targetMethod = "loadClass", targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Class;"),
-        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.ClassLoader", targetMethod = "loadClass", targetMethodDescriptor = "(Ljava/lang/String;Z)Ljava/lang/Class;"),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "java.lang.Class",
+            targetMethod = "forName",
+            targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Class;",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "java.lang.Class",
+            targetMethod = "forName",
+            targetMethodDescriptor = "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "java.lang.ClassLoader",
+            targetMethod = "loadClass",
+            targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/Class;",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "java.lang.ClassLoader",
+            targetMethod = "loadClass",
+            targetMethodDescriptor = "(Ljava/lang/String;Z)Ljava/lang/Class;",
+        ),
     )
     @JvmStatic
-    fun loadClassHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
+    fun loadClassHook(
+        method: MethodHandle?,
+        alwaysNull: Any?,
+        args: Array<Any?>,
+        hookId: Int,
+    ) {
         val className = args[0] as? String ?: return
         Jazzer.guideTowardsEquality(className, HONEYPOT_CLASS_NAME, hookId)
     }
 
     @MethodHooks(
-        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.Class", targetMethod = "forName", targetMethodDescriptor = "(Ljava/lang/Module;Ljava/lang/String;)Ljava/lang/Class;"),
-        MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.ClassLoader", targetMethod = "loadClass", targetMethodDescriptor = "(Ljava/lang/Module;Ljava/lang/String;)Ljava/lang/Class;"),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "java.lang.Class",
+            targetMethod = "forName",
+            targetMethodDescriptor = "(Ljava/lang/Module;Ljava/lang/String;)Ljava/lang/Class;",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "java.lang.ClassLoader",
+            targetMethod = "loadClass",
+            targetMethodDescriptor = "(Ljava/lang/Module;Ljava/lang/String;)Ljava/lang/Class;",
+        ),
     )
     @JvmStatic
-    fun loadClassWithModuleHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
+    fun loadClassWithModuleHook(
+        method: MethodHandle?,
+        alwaysNull: Any?,
+        args: Array<Any?>,
+        hookId: Int,
+    ) {
         val className = args[1] as? String ?: return
         Jazzer.guideTowardsEquality(className, HONEYPOT_CLASS_NAME, hookId)
     }
@@ -62,8 +101,15 @@ object ReflectiveCall {
         MethodHook(type = HookType.BEFORE, targetClassName = "java.lang.ClassLoader", targetMethod = "findLibrary"),
     )
     @JvmStatic
-    fun loadLibraryHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
-        if (args.isEmpty()) { return }
+    fun loadLibraryHook(
+        method: MethodHandle?,
+        alwaysNull: Any?,
+        args: Array<Any?>,
+        hookId: Int,
+    ) {
+        if (args.isEmpty()) {
+            return
+        }
         val libraryName = args[0] as? String ?: return
         if (libraryName == HONEYPOT_LIBRARY_NAME) {
             Jazzer.reportFindingFromHook(

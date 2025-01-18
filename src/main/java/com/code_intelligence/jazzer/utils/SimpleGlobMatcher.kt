@@ -16,7 +16,9 @@
 
 package com.code_intelligence.jazzer.utils
 
-class SimpleGlobMatcher(val glob: String) {
+class SimpleGlobMatcher(
+    val glob: String,
+) {
     private enum class Type {
         // foo.bar (matches foo.bar only)
         FULL_MATCH,

@@ -33,7 +33,6 @@ import java.util.WeakHashMap
  */
 @Suppress("unused_parameter", "unused")
 object Deserialization {
-
     private val OBJECT_INPUT_STREAM_HEADER =
         ObjectStreamConstants.STREAM_MAGIC.toBytes() + ObjectStreamConstants.STREAM_VERSION.toBytes()
 
@@ -88,13 +87,19 @@ object Deserialization {
         targetMethodDescriptor = "(Ljava/io/InputStream;)V",
     )
     @JvmStatic
-    fun objectInputStreamInitBeforeHook(method: MethodHandle?, alwaysNull: Any?, args: Array<Any?>, hookId: Int) {
+    fun objectInputStreamInitBeforeHook(
+        method: MethodHandle?,
+        alwaysNull: Any?,
+        args: Array<Any?>,
+        hookId: Int,
+    ) {
         val originalInputStream = args[0] as? InputStream ?: return
-        val fixedInputStream = if (originalInputStream.markSupported()) {
-            originalInputStream
-        } else {
-            BufferedInputStream(originalInputStream)
-        }
+        val fixedInputStream =
+            if (originalInputStream.markSupported()) {
+                originalInputStream
+            } else {
+                BufferedInputStream(originalInputStream)
+            }
         args[0] = fixedInputStream
         guideMarkableInputStreamTowardsEquality(fixedInputStream, OBJECT_INPUT_STREAM_HEADER, hookId)
     }

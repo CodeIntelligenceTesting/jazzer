@@ -37,8 +37,8 @@ internal fun makeHookMethodVisitor(
     java6Mode: Boolean,
     random: DeterministicRandom,
     classWithHooksEnabledField: String?,
-): MethodVisitor {
-    return HookMethodVisitor(
+): MethodVisitor =
+    HookMethodVisitor(
         owner,
         access,
         name,
@@ -49,7 +49,6 @@ internal fun makeHookMethodVisitor(
         random,
         classWithHooksEnabledField,
     ).lvs
-}
 
 private class HookMethodVisitor(
     owner: String,
@@ -62,50 +61,51 @@ private class HookMethodVisitor(
     private val random: DeterministicRandom,
     private val classWithHooksEnabledField: String?,
 ) : MethodVisitor(
-    Instrumentor.ASM_API_VERSION,
-    // AnalyzerAdapter computes stack map frames at every instruction, which is needed for the
-    // conditional hook logic as it adds a conditional jump. Before Java 7, stack map frames were
-    // neither included nor required in class files.
-    //
-    // Note: Delegating to AnalyzerAdapter rather than having AnalyzerAdapter delegate to our
-    // MethodVisitor is unusual. We do this since we insert conditional jumps around method calls,
-    // which requires knowing the stack map both before and after the call. If AnalyzerAdapter
-    // delegated to this MethodVisitor, we would only be able to access the stack map before the
-    // method call in visitMethodInsn.
-    if (classWithHooksEnabledField != null && !java6Mode) {
-        AnalyzerAdapter(
-            owner,
-            access,
-            name,
-            descriptor,
-            methodVisitor,
-        )
-    } else {
-        methodVisitor
-    },
-) {
-
+        Instrumentor.ASM_API_VERSION,
+        // AnalyzerAdapter computes stack map frames at every instruction, which is needed for the
+        // conditional hook logic as it adds a conditional jump. Before Java 7, stack map frames were
+        // neither included nor required in class files.
+        //
+        // Note: Delegating to AnalyzerAdapter rather than having AnalyzerAdapter delegate to our
+        // MethodVisitor is unusual. We do this since we insert conditional jumps around method calls,
+        // which requires knowing the stack map both before and after the call. If AnalyzerAdapter
+        // delegated to this MethodVisitor, we would only be able to access the stack map before the
+        // method call in visitMethodInsn.
+        if (classWithHooksEnabledField != null && !java6Mode) {
+            AnalyzerAdapter(
+                owner,
+                access,
+                name,
+                descriptor,
+                methodVisitor,
+            )
+        } else {
+            methodVisitor
+        },
+    ) {
     companion object {
         private val showUnsupportedHookWarning = AtomicBoolean(true)
     }
 
-    val lvs = object : LocalVariablesSorter(Instrumentor.ASM_API_VERSION, access, descriptor, this) {
-        override fun updateNewLocals(newLocals: Array<Any>) {
-            // The local variables involved in calling hooks do not need to outlive the current
-            // basic block and should thus not appear in stack map frames. By requesting the
-            // LocalVariableSorter to fill their entries in stack map frames with TOP, they will
-            // be treated like an unused local variable slot.
-            newLocals.fill(Opcodes.TOP)
+    val lvs =
+        object : LocalVariablesSorter(Instrumentor.ASM_API_VERSION, access, descriptor, this) {
+            override fun updateNewLocals(newLocals: Array<Any>) {
+                // The local variables involved in calling hooks do not need to outlive the current
+                // basic block and should thus not appear in stack map frames. By requesting the
+                // LocalVariableSorter to fill their entries in stack map frames with TOP, they will
+                // be treated like an unused local variable slot.
+                newLocals.fill(Opcodes.TOP)
+            }
         }
-    }
 
-    private val hooks = hooks.groupBy { hook ->
-        var hookKey = "${hook.hookType}#${hook.targetInternalClassName}#${hook.targetMethodName}"
-        if (hook.targetMethodDescriptor != null) {
-            hookKey += "#${hook.targetMethodDescriptor}"
+    private val hooks =
+        hooks.groupBy { hook ->
+            var hookKey = "${hook.hookType}#${hook.targetInternalClassName}#${hook.targetMethodName}"
+            if (hook.targetMethodDescriptor != null) {
+                hookKey += "#${hook.targetMethodDescriptor}"
+            }
+            hookKey
         }
-        hookKey
-    }
 
     override fun visitMethodInsn(
         opcode: Int,
@@ -233,13 +233,14 @@ private class HookMethodVisitor(
                 }
             } else {
                 // Push a MethodHandle representing the hooked method.
-                val handleOpcode = when (opcode) {
-                    Opcodes.INVOKEVIRTUAL -> Opcodes.H_INVOKEVIRTUAL
-                    Opcodes.INVOKEINTERFACE -> Opcodes.H_INVOKEINTERFACE
-                    Opcodes.INVOKESTATIC -> Opcodes.H_INVOKESTATIC
-                    Opcodes.INVOKESPECIAL -> Opcodes.H_INVOKESPECIAL
-                    else -> -1
-                }
+                val handleOpcode =
+                    when (opcode) {
+                        Opcodes.INVOKEVIRTUAL -> Opcodes.H_INVOKEVIRTUAL
+                        Opcodes.INVOKEINTERFACE -> Opcodes.H_INVOKEINTERFACE
+                        Opcodes.INVOKESTATIC -> Opcodes.H_INVOKESTATIC
+                        Opcodes.INVOKESPECIAL -> Opcodes.H_INVOKESPECIAL
+                        else -> -1
+                    }
                 if (java6Mode) {
                     // MethodHandle constants (type 15) are not supported in Java 6 class files (major version 50).
                     mv.visitInsn(Opcodes.ACONST_NULL) // push nullref
@@ -381,19 +382,28 @@ private class HookMethodVisitor(
         }
     }
 
-    private fun isMethodInvocationOp(opcode: Int) = opcode in listOf(
-        Opcodes.INVOKEVIRTUAL,
-        Opcodes.INVOKEINTERFACE,
-        Opcodes.INVOKESTATIC,
-        Opcodes.INVOKESPECIAL,
-    )
+    private fun isMethodInvocationOp(opcode: Int) =
+        opcode in
+            listOf(
+                Opcodes.INVOKEVIRTUAL,
+                Opcodes.INVOKEINTERFACE,
+                Opcodes.INVOKESTATIC,
+                Opcodes.INVOKESPECIAL,
+            )
 
-    private fun findMatchingHooks(owner: String, name: String, descriptor: String): List<Hook> {
-        val result = HookType.values().flatMap { hookType ->
-            val withoutDescriptorKey = "$hookType#$owner#$name"
-            val withDescriptorKey = "$withoutDescriptorKey#$descriptor"
-            hooks[withDescriptorKey].orEmpty() + hooks[withoutDescriptorKey].orEmpty()
-        }.sortedBy { it.hookType }
+    private fun findMatchingHooks(
+        owner: String,
+        name: String,
+        descriptor: String,
+    ): List<Hook> {
+        val result =
+            HookType
+                .values()
+                .flatMap { hookType ->
+                    val withoutDescriptorKey = "$hookType#$owner#$name"
+                    val withDescriptorKey = "$withoutDescriptorKey#$descriptor"
+                    hooks[withDescriptorKey].orEmpty() + hooks[withoutDescriptorKey].orEmpty()
+                }.sortedBy { it.hookType }
         val replaceHookCount = result.count { it.hookType == HookType.REPLACE }
         check(
             replaceHookCount == 0 ||
@@ -457,7 +467,10 @@ private class HookMethodVisitor(
     // Loads all arguments for a method call from a local object array.
     // argTypeSigs: The type signatures for all method arguments
     // localObjArr: Index of a local variable containing an object array where the arguments will be loaded from
-    private fun loadMethodArguments(paramDescriptors: List<String>, localObjArr: Int) {
+    private fun loadMethodArguments(
+        paramDescriptors: List<String>,
+        localObjArr: Int,
+    ) {
         // Loop over all arguments
         for ((argIdx, argDescriptor) in paramDescriptors.withIndex()) {
             // Push a reference to the object array on the stack
@@ -494,17 +507,18 @@ private class HookMethodVisitor(
     // and pushes the primitive value it contains (e.g. removes Integer, pushes int).
     // This is done by calling .intValue(...) / .charValue(...) / ... on the wrapper object.
     private fun unwrapTypeIfPrimitive(primitiveTypeDescriptor: String) {
-        val (methodName, wrappedTypeDescriptor) = when (primitiveTypeDescriptor) {
-            "B" -> Pair("byteValue", "java/lang/Byte")
-            "C" -> Pair("charValue", "java/lang/Character")
-            "D" -> Pair("doubleValue", "java/lang/Double")
-            "F" -> Pair("floatValue", "java/lang/Float")
-            "I" -> Pair("intValue", "java/lang/Integer")
-            "J" -> Pair("longValue", "java/lang/Long")
-            "S" -> Pair("shortValue", "java/lang/Short")
-            "Z" -> Pair("booleanValue", "java/lang/Boolean")
-            else -> return
-        }
+        val (methodName, wrappedTypeDescriptor) =
+            when (primitiveTypeDescriptor) {
+                "B" -> Pair("byteValue", "java/lang/Byte")
+                "C" -> Pair("charValue", "java/lang/Character")
+                "D" -> Pair("doubleValue", "java/lang/Double")
+                "F" -> Pair("floatValue", "java/lang/Float")
+                "I" -> Pair("intValue", "java/lang/Integer")
+                "J" -> Pair("longValue", "java/lang/Long")
+                "S" -> Pair("shortValue", "java/lang/Short")
+                "Z" -> Pair("booleanValue", "java/lang/Boolean")
+                else -> return
+            }
         mv.visitMethodInsn(
             Opcodes.INVOKEVIRTUAL,
             wrappedTypeDescriptor,
