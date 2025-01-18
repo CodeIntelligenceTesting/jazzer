@@ -50,6 +50,7 @@ object LdapInjection {
     // Characters to escape in search filter queries
     private const val FILTER_CHARACTERS = "*()\\\u0000"
 
+    @Suppress("ktlint:standard:max-line-length")
     @MethodHooks(
         // Single object lookup, possible DN injection
         MethodHook(

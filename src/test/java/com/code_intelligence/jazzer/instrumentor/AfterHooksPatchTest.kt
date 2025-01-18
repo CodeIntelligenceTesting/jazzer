@@ -52,6 +52,7 @@ private fun getPatchedAfterHooksTargetInstance(classWithHooksEnabledField: Class
     return patchedClass.getDeclaredConstructor().newInstance() as AfterHooksTargetContract
 }
 
+@Suppress("ktlint:standard:property-naming")
 class AfterHooksPatchTest {
     @Test
     fun testOriginal() {
