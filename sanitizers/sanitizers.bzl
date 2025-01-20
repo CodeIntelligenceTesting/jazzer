@@ -21,6 +21,7 @@ _sanitizer_class_names = [
     "ClojureLangHooks",
     "Deserialization",
     "ExpressionLanguageInjection",
+    "FilePathTraversal",
     "LdapInjection",
     "NamingContextLookup",
     "OsCommandInjection",
