@@ -30,6 +30,7 @@ import com.code_intelligence.jazzer.autofuzz.FuzzTarget;
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder;
 import com.code_intelligence.jazzer.mutation.ArgumentsMutator;
 import com.code_intelligence.jazzer.runtime.FuzzTargetRunnerNatives;
+import com.code_intelligence.jazzer.runtime.Fuzzer;
 import com.code_intelligence.jazzer.runtime.JazzerInternal;
 import com.code_intelligence.jazzer.utils.Log;
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
@@ -440,6 +441,10 @@ public final class FuzzTargetRunner {
     }
     return startLibFuzzer(
         args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][]::new));
+  }
+
+  public static int startFuzzer(List<String> args) {
+    return Fuzzer.start(args, FuzzTargetRunner.class, useMutatorFramework);
   }
 
   public static void registerFatalFindingHandlerForJUnit(Consumer<Throwable> findingHandler) {
