@@ -330,7 +330,9 @@ class FuzzTestExecutor {
 
     ApiStatsHolder.apiStats = new ApiStatsInterval();
 
-    int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
+    // TODO select the fuzzer using options
+    // int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
+    int exitCode = FuzzTargetRunner.startUnchainedFuzzer(libFuzzerArgs);
     javaSeedsDir.ifPresent(FuzzTestExecutor::deleteJavaSeedsDir);
     Throwable finding = atomicFinding.get();
 

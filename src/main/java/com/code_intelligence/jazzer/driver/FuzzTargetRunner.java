@@ -442,6 +442,31 @@ public final class FuzzTargetRunner {
         args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][]::new));
   }
 
+  public static int startUnchainedFuzzer(List<String> args) {
+    if (mutator == null) {
+      Log.error("Mutator framework is required for unchained fuzzing");
+      exit(1);
+    }
+
+    // Native (Java) corpus management
+    // read corpus and deserialize using mutator
+    // get features from each input
+    // - coverage features
+    // - execution time
+    // - memory usage
+    // apply user-configurable selection fn (SEL) to keep inputs based on the features
+    //   this fn is also used during fuzzing
+
+    // Native (Java) fuzzing loop in a thread
+    // - select input from corpus using user-configurable fuzzing strategy fn (FUZ)
+    // - apply mutator to generate new input
+    // - run fuzz target with new input
+    // - collect features and apply SEL to keep or discard input
+    // - if input is kept, write out the corpus
+    // Also start timeout thread that kills the fuzzing thread after timeout
+    return 0;
+  }
+
   public static void registerFatalFindingHandlerForJUnit(Consumer<Throwable> findingHandler) {
     FuzzTargetRunner.fatalFindingHandlerForJUnit = Objects.requireNonNull(findingHandler);
   }
