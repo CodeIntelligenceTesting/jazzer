@@ -127,6 +127,8 @@ public @interface FuzzTest {
    */
   long maxExecutions() default 0;
 
+  boolean isUnchained() default false;
+
   /**
    * Controls the JUnit lifecycle of fuzz tests during fuzzing.
    *

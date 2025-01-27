@@ -26,6 +26,7 @@ import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.FuzzTargetHolder;
 import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import com.code_intelligence.jazzer.driver.Opt;
+import com.code_intelligence.jazzer.driver.OptItem;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -58,10 +59,33 @@ class FuzzTestExecutor {
 
   private final List<String> libFuzzerArgs;
   private final Optional<Path> javaSeedsDir;
+  // unchained args
+  private final boolean isUnchained;
+  private final List<OptItem> opts;
 
   private FuzzTestExecutor(List<String> libFuzzerArgs, Optional<Path> javaSeedsDir) {
     this.libFuzzerArgs = libFuzzerArgs;
     this.javaSeedsDir = javaSeedsDir;
+    this.isUnchained = false;
+    this.opts = null;
+  }
+
+  private FuzzTestExecutor(Optional<Path> javaSeedsDir, List<OptItem> fuzzerArgs) {
+    this.libFuzzerArgs = null;
+    this.opts = fuzzerArgs;
+    this.javaSeedsDir = javaSeedsDir;
+    this.isUnchained = true;
+  }
+
+  public static FuzzTestExecutor prepareUnchained(
+      ExtensionContext context, String maxDuration, long maxRuns, Optional<Path> dictionaryPath)
+      throws IOException {
+    if (!hasBeenPrepared.compareAndSet(false, true)) {
+      throw new FuzzTestConfigurationError(
+          "FuzzTestExecutor#prepare can only be called once per test run");
+    }
+    List<OptItem> opts = null;
+    return new FuzzTestExecutor(Optional.empty(), opts);
   }
 
   public static FuzzTestExecutor prepare(
@@ -260,14 +284,19 @@ class FuzzTestExecutor {
       ExtensionContext extensionContext,
       String maxDuration,
       long maxExecutions,
-      Optional<Path> dictionaryPath)
+      Optional<Path> dictionaryPath,
+      boolean isUnchained)
       throws IOException {
     if (!agentInstalled.compareAndSet(false, true)) {
       return;
     }
     if (Utils.isFuzzing(extensionContext)) {
       FuzzTestExecutor executor =
-          prepare(extensionContext, maxDuration, maxExecutions, dictionaryPath);
+          isUnchained
+              ? FuzzTestExecutor.prepareUnchained(
+                  extensionContext, maxDuration, maxExecutions, dictionaryPath)
+              : FuzzTestExecutor.prepare(
+                  extensionContext, maxDuration, maxExecutions, dictionaryPath);
       extensionContext.getRoot().getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
       AgentConfigurator.forFuzzing(extensionContext);
     } else {
@@ -330,9 +359,10 @@ class FuzzTestExecutor {
 
     ApiStatsHolder.apiStats = new ApiStatsInterval();
 
-    // TODO select the fuzzer using options
-    // int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
-    int exitCode = FuzzTargetRunner.startUnchainedFuzzer(libFuzzerArgs);
+    int exitCode =
+        isUnchained
+            ? FuzzTargetRunner.startUnchainedFuzzer(libFuzzerArgs)
+            : FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
     javaSeedsDir.ifPresent(FuzzTestExecutor::deleteJavaSeedsDir);
     Throwable finding = atomicFinding.get();
 

@@ -60,7 +60,11 @@ class FuzzTestExtensions
     // as that provider isn't invoked before fuzz test executions for the arguments provided by
     // user-provided ArgumentsProviders ("Java seeds").
     FuzzTestExecutor.configureAndInstallAgent(
-        extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions(), dictionaryPath);
+        extensionContext,
+        fuzzTest.maxDuration(),
+        fuzzTest.maxExecutions(),
+        dictionaryPath,
+        fuzzTest.isUnchained());
     // Skip the invocation of the test method with the special arguments provided by
     // FuzzTestArgumentsProvider and start fuzzing instead.
     if (Utils.isMarkedInvocation(invocationContext)) {
