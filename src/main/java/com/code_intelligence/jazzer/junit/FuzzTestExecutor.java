@@ -61,18 +61,18 @@ class FuzzTestExecutor {
   private final Optional<Path> javaSeedsDir;
   // unchained args
   private final boolean isUnchained;
-  private final List<OptItem> opts;
+  private final List<OptItem> fuzzerArgs;
 
   private FuzzTestExecutor(List<String> libFuzzerArgs, Optional<Path> javaSeedsDir) {
     this.libFuzzerArgs = libFuzzerArgs;
     this.javaSeedsDir = javaSeedsDir;
     this.isUnchained = false;
-    this.opts = null;
+    this.fuzzerArgs = null;
   }
 
   private FuzzTestExecutor(Optional<Path> javaSeedsDir, List<OptItem> fuzzerArgs) {
     this.libFuzzerArgs = null;
-    this.opts = fuzzerArgs;
+    this.fuzzerArgs = fuzzerArgs;
     this.javaSeedsDir = javaSeedsDir;
     this.isUnchained = true;
   }
@@ -361,7 +361,7 @@ class FuzzTestExecutor {
 
     int exitCode =
         isUnchained
-            ? FuzzTargetRunner.startUnchainedFuzzer(libFuzzerArgs)
+            ? FuzzTargetRunner.startUnchainedFuzzer(fuzzerArgs)
             : FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
     javaSeedsDir.ifPresent(FuzzTestExecutor::deleteJavaSeedsDir);
     Throwable finding = atomicFinding.get();
