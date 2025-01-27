@@ -44,7 +44,11 @@ class AgentConfiguringArgumentsProvider implements ArgumentsProvider, Annotation
     // ArgumentProviders need the bootstrap jar on the classpath and there may be no user-provided
     // ArgumentProviders to trigger the call in FuzzTestExtensions.
     FuzzTestExecutor.configureAndInstallAgent(
-        extensionContext, fuzzTest.maxDuration(), fuzzTest.maxExecutions(), dictionaryPath);
+        extensionContext,
+        fuzzTest.maxDuration(),
+        fuzzTest.maxExecutions(),
+        dictionaryPath,
+        fuzzTest.isUnchained());
     return Stream.empty();
   }
 }
