@@ -108,6 +108,7 @@ java_jni_library(
         ":fuzzed_data_provider_impl",
         ":lifecycle_methods_invoker",
         ":opt",
+        ":opt_item",
         ":recording_fuzzed_data_provider",
         ":reproducer_template",
         ":signal_handler",

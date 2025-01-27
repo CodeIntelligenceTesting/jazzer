@@ -442,7 +442,7 @@ public final class FuzzTargetRunner {
         args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][]::new));
   }
 
-  public static int startUnchainedFuzzer(List<String> args) {
+  public static int startUnchainedFuzzer(List<OptItem> args) {
     if (mutator == null) {
       Log.error("Mutator framework is required for unchained fuzzing");
       exit(1);
