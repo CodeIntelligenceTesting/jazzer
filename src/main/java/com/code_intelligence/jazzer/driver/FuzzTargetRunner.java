@@ -443,7 +443,8 @@ public final class FuzzTargetRunner {
         args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][]::new));
   }
 
-  // TODO when done prototyping: use UnchainedOptions (or similar) to pass the arguments instead of a Map
+  // TODO when done prototyping: use UnchainedOptions (or similar) to pass the arguments instead of
+  // a Map
   public static int startUnchainedFuzzer(Map<String, Object> args) {
     if (mutator == null) {
       Log.error("Mutator framework is required for unchained fuzzing");
@@ -454,7 +455,7 @@ public final class FuzzTargetRunner {
     for (Map.Entry<String, Object> entry : args.entrySet()) {
       System.err.println(entry.getKey() + ": " + entry.getValue());
     }
-    // Native (Java) corpus management
+    // Native (Java) corpus management  ### LATER
     // read corpus and deserialize using mutator
     // get features from each input
     // - coverage features
@@ -463,13 +464,88 @@ public final class FuzzTargetRunner {
     // apply user-configurable selection fn (SEL) to keep inputs based on the features
     //   this fn is also used during fuzzing
 
-    // Native (Java) fuzzing loop in a thread
+    // Mutation Core ## LATER
+
+    // Native (Java) fuzzing loop in a thread ### NOW
     // - select input from corpus using user-configurable fuzzing strategy fn (FUZ)
     // - apply mutator to generate new input
     // - run fuzz target with new input
     // - collect features and apply SEL to keep or discard input
     // - if input is kept, write out the corpus
     // Also start timeout thread that kills the fuzzing thread after timeout
+
+    // Extract some args.
+    // TODO: use UnchainedOptions instead
+    Integer maxExecutions = (Integer) args.get("maxExecutions");
+    Long maxDuration = (Long) args.get("maxDuration");
+    // if seed is null, use a random seed and print it
+
+    // make byte arrey of size 1 containing "\n"
+    byte[] initialBuf = new byte[1];
+    initialBuf[0] = '\n';
+
+    // corpus in RAM only for now
+    List<byte[]> corpus = new ArrayList<>();
+    corpus.add(initialBuf);
+
+    Thread fuzzerThread =
+        new Thread(
+            () -> {
+              Long seed = (Long) args.get("seed");
+              if (seed == null) {
+                seed = (long) (Math.random() * Long.MAX_VALUE);
+                System.err.println("Seed: " + seed);
+              }
+
+              // limited fuzzing loop for now
+              for (int i = 0; i < 10; i++) {
+                Throwable finding = null;
+                // select a random input from corpus
+                int index = (int) (Math.random() * corpus.size());
+                mutator.read(new ByteArrayInputStream(corpus.get(index)));
+                mutator.mutate(seed);
+
+                try {
+                  lifecycleMethodsInvoker.beforeEachExecution();
+                } catch (Throwable uncaughtFinding) {
+                  finding = uncaughtFinding;
+                }
+                // Do not insert code here. After beforeEachExecution has completed without a
+                // finding, we should
+                // always enter the try block that calls afterEachExecution in finally.
+                if (finding == null) {
+                  try {
+                    Object fuzzTargetInstance = lifecycleMethodsInvoker.getTestClassInstance();
+                    // detaching because we mutate
+                    mutator.invoke(fuzzTargetInstance, true);
+                  } catch (Throwable uncaughtFinding) {
+                    finding = uncaughtFinding;
+                  } finally {
+                    mutator.finishFuzzingIteration();
+                    try {
+                      lifecycleMethodsInvoker.afterEachExecution();
+                    } catch (Throwable t) {
+                      if (finding != null) {
+                        // We already have a finding and do not know whether the fuzz target is in
+                        // an expected
+                        // state, so report this as a warning rather than an error or finding.
+                        Log.warn("Failed to run lifecycle method", t);
+                      } else {
+                        finding = t;
+                      }
+                    }
+                  }
+                }
+                seed++;
+              }
+            });
+    fuzzerThread.start();
+    try {
+      fuzzerThread.join();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
     return 0;
   }
 
