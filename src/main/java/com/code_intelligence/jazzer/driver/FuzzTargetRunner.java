@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -442,12 +443,17 @@ public final class FuzzTargetRunner {
         args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][]::new));
   }
 
-  public static int startUnchainedFuzzer(List<OptItem> args) {
+  // TODO when done prototyping: use UnchainedOptions (or similar) to pass the arguments instead of a Map
+  public static int startUnchainedFuzzer(Map<String, Object> args) {
     if (mutator == null) {
       Log.error("Mutator framework is required for unchained fuzzing");
       exit(1);
     }
 
+    // print all args
+    for (Map.Entry<String, Object> entry : args.entrySet()) {
+      System.err.println(entry.getKey() + ": " + entry.getValue());
+    }
     // Native (Java) corpus management
     // read corpus and deserialize using mutator
     // get features from each input
