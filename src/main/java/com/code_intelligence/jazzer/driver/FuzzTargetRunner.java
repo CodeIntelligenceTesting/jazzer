@@ -175,7 +175,7 @@ public final class FuzzTargetRunner {
   }
 
   /** A test-only convenience wrapper around {@link #runOne(long, int)}. */
-  static int runOne(byte[] data) {
+  public static int runOne(byte[] data) {
     long dataPtr = UNSAFE.allocateMemory(data.length);
     UNSAFE.copyMemory(data, BYTE_ARRAY_OFFSET, null, dataPtr, data.length);
     try {
