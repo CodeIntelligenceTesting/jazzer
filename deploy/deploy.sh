@@ -27,13 +27,13 @@ cd "$BUILD_WORKSPACE_DIRECTORY" || fail "BUILD_WORKSPACE_DIRECTORY not found"
 JAZZER_COORDINATES=$1
 [[ "$JAZZER_COORDINATES" != *-dev ]] || fail "--//deploy:jazzer_version must be set to a release version, got: $JAZZER_COORDINATES"
 
-echo "$RELEASE_SIGNING_KEY_PRIVATE" | gpg --import
-echo "default-key $RELEASE_SIGNING_KEY_ID" > $HOME/.gnupg/gpg.conf
+#echo "$RELEASE_SIGNING_KEY_PRIVATE" | gpg --import
+#echo "default-key $RELEASE_SIGNING_KEY_ID" > $HOME/.gnupg/gpg.conf
 
 [ -z "${MAVEN_USER+x}" ] && \
-  fail "Set MAVEN_USER to the Sonatype OSSRH user"
+  fail "Set MAVEN_USER to the GitHub user"
 [ -z "${MAVEN_PASSWORD+x}" ] && \
-  fail "Set MAVEN_PASSWORD to the Sonatype OSSRH password"
+  fail "Set MAVEN_PASSWORD to the GitHub personal access token"
 [ -z "${JAZZER_JAR_PATH+x}" ] && \
   fail "Set JAZZER_JAR_PATH to the absolute path of jazzer.jar obtained from the release GitHub Actions workflow"
 [ ! -f "${JAZZER_JAR_PATH}" ] && \
@@ -57,7 +57,7 @@ java=$(rlocation "$java_rlocationpath")
 "$java" -jar "${JAZZER_JAR_PATH}" --version 2>&1 | grep '^Jazzer v' || \
   fail "JAZZER_JAR_PATH is not a valid jazzer.jar"
 
-MAVEN_REPO=https://oss.sonatype.org/service/local/staging/deploy/maven2
+MAVEN_REPO=https://maven.pkg.github.com/plan-research/kotlin-maven
 
 # The Jazzer jar itself bundles native libraries for multiple architectures and thus can't be built
 # on the local machine. It is obtained from CI and passed in via JAZZER_JAR_PATH.
@@ -68,11 +68,11 @@ JAZZER_SOURCES_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-sources)
 JAZZER_POM_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-pom)
 
 bazel run --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}" \
-  --define "maven_password=${MAVEN_PASSWORD}" --define gpg_sign=true \
+  --define "maven_password=${MAVEN_PASSWORD}" \
   //deploy:jazzer-api.publish
-MAVEN_REPO="$MAVEN_REPO" GPG_SIGN="true" MAVEN_USER="$MAVEN_USER" MAVEN_PASSWORD="$MAVEN_PASSWORD" \
+MAVEN_REPO="$MAVEN_REPO" MAVEN_USER="$MAVEN_USER" MAVEN_PASSWORD="$MAVEN_PASSWORD" \
   bazel run @rules_jvm_external//private/tools/java/com/github/bazelbuild/rules_jvm_external/maven:MavenPublisher -- \
   "$JAZZER_COORDINATES" "$JAZZER_POM_PATH" "$JAZZER_JAR_PATH" "sources=${JAZZER_SOURCES_PATH},javadoc=${JAZZER_DOCS_PATH}"
 bazel run --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}" \
-  --define "maven_password=${MAVEN_PASSWORD}" --define gpg_sign=true \
+  --define "maven_password=${MAVEN_PASSWORD}" \
   //deploy:jazzer-junit.publish
