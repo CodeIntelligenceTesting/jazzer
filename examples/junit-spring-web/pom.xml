@@ -48,9 +48,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.code-intelligence</groupId>
+			<groupId>org.jetbrains</groupId>
 			<artifactId>jazzer-junit</artifactId>
-			<version>0.0.0-dev</version>
+			<version>0.0.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -60,6 +60,13 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>apal-research-maven</id>
+			<url>https://maven.apal-research.com</url>
+		</repository>
+	</repositories>
 
 	<build>
 		<plugins>
