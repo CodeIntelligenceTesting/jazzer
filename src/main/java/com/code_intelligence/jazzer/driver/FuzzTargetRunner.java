@@ -442,7 +442,8 @@ public final class FuzzTargetRunner {
         args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][]::new));
   }
 
-  public static void registerFatalFindingHandlerForJUnit(BiConsumer<byte[], Throwable> findingHandler) {
+  public static void registerFatalFindingHandlerForJUnit(
+      BiConsumer<byte[], Throwable> findingHandler) {
     FuzzTargetRunner.fatalFindingHandlerForJUnit = Objects.requireNonNull(findingHandler);
   }
 

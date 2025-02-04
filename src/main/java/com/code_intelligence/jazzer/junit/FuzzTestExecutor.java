@@ -43,8 +43,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -318,9 +318,10 @@ class FuzzTestExecutor {
     AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
     try {
       // Non-fatal findings (with --keep_going) are logged by FuzzTargetRunner.
-      BiConsumer<byte[], Throwable> consumer = (a, b) -> {
-        atomicFinding.set(b);
-      };
+      BiConsumer<byte[], Throwable> consumer =
+          (a, b) -> {
+            atomicFinding.set(b);
+          };
       FuzzTargetRunner.registerFatalFindingHandlerForJUnit(consumer);
     } catch (Throwable throwable) {
       // Exception during initialization of FuzzTargetRunner, e.g. unsupported
