@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 import sun.misc.Unsafe;
 
@@ -119,7 +119,7 @@ public final class FuzzTargetRunner {
   private static final boolean useFuzzedDataProvider;
   private static final ArgumentsMutator mutator;
   private static final ReproducerTemplate reproducerTemplate;
-  private static Consumer<Throwable> fatalFindingHandlerForJUnit;
+  private static BiConsumer<byte[], Throwable> fatalFindingHandlerForJUnit;
 
   static {
     FuzzTargetHolder.FuzzTarget fuzzTarget = FuzzTargetHolder.fuzzTarget;
@@ -301,7 +301,7 @@ public final class FuzzTargetRunner {
       Log.finding(finding);
     }
     if (fatalFindingHandlerForJUnit != null && !continueFuzzing) {
-      fatalFindingHandlerForJUnit.accept(finding);
+      fatalFindingHandlerForJUnit.accept(data, finding);
     }
     if (emitDedupToken) {
       // Has to be printed to stdout as it is parsed by libFuzzer when minimizing a crash. It does
@@ -442,7 +442,7 @@ public final class FuzzTargetRunner {
         args.stream().map(str -> str.getBytes(StandardCharsets.UTF_8)).toArray(byte[][]::new));
   }
 
-  public static void registerFatalFindingHandlerForJUnit(Consumer<Throwable> findingHandler) {
+  public static void registerFatalFindingHandlerForJUnit(BiConsumer<byte[], Throwable> findingHandler) {
     FuzzTargetRunner.fatalFindingHandlerForJUnit = Objects.requireNonNull(findingHandler);
   }
 
