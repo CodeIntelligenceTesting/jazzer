@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import sun.misc.Unsafe;
 
@@ -119,7 +119,7 @@ public final class FuzzTargetRunner {
   private static final boolean useFuzzedDataProvider;
   private static final ArgumentsMutator mutator;
   private static final ReproducerTemplate reproducerTemplate;
-  private static BiConsumer<byte[], Throwable> fatalFindingHandlerForJUnit;
+  private static BiPredicate<byte[], Throwable> isFatalFindingForJUnit;
 
   static {
     FuzzTargetHolder.FuzzTarget fuzzTarget = FuzzTargetHolder.fuzzTarget;
@@ -293,15 +293,15 @@ public final class FuzzTargetRunner {
         emitDedupToken
             && (keepGoing == 0 || Long.compareUnsigned(ignoredTokens.size(), keepGoing) < 0);
     boolean isFuzzingFromCommandLine =
-        fatalFindingHandlerForJUnit == null || Opt.isJUnitAndCommandLine.get();
+        isFatalFindingForJUnit == null || Opt.isJUnitAndCommandLine.get();
     // In case of --keep_going, only the last finding is reported to JUnit as a Java object, all
     // previous ones are merely printed. When fuzzing from the command line, we always print all
     // findings.
     if (isFuzzingFromCommandLine || continueFuzzing) {
       Log.finding(finding);
     }
-    if (fatalFindingHandlerForJUnit != null && !continueFuzzing) {
-      fatalFindingHandlerForJUnit.accept(data, finding);
+    if (isFatalFindingForJUnit != null) {
+      continueFuzzing = continueFuzzing && !isFatalFindingForJUnit.test(data, finding);
     }
     if (emitDedupToken) {
       // Has to be printed to stdout as it is parsed by libFuzzer when minimizing a crash. It does
@@ -322,7 +322,7 @@ public final class FuzzTargetRunner {
     // that satisfies the same purpose.
     // It also doesn't support the mutator framework yet as that requires implementing Java code
     // generation for mutators.
-    if (fatalFindingHandlerForJUnit == null && !useMutatorFramework) {
+    if (isFatalFindingForJUnit == null && !useMutatorFramework) {
       dumpReproducer(data);
     }
 
@@ -342,7 +342,7 @@ public final class FuzzTargetRunner {
                         Opt.autofuzzIgnore.get().stream(), Stream.of(finding.getClass().getName()))
                     .collect(joining(","))));
       }
-      if (fatalFindingHandlerForJUnit == null) {
+      if (isFatalFindingForJUnit == null) {
         // When running a legacy fuzzerTestOneInput test, exit now with the correct exit code.
         // This will trigger the shutdown hook that runs fuzzerTearDown.
         System.exit(JAZZER_FINDING_EXIT_CODE);
@@ -443,8 +443,8 @@ public final class FuzzTargetRunner {
   }
 
   public static void registerFatalFindingHandlerForJUnit(
-      BiConsumer<byte[], Throwable> findingHandler) {
-    FuzzTargetRunner.fatalFindingHandlerForJUnit = Objects.requireNonNull(findingHandler);
+      BiPredicate<byte[], Throwable> findingHandler) {
+    FuzzTargetRunner.isFatalFindingForJUnit = Objects.requireNonNull(findingHandler);
   }
 
   private static void shutdown() {
