@@ -322,8 +322,7 @@ class FuzzTestExecutor {
       AtomicInteger counter = new AtomicInteger();
       BiPredicate<byte[], Throwable> predicate =
           (a, b) -> {
-            if(counter.incrementAndGet() == Opt.keepGoing.get())
-              atomicFinding.set(b);
+            if (counter.incrementAndGet() == Opt.keepGoing.get()) atomicFinding.set(b);
             return counter.get() == Opt.keepGoing.get();
           };
       FuzzTargetRunner.registerFatalFindingHandlerForJUnit(predicate);
