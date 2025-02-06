@@ -42,6 +42,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.function.Supplier;
@@ -318,10 +319,12 @@ class FuzzTestExecutor {
     AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
     try {
       // Non-fatal findings (with --keep_going) are logged by FuzzTargetRunner.
+      AtomicInteger counter = new AtomicInteger();
       BiPredicate<byte[], Throwable> predicate =
           (a, b) -> {
-            atomicFinding.set(b);
-            return true;
+            if(counter.incrementAndGet() == Opt.keepGoing.get())
+              atomicFinding.set(b);
+            return counter.get() == Opt.keepGoing.get();
           };
       FuzzTargetRunner.registerFatalFindingHandlerForJUnit(predicate);
     } catch (Throwable throwable) {
