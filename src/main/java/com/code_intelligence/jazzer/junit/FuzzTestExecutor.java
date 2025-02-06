@@ -323,9 +323,9 @@ class FuzzTestExecutor {
       BiPredicate<byte[], Throwable> predicate =
           (a, b) -> {
             if (counter.incrementAndGet() == Opt.keepGoing.get()) atomicFinding.set(b);
-            return counter.get() >= Opt.keepGoing.get();
+            return Opt.keepGoing.get() != 0 && counter.get() >= Opt.keepGoing.get();
           };
-      FuzzTargetRunner.registerFatalFindingHandlerForJUnit(predicate);
+      FuzzTargetRunner.registerFatalFindingDeterminatorForJUnit(predicate);
     } catch (Throwable throwable) {
       // Exception during initialization of FuzzTargetRunner, e.g. unsupported
       // parameter type in fuzz target method. Rethrow as FuzzTestConfigurationError.
