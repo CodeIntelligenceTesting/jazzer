@@ -319,11 +319,11 @@ class FuzzTestExecutor {
     AtomicReference<Throwable> atomicFinding = new AtomicReference<>();
     try {
       // Non-fatal findings (with --keep_going) are logged by FuzzTargetRunner.
-      AtomicInteger counter = new AtomicInteger();
+      AtomicInteger counter = new AtomicInteger(0);
       BiPredicate<byte[], Throwable> predicate =
           (a, b) -> {
             if (counter.incrementAndGet() == Opt.keepGoing.get()) atomicFinding.set(b);
-            return counter.get() == Opt.keepGoing.get();
+            return counter.get() >= Opt.keepGoing.get();
           };
       FuzzTargetRunner.registerFatalFindingHandlerForJUnit(predicate);
     } catch (Throwable throwable) {
