@@ -40,6 +40,18 @@ public final class LibFuzzerMutatorFactory {
   private static final int DEFAULT_MIN_LENGTH = 0;
   private static final int DEFAULT_MAX_LENGTH = 1000;
 
+  // interface to hold mutation functions
+  private interface MutationFunction {
+    byte[] mutate(byte[] value, int maxSizeIncrease, PseudoRandom prng);
+  }
+
+  private static final MutationFunction[] MUTATION_FUNCTIONS = {
+    LibFuzzerMutator::deleteRandomChunk,
+    LibFuzzerMutator::insertRandomByte,
+    LibFuzzerMutator::insertRepeatedBytes,
+    LibFuzzerMutator::changeByte
+  };
+
   @CheckReturnValue
   public static Optional<SerializingMutator<?>> tryCreate(AnnotatedType type) {
     Optional<WithLength> withLength = Optional.ofNullable(type.getAnnotation(WithLength.class));
@@ -114,8 +126,58 @@ public final class LibFuzzerMutatorFactory {
     @Override
     public byte[] mutate(byte[] value, PseudoRandom prng) {
       int maxLengthIncrease = maxLength - value.length;
-      byte[] mutated = LibFuzzerMutate.mutateDefault(value, maxLengthIncrease);
-      return enforceLength(mutated);
+      return enforceLength(prng.pickIn(MUTATION_FUNCTIONS).mutate(value, maxLengthIncrease, prng));
+    }
+
+    public static byte[] changeByte(byte[] value, int maxSizeIncrease, PseudoRandom prng) {
+      if (value.length == 0) {
+        return new byte[0];
+      }
+      int pos = prng.indexIn(value.length);
+      byte[] out = Arrays.copyOf(value, value.length);
+      out[pos] = (byte) prng.closedRange(0, 255);
+      return out;
+    }
+
+    public static byte[] deleteRandomChunk(byte[] value, int maxSizeIncrease, PseudoRandom prng) {
+      if (value.length < 2) {
+        return new byte[0];
+      }
+      int eraseN = prng.indexIn(value.length / 2) + 1;
+      int eraseStart = prng.indexIn(value.length - eraseN + 1);
+      byte[] out = new byte[value.length - eraseN];
+      System.arraycopy(value, 0, out, 0, eraseStart);
+      System.arraycopy(
+          value, eraseStart + eraseN, out, eraseStart, value.length - eraseStart - eraseN);
+      return out;
+    }
+
+    public static byte[] insertRandomByte(byte[] value, int maxSizeIncrease, PseudoRandom prng) {
+      if (maxSizeIncrease == 0) {
+        return value;
+      }
+      int insertPos = prng.indexIn(value.length + 1);
+      byte[] out = new byte[value.length + 1];
+      System.arraycopy(value, 0, out, 0, insertPos);
+      out[insertPos] = (byte) prng.closedRange(0, 255);
+      System.arraycopy(value, insertPos, out, insertPos + 1, value.length - insertPos);
+      return out;
+    }
+
+    public static byte[] insertRepeatedBytes(byte[] value, int maxSizeIncrease, PseudoRandom prng) {
+      if (maxSizeIncrease == 0) {
+        return value;
+      }
+      int insertPos = prng.indexIn(value.length + 1);
+      int insertSize = prng.closedRange(1, Math.min(maxSizeIncrease, 128));
+      byte[] out = new byte[value.length + insertSize];
+      System.arraycopy(value, 0, out, 0, insertPos);
+      byte repeatedByte = (byte) prng.closedRange(0, 255);
+      for (int i = 0; i < insertSize; i++) {
+        out[insertPos + i] = repeatedByte;
+      }
+      System.arraycopy(value, insertPos, out, insertPos + insertSize, value.length - insertPos);
+      return out;
     }
 
     private byte[] enforceLength(byte[] mutated) {

@@ -476,7 +476,7 @@ public final class FuzzTargetRunner {
 
     // Extract some args.
     // TODO: use UnchainedOptions instead
-    Integer maxExecutions = (Integer) args.get("maxExecutions");
+    Long maxRuns = (Long) args.get("maxRuns");
     Long maxDuration = (Long) args.get("maxDuration");
     // if seed is null, use a random seed and print it
 
@@ -498,7 +498,8 @@ public final class FuzzTargetRunner {
               }
 
               // limited fuzzing loop for now
-              for (int i = 0; i < 10; i++) {
+              long run = 0;
+              while (run < maxRuns) {
                 Throwable finding = null;
                 // select a random input from corpus
                 int index = (int) (Math.random() * corpus.size());
@@ -537,6 +538,7 @@ public final class FuzzTargetRunner {
                   }
                 }
                 seed++;
+                run++;
               }
             });
     fuzzerThread.start();
