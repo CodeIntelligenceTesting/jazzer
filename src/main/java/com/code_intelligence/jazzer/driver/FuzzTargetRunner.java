@@ -301,7 +301,8 @@ public final class FuzzTargetRunner {
       Log.finding(finding);
     }
     if (fatalFindingDeterminatorForJUnit != null) {
-      boolean isFatal = fatalFindingDeterminatorForJUnit.test(data, finding);
+      byte[] crashData = data != null ? data : copyToArray(dataPtr, dataLength);
+      boolean isFatal = fatalFindingDeterminatorForJUnit.test(crashData, finding);
       continueFuzzing = continueFuzzing && !isFatal;
     }
     if (emitDedupToken) {
