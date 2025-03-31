@@ -69,7 +69,8 @@ public final class LibFuzzerMutate {
   }
 
   private static int defaultMutate(byte[] buffer, int size) {
-    // TODO: implement byte [] mutator in Java and get rid of all JNI calls in the mutator framework, including this mock
+    // TODO: implement byte [] mutator in Java and get rid of all JNI calls in the mutator
+    // framework, including this mock
     if (Mutator.SHOULD_MOCK) {
       return defaultMutateMock(buffer, size);
     } else {
