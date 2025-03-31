@@ -289,21 +289,19 @@ public final class FuzzTargetRunner {
     if (emitDedupToken && !ignoredTokens.add(dedupToken)) {
       return LIBFUZZER_CONTINUE;
     }
-    boolean continueFuzzing =
-        emitDedupToken
-            && (keepGoing == 0 || Long.compareUnsigned(ignoredTokens.size(), keepGoing) < 0);
+    boolean continueFuzzing = emitDedupToken;
     boolean isFuzzingFromCommandLine =
         fatalFindingDeterminatorForJUnit == null || Opt.isJUnitAndCommandLine.get();
     // In case of --keep_going, only the last finding is reported to JUnit as a Java object, all
     // previous ones are merely printed. When fuzzing from the command line, we always print all
     // findings.
-    if (isFuzzingFromCommandLine || continueFuzzing) {
-      Log.finding(finding);
-    }
     if (fatalFindingDeterminatorForJUnit != null) {
       byte[] crashData = data != null ? data : copyToArray(dataPtr, dataLength);
       boolean isFatal = fatalFindingDeterminatorForJUnit.test(crashData, finding);
       continueFuzzing = continueFuzzing && !isFatal;
+    }
+    if (isFuzzingFromCommandLine || continueFuzzing) {
+      Log.finding(finding);
     }
     if (emitDedupToken) {
       // Has to be printed to stdout as it is parsed by libFuzzer when minimizing a crash. It does
