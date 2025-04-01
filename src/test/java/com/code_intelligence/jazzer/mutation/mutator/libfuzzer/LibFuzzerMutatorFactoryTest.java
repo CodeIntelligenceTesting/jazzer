@@ -17,7 +17,7 @@ package com.code_intelligence.jazzer.mutation.mutator.libfuzzer;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
@@ -25,9 +25,12 @@ import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("unchecked")
 class LibFuzzerMutatorFactoryTest {
 
   @Test
@@ -45,150 +48,57 @@ class LibFuzzerMutatorFactoryTest {
     }
   }
 
-  @Test
-  void testEraseByteEvenSize() {
-    Optional<SerializingMutator<?>> opt =
-        LibFuzzerMutatorFactory.tryCreate(
-            new TypeHolder<byte @NotNull @WithLength(max = 5) []>() {}.annotatedType());
-    assertThat(opt).isPresent();
-    SerializingMutator<byte[]> mutator = (SerializingMutator<byte[]>) opt.get();
-    assertThat(mutator.toString()).isEqualTo("byte[]");
+  static final int DEL_CHUNK = 0;
+  static final int INS_BYTE = 1;
+  static final int INS_REP = 2;
+  static final int MUT_BYTE = 3;
 
-    try (MockPseudoRandom prng =
-        mockPseudoRandom(
-            // 0: op - erase byte
-            // 1: Number of bytes to erase (+1)
-            // 2: start index
-            // Erase the first byte
-            0,
-            0,
-            0,
-            // Erase the first byte
-            0,
-            0,
-            0,
-            // Erase the second byte
-            0,
-            0,
-            1,
-            // Erase the third byte
-            0,
-            0,
-            2,
-            // Erase the fourth byte
-            0,
-            0,
-            3,
-            // Erase the first two bytes
-            0,
-            1,
-            0,
-            // Erase the second two bytes
-            0,
-            1,
-            1,
-            // Erase the last two bytes
-            0,
-            1,
-            2,
-            // Erase the first three bytes should fail
-            0,
-            2)) {
-
-      final byte[] data = new byte[] {0, 1, 2, 3};
-
-      // One byte
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {1, 2, 3});
-      assertThat(mutator.mutate(new byte[] {0, 10, 20, 30}, prng))
-          .isEqualTo(new byte[] {10, 20, 30});
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {0, 2, 3});
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {0, 1, 3});
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {0, 1, 2});
-
-      // Two bytes
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {2, 3});
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {0, 3});
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {0, 1});
-
-      assertThrows(AssertionError.class, () -> mutator.mutate(data, prng));
-    }
+  static Stream<Arguments> deleteChunk() {
+    final byte[] even = new byte[] {0, 1, 2, 3};
+    final byte[] odd = new byte[] {0, 1, 2, 3, 4};
+    return Stream.of(
+        // Even length, delete one byte
+        arguments(DEL_CHUNK, 0, 0, even, new byte[] {1, 2, 3}),
+        arguments(DEL_CHUNK, 0, 0, new byte[] {0, 10, 20, 30}, new byte[] {10, 20, 30}),
+        arguments(DEL_CHUNK, 0, 1, even, new byte[] {0, 2, 3}),
+        arguments(DEL_CHUNK, 0, 2, even, new byte[] {0, 1, 3}),
+        arguments(DEL_CHUNK, 0, 3, even, new byte[] {0, 1, 2}),
+        // Delete two bytes
+        arguments(DEL_CHUNK, 1, 0, even, new byte[] {2, 3}),
+        arguments(DEL_CHUNK, 1, 1, even, new byte[] {0, 3}),
+        arguments(DEL_CHUNK, 1, 2, even, new byte[] {0, 1}),
+        // Odd length, delete one byte
+        arguments(DEL_CHUNK, 0, 0, odd, new byte[] {1, 2, 3, 4}),
+        arguments(DEL_CHUNK, 0, 1, odd, new byte[] {0, 2, 3, 4}),
+        arguments(DEL_CHUNK, 0, 2, odd, new byte[] {0, 1, 3, 4}),
+        arguments(DEL_CHUNK, 0, 3, odd, new byte[] {0, 1, 2, 4}),
+        arguments(DEL_CHUNK, 0, 4, odd, new byte[] {0, 1, 2, 3}),
+        // Delete two bytes
+        arguments(DEL_CHUNK, 1, 0, odd, new byte[] {2, 3, 4}),
+        arguments(DEL_CHUNK, 1, 1, odd, new byte[] {0, 3, 4}),
+        arguments(DEL_CHUNK, 1, 2, odd, new byte[] {0, 1, 4}),
+        arguments(DEL_CHUNK, 1, 3, odd, new byte[] {0, 1, 2}));
   }
 
-  @Test
-  void testEraseByteOddSize() {
-    Optional<SerializingMutator<?>> opt =
-        LibFuzzerMutatorFactory.tryCreate(
-            new TypeHolder<byte @NotNull @WithLength(max = 5) []>() {}.annotatedType());
-    assertThat(opt).isPresent();
-    SerializingMutator<byte[]> mutator = (SerializingMutator<byte[]>) opt.get();
-    assertThat(mutator.toString()).isEqualTo("byte[]");
-
-    try (MockPseudoRandom prng =
-        mockPseudoRandom(
-            // 0: op - erase byte
-            // 1: Number of bytes to erase (+1)
-            // 2: start index
-            // Erase the first byte
-            0,
-            0,
-            0,
-            // Erase the first byte
-            0,
-            0,
-            0,
-            // Erase the second byte
-            0,
-            0,
-            1,
-            // Erase the third byte
-            0,
-            0,
-            2,
-            // Erase the fourth byte
-            0,
-            0,
-            3,
-            // Erase the first two bytes
-            0,
-            1,
-            0,
-            // Erase the second two bytes
-            0,
-            1,
-            1,
-            // Erase the butlast two bytes
-            0,
-            1,
-            2,
-            // Erase the last two bytes
-            0,
-            1,
-            3,
-            // Erase the first three bytes should fail
-            0,
-            2)) {
-      final byte[] data = new byte[] {0, 1, 2, 3, 4};
-
-      // One byte
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {1, 2, 3, 4});
-      assertThat(mutator.mutate(new byte[] {0, 10, 20, 30, 40}, prng))
-          .isEqualTo(new byte[] {10, 20, 30, 40});
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {0, 2, 3, 4});
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {0, 1, 3, 4});
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {0, 1, 2, 4});
-
-      // Two bytes
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {2, 3, 4});
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {0, 3, 4});
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {0, 1, 4});
-      assertThat(mutator.mutate(data, prng)).isEqualTo(new byte[] {0, 1, 2});
-
-      assertThrows(AssertionError.class, () -> mutator.mutate(data, prng));
-    }
+  static Stream<Arguments> insertByte() {
+    final byte[] input1 = new byte[] {0};
+    final byte[] input2 = new byte[] {0, 1};
+    final byte[] input3 = new byte[] {0, 1, 2};
+    return Stream.of(
+        arguments(INS_BYTE, 0, 10, input1, new byte[] {10, 0}),
+        arguments(INS_BYTE, 1, 20, input1, new byte[] {0, 20}),
+        arguments(INS_BYTE, 0, 10, input2, new byte[] {10, 0, 1}),
+        arguments(INS_BYTE, 1, 20, input2, new byte[] {0, 20, 1}),
+        arguments(INS_BYTE, 2, 30, input2, new byte[] {0, 1, 30}),
+        arguments(INS_BYTE, 0, 10, input3, new byte[] {10, 0, 1, 2}),
+        arguments(INS_BYTE, 1, 20, input3, new byte[] {0, 20, 1, 2}),
+        arguments(INS_BYTE, 2, 30, input3, new byte[] {0, 1, 30, 2}),
+        arguments(INS_BYTE, 3, 40, input3, new byte[] {0, 1, 2, 40}));
   }
 
-  @Test
-  void testInsertRandomByte() {
+  @ParameterizedTest
+  @MethodSource({"deleteChunk", "insertByte"})
+  void testMutatorOperations(int op, int arg1, int arg2, byte[] input, byte[] expected) {
     Optional<SerializingMutator<?>> opt =
         LibFuzzerMutatorFactory.tryCreate(
             new TypeHolder<byte @NotNull @WithLength(max = 5) []>() {}.annotatedType());
@@ -196,66 +106,8 @@ class LibFuzzerMutatorFactoryTest {
     SerializingMutator<byte[]> mutator = (SerializingMutator<byte[]>) opt.get();
     assertThat(mutator.toString()).isEqualTo("byte[]");
 
-    try (MockPseudoRandom prng =
-        mockPseudoRandom(
-            // 0: op - insertRandomByte
-            // 1: Index to insert at
-            // 2: Byte to insert
-            // Insert 2 at index 0
-            1,
-            0,
-            2,
-            // Insert 127 at index 1
-            1,
-            1,
-            127,
-            // Insert 2 at index 2
-            1,
-            2,
-            2,
-            // Insert 2 at index 1
-            1,
-            1,
-            2,
-            // Insert 2 at index 0
-            1,
-            0,
-            2,
-            // Insert 2 at index 3
-            1,
-            3,
-            30,
-            // Insert 2 at index 2
-            1,
-            2,
-            40,
-            // Insert 2 at index 1
-            1,
-            1,
-            50,
-            // Insert 2 at index 0
-            1,
-            0,
-            60)) {
-
-      final byte[] data1 = new byte[] {0};
-
-      // One byte
-      assertThat(mutator.mutate(data1, prng)).isEqualTo(new byte[] {2, 0});
-      assertThat(mutator.mutate(data1, prng)).isEqualTo(new byte[] {0, 127});
-
-      // Two bytes
-      final byte[] data2 = new byte[] {0, 1};
-      assertThat(mutator.mutate(data2, prng)).isEqualTo(new byte[] {0, 1, 2});
-      assertThat(mutator.mutate(data2, prng)).isEqualTo(new byte[] {0, 2, 1});
-      assertThat(mutator.mutate(data2, prng)).isEqualTo(new byte[] {2, 0, 1});
-
-      // Three bytes
-      final byte[] data3 = new byte[] {0, 1, 2};
-      assertThat(mutator.mutate(data3, prng)).isEqualTo(new byte[] {0, 1, 2, 30});
-      assertThat(mutator.mutate(data3, prng)).isEqualTo(new byte[] {0, 1, 40, 2});
-      assertThat(mutator.mutate(data3, prng)).isEqualTo(new byte[] {0, 50, 1, 2});
-      assertThat(mutator.mutate(data3, prng)).isEqualTo(new byte[] {60, 0, 1, 2});
+    try (MockPseudoRandom prng = mockPseudoRandom(op, arg1, arg2)) {
+      assertThat(mutator.mutate(input, prng)).isEqualTo(expected);
     }
   }
 }
