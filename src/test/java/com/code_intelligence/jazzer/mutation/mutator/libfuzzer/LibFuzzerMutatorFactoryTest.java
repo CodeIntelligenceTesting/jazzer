@@ -58,26 +58,26 @@ class LibFuzzerMutatorFactoryTest {
     final byte[] odd = new byte[] {0, 1, 2, 3, 4};
     return Stream.of(
         // Even length, delete one byte
-        arguments(DEL_CHUNK, 0, 0, even, new byte[] {1, 2, 3}),
-        arguments(DEL_CHUNK, 0, 0, new byte[] {0, 10, 20, 30}, new byte[] {10, 20, 30}),
-        arguments(DEL_CHUNK, 0, 1, even, new byte[] {0, 2, 3}),
-        arguments(DEL_CHUNK, 0, 2, even, new byte[] {0, 1, 3}),
-        arguments(DEL_CHUNK, 0, 3, even, new byte[] {0, 1, 2}),
+        arguments(arguments(DEL_CHUNK, 0, 0), even, new byte[] {1, 2, 3}),
+        arguments(arguments(DEL_CHUNK, 0, 0), new byte[] {0, 10, 20, 30}, new byte[] {10, 20, 30}),
+        arguments(arguments(DEL_CHUNK, 0, 1), even, new byte[] {0, 2, 3}),
+        arguments(arguments(DEL_CHUNK, 0, 2), even, new byte[] {0, 1, 3}),
+        arguments(arguments(DEL_CHUNK, 0, 3), even, new byte[] {0, 1, 2}),
         // Delete two bytes
-        arguments(DEL_CHUNK, 1, 0, even, new byte[] {2, 3}),
-        arguments(DEL_CHUNK, 1, 1, even, new byte[] {0, 3}),
-        arguments(DEL_CHUNK, 1, 2, even, new byte[] {0, 1}),
+        arguments(arguments(DEL_CHUNK, 1, 0), even, new byte[] {2, 3}),
+        arguments(arguments(DEL_CHUNK, 1, 1), even, new byte[] {0, 3}),
+        arguments(arguments(DEL_CHUNK, 1, 2), even, new byte[] {0, 1}),
         // Odd length, delete one byte
-        arguments(DEL_CHUNK, 0, 0, odd, new byte[] {1, 2, 3, 4}),
-        arguments(DEL_CHUNK, 0, 1, odd, new byte[] {0, 2, 3, 4}),
-        arguments(DEL_CHUNK, 0, 2, odd, new byte[] {0, 1, 3, 4}),
-        arguments(DEL_CHUNK, 0, 3, odd, new byte[] {0, 1, 2, 4}),
-        arguments(DEL_CHUNK, 0, 4, odd, new byte[] {0, 1, 2, 3}),
+        arguments(arguments(DEL_CHUNK, 0, 0), odd, new byte[] {1, 2, 3, 4}),
+        arguments(arguments(DEL_CHUNK, 0, 1), odd, new byte[] {0, 2, 3, 4}),
+        arguments(arguments(DEL_CHUNK, 0, 2), odd, new byte[] {0, 1, 3, 4}),
+        arguments(arguments(DEL_CHUNK, 0, 3), odd, new byte[] {0, 1, 2, 4}),
+        arguments(arguments(DEL_CHUNK, 0, 4), odd, new byte[] {0, 1, 2, 3}),
         // Delete two bytes
-        arguments(DEL_CHUNK, 1, 0, odd, new byte[] {2, 3, 4}),
-        arguments(DEL_CHUNK, 1, 1, odd, new byte[] {0, 3, 4}),
-        arguments(DEL_CHUNK, 1, 2, odd, new byte[] {0, 1, 4}),
-        arguments(DEL_CHUNK, 1, 3, odd, new byte[] {0, 1, 2}));
+        arguments(arguments(DEL_CHUNK, 1, 0), odd, new byte[] {2, 3, 4}),
+        arguments(arguments(DEL_CHUNK, 1, 1), odd, new byte[] {0, 3, 4}),
+        arguments(arguments(DEL_CHUNK, 1, 2), odd, new byte[] {0, 1, 4}),
+        arguments(arguments(DEL_CHUNK, 1, 3), odd, new byte[] {0, 1, 2}));
   }
 
   static Stream<Arguments> insertByte() {
@@ -85,20 +85,20 @@ class LibFuzzerMutatorFactoryTest {
     final byte[] input2 = new byte[] {0, 1};
     final byte[] input3 = new byte[] {0, 1, 2};
     return Stream.of(
-        arguments(INS_BYTE, 0, 10, input1, new byte[] {10, 0}),
-        arguments(INS_BYTE, 1, 20, input1, new byte[] {0, 20}),
-        arguments(INS_BYTE, 0, 10, input2, new byte[] {10, 0, 1}),
-        arguments(INS_BYTE, 1, 20, input2, new byte[] {0, 20, 1}),
-        arguments(INS_BYTE, 2, 30, input2, new byte[] {0, 1, 30}),
-        arguments(INS_BYTE, 0, 10, input3, new byte[] {10, 0, 1, 2}),
-        arguments(INS_BYTE, 1, 20, input3, new byte[] {0, 20, 1, 2}),
-        arguments(INS_BYTE, 2, 30, input3, new byte[] {0, 1, 30, 2}),
-        arguments(INS_BYTE, 3, 40, input3, new byte[] {0, 1, 2, 40}));
+        arguments(arguments(INS_BYTE, 0, 10), input1, new byte[] {10, 0}),
+        arguments(arguments(INS_BYTE, 1, 20), input1, new byte[] {0, 20}),
+        arguments(arguments(INS_BYTE, 0, 10), input2, new byte[] {10, 0, 1}),
+        arguments(arguments(INS_BYTE, 1, 20), input2, new byte[] {0, 20, 1}),
+        arguments(arguments(INS_BYTE, 2, 30), input2, new byte[] {0, 1, 30}),
+        arguments(arguments(INS_BYTE, 0, 10), input3, new byte[] {10, 0, 1, 2}),
+        arguments(arguments(INS_BYTE, 1, 20), input3, new byte[] {0, 20, 1, 2}),
+        arguments(arguments(INS_BYTE, 2, 30), input3, new byte[] {0, 1, 30, 2}),
+        arguments(arguments(INS_BYTE, 3, 40), input3, new byte[] {0, 1, 2, 40}));
   }
 
   @ParameterizedTest
-  @MethodSource({"deleteChunk", "insertByte"})
-  void testMutatorOperations(int op, int arg1, int arg2, byte[] input, byte[] expected) {
+  @MethodSource({"deleteChunk", "insertByte", "insertRepeatedBytes"})
+  void testMutatorOperations(Arguments args, byte[] input, byte[] expected) {
     Optional<SerializingMutator<?>> opt =
         LibFuzzerMutatorFactory.tryCreate(
             new TypeHolder<byte @NotNull @WithLength(max = 5) []>() {}.annotatedType());
@@ -106,7 +106,8 @@ class LibFuzzerMutatorFactoryTest {
     SerializingMutator<byte[]> mutator = (SerializingMutator<byte[]>) opt.get();
     assertThat(mutator.toString()).isEqualTo("byte[]");
 
-    try (MockPseudoRandom prng = mockPseudoRandom(op, arg1, arg2)) {
+    // apply "args" to mockPseudoRandom
+    try (MockPseudoRandom prng = mockPseudoRandom(args.get())) {
       assertThat(mutator.mutate(input, prng)).isEqualTo(expected);
     }
   }
