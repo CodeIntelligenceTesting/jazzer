@@ -186,4 +186,76 @@ class LibFuzzerMutatorFactoryTest {
       assertThrows(AssertionError.class, () -> mutator.mutate(data, prng));
     }
   }
+
+  @Test
+  void testInsertRandomByte() {
+    Optional<SerializingMutator<?>> opt =
+        LibFuzzerMutatorFactory.tryCreate(
+            new TypeHolder<byte @NotNull @WithLength(max = 5) []>() {}.annotatedType());
+    assertThat(opt).isPresent();
+    SerializingMutator<byte[]> mutator = (SerializingMutator<byte[]>) opt.get();
+    assertThat(mutator.toString()).isEqualTo("byte[]");
+
+    try (MockPseudoRandom prng =
+        mockPseudoRandom(
+            // 0: op - insertRandomByte
+            // 1: Index to insert at
+            // 2: Byte to insert
+            // Insert 2 at index 0
+            1,
+            0,
+            2,
+            // Insert 127 at index 1
+            1,
+            1,
+            127,
+            // Insert 2 at index 2
+            1,
+            2,
+            2,
+            // Insert 2 at index 1
+            1,
+            1,
+            2,
+            // Insert 2 at index 0
+            1,
+            0,
+            2,
+            // Insert 2 at index 3
+            1,
+            3,
+            30,
+            // Insert 2 at index 2
+            1,
+            2,
+            40,
+            // Insert 2 at index 1
+            1,
+            1,
+            50,
+            // Insert 2 at index 0
+            1,
+            0,
+            60)) {
+
+      final byte[] data1 = new byte[] {0};
+
+      // One byte
+      assertThat(mutator.mutate(data1, prng)).isEqualTo(new byte[] {2, 0});
+      assertThat(mutator.mutate(data1, prng)).isEqualTo(new byte[] {0, 127});
+
+      // Two bytes
+      final byte[] data2 = new byte[] {0, 1};
+      assertThat(mutator.mutate(data2, prng)).isEqualTo(new byte[] {0, 1, 2});
+      assertThat(mutator.mutate(data2, prng)).isEqualTo(new byte[] {0, 2, 1});
+      assertThat(mutator.mutate(data2, prng)).isEqualTo(new byte[] {2, 0, 1});
+
+      // Three bytes
+      final byte[] data3 = new byte[] {0, 1, 2};
+      assertThat(mutator.mutate(data3, prng)).isEqualTo(new byte[] {0, 1, 2, 30});
+      assertThat(mutator.mutate(data3, prng)).isEqualTo(new byte[] {0, 1, 40, 2});
+      assertThat(mutator.mutate(data3, prng)).isEqualTo(new byte[] {0, 50, 1, 2});
+      assertThat(mutator.mutate(data3, prng)).isEqualTo(new byte[] {60, 0, 1, 2});
+    }
+  }
 }
