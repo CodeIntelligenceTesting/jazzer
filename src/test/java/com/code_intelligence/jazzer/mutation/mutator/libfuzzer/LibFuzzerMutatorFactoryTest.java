@@ -114,8 +114,27 @@ class LibFuzzerMutatorFactoryTest {
         arguments(arguments(INS_REP, 2, 2, 30), input2, new byte[] {0, 1, 30, 30}));
   }
 
+  static Stream<Arguments> changeByte() {
+    final byte[] input1 = new byte[] {0};
+    final byte[] input2 = new byte[] {0, 1};
+    final byte[] input3 = new byte[] {1, 2, 3};
+    return Stream.of(
+        arguments(arguments(MUT_BYTE, 0, 1), input1, new byte[] {1}),
+        arguments(arguments(MUT_BYTE, 0, 10), input1, new byte[] {10}),
+        arguments(arguments(MUT_BYTE, 0, 1), input2, new byte[] {1, 1}),
+        arguments(arguments(MUT_BYTE, 0, 10), input2, new byte[] {10, 1}),
+        arguments(arguments(MUT_BYTE, 1, 20), input2, new byte[] {0, 20}),
+        arguments(arguments(MUT_BYTE, 1, 0), input2, new byte[] {0, 0}),
+        arguments(arguments(MUT_BYTE, 0, 1), input3, new byte[] {1, 2, 3}),
+        arguments(arguments(MUT_BYTE, 0, 10), input3, new byte[] {10, 2, 3}),
+        arguments(arguments(MUT_BYTE, 1, 20), input3, new byte[] {1, 20, 3}),
+        arguments(arguments(MUT_BYTE, 1, 0), input3, new byte[] {1, 0, 3}),
+        arguments(arguments(MUT_BYTE, 2, 30), input3, new byte[] {1, 2, 30}),
+        arguments(arguments(MUT_BYTE, 2, 0), input3, new byte[] {1, 2, 0}));
+  }
+
   @ParameterizedTest
-  @MethodSource({"deleteChunk", "insertByte", "insertRepeatedBytes"})
+  @MethodSource({"deleteChunk", "insertByte", "insertRepeatedBytes", "changeByte"})
   void testMutatorOperations(Arguments args, byte[] input, byte[] expected) {
     Optional<SerializingMutator<?>> opt =
         LibFuzzerMutatorFactory.tryCreate(
