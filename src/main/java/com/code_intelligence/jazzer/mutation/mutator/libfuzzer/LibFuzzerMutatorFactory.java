@@ -165,7 +165,7 @@ public final class LibFuzzerMutatorFactory {
 
     public static byte[] insertRandomByte(byte[] value, int maxSizeIncrease, PseudoRandom prng) {
       if (maxSizeIncrease == 0) {
-        return value;
+        return new byte[] {(byte) prng.closedRange(0, 255)};
       }
       int insertPos = prng.indexIn(value.length + 1);
       byte[] out = new byte[value.length + 1];
