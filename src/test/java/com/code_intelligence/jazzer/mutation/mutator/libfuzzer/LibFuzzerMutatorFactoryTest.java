@@ -52,6 +52,7 @@ class LibFuzzerMutatorFactoryTest {
   static final int INS_BYTE = 1;
   static final int INS_REP = 2;
   static final int MUT_BYTE = 3;
+  static final int MUT_BIT = 4;
 
   static Stream<Arguments> deleteChunk() {
     final byte[] even = new byte[] {0, 1, 2, 3};
@@ -133,8 +134,30 @@ class LibFuzzerMutatorFactoryTest {
         arguments(arguments(MUT_BYTE, 2, 0), input3, new byte[] {1, 2, 0}));
   }
 
+  static Stream<Arguments> changeBit() {
+    final byte[] zeroes = new byte[] {0};
+    final byte[] ones = new byte[] {(byte) 0xFF};
+    return Stream.of(
+        arguments(arguments(MUT_BIT, 0, 0), zeroes, new byte[] {1}),
+        arguments(arguments(MUT_BIT, 0, 1), zeroes, new byte[] {2}),
+        arguments(arguments(MUT_BIT, 0, 2), zeroes, new byte[] {4}),
+        arguments(arguments(MUT_BIT, 0, 3), zeroes, new byte[] {8}),
+        arguments(arguments(MUT_BIT, 0, 4), zeroes, new byte[] {16}),
+        arguments(arguments(MUT_BIT, 0, 5), zeroes, new byte[] {32}),
+        arguments(arguments(MUT_BIT, 0, 6), zeroes, new byte[] {64}),
+        arguments(arguments(MUT_BIT, 0, 7), zeroes, new byte[] {(byte) 128}),
+        arguments(arguments(MUT_BIT, 0, 0), ones, new byte[] {(byte) 0b11111110}),
+        arguments(arguments(MUT_BIT, 0, 1), ones, new byte[] {(byte) 0b11111101}),
+        arguments(arguments(MUT_BIT, 0, 2), ones, new byte[] {(byte) 0b11111011}),
+        arguments(arguments(MUT_BIT, 0, 3), ones, new byte[] {(byte) 0b11110111}),
+        arguments(arguments(MUT_BIT, 0, 4), ones, new byte[] {(byte) 0b11101111}),
+        arguments(arguments(MUT_BIT, 0, 5), ones, new byte[] {(byte) 0b11011111}),
+        arguments(arguments(MUT_BIT, 0, 6), ones, new byte[] {(byte) 0b10111111}),
+        arguments(arguments(MUT_BIT, 0, 7), ones, new byte[] {(byte) 0b01111111}));
+  }
+
   @ParameterizedTest
-  @MethodSource({"deleteChunk", "insertByte", "insertRepeatedBytes", "changeByte"})
+  @MethodSource({"deleteChunk", "insertByte", "insertRepeatedBytes", "changeByte", "changeBit"})
   void testMutatorOperations(Arguments args, byte[] input, byte[] expected) {
     Optional<SerializingMutator<?>> opt =
         LibFuzzerMutatorFactory.tryCreate(

@@ -49,7 +49,8 @@ public final class LibFuzzerMutatorFactory {
     LibFuzzerMutator::deleteRandomChunk,
     LibFuzzerMutator::insertRandomByte,
     LibFuzzerMutator::insertRepeatedBytes,
-    LibFuzzerMutator::changeByte
+    LibFuzzerMutator::changeByte,
+    LibFuzzerMutator::changeBit,
   };
 
   @CheckReturnValue
@@ -127,6 +128,16 @@ public final class LibFuzzerMutatorFactory {
     public byte[] mutate(byte[] value, PseudoRandom prng) {
       int maxLengthIncrease = maxLength - value.length;
       return enforceLength(prng.pickIn(MUTATION_FUNCTIONS).mutate(value, maxLengthIncrease, prng));
+    }
+
+    public static byte[] changeBit(byte[] value, int maxSizeIncrease, PseudoRandom prng) {
+      if (value.length == 0) {
+        return new byte[0];
+      }
+      int pos = prng.indexIn(value.length);
+      byte[] out = Arrays.copyOf(value, value.length);
+      out[pos] ^= (1 << (byte) prng.closedRange(0, 7));
+      return out;
     }
 
     public static byte[] changeByte(byte[] value, int maxSizeIncrease, PseudoRandom prng) {
