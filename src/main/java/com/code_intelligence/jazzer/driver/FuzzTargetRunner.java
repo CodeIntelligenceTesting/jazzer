@@ -119,6 +119,7 @@ public final class FuzzTargetRunner {
   private static final LifecycleMethodsInvoker lifecycleMethodsInvoker;
   private static final boolean useFuzzedDataProvider;
   private static final ArgumentsMutator mutator;
+  private static final ArgumentsMutator unchainedMutator;
   private static final ReproducerTemplate reproducerTemplate;
   private static Consumer<Throwable> fatalFindingHandlerForJUnit;
 
@@ -160,10 +161,13 @@ public final class FuzzTargetRunner {
 
     if (useMutatorFramework) {
       mutator = ArgumentsMutator.forMethodOrThrow(fuzzTarget.method);
-      Log.info("Using mutator: " + mutator);
+      unchainedMutator = mutator;
     } else {
       mutator = null;
+      unchainedMutator = ArgumentsMutator.forMethodOrThrow(fuzzTarget.method);
     }
+    Log.info("Mutator: " + mutator);
+    Log.info("Unchained mutator: " + unchainedMutator);
 
     if (useHooks) {
       // libFuzzer will clear the coverage map after this method returns and keeps no record of the
@@ -446,11 +450,6 @@ public final class FuzzTargetRunner {
   // TODO when done prototyping: use UnchainedOptions (or similar) to pass the arguments instead of
   // a Map
   public static int startUnchainedFuzzer(Map<String, Object> args) {
-    if (mutator == null) {
-      Log.error("Mutator framework is required for unchained fuzzing");
-      exit(1);
-    }
-
     // print all args
     for (Map.Entry<String, Object> entry : args.entrySet()) {
       System.err.println(entry.getKey() + ": " + entry.getValue());
@@ -503,8 +502,8 @@ public final class FuzzTargetRunner {
                 Throwable finding = null;
                 // select a random input from corpus
                 int index = (int) (Math.random() * corpus.size());
-                mutator.read(new ByteArrayInputStream(corpus.get(index)));
-                mutator.mutate(seed);
+                unchainedMutator.read(new ByteArrayInputStream(corpus.get(index)));
+                unchainedMutator.mutate(seed);
 
                 try {
                   lifecycleMethodsInvoker.beforeEachExecution();
@@ -518,11 +517,11 @@ public final class FuzzTargetRunner {
                   try {
                     Object fuzzTargetInstance = lifecycleMethodsInvoker.getTestClassInstance();
                     // detaching because we mutate
-                    mutator.invoke(fuzzTargetInstance, true);
+                    unchainedMutator.invoke(fuzzTargetInstance, true);
                   } catch (Throwable uncaughtFinding) {
                     finding = uncaughtFinding;
                   } finally {
-                    mutator.finishFuzzingIteration();
+                    unchainedMutator.finishFuzzingIteration();
                     try {
                       lifecycleMethodsInvoker.afterEachExecution();
                     } catch (Throwable t) {
