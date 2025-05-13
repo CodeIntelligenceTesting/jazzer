@@ -16,6 +16,12 @@ java_library(
 )
 
 java_library(
+    name = "os_command_injection",
+    srcs = ["OsCommandInjection.java"],
+    deps = ["//src/main/java/com/code_intelligence/jazzer/api:hooks"],
+)
+
+java_library(
     name = "regex_roadblocks",
     srcs = ["RegexRoadblocks.java"],
     deps = [
@@ -55,7 +61,6 @@ kt_jvm_library(
         "ExpressionLanguageInjection.kt",
         "LdapInjection.kt",
         "NamingContextLookup.kt",
-        "OsCommandInjection.kt",
         "ReflectiveCall.kt",
         "RegexInjection.kt",
         "Utils.kt",
@@ -65,6 +70,7 @@ kt_jvm_library(
     runtime_deps = [
         ":clojure_lang_hooks",
         ":file_path_traversal",
+        ":os_command_injection",
         ":regex_roadblocks",
         ":script_engine_injection",
         ":server_side_request_forgery",
