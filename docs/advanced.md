@@ -10,7 +10,8 @@
 * [Export Coverage Information](#export-coverage-information)
 * [Native Libraries](#native-libraries)
 
-**Note**: These settings apply to the old fuzzing approach using a `fuzzerTestOneInput` method and the native Jazzer binary. They don't work in the new JUnit integration.
+> [!NOTE]\
+> These settings apply to the old fuzzing approach using a `fuzzerTestOneInput` method and the native Jazzer binary. They don't work in the new JUnit integration.
 
 ## Using Jazzer Standalone
 There are two ways to use Jazzer standalone: by using the `jazzer` binary or by calling the Jazzer main class directly.
@@ -117,7 +118,8 @@ Particular stack traces can also be ignored based on their `DEDUP_TOKEN` by pass
 
 ### Export Coverage Information
 
-**Note**: This feature is deprecated. The standalone JaCoCo agent should be used to generate coverage reports.
+> [!WARNING]\
+> This feature is deprecated. The standalone JaCoCo agent should be used to generate coverage reports.
 
 The internally gathered JaCoCo coverage information can be exported in human-readable and JaCoCo execution data format (`.exec`).
 These can help identify code areas that have not been covered by the fuzzer and thus may require more comprehensive fuzz targets or a more extensive initial corpus to reach.
@@ -156,7 +158,8 @@ Jazzer defaults to using the runtimes associated with `clang` on the `PATH`.
 If you used a different compiler to compile the native libraries, specify it with `CC` to override this default.
 If no compiler is available in your runtime environment (e.g. in OSS-Fuzz) but you have a directory that contains the required sanitier libraries, specify its path in `JAZZER_NATIVE_SANITIZERS_DIR`.
 
-**Note:** On macOS, you may see Gatekeeper warnings when using `--asan` and/or `--ubsan` since these flags cause the native sanitizer libraries to be preloaded into the codesigned `java` executable via `DYLD_INSERT_LIBRARIES`.
+> [!NOTE]\
+> On macOS, you may see Gatekeeper warnings when using `--asan` and/or `--ubsan` since these flags cause the native sanitizer libraries to be preloaded into the codesigned `java` executable via `DYLD_INSERT_LIBRARIES`.
 
 Sanitizers other than AddressSanitizer and UndefinedBehaviorSanitizer are not yet supported.
 Furthermore, due to the nature of the JVM's GC, LeakSanitizer reports too many false positives to be useful and is thus disabled.

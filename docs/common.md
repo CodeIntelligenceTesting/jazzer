@@ -6,7 +6,8 @@
 * [Parallel Execution](#parallel-execution)
 * [Autofuzz Mode](#autofuzz-mode)
 
-**Note**: These settings apply to the old fuzzing approach using a `fuzzerTestOneInput` method and the native Jazzer binary. They don't work in the new JUnit integration.
+> [!NOTE]\
+> These settings apply to the old fuzzing approach using a `fuzzerTestOneInput` method and the native Jazzer binary. They don't work in the new JUnit integration.
 
 ## Recommended JVM Options
 
