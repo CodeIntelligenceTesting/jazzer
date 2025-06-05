@@ -365,6 +365,10 @@ value (`true`, `1`, `yes`)) and in regression mode (when `JAZZER_FUZZ` is not se
 
 JUnit will call the following methods for each test marked with `FuzzTest`.
 
+> [!NOTE]\
+> In fuzzing mode, only a single fuzz test is executed per test run
+> (see [#599](https://github.com/CodeIntelligenceTesting/jazzer/issues/599) for details).
+
 #### `evaluateExecutionCondition`
 
 The first call to this test will determine if the test should be run at all. In fuzzing mode, we only allow one test to
@@ -428,6 +432,12 @@ The tests from the resources directory are gathered by `walkInputs`. This will l
 
 JUnit will use the file's name as the name of the test case for its reporting. It also accepts .jar files where it will
 search with the given directory in the jar.
+
+> [!IMPORTANT]\
+> When adding these inputs files to a Git repository, consider creating a `.gitattributes` file containing
+> `src/test/resources/** binary` or similar to explicitly mark the files as binary files. Otherwise Git might
+> erroneously consider them text files, misinterpret bytes as line terminators and convert them on checkout.
+> This would change the content of the inputs files and can lead to unexpected behavior.
 
 ##### Corpus
 

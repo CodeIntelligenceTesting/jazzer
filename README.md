@@ -87,6 +87,8 @@ class ParserTests {
 
 A complete Maven example project can be found in [`examples/junit`](examples/junit).
 
+A detailed description of the JUnit integration can be found in the [documentation](docs/junit-integration.md).
+
 ### GitHub releases
 
 You can also use GitHub release archives to run a standalone Jazzer binary that starts its own JVM configured for fuzzing:
