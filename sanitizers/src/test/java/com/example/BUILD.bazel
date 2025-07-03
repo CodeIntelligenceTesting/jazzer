@@ -219,6 +219,31 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "UnsafeArrayOutOfBounds",
+    srcs = [
+        "UnsafeArrayOutOfBounds.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
+    ],
+    target_class = "com.example.UnsafeArrayOutOfBounds",
+    verify_crash_reproducer = False,
+)
+
+java_fuzz_target_test(
+    name = "UnsafeArrayOutOfBoundsValid",
+    srcs = [
+        "UnsafeArrayOutOfBoundsValid.java",
+    ],
+    allowed_findings = [],
+    fuzzer_args = [
+        # Test does not depend on fuzzing input; just run it once
+        "-runs=1",
+    ],
+    target_class = "com.example.UnsafeArrayOutOfBoundsValid",
+)
+
+java_fuzz_target_test(
     name = "ClojureTests",
     srcs = [
         "ClojureTests.java",
