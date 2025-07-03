@@ -192,7 +192,10 @@ public @interface MethodHook {
    * <p>The descriptor of a method is an internal representation of the method's signature, which
    * includes the types of its parameters and its return value. For more information on descriptors,
    * see the <a href=https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html#jvms-4.3.3>JVM
-   * Specification, Section 4.3.3</a> and {@link MethodType#toMethodDescriptorString()}
+   * Specification, Section 4.3.3</a> and {@link MethodType#toMethodDescriptorString()}.
+   *
+   * <p><b>Important:</b> For instance methods the parameter for the argument representing {@code
+   * this} has to be omitted.
    *
    * @return the descriptor of the method to be hooked
    */
