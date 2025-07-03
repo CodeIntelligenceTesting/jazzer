@@ -22,7 +22,6 @@ import com.code_intelligence.jazzer.api.MethodHook;
 import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Array;
-import sun.jvm.hotspot.utilities.AssertionFailure;
 import sun.misc.Unsafe;
 
 /**
@@ -89,23 +88,23 @@ public class UnsafeArrayOutOfBounds {
    ====================================================
   */
 
-  private static int getAccessSize(Class<?> c) {
-    int accessSize;
+  private static int getBytesCount(Class<?> c) {
+    int bytesCount;
     if (c == boolean.class) {
       // Assumes that `Unsafe.ARRAY_BOOLEAN_INDEX_SCALE > 0`
-      accessSize = 1;
+      bytesCount = 1;
     } else if (c == byte.class) {
-      accessSize = 1;
+      bytesCount = 1;
     } else if (c == char.class || c == short.class) {
-      accessSize = 2;
+      bytesCount = 2;
     } else if (c == int.class || c == float.class) {
-      accessSize = 4;
+      bytesCount = 4;
     } else if (c == long.class || c == double.class) {
-      accessSize = 8;
+      bytesCount = 8;
     } else {
-      throw new AssertionFailure("Unexpected type: " + c);
+      throw new AssertionError("Unexpected type: " + c);
     }
-    return accessSize;
+    return bytesCount;
   }
 
   /** Hook for all {@link Unsafe} methods which read or write an {@code Object} reference. */
@@ -214,7 +213,7 @@ public class UnsafeArrayOutOfBounds {
       targetMethod = "getShortVolatile")
   public static void primitiveGetterHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
-    int accessSize = getAccessSize(method.type().returnType());
+    int accessSize = getBytesCount(method.type().returnType());
     checkAccess(arguments, accessSize);
   }
 
@@ -306,7 +305,7 @@ public class UnsafeArrayOutOfBounds {
   public static void primitiveSetterHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     int accessSize =
-        getAccessSize(method.type().parameterType(2 + 1)); // + 1 for implicit Unsafe instance
+        getBytesCount(method.type().parameterType(2 + 1)); // + 1 for implicit Unsafe instance
     checkAccess(arguments, accessSize);
   }
 
