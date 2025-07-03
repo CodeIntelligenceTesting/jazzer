@@ -17,7 +17,7 @@ jobs:
     name: Build & Test
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-2019, macos-14]
+        os: [ubuntu-22.04, windows-2022, macos-14]
         jdk: [21]
         include:
           - jdk: 21
@@ -32,7 +32,7 @@ jobs:
           - os: macos-14
             arch: "macos-arm64"
             bazel_args: "--xcode_version_config=//.github:host_xcodes"
-          - os: windows-2019
+          - os: windows-2022
             arch: "windows"
 
     steps:

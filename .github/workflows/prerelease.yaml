@@ -16,7 +16,7 @@ jobs:
             name: linux
           - os: macos-14
             name: macos
-          - os: windows-2019
+          - os: windows-2022
             name: windows
 
     steps:
