@@ -55,24 +55,23 @@ public class UnsafeArrayOutOfBounds {
   Script for generating the @MethodHook annotations:
   ====================================================
    Method[] methods = sun.misc.Unsafe.class.getMethods();
-   Set<String> allMethodNames = new HashSet<>();
-   Set<String> duplicateMethodNames = new HashSet<>();
-   Arrays.stream(methods).map(Method::getName).forEach(n -> {
-     if (!allMethodNames.add(n)) {
-       duplicateMethodNames.add(n);
-     }
-   });
+   Set<String> methodsWithNativeOnlyOverload = Arrays.stream(methods)
+     .filter(m -> Arrays.stream(m.getParameterTypes()).noneMatch(p -> p == Object.class))
+     .map(Method::getName)
+     .collect(Collectors.toSet());
 
+   Set<String> emittedWithoutDesc = new HashSet<>();
    Arrays.stream(methods)
      .filter(m -> Arrays.stream(m.getParameterTypes()).anyMatch(p -> p == Object.class))
-     .filter(m -> !Set.of("equals", "unpark").contains(m.getName()))
+     .filter(m -> !Arrays.asList("equals", "monitorEnter", "monitorExit", "tryMonitorEnter", "unpark")
+       .contains(m.getName()))
      .sorted(Comparator.comparing(Method::getName))
      .forEach(m -> {
        String methodName = m.getName();
        String s = "@MethodHook(\n    type = HookType.BEFORE,\n    targetClassName = UNSAFE_NAME,\n    targetMethod = \""
            + methodName
            + "\"";
-       if (duplicateMethodNames.contains(methodName)) {
+       if (methodsWithNativeOnlyOverload.contains(methodName)) {
          String methodDesc;
          try {
            methodDesc = MethodHandles.lookup().unreflect(m).type()
@@ -85,8 +84,12 @@ public class UnsafeArrayOutOfBounds {
          s += ",\n    targetMethodDescriptor = \""
              + methodDesc
              + "\"";
+         System.out.println(s + ")");
        }
-       System.out.println(s + ")");
+       // Avoid emitting same annotation twice for overloads where no native-only overload exists
+       else if (emittedWithoutDesc.add(methodName)) {
+         System.out.println(s + ")");
+       }
      });
    ====================================================
   */
@@ -146,6 +149,7 @@ public class UnsafeArrayOutOfBounds {
   @MethodHook(type = HookType.BEFORE, targetClassName = UNSAFE_NAME, targetMethod = "getAndAddLong")
   @MethodHook(type = HookType.BEFORE, targetClassName = UNSAFE_NAME, targetMethod = "getAndSetInt")
   @MethodHook(type = HookType.BEFORE, targetClassName = UNSAFE_NAME, targetMethod = "getAndSetLong")
+  // `getBoolean` has no overload without Object parameter, so no need to specify method descriptor
   @MethodHook(type = HookType.BEFORE, targetClassName = UNSAFE_NAME, targetMethod = "getBoolean")
   @MethodHook(
       type = HookType.BEFORE,
@@ -159,12 +163,24 @@ public class UnsafeArrayOutOfBounds {
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
+      targetMethod = "getByte",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;I)B")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
       targetMethod = "getByteVolatile")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
       targetMethod = "getChar",
       targetMethodDescriptor = "(Ljava/lang/Object;J)C")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
+      targetMethod = "getChar",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;I)C")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
@@ -177,12 +193,24 @@ public class UnsafeArrayOutOfBounds {
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
+      targetMethod = "getDouble",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;I)D")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
       targetMethod = "getDoubleVolatile")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
       targetMethod = "getFloat",
       targetMethodDescriptor = "(Ljava/lang/Object;J)F")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
+      targetMethod = "getFloat",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;I)F")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
@@ -195,6 +223,12 @@ public class UnsafeArrayOutOfBounds {
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
+      targetMethod = "getInt",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;I)I")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
       targetMethod = "getIntVolatile")
   @MethodHook(
       type = HookType.BEFORE,
@@ -204,12 +238,24 @@ public class UnsafeArrayOutOfBounds {
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
+      targetMethod = "getLong",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;I)J")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
       targetMethod = "getLongVolatile")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
       targetMethod = "getShort",
       targetMethodDescriptor = "(Ljava/lang/Object;J)S")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
+      targetMethod = "getShort",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;I)S")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
@@ -232,6 +278,7 @@ public class UnsafeArrayOutOfBounds {
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
       targetMethod = "compareAndSwapLong")
+  // `putBoolean` has no overload without Object parameter, so no need to specify method descriptor
   @MethodHook(type = HookType.BEFORE, targetClassName = UNSAFE_NAME, targetMethod = "putBoolean")
   @MethodHook(
       type = HookType.BEFORE,
@@ -245,12 +292,24 @@ public class UnsafeArrayOutOfBounds {
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
+      targetMethod = "putByte",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;IB)V")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
       targetMethod = "putByteVolatile")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
       targetMethod = "putChar",
       targetMethodDescriptor = "(Ljava/lang/Object;JC)V")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
+      targetMethod = "putChar",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;IC)V")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
@@ -263,12 +322,24 @@ public class UnsafeArrayOutOfBounds {
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
+      targetMethod = "putDouble",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;ID)V")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
       targetMethod = "putDoubleVolatile")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
       targetMethod = "putFloat",
       targetMethodDescriptor = "(Ljava/lang/Object;JF)V")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
+      targetMethod = "putFloat",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;IF)V")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
@@ -281,6 +352,12 @@ public class UnsafeArrayOutOfBounds {
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
+      targetMethod = "putInt",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;II)V")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
       targetMethod = "putIntVolatile")
   @MethodHook(
       type = HookType.BEFORE,
@@ -290,12 +367,24 @@ public class UnsafeArrayOutOfBounds {
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
+      targetMethod = "putLong",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;IJ)V")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
       targetMethod = "putLongVolatile")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
       targetMethod = "putShort",
       targetMethodDescriptor = "(Ljava/lang/Object;JS)V")
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = UNSAFE_NAME,
+      targetMethod = "putShort",
+      // Overload with `int offset`, removed in Java 9
+      targetMethodDescriptor = "(Ljava/lang/Object;IS)V")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = UNSAFE_NAME,
@@ -342,9 +431,15 @@ public class UnsafeArrayOutOfBounds {
     Jazzer.reportFindingFromHook(new FuzzerSecurityIssueCritical(message));
   }
 
+  private static long offsetValue(Object obj) {
+    // Java 8 also had deprecated Unsafe method overloads with `int offset` parameter, therefore
+    // cannot just cast to `long` here
+    return ((Number) obj).longValue();
+  }
+
   private static void checkAccess(Object[] args, long accessSize) {
     Object obj = args[0];
-    long offset = (long) args[1];
+    long offset = offsetValue(args[1]);
     checkAccess(obj, offset, accessSize);
   }
 
@@ -406,7 +501,7 @@ public class UnsafeArrayOutOfBounds {
 
   private static void checkObjectSizedAccess(Object[] args) {
     Object obj = args[0];
-    long offset = (long) args[1];
+    long offset = offsetValue(args[1]);
     checkObjectSizedAccess(obj, offset);
   }
 
