@@ -36,14 +36,14 @@ jobs:
     name: Build & Test
     strategy:
       matrix:
-        os: [ macos-14, windows-2019 ]
+        os: [ macos-14, windows-2022 ]
         # Test JDK 8 on Windows and mac only on main.
         jdk: [8]
         include:
           - os: macos-14
             arch: "macos-arm64"
             bazel_args: "--xcode_version_config=//.github:host_xcodes"
-          - os: windows-2019
+          - os: windows-2022
             arch: "windows"
 
     steps:
@@ -54,6 +54,12 @@ jobs:
         with:
           distribution: zulu
           java-version: 21
+
+      - name: Install Clang on Windows
+        if: matrix.os == 'windows-2022'
+        run: |
+          choco install llvm --version=19.1.0 --force
+          echo "C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Set Build Buddy config
         run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV

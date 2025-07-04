@@ -16,7 +16,7 @@ jobs:
             name: linux
           - os: macos-14
             name: macos
-          - os: windows-2019
+          - os: windows-2022
             name: windows
 
     steps:
@@ -27,6 +27,12 @@ jobs:
         with:
           distribution: zulu
           java-version: 21
+
+      - name: Install Clang on Windows
+        if: matrix.os == 'windows-2022'
+        run: |
+          choco install llvm --version=19.1.0 --force
+          echo "C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Append build settings to .bazelrc
         shell: bash

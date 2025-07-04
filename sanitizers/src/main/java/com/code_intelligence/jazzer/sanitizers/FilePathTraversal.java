@@ -342,7 +342,14 @@ public class FilePathTraversal {
       return;
     }
 
-    if (p.toAbsolutePath().normalize().equals(ABSOLUTE_TARGET)) {
+    // catch all exceptions that might be thrown by the sanitizer
+    Path normalized;
+    try {
+      normalized = p.toAbsolutePath().normalize();
+    } catch (Throwable e) {
+      return;
+    }
+    if (normalized.equals(ABSOLUTE_TARGET)) {
       Jazzer.reportFindingFromHook(new FuzzerSecurityIssueCritical("File path traversal: " + p));
     }
   }
