@@ -24,11 +24,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Array;
 import sun.misc.Unsafe;
 
-/**
- * Sanitizer for {@link Unsafe sun.misc.Unsafe} usage which performs out-of-bounds and some other
- * invalid access on arrays.
- */
-public class UnsafeArrayOutOfBounds {
+/** Sanitizer for {@link Unsafe sun.misc.Unsafe} usage. */
+public class UnsafeSanitizer {
   /*
    * Implementation notes:
    * - This only covers the 'public' class sun.misc.Unsafe, not the JDK-internal jdk.internal.misc.Unsafe since
@@ -263,7 +260,7 @@ public class UnsafeArrayOutOfBounds {
   public static void primitiveGetterHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     int accessSize = getBytesCount(method.type().returnType());
-    checkAccess(arguments, accessSize);
+    checkPrimitiveAccess(arguments, accessSize);
   }
 
   /**
@@ -398,7 +395,7 @@ public class UnsafeArrayOutOfBounds {
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     int accessSize =
         getBytesCount(method.type().parameterType(2 + 1)); // + 1 for implicit Unsafe instance
-    checkAccess(arguments, accessSize);
+    checkPrimitiveAccess(arguments, accessSize);
   }
 
   /** Hook for {@link Unsafe#setMemory(Object, long, long, byte)} */
@@ -410,7 +407,7 @@ public class UnsafeArrayOutOfBounds {
       targetMethodDescriptor = "(Ljava/lang/Object;JJB)V")
   public static void setMemoryHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
-    checkAccess(arguments[0], (long) arguments[1], (long) arguments[2]);
+    checkPrimitiveAccess(arguments[0], (long) arguments[1], (long) arguments[2]);
   }
 
   /** Hook for {@link Unsafe#copyMemory(Object, long, Object, long, long)} */
@@ -423,8 +420,8 @@ public class UnsafeArrayOutOfBounds {
   public static void copyMemoryHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     long size = (long) arguments[4];
-    checkAccess(arguments[0], (long) arguments[1], size);
-    checkAccess(arguments[2], (long) arguments[3], size);
+    checkPrimitiveAccess(arguments[0], (long) arguments[1], size);
+    checkPrimitiveAccess(arguments[2], (long) arguments[3], size);
   }
 
   private static void report(String message) {
@@ -437,14 +434,25 @@ public class UnsafeArrayOutOfBounds {
     return ((Number) obj).longValue();
   }
 
-  private static void checkAccess(Object[] args, long accessSize) {
+  private static void checkPrimitiveAccess(Object[] args, long accessSize) {
     Object obj = args[0];
     long offset = offsetValue(args[1]);
-    checkAccess(obj, offset, accessSize);
+    checkPrimitiveAccess(obj, offset, accessSize);
+  }
+
+  private static void checkPrimitiveAccess(Object obj, long offset, long accessSize) {
+    checkAccess(obj, offset, accessSize, false);
+  }
+
+  private static void checkObjectSizedAccess(Object[] args) {
+    Object obj = args[0];
+    long offset = offsetValue(args[1]);
+    long accessSize = Unsafe.ARRAY_OBJECT_INDEX_SCALE;
+    checkAccess(obj, offset, accessSize, true);
   }
 
   /**
-   * Checks {@link Unsafe} memory access where the access size is measured in number of bytes.
+   * Checks {@link Unsafe} memory access.
    *
    * @param obj the base object for memory access; e.g. for {@link Unsafe#getInt(Object, long)} it
    *     is the argument at index 0
@@ -452,9 +460,11 @@ public class UnsafeArrayOutOfBounds {
    *     is the argument at index 1
    * @param accessSize the number of bytes which is accessed; e.g. for {@link Unsafe#getInt(Object,
    *     long)} it is 4 (due to {@code int} being 4 bytes large)
-   * @see #checkObjectSizedAccess(Object, long)
+   * @param isObjectAccess whether an object reference (instead of a primitive value) is being
+   *     accessed
    */
-  private static void checkAccess(Object obj, long offset, long accessSize) {
+  private static void checkAccess(
+      Object obj, long offset, long accessSize, boolean isObjectAccess) {
     if (accessSize < 0) {
       report("Negative access size: " + accessSize);
     }
@@ -471,10 +481,17 @@ public class UnsafeArrayOutOfBounds {
       return;
     }
 
-    if (!componentType.isPrimitive()) {
-      // Reading or writing bytes to an array of references; might be possible but seems
-      // rather unreliable and might mess with the garbage collector?
-      report("Reading or writing bytes from a " + objClass.getTypeName());
+    // Mixing up bytes and object references (e.g. reading an object reference from a primitive
+    // array)
+    // seems error-prone and might mess with the garbage collector
+    if (isObjectAccess) {
+      if (componentType.isPrimitive()) {
+        report("Reading or writing object reference from a " + objClass.getTypeName());
+      }
+    } else {
+      if (!componentType.isPrimitive()) {
+        report("Reading or writing bytes from a " + objClass.getTypeName());
+      }
     }
 
     long baseOffset = UNSAFE.arrayBaseOffset(objClass);
@@ -495,60 +512,11 @@ public class UnsafeArrayOutOfBounds {
               + endOffset);
     }
 
-    // Don't check if access is aligned; depends on platform if unaligned access is supported
-    // and some libraries which are using Unsafe assume that it is supported
-  }
-
-  private static void checkObjectSizedAccess(Object[] args) {
-    Object obj = args[0];
-    long offset = offsetValue(args[1]);
-    checkObjectSizedAccess(obj, offset);
-  }
-
-  /**
-   * Checks {@link Unsafe} memory access where an object reference is accessed.
-   *
-   * @param obj the base object for memory access; e.g. for {@link Unsafe#getObject(Object, long)}
-   *     it is the argument at index 0
-   * @param offset the offset for the memory access; e.g. for {@link Unsafe#getObject(Object, long)}
-   *     it is the argument at index 1
-   * @see #checkAccess(Object, long, long)
-   */
-  private static void checkObjectSizedAccess(Object obj, long offset) {
-    if (obj == null) {
-      // Native memory access; not sanitized here
-      return;
-    }
-
-    Class<?> objClass = obj.getClass();
-    Class<?> componentType = objClass.getComponentType();
-    if (componentType == null) {
-      // Not an array
-      return;
-    }
-
-    if (componentType.isPrimitive()) {
-      // Reading or writing object references from a primitive array; might be possible but seems
-      // rather unreliable and might mess with the garbage collector?
-      report("Reading or writing object reference from a " + objClass.getTypeName());
-    }
-
-    long baseOffset = UNSAFE.arrayBaseOffset(objClass);
-    long indexScale = UNSAFE.arrayIndexScale(objClass);
-
-    if (offset < baseOffset) {
-      report("Offset " + offset + " is lower than baseOffset " + baseOffset);
-    }
-
-    if ((offset - baseOffset) % indexScale != 0) {
+    if (isObjectAccess && (offset - baseOffset) % indexScale != 0) {
       // Trying to read or write object at an offset which spans two array elements
       report("Access at offset " + offset + " is not aligned");
     }
-
-    long endOffset = baseOffset + Array.getLength(obj) * indexScale;
-    long accessSize = indexScale;
-    if (Long.compareUnsigned(endOffset, offset + accessSize) < 0) {
-      report("Access at offset " + offset + " exceeds end offset " + endOffset);
-    }
+    // For primitive arrays don't check if access is aligned; depends on platform if unaligned
+    // access is supported and some libraries which are using Unsafe assume that it is supported
   }
 }

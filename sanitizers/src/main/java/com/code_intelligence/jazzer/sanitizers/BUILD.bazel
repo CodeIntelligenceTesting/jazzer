@@ -49,8 +49,8 @@ java_library(
 )
 
 java_library(
-    name = "unsafe_array_out_of_bounds",
-    srcs = ["UnsafeArrayOutOfBounds.java"],
+    name = "unsafe_sanitizer",
+    srcs = ["UnsafeSanitizer.java"],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
         "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
@@ -78,7 +78,7 @@ kt_jvm_library(
         ":script_engine_injection",
         ":server_side_request_forgery",
         ":sql_injection",
-        ":unsafe_array_out_of_bounds",
+        ":unsafe_sanitizer",
     ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
