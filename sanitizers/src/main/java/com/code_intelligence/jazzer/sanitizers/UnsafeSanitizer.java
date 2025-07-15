@@ -260,7 +260,7 @@ public class UnsafeSanitizer {
   public static void primitiveGetterHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     int accessSize = getBytesCount(method.type().returnType());
-    checkPrimitiveAccess(arguments, accessSize);
+    checkByteSizedAccess(arguments, accessSize);
   }
 
   /**
@@ -395,7 +395,7 @@ public class UnsafeSanitizer {
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     int accessSize =
         getBytesCount(method.type().parameterType(2 + 1)); // + 1 for implicit Unsafe instance
-    checkPrimitiveAccess(arguments, accessSize);
+    checkByteSizedAccess(arguments, accessSize);
   }
 
   /** Hook for {@link Unsafe#setMemory(Object, long, long, byte)} */
@@ -407,7 +407,7 @@ public class UnsafeSanitizer {
       targetMethodDescriptor = "(Ljava/lang/Object;JJB)V")
   public static void setMemoryHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
-    checkPrimitiveAccess(arguments[0], (long) arguments[1], (long) arguments[2]);
+    checkByteSizedAccess(arguments[0], (long) arguments[1], (long) arguments[2]);
   }
 
   /** Hook for {@link Unsafe#copyMemory(Object, long, Object, long, long)} */
@@ -420,8 +420,8 @@ public class UnsafeSanitizer {
   public static void copyMemoryHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     long size = (long) arguments[4];
-    checkPrimitiveAccess(arguments[0], (long) arguments[1], size);
-    checkPrimitiveAccess(arguments[2], (long) arguments[3], size);
+    checkByteSizedAccess(arguments[0], (long) arguments[1], size);
+    checkByteSizedAccess(arguments[2], (long) arguments[3], size);
   }
 
   private static void report(String message) {
@@ -434,13 +434,13 @@ public class UnsafeSanitizer {
     return ((Number) obj).longValue();
   }
 
-  private static void checkPrimitiveAccess(Object[] args, long accessSize) {
+  private static void checkByteSizedAccess(Object[] args, long accessSize) {
     Object obj = args[0];
     long offset = offsetValue(args[1]);
-    checkPrimitiveAccess(obj, offset, accessSize);
+    checkByteSizedAccess(obj, offset, accessSize);
   }
 
-  private static void checkPrimitiveAccess(Object obj, long offset, long accessSize) {
+  private static void checkByteSizedAccess(Object obj, long offset, long accessSize) {
     checkAccess(obj, offset, accessSize, false);
   }
 
@@ -482,11 +482,10 @@ public class UnsafeSanitizer {
     }
 
     // Mixing up bytes and object references (e.g. reading an object reference from a primitive
-    // array)
-    // seems error-prone and might mess with the garbage collector
+    // array) seems error-prone and might mess with the garbage collector
     if (isObjectAccess) {
       if (componentType.isPrimitive()) {
-        report("Reading or writing object reference from a " + objClass.getTypeName());
+        report("Reading or writing an object reference from a " + objClass.getTypeName());
       }
     } else {
       if (!componentType.isPrimitive()) {

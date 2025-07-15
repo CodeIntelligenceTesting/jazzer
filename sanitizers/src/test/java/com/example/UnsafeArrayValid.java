@@ -19,7 +19,10 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import java.lang.reflect.Field;
 import sun.misc.Unsafe;
 
-/** Verifies that valid {@link Unsafe} usage does not cause a spurious sanitizer exception. */
+/**
+ * Verifies that valid array access through {@link Unsafe} does not cause a spurious sanitizer
+ * exception.
+ */
 public class UnsafeArrayValid {
   private static final Unsafe UNSAFE;
 
