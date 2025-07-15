@@ -15,9 +15,8 @@
  */
 package com.example;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.junit.FuzzTest;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import sun.misc.Unsafe;
 
 public class UnsafeArrayOutOfBounds {
@@ -33,520 +32,602 @@ public class UnsafeArrayOutOfBounds {
     }
   }
 
-  /** Defines test methods which all perform invalid memory access with {@link Unsafe}. */
-  @SuppressWarnings("unused") // test methods are accessed through reflection
-  private static class TestMethods {
-    static void compareAndSwapInt() {
-      UNSAFE.compareAndSwapInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 0, 1);
-    }
-
-    static void compareAndSwapInt_end() {
-      UNSAFE.compareAndSwapInt(
-          new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 0, 1);
-    }
-
-    static void compareAndSwapLong() {
-      UNSAFE.compareAndSwapLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 0, 1);
-    }
-
-    static void compareAndSwapLong_end() {
-      UNSAFE.compareAndSwapLong(
-          new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 0, 1);
-    }
-
-    static void compareAndSwapObject() {
-      UNSAFE.compareAndSwapObject(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1, "a", "b");
-    }
-
-    static void compareAndSwapObject_end() {
-      UNSAFE.compareAndSwapObject(
-          new Object[5],
-          Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE,
-          "a",
-          "b");
-    }
-
-    static void getAndAddInt() {
-      UNSAFE.getAndAddInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 1);
-    }
-
-    static void getAndAddInt_end() {
-      UNSAFE.getAndAddInt(
-          new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 1);
-    }
-
-    static void getAndAddLong() {
-      UNSAFE.getAndAddLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 1);
-    }
-
-    static void getAndAddLong_end() {
-      UNSAFE.getAndAddLong(
-          new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 1);
-    }
-
-    static void getAndSetInt() {
-      UNSAFE.getAndSetInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 1);
-    }
-
-    static void getAndSetInt_end() {
-      UNSAFE.getAndSetInt(
-          new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 1);
-    }
-
-    static void getAndSetLong() {
-      UNSAFE.getAndSetLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 1);
-    }
-
-    static void getAndSetLong_end() {
-      UNSAFE.getAndSetLong(
-          new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 1);
-    }
-
-    static void getAndSetObject() {
-      UNSAFE.getAndSetObject(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1, "a");
-    }
-
-    static void getAndSetObject_end() {
-      UNSAFE.getAndSetObject(
-          new Object[5],
-          Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE,
-          "a");
-    }
-
-    static void getBoolean() {
-      UNSAFE.getBoolean(new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET - 1);
-    }
-
-    static void getBoolean_end() {
-      UNSAFE.getBoolean(
-          new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET + 5L * Unsafe.ARRAY_BOOLEAN_INDEX_SCALE);
-    }
-
-    static void getBooleanVolatile() {
-      UNSAFE.getBooleanVolatile(new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET - 1);
-    }
-
-    static void getBooleanVolatile_end() {
-      UNSAFE.getBooleanVolatile(
-          new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET + 5L * Unsafe.ARRAY_BOOLEAN_INDEX_SCALE);
-    }
-
-    static void getByte() {
-      UNSAFE.getByte(new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET - 1);
-    }
-
-    static void getByte_end() {
-      UNSAFE.getByte(
-          new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET + 5L * Unsafe.ARRAY_BYTE_INDEX_SCALE);
-    }
-
-    static void getByteVolatile() {
-      UNSAFE.getByteVolatile(new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET - 1);
-    }
-
-    static void getByteVolatile_end() {
-      UNSAFE.getByteVolatile(
-          new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET + 5L * Unsafe.ARRAY_BYTE_INDEX_SCALE);
-    }
-
-    static void getChar() {
-      UNSAFE.getChar(new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET - 1);
-    }
-
-    static void getChar_end() {
-      UNSAFE.getChar(
-          new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET + 5L * Unsafe.ARRAY_CHAR_INDEX_SCALE);
-    }
-
-    static void getCharVolatile() {
-      UNSAFE.getCharVolatile(new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET - 1);
-    }
-
-    static void getCharVolatile_end() {
-      UNSAFE.getCharVolatile(
-          new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET + 5L * Unsafe.ARRAY_CHAR_INDEX_SCALE);
-    }
-
-    static void getDouble() {
-      UNSAFE.getDouble(new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET - 1);
-    }
-
-    static void getDouble_end() {
-      UNSAFE.getDouble(
-          new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET + 5L * Unsafe.ARRAY_DOUBLE_INDEX_SCALE);
-    }
-
-    static void getDoubleVolatile() {
-      UNSAFE.getDoubleVolatile(new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET - 1);
-    }
-
-    static void getDoubleVolatile_end() {
-      UNSAFE.getDoubleVolatile(
-          new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET + 5L * Unsafe.ARRAY_DOUBLE_INDEX_SCALE);
-    }
-
-    static void getFloat() {
-      UNSAFE.getFloat(new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET - 1);
-    }
-
-    static void getFloat_end() {
-      UNSAFE.getFloat(
-          new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET + 5L * Unsafe.ARRAY_FLOAT_INDEX_SCALE);
-    }
-
-    static void getFloatVolatile() {
-      UNSAFE.getFloatVolatile(new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET - 1);
-    }
-
-    static void getFloatVolatile_end() {
-      UNSAFE.getFloatVolatile(
-          new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET + 5L * Unsafe.ARRAY_FLOAT_INDEX_SCALE);
-    }
-
-    static void getInt() {
-      UNSAFE.getInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1);
-    }
-
-    static void getInt_end() {
-      UNSAFE.getInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE);
-    }
-
-    static void getIntVolatile() {
-      UNSAFE.getIntVolatile(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1);
-    }
-
-    static void getIntVolatile_end() {
-      UNSAFE.getIntVolatile(
-          new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE);
-    }
-
-    static void getLong() {
-      UNSAFE.getLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1);
-    }
-
-    static void getLong_end() {
-      UNSAFE.getLong(
-          new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE);
-    }
-
-    static void getLongVolatile() {
-      UNSAFE.getLongVolatile(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1);
-    }
-
-    static void getLongVolatile_end() {
-      UNSAFE.getLongVolatile(
-          new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE);
-    }
-
-    static void getObject() {
-      UNSAFE.getObject(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1);
-    }
-
-    static void getObject_end() {
-      UNSAFE.getObject(
-          new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE);
-    }
-
-    static void getObjectVolatile() {
-      UNSAFE.getObjectVolatile(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1);
-    }
-
-    static void getObjectVolatile_end() {
-      UNSAFE.getObjectVolatile(
-          new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE);
-    }
-
-    static void getShort() {
-      UNSAFE.getShort(new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET - 1);
-    }
-
-    static void getShort_end() {
-      UNSAFE.getShort(
-          new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET + 5L * Unsafe.ARRAY_SHORT_INDEX_SCALE);
-    }
-
-    static void getShortVolatile() {
-      UNSAFE.getShortVolatile(new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET - 1);
-    }
-
-    static void getShortVolatile_end() {
-      UNSAFE.getShortVolatile(
-          new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET + 5L * Unsafe.ARRAY_SHORT_INDEX_SCALE);
-    }
-
-    static void putBoolean() {
-      UNSAFE.putBoolean(new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET - 1, true);
-    }
-
-    static void putBoolean_end() {
-      UNSAFE.putBoolean(
-          new boolean[5],
-          Unsafe.ARRAY_BOOLEAN_BASE_OFFSET + 5L * Unsafe.ARRAY_BOOLEAN_INDEX_SCALE,
-          true);
-    }
-
-    static void putBooleanVolatile() {
-      UNSAFE.putBooleanVolatile(new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET - 1, true);
-    }
-
-    static void putBooleanVolatile_end() {
-      UNSAFE.putBooleanVolatile(
-          new boolean[5],
-          Unsafe.ARRAY_BOOLEAN_BASE_OFFSET + 5L * Unsafe.ARRAY_BOOLEAN_INDEX_SCALE,
-          true);
-    }
-
-    static void putByte() {
-      UNSAFE.putByte(new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET - 1, (byte) 0);
-    }
-
-    static void putByte_end() {
-      UNSAFE.putByte(
-          new byte[5],
-          Unsafe.ARRAY_BYTE_BASE_OFFSET + 5L * Unsafe.ARRAY_BYTE_INDEX_SCALE,
-          (byte) 0);
-    }
-
-    static void putByteVolatile() {
-      UNSAFE.putByteVolatile(new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET - 1, (byte) 0);
-    }
-
-    static void putByteVolatile_end() {
-      UNSAFE.putByteVolatile(
-          new byte[5],
-          Unsafe.ARRAY_BYTE_BASE_OFFSET + 5L * Unsafe.ARRAY_BYTE_INDEX_SCALE,
-          (byte) 0);
-    }
-
-    static void putChar() {
-      UNSAFE.putChar(new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET - 1, 'a');
-    }
-
-    static void putChar_end() {
-      UNSAFE.putChar(
-          new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET + 5L * Unsafe.ARRAY_CHAR_INDEX_SCALE, 'a');
-    }
-
-    static void putCharVolatile() {
-      UNSAFE.putCharVolatile(new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET - 1, 'a');
-    }
-
-    static void putCharVolatile_end() {
-      UNSAFE.putCharVolatile(
-          new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET + 5L * Unsafe.ARRAY_CHAR_INDEX_SCALE, 'a');
-    }
-
-    static void putDouble() {
-      UNSAFE.putDouble(new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET - 1, 0);
-    }
-
-    static void putDouble_end() {
-      UNSAFE.putDouble(
-          new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET + 5L * Unsafe.ARRAY_DOUBLE_INDEX_SCALE, 0);
-    }
-
-    static void putDoubleVolatile() {
-      UNSAFE.putDoubleVolatile(new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET - 1, 0);
-    }
-
-    static void putDoubleVolatile_end() {
-      UNSAFE.putDoubleVolatile(
-          new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET + 5L * Unsafe.ARRAY_DOUBLE_INDEX_SCALE, 0);
-    }
-
-    static void putFloat() {
-      UNSAFE.putFloat(new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET - 1, 0);
-    }
-
-    static void putFloat_end() {
-      UNSAFE.putFloat(
-          new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET + 5L * Unsafe.ARRAY_FLOAT_INDEX_SCALE, 0);
-    }
-
-    static void putFloatVolatile() {
-      UNSAFE.putFloatVolatile(new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET - 1, 0);
-    }
-
-    static void putFloatVolatile_end() {
-      UNSAFE.putFloatVolatile(
-          new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET + 5L * Unsafe.ARRAY_FLOAT_INDEX_SCALE, 0);
-    }
-
-    static void putInt() {
-      UNSAFE.putInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 0);
-    }
-
-    static void putInt_end() {
-      UNSAFE.putInt(
-          new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 0);
-    }
-
-    static void putIntVolatile() {
-      UNSAFE.putIntVolatile(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 0);
-    }
-
-    static void putIntVolatile_end() {
-      UNSAFE.putIntVolatile(
-          new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 0);
-    }
-
-    static void putLong() {
-      UNSAFE.putLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 0);
-    }
-
-    static void putLong_end() {
-      UNSAFE.putLong(
-          new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 0);
-    }
-
-    static void putLongVolatile() {
-      UNSAFE.putLongVolatile(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 0);
-    }
-
-    static void putLongVolatile_end() {
-      UNSAFE.putLongVolatile(
-          new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 0);
-    }
-
-    static void putObject() {
-      UNSAFE.putObject(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1, 0);
-    }
-
-    static void putObject_end() {
-      UNSAFE.putObject(
-          new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE, 0);
-    }
-
-    static void putObjectVolatile() {
-      UNSAFE.putObjectVolatile(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1, 0);
-    }
-
-    static void putObjectVolatile_end() {
-      UNSAFE.putObjectVolatile(
-          new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE, 0);
-    }
-
-    static void putOrderedInt() {
-      UNSAFE.putOrderedInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 0);
-    }
-
-    static void putOrderedInt_end() {
-      UNSAFE.putOrderedInt(
-          new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 0);
-    }
-
-    static void putOrderedLong() {
-      UNSAFE.putOrderedLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 0);
-    }
-
-    static void putOrderedLong_end() {
-      UNSAFE.putOrderedLong(
-          new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 0);
-    }
-
-    static void putOrderedObject() {
-      UNSAFE.putOrderedObject(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1, 0);
-    }
-
-    static void putOrderedObject_end() {
-      UNSAFE.putOrderedObject(
-          new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE, 0);
-    }
-
-    static void putShort() {
-      UNSAFE.putShort(new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET - 1, (short) 0);
-    }
-
-    static void putShort_end() {
-      UNSAFE.putShort(
-          new short[5],
-          Unsafe.ARRAY_SHORT_BASE_OFFSET + 5L * Unsafe.ARRAY_SHORT_INDEX_SCALE,
-          (short) 0);
-    }
-
-    static void putShortVolatile() {
-      UNSAFE.putShortVolatile(new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET - 1, (short) 0);
-    }
-
-    static void putShortVolatile_end() {
-      UNSAFE.putShortVolatile(
-          new short[5],
-          Unsafe.ARRAY_SHORT_BASE_OFFSET + 5L * Unsafe.ARRAY_SHORT_INDEX_SCALE,
-          (short) 0);
-    }
-
-    static void copyMemory() {
-      UNSAFE.copyMemory(
-          new byte[5],
-          Unsafe.ARRAY_BYTE_BASE_OFFSET - 1,
-          new byte[5],
-          Unsafe.ARRAY_BYTE_BASE_OFFSET,
-          2);
-    }
-
-    static void copyMemory_end() {
-      UNSAFE.copyMemory(
-          new byte[5],
-          Unsafe.ARRAY_BYTE_BASE_OFFSET + 4L * Unsafe.ARRAY_BYTE_INDEX_SCALE,
-          new byte[5],
-          Unsafe.ARRAY_BYTE_BASE_OFFSET,
-          2);
-    }
-
-    static void copyMemory_dest() {
-      UNSAFE.copyMemory(
-          new byte[5],
-          Unsafe.ARRAY_BYTE_BASE_OFFSET,
-          new byte[5],
-          Unsafe.ARRAY_BYTE_BASE_OFFSET - 1,
-          2);
-    }
-
-    static void copyMemory_dest_end() {
-      UNSAFE.copyMemory(
-          new byte[5],
-          Unsafe.ARRAY_BYTE_BASE_OFFSET,
-          new byte[5],
-          Unsafe.ARRAY_BYTE_BASE_OFFSET + 4L * Unsafe.ARRAY_BYTE_INDEX_SCALE,
-          2);
-    }
-
-    static void setMemory() {
-      UNSAFE.setMemory(new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET - 1, 2, (byte) 0);
-    }
-
-    static void setMemory_end() {
-      UNSAFE.setMemory(
-          new byte[5],
-          Unsafe.ARRAY_BYTE_BASE_OFFSET + 4L * Unsafe.ARRAY_BYTE_INDEX_SCALE,
-          2,
-          (byte) 0);
-    }
-
-    // The following covers some additional special cases of invalid memory access
-    static void byteAccessOnObjectArray() {
-      UNSAFE.getByte(new String[10], Unsafe.ARRAY_OBJECT_BASE_OFFSET);
-    }
-
-    static void objectAccessOnPrimitiveArray() {
-      UNSAFE.getObject(new byte[100], Unsafe.ARRAY_BYTE_BASE_OFFSET);
-    }
-
-    static void unalignedObjectAccess() {
-      assert Unsafe.ARRAY_OBJECT_INDEX_SCALE != 1;
-      UNSAFE.getObject(new String[2], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 1);
-    }
+  /*
+   * These test methods all perform invalid memory access with Unsafe.
+   * IMPORTANT: When adding new methods, the list of method names in `BUILD.bazel` has to be adjusted as well.
+   */
+
+  @FuzzTest
+  public void compareAndSwapInt(Boolean ignored) {
+    UNSAFE.compareAndSwapInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 0, 1);
   }
 
-  public static void fuzzerTestOneInput(FuzzedDataProvider data) throws Exception {
-    Method[] testMethods = TestMethods.class.getDeclaredMethods();
-    // Since all of these methods are expected to cause a sanitizer exception, pick a random one and
-    // run it
-    // TODO: Is this a proper way to implement this?
-    Method testMethod = testMethods[data.consumeInt(0, testMethods.length - 1)];
+  @FuzzTest
+  public void compareAndSwapInt_end(Boolean ignored) {
+    UNSAFE.compareAndSwapInt(
+        new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 0, 1);
+  }
 
-    testMethod.invoke(null);
+  @FuzzTest
+  public void compareAndSwapLong(Boolean ignored) {
+    UNSAFE.compareAndSwapLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 0, 1);
+  }
 
-    throw new AssertionError("No sanitizer exception was thrown for " + testMethod);
+  @FuzzTest
+  public void compareAndSwapLong_end(Boolean ignored) {
+    UNSAFE.compareAndSwapLong(
+        new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 0, 1);
+  }
+
+  @FuzzTest
+  public void compareAndSwapObject(Boolean ignored) {
+    UNSAFE.compareAndSwapObject(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1, "a", "b");
+  }
+
+  @FuzzTest
+  public void compareAndSwapObject_end(Boolean ignored) {
+    UNSAFE.compareAndSwapObject(
+        new Object[5],
+        Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE,
+        "a",
+        "b");
+  }
+
+  @FuzzTest
+  public void getAndAddInt(Boolean ignored) {
+    UNSAFE.getAndAddInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 1);
+  }
+
+  @FuzzTest
+  public void getAndAddInt_end(Boolean ignored) {
+    UNSAFE.getAndAddInt(
+        new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 1);
+  }
+
+  @FuzzTest
+  public void getAndAddLong(Boolean ignored) {
+    UNSAFE.getAndAddLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 1);
+  }
+
+  @FuzzTest
+  public void getAndAddLong_end(Boolean ignored) {
+    UNSAFE.getAndAddLong(
+        new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 1);
+  }
+
+  @FuzzTest
+  public void getAndSetInt(Boolean ignored) {
+    UNSAFE.getAndSetInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 1);
+  }
+
+  @FuzzTest
+  public void getAndSetInt_end(Boolean ignored) {
+    UNSAFE.getAndSetInt(
+        new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 1);
+  }
+
+  @FuzzTest
+  public void getAndSetLong(Boolean ignored) {
+    UNSAFE.getAndSetLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 1);
+  }
+
+  @FuzzTest
+  public void getAndSetLong_end(Boolean ignored) {
+    UNSAFE.getAndSetLong(
+        new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 1);
+  }
+
+  @FuzzTest
+  public void getAndSetObject(Boolean ignored) {
+    UNSAFE.getAndSetObject(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1, "a");
+  }
+
+  @FuzzTest
+  public void getAndSetObject_end(Boolean ignored) {
+    UNSAFE.getAndSetObject(
+        new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE, "a");
+  }
+
+  @FuzzTest
+  public void getBoolean(Boolean ignored) {
+    UNSAFE.getBoolean(new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getBoolean_end(Boolean ignored) {
+    UNSAFE.getBoolean(
+        new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET + 5L * Unsafe.ARRAY_BOOLEAN_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getBooleanVolatile(Boolean ignored) {
+    UNSAFE.getBooleanVolatile(new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getBooleanVolatile_end(Boolean ignored) {
+    UNSAFE.getBooleanVolatile(
+        new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET + 5L * Unsafe.ARRAY_BOOLEAN_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getByte(Boolean ignored) {
+    UNSAFE.getByte(new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getByte_end(Boolean ignored) {
+    UNSAFE.getByte(new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET + 5L * Unsafe.ARRAY_BYTE_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getByteVolatile(Boolean ignored) {
+    UNSAFE.getByteVolatile(new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getByteVolatile_end(Boolean ignored) {
+    UNSAFE.getByteVolatile(
+        new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET + 5L * Unsafe.ARRAY_BYTE_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getChar(Boolean ignored) {
+    UNSAFE.getChar(new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getChar_end(Boolean ignored) {
+    UNSAFE.getChar(new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET + 5L * Unsafe.ARRAY_CHAR_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getCharVolatile(Boolean ignored) {
+    UNSAFE.getCharVolatile(new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getCharVolatile_end(Boolean ignored) {
+    UNSAFE.getCharVolatile(
+        new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET + 5L * Unsafe.ARRAY_CHAR_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getDouble(Boolean ignored) {
+    UNSAFE.getDouble(new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getDouble_end(Boolean ignored) {
+    UNSAFE.getDouble(
+        new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET + 5L * Unsafe.ARRAY_DOUBLE_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getDoubleVolatile(Boolean ignored) {
+    UNSAFE.getDoubleVolatile(new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getDoubleVolatile_end(Boolean ignored) {
+    UNSAFE.getDoubleVolatile(
+        new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET + 5L * Unsafe.ARRAY_DOUBLE_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getFloat(Boolean ignored) {
+    UNSAFE.getFloat(new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getFloat_end(Boolean ignored) {
+    UNSAFE.getFloat(
+        new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET + 5L * Unsafe.ARRAY_FLOAT_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getFloatVolatile(Boolean ignored) {
+    UNSAFE.getFloatVolatile(new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getFloatVolatile_end(Boolean ignored) {
+    UNSAFE.getFloatVolatile(
+        new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET + 5L * Unsafe.ARRAY_FLOAT_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getInt(Boolean ignored) {
+    UNSAFE.getInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getInt_end(Boolean ignored) {
+    UNSAFE.getInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getIntVolatile(Boolean ignored) {
+    UNSAFE.getIntVolatile(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getIntVolatile_end(Boolean ignored) {
+    UNSAFE.getIntVolatile(
+        new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getLong(Boolean ignored) {
+    UNSAFE.getLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getLong_end(Boolean ignored) {
+    UNSAFE.getLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getLongVolatile(Boolean ignored) {
+    UNSAFE.getLongVolatile(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getLongVolatile_end(Boolean ignored) {
+    UNSAFE.getLongVolatile(
+        new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getObject(Boolean ignored) {
+    UNSAFE.getObject(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getObject_end(Boolean ignored) {
+    UNSAFE.getObject(
+        new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getObjectVolatile(Boolean ignored) {
+    UNSAFE.getObjectVolatile(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getObjectVolatile_end(Boolean ignored) {
+    UNSAFE.getObjectVolatile(
+        new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getShort(Boolean ignored) {
+    UNSAFE.getShort(new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getShort_end(Boolean ignored) {
+    UNSAFE.getShort(
+        new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET + 5L * Unsafe.ARRAY_SHORT_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void getShortVolatile(Boolean ignored) {
+    UNSAFE.getShortVolatile(new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET - 1);
+  }
+
+  @FuzzTest
+  public void getShortVolatile_end(Boolean ignored) {
+    UNSAFE.getShortVolatile(
+        new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET + 5L * Unsafe.ARRAY_SHORT_INDEX_SCALE);
+  }
+
+  @FuzzTest
+  public void putBoolean(Boolean ignored) {
+    UNSAFE.putBoolean(new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET - 1, true);
+  }
+
+  @FuzzTest
+  public void putBoolean_end(Boolean ignored) {
+    UNSAFE.putBoolean(
+        new boolean[5],
+        Unsafe.ARRAY_BOOLEAN_BASE_OFFSET + 5L * Unsafe.ARRAY_BOOLEAN_INDEX_SCALE,
+        true);
+  }
+
+  @FuzzTest
+  public void putBooleanVolatile(Boolean ignored) {
+    UNSAFE.putBooleanVolatile(new boolean[5], Unsafe.ARRAY_BOOLEAN_BASE_OFFSET - 1, true);
+  }
+
+  @FuzzTest
+  public void putBooleanVolatile_end(Boolean ignored) {
+    UNSAFE.putBooleanVolatile(
+        new boolean[5],
+        Unsafe.ARRAY_BOOLEAN_BASE_OFFSET + 5L * Unsafe.ARRAY_BOOLEAN_INDEX_SCALE,
+        true);
+  }
+
+  @FuzzTest
+  public void putByte(Boolean ignored) {
+    UNSAFE.putByte(new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET - 1, (byte) 0);
+  }
+
+  @FuzzTest
+  public void putByte_end(Boolean ignored) {
+    UNSAFE.putByte(
+        new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET + 5L * Unsafe.ARRAY_BYTE_INDEX_SCALE, (byte) 0);
+  }
+
+  @FuzzTest
+  public void putByteVolatile(Boolean ignored) {
+    UNSAFE.putByteVolatile(new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET - 1, (byte) 0);
+  }
+
+  @FuzzTest
+  public void putByteVolatile_end(Boolean ignored) {
+    UNSAFE.putByteVolatile(
+        new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET + 5L * Unsafe.ARRAY_BYTE_INDEX_SCALE, (byte) 0);
+  }
+
+  @FuzzTest
+  public void putChar(Boolean ignored) {
+    UNSAFE.putChar(new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET - 1, 'a');
+  }
+
+  @FuzzTest
+  public void putChar_end(Boolean ignored) {
+    UNSAFE.putChar(
+        new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET + 5L * Unsafe.ARRAY_CHAR_INDEX_SCALE, 'a');
+  }
+
+  @FuzzTest
+  public void putCharVolatile(Boolean ignored) {
+    UNSAFE.putCharVolatile(new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET - 1, 'a');
+  }
+
+  @FuzzTest
+  public void putCharVolatile_end(Boolean ignored) {
+    UNSAFE.putCharVolatile(
+        new char[5], Unsafe.ARRAY_CHAR_BASE_OFFSET + 5L * Unsafe.ARRAY_CHAR_INDEX_SCALE, 'a');
+  }
+
+  @FuzzTest
+  public void putDouble(Boolean ignored) {
+    UNSAFE.putDouble(new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putDouble_end(Boolean ignored) {
+    UNSAFE.putDouble(
+        new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET + 5L * Unsafe.ARRAY_DOUBLE_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putDoubleVolatile(Boolean ignored) {
+    UNSAFE.putDoubleVolatile(new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putDoubleVolatile_end(Boolean ignored) {
+    UNSAFE.putDoubleVolatile(
+        new double[5], Unsafe.ARRAY_DOUBLE_BASE_OFFSET + 5L * Unsafe.ARRAY_DOUBLE_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putFloat(Boolean ignored) {
+    UNSAFE.putFloat(new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putFloat_end(Boolean ignored) {
+    UNSAFE.putFloat(
+        new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET + 5L * Unsafe.ARRAY_FLOAT_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putFloatVolatile(Boolean ignored) {
+    UNSAFE.putFloatVolatile(new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putFloatVolatile_end(Boolean ignored) {
+    UNSAFE.putFloatVolatile(
+        new float[5], Unsafe.ARRAY_FLOAT_BASE_OFFSET + 5L * Unsafe.ARRAY_FLOAT_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putInt(Boolean ignored) {
+    UNSAFE.putInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putInt_end(Boolean ignored) {
+    UNSAFE.putInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putIntVolatile(Boolean ignored) {
+    UNSAFE.putIntVolatile(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putIntVolatile_end(Boolean ignored) {
+    UNSAFE.putIntVolatile(
+        new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putLong(Boolean ignored) {
+    UNSAFE.putLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putLong_end(Boolean ignored) {
+    UNSAFE.putLong(
+        new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putLongVolatile(Boolean ignored) {
+    UNSAFE.putLongVolatile(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putLongVolatile_end(Boolean ignored) {
+    UNSAFE.putLongVolatile(
+        new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putObject(Boolean ignored) {
+    UNSAFE.putObject(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putObject_end(Boolean ignored) {
+    UNSAFE.putObject(
+        new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putObjectVolatile(Boolean ignored) {
+    UNSAFE.putObjectVolatile(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putObjectVolatile_end(Boolean ignored) {
+    UNSAFE.putObjectVolatile(
+        new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putOrderedInt(Boolean ignored) {
+    UNSAFE.putOrderedInt(new int[5], Unsafe.ARRAY_INT_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putOrderedInt_end(Boolean ignored) {
+    UNSAFE.putOrderedInt(
+        new int[5], Unsafe.ARRAY_INT_BASE_OFFSET + 5L * Unsafe.ARRAY_INT_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putOrderedLong(Boolean ignored) {
+    UNSAFE.putOrderedLong(new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putOrderedLong_end(Boolean ignored) {
+    UNSAFE.putOrderedLong(
+        new long[5], Unsafe.ARRAY_LONG_BASE_OFFSET + 5L * Unsafe.ARRAY_LONG_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putOrderedObject(Boolean ignored) {
+    UNSAFE.putOrderedObject(new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET - 1, 0);
+  }
+
+  @FuzzTest
+  public void putOrderedObject_end(Boolean ignored) {
+    UNSAFE.putOrderedObject(
+        new Object[5], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 5L * Unsafe.ARRAY_OBJECT_INDEX_SCALE, 0);
+  }
+
+  @FuzzTest
+  public void putShort(Boolean ignored) {
+    UNSAFE.putShort(new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET - 1, (short) 0);
+  }
+
+  @FuzzTest
+  public void putShort_end(Boolean ignored) {
+    UNSAFE.putShort(
+        new short[5],
+        Unsafe.ARRAY_SHORT_BASE_OFFSET + 5L * Unsafe.ARRAY_SHORT_INDEX_SCALE,
+        (short) 0);
+  }
+
+  @FuzzTest
+  public void putShortVolatile(Boolean ignored) {
+    UNSAFE.putShortVolatile(new short[5], Unsafe.ARRAY_SHORT_BASE_OFFSET - 1, (short) 0);
+  }
+
+  @FuzzTest
+  public void putShortVolatile_end(Boolean ignored) {
+    UNSAFE.putShortVolatile(
+        new short[5],
+        Unsafe.ARRAY_SHORT_BASE_OFFSET + 5L * Unsafe.ARRAY_SHORT_INDEX_SCALE,
+        (short) 0);
+  }
+
+  @FuzzTest
+  public void copyMemory(Boolean ignored) {
+    UNSAFE.copyMemory(
+        new byte[5],
+        Unsafe.ARRAY_BYTE_BASE_OFFSET - 1,
+        new byte[5],
+        Unsafe.ARRAY_BYTE_BASE_OFFSET,
+        2);
+  }
+
+  @FuzzTest
+  public void copyMemory_end(Boolean ignored) {
+    UNSAFE.copyMemory(
+        new byte[5],
+        Unsafe.ARRAY_BYTE_BASE_OFFSET + 4L * Unsafe.ARRAY_BYTE_INDEX_SCALE,
+        new byte[5],
+        Unsafe.ARRAY_BYTE_BASE_OFFSET,
+        2);
+  }
+
+  @FuzzTest
+  public void copyMemory_dest(Boolean ignored) {
+    UNSAFE.copyMemory(
+        new byte[5],
+        Unsafe.ARRAY_BYTE_BASE_OFFSET,
+        new byte[5],
+        Unsafe.ARRAY_BYTE_BASE_OFFSET - 1,
+        2);
+  }
+
+  @FuzzTest
+  public void copyMemory_dest_end(Boolean ignored) {
+    UNSAFE.copyMemory(
+        new byte[5],
+        Unsafe.ARRAY_BYTE_BASE_OFFSET,
+        new byte[5],
+        Unsafe.ARRAY_BYTE_BASE_OFFSET + 4L * Unsafe.ARRAY_BYTE_INDEX_SCALE,
+        2);
+  }
+
+  @FuzzTest
+  public void setMemory(Boolean ignored) {
+    UNSAFE.setMemory(new byte[5], Unsafe.ARRAY_BYTE_BASE_OFFSET - 1, 2, (byte) 0);
+  }
+
+  @FuzzTest
+  public void setMemory_end(Boolean ignored) {
+    UNSAFE.setMemory(
+        new byte[5],
+        Unsafe.ARRAY_BYTE_BASE_OFFSET + 4L * Unsafe.ARRAY_BYTE_INDEX_SCALE,
+        2,
+        (byte) 0);
+  }
+
+  // The following covers some additional special cases of invalid memory access
+  @FuzzTest
+  public void byteAccessOnObjectArray(Boolean ignored) {
+    UNSAFE.getByte(new String[10], Unsafe.ARRAY_OBJECT_BASE_OFFSET);
+  }
+
+  @FuzzTest
+  public void objectAccessOnPrimitiveArray(Boolean ignored) {
+    UNSAFE.getObject(new byte[100], Unsafe.ARRAY_BYTE_BASE_OFFSET);
+  }
+
+  @FuzzTest
+  public void unalignedObjectAccess(Boolean ignored) {
+    assert Unsafe.ARRAY_OBJECT_INDEX_SCALE != 1;
+    UNSAFE.getObject(new String[2], Unsafe.ARRAY_OBJECT_BASE_OFFSET + 1);
   }
 }
