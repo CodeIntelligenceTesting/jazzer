@@ -223,17 +223,17 @@ java_fuzz_target_test(
     srcs = [
         "UnsafeArrayOutOfBounds.java",
     ],
-    fuzzer_args = [
-        "-print_final_stats=1",
-        "-runs=0",
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
     ],
     env = {
         "JAZZER_FUZZ": "1",
     },
-    allowed_findings = [
-        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
+    expect_number_of_findings = 1,
+    fuzzer_args = [
+        "-print_final_stats=1",
+        "-runs=0",
     ],
-    expect_number_of_findings=1,
     target_class = "com.example.UnsafeArrayOutOfBounds",
     target_method = method,
     verify_crash_reproducer = False,
