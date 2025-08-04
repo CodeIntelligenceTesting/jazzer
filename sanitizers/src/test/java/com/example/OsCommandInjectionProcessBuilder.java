@@ -16,12 +16,11 @@
 
 package com.example;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.mutation.annotation.Ascii;
 import java.util.concurrent.TimeUnit;
 
 public class OsCommandInjectionProcessBuilder {
-  public static void fuzzerTestOneInput(FuzzedDataProvider data) {
-    String input = data.consumeRemainingAsAsciiString();
+  public static void fuzzerTestOneInput(@Ascii String input) {
     try {
       ProcessBuilder processBuilder = new ProcessBuilder(input);
       processBuilder.environment().clear();
