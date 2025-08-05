@@ -16,7 +16,6 @@
 
 package com.example;
 
-import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
 import java.io.BufferedReader;
@@ -32,21 +31,14 @@ public class AbsoluteFilePathTraversal {
     System.setProperty("jazzer.file_path_traversal_target", "/custom/path/jazzer-traversal");
   }
 
-  public static void fuzzerTestOneInput(
-      @WithUtf8Length(max = 100) @NotNull String pathFromFuzzer,
-      @NotNull @DoubleInRange(min = 0.0, max = 1.0) Double fixedPathProbability) {
-    // Slow down the fuzzer a bit, otherwise it finds file path traversal way too quickly!
-    String path = fixedPathProbability < 0.95 ? "/a/b/c/fixed-path" : pathFromFuzzer;
-
+  public static void fuzzerTestOneInput(@WithUtf8Length(max = 100) @NotNull String path) {
     try {
       Path p = Paths.get(path);
       try (BufferedReader r = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
         r.read();
       } catch (IOException ignored) {
-        // swallow
       }
     } catch (InvalidPathException ignored) {
-      // swallow
     }
   }
 }
