@@ -67,7 +67,6 @@ java_fuzz_target_test(
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
     ],
     target_class = "com.example.AbsoluteFilePathTraversal",
-    #not clear why reproducer doesn't work TODO -- fix this
     verify_crash_reproducer = False,
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
@@ -83,7 +82,6 @@ java_fuzz_target_test(
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
     ],
     target_class = "com.example.FilePathTraversal",
-    #not clear why reproducer doesn't work TODO -- fix this
     verify_crash_reproducer = False,
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
