@@ -12,13 +12,32 @@ concurrency:
 
 jobs:
 
+  test_junit_springboot:
+    name: Spring Boot
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+      - name: Run Spring Boot example
+        # The Spring Boot example project is built with Maven. The shell script builds the project
+        # against the local version of Jazzer and runs its unit and fuzz tests.
+        # Spring version 6 requires JDK 17.
+        run: |
+          cd examples/junit-spring-web
+          ./build-and-run-tests.sh
+        shell: bash
+
   build_and_test:
     runs-on: ${{ matrix.os }}
     name: Build & Test
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022, macos-14]
-        jdk: [21]
+        jdk: [21, 8]
         include:
           - jdk: 21
             # Workaround for https://github.com/bazelbuild/bazel/issues/14502
@@ -27,8 +46,7 @@ jobs:
 #            arch: "linux"
 #            bazel_args: "//launcher/android:jazzer_android"
           - os: ubuntu-22.04
-            # Use JDK 8 only on Ubuntu in PRs.
-            jdk: 8
+            arch: "linux"
           - os: macos-14
             arch: "macos-arm64"
             bazel_args: "--xcode_version_config=//.github:host_xcodes"
