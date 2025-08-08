@@ -16,8 +16,10 @@
 
 package com.code_intelligence.jazzer.api;
 
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
+import java.util.function.Supplier;
 
 /** Provides static functions that configure the behavior of bug detectors provided by Jazzer. */
 public final class BugDetectors {
@@ -103,6 +105,66 @@ public final class BugDetectors {
       e.printStackTrace();
       return null;
     }
+  }
+
+  // File path traversal sanitizer control
+  private static final AtomicReference<Supplier<Path>> currentPathTraversalTarget =
+      getFilePathTraversalTarget();
+
+  /**
+   * Returns the current target for file path traversal sanitization.
+   *
+   * @return a supplier that provides the target directory for file path traversal sanitization.
+   */
+  private static AtomicReference<Supplier<Path>> getFilePathTraversalTarget() {
+    try {
+      Class<?> pathTraversalSanitizer =
+          Class.forName("com.code_intelligence.jazzer.sanitizers.FilePathTraversal");
+      return (AtomicReference<Supplier<Path>>) pathTraversalSanitizer.getField("target").get(null);
+    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+      System.err.println("WARN: ");
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  /**
+   * Sets the target for file path traversal sanitization.
+   *
+   * <p>By default, the file path traversal target is set to {@code "../jazzer-traversal"}.
+   *
+   * <p>Setting the target to {@code () -> null } will disable file path traversal sanitization.
+   *
+   * <p>By wrapping the call into a try-with-resources statement, the target can be configured to
+   * apply to individual parts of the fuzz test only:
+   *
+   * <pre>{@code
+   * try (SilentCloseable unused = BugDetectors.setFilePathTraversalTarget(() -> Paths.get("/root"))) {
+   *   // Perform operations that require file path traversal sanitization
+   * }
+   * }</pre>
+   *
+   * @param pathTraversalTarget a supplier that provides the target directory for file path
+   *     traversal sanitization
+   * @return a {@link SilentCloseable} that restores the previously set target when closed
+   */
+  public static SilentCloseable setFilePathTraversalTarget(Supplier<Path> pathTraversalTarget) {
+    if (pathTraversalTarget == null) {
+      throw new IllegalArgumentException("pathTraversalTarget must not be null");
+    }
+    if (currentPathTraversalTarget == null) {
+      throw new IllegalStateException("Failed to set path traversal target");
+    }
+    Supplier<Path> previousPathTraversalTarget =
+        currentPathTraversalTarget.getAndSet(pathTraversalTarget);
+    return () -> {
+      if (!currentPathTraversalTarget.compareAndSet(
+          pathTraversalTarget, previousPathTraversalTarget)) {
+        throw new IllegalStateException(
+            "Failed to reset path traversal target - using try-with-resources is highly"
+                + " recommended");
+      }
+    };
   }
 
   private BugDetectors() {}
