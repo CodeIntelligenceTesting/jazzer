@@ -16,6 +16,7 @@
 
 package com.example;
 
+import com.code_intelligence.jazzer.api.BugDetectors;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
 import java.io.BufferedReader;
@@ -28,7 +29,8 @@ import java.nio.file.Paths;
 
 public class AbsoluteFilePathTraversal {
   static {
-    System.setProperty("jazzer.file_path_traversal_target", "/custom/path/jazzer-traversal");
+    BugDetectors.setFilePathTraversalTarget(
+        () -> Paths.get("/", "custom", "path", "jazzer-traversal"));
   }
 
   public static void fuzzerTestOneInput(@WithUtf8Length(max = 100) @NotNull String path) {

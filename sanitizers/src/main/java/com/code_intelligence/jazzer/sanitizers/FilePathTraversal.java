@@ -24,59 +24,63 @@ import java.lang.invoke.MethodHandle;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 /**
  * This tests for a file read or write of a specific file path whether relative or absolute.
  *
  * <p>This checks only for literal, absolute, normalized paths. It does not process symbolic links.
  *
- * <p>The default target is {@link FilePathTraversal#DEFAULT_TARGET_STRING}
+ * <p>The default target is "../jazzer-traversal"."
  *
- * <p>Users may customize a customize the target by setting the full path in the environment
- * variable {@link FilePathTraversal#FILE_PATH_TARGET_KEY}
+ * <p>Users may customize a customize the target by the BugDetectors API, e.g. by {@code
+ * BugDetectors.setFilePathTraversalTarget(() -> Path.of("..", "jazzer-traversal"))}.
  *
  * <p>This does not currently check for reading metadata from the target file.
  */
 public class FilePathTraversal {
-  public static final String FILE_PATH_TARGET_KEY = "jazzer.file_path_traversal_target";
-  public static final String DEFAULT_TARGET_STRING = "../jazzer-traversal";
+  public static final Path DEFAULT_TARGET = Paths.get("..", "jazzer-traversal");
 
-  private static final Logger LOG = Logger.getLogger(FilePathTraversal.class.getName());
+  // Set via reflection by Jazzer's BugDetectors API.
+  public static final AtomicReference<Supplier<Path>> target =
+      new AtomicReference<>(() -> DEFAULT_TARGET);
 
-  private static Path RELATIVE_TARGET;
-  private static Path ABSOLUTE_TARGET;
-  private static boolean IS_DISABLED = false;
-  private static boolean IS_SET_UP = false;
+  // When guiding the fuzzer towards the target path, sometimes both the absolute and relative paths
+  // are valid. In this case, we toggle between them randomly.
+  // The random part is important because it is possible to set several targets in a fuzz test with
+  // try(target1...){
+  //    ...
+  //    try(target2...) {
+  //       ...
+  // If we toggle in fix pattern, the fuzzer might guide towards the same blocks towards the same
+  // target.
+  // Randomizing the toggle counter sidesteps this issue.
+  private static final int MAX_TARGET_FOCUS_COUNT = 23;
+  private static boolean guideTowardsAbsoluteTargetPath = true;
+  private static int toggleCounter = 1;
 
-  private static void setUp() {
-    String customTarget = System.getProperty(FILE_PATH_TARGET_KEY);
-    if (customTarget != null && !customTarget.isEmpty()) {
-      LOG.log(Level.FINE, "custom target loaded: " + customTarget);
-      setTargets(customTarget);
-    } else {
-      // check that this isn't being run at the root directory
-      Path cwd = Paths.get(".").toAbsolutePath();
-      if (cwd.getParent() == null) {
-        LOG.warning(
-            "Can't run from the root directory with the default target. "
-                + "The FilePathTraversal sanitizer is disabled.");
-        IS_DISABLED = true;
+  public static Optional<Path> toAbsolutePath(Path path, Path currentDir) {
+    try {
+      if (path.isAbsolute()) {
+        return Optional.of(path.normalize());
       }
-      setTargets(DEFAULT_TARGET_STRING);
+      return Optional.of(currentDir.resolve(path).normalize());
+    } catch (InvalidPathException e) {
+      return Optional.empty();
     }
   }
 
-  private static void setTargets(String targetPath) {
-    Path p = Paths.get(targetPath);
-    Path pwd = Paths.get(".");
-    if (p.isAbsolute()) {
-      ABSOLUTE_TARGET = p.toAbsolutePath().normalize();
-      RELATIVE_TARGET = pwd.toAbsolutePath().relativize(ABSOLUTE_TARGET).normalize();
-    } else {
-      ABSOLUTE_TARGET = pwd.resolve(p).toAbsolutePath().normalize();
-      RELATIVE_TARGET = p.normalize();
+  public static Optional<Path> toRelativePath(Path path, Path currentDir) {
+    try {
+      if (path.isAbsolute()) {
+        return Optional.of(currentDir.relativize(path).normalize());
+      }
+      return Optional.of(path.normalize());
+    } catch (IllegalArgumentException e) {
+      return Optional.empty();
     }
   }
 
@@ -172,21 +176,11 @@ public class FilePathTraversal {
   public static void pathFirstArgHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     if (arguments.length > 0) {
-      Object argObj = arguments[0];
-      if (argObj instanceof Path) {
-        checkPath((Path) argObj, hookId);
-      }
+      detectAndGuidePathTraversal(arguments[0], hookId);
     }
   }
 
-  /**
-   * Checks to confirm that a path that is read from or written to is in an allowed directory.
-   *
-   * @param method
-   * @param thisObject
-   * @param arguments
-   * @param hookId
-   */
+  /** Checks to confirm that a path that is read from or written to is in an allowed directory. */
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = "java.nio.file.Files",
@@ -202,14 +196,8 @@ public class FilePathTraversal {
   public static void copyMismatchMvHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     if (arguments.length > 1) {
-      Object from = arguments[0];
-      if (from instanceof Path) {
-        checkPath((Path) from, hookId);
-      }
-      Object to = arguments[1];
-      if (to instanceof Path) {
-        checkPath((Path) to, hookId);
-      }
+      detectAndGuidePathTraversal(arguments[0], hookId);
+      detectAndGuidePathTraversal(arguments[1], hookId);
     }
   }
 
@@ -220,7 +208,7 @@ public class FilePathTraversal {
   public static void fileReaderHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     if (arguments.length > 0) {
-      checkObj(arguments[0], hookId);
+      detectAndGuidePathTraversal(arguments[0], hookId);
     }
   }
 
@@ -231,7 +219,7 @@ public class FilePathTraversal {
   public static void fileWriterHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     if (arguments.length > 0) {
-      checkObj(arguments[0], hookId);
+      detectAndGuidePathTraversal(arguments[0], hookId);
     }
   }
 
@@ -242,7 +230,7 @@ public class FilePathTraversal {
   public static void fileInputStreamHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     if (arguments.length > 0) {
-      checkObj(arguments[0], hookId);
+      detectAndGuidePathTraversal(arguments[0], hookId);
     }
   }
 
@@ -253,7 +241,7 @@ public class FilePathTraversal {
   public static void processFileOutputStartHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     if (arguments.length > 0) {
-      checkObj(arguments[0], hookId);
+      detectAndGuidePathTraversal(arguments[0], hookId);
     }
   }
 
@@ -264,7 +252,7 @@ public class FilePathTraversal {
   public static void scannerHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     if (arguments.length > 0) {
-      checkObj(arguments[0], hookId);
+      detectAndGuidePathTraversal(arguments[0], hookId);
     }
   }
 
@@ -275,82 +263,65 @@ public class FilePathTraversal {
   public static void fileOutputStreamHook(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     if (arguments.length > 0) {
-      checkObj(arguments[0], hookId);
+      detectAndGuidePathTraversal(arguments[0], hookId);
     }
   }
 
-  private static void checkObj(Object obj, int hookId) {
-    if (obj instanceof String) {
-      checkString((String) obj, hookId);
-    } else if (obj instanceof Path) {
-      checkPath((Path) obj, hookId);
+  private static void detectAndGuidePathTraversal(Object obj, int hookId) {
+    if (obj == null) {
+      return;
+    }
+    Path targetPath = target.get().get();
+
+    // Users can set the atomic function to return null to disable the sanitizer.
+    if (targetPath == null) {
+      return;
+    }
+    targetPath = targetPath.normalize();
+
+    Path currentDir = Paths.get("").toAbsolutePath();
+    Path absTarget = toAbsolutePath(targetPath, currentDir).orElse(null);
+    Path relTarget = toRelativePath(targetPath, currentDir).orElse(null);
+    if (absTarget == null && relTarget == null) {
+      return;
+    }
+
+    String query;
+    if (obj instanceof Path) {
+      query = ((Path) obj).normalize().toString();
     } else if (obj instanceof File) {
-      checkFile((File) obj, hookId);
-    }
-  }
-
-  private static void checkPath(Path p, int hookId) {
-    check(p);
-    Path normalized = p.normalize();
-    if (p.isAbsolute()) {
-      Jazzer.guideTowardsEquality(normalized.toString(), ABSOLUTE_TARGET.toString(), hookId);
-    } else {
-      Jazzer.guideTowardsEquality(normalized.toString(), RELATIVE_TARGET.toString(), hookId);
-    }
-  }
-
-  private static void checkFile(File f, int hookId) {
-    try {
-      check(f.toPath());
-    } catch (InvalidPathException e) {
-      // TODO: give up -- for now
-      return;
-    }
-    Path normalized = f.toPath().normalize();
-    if (normalized.isAbsolute()) {
-      Jazzer.guideTowardsEquality(normalized.toString(), ABSOLUTE_TARGET.toString(), hookId);
-    } else {
-      Jazzer.guideTowardsEquality(normalized.toString(), RELATIVE_TARGET.toString(), hookId);
-    }
-  }
-
-  private static void checkString(String s, int hookId) {
-    try {
-      check(Paths.get(s));
-    } catch (InvalidPathException e) {
-      checkFile(new File(s), hookId);
-      // TODO -- give up for now
-      return;
-    }
-    Path normalized = Paths.get(s);
-    if (normalized.isAbsolute()) {
-      Jazzer.guideTowardsEquality(s, ABSOLUTE_TARGET.toString(), hookId);
-    } else {
-      Jazzer.guideTowardsEquality(s, RELATIVE_TARGET.toString(), hookId);
-    }
-  }
-
-  private static void check(Path p) {
-    // super lazy initialization -- race condition with unit test if this is set in a static block
-    synchronized (LOG) {
-      if (!IS_SET_UP) {
-        setUp();
-        IS_SET_UP = true;
+      try {
+        query = ((File) obj).toPath().normalize().toString();
+      } catch (InvalidPathException e) {
+        return;
       }
-    }
-    if (IS_DISABLED) {
+    } else if (obj instanceof String) {
+      try {
+        query = (String) obj;
+      } catch (InvalidPathException e) {
+        return;
+      }
+    } else { // not a path, file or string
       return;
     }
 
-    // catch all exceptions that might be thrown by the sanitizer
-    Path normalized;
-    try {
-      normalized = p.toAbsolutePath().normalize();
-    } catch (Throwable e) {
-      return;
+    if ((absTarget != null && absTarget.toString().equals(query))
+        || (relTarget != null && relTarget.toString().equals(query))) {
+      Jazzer.reportFindingFromHook(
+          new FuzzerSecurityIssueCritical("File path traversal: " + query));
     }
-    if (normalized.equals(ABSOLUTE_TARGET)) {
-      Jazzer.reportFindingFromHook(new FuzzerSecurityIssueCritical("File path traversal: " + p));
-    }
+    if (absTarget != null && relTarget != null) {
+      if (guideTowardsAbsoluteTargetPath) {
+        Jazzer.guideTowardsContainment(query, relTarget.toString(), hookId);
+      } else {
+        Jazzer.guideTowardsContainment(query, absTarget.toString(), hookId);
+      }
+      if (--toggleCounter <= 0) {
+        guideTowardsAbsoluteTargetPath = !guideTowardsAbsoluteTargetPath;
+        toggleCounter = ThreadLocalRandom.current().nextInt(1, MAX_TARGET_FOCUS_COUNT + 1);
+      }
+    } else
+      Jazzer.guideTowardsContainment(
+          query, (absTarget != null ? absTarget : relTarget).toString(), hookId);
   }
 }
