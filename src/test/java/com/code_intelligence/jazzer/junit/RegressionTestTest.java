@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.junit;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assume.assumeTrue;
+import static org.junit.platform.engine.discovery.ClassNameFilter.excludeClassNamePatterns;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectPackage;
 import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.displayName;
@@ -69,6 +70,7 @@ public class RegressionTestTest {
   private static EngineExecutionResults executeTests() {
     return EngineTestKit.engine("junit-jupiter")
         .selectors(selectPackage("com.example"))
+        .filters(excludeClassNamePatterns("com.example.FuzzTestWithCrashTest"))
         .configurationParameter(
             "jazzer.instrument", "com.other.package.**,com.example.**,com.yet.another.package.*")
         .configurationParameter("jazzer.mutator_framework", "false")
