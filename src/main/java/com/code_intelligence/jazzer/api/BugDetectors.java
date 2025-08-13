@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.api;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /** Provides static functions that configure the behavior of bug detectors provided by Jazzer. */
@@ -88,11 +89,14 @@ public final class BugDetectors {
       getSanitizerVariable("com.code_intelligence.jazzer.sanitizers.FilePathTraversal", "target");
 
   /**
-   * Sets the target for file path traversal sanitization.
+   * Sets the target for file path traversal sanitization. If the target is reached, a finding is
+   * thrown. The target is also used to guide the fuzzer to intentionally trigger file path
+   * traversal.
    *
-   * <p>By default, the file path traversal target is set to {@code "../jazzer-traversal"}.
+   * <p>By default, the file path traversal target is set to return {@code "../jazzer-traversal"}.
    *
-   * <p>Setting the target to {@code () -> null } will disable file path traversal sanitization.
+   * <p>Setting the path traversal target supplier to return {@code null } will disable the
+   * guidance.
    *
    * <p>By wrapping the call into a try-with-resources statement, the target can be configured to
    * apply to individual parts of the fuzz test only:
@@ -109,6 +113,36 @@ public final class BugDetectors {
    */
   public static SilentCloseable setFilePathTraversalTarget(Supplier<Path> pathTraversalTarget) {
     return setSanitizerVariable(pathTraversalTarget, currentPathTraversalTarget);
+  }
+
+  private static final AtomicReference<Predicate<Path>> currentCheckPath =
+      getSanitizerVariable(
+          "com.code_intelligence.jazzer.sanitizers.FilePathTraversal", "checkPath");
+
+  /**
+   * Sets the predicate that determines if a file path is allowed to be accessed. Paths that are not
+   * allowed will trigger a file path traversal finding. If you use this method, don't forget to set
+   * the fuzzing target with {@code setFilePathTraversalTarget} that aligns with this predicate,
+   * because both {@code target} and {@code checkPath} can trigger a finding independently.
+   *
+   * <p>By default, all file paths are allowed. Setting the predicate to {@code false} will trigger
+   * a file path traversal finding for any file path access.
+   *
+   * <p>By wrapping the call into a try-with-resources statement, the predicate can be configured to
+   * apply to individual parts of the fuzz test only:
+   *
+   * <pre>{@code
+   * try (SilentCloseable unused = BugDetectors.setFilePathTraversalAllowPath(
+   *     (Path p) -> p.toString().contains("secret"))) {
+   *   // Perform operations that require file path traversal sanitization
+   * }
+   * }</pre>
+   *
+   * @param checkPath a predicate that evaluates to {@code true} if the file path is allowed
+   * @return a {@link SilentCloseable} that restores the previously set predicate when closed
+   */
+  public static SilentCloseable setFilePathTraversalAllowPath(Predicate<Path> checkPath) {
+    return setSanitizerVariable(checkPath, currentCheckPath);
   }
 
   private static <T> AtomicReference<T> getSanitizerVariable(
