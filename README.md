@@ -9,9 +9,6 @@
   <a href="https://search.maven.org/search?q=g:com.code-intelligence%20a:jazzer">
     <img src="https://img.shields.io/maven-central/v/com.code-intelligence/jazzer" alt="Maven Central">
   </a>
-  <a href="https://github.com/CodeIntelligenceTesting/jazzer/actions/workflows/run-all-tests-main.yml?query=branch%3Amain">
-    <img src="https://img.shields.io/github/actions/workflow/status/CodeIntelligenceTesting/jazzer/run-all-tests-main.yml?branch=main&logo=github" alt="CI status">
-  </a>
   <a href="https://github.com/CodeIntelligenceTesting/jazzer/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/CodeIntelligenceTesting/jazzer" alt="License">
   </a>
