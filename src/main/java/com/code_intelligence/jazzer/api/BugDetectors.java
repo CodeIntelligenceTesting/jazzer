@@ -24,7 +24,9 @@ import java.util.function.Supplier;
 /** Provides static functions that configure the behavior of bug detectors provided by Jazzer. */
 public final class BugDetectors {
   private static final AtomicReference<BiPredicate<String, Integer>> currentPolicy =
-      getConnectionPermittedReference();
+      getSanitizerVariable(
+          "com.code_intelligence.jazzer.sanitizers.ServerSideRequestForgery",
+          "connectionPermitted");
 
   /**
    * Allows all network connections.
@@ -78,55 +80,12 @@ public final class BugDetectors {
    */
   public static SilentCloseable allowNetworkConnections(
       BiPredicate<String, Integer> connectionPermitted) {
-    if (connectionPermitted == null) {
-      throw new IllegalArgumentException("connectionPermitted must not be null");
-    }
-    if (currentPolicy == null) {
-      throw new IllegalStateException("Failed to set network connection policy");
-    }
-    BiPredicate<String, Integer> previousPolicy = currentPolicy.getAndSet(connectionPermitted);
-    return () -> {
-      if (!currentPolicy.compareAndSet(connectionPermitted, previousPolicy)) {
-        throw new IllegalStateException(
-            "Failed to reset network connection policy - using try-with-resources is highly"
-                + " recommended");
-      }
-    };
-  }
-
-  private static AtomicReference<BiPredicate<String, Integer>> getConnectionPermittedReference() {
-    try {
-      Class<?> ssrfSanitizer =
-          Class.forName("com.code_intelligence.jazzer.sanitizers.ServerSideRequestForgery");
-      return (AtomicReference<BiPredicate<String, Integer>>)
-          ssrfSanitizer.getField("connectionPermitted").get(null);
-    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-      System.err.println("WARN: ");
-      e.printStackTrace();
-      return null;
-    }
+    return setSanitizerVariable(connectionPermitted, currentPolicy);
   }
 
   // File path traversal sanitizer control
   private static final AtomicReference<Supplier<Path>> currentPathTraversalTarget =
-      getFilePathTraversalTarget();
-
-  /**
-   * Returns the current target for file path traversal sanitization.
-   *
-   * @return a supplier that provides the target directory for file path traversal sanitization.
-   */
-  private static AtomicReference<Supplier<Path>> getFilePathTraversalTarget() {
-    try {
-      Class<?> pathTraversalSanitizer =
-          Class.forName("com.code_intelligence.jazzer.sanitizers.FilePathTraversal");
-      return (AtomicReference<Supplier<Path>>) pathTraversalSanitizer.getField("target").get(null);
-    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-      System.err.println("WARN: ");
-      e.printStackTrace();
-      return null;
-    }
-  }
+      getSanitizerVariable("com.code_intelligence.jazzer.sanitizers.FilePathTraversal", "target");
 
   /**
    * Sets the target for file path traversal sanitization.
@@ -149,19 +108,33 @@ public final class BugDetectors {
    * @return a {@link SilentCloseable} that restores the previously set target when closed
    */
   public static SilentCloseable setFilePathTraversalTarget(Supplier<Path> pathTraversalTarget) {
-    if (pathTraversalTarget == null) {
-      throw new IllegalArgumentException("pathTraversalTarget must not be null");
+    return setSanitizerVariable(pathTraversalTarget, currentPathTraversalTarget);
+  }
+
+  private static <T> AtomicReference<T> getSanitizerVariable(
+      String sanitizerClassName, String fieldName) {
+    try {
+      return (AtomicReference<T>) Class.forName(sanitizerClassName).getField(fieldName).get(null);
+    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+      System.err.println("WARN: ");
+      e.printStackTrace();
+      return null;
     }
-    if (currentPathTraversalTarget == null) {
-      throw new IllegalStateException("Failed to set path traversal target");
+  }
+
+  private static <T> SilentCloseable setSanitizerVariable(
+      T newValue, AtomicReference<T> currentValue) {
+    if (newValue == null) {
+      throw new IllegalArgumentException("sanitizer variable must not be null");
     }
-    Supplier<Path> previousPathTraversalTarget =
-        currentPathTraversalTarget.getAndSet(pathTraversalTarget);
+    if (currentValue == null) {
+      throw new IllegalStateException("Failed to set sanitizer variable");
+    }
+    T previousValue = currentValue.getAndSet(newValue);
     return () -> {
-      if (!currentPathTraversalTarget.compareAndSet(
-          pathTraversalTarget, previousPathTraversalTarget)) {
+      if (!currentValue.compareAndSet(newValue, previousValue)) {
         throw new IllegalStateException(
-            "Failed to reset path traversal target - using try-with-resources is highly"
+            "Failed to reset sanitizer variable - using try-with-resources is highly"
                 + " recommended");
       }
     };
