@@ -111,13 +111,15 @@ T JNICALL ConsumeIntegralInRange(JNIEnv &env, jobject self, T min, T max) {
   env.SetIntField(self, gRemainingBytesField, remainingBytes);
   // dataPtr hasn't been modified, so we don't need to update gDataPtrField.
 
-  if (range != std::numeric_limits<T>::max())
-    // We accept modulo bias in favor of reading a dynamic number of bytes as
-    // this would make it harder for the fuzzer to mutate towards values from
-    // the table of recent compares.
-    result = result % (range + 1);
-
-  return static_cast<T>(min + result);
+  // The number is already within the requested range. Keeping it "as is"
+  // makes great use of the table of recent compares.
+  if (static_cast<T>(result) >= min && static_cast<T>(result) <= max) {
+    return static_cast<T>(result);
+  }
+  // We accept modulo bias in favor of reading a dynamic number of bytes as
+  // this would make it harder for the fuzzer to mutate towards values from
+  // the table of recent compares.
+  return static_cast<T>(min + (result % (range + 1)));
 }
 
 template <typename T>
