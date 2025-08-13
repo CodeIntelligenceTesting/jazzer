@@ -88,6 +88,71 @@ java_fuzz_target_test(
     ],
 )
 
+[java_fuzz_target_test(
+    name = "FilePathTraversalPass_" + method,
+    srcs = [
+        "FilePathTraversalPass.java",
+    ],
+    env = {
+        "JAZZER_FUZZ": "1",
+    },
+    fuzzer_args = [
+        "-runs=0",
+    ],
+    target_class = "com.example.FilePathTraversalPass",
+    target_method = method,
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+) for method in [
+    "beforeEachWorks",
+    "overwritingBeforeEachWorks",
+    "allow",
+    "targetMissed",
+    "onion",
+]]
+
+[java_fuzz_target_test(
+    name = "FilePathTraversalCrash_" + method,
+    srcs = [
+        "FilePathTraversalCrash.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
+    ],
+    env = {
+        "JAZZER_FUZZ": "1",
+    },
+    expect_number_of_findings = 1,
+    fuzzer_args = [
+        "-runs=0",
+    ],
+    target_class = "com.example.FilePathTraversalCrash",
+    target_method = method,
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+) for method in [
+    "beforeEachWorks",
+    "overwritingBeforeEachWorks",
+    "crashWhenAllowIsFalse",
+    "crashWhenDefaultTarget",
+    "onionTarget",
+    "cascadedTarget",
+    "absoluteToRelative",
+    "relativeToAbsolute",
+]]
+
 java_fuzz_target_test(
     name = "OsCommandInjectionProcessBuilder",
     srcs = [
