@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -36,10 +37,10 @@ import java.util.function.Supplier;
  *
  * <p>The default target is "../jazzer-traversal"."
  *
- * <p>Users may customize a customize the target by the BugDetectors API, e.g. by {@code
+ * <p>Users may customize the target using the BugDetectors API, e.g. by {@code
  * BugDetectors.setFilePathTraversalTarget(() -> Path.of("..", "jazzer-traversal"))}.
  *
- * <p>This does not currently check for reading metadata from the target file.
+ * <p>TODO: This sanitizer does not currently check for reading metadata from the target file.
  */
 public class FilePathTraversal {
   public static final Path DEFAULT_TARGET = Paths.get("..", "jazzer-traversal");
@@ -47,6 +48,8 @@ public class FilePathTraversal {
   // Set via reflection by Jazzer's BugDetectors API.
   public static final AtomicReference<Supplier<Path>> target =
       new AtomicReference<>(() -> DEFAULT_TARGET);
+  public static final AtomicReference<Predicate<Path>> checkPath =
+      new AtomicReference<>((Path ignored) -> true);
 
   // When guiding the fuzzer towards the target path, sometimes both the absolute and relative paths
   // are valid. In this case, we toggle between them randomly.
@@ -271,20 +274,8 @@ public class FilePathTraversal {
     if (obj == null) {
       return;
     }
+
     Path targetPath = target.get().get();
-
-    // Users can set the atomic function to return null to disable the sanitizer.
-    if (targetPath == null) {
-      return;
-    }
-    targetPath = targetPath.normalize();
-
-    Path currentDir = Paths.get("").toAbsolutePath();
-    Path absTarget = toAbsolutePath(targetPath, currentDir).orElse(null);
-    Path relTarget = toRelativePath(targetPath, currentDir).orElse(null);
-    if (absTarget == null && relTarget == null) {
-      return;
-    }
 
     String query;
     if (obj instanceof Path) {
@@ -305,23 +296,54 @@ public class FilePathTraversal {
       return;
     }
 
+    Predicate<Path> checkAllowed = checkPath.get();
+    boolean isPathAllowed = checkAllowed == null || checkAllowed.test(Paths.get(query).normalize());
+    if (!isPathAllowed) {
+      Jazzer.reportFindingFromHook(
+          new FuzzerSecurityIssueCritical(
+              "File path traversal: "
+                  + query
+                  + "\n   Path is not allowed by the user-defined predicate."
+                  + "\n   Current path traversal fuzzing target: "
+                  + targetPath));
+    }
+
+    // Users can set the atomic function to return null to disable the fuzzer guidance.
+    if (targetPath == null) {
+      return;
+    }
+    targetPath = targetPath.normalize();
+
+    Path currentDir = Paths.get("").toAbsolutePath();
+    Path absTarget = toAbsolutePath(targetPath, currentDir).orElse(null);
+    Path relTarget = toRelativePath(targetPath, currentDir).orElse(null);
+    if (absTarget == null && relTarget == null) {
+      return;
+    }
+
     if ((absTarget != null && absTarget.toString().equals(query))
         || (relTarget != null && relTarget.toString().equals(query))) {
       Jazzer.reportFindingFromHook(
-          new FuzzerSecurityIssueCritical("File path traversal: " + query));
+          new FuzzerSecurityIssueCritical(
+              "File path traversal: "
+                  + query
+                  + "\n   Reached current path traversal fuzzing target: "
+                  + targetPath));
     }
+
     if (absTarget != null && relTarget != null) {
       if (guideTowardsAbsoluteTargetPath) {
-        Jazzer.guideTowardsContainment(query, relTarget.toString(), hookId);
-      } else {
         Jazzer.guideTowardsContainment(query, absTarget.toString(), hookId);
+      } else {
+        Jazzer.guideTowardsContainment(query, relTarget.toString(), hookId);
       }
       if (--toggleCounter <= 0) {
         guideTowardsAbsoluteTargetPath = !guideTowardsAbsoluteTargetPath;
         toggleCounter = ThreadLocalRandom.current().nextInt(1, MAX_TARGET_FOCUS_COUNT + 1);
       }
-    } else
+    } else {
       Jazzer.guideTowardsContainment(
           query, (absTarget != null ? absTarget : relTarget).toString(), hookId);
+    }
   }
 }
