@@ -172,6 +172,13 @@ class FuzzTestExtensions
           "Regression tests are run instead of fuzzing since JAZZER_FUZZ has not been set to a"
               + " non-empty value");
     }
+
+    // Clear the last finding before starting a fuzzing run.
+    try {
+      getLastFindingField().set(null, null);
+    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException ignore) {
+    }
+
     // Only fuzz the first @FuzzTest that makes it here.
     if (FuzzTestExtensions.fuzzTestMethod.compareAndSet(
             null, extensionContext.getRequiredTestMethod())
