@@ -16,13 +16,18 @@
 
 package com.code_intelligence.jazzer.api;
 
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /** Provides static functions that configure the behavior of bug detectors provided by Jazzer. */
 public final class BugDetectors {
   private static final AtomicReference<BiPredicate<String, Integer>> currentPolicy =
-      getConnectionPermittedReference();
+      getSanitizerVariable(
+          "com.code_intelligence.jazzer.sanitizers.ServerSideRequestForgery",
+          "connectionPermitted");
 
   /**
    * Allows all network connections.
@@ -76,33 +81,96 @@ public final class BugDetectors {
    */
   public static SilentCloseable allowNetworkConnections(
       BiPredicate<String, Integer> connectionPermitted) {
-    if (connectionPermitted == null) {
-      throw new IllegalArgumentException("connectionPermitted must not be null");
-    }
-    if (currentPolicy == null) {
-      throw new IllegalStateException("Failed to set network connection policy");
-    }
-    BiPredicate<String, Integer> previousPolicy = currentPolicy.getAndSet(connectionPermitted);
-    return () -> {
-      if (!currentPolicy.compareAndSet(connectionPermitted, previousPolicy)) {
-        throw new IllegalStateException(
-            "Failed to reset network connection policy - using try-with-resources is highly"
-                + " recommended");
-      }
-    };
+    return setSanitizerVariable(connectionPermitted, currentPolicy);
   }
 
-  private static AtomicReference<BiPredicate<String, Integer>> getConnectionPermittedReference() {
+  // File path traversal sanitizer control
+  private static final AtomicReference<Supplier<Path>> currentPathTraversalTarget =
+      getSanitizerVariable("com.code_intelligence.jazzer.sanitizers.FilePathTraversal", "target");
+
+  /**
+   * Sets the target for file path traversal sanitization. If the target is reached, a finding is
+   * thrown. The target is also used to guide the fuzzer to intentionally trigger file path
+   * traversal.
+   *
+   * <p>By default, the file path traversal target is set to {@code "../jazzer-traversal"}.
+   *
+   * <p>Setting the target path to {@code null } will disable the guidance.
+   *
+   * <p>By wrapping the call into a try-with-resources statement, the target can be configured to
+   * apply to individual parts of the fuzz test only:
+   *
+   * <pre>{@code
+   * try (SilentCloseable unused = BugDetectors.setFilePathTraversalTarget(() -> Paths.get("/root"))) {
+   *   // Perform operations that require file path traversal sanitization
+   * }
+   * }</pre>
+   *
+   * @param pathTraversalTarget a supplier that provides the target directory for file path
+   *     traversal sanitization
+   * @return a {@link SilentCloseable} that restores the previously set target when closed
+   */
+  public static SilentCloseable setFilePathTraversalTarget(Supplier<Path> pathTraversalTarget) {
+    return setSanitizerVariable(pathTraversalTarget, currentPathTraversalTarget);
+  }
+
+  private static final AtomicReference<Predicate<Path>> currentCheckPath =
+      getSanitizerVariable(
+          "com.code_intelligence.jazzer.sanitizers.FilePathTraversal", "checkPath");
+
+  /**
+   * Sets the predicate that determines if a file path is allowed to be accessed. Paths that are not
+   * allowed will trigger a file path traversal finding. If you use this method, don't forget to set
+   * the fuzzing target with {@code setFilePathTraversalTarget} that aligns with this predicate,
+   * because both {@code target} and {@code checkPath} can trigger a finding independently.
+   *
+   * <p>By default, all file paths are allowed. Setting the predicate to {@code false} will trigger
+   * a file path traversal finding for any file path access.
+   *
+   * <p>By wrapping the call into a try-with-resources statement, the predicate can be configured to
+   * apply to individual parts of the fuzz test only:
+   *
+   * <pre>{@code
+   * try (SilentCloseable unused = BugDetectors.setFilePathTraversalAllowPath(
+   *     (Path p) -> p.toString().contains("secret"))) {
+   *   // Perform operations that require file path traversal sanitization
+   * }
+   * }</pre>
+   *
+   * @param checkPath a predicate that evaluates to {@code true} if the file path is allowed
+   * @return a {@link SilentCloseable} that restores the previously set predicate when closed
+   */
+  public static SilentCloseable setFilePathTraversalAllowPath(Predicate<Path> checkPath) {
+    return setSanitizerVariable(checkPath, currentCheckPath);
+  }
+
+  private static <T> AtomicReference<T> getSanitizerVariable(
+      String sanitizerClassName, String fieldName) {
     try {
-      Class<?> ssrfSanitizer =
-          Class.forName("com.code_intelligence.jazzer.sanitizers.ServerSideRequestForgery");
-      return (AtomicReference<BiPredicate<String, Integer>>)
-          ssrfSanitizer.getField("connectionPermitted").get(null);
+      return (AtomicReference<T>) Class.forName(sanitizerClassName).getField(fieldName).get(null);
     } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
       System.err.println("WARN: ");
       e.printStackTrace();
       return null;
     }
+  }
+
+  private static <T> SilentCloseable setSanitizerVariable(
+      T newValue, AtomicReference<T> currentValue) {
+    if (newValue == null) {
+      throw new IllegalArgumentException("sanitizer variable must not be null");
+    }
+    if (currentValue == null) {
+      throw new IllegalStateException("Failed to set sanitizer variable");
+    }
+    T previousValue = currentValue.getAndSet(newValue);
+    return () -> {
+      if (!currentValue.compareAndSet(newValue, previousValue)) {
+        throw new IllegalStateException(
+            "Failed to reset sanitizer variable - using try-with-resources is highly"
+                + " recommended");
+      }
+    };
   }
 
   private BugDetectors() {}
