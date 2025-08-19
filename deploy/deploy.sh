@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright 2024 Code Intelligence GmbH
+# Copyright 2025 Code Intelligence GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,7 +57,8 @@ java=$(rlocation "$java_rlocationpath")
 "$java" -jar "${JAZZER_JAR_PATH}" --version 2>&1 | grep '^Jazzer v' || \
   fail "JAZZER_JAR_PATH is not a valid jazzer.jar"
 
-MAVEN_REPO=https://oss.sonatype.org/service/local/staging/deploy/maven2
+# Local release for manual upload to central.sonatype.com
+MAVEN_REPO=file://`pwd`/_tmp/release
 
 # The Jazzer jar itself bundles native libraries for multiple architectures and thus can't be built
 # on the local machine. It is obtained from CI and passed in via JAZZER_JAR_PATH.

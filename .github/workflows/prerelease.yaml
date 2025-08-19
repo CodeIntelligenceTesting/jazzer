@@ -122,13 +122,20 @@ jobs:
           name: jazzer
           path: _tmp/
 
-      - name: Run Deployment
+      - name: Generate Jazzer Bundle for Upload to Maven Central
         env:
           RELEASE_SIGNING_KEY_ID: ${{ secrets.RELEASE_SIGNING_KEY_ID }}
           RELEASE_SIGNING_KEY_PRIVATE: ${{ secrets.RELEASE_SIGNING_KEY_PRIVATE }}
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         run: JAZZER_JAR_PATH="$(pwd)/_tmp/jazzer.jar" bazel run deploy
+
+      - name: Upload Jazzer Bundle to Github Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jazzer-maven-central-bundle
+          path: _tmp/release
+          if-no-files-found: error
 
   create_release:
     needs: build_release
