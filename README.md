@@ -23,13 +23,10 @@
 </div>
 
 > [!IMPORTANT]
-> Hello users!
+> **Jazzer** is back under the **Apache 2.0 license**!
 >
-> We are thrilled to announce that **Jazzer** is now back under the **Apache 2.0 license**!
->
-> A year ago, we temporarily stopped maintaining Jazzer as open source. 
-> During this time, we received incredible feedback, support, and ideas from
-> the community, which motivated us to find a way to bring Jazzer back to the
+> We previously paused open-source maintenance but the incredible feedback, support, and ideas from
+> the community motivated us to find a way to bring Jazzer back to the
 > open-source world.
 >
 > Thanks to your enthusiasm and contributions, and a special callout to the 
@@ -57,7 +54,7 @@ The following steps assume that JUnit 5.9.0 or higher is set up for your project
 1. Add a dependency on `com.code-intelligence:jazzer-junit:<latest version>`.
    All Jazzer Maven artifacts are signed with [this key](deploy/maven.pub).
 2. Add a new *fuzz test* to a new or existing test class: a method annotated with [`@FuzzTest`](https://codeintelligencetesting.github.io/jazzer-docs/jazzer-junit/com/code_intelligence/jazzer/junit/FuzzTest.html) and at least one parameter.
-   Using a single parameter of type [`FuzzedDataProvider`](https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/com/code_intelligence/jazzer/api/FuzzedDataProvider.html), which provides utility functions to produce commonly used Java values, or `byte[]` is recommended for optimal performance and reproducibility of findings.
+   A list of supported parameter types can be found in the [documentation](docs/junit-integration.md#supported-types).
 3. Assuming your test class is called `com.example.MyFuzzTests`, create the *inputs directory* `src/test/resources/com/example/MyFuzzTestsInputs`.
 4. Run a fuzz test with the environment variable `JAZZER_FUZZ` set to `1` to let the fuzzer rapidly try new sets of arguments.
    If the fuzzer finds arguments that make your fuzz test fail or even trigger a security issue, it will store them in the inputs directory.
@@ -65,20 +62,19 @@ The following steps assume that JUnit 5.9.0 or higher is set up for your project
 5. Run the fuzz test without `JAZZER_FUZZ` set to execute it only on the inputs in the inputs directory.
    This mode, which behaves just like a traditional unit test, ensures that issues previously found by the fuzzer remain fixed and can also be used to debug the fuzz test on individual inputs.
 
-A simple property-based fuzz test could look like this (excluding imports):
+A simple property-based fuzz test could look like this:
 
 ```java
 class ParserTests {
-   @Test
-   void unitTest() {
-      assertEquals("foobar", SomeScheme.decode(SomeScheme.encode("foobar")));
-   }
+    @Test
+    void unitTest() {
+        assertEquals("foobar", SomeScheme.decode(SomeScheme.encode("foobar")));
+    }
 
-   @FuzzTest
-   void fuzzTest(FuzzedDataProvider data) {
-      String input = data.consumeRemainingAsString();
-      assertEquals(input, SomeScheme.decode(SomeScheme.encode(input)));
-   }
+    @FuzzTest
+    void fuzzTest(@NotNull String input) {
+        assertEquals(input, SomeScheme.decode(SomeScheme.encode(input)));
+    }
 }
 ```
 
@@ -91,7 +87,7 @@ A detailed description of the JUnit integration can be found in the [documentati
 You can also use GitHub release archives to run a standalone Jazzer binary that starts its own JVM configured for fuzzing:
 
 1. Download and extract the latest release from the [GitHub releases page](https://github.com/CodeIntelligenceTesting/jazzer/releases).
-2. Add a new class to your project with a <code>public static void fuzzerTestOneInput(<a href="https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/com/code_intelligence/jazzer/api/FuzzedDataProvider.html">FuzzedDataProvider</a> data)</code> method.
+2. Add a new class to your project with a <code>public static void fuzzerTestOneInput(String par1, int par2, int[] par3, ...)</code> method, with the parameters you want to use in the fuzz test.
 3. Compile your fuzz test with `jazzer_standalone.jar` on the classpath.
 4. Run the `jazzer` binary (`jazzer.exe` on Windows), specifying the classpath and fuzz test class:
 
@@ -146,5 +142,3 @@ Previously, Jazzer used AFL-style coverage instrumentation as pioneered by [keli
 <p align="center">
 <a href="https://www.code-intelligence.com"><img src="https://www.code-intelligence.com/hubfs/Logos/CI%20Logos/CI_Header_GitHub_quer.jpeg" height=50px alt="Code Intelligence logo"></a>
 </p>
-
-[`FuzzedDataProvider`]: https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/com/code_intelligence/jazzer/api/FuzzedDataProvider.html
