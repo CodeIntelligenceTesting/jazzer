@@ -117,7 +117,10 @@ Run `./format.sh` to format all source files in the way enforced by the "Check f
 ## Releasing (CI employees only)
 
 1. Push a tag of the form `v1.2.3` to trigger the "Prerelease" GitHub Actions workflow.
-2. Wait for the workflow to finish (about 10 minutes)
-3. When successful and happy with the results, log into https://oss.sonatype.org, select all staging repositories (usually one, can be more) under "Staging Repositories" and "Close" them.
-   Wait and refresh, then select them again and "Release" them.
-4. Release the draft Github release. This will automatically create a tag, push the docker images and deploy the docs (can take about a few minutes to appear at [jazzer-docs]( https://codeintelligencetesting.github.io/jazzer-docs)).
+2. Wait for the workflow to finish (about 10 minutes).
+3. Download the artifact called "jazzer-maven-central-bundle" from the prerelease workflow run.
+4. Log into https://central.sonatype.com/publishing and click on "Publish Component".
+5. In the dialog that follows, under "Upload Your File", select the downloaded artifact. The "Deployment Name" doesn't matter. Click "Publish Component".
+6. Refresh the page, and you should see "Deployment Info" with status "VALIDATED".
+7. Click "Publish" to publish the component to Maven Central and wait for the status to change to "PUBLISHED" (a refresh or two may be necessary).
+8. Release the draft Github release. This will automatically create a tag, push the docker images and deploy the docs (can take about a few minutes to appear at [jazzer-docs]( https://codeintelligencetesting.github.io/jazzer-docs)).
