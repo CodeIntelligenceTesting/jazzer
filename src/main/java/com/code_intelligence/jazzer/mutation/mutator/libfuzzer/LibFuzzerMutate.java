@@ -33,6 +33,7 @@ public final class LibFuzzerMutate {
   public static final String MOCK_SIZE_KEY = "libfuzzermutator.mock.newsize";
 
   public static byte[] mutateDefault(byte[] data, int maxSizeIncrease) {
+    require(maxSizeIncrease >= 0);
     byte[] mutatedBytes;
     if (maxSizeIncrease == 0) {
       mutatedBytes = data;

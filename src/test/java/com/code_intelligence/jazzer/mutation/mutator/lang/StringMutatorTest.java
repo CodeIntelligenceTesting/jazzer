@@ -34,6 +34,8 @@ import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.google.protobuf.ByteString;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.SplittableRandom;
@@ -209,6 +211,19 @@ class StringMutatorTest {
       s = mutator.mutate(s, prng);
     }
     assertThat(s).isEqualTo("gqrff\0\0\0\0\0");
+  }
+
+  @Test
+  void testReadInputsLongerThanMaxLength() throws IOException {
+    SerializingMutator<String> mutator =
+        (SerializingMutator<String>)
+            factory.createOrThrow(
+                new TypeHolder<@NotNull @WithUtf8Length(max = 5) String>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("String");
+
+    ByteArrayInputStream in = new java.io.ByteArrayInputStream("foobarbazf".getBytes());
+    String s = mutator.readExclusive(in);
+    assertThat(s).isEqualTo("fooba");
   }
 
   @Test

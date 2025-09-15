@@ -71,7 +71,7 @@ public final class LibFuzzerMutatorFactory {
 
     @Override
     public byte[] readExclusive(InputStream in) throws IOException {
-      return readAllBytes(in);
+      return enforceLength(readAllBytes(in));
     }
 
     @Override
