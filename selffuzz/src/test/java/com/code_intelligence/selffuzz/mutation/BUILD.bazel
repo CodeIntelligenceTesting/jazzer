@@ -1,0 +1,30 @@
+load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
+
+java_fuzz_target_test(
+    name = "ArgumentsMutatorFuzzTest",
+    srcs = [
+        "ArgumentsMutatorFuzzTest.java",
+        "BeanWithParent.java",
+        "ConstructorPropertiesAnnotatedBean.java",
+        "ImmutableBuilder.java",
+    ],
+    fuzzer_args = [
+        # Make sure that the fuzzer can run. Longer fuzzing runs will be done in a separate GH action.
+        "-runs=10000",
+    ],
+    target_class = "com.code_intelligence.selffuzz.mutation.ArgumentsMutatorFuzzTest",
+    deps = [
+        "//deploy:jazzer-project",
+        "//selffuzz:jazzer_api_selffuzz",
+        "//selffuzz:jazzer_selffuzz",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation/proto:protobuf_runtime_compile_only",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator/proto:proto2_java_proto",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator/proto:proto3_java_proto",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        "@maven//:org_junit_platform_junit_platform_launcher",
+        "@protobuf//java/core",
+    ],
+)

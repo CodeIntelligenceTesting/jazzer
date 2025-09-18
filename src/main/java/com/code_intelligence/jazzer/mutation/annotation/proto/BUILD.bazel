@@ -16,6 +16,7 @@ java_library(
     # supporting proto mutations.
     neverlink = True,
     visibility = [
+        "//selffuzz:__pkg__",
         "//selffuzz:__subpackages__",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/proto:__pkg__",
     ],
