@@ -61,9 +61,9 @@ SHADED_RUNTIME_MAVEN_ARTIFACTS = [
     "io.github.classgraph:classgraph:jar:4.8.170",
     "net.bytebuddy:byte-buddy-agent:1.14.13",
     "net.jodah:typetools:jar:0.6.3",
-    "org.ow2.asm:asm:9.7",
-    "org.ow2.asm:asm-commons:9.7",
-    "org.ow2.asm:asm-tree:9.7",
+    "org.ow2.asm:asm:9.8",
+    "org.ow2.asm:asm-commons:9.8",
+    "org.ow2.asm:asm-tree:9.8",
 ]
 
 # Runtime dependencies of Jazzer that are expected to be provided by the fuzzed project.
