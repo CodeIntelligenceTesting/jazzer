@@ -1,0 +1,73 @@
+name: Fuzzing
+on:
+  schedule:
+     # At 03:00 UTC (01:00 CEST) every day
+     - cron: '0 3 * * *'
+
+  merge_group:
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  build_and_test:
+    runs-on: ${{ matrix.os }}
+    name: Fuzzing
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-14]
+        jdk: [21, 8]
+        include:
+          - jdk: 21
+            # Workaround for https://github.com/bazelbuild/bazel/issues/14502
+            extra_bazel_args: "--jvmopt=-Djava.security.manager=allow"
+          - os: ubuntu-22.04
+            arch: "linux"
+          - os: macos-14
+            arch: "macos-arm64"
+            bazel_args: "--xcode_version_config=//.github:host_xcodes"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 21
+
+      - name: Set Build Buddy config
+        run: .github/scripts/echoBuildBuddyConfig.sh ${{ secrets.BUILDBUDDY_API_KEY }} >> $GITHUB_ENV
+        shell: bash
+
+      - name: Cache Fuzzing Corpus
+        uses: actions/cache@v4
+        with:
+          path: |
+            selffuzz/src/test/resources/.corpus
+
+          key: fuzzing-corpus-${{ matrix.os }}-${{ matrix.jdk }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            fuzzing-corpus-
+
+      - name: Build & Fuzz
+        run: |
+          bazelisk run ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=remotejdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} ${{ matrix.extra_bazel_args }} //selffuzz/src/test/java/com/code_intelligence/selffuzz/mutation:ArgumentsMutatorFuzzTest --jvmopt=-Xmx10000m -- -runs=1000000
+
+  # Notification job that runs after all matrix jobs complete
+  notification:
+    needs: build_and_test
+    runs-on: ubuntu-24.04
+    if: failure()  # Run regardless of build_and_test outcome
+    steps:
+    - name: Slack notification on failure
+      run: |
+            curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "workflow_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
