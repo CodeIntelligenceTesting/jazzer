@@ -31,7 +31,6 @@ import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSu
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.parameterTypesIfParameterized;
 import static java.lang.Math.min;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toMap;
 
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
@@ -207,11 +206,11 @@ final class MapMutatorFactory implements MutatorFactory {
 
     @Override
     public Map<K, V> detach(Map<K, V> value) {
-      return value.entrySet().stream()
-          .collect(
-              toMap(
-                  entry -> keyMutator.detach(entry.getKey()),
-                  entry -> valueMutator.detach(entry.getValue())));
+      Map<K, V> detached = new LinkedHashMap<>(value.size(), 1.0f);
+      for (Map.Entry<K, V> entry : value.entrySet()) {
+        detached.put(keyMutator.detach(entry.getKey()), valueMutator.detach(entry.getValue()));
+      }
+      return detached;
     }
 
     @Override
