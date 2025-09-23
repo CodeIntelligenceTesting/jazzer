@@ -1,0 +1,5 @@
+filegroup(
+    name = "ArgumentsMutatorFuzzTest-corpus",
+    srcs = [".corpus/ArgumentsMutatorFuzzTest"],
+    visibility = ["//selffuzz/src/test/java/com/code_intelligence/selffuzz/mutation:__pkg__"],
+)
