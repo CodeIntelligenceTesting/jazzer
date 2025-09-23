@@ -72,6 +72,16 @@ jobs:
           choco install llvm --version=19.1.0 --force
           echo "C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
+      - name: Load fuzzing corpus cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            selffuzz/src/test/resources/.corpus
+
+          key: fuzzing-corpus-${{ matrix.os }}-${{ matrix.jdk }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            fuzzing-corpus-
+
       - name: Build & Test
         run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=remotejdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} ${{ matrix.extra_bazel_args }} --build_tag_filters="-no-${{ matrix.arch }},-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" --test_tag_filters="-no-${{ matrix.arch }},-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
 
