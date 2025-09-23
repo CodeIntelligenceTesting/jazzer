@@ -8,9 +8,11 @@ java_fuzz_target_test(
         "ConstructorPropertiesAnnotatedBean.java",
         "ImmutableBuilder.java",
     ],
+    data = ["//selffuzz/src/test/resources:ArgumentsMutatorFuzzTest-corpus"],
     fuzzer_args = [
         # Make sure that the fuzzer can run. Longer fuzzing runs will be done in a separate GH action.
         "-runs=10000",
+        "$(rlocationpaths //selffuzz/src/test/resources:ArgumentsMutatorFuzzTest-corpus)",
     ],
     target_class = "com.code_intelligence.selffuzz.mutation.ArgumentsMutatorFuzzTest",
     deps = [
