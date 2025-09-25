@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2024 Code Intelligence GmbH
+  ~ Copyright 2025 Code Intelligence GmbH
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -58,5 +58,11 @@
         <developer>
             <name>Peter Samarin</name>
         </developer>
+        <developer>
+            <name>Simon Resch</name>
+        </developer>
+        <developer>
+            <name>Florian Glaesser</name>
+        </developer>	
     </developers>
 </project>
