@@ -21,6 +21,7 @@ import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.e
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.asMap;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.asSet;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.lang.Math.floor;
@@ -95,6 +96,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -635,6 +637,31 @@ public class StressTest {
                 asMap(false, false, true, true),
                 asMap(false, true, true, false),
                 asMap(false, true, true, true))),
+        arguments(
+            new TypeHolder<@NotNull Set<@NotNull String>>() {}.annotatedType(),
+            "Set<String>",
+            false,
+            distinctElementsRatio(0.45),
+            distinctElementsRatio(0.45)),
+        arguments(
+            new TypeHolder<Set<@NotNull String>>() {}.annotatedType(),
+            "Nullable<Set<String>>",
+            false,
+            distinctElementsRatio(0.46),
+            distinctElementsRatio(0.48)),
+        arguments(
+            new TypeHolder<@WithSize(max = 3) @NotNull Set<@NotNull Integer>>() {}.annotatedType(),
+            "Set<Integer>",
+            false,
+            // Half of all sets are empty, the other half is heavily biased towards special values.
+            all(setSizeInClosedRange(0, 3), distinctElementsRatio(0.09)),
+            all(setSizeInClosedRange(0, 3), manyDistinctElements())),
+        arguments(
+            new TypeHolder<@NotNull Set<@NotNull Boolean>>() {}.annotatedType(),
+            "Set<Boolean>",
+            false,
+            exactly(asSet(), asSet(false), asSet(true)),
+            exactly(asSet(), asSet(false), asSet(true), asSet(false, true))),
         arguments(
             new ParameterHolder() {
               void singleParam(byte parameter) {}
@@ -1378,6 +1405,24 @@ public class StressTest {
     };
   }
 
+  private static CloseableConsumer setSizeInClosedRange(int min, int max) {
+    return new CloseableConsumer() {
+      @Override
+      public void accept(Object set) {
+        if (set instanceof Set) {
+          assertThat(((Set<?>) set).size()).isAtLeast(min);
+          assertThat(((Set<?>) set).size()).isAtMost(max);
+        } else {
+          throw new IllegalArgumentException(
+              "Expected a list of sets, got list of " + set.getClass().getName());
+        }
+      }
+
+      @Override
+      public void close() {}
+    };
+  }
+
   interface CloseableConsumer extends AutoCloseable, Consumer<Object> {}
 
   @SuppressWarnings("rawtypes")
@@ -1400,8 +1445,12 @@ public class StressTest {
     // Even with a fallback to mutating map values when no new key can be constructed, the map
     // {false: true, true: false} will not change its equality class when the fallback picks both
     // values to mutate.
+    // Likewise, for sets containing {true, false}, some mutations (e.g. insertion) will not change
+    // the equality class.
     boolean mayPerformNoopMutations =
-        mutatorTree.contains("FixedValue(") || mutatorTree.contains("Map<Boolean, Boolean>");
+        mutatorTree.contains("FixedValue(")
+            || mutatorTree.contains("Map<Boolean, Boolean>")
+            || mutatorTree.contains("Set<Boolean>");
 
     PseudoRandom rng = anyPseudoRandom();
 
