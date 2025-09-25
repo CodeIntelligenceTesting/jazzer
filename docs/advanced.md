@@ -1,45 +1,58 @@
-## Advanced options
+# Advanced options
 
-* [Using Jazzer Standalone](#using-jazzer-standalone)
-* [Passing JVM Arguments](#passing-jvm-arguments)
-* [Coverage Instrumentation](#coverage-instrumentation)
-* [Trace Instrumentation](#trace-instrumentation)
-* [Value Profile](#value-profile)
-* [Custom Hooks](#custom-hooks)
-* [Keep Going](#keep-going)
-* [Export Coverage Information](#export-coverage-information)
-* [Native Libraries](#native-libraries)
 
-> [!NOTE]\
-> These settings apply to the old fuzzing approach using a `fuzzerTestOneInput` method and the native Jazzer binary. They don't work in the new JUnit integration.
 
-## Using Jazzer Standalone
-There are two ways to use Jazzer standalone: by using the `jazzer` binary or by calling the Jazzer main class directly.
+## Custom hooks
+In order to obtain information about data passed into functions such as `String.equals` or `String.startsWith`, Jazzer hooks invocations to these methods.
+This functionality is also available to fuzz targets, where it can be used to implement custom sanitizers or stub out methods that block the fuzzer from progressing (e.g. checksum verifications or random number generation).
+See [ExampleFuzzerHooks.java](./examples/src/main/java/com/example/ExampleFuzzerHooks.java) for an example of such a hook.
+An example for a sanitizer can be found in [ExamplePathTraversalFuzzerHooks.java](./examples/src/main/java/com/example/ExamplePathTraversalFuzzerHooks.java).
 
-### Using the `jazzer` binary
-Jazzer is available as a standalone libFuzzer-compiled binary. To call `jazzer` you need to pass it the project
-classpath and target class that contains the Fuzz Test.
+Method hooks can be declared using the `@MethodHook` annotation defined in the `com.code_intelligence.jazzer.api` package, which is contained in `jazzer_standalone.jar` (binary release) or in the Maven artifact [`com.code-intelligence:jazzer-api`](https://search.maven.org/search?q=g:com.code-intelligence%20a:jazzer-api).
+See the [javadocs of the `@MethodHook` API](https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/com/code_intelligence/jazzer/api/MethodHook.html) for more details.
 
-```shell
-jazzer --cp=<classpath> --target_class=<fuzz test class>
+To use the compiled method hooks, they have to be available on the classpath provided by `--cp` and can then be loaded by providing the flag `--custom_hooks`, which takes a colon-separated list of names of classes to load hooks from.
+Hooks have to be loaded from separate JAR files so that Jazzer can [add it to the bootstrap class loader search](https://docs.oracle.com/javase/8/docs/api/java/lang/instrument/Instrumentation.html#appendToBootstrapClassLoaderSearch-java.util.jar.JarFile-).
+The list of custom hooks can alternatively be specified via the `Jazzer-Hook-Classes` attribute in the fuzz target JAR's manifest.
+
+
+## Reproducing a finding
+
+When Jazzer manages to find an input that causes an uncaught exception or a failed assertion, it prints a Java stack trace and creates two files that aid in reproducing the crash without Jazzer:
+
+* `crash-<sha1_of_input>` contains the raw bytes passed to the fuzz target (just as with libFuzzer C/C++ fuzz targets).
+  The crash can be reproduced with Jazzer by passing the path to the crash file as the only positional argument.
+* `Crash-<sha1_of_input>.java` contains a class with a `main` function that invokes the fuzz target with the crashing input.
+  This is especially useful if using `FuzzedDataProvider` as the raw bytes of the input do not directly correspond to the values consumed by the fuzz target.
+  The `.java` file can be compiled with just the fuzz target and its dependencies in the classpath (plus `jazzer_standalone.jar` or `com.code-intelligence:jazzer-api:<version>` if using `FuzzedDataProvider`).
+
+## Minimizing a crashing input
+
+With the following argument you can minimize a crashing input to find the smallest input that reproduces the same "bug":
+
+```bash
+-minimize_crash=1 <path/to/crashing_input>
 ```
 
-### Calling the Jazzer main class directly
-To call Jazzer directly you need to pass it the project classpath, the path to the `jazzer.jar` and `jazzer-junit.jar`
-along with the Jazzer main class `com.code_intelligence.jazzer.Jazzer` and target class that contains the Fuzz Test.
+## Parallel execution
 
-```shell
-java -cp <classpath>;<path/to/jazzer.jar>;<path/to/jazzer-junit.jar> com.code_intelligence.jazzer.Jazzer --target_class=<fuzz-test-class> [args...]
-```
+libFuzzer offers the `-fork=N` and `-jobs=N` flags for parallel fuzzing, both of which are also supported by Jazzer.
 
-Optionally you can add other Jazzer arguments with double dash command-line flags.
-Because Jazzer is based on libFuzzer, all available libFuzzer arguments can be added with single dash command-line flags.
-Please refer to [libFuzzer](https://llvm.org/docs/LibFuzzer.html) for documentation.
 
-Various command line options are available to control the instrumentation and fuzzer execution.
-A full list of command-line flags can be printed with the `--help` flag.
+## Recommended JVM Options
 
-### Passing JVM Arguments
+The following JVM settings are recommended for running Jazzer:
+
+* `-XX:-OmitStackTraceInFastThrow`: Ensures that stack traces are emitted even on hot code paths.
+  This may hurt performance if your Fuzz Test frequently throws and catches exceptions, but also helps find flaky bugs.
+* `-XX:+UseParallelGC`: Optimizes garbage collection for high throughput rather than low latency.
+* `-XX:+CriticalJNINatives`: Is supported with JDK 17 and earlier and improves the runtime performance of Jazzer's
+  instrumentation.
+* `-XX:+EnableDynamicAgentLoading`: Silences a warning with JDK 21 and later triggered by the Java agent that Jazzer
+  attaches to instrument the fuzzed code.
+
+
+## Passing JVM Arguments
 
 When Jazzer is started using the `jazzer` binary, it starts a JVM in which it executes the fuzz target.
 Arguments for this JVM can be provided via the `JAVA_OPTS` environment variable.
@@ -73,7 +86,7 @@ Both flags take a list of glob patterns for the java class name separated by col
 By default, JVM-internal classes and Java as well as Kotlin standard library classes are not instrumented,
 so these do not need to be excluded manually.
 
-### Trace Instrumentation
+## Trace Instrumentation
 
 The agent adds additional hooks for tracing compares, integer divisions, switch statements and array indices.
 These hooks correspond to [clang's data flow hooks](https://clang.llvm.org/docs/SanitizerCoverage.html#tracing-data-flow).
@@ -88,27 +101,14 @@ The particular instrumentation types to apply can be specified using the `--trac
 
 Multiple instrumentation types can be combined with a colon (Linux, macOS) or a semicolon (Windows).
 
-### Value Profile
+## Value Profile
 
 The run-time flag `-use_value_profile=1` enables [libFuzzer's value profiling mode](https://llvm.org/docs/LibFuzzer.html#value-profile).
 When running with this flag, the feedback about compares and constants received from Jazzer's trace instrumentation is associated with the particular bytecode location and used to provide additional coverage instrumentation.
 See [ExampleValueProfileFuzzer.java](../examples/src/main/java/com/example/ExampleValueProfileFuzzer.java) for a fuzz target that would be very hard to fuzz without value profile.
 
-### Custom hooks
 
-In order to obtain information about data passed into functions such as `String.equals` or `String.startsWith`, Jazzer hooks invocations to these methods.
-This functionality is also available to fuzz targets, where it can be used to implement custom sanitizers or stub out methods that block the fuzzer from progressing (e.g. checksum verifications or random number generation).
-See [ExampleFuzzerHooks.java](../examples/src/main/java/com/example/ExampleFuzzerHooks.java) for an example of such a hook.
-An example for a sanitizer can be found in [ExamplePathTraversalFuzzerHooks.java](../examples/src/main/java/com/example/ExamplePathTraversalFuzzerHooks.java).
-
-Method hooks can be declared using the `@MethodHook` annotation defined in the `com.code_intelligence.jazzer.api` package, which is contained in `jazzer_standalone.jar` (binary release) or in the Maven artifact [`com.code-intelligence:jazzer-api`](https://search.maven.org/search?q=g:com.code-intelligence%20a:jazzer-api).
-See the [javadocs of the `@MethodHook` API](https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/com/code_intelligence/jazzer/api/MethodHook.html) for more details.
-
-To use the compiled method hooks, they have to be available on the classpath provided by `--cp` and can then be loaded by providing the flag `--custom_hooks`, which takes a colon-separated list of names of classes to load hooks from.
-Hooks have to be loaded from separate JAR files so that Jazzer can [add it to the bootstrap class loader search](https://docs.oracle.com/javase/8/docs/api/java/lang/instrument/Instrumentation.html#appendToBootstrapClassLoaderSearch-java.util.jar.JarFile-).
-The list of custom hooks can alternatively be specified via the `Jazzer-Hook-Classes` attribute in the fuzz target JAR's manifest.
-
-### Keep Going
+## Keep Going
 
 With the flag `--keep_going=N` Jazzer continues fuzzing until `N` unique stack traces have been encountered.
 Specifically `--keep-going=0` will keep the fuzzer running until another stop condition (e.g. maximum runtime) is met.
@@ -116,7 +116,7 @@ Specifically `--keep-going=0` will keep the fuzzer running until another stop co
 Particular stack traces can also be ignored based on their `DEDUP_TOKEN` by passing a comma-separated list of tokens via
 `--ignore=<token_1>,<token2>`.
 
-### Export Coverage Information
+## Export Coverage Information
 
 > [!WARNING]\
 > This feature is deprecated. The standalone JaCoCo agent should be used to generate coverage reports.
@@ -143,7 +143,7 @@ java -jar path/to/jacococli.jar report coverage.exec \
   --name FuzzCoverageReport
 ```
 
-### Native Libraries
+## Native Libraries
 
 Jazzer supports fuzzing of native libraries loaded by the JVM, for example via `System.load()`.
 For the fuzzer to get coverage feedback, these libraries have to be compiled with `-fsanitize=fuzzer-no-link`.
