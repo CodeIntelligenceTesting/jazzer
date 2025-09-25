@@ -1,4 +1,4 @@
-## Findings
+## Trophies
 
 Jazzer has found the following vulnerabilities and bugs.
 
