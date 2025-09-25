@@ -94,6 +94,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -634,6 +635,25 @@ public class StressTest {
                 asMap(false, false, true, true),
                 asMap(false, true, true, false),
                 asMap(false, true, true, true))),
+        arguments(
+            new TypeHolder<@NotNull Set<@NotNull String>>() {}.annotatedType(),
+            "Set<String>",
+            false,
+            distinctElementsRatio(0.45),
+            distinctElementsRatio(0.45)),
+        arguments(
+            new TypeHolder<Set<@NotNull String>>() {}.annotatedType(),
+            "Nullable<Set<String>>",
+            false,
+            distinctElementsRatio(0.46),
+            distinctElementsRatio(0.48)),
+        arguments(
+            new TypeHolder<@WithSize(max = 3) @NotNull Set<@NotNull Integer>>() {}.annotatedType(),
+            "Set<Integer>",
+            false,
+            // Half of all sets are empty, the other half is heavily biased towards special values.
+            all(setSizeInClosedRange(0, 3), distinctElementsRatio(0.09)),
+            all(setSizeInClosedRange(0, 3), manyDistinctElements())),
         arguments(
             new ParameterHolder() {
               void singleParam(byte parameter) {}
@@ -1336,6 +1356,24 @@ public class StressTest {
         } else {
           throw new IllegalArgumentException(
               "Expected a list of maps, got list of" + map.getClass().getName());
+        }
+      }
+
+      @Override
+      public void close() {}
+    };
+  }
+
+  private static CloseableConsumer setSizeInClosedRange(int min, int max) {
+    return new CloseableConsumer() {
+      @Override
+      public void accept(Object set) {
+        if (set instanceof Set) {
+          assertThat(((Set<?>) set).size()).isAtLeast(min);
+          assertThat(((Set<?>) set).size()).isAtMost(max);
+        } else {
+          throw new IllegalArgumentException(
+              "Expected a list of sets, got list of" + set.getClass().getName());
         }
       }
 
