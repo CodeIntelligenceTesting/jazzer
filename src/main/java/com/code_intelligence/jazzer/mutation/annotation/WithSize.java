@@ -26,10 +26,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Target(TYPE_USE)
 @Retention(RUNTIME)
-@AppliesTo({List.class, Map.class})
+@AppliesTo({List.class, Map.class, Set.class})
 @ValidateContainerDimensions
 @PropertyConstraint
 public @interface WithSize {

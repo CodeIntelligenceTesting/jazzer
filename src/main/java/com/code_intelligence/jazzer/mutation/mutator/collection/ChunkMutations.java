@@ -16,10 +16,11 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.collection;
 
+import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
+
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.api.ValueMutator;
-import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import java.util.AbstractList;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -162,6 +163,56 @@ final class ChunkMutations {
     return grownBy > 0;
   }
 
+  static <K, KW> boolean mutateRandomKeysChunk(
+      Set<K> set, SerializingMutator<K> keyMutator, PseudoRandom prng) {
+    int originalSize = set.size();
+    int chunkSize = prng.sizeInClosedRange(1, originalSize, keyMutator.hasFixedSize());
+    int chunkOffset = prng.closedRange(0, originalSize - chunkSize);
+
+    // To ensure that mutating keys actually results in the set of keys changing, we keep the keys
+    // to mutate in the set, try to add new keys (that are therefore distinct from the keys to
+    // mutate) and only remove the successfully mutated keys in the end.
+    ArrayDeque<KW> keysToMutate = new ArrayDeque<>(chunkSize);
+    ArrayList<K> keysToRemove = new ArrayList<>(chunkSize);
+    // get the set iterator
+    Iterator<K> it = set.iterator();
+    for (int i = 0; i < chunkOffset; i++) {
+      it.next();
+    }
+    for (int i = chunkOffset; i < chunkOffset + chunkSize; i++) {
+      K entry = it.next();
+      // ArrayDeque cannot hold null elements, which requires us to replace null with a sentinel.
+      // Also detach the key as keys may be mutable and mutation could destroy them.
+      keysToMutate.add(boxNull(keyMutator.detach(entry)));
+      keysToRemove.add(entry);
+    }
+
+    Consumer<K> addIfNew =
+        key -> {
+          int sizeBeforeAdd = set.size();
+          set.add(key);
+          // The mutated key was new, try to mutate and add the next in line.
+          if (set.size() > sizeBeforeAdd) {
+            keysToMutate.removeFirst();
+          }
+        };
+    Supplier<K> nextCandidate =
+        () -> {
+          // Mutate the next candidate in the queue.
+          K candidate = keyMutator.mutate(unboxNull(keysToMutate.removeFirst()), prng);
+          keysToMutate.addFirst(boxNull(candidate));
+          return candidate;
+        };
+
+    growBy(set, addIfNew, chunkSize, nextCandidate);
+    // Remove the original keys that were successfully mutated into new keys. Since the original
+    // keys have been kept in the set up to this point, all keys added were successfully mutated to
+    // be unequal to the original keys.
+    int grownBy = set.size() - originalSize;
+    keysToRemove.stream().limit(grownBy).forEach(set::remove);
+    return grownBy > 0;
+  }
+
   public static <K, V> void mutateRandomValuesChunk(
       Map<K, V> map, ValueMutator<V> valueMutator, PseudoRandom prng) {
     Collection<Map.Entry<K, V>> collection = map.entrySet();
@@ -182,7 +233,7 @@ final class ChunkMutations {
   static <T> boolean growBy(
       Set<T> set, Consumer<T> addIfNew, int delta, Supplier<T> candidateSupplier) {
     int oldSize = set.size();
-    Preconditions.require(delta >= 0);
+    require(delta >= 0);
 
     final int targetSize = oldSize + delta;
     int remainingAttempts = MAX_FAILED_INSERTION_ATTEMPTS;
