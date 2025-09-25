@@ -20,13 +20,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
-import com.code_intelligence.jazzer.mutation.annotation.WithSize;
-import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
 import com.code_intelligence.jazzer.protobuf.Proto2;
 import com.code_intelligence.jazzer.protobuf.Proto3;
 import com.code_intelligence.selffuzz.jazzer.mutation.ArgumentsMutator;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.WithLength;
+import com.code_intelligence.selffuzz.jazzer.mutation.annotation.WithSize;
+import com.code_intelligence.selffuzz.jazzer.mutation.annotation.WithUtf8Length;
 import com.code_intelligence.selffuzz.jazzer.mutation.mutator.Mutators;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -102,21 +102,32 @@ public class ArgumentsMutatorFuzzTest {
       @NotNull String s1,
       @NotNull @WithUtf8Length(min = 10, max = 20) String s2) {}
 
-  @SelfFuzzTest // BUG: null pointer exception
-  void fuzzListOfMaps(Map<String, Integer> nullableMap) {}
+  @SelfFuzzTest
+  void fuzzListOfMaps(@WithSize(max = 4) Map<String, Integer> nullableMap) {
+    if (nullableMap != null) {
+      assertThat(nullableMap.size()).isAtMost(4);
+    }
+  }
 
   @SelfFuzzTest
   void fuzzListOfLists(List<@NotNull List<String>> nullableMap, List<List<Integer>> nullableList) {}
 
   @SelfFuzzTest
-  void fuzzPPrimitiveArrays(
-      int @WithLength(max = 10) [] a0, boolean[] a2, int @WithLength(max = 8193) [] a3) {}
+  void fuzzPrimitiveArrays(
+      int @WithLength(max = 10) [] a0, boolean[] a2, int @WithLength(max = 8193) [] a3) {
+    if (a0 != null) assertThat(a0.length).isAtMost(10);
+    if (a3 != null) assertThat(a3.length).isAtMost(8193);
+  }
 
   @SelfFuzzTest
   void fuzzBean(@NotNull ConstructorPropertiesAnnotatedBean bean, BeanWithParent beanWithParent) {}
 
   @SelfFuzzTest
-  void fuzzListOfBeans(@WithSize(max = 4) List<BeanWithParent> beanWithParent) {}
+  void fuzzListOfBeans(@WithSize(max = 4) List<BeanWithParent> beanWithParent) {
+    if (beanWithParent != null) {
+      assertThat(beanWithParent.size()).isAtMost(4);
+    }
+  }
 
   @SelfFuzzTest
   void fuzzListOfListOfBeans(
@@ -189,7 +200,15 @@ public class ArgumentsMutatorFuzzTest {
       Byte @WithLength(max = 3) [] by0,
       byte[] by1,
       Short @WithLength(max = 3) [] s0,
-      short[] s1) {}
+      short[] s1) {
+    if (i0 != null) assertThat(i0.length).isAtMost(3);
+    if (b0 != null) assertThat(b0.length).isAtMost(3);
+    if (d0 != null) assertThat(d0.length).isAtMost(3);
+    if (f0 != null) assertThat(f0.length).isAtMost(3);
+    if (l0 != null) assertThat(l0.length).isAtMost(3);
+    if (by0 != null) assertThat(by0.length).isAtMost(3);
+    if (s0 != null) assertThat(s0.length).isAtMost(3);
+  }
 
   enum MyEnum {
     A,
