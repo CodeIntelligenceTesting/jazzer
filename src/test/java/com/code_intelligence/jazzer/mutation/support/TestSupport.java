@@ -42,6 +42,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.function.BiConsumer;
@@ -50,6 +51,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
+import org.junit.jupiter.params.provider.Arguments;
 
 public final class TestSupport {
   private static final DataOutputStream nullDataOutputStream =
@@ -262,6 +265,10 @@ public final class TestSupport {
       return "PRNG: " + Arrays.toString(elements.toArray());
     }
 
+    public boolean isEmpty() {
+      return elements.isEmpty();
+    }
+
     @Override
     public boolean choice() {
       assertThat(elements).isNotEmpty();
@@ -428,6 +435,10 @@ public final class TestSupport {
     return map;
   }
 
+  public static <K> LinkedHashSet<K> asSet(K... objs) {
+    return new LinkedHashSet<>(Arrays.asList(objs));
+  }
+
   @SafeVarargs
   public static <T> ArrayList<T> asMutableList(T... objs) {
     return stream(objs).collect(toCollection(ArrayList::new));
@@ -476,5 +487,36 @@ public final class TestSupport {
   public static <T> SerializingMutator<T> createOrThrow(
       ExtendedMutatorFactory factory, TypeHolder<T> typeHolder) {
     return (SerializingMutator<T>) factory.createOrThrow(typeHolder.annotatedType());
+  }
+
+  public static String getCallerMethodName() {
+    StackTraceElement[] s = Thread.currentThread().getStackTrace();
+    if (s.length < 3) {
+      throw new IllegalStateException(
+          "Not enough stack trace elements to determine caller method name");
+    }
+    return s[2].getMethodName();
+  }
+
+  public static final class ParameterizedTestUtils {
+    private ParameterizedTestUtils() {}
+
+    /**
+     * Adds an argument to the beginning of each Arguments in a stream.
+     *
+     * @param base - the base stream of Arguments
+     * @param arguments - the arguments to prepend
+     * @return a stream of Arguments with the given argument prepended before the original ones.
+     */
+    public static Stream<Arguments> prependArgs(Stream<Arguments> base, Object... arguments) {
+      return base.map(
+          args -> {
+            Object[] original = args.get();
+            Object[] withArg = new Object[original.length + arguments.length];
+            System.arraycopy(arguments, 0, withArg, 0, arguments.length);
+            System.arraycopy(original, 0, withArg, arguments.length, original.length);
+            return Arguments.of(withArg);
+          });
+    }
   }
 }

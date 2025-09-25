@@ -22,9 +22,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 final class ChunkCrossOvers {
   private ChunkCrossOvers() {}
@@ -98,6 +100,25 @@ final class ChunkCrossOvers {
     }
   }
 
+  static <K> void insertChunk(
+      Set<K> set, Set<K> otherSet, int maxSize, PseudoRandom prng, boolean hasFixedSize) {
+    int originalSize = set.size();
+    int maxChunkSize = Math.min(maxSize - originalSize, otherSet.size());
+    int chunkSize = prng.sizeInClosedRange(1, maxChunkSize, hasFixedSize);
+    int fromChunkOffset = prng.closedRange(0, otherSet.size() - chunkSize);
+    Iterator<K> fromIterator = otherSet.iterator();
+    for (int i = 0; i < fromChunkOffset; i++) {
+      fromIterator.next();
+    }
+    // insertChunk only inserts new entries and does not overwrite existing
+    // ones. As skipping those entries would lead to fewer insertions than
+    // requested, loop over the rest of the set to fill the chunk if possible.
+    while (set.size() < originalSize + chunkSize && fromIterator.hasNext()) {
+      K key = fromIterator.next();
+      set.add(key);
+    }
+  }
+
   static <K, V> void overwriteChunk(
       Map<K, V> map, Map<K, V> otherMap, PseudoRandom prng, boolean hasFixedSize) {
     onCorrespondingChunks(
@@ -117,6 +138,24 @@ final class ChunkCrossOvers {
         hasFixedSize);
   }
 
+  static <E> void overwriteChunk(
+      Set<E> set, Set<E> otherSet, PseudoRandom prng, boolean hasFixedSize) {
+    onCorrespondingChunks(
+        set,
+        otherSet,
+        prng,
+        (fromIterator, toIterator, chunkSize) -> {
+          Set<E> elementsToAdd = new LinkedHashSet<>(chunkSize);
+          for (int i = 0; i < chunkSize; i++) {
+            toIterator.next();
+            toIterator.remove();
+            elementsToAdd.add(fromIterator.next());
+          }
+          set.addAll(elementsToAdd);
+        },
+        hasFixedSize);
+  }
+
   static <K, V> void crossOverChunk(
       Map<K, V> map,
       Map<K, V> otherMap,
@@ -128,6 +167,23 @@ final class ChunkCrossOvers {
     } else {
       crossOverChunkValues(map, otherMap, valueMutator, prng);
     }
+  }
+
+  static <E> void crossOverChunk(
+      Set<E> set, Set<E> otherSet, SerializingMutator<E> mutator, PseudoRandom prng) {
+    onCorrespondingChunks(
+        set,
+        otherSet,
+        prng,
+        (fromIterator, toIterator, chunkSize) -> {
+          Set<E> elementsToAdd = new LinkedHashSet<>(chunkSize);
+          for (int i = 0; i < chunkSize; i++) {
+            elementsToAdd.add(mutator.crossOver(toIterator.next(), fromIterator.next(), prng));
+            toIterator.remove();
+          }
+          set.addAll(elementsToAdd);
+        },
+        mutator.hasFixedSize());
   }
 
   private static <K, V> void crossOverChunkKeys(
@@ -198,6 +254,11 @@ final class ChunkCrossOvers {
     void apply(Iterator<Entry<K, V>> fromIterator, Iterator<Entry<K, V>> toIterator, int chunkSize);
   }
 
+  @FunctionalInterface
+  private interface ChunkSetOperation<E> {
+    void apply(Iterator<E> fromIterator, Iterator<E> toIterator, int chunkSize);
+  }
+
   static <K, V> void onCorrespondingChunks(
       Map<K, V> map,
       Map<K, V> otherMap,
@@ -213,6 +274,32 @@ final class ChunkCrossOvers {
       fromIterator.next();
     }
     Iterator<Entry<K, V>> toIterator = map.entrySet().iterator();
+    for (int i = 0; i < toChunkOffset; i++) {
+      toIterator.next();
+    }
+    operation.apply(fromIterator, toIterator, chunkSize);
+  }
+
+  static <K> void onCorrespondingChunks(
+      Set<K> set,
+      Set<K> otherSet,
+      PseudoRandom prng,
+      ChunkSetOperation<K> operation,
+      boolean hasFixedSize) {
+
+    if (set.isEmpty() || otherSet.isEmpty()) {
+      return;
+    }
+
+    int maxChunkSize = Math.min(set.size(), otherSet.size());
+    int chunkSize = prng.sizeInClosedRange(1, maxChunkSize, hasFixedSize);
+    int fromChunkOffset = prng.closedRange(0, otherSet.size() - chunkSize);
+    int toChunkOffset = prng.closedRange(0, set.size() - chunkSize);
+    Iterator<K> fromIterator = otherSet.iterator();
+    for (int i = 0; i < fromChunkOffset; i++) {
+      fromIterator.next();
+    }
+    Iterator<K> toIterator = set.iterator();
     for (int i = 0; i < toChunkOffset; i++) {
       toIterator.next();
     }

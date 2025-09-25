@@ -42,6 +42,7 @@ import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ArgumentsMutatorFuzzTest {
@@ -106,6 +107,13 @@ public class ArgumentsMutatorFuzzTest {
   void fuzzListOfMaps(@WithSize(max = 4) Map<String, Integer> nullableMap) {
     if (nullableMap != null) {
       assertThat(nullableMap.size()).isAtMost(4);
+    }
+  }
+
+  @SelfFuzzTest
+  void fuzzListOfSets(@WithSize(max = 10) @NotNull Set<@NotNull Integer> setWithSize) {
+    if (setWithSize != null) {
+      assertThat(setWithSize.size()).isAtMost(10);
     }
   }
 

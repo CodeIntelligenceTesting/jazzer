@@ -16,10 +16,11 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.collection;
 
+import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
+
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.api.ValueMutator;
-import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import java.util.AbstractList;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -162,6 +163,52 @@ final class ChunkMutations {
     return grownBy > 0;
   }
 
+  static <E> boolean mutateRandomChunk(
+      Set<E> set, SerializingMutator<E> elementMutator, PseudoRandom prng) {
+    int originalSize = set.size();
+    require(originalSize > 0, "mutateRandomSetChunk requires set size > 0");
+    int chunkSize = prng.sizeInClosedRange(1, originalSize, elementMutator.hasFixedSize());
+    int chunkOffset = prng.closedRange(0, originalSize - chunkSize);
+
+    Iterator<E> iterator = set.iterator();
+
+    // Skip to chunk offset
+    for (int i = 0; i < chunkOffset; i++) {
+      iterator.next();
+    }
+
+    // Collect elements to mutate and remove
+    List<E> originalElements = new ArrayList<>(chunkSize);
+    List<E> elementsToMutate = new ArrayList<>(chunkSize);
+    for (int i = 0; i < chunkSize; i++) {
+      E element = iterator.next();
+      originalElements.add(element);
+      elementsToMutate.add(elementMutator.detach(element));
+    }
+
+    // Try mutating each chunk element into a yet-not-present element in the set.
+    // Abort after MAX_FAILED_INSERTION_ATTEMPTS failed mutations in total.
+    int successCount = 0;
+    int failedAttemptsCount = 0;
+    for (E element : elementsToMutate) {
+      while (failedAttemptsCount < MAX_FAILED_INSERTION_ATTEMPTS) {
+        // Each element keeps getting mutated until we get a completely novel element.
+        element = elementMutator.mutate(element, prng);
+        if (set.add(element)) {
+          successCount++;
+          break;
+        } else {
+          failedAttemptsCount++;
+        }
+      }
+    }
+
+    for (int i = 0; i < successCount; i++) {
+      set.remove(originalElements.get(i));
+    }
+    return successCount > 0;
+  }
+
   public static <K, V> void mutateRandomValuesChunk(
       Map<K, V> map, ValueMutator<V> valueMutator, PseudoRandom prng) {
     Collection<Map.Entry<K, V>> collection = map.entrySet();
@@ -182,7 +229,7 @@ final class ChunkMutations {
   static <T> boolean growBy(
       Set<T> set, Consumer<T> addIfNew, int delta, Supplier<T> candidateSupplier) {
     int oldSize = set.size();
-    Preconditions.require(delta >= 0);
+    require(delta >= 0);
 
     final int targetSize = oldSize + delta;
     int remainingAttempts = MAX_FAILED_INSERTION_ATTEMPTS;
