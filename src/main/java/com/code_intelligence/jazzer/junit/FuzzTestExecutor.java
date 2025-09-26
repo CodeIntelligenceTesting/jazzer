@@ -17,7 +17,6 @@
 package com.code_intelligence.jazzer.junit;
 
 import static com.code_intelligence.jazzer.junit.ApiStatsHolder.printApiStats;
-import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
@@ -116,7 +115,9 @@ class FuzzTestExecutor {
 
     dictionaryPath.ifPresent(s -> libFuzzerArgs.add("-dict=" + s));
 
-    libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
+    libFuzzerArgs.add(
+        "-max_total_time="
+            + com.code_intelligence.jazzer.utils.Utils.durationStringToSeconds(maxDuration));
     if (maxRuns > 0) {
       libFuzzerArgs.add("-runs=" + maxRuns);
     }
