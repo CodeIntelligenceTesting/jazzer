@@ -41,7 +41,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -275,19 +274,6 @@ class Utils {
         .skip(1)
         .filter(arg -> !arg.startsWith("-"))
         .collect(toList());
-  }
-
-  /**
-   * Convert the string to ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601#Durations). We do not
-   * allow for duration units longer than hours, so we can always prepend PT.
-   */
-  static long durationStringToSeconds(String duration) {
-    if (duration.isEmpty()) {
-      return 0;
-    }
-    String isoDuration =
-        "PT" + duration.replace("sec", "s").replace("min", "m").replace("hr", "h").replace(" ", "");
-    return Duration.parse(isoDuration).getSeconds();
   }
 
   static long parseJUnitTimeoutValueToSeconds(String value) {
