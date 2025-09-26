@@ -7,7 +7,8 @@
 * [Autofuzz Mode](#autofuzz-mode)
 
 > [!NOTE]\
-> These settings apply to the old fuzzing approach using a `fuzzerTestOneInput` method and the native Jazzer binary. They don't work in the new JUnit integration.
+> This page focuses on standalone/CLI usage. The JUnit integration uses the same precedence model, however some options
+> are not used when executing fuzz tests via the JUnit integration.
 
 ## Recommended JVM Options
 
