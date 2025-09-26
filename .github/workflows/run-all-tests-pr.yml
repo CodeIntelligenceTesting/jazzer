@@ -81,6 +81,7 @@ jobs:
           key: fuzzing-corpus-${{ matrix.os }}-${{ matrix.jdk }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             fuzzing-corpus-
+          enableCrossOsArchive: true
 
       - name: Build & Test
         run: bazelisk test ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=remotejdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} ${{ matrix.extra_bazel_args }} --build_tag_filters="-no-${{ matrix.arch }},-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" --test_tag_filters="-no-${{ matrix.arch }},-no-${{ matrix.arch }}-jdk${{ matrix.jdk }},-no-jdk${{ matrix.jdk }}" //...
