@@ -18,6 +18,7 @@
 package com.code_intelligence.jazzer.utils
 
 import java.lang.reflect.Executable
+import java.time.Duration
 
 val Class<*>.readableDescriptor: String
     get() =
@@ -47,3 +48,21 @@ val Executable.readableDescriptor: String
         parameterTypes.joinToString(separator = ",", prefix = "(", postfix = ")") { parameterType ->
             parameterType.readableDescriptor
         }
+
+/**
+ * Convert the string to ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601#Durations). We do not
+ * allow for duration units longer than hours, so we can always prepend PT.
+ */
+fun durationStringToSeconds(duration: String): Long {
+    if (duration.isEmpty()) {
+        return 0
+    }
+    val isoDuration =
+        "PT" +
+            duration
+                .replace("sec", "s")
+                .replace("min", "m")
+                .replace("hr", "h")
+                .replace(" ", "")
+    return Duration.parse(isoDuration).seconds
+}

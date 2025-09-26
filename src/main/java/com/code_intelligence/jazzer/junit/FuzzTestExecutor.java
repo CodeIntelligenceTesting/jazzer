@@ -17,7 +17,6 @@
 package com.code_intelligence.jazzer.junit;
 
 import static com.code_intelligence.jazzer.junit.ApiStatsHolder.printApiStats;
-import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
@@ -64,8 +63,7 @@ class FuzzTestExecutor {
     this.javaSeedsDir = javaSeedsDir;
   }
 
-  public static FuzzTestExecutor prepare(
-      ExtensionContext context, String maxDuration, long maxRuns, Optional<Path> dictionaryPath)
+  public static FuzzTestExecutor prepare(ExtensionContext context, Optional<Path> dictionaryPath)
       throws IOException {
     if (!hasBeenPrepared.compareAndSet(false, true)) {
       throw new FuzzTestConfigurationError(
@@ -116,9 +114,12 @@ class FuzzTestExecutor {
 
     dictionaryPath.ifPresent(s -> libFuzzerArgs.add("-dict=" + s));
 
-    libFuzzerArgs.add("-max_total_time=" + durationStringToSeconds(maxDuration));
-    if (maxRuns > 0) {
-      libFuzzerArgs.add("-runs=" + maxRuns);
+    libFuzzerArgs.add(
+        "-max_total_time="
+            + com.code_intelligence.jazzer.utils.Utils.durationStringToSeconds(
+                Opt.maxDuration.get()));
+    if (Opt.maxExecutions.get() > 0) {
+      libFuzzerArgs.add("-runs=" + Opt.maxExecutions.get());
     }
     // Disable libFuzzer's out of memory detection: It is only useful for native library fuzzing,
     // which we don't support without our native driver, and leads to false positives where it picks
@@ -266,10 +267,11 @@ class FuzzTestExecutor {
       return;
     }
     if (Utils.isFuzzing(extensionContext)) {
-      FuzzTestExecutor executor =
-          prepare(extensionContext, maxDuration, maxExecutions, dictionaryPath);
+      // Register configuration parameters and apply common config before reading Opt values
+      // inside prepare(...), so JUnit config (junit-platform.properties) can override defaults.
+      AgentConfigurator.forFuzzing(extensionContext, maxDuration, maxExecutions);
+      FuzzTestExecutor executor = prepare(extensionContext, dictionaryPath);
       extensionContext.getRoot().getStore(Namespace.GLOBAL).put(FuzzTestExecutor.class, executor);
-      AgentConfigurator.forFuzzing(extensionContext);
     } else {
       AgentConfigurator.forRegressionTest(extensionContext);
     }

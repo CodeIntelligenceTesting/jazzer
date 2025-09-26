@@ -7,7 +7,8 @@
 * [Autofuzz Mode](#autofuzz-mode)
 
 > [!NOTE]\
-> These settings apply to the old fuzzing approach using a `fuzzerTestOneInput` method and the native Jazzer binary. They don't work in the new JUnit integration.
+> This page focuses on standalone/CLI usage. The JUnit integration uses the same precedence model, however some options
+> are not used when executing fuzz tests via the JUnit integration.
 
 ## Recommended JVM Options
 
@@ -33,6 +34,15 @@ The value of a setting item `some_opt` is obtained from the following sources in
 - the `jazzer.some_opt` system property
 - the `jazzer.some_opt` JUnit configuration parameter
 - the `--some_opt` CLI parameter
+
+## Global Time/Execution Limits
+
+- `jazzer.max_duration`: Sets the maximum fuzzing duration (e.g., `30s`, `2m`, `1h`; empty = unlimited).
+  - Standalone: translated to libFuzzer flag `-max_total_time` unless that flag is already set.
+  - JUnit: overrides `@FuzzTest(maxDuration)`.
+- `jazzer.max_executions`: Sets the maximum number of executions (positive value limits runs).
+  - Standalone: translated to libFuzzer flag `-runs` unless that flag is already set.
+  - JUnit: overrides `@FuzzTest(maxExecutions)`.
 
 ### Reproducing a finding
 

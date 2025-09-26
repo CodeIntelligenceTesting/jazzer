@@ -45,12 +45,18 @@ class AgentConfigurator {
     Opt.customHookIncludes.setIfDefault(Opt.instrument.get());
   }
 
-  static void forFuzzing(ExtensionContext extensionContext) {
+  static void forFuzzing(
+      ExtensionContext extensionContext, String fuzzingDuration, long maxExecutions) {
     if (!hasBeenConfigured.compareAndSet(false, true)) {
       throw new IllegalStateException("Only a single fuzz test should be executed per fuzzing run");
     }
 
     applyCommonConfiguration(extensionContext);
+
+    // Allow dynamic overrides via Opt while keeping annotation values as defaults.
+    // If the user supplied jazzer.max_duration/JAZZER_MAX_DURATION/--max_duration, it will win.
+    Opt.maxDuration.setIfDefault(fuzzingDuration);
+    Opt.maxExecutions.setIfDefault(maxExecutions);
 
     Opt.instrument.setIfDefault(determineInstrumentationFilters(extensionContext));
     Opt.customHookIncludes.setIfDefault(Opt.instrument.get());

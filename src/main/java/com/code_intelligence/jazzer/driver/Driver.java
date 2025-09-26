@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.toList;
 import com.code_intelligence.jazzer.agent.AgentInstaller;
 import com.code_intelligence.jazzer.driver.junit.JUnitRunner;
 import com.code_intelligence.jazzer.utils.Log;
+import com.code_intelligence.jazzer.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -156,6 +157,20 @@ public class Driver {
       Optional<JUnitRunner> runner = JUnitRunner.create(targetClassName, args);
       if (runner.isPresent()) {
         return runner.get().run();
+      }
+    }
+
+    // Translate Jazzer options to libFuzzer flags if not explicitly provided.
+    if (Opt.maxDuration.isSet() && !Opt.maxDuration.get().isEmpty()) {
+      boolean hasMaxTime = args.stream().anyMatch(a -> a.startsWith("-max_total_time="));
+      if (!hasMaxTime) {
+        args.add("-max_total_time=" + Utils.durationStringToSeconds(Opt.maxDuration.get()));
+      }
+    }
+    if (Opt.maxExecutions.isSet() && Opt.maxExecutions.get() > 0) {
+      boolean hasRuns = args.stream().anyMatch(a -> a.startsWith("-runs="));
+      if (!hasRuns) {
+        args.add("-runs=" + Opt.maxExecutions.get());
       }
     }
 

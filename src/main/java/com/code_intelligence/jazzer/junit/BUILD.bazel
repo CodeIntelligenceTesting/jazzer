@@ -110,6 +110,7 @@ java_jni_library(
         ":utils",
         "//deploy:jazzer",
         "//deploy:jazzer-api",
+        "//src/main/java/com/code_intelligence/jazzer/utils",
         "@maven//:jakarta_servlet_jakarta_servlet_api",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
