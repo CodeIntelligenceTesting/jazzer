@@ -205,6 +205,20 @@ public final class Opt {
           "",
           "Fully qualified name of the fuzz target class (required unless --autofuzz is"
               + " specified)");
+  public static final OptItem<String> maxDuration =
+      stringSetting(
+          "max_duration",
+          "",
+          "Sets the maximum fuzzing duration (e.g., '30s', '2m', '1h'; empty = unlimited). For"
+              + " JUnit tests, overrides @FuzzTest(maxDuration); for standalone, translates to"
+              + " -max_total_time unless that flag is already present.");
+  public static final OptItem<Long> maxExecutions =
+      uint64Setting(
+          "max_executions",
+          0,
+          "Sets the maximum number of executions during fuzzing (positive value limits runs). For"
+              + " JUnit tests, overrides @FuzzTest(maxExecutions); for standalone, translates to"
+              + " -runs unless that flag is already present.");
   // Used to disambiguate between multiple methods annotated with @FuzzTest in the target class.
   public static final OptItem<String> targetMethod =
       stringSetting(

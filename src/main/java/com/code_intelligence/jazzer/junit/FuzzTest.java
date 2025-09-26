@@ -113,6 +113,8 @@ public @interface FuzzTest {
    * <p>To remove the default limit of 5 minutes, set this element to {@code ""}.
    *
    * <p>This option has no effect during regression testing.
+   *
+   * <p>This value can be overridden at runtime via the Jazzer option {@code jazzer.max_duration}.
    */
   String maxDuration() default "5m";
 
@@ -124,6 +126,8 @@ public @interface FuzzTest {
    * fuzzing across machine's with different performance characteristics.
    *
    * <p>This option has no effect during regression testing.
+   *
+   * <p>This value can be overridden at runtime via the Jazzer option {@code jazzer.max_executions}.
    */
   long maxExecutions() default 0;
 

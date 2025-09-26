@@ -34,6 +34,15 @@ The value of a setting item `some_opt` is obtained from the following sources in
 - the `jazzer.some_opt` JUnit configuration parameter
 - the `--some_opt` CLI parameter
 
+## Global Time/Execution Limits
+
+- `jazzer.max_duration`: Sets the maximum fuzzing duration (e.g., `30s`, `2m`, `1h`; empty = unlimited).
+  - Standalone: translated to libFuzzer flag `-max_total_time` unless that flag is already set.
+  - JUnit: overrides `@FuzzTest(maxDuration)`.
+- `jazzer.max_executions`: Sets the maximum number of executions (positive value limits runs).
+  - Standalone: translated to libFuzzer flag `-runs` unless that flag is already set.
+  - JUnit: overrides `@FuzzTest(maxExecutions)`.
+
 ### Reproducing a finding
 
 When Jazzer manages to find an input that causes an uncaught exception or a failed assertion, it prints a Java stack trace and creates two files that aid in reproducing the crash without Jazzer:
