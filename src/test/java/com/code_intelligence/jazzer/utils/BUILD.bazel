@@ -1,4 +1,4 @@
-load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_junit5_test")
 
 java_library(
     name = "test_utils",
@@ -6,5 +6,16 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
+    ],
+)
+
+java_junit5_test(
+    name = "UtilsTest",
+    size = "small",
+    srcs = ["UtilsTest.java"],
+    deps = JUNIT5_DEPS + [
+        "//src/main/java/com/code_intelligence/jazzer/utils",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 )

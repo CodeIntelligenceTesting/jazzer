@@ -16,7 +16,6 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import static com.code_intelligence.jazzer.junit.Utils.durationStringToSeconds;
 import static com.code_intelligence.jazzer.junit.Utils.getMarkedArguments;
 import static com.code_intelligence.jazzer.junit.Utils.getMarkedInstance;
 import static com.code_intelligence.jazzer.junit.Utils.isMarkedInstance;
@@ -57,18 +56,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 public class UtilsTest implements InvocationInterceptor {
   @TempDir Path temp;
-
-  @Test
-  void testDurationStringToSeconds() {
-    assertThat(durationStringToSeconds("")).isEqualTo(0);
-    assertThat(durationStringToSeconds("0s")).isEqualTo(0);
-    assertThat(durationStringToSeconds("1m")).isEqualTo(60);
-    assertThat(durationStringToSeconds("1min")).isEqualTo(60);
-    assertThat(durationStringToSeconds("1h")).isEqualTo(60 * 60);
-    assertThat(durationStringToSeconds("1h   2m 30s")).isEqualTo(60 * 60 + 2 * 60 + 30);
-    assertThat(durationStringToSeconds("1hr2min30sec")).isEqualTo(60 * 60 + 2 * 60 + 30);
-    assertThat(durationStringToSeconds("1h2m30s")).isEqualTo(60 * 60 + 2 * 60 + 30);
-  }
 
   @Test
   void testParseJUnitTimeoutValueToSeconds() {
