@@ -462,24 +462,18 @@ public final class FuzzTargetRunner {
     for (Map.Entry<String, Object> entry : args.entrySet()) {
       System.err.println(entry.getKey() + ": " + entry.getValue());
     }
-    // Native (Java) corpus management  ### LATER
-    // read corpus and deserialize using mutator
-    // get features from each input
-    // - coverage features
-    // - execution time
-    // - memory usage
-    // apply user-configurable selection fn (SEL) to keep inputs based on the features
-    //   this fn is also used during fuzzing
-
-    // Mutation Core ## LATER
-
-    // Native (Java) fuzzing loop in a thread ### NOW
-    // - select input from corpus using user-configurable fuzzing strategy fn (FUZ)
-    // - apply mutator to generate new input
-    // - run fuzz target with new input
-    // - collect features and apply SEL to keep or discard input
-    // - if input is kept, write out the corpus
-    // Also start timeout thread that kills the fuzzing thread after timeout
+    /* TODO
+     * - TORCs in LibfuzzerMutator
+     * - entropic scheduler
+     * - allow running all fuzz tests
+     * - start a timeout thread that kills the fuzzing thread after timeout
+     * - track memory usage
+     * TODO PLUGINs
+     *  - user callback for initial corpus run
+     * - user callback for input scheduling
+     * - user callback for feature extraction/computation (e.g. users want to focus on longer-running inputs)
+     *
+     */
 
     // Extract some args.
     // TODO: use UnchainedOptions instead
