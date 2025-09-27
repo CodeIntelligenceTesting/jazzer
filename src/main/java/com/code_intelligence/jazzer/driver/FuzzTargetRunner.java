@@ -53,6 +53,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -491,8 +492,8 @@ public final class FuzzTargetRunner {
     initialBuf[0] = '\n';
 
     // corpus in RAM only for now
-    List<byte[]> corpus = new ArrayList<>();
-    corpus.add(initialBuf);
+    List<byte[]> initialCorpus = new ArrayList<>();
+    initialCorpus.add(initialBuf);
 
     // Read corpus from disk
     List<String> corpusDirs = (List<String>) args.get("corpusDirs");
@@ -510,7 +511,7 @@ public final class FuzzTargetRunner {
         for (Path file : files) {
           try {
             byte[] fileBytes = Files.readAllBytes(file);
-            corpus.add(fileBytes);
+            initialCorpus.add(fileBytes);
           } catch (IOException e) {
             System.err.println("Failed to read file: " + file + " : " + e);
           }
@@ -520,7 +521,9 @@ public final class FuzzTargetRunner {
       }
     }
 
+    // Used in the lambda below, has to be effectively final
     List<String> finalCorpusDirs = corpusDirs;
+
     Thread fuzzerThread =
         new Thread(
             () -> {
@@ -541,7 +544,20 @@ public final class FuzzTargetRunner {
               long execTimeForTimeWindow = 0;
               long lastExecsPerSecond = 0;
 
-              for (byte[] input : corpus) {
+              // We only keep inputs that increase coverage
+              List<byte[]> corpus = new ArrayList<>();
+
+              /*
+               * Run through the corpus once to initialize the known features.
+               * Here we sort the corpus by input length to get a better
+               * initial coverage faster.
+               * TODO: allow user to configure initial corpus and the order inputs are
+               *  executed in.
+               */
+              for (byte[] input :
+                  initialCorpus.stream()
+                      .sorted(Comparator.comparingInt(a -> a.length))
+                      .collect(toList())) {
                 unchainedMutator.read(new ByteArrayInputStream(input));
 
                 // Measure execution time
@@ -554,7 +570,11 @@ public final class FuzzTargetRunner {
                   execTimeForTimeWindow = 0;
                 }
 
+                long coverageBefore = knownIds.size();
                 knownIds.addAll(coverageIds);
+                if (knownIds.size() > coverageBefore) {
+                  corpus.add(input);
+                }
 
                 if (run % printEvery == 0) {
                   System.err.println(
