@@ -16,7 +16,6 @@
 
 package com.code_intelligence.jazzer.runtime;
 
-import com.github.fmeum.rules_jni.RulesJni;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
@@ -33,10 +32,6 @@ public final class TraceDataFlowNativeCallbacks {
   // UTF-8.
   private static final Charset FUZZED_DATA_CHARSET = Charset.forName("CESU8");
 
-  static {
-    RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
-  }
-
   // It is possible for RulesJni#loadLibrary to trigger a hook even though it isn't instrumented if
   // it uses regexes, which it does with at least some JDKs due to its use of String#format. This
   // led to exceptions in the past when the hook ended up calling traceStrcmp or traceStrstr before
@@ -48,16 +43,23 @@ public final class TraceDataFlowNativeCallbacks {
   // completed yet.
   private static final boolean NATIVE_INITIALIZED = true;
 
-  public static native void traceMemcmp(byte[] b1, byte[] b2, int result, int pc);
+  // public static native void traceMemcmp(byte[] b1, byte[] b2, int result, int pc);
+  public static void traceMemcmp(byte[] b1, byte[] b2, int result, int pc) {
+    // System.out.println("traceMemcmp called with: "+ Arrays.toString(b1)+" ,
+    // "+Arrays.toString(b2)+" , "+result+" , "+pc);
+
+  }
 
   public static void traceStrcmp(String s1, String s2, int result, int pc) {
     if (NATIVE_INITIALIZED) {
+      // System.out.println("traceStrcmp called with: "+ s1+" , "+s2+" , "+result+" , "+pc);
       traceMemcmp(encodeForLibFuzzer(s1), encodeForLibFuzzer(s2), result, pc);
     }
   }
 
   public static void traceStrstr(String s1, String s2, int pc) {
     if (NATIVE_INITIALIZED) {
+      // System.out.println("---traceStrstr called with: "+ s1+" , "+s2+" , "+pc);
       traceStrstr0(encodeForLibFuzzer(s2), pc);
     }
   }
@@ -103,7 +105,13 @@ public final class TraceDataFlowNativeCallbacks {
   }
 
   /* trace-cmp */
-  public static native void traceCmpInt(int arg1, int arg2, int pc);
+  // public static native void traceCmpInt(int arg1, int arg2, int pc);
+  public static void traceCmpInt(int arg1, int arg2, int pc) {
+    //    System.out.println("####### traceCmpInt called with: "+ arg1+" , "+arg2+" , "+pc);
+    //    // Trace the stack trace
+    //    System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+
+  }
 
   public static native void traceConstCmpInt(int arg1, int arg2, int pc);
 
@@ -117,7 +125,10 @@ public final class TraceDataFlowNativeCallbacks {
   public static native void traceDivLong(long val, int pc);
 
   /* trace-gep */
-  public static native void traceGep(long val, int pc);
+  // public static native void traceGep(long val, int pc);
+  public static void traceGep(long val, int pc) {
+    System.out.println("####### traceGep called with: " + val + " , " + pc);
+  }
 
   /* indirect-calls */
   public static native void tracePcIndir(int callee, int caller);
