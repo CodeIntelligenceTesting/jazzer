@@ -139,6 +139,12 @@ public final class CoverageMap {
     return Collections.unmodifiableSet(coveredIds);
   }
 
+  public static void resetCoveredIds() {
+    for (int id = 0; id < currentNumCounters; id++) {
+      UNSAFE.putByte(countersAddress + id, (byte) 0);
+    }
+  }
+
   public static void replayCoveredIds(Set<Integer> coveredIds) {
     for (int id : coveredIds) {
       UNSAFE.putByte(countersAddress + id, (byte) 1);

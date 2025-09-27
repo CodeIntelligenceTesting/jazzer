@@ -18,6 +18,8 @@ package com.code_intelligence.jazzer.driver;
 
 import static com.code_intelligence.jazzer.driver.Constants.JAZZER_FINDING_EXIT_CODE;
 import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
+import static com.code_intelligence.jazzer.runtime.CoverageMap.getCoveredIds;
+import static com.code_intelligence.jazzer.runtime.CoverageMap.resetCoveredIds;
 import static java.lang.System.exit;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
@@ -40,6 +42,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -343,14 +347,13 @@ public final class FuzzTargetRunner {
                 ignoredTokens.stream()
                     .map(token -> Long.toUnsignedString(token, 16))
                     .collect(joining(",")),
-                Stream.concat(
-                        Opt.autofuzzIgnore.get().stream(), Stream.of(finding.getClass().getName()))
+                concat(Opt.autofuzzIgnore.get().stream(), Stream.of(finding.getClass().getName()))
                     .collect(joining(","))));
       }
       if (fatalFindingHandlerForJUnit == null) {
         // When running a legacy fuzzerTestOneInput test, exit now with the correct exit code.
         // This will trigger the shutdown hook that runs fuzzerTearDown.
-        System.exit(JAZZER_FINDING_EXIT_CODE);
+        exit(JAZZER_FINDING_EXIT_CODE);
       } else {
         // When running within JUnit, pass control back to FuzzTestExecutor, which has received
         // the finding via the handler.
@@ -487,6 +490,36 @@ public final class FuzzTargetRunner {
     List<byte[]> corpus = new ArrayList<>();
     corpus.add(initialBuf);
 
+    List<String> corpusDirs = (List<String>) args.get("corpusDirs");
+    for (String dirName : corpusDirs) {
+      Path dir = Path.of(dirName);
+      System.err.println("Corpus dirs: " + dir);
+      // add all files in dir to coprus
+      try (Stream<Path> paths = Files.walk(dir)) {
+        List<Path> files = paths.filter(Files::isRegularFile).collect(toList());
+        System.err.println("Found " + files.size() + " files in corpus dir");
+        for (Path file : files) {
+          try {
+            byte[] fileBytes = Files.readAllBytes(file);
+            corpus.add(fileBytes);
+          } catch (IOException e) {
+            System.err.println("Failed to read file: " + file + " : " + e);
+          }
+        }
+      } catch (IOException e) {
+        System.err.println("Failed to read corpus dir: " + dir + " : " + e);
+      }
+    }
+
+    //    if (corpusDirs != null) {
+    //      for (String corpusDir : corpusDirs) {
+    //        System.err.println("Reading corpus from: " + corpusDir);
+    //        //List<byte[]> corpusFromDir = CorpusUtils.readCorpus(corpusDir);
+    //        //System.err.println("Read " + corpusFromDir.size() + " inputs from " + corpusDir);
+    //        //corpus.addAll(corpusFromDir);
+    //      }
+    //    }
+
     Thread fuzzerThread =
         new Thread(
             () -> {
@@ -495,47 +528,43 @@ public final class FuzzTargetRunner {
                 seed = (long) (Math.random() * Long.MAX_VALUE);
                 System.err.println("Seed: " + seed);
               }
+              Set<Integer> knownIds = new HashSet<>();
+
+              long run = 0;
+              long printEvery = 1;
+
+              // load corpus and see which features are covered
+              for (byte[] input : corpus) {
+                if (run % printEvery == 0) {
+                  System.err.println("#" + run + " corpus: " + corpus.size());
+                  printEvery *= 2;
+                }
+
+                unchainedMutator.read(new ByteArrayInputStream(input));
+                Set<Integer> coverageIds = runInput(unchainedMutator, false);
+                // Add to known ids
+                int before = knownIds.size();
+                knownIds.addAll(coverageIds);
+                if (knownIds.size() > before) {
+                  System.err.println("New coverage from corpus input! Total: " + knownIds.size());
+                }
+                run++;
+              }
+              exit(0);
 
               // limited fuzzing loop for now
-              long run = 0;
+
               while (run < maxRuns) {
-                Throwable finding = null;
+                if (run % printEvery == 0) {
+                  System.err.println("#" + run + " corpus: " + corpus.size());
+                  printEvery *= 2;
+                }
                 // select a random input from corpus
                 int index = (int) (Math.random() * corpus.size());
                 unchainedMutator.read(new ByteArrayInputStream(corpus.get(index)));
                 unchainedMutator.mutate(seed);
+                Set<Integer> coverageIds = runInput(unchainedMutator, true);
 
-                try {
-                  lifecycleMethodsInvoker.beforeEachExecution();
-                } catch (Throwable uncaughtFinding) {
-                  finding = uncaughtFinding;
-                }
-                // Do not insert code here. After beforeEachExecution has completed without a
-                // finding, we should
-                // always enter the try block that calls afterEachExecution in finally.
-                if (finding == null) {
-                  try {
-                    Object fuzzTargetInstance = lifecycleMethodsInvoker.getTestClassInstance();
-                    // detaching because we mutate
-                    unchainedMutator.invoke(fuzzTargetInstance, true);
-                  } catch (Throwable uncaughtFinding) {
-                    finding = uncaughtFinding;
-                  } finally {
-                    unchainedMutator.finishFuzzingIteration();
-                    try {
-                      lifecycleMethodsInvoker.afterEachExecution();
-                    } catch (Throwable t) {
-                      if (finding != null) {
-                        // We already have a finding and do not know whether the fuzz target is in
-                        // an expected
-                        // state, so report this as a warning rather than an error or finding.
-                        Log.warn("Failed to run lifecycle method", t);
-                      } else {
-                        finding = t;
-                      }
-                    }
-                  }
-                }
                 seed++;
                 run++;
               }
@@ -548,6 +577,46 @@ public final class FuzzTargetRunner {
     }
 
     return 0;
+  }
+
+  public static Set<Integer> runInput(ArgumentsMutator mutator, boolean detach) {
+    Throwable finding = null;
+    Set<Integer> coveredIds = Set.of();
+    try {
+      lifecycleMethodsInvoker.beforeEachExecution();
+    } catch (Throwable uncaughtFinding) {
+      finding = uncaughtFinding;
+    }
+    // Do not insert code here. After beforeEachExecution has completed without a
+    // finding, we should
+    // always enter the try block that calls afterEachExecution in finally.
+    if (finding == null) {
+      try {
+        Object fuzzTargetInstance = lifecycleMethodsInvoker.getTestClassInstance();
+        // detaching because we mutate
+        resetCoveredIds();
+        unchainedMutator.invoke(fuzzTargetInstance, true);
+        coveredIds = getCoveredIds();
+      } catch (Throwable uncaughtFinding) {
+        finding = uncaughtFinding;
+      } finally {
+        unchainedMutator.finishFuzzingIteration();
+        try {
+          lifecycleMethodsInvoker.afterEachExecution();
+        } catch (Throwable t) {
+          if (finding != null) {
+            // We already have a finding and do not know whether the fuzz target is in
+            // an expected
+            // state, so report this as a warning rather than an error or finding.
+            Log.warn("Failed to run lifecycle method", t);
+          } else {
+            finding = t;
+            throw new RuntimeException(finding);
+          }
+        }
+      }
+    }
+    return coveredIds;
   }
 
   public static void registerFatalFindingHandlerForJUnit(Consumer<Throwable> findingHandler) {
@@ -568,7 +637,7 @@ public final class FuzzTargetRunner {
       lifecycleMethodsInvoker.afterLastExecution();
     } catch (Throwable t) {
       Log.finding(t);
-      System.exit(JAZZER_FINDING_EXIT_CODE);
+      exit(JAZZER_FINDING_EXIT_CODE);
     }
   }
 
@@ -612,7 +681,7 @@ public final class FuzzTargetRunner {
       } catch (IOException e) {
         Log.error("Failed to create reproducer", e);
         // Don't let libFuzzer print a native stack trace.
-        System.exit(1);
+        exit(1);
         throw new IllegalStateException("Not reached");
       }
     } else {

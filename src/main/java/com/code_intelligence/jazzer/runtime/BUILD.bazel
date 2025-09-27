@@ -112,6 +112,7 @@ java_jni_library(
     }),
     visibility = [
         "//src/jmh/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/driver:__pkg__",
         "//src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
         "//src/test:__subpackages__",
     ],

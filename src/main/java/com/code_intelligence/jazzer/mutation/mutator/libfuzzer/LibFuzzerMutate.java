@@ -40,11 +40,12 @@ public final class LibFuzzerMutate {
     } else {
       mutatedBytes = Arrays.copyOf(data, data.length + maxSizeIncrease);
     }
-    byte [] out = defaultMutate(mutatedBytes, data.length, prng);
+    byte[] out = defaultMutate(mutatedBytes, data.length, prng);
     return out;
   }
 
-  public static <T> T mutateDefault(T value, Serializer<T> serializer, int maxSizeIncrease, PseudoRandom prng) {
+  public static <T> T mutateDefault(
+      T value, Serializer<T> serializer, int maxSizeIncrease, PseudoRandom prng) {
     require(maxSizeIncrease >= 0);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     try {
@@ -67,11 +68,11 @@ public final class LibFuzzerMutate {
   private static byte[] defaultMutate(byte[] buffer, int size, PseudoRandom prng) {
     // TODO: implement byte [] mutator in Java and get rid of all JNI calls in the mutator
     // framework, including this mock
-//    if (Mutator.SHOULD_MOCK) {
-//      return defaultMutateMock(buffer, size);
-//    } else {
-      return LibFuzzerMutatorFactory.LibFuzzerMutator.mutate(buffer, size, prng);
-    //}
+    //    if (Mutator.SHOULD_MOCK) {
+    //      return defaultMutateMock(buffer, size);
+    //    } else {
+    return LibFuzzerMutatorFactory.LibFuzzerMutator.mutate(buffer, size, prng);
+    // }
   }
 
   private static int defaultMutateMock(byte[] buffer, int size) {
