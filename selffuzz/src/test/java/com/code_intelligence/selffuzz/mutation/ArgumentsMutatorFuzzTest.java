@@ -66,7 +66,7 @@ public class ArgumentsMutatorFuzzTest {
    * use FuzzedDataProvider to force the top-level fuzzer to not use the mutation framework, for
    * easier debugging.
    */
-  @FuzzTest
+  @FuzzTest(isUnchained = true, maxExecutions = 1000000)
   void allTests(FuzzedDataProvider data) throws Throwable {
     int index = data.consumeInt(0, methods.size() - 1);
     Method method = methods.get(index);

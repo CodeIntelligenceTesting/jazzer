@@ -88,7 +88,10 @@ java_library(
 
 java_jni_library(
     name = "fuzz_target_runner",
-    srcs = ["FuzzTargetRunner.java"],
+    srcs = [
+        "FuzzTargetRunner.java",
+        "MurmurHash3.java",
+    ],
     # This library is loaded by the classes in the agent runtime package as it needs to be available
     # in the bootstrap class loader. It is packaged here rather than in jazzer_boostrap.jar since
     # the bootstrap class loader doesn't support resources.

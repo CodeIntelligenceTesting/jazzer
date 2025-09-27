@@ -90,7 +90,7 @@ public final class CoverageMap {
    * dynamically as classes are instrumented and should be kept as low as possible as libFuzzer has
    * to iterate over the whole map for every execution.
    */
-  private static int currentNumCounters = INITIAL_NUM_COUNTERS;
+  public static int currentNumCounters = INITIAL_NUM_COUNTERS;
 
   // Called via reflection.
   @SuppressWarnings("unused")

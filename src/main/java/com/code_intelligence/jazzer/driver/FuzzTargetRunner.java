@@ -17,7 +17,9 @@
 package com.code_intelligence.jazzer.driver;
 
 import static com.code_intelligence.jazzer.driver.Constants.JAZZER_FINDING_EXIT_CODE;
+import static com.code_intelligence.jazzer.driver.MurmurHash3.MurmurHash3_x64_128;
 import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
+import static com.code_intelligence.jazzer.runtime.CoverageMap.currentNumCounters;
 import static com.code_intelligence.jazzer.runtime.CoverageMap.getCoveredIds;
 import static com.code_intelligence.jazzer.runtime.CoverageMap.resetCoveredIds;
 import static java.lang.System.exit;
@@ -38,12 +40,14 @@ import com.code_intelligence.jazzer.utils.UnsafeProvider;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -490,7 +494,12 @@ public final class FuzzTargetRunner {
     List<byte[]> corpus = new ArrayList<>();
     corpus.add(initialBuf);
 
+    // Read corpus from disk
     List<String> corpusDirs = (List<String>) args.get("corpusDirs");
+    // filter out non-existent dirs
+    corpusDirs =
+        corpusDirs.stream().filter(dir -> Files.isDirectory(Path.of(dir))).collect(toList());
+
     for (String dirName : corpusDirs) {
       Path dir = Path.of(dirName);
       System.err.println("Corpus dirs: " + dir);
@@ -511,15 +520,7 @@ public final class FuzzTargetRunner {
       }
     }
 
-    //    if (corpusDirs != null) {
-    //      for (String corpusDir : corpusDirs) {
-    //        System.err.println("Reading corpus from: " + corpusDir);
-    //        //List<byte[]> corpusFromDir = CorpusUtils.readCorpus(corpusDir);
-    //        //System.err.println("Read " + corpusFromDir.size() + " inputs from " + corpusDir);
-    //        //corpus.addAll(corpusFromDir);
-    //      }
-    //    }
-
+    List<String> finalCorpusDirs = corpusDirs;
     Thread fuzzerThread =
         new Thread(
             () -> {
@@ -534,37 +535,108 @@ public final class FuzzTargetRunner {
               long printEvery = 1;
 
               // load corpus and see which features are covered
+              long initialTime = System.currentTimeMillis();
+
+              // Update exec speed every N runs
+              long execTimeForTimeWindow = 0;
+              long lastExecsPerSecond = 0;
+
               for (byte[] input : corpus) {
-                if (run % printEvery == 0) {
-                  System.err.println("#" + run + " corpus: " + corpus.size());
-                  printEvery *= 2;
+                unchainedMutator.read(new ByteArrayInputStream(input));
+
+                // Measure execution time
+                long startTime = System.currentTimeMillis();
+                Set<Integer> coverageIds = runInput(unchainedMutator, false);
+                execTimeForTimeWindow += System.currentTimeMillis() - startTime;
+
+                if (run % 1000 == 0) {
+                  lastExecsPerSecond = 1000 * 1000 / (execTimeForTimeWindow + 1);
+                  execTimeForTimeWindow = 0;
                 }
 
-                unchainedMutator.read(new ByteArrayInputStream(input));
-                Set<Integer> coverageIds = runInput(unchainedMutator, false);
-                // Add to known ids
-                int before = knownIds.size();
                 knownIds.addAll(coverageIds);
-                if (knownIds.size() > before) {
-                  System.err.println("New coverage from corpus input! Total: " + knownIds.size());
+
+                if (run % printEvery == 0) {
+                  System.err.println(
+                      "#"
+                          + run
+                          + " cov: "
+                          + knownIds.size()
+                          + " total: "
+                          + currentNumCounters
+                          + " corpus: "
+                          + corpus.size()
+                          + " exec/s: "
+                          + lastExecsPerSecond);
+                  printEvery *= 2;
                 }
                 run++;
               }
-              exit(0);
-
-              // limited fuzzing loop for now
+              System.err.println(
+                  "INITED with cov: "
+                      + knownIds.size()
+                      + " total: "
+                      + currentNumCounters
+                      + " corpus: "
+                      + corpus.size()
+                      + " exec/s: "
+                      + lastExecsPerSecond);
 
               while (run < maxRuns) {
-                if (run % printEvery == 0) {
-                  System.err.println("#" + run + " corpus: " + corpus.size());
-                  printEvery *= 2;
-                }
-                // select a random input from corpus
+                // TODO: corpus selection strategy
                 int index = (int) (Math.random() * corpus.size());
+
                 unchainedMutator.read(new ByteArrayInputStream(corpus.get(index)));
                 unchainedMutator.mutate(seed);
-                Set<Integer> coverageIds = runInput(unchainedMutator, true);
+                int before = knownIds.size();
+                long startTime = System.currentTimeMillis();
+                Set<Integer> coverageIds = runInput(unchainedMutator, false);
+                long execTime = System.currentTimeMillis() - startTime;
+                execTimeForTimeWindow += execTime;
+                knownIds.addAll(coverageIds);
 
+                // add to corpus if new coverage is found
+                if (knownIds.size() > before) {
+                  // new coverage found, add to corpus
+                  ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                  unchainedMutator.write(baos);
+                  final byte[] mutatedBytes = baos.toByteArray();
+                  corpus.add(mutatedBytes);
+
+                  // also write out to disk to the first corpus dir
+                  if (!finalCorpusDirs.isEmpty()) {
+                    // make a hash of the input (use quick non-cryptographic hash)
+                    String fileName = MurmurHash3_x64_128(mutatedBytes, 0);
+                    Path filePath = Paths.get(finalCorpusDirs.get(0), fileName);
+                    try (OutputStream os = Files.newOutputStream(filePath)) {
+                      os.write(mutatedBytes);
+                      System.err.println("Wrote new corpus entry to " + fileName);
+                    } catch (IOException e) {
+                      System.err.println(
+                          "Failed to write new corpus entry to " + fileName + " : " + e);
+                    }
+                  }
+                }
+
+                if (run % 1000 == 0) {
+                  lastExecsPerSecond = 1000 * 1000 / (execTimeForTimeWindow + 1);
+                  execTimeForTimeWindow = 0;
+                }
+
+                if (run % printEvery == 0) {
+                  System.err.println(
+                      "#"
+                          + run
+                          + " cov: "
+                          + knownIds.size()
+                          + " total: "
+                          + currentNumCounters
+                          + " corpus: "
+                          + corpus.size()
+                          + " exec/s: "
+                          + lastExecsPerSecond);
+                  printEvery *= 2;
+                }
                 seed++;
                 run++;
               }
