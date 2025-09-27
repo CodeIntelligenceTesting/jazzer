@@ -29,7 +29,6 @@ cc_library(
         ":fuzz_target_runner",
         ":jazzer_fuzzer_callbacks",
         ":libfuzzer_callbacks",
-        ":mutator",
     ],
 )
 
@@ -122,14 +121,6 @@ cc_library(
         "//src/main/java/com/code_intelligence/jazzer/runtime:trace_data_flow_native_callbacks.hdrs",
         "@abseil-cpp//absl/strings",
     ],
-    # Symbols are only referenced dynamically via JNI.
-    alwayslink = True,
-)
-
-cc_library(
-    name = "mutator",
-    srcs = ["mutator.cpp"],
-    deps = ["//src/main/java/com/code_intelligence/jazzer/runtime:mutator.hdrs"],
     # Symbols are only referenced dynamically via JNI.
     alwayslink = True,
 )

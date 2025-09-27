@@ -162,8 +162,8 @@ final class FloatingPointMutatorFactory implements MutatorFactory {
       return specialValuesArray;
     }
 
-    public float mutateWithLibFuzzer(float value) {
-      return LibFuzzerMutate.mutateDefault(value, this, 0);
+    public float mutateWithLibFuzzer(float value, PseudoRandom prng) {
+      return LibFuzzerMutate.mutateDefault(value, this, 0, prng);
     }
 
     @Override
@@ -196,7 +196,7 @@ final class FloatingPointMutatorFactory implements MutatorFactory {
             result = mutateWithMathematicalFn(value, prng);
             break;
           case 4:
-            result = mutateWithLibFuzzer(value);
+            result = mutateWithLibFuzzer(value, prng);
             break;
           case 5: // random in range cannot exceed the given bounds (and cannot be NaN)
             result = prng.closedRange(minValue, maxValue);
@@ -442,8 +442,8 @@ final class FloatingPointMutatorFactory implements MutatorFactory {
           .toArray();
     }
 
-    public double mutateWithLibFuzzer(double value) {
-      return LibFuzzerMutate.mutateDefault(value, this, 0);
+    public double mutateWithLibFuzzer(double value, PseudoRandom prng) {
+      return LibFuzzerMutate.mutateDefault(value, this, 0, prng);
     }
 
     @Override
@@ -476,7 +476,7 @@ final class FloatingPointMutatorFactory implements MutatorFactory {
             result = mutateWithMathematicalFn(value, prng);
             break;
           case 4:
-            result = mutateWithLibFuzzer(value);
+            result = mutateWithLibFuzzer(value, prng);
             break;
           case 5: // random in range cannot exceed the given bounds (and cannot be NaN)
             result = prng.closedRange(minValue, maxValue);

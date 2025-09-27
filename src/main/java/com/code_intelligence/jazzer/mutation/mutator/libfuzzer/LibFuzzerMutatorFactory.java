@@ -64,7 +64,7 @@ public final class LibFuzzerMutatorFactory {
   }
 
   @Immutable
-  private static final class LibFuzzerMutator extends SerializingMutator<byte[]> {
+  public static final class LibFuzzerMutator extends SerializingMutator<byte[]> {
     private final int minLength;
 
     private final int maxLength;
@@ -128,6 +128,10 @@ public final class LibFuzzerMutatorFactory {
     public byte[] mutate(byte[] value, PseudoRandom prng) {
       int maxLengthIncrease = maxLength - value.length;
       return enforceLength(prng.pickIn(MUTATION_FUNCTIONS).mutate(value, maxLengthIncrease, prng));
+    }
+
+    public static byte[] mutate(byte[] value, int maxLengthIncrease, PseudoRandom prng) {
+      return prng.pickIn(MUTATION_FUNCTIONS).mutate(value, maxLengthIncrease, prng);
     }
 
     public static byte[] changeBit(byte[] value, int maxSizeIncrease, PseudoRandom prng) {

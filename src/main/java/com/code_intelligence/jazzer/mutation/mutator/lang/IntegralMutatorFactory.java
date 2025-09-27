@@ -50,8 +50,8 @@ final class IntegralMutatorFactory implements MutatorFactory {
       return Optional.of(
           new AbstractIntegralMutator<Byte>(type, Byte.MIN_VALUE, Byte.MAX_VALUE) {
             @Override
-            protected long mutateWithLibFuzzer(long value) {
-              return LibFuzzerMutate.mutateDefault((byte) value, this, 0);
+            protected long mutateWithLibFuzzer(long value, PseudoRandom prng) {
+              return LibFuzzerMutate.mutateDefault((byte) value, this, 0, prng);
             }
 
             @Override
@@ -83,8 +83,8 @@ final class IntegralMutatorFactory implements MutatorFactory {
       return Optional.of(
           new AbstractIntegralMutator<Short>(type, Short.MIN_VALUE, Short.MAX_VALUE) {
             @Override
-            protected long mutateWithLibFuzzer(long value) {
-              return LibFuzzerMutate.mutateDefault((short) value, this, 0);
+            protected long mutateWithLibFuzzer(long value, PseudoRandom prng) {
+              return LibFuzzerMutate.mutateDefault((short) value, this, 0, prng);
             }
 
             @Override
@@ -116,8 +116,8 @@ final class IntegralMutatorFactory implements MutatorFactory {
       return Optional.of(
           new AbstractIntegralMutator<Integer>(type, Integer.MIN_VALUE, Integer.MAX_VALUE) {
             @Override
-            protected long mutateWithLibFuzzer(long value) {
-              return LibFuzzerMutate.mutateDefault((int) value, this, 0);
+            protected long mutateWithLibFuzzer(long value, PseudoRandom prng) {
+              return LibFuzzerMutate.mutateDefault((int) value, this, 0, prng);
             }
 
             @Override
@@ -149,8 +149,8 @@ final class IntegralMutatorFactory implements MutatorFactory {
       return Optional.of(
           new AbstractIntegralMutator<Long>(type, Long.MIN_VALUE, Long.MAX_VALUE) {
             @Override
-            protected long mutateWithLibFuzzer(long value) {
-              return LibFuzzerMutate.mutateDefault(value, this, 0);
+            protected long mutateWithLibFuzzer(long value, PseudoRandom prng) {
+              return LibFuzzerMutate.mutateDefault(value, this, 0, prng);
             }
 
             @Override
@@ -290,7 +290,7 @@ final class IntegralMutatorFactory implements MutatorFactory {
             break;
           case 3:
             // TODO: Replace this with a structure-aware dictionary/TORC search similar to fuzztest.
-            value = forceInRange(mutateWithLibFuzzer(value));
+            value = forceInRange(mutateWithLibFuzzer(value, prng));
             break;
         }
       } while (value == previousValue);
@@ -328,7 +328,7 @@ final class IntegralMutatorFactory implements MutatorFactory {
     }
 
     @ForOverride
-    protected abstract long mutateWithLibFuzzer(long value);
+    protected abstract long mutateWithLibFuzzer(long value, PseudoRandom prng);
 
     /**
      * Force value into the closed interval [minValue, maxValue] while preserving as many of its
