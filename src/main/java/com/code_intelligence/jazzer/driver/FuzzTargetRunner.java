@@ -479,6 +479,8 @@ public final class FuzzTargetRunner {
     // TODO: use UnchainedOptions instead
     Long maxRuns = (Long) args.get("maxRuns");
     Long maxDuration = (Long) args.get("maxDuration");
+    System.err.println("maxRuns: " + maxRuns);
+    System.err.println("maxDuration: " + maxDuration);
     // if seed is null, use a random seed and print it
 
     // make byte arrey of size 1 containing "\n"
@@ -517,6 +519,9 @@ public final class FuzzTargetRunner {
 
     // Used in the lambda below, has to be effectively final
     List<String> finalCorpusDirs = corpusDirs;
+
+    // should stop is used to signal the fuzzer thread to stop
+    boolean shouldStop = false;
 
     Thread fuzzerThread =
         new Thread(
@@ -596,7 +601,11 @@ public final class FuzzTargetRunner {
                       + " exec/s: "
                       + lastExecsPerSecond);
 
-              while (run < maxRuns) {
+              while (maxRuns <= 0 || run < maxRuns) {
+                if (Thread.interrupted()) {
+                  System.err.println("Fuzzer thread stopping");
+                  break;
+                }
                 // TODO: corpus selection strategy
                 int index = (int) (Math.random() * corpus.size());
 
@@ -656,9 +665,30 @@ public final class FuzzTargetRunner {
               }
             });
     fuzzerThread.start();
+
+    // Start the duration thread that kills the fuzzer thread after maxDuration seconds.
+    Thread durationThread = null;
+    if (maxDuration > 0) {
+      durationThread =
+          new Thread(
+              () -> {
+                try {
+                  Thread.sleep(maxDuration * 1000);
+                } catch (InterruptedException e) {
+                  e.printStackTrace();
+                }
+                System.err.println("Max duration reached, stopping");
+                fuzzerThread.interrupt();
+              });
+      durationThread.setDaemon(true);
+      durationThread.start();
+    }
+
     try {
       fuzzerThread.join();
     } catch (InterruptedException e) {
+      // stop duration thread
+      if (durationThread != null) durationThread.interrupt();
       e.printStackTrace();
     }
 

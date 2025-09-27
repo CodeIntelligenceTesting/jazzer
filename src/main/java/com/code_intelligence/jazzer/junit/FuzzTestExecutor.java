@@ -131,9 +131,7 @@ class FuzzTestExecutor {
     fuzzerArgs.put("corpusDirs", corpusFilesOrDirs);
 
     fuzzerArgs.put("maxDuration", durationStringToSeconds(maxDuration));
-    if (maxRuns > 0) {
-      fuzzerArgs.put("maxRuns", maxRuns);
-    }
+    fuzzerArgs.put("maxRuns", maxRuns);
 
     if (Utils.permissivelyParseBoolean(
         context.getConfigurationParameter("jazzer.valueprofile").orElse("false"))) {

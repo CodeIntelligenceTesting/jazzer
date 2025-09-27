@@ -114,7 +114,7 @@ public @interface FuzzTest {
    *
    * <p>This option has no effect during regression testing.
    */
-  String maxDuration() default "5m";
+  String maxDuration() default "10s";
 
   /**
    * If set to a positive number, the fuzz test function will be executed at most this many times
@@ -127,7 +127,7 @@ public @interface FuzzTest {
    */
   long maxExecutions() default 0;
 
-  boolean isUnchained() default false;
+  boolean isUnchained() default true;
 
   /**
    * Controls the JUnit lifecycle of fuzz tests during fuzzing.
