@@ -183,18 +183,10 @@ class FuzzTestExtensions
     } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException ignore) {
     }
 
-    // Only fuzz the first @FuzzTest that makes it here.
-    if (FuzzTestExtensions.fuzzTestMethod.compareAndSet(
-            null, extensionContext.getRequiredTestMethod())
-        || extensionContext
-            .getRequiredTestMethod()
-            .equals(FuzzTestExtensions.fuzzTestMethod.get())) {
-      return ConditionEvaluationResult.enabled(
-          "Fuzzing " + extensionContext.getRequiredTestMethod());
-    }
-    return ConditionEvaluationResult.disabled(
-        "Only one fuzz test can be run at a time, but multiple tests have been annotated with"
-            + " @FuzzTest");
+    System.err.println(
+        "******************** extension context" + extensionContext.getRequiredTestMethod());
+    FuzzTestExtensions.fuzzTestMethod.set(extensionContext.getRequiredTestMethod());
+    return ConditionEvaluationResult.enabled("Fuzzing " + extensionContext.getRequiredTestMethod());
   }
 
   private static SeedSerializer getOrCreateSeedSerializer(ExtensionContext extensionContext) {

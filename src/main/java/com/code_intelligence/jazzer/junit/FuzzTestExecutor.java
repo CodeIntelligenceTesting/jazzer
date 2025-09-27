@@ -80,11 +80,6 @@ class FuzzTestExecutor {
   public static FuzzTestExecutor prepareUnchained(
       ExtensionContext context, String maxDuration, long maxRuns, Optional<Path> dictionaryPath)
       throws IOException {
-    if (!hasBeenPrepared.compareAndSet(false, true)) {
-      throw new FuzzTestConfigurationError(
-          "FuzzTestExecutor#prepareUnchained can only be called once per test run");
-    }
-
     List<ArgumentsSource> allSources =
         AnnotationSupport.findRepeatableAnnotations(
             context.getRequiredTestMethod(), ArgumentsSource.class);
@@ -378,9 +373,6 @@ class FuzzTestExecutor {
       Optional<Path> dictionaryPath,
       boolean isUnchained)
       throws IOException {
-    if (!agentInstalled.compareAndSet(false, true)) {
-      return;
-    }
     if (Utils.isFuzzing(extensionContext)) {
       FuzzTestExecutor executor =
           isUnchained

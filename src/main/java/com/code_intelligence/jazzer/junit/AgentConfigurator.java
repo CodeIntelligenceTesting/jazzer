@@ -46,10 +46,6 @@ class AgentConfigurator {
   }
 
   static void forFuzzing(ExtensionContext extensionContext) {
-    if (!hasBeenConfigured.compareAndSet(false, true)) {
-      throw new IllegalStateException("Only a single fuzz test should be executed per fuzzing run");
-    }
-
     applyCommonConfiguration(extensionContext);
 
     Opt.instrument.setIfDefault(determineInstrumentationFilters(extensionContext));
