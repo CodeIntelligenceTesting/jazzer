@@ -28,6 +28,8 @@ build --features=layering_check
 build:macos --apple_crosstool_top=@local_config_apple_cc//:toolchain
 build:macos --crosstool_top=@local_config_apple_cc//:toolchain
 build:macos --host_crosstool_top=@local_config_apple_cc//:toolchain
+build:macos --cxxopt=-std=c++17
+build:macos --host_cxxopt=-std=c++17
 
 # Java
 # Always build for Java 8, even with a newer JDK. This ensures that all artifacts we release are
@@ -66,6 +68,8 @@ build --android_platforms=//:android_arm64
 build:windows --extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl
 build:windows --extra_execution_platforms=//bazel/platforms:x64_windows-clang-cl
 build:windows --features=static_link_msvcrt
+build:windows --cxxopt=/std:c++17
+build:windows --host_cxxopt=/std:c++17
 # Required as PATH doubles as the shared library search path on Windows and the
 # Java agent functionality depends on system-provided shared libraries.
 test:windows --noincompatible_strict_action_env
