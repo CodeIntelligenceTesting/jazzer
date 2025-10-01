@@ -19,18 +19,18 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static java.lang.String.format;
 
-import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
+import com.code_intelligence.jazzer.mutation.support.RangeSupport;
+import com.code_intelligence.jazzer.mutation.support.RangeSupport.LongRange;
 import com.google.errorprone.annotations.ForOverride;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
 import java.util.Optional;
@@ -199,33 +199,17 @@ final class IntegralMutatorFactory implements MutatorFactory {
 
     AbstractIntegralMutator(
         AnnotatedType type, long defaultMinValueForType, long defaultMaxValueForType) {
-      long minValue = defaultMinValueForType;
-      long maxValue = defaultMaxValueForType;
-      // InRange is not repeatable, so the loop body will apply exactly once.
-      for (Annotation annotation : type.getAnnotations()) {
-        if (annotation instanceof InRange) {
-          InRange inRange = (InRange) annotation;
-          // Since we use a single annotation for all integral types and its min and max fields are
-          // longs, we have to ignore them if they are at their default values.
-          //
-          // This results in a small quirk that is probably acceptable: If someone specifies
-          // @InRange(max = Long.MAX_VALUE) on a byte, we will not fail but silently use
-          // Byte.MAX_VALUE instead. IDEs will warn about the redundant specification of the default
-          // value, so this should not be a problem in practice.
-          if (inRange.min() != Long.MIN_VALUE) {
-            require(
-                inRange.min() >= defaultMinValueForType,
-                format("@InRange.min=%d is out of range: %s", inRange.min(), type.getType()));
-            minValue = inRange.min();
-          }
-          if (inRange.max() != Long.MAX_VALUE) {
-            require(
-                inRange.max() <= defaultMaxValueForType,
-                format("@InRange.max=%d is out of range: %s", inRange.max(), type.getType()));
-            maxValue = inRange.max();
-          }
-        }
-      }
+      LongRange resolved =
+          RangeSupport.resolveIntegralRange(type, defaultMinValueForType, defaultMaxValueForType);
+      long minValue = resolved.min;
+      long maxValue = resolved.max;
+      // Ensure range does not specify values outside the type bounds.
+      require(
+          minValue >= defaultMinValueForType,
+          format("@InRange.min=%d is out of range: %s", minValue, type.getType()));
+      require(
+          maxValue <= defaultMaxValueForType,
+          format("@InRange.max=%d is out of range: %s", maxValue, type.getType()));
 
       require(
           minValue <= maxValue,

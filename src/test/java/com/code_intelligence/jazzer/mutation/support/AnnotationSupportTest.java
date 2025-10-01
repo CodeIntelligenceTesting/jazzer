@@ -24,7 +24,11 @@ import com.code_intelligence.jazzer.mutation.annotation.Ascii;
 import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
 import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
+import com.code_intelligence.jazzer.mutation.annotation.Negative;
+import com.code_intelligence.jazzer.mutation.annotation.NonNegative;
+import com.code_intelligence.jazzer.mutation.annotation.NonPositive;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.Positive;
 import com.code_intelligence.jazzer.mutation.annotation.UrlSegment;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
@@ -85,6 +89,10 @@ public class AnnotationSupportTest {
         arguments(new TypeHolder<String @InRange(min = 10) []>() {}.annotatedType()),
         arguments(new TypeHolder<@UrlSegment Integer>() {}.annotatedType()),
         arguments(new TypeHolder<@UrlSegment List<String>>() {}.annotatedType()),
+        arguments(new TypeHolder<@Positive String>() {}.annotatedType()),
+        arguments(new TypeHolder<@Negative String>() {}.annotatedType()),
+        arguments(new TypeHolder<@NonNegative String>() {}.annotatedType()),
+        arguments(new TypeHolder<@NonPositive String>() {}.annotatedType()),
         // deep
         arguments(
             new TypeHolder<

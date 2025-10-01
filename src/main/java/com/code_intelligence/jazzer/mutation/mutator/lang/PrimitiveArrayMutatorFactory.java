@@ -23,8 +23,6 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirs
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.forwardAnnotations;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withLength;
 
-import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
-import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
@@ -33,6 +31,10 @@ import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutatorFactory;
+import com.code_intelligence.jazzer.mutation.support.RangeSupport;
+import com.code_intelligence.jazzer.mutation.support.RangeSupport.DoubleRange;
+import com.code_intelligence.jazzer.mutation.support.RangeSupport.FloatRange;
+import com.code_intelligence.jazzer.mutation.support.RangeSupport.LongRange;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -138,45 +140,64 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
 
     private void extractRange(AnnotatedType type) {
       Optional<InRange> inRange = Optional.ofNullable(type.getAnnotation(InRange.class));
-      Optional<FloatInRange> inRangeFloat =
-          Optional.ofNullable(type.getAnnotation(FloatInRange.class));
-      Optional<DoubleInRange> inRangeDouble =
-          Optional.ofNullable(type.getAnnotation(DoubleInRange.class));
 
       switch (type.getType().getTypeName()) {
         case "int":
-          minRange = inRange.map(InRange::min).orElse((long) Integer.MIN_VALUE);
-          maxRange = inRange.map(InRange::max).orElse((long) Integer.MAX_VALUE);
+          {
+            LongRange r =
+                RangeSupport.resolveIntegralRange(type, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            minRange = r.min;
+            maxRange = r.max;
+          }
           break;
         case "long":
-          minRange = inRange.map(InRange::min).orElse(Long.MIN_VALUE);
-          maxRange = inRange.map(InRange::max).orElse(Long.MAX_VALUE);
+          {
+            LongRange r = RangeSupport.resolveIntegralRange(type, Long.MIN_VALUE, Long.MAX_VALUE);
+            minRange = r.min;
+            maxRange = r.max;
+          }
           break;
         case "short":
-          minRange = inRange.map(InRange::min).orElse((long) Short.MIN_VALUE);
-          maxRange = inRange.map(InRange::max).orElse((long) Short.MAX_VALUE);
+          {
+            LongRange r = RangeSupport.resolveIntegralRange(type, Short.MIN_VALUE, Short.MAX_VALUE);
+            minRange = r.min;
+            maxRange = r.max;
+          }
           break;
         case "char":
           minRange = inRange.map(InRange::min).orElse((long) Character.MIN_VALUE);
           maxRange = inRange.map(InRange::max).orElse((long) Character.MAX_VALUE);
           break;
         case "float":
-          minFloatRange = inRangeFloat.map(FloatInRange::min).orElse(Float.NEGATIVE_INFINITY);
-          maxFloatRange = inRangeFloat.map(FloatInRange::max).orElse(Float.POSITIVE_INFINITY);
-          allowNaN = inRangeFloat.map(FloatInRange::allowNaN).orElse(false);
+          {
+            FloatRange r =
+                RangeSupport.resolveFloatRange(
+                    type, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, false);
+            minFloatRange = r.min;
+            maxFloatRange = r.max;
+            allowNaN = r.allowNaN;
+          }
           break;
         case "double":
-          minDoubleRange = inRangeDouble.map(DoubleInRange::min).orElse(Double.NEGATIVE_INFINITY);
-          maxDoubleRange = inRangeDouble.map(DoubleInRange::max).orElse(Double.POSITIVE_INFINITY);
-          allowNaN = inRangeDouble.map(DoubleInRange::allowNaN).orElse(false);
+          {
+            DoubleRange r =
+                RangeSupport.resolveDoubleRange(
+                    type, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, false);
+            minDoubleRange = r.min;
+            maxDoubleRange = r.max;
+            allowNaN = r.allowNaN;
+          }
           break;
         case "boolean":
-          minRange = inRange.map(InRange::min).orElse(0L);
-          maxRange = inRange.map(InRange::max).orElse(1L);
+          minRange = 0L;
+          maxRange = 1L;
           break;
         case "byte":
-          minRange = inRange.map(InRange::min).orElse((long) Byte.MIN_VALUE);
-          maxRange = inRange.map(InRange::max).orElse((long) Byte.MAX_VALUE);
+          {
+            LongRange r = RangeSupport.resolveIntegralRange(type, Byte.MIN_VALUE, Byte.MAX_VALUE);
+            minRange = r.min;
+            maxRange = r.max;
+          }
           break;
         default:
           throw new IllegalStateException("Unexpected type: " + type);

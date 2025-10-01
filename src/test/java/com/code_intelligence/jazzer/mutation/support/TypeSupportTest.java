@@ -31,7 +31,11 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
 import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
+import com.code_intelligence.jazzer.mutation.annotation.Negative;
+import com.code_intelligence.jazzer.mutation.annotation.NonNegative;
+import com.code_intelligence.jazzer.mutation.annotation.NonPositive;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+import com.code_intelligence.jazzer.mutation.annotation.Positive;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
@@ -444,7 +448,35 @@ class TypeSupportTest {
         arguments(
             new TypeHolder<@NotNull @InRange(min = 10) Integer>() {}.annotatedType(),
             new TypeHolder<@InRange(min = 20) Integer>() {}.annotatedType(),
-            new TypeHolder<@InRange(min = 20) @NotNull Integer>() {}.annotatedType()));
+            new TypeHolder<@InRange(min = 20) @NotNull Integer>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@Positive Float>() {}.annotatedType(),
+            new TypeHolder<@NotNull Float>() {}.annotatedType(),
+            new TypeHolder<@NotNull @Positive Float>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@Negative Float>() {}.annotatedType(),
+            new TypeHolder<@NotNull Float>() {}.annotatedType(),
+            new TypeHolder<@NotNull @Negative Float>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@NonPositive Float>() {}.annotatedType(),
+            new TypeHolder<@NotNull Float>() {}.annotatedType(),
+            new TypeHolder<@NotNull @NonPositive Float>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@NonNegative Float>() {}.annotatedType(),
+            new TypeHolder<@NotNull Float>() {}.annotatedType(),
+            new TypeHolder<@NotNull @NonNegative Float>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@Negative Double>() {}.annotatedType(),
+            new TypeHolder<@NotNull Double>() {}.annotatedType(),
+            new TypeHolder<@NotNull @Negative Double>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@NonPositive Double>() {}.annotatedType(),
+            new TypeHolder<@NotNull Double>() {}.annotatedType(),
+            new TypeHolder<@NotNull @NonPositive Double>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@NonNegative Double>() {}.annotatedType(),
+            new TypeHolder<@NotNull Double>() {}.annotatedType(),
+            new TypeHolder<@NotNull @NonNegative Double>() {}.annotatedType()));
   }
 
   @ParameterizedTest
