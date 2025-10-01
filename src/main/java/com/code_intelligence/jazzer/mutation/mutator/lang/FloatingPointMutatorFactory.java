@@ -19,18 +19,18 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static java.lang.String.format;
 
-import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
-import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
+import com.code_intelligence.jazzer.mutation.support.RangeSupport;
+import com.code_intelligence.jazzer.mutation.support.RangeSupport.DoubleRange;
+import com.code_intelligence.jazzer.mutation.support.RangeSupport.FloatRange;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -109,18 +109,12 @@ final class FloatingPointMutatorFactory implements MutatorFactory {
         float defaultMinValueForType,
         float defaultMaxValueForType,
         boolean defaultAllowNaN) {
-      float minValue = defaultMinValueForType;
-      float maxValue = defaultMaxValueForType;
-      boolean allowNaN = defaultAllowNaN;
-      // InRange is not repeatable, so the loop body will apply at most once.
-      for (Annotation annotation : type.getAnnotations()) {
-        if (annotation instanceof FloatInRange) {
-          FloatInRange floatInRange = (FloatInRange) annotation;
-          minValue = floatInRange.min();
-          maxValue = floatInRange.max();
-          allowNaN = floatInRange.allowNaN();
-        }
-      }
+      FloatRange resolved =
+          RangeSupport.resolveFloatRange(
+              type, defaultMinValueForType, defaultMaxValueForType, defaultAllowNaN);
+      float minValue = resolved.min;
+      float maxValue = resolved.max;
+      boolean allowNaN = resolved.allowNaN;
 
       require(
           minValue <= maxValue,
@@ -389,18 +383,12 @@ final class FloatingPointMutatorFactory implements MutatorFactory {
         double defaultMinValueForType,
         double defaultMaxValueForType,
         boolean defaultAllowNaN) {
-      double minValue = defaultMinValueForType;
-      double maxValue = defaultMaxValueForType;
-      boolean allowNaN = defaultAllowNaN;
-      // InRange is not repeatable, so the loop body will apply at most once.
-      for (Annotation annotation : type.getAnnotations()) {
-        if (annotation instanceof DoubleInRange) {
-          DoubleInRange doubleInRange = (DoubleInRange) annotation;
-          minValue = doubleInRange.min();
-          maxValue = doubleInRange.max();
-          allowNaN = doubleInRange.allowNaN();
-        }
-      }
+      DoubleRange resolved =
+          RangeSupport.resolveDoubleRange(
+              type, defaultMinValueForType, defaultMaxValueForType, defaultAllowNaN);
+      double minValue = resolved.min;
+      double maxValue = resolved.max;
+      boolean allowNaN = resolved.allowNaN;
 
       require(
           !Double.isNaN(minValue) && !Double.isNaN(maxValue),
