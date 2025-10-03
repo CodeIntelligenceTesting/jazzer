@@ -66,7 +66,7 @@ public class ArgumentsMutatorFuzzTest {
    * use FuzzedDataProvider to force the top-level fuzzer to not use the mutation framework, for
    * easier debugging.
    */
-  @FuzzTest(isUnchained = true, maxExecutions = 1000000)
+  @FuzzTest(isUnchained = true, maxExecutions = 10000000, maxDuration = "10m")
   void allTests(FuzzedDataProvider data) throws Throwable {
     int index = data.consumeInt(0, methods.size() - 1);
     Method method = methods.get(index);
@@ -92,6 +92,16 @@ public class ArgumentsMutatorFuzzTest {
       mutator.crossOver(mutated, inited, seed);
     } catch (Exception e) {
       throw new RuntimeException("In method: " + method, e);
+    }
+  }
+
+  @Solo
+  @SelfFuzzTest
+  void fuzzStrings_torc(@NotNull String s0) {
+    if (s0.equals(
+        "qbfdbas891rbujebfrldsafbhd81irbewhavfsgdalvfdlasuvfzu3vrvesadolufdvsalfv"
+            + " dsagolufvdgsalfvffdshakfvdsakfvdksavfgdksafdasgfzdasgfzdasgfdsafdsafdasvfdavsfdasfdasvfdsafdsafdsafdsafdsafdsafdasfdasfdsafdsafdsa")) {
+      throw new RuntimeException("Found it!");
     }
   }
 
