@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.runtime;
 
+import com.code_intelligence.jazzer.mutation.mutator.torc.Torc;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
@@ -45,8 +46,10 @@ public final class TraceDataFlowNativeCallbacks {
 
   // public static native void traceMemcmp(byte[] b1, byte[] b2, int result, int pc);
   public static void traceMemcmp(byte[] b1, byte[] b2, int result, int pc) {
-    // System.out.println("traceMemcmp called with: "+ Arrays.toString(b1)+" ,
-    // "+Arrays.toString(b2)+" , "+result+" , "+pc);
+    Torc.add(b1);
+    Torc.add(b2);
+    // System.out.println("traceMemcmp called with: "+ Arrays.toString(b1)+ ","
+    // +Arrays.toString(b2)+" , "+result+" , "+pc);
 
   }
 

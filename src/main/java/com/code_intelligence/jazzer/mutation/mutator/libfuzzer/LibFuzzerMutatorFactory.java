@@ -23,6 +23,7 @@ import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.mutator.torc.Torc;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Immutable;
@@ -51,6 +52,7 @@ public final class LibFuzzerMutatorFactory {
     LibFuzzerMutator::insertRepeatedBytes,
     LibFuzzerMutator::changeByte,
     LibFuzzerMutator::changeBit,
+    LibFuzzerMutator::insertTorcBytes
   };
 
   @CheckReturnValue
@@ -191,6 +193,23 @@ public final class LibFuzzerMutatorFactory {
       for (int i = 0; i < insertSize; i++) {
         out[insertPos + i] = repeatedByte;
       }
+      System.arraycopy(value, insertPos, out, insertPos + insertSize, value.length - insertPos);
+      return out;
+    }
+
+    public static byte[] insertTorcBytes(byte[] value, int maxSizeIncrease, PseudoRandom prng) {
+      if (maxSizeIncrease == 0) {
+        return value;
+      }
+      byte[] torcBytes = Torc.get(prng);
+      if (torcBytes == null || torcBytes.length == 0) {
+        return value;
+      }
+      int insertPos = prng.indexIn(value.length + 1);
+      int insertSize = Math.min(torcBytes.length, maxSizeIncrease);
+      byte[] out = new byte[value.length + insertSize];
+      System.arraycopy(value, 0, out, 0, insertPos);
+      System.arraycopy(torcBytes, 0, out, insertPos, insertSize);
       System.arraycopy(value, insertPos, out, insertPos + insertSize, value.length - insertPos);
       return out;
     }

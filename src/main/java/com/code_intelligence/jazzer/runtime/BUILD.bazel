@@ -128,7 +128,10 @@ java_jni_library(
     visibility = [
         "//src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
     ],
-    deps = ["@maven//:org_ow2_asm_asm"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/torc",
+        "@maven//:org_ow2_asm_asm",
+    ],
 )
 
 java_jni_library(

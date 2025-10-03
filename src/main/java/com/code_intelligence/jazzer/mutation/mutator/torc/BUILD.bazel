@@ -1,0 +1,15 @@
+java_library(
+    name = "torc",
+    srcs = [
+        "Torc.java",
+    ],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/mutation:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/mutator/libfuzzer:__pkg__",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:__pkg__",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+    ],
+)

@@ -500,22 +500,21 @@ public final class FuzzTargetRunner {
     for (String dirName : corpusDirs) {
       Path dir = Path.of(dirName);
       System.err.println("Corpus dirs: " + dir);
-      // add all files in dir to coprus
-      try (Stream<Path> paths = Files.walk(dir)) {
-        List<Path> files = paths.filter(Files::isRegularFile).collect(toList());
-        System.err.println("Found " + files.size() + " files in corpus dir");
-        for (Path file : files) {
-          try {
-            byte[] fileBytes = Files.readAllBytes(file);
-            initialCorpus.add(fileBytes);
-          } catch (IOException e) {
-            System.err.println("Failed to read file: " + file + " : " + e);
+      // Get the number of files in the corpus dir
+      if (!Files.isDirectory(dir)) {
+        throw new IllegalArgumentException("Corpus dir is not a directory: " + dir);
+      }
+      try {
+        for (Path f : Files.newDirectoryStream(dir)) {
+          if (Files.isRegularFile(f)) {
+            initialCorpus.add(Files.readAllBytes(f));
           }
         }
       } catch (IOException e) {
-        System.err.println("Failed to read corpus dir: " + dir + " : " + e);
+        throw new RuntimeException("Failed to read corpus dir: " + dir, e);
       }
     }
+    System.err.println("Initial corpus size: " + initialCorpus.size());
 
     // Used in the lambda below, has to be effectively final
     List<String> finalCorpusDirs = corpusDirs;
