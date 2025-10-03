@@ -128,12 +128,12 @@ public abstract class OptItem<T> implements Supplier<T> {
    *     {@code newValue}.
    */
   public final boolean setIfDefault(T newValue) throws IllegalOptionValueException {
-//    if (value != null) {
-//      throw new IllegalStateException(
-//          String.format(
-//              "Attempted to set of option %s to %s, but it has already been read elsewhere",
-//              propertyName(), newValue));
-//    }
+    //    if (value != null) {
+    //      throw new IllegalStateException(
+    //          String.format(
+    //              "Attempted to set of option %s to %s, but it has already been read elsewhere",
+    //              propertyName(), newValue));
+    //    }
     Optional<T> explicitValue = getExplicitValue();
     if (explicitValue.isPresent()) {
       value = explicitValue.get();
