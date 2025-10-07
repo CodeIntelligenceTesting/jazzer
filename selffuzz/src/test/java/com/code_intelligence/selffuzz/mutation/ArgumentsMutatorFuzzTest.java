@@ -137,7 +137,7 @@ public class ArgumentsMutatorFuzzTest {
   void fuzz_EmptyArgs(@NotNull EmptyArgs emptyArgs) {}
 
   @SelfFuzzTest
-  void fuzz_Builder(@NotNull ImmutableBuilder b) {}
+  void fuzz_ImmutableBean(@NotNull ImmutableBean b) {}
 
   @SelfFuzzTest
   void fuzzPrimitives(
