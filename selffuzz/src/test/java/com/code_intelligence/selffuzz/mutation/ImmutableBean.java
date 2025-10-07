@@ -20,16 +20,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class ImmutableBuilder {
+public class ImmutableBean {
   private final int i;
   private final boolean b;
   private final List<String> list;
 
-  public ImmutableBuilder() {
+  public ImmutableBean() {
     this(0, false, Collections.emptyList());
   }
 
-  private ImmutableBuilder(int i, boolean b, List<String> list) {
+  private ImmutableBean(int i, boolean b, List<String> list) {
     this.i = i;
     this.b = b;
     this.list = list;
@@ -43,25 +43,29 @@ public class ImmutableBuilder {
     return b;
   }
 
-  public ImmutableBuilder withI(int i) {
-    return new ImmutableBuilder(i, b, list);
+  public ImmutableBean withI(int i) {
+    return new ImmutableBean(i, b, list);
   }
 
   // Both withX and setX are supported on immutable builders.
-  public ImmutableBuilder setB(boolean b) {
-    return new ImmutableBuilder(i, b, list);
+  public ImmutableBean setB(boolean b) {
+    return new ImmutableBean(i, b, list);
   }
 
-  public ImmutableBuilder setList(List<String> list) {
-    return new ImmutableBuilder(i, b, list);
+  public ImmutableBean setList(List<String> list) {
+    return new ImmutableBean(i, b, list);
+  }
+
+  public List<String> getList() {
+    return list;
   }
 
   @Override
   @SuppressWarnings("PatternVariableCanBeUsed")
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof ImmutableBuilder)) return false;
-    ImmutableBuilder that = (ImmutableBuilder) o;
+    if (!(o instanceof ImmutableBean)) return false;
+    ImmutableBean that = (ImmutableBean) o;
     return i == that.i && b == that.b;
   }
 

@@ -6,7 +6,7 @@ java_fuzz_target_test(
         "ArgumentsMutatorFuzzTest.java",
         "BeanWithParent.java",
         "ConstructorPropertiesAnnotatedBean.java",
-        "ImmutableBuilder.java",
+        "ImmutableBean.java",
     ],
     data = ["//selffuzz/src/test/resources:ArgumentsMutatorFuzzTest-corpus"],
     fuzzer_args = [
