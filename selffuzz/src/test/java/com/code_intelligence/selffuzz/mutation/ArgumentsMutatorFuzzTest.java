@@ -129,11 +129,15 @@ public class ArgumentsMutatorFuzzTest {
       List<int @WithLength(max = 10) []> listOfIntArrays,
       byte[] @WithLength(max = 11) [] byteArrays) {}
 
+  public static class EmptyArgs {
+    EmptyArgs() {}
+  }
+
   @SelfFuzzTest
-  void fuzz_Builder(
-      // @NotNull  // BUG: @NotNull causes "Index -1 out of bounds for length 0"
-      // in InPlaceProductMutator.writeExclusive
-      ImmutableBuilder b) {}
+  void fuzz_EmptyArgs(@NotNull EmptyArgs emptyArgs) {}
+
+  @SelfFuzzTest
+  void fuzz_Builder(@NotNull ImmutableBuilder b) {}
 
   @SelfFuzzTest
   void fuzzPrimitives(
