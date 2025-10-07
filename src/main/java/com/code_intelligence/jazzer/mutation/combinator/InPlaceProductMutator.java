@@ -83,6 +83,11 @@ public final class InPlaceProductMutator extends SerializingInPlaceMutator<Objec
 
   @Override
   public void writeExclusive(Object[] value, OutputStream out) throws IOException {
+    // mutators can be an empty array. This can so far only happen when an empty Java Bean mutator
+    // is used. We simply return in that case and don't write anything to out.
+    if (mutators.length == 0) {
+      return;
+    }
     DataOutputStream dataOut = new DataOutputStream(out);
     int lastIndex = mutators.length - 1;
     for (int i = 0; i < lastIndex; i++) {

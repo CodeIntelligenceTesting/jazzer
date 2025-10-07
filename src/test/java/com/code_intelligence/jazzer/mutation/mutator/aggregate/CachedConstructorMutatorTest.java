@@ -26,6 +26,9 @@ import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -168,5 +171,25 @@ class CachedConstructorMutatorTest {
 
   static void emptyInputMethod(SimpleClass simpleClass) {
     // Nothing to do here, only needed for the method reference.
+  }
+
+  public static class EmptyArgs {
+    public EmptyArgs() {}
+  }
+
+  @Test
+  void testEmptyArgsConstructor() throws IOException {
+    SerializingMutator<EmptyArgs> mutator =
+        (SerializingMutator<EmptyArgs>)
+            Mutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull EmptyArgs>() {}.annotatedType());
+    assertThat(mutator.toString()).startsWith("[] -> EmptyArgs");
+
+    PseudoRandom prng = anyPseudoRandom();
+    EmptyArgs inited = mutator.init(prng);
+
+    EmptyArgs mutated = mutator.mutate(inited, prng);
+    EmptyArgs read = mutator.readExclusive(new ByteArrayInputStream(new byte[] {}));
+    mutator.writeExclusive(read, new ByteArrayOutputStream());
   }
 }
