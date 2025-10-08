@@ -23,6 +23,8 @@ import static java.util.Collections.singletonList;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
+import com.code_intelligence.jazzer.protobuf.Proto2.TestProtobuf;
+import com.google.protobuf.DescriptorProtos;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
@@ -346,5 +348,27 @@ class ArgumentsMutatorTest {
     } catch (RuntimeException e) {
       // expected
     }
+  }
+
+  // Regression: ensure we can build an ArgumentsMutator for a fuzz target that
+  // takes a protobuf message and a protobuf descriptor as parameters.
+  @SuppressWarnings("unused")
+  public static void complexProtoFuzzTest(
+      @NotNull TestProtobuf proto, @NotNull DescriptorProtos.DescriptorProto descriptor) {}
+
+  @Test
+  void testProtoAndDescriptorParameters() throws NoSuchMethodException {
+    Method method =
+        ArgumentsMutatorTest.class.getMethod(
+            "complexProtoFuzzTest", TestProtobuf.class, DescriptorProtos.DescriptorProto.class);
+    Optional<ArgumentsMutator> maybeMutator =
+        ArgumentsMutator.forMethod(Mutators.newFactory(), method);
+    assertThat(maybeMutator).isPresent();
+    // Ensure that the mutator debug string can be generated. This would fail with the error:
+    //   Caused by: java.lang.NullPointerException: Cannot invoke
+    //
+    // "com.code_intelligence.jazzer.mutation.api.SerializingMutator.toDebugString(java.util.function.Predicate)"
+    //   because "productMutator" is null
+    assertThat(maybeMutator.toString()).contains("-> Message");
   }
 }
