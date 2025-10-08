@@ -53,6 +53,8 @@ import com.code_intelligence.jazzer.mutation.api.Serializer;
 import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
+import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutators;
+import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors.Descriptor;
@@ -140,31 +142,35 @@ public final class BuilderMutatorFactory implements MutatorFactory {
     if (field.getJavaType() == JavaType.ENUM) {
       // Proto enum fields are special as their type (EnumValueDescriptor) does not encode their
       // domain - we need the actual EnumDescriptor instance.
+      MutatorFactory enumFactory =
+          (type, factory) ->
+              asSubclassOrEmpty(type, EnumValueDescriptor.class)
+                  .map(
+                      unused -> {
+                        EnumDescriptor enumType = field.getEnumType();
+                        List<EnumValueDescriptor> values = enumType.getValues();
+                        String name = enumType.getName();
+                        if (values.size() == 1) {
+                          // While we generally prefer to error out instead of creating a
+                          // mutator that can't actually mutate its domain, we can't do that
+                          // for proto enum fields as the user creating the fuzz test may not be
+                          // in a position to modify the existing proto definition.
+                          return fixedValue(values.get(0));
+                        } else {
+                          return mutateThenMapToImmutable(
+                              mutateIndices(values.size()),
+                              values::get,
+                              EnumValueDescriptor::getIndex,
+                              unused2 -> "Enum<" + name + ">");
+                        }
+                      });
+      // Apart from the specific enum factory we need handling for `null` and other collection
+      // types. Note, that we don't include the full original factory here because we don't want
+      // to follow constructors or builders of the EnumValueDescriptor class.
       return ChainedMutatorFactory.of(
-          originalFactory.getCache(),
-          Stream.of(
-              originalFactory,
-              (type, factory) ->
-                  asSubclassOrEmpty(type, EnumValueDescriptor.class)
-                      .map(
-                          unused -> {
-                            EnumDescriptor enumType = field.getEnumType();
-                            List<EnumValueDescriptor> values = enumType.getValues();
-                            String name = enumType.getName();
-                            if (values.size() == 1) {
-                              // While we generally prefer to error out instead of creating a
-                              // mutator that can't actually mutate its domain, we can't do that for
-                              // proto enum fields as the user creating the fuzz test may not be in
-                              // a position to modify the existing proto definition.
-                              return fixedValue(values.get(0));
-                            } else {
-                              return mutateThenMapToImmutable(
-                                  mutateIndices(values.size()),
-                                  values::get,
-                                  EnumValueDescriptor::getIndex,
-                                  unused2 -> "Enum<" + name + ">");
-                            }
-                          })));
+          Stream.concat(
+              Stream.concat(LangMutators.newFactories(), CollectionMutators.newFactories()),
+              Stream.of(enumFactory)));
     } else if (field.getJavaType() == JavaType.MESSAGE) {
       Descriptor messageDescriptor;
       if (field.isMapField()) {
