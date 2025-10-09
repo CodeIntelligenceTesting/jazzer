@@ -19,6 +19,8 @@ package com.code_intelligence.jazzer.mutation.mutator.lang;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static java.lang.String.format;
 
+import com.code_intelligence.jazzer.mutation.annotation.DictionaryObject;
+import com.code_intelligence.jazzer.mutation.annotation.DictionaryProvider;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
@@ -33,6 +35,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.LongStream;
@@ -196,6 +199,8 @@ final class IntegralMutatorFactory implements MutatorFactory {
     private final int largestMutableBitNegative;
     private final int largestMutableBitPositive;
     private final long[] specialValues;
+    private final long[] dictionaryValues;
+    private final int numberOfPossibleMutations;
 
     AbstractIntegralMutator(
         AnnotatedType type, long defaultMinValueForType, long defaultMaxValueForType) {
@@ -231,6 +236,33 @@ final class IntegralMutatorFactory implements MutatorFactory {
         largestMutableBitPositive = bitWidth(maxValue);
       }
       this.specialValues = collectSpecialValues(minValue, maxValue);
+
+      DictionaryObject[] dictObj = type.getAnnotationsByType(DictionaryObject.class);
+      long finalMinValue = minValue;
+      long finalMaxValue = maxValue;
+      this.dictionaryValues =
+          Arrays.stream(dictObj)
+              .flatMap(
+                  o -> {
+                    Class<? extends DictionaryProvider> providerClass = o.value();
+                    try {
+                      DictionaryProvider provider =
+                          providerClass.getDeclaredConstructor().newInstance();
+                      return provider
+                          .value()
+                          .filter(v -> v instanceof Number)
+                          .map(v -> ((Number) v).longValue());
+                    } catch (ReflectiveOperationException e) {
+                      throw new RuntimeException(e);
+                    }
+                  })
+              .distinct()
+              .filter(v -> v >= finalMinValue && v <= finalMaxValue)
+              .sorted()
+              .mapToLong(Long::longValue)
+              .toArray();
+
+      numberOfPossibleMutations = dictionaryValues.length > 0 ? 5 : 4;
     }
 
     private static long[] collectSpecialValues(long minValue, long maxValue) {
@@ -262,7 +294,7 @@ final class IntegralMutatorFactory implements MutatorFactory {
       final long previousValue = value;
       // Mutate in a loop to verify that we really mutated.
       do {
-        switch (prng.indexIn(4)) {
+        switch (prng.indexIn(numberOfPossibleMutations)) {
           case 0:
             value = bitFlip(value, prng);
             break;
@@ -275,6 +307,9 @@ final class IntegralMutatorFactory implements MutatorFactory {
           case 3:
             // TODO: Replace this with a structure-aware dictionary/TORC search similar to fuzztest.
             value = forceInRange(mutateWithLibFuzzer(value));
+            break;
+          case 4:
+            value = dictionaryValues[prng.indexIn(dictionaryValues.length)];
             break;
         }
       } while (value == previousValue);
