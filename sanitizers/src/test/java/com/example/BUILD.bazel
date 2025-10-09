@@ -216,6 +216,14 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "RegexSplitInjection",
+    srcs = ["RegexSplitInjection.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    target_class = "com.example.RegexSplitInjection",
+    verify_crash_reproducer = False,
+)
+
+java_fuzz_target_test(
     name = "RegexCanonEqInjection",
     srcs = [
         "RegexCanonEqInjection.java",
