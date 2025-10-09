@@ -107,13 +107,13 @@ object RegexInjection {
             type = HookType.REPLACE,
             targetClassName = "java.lang.String",
             targetMethod = "split",
-            targetMethodDescriptor = "(Ljava/lang/String;)Ljava/lang/String;",
+            targetMethodDescriptor = "(Ljava/lang/String;)[Ljava/lang/String;",
         ),
         MethodHook(
             type = HookType.REPLACE,
             targetClassName = "java.lang.String",
             targetMethod = "split",
-            targetMethodDescriptor = "(Ljava/lang/String;I)Ljava/lang/String;",
+            targetMethodDescriptor = "(Ljava/lang/String;I)[Ljava/lang/String;",
         ),
     )
     @JvmStatic
