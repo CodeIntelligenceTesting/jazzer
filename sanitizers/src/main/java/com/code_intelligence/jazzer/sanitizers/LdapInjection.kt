@@ -57,14 +57,14 @@ object LdapInjection {
             type = HookType.REPLACE,
             targetClassName = "javax.naming.directory.DirContext",
             targetMethod = "search",
-            targetMethodDescriptor = "(Ljava/lang/String;Ljavax/naming.directory/Attributes;)Ljavax/naming/NamingEnumeration;",
+            targetMethodDescriptor = "(Ljava/lang/String;Ljavax/naming/directory/Attributes;)Ljavax/naming/NamingEnumeration;",
             additionalClassesToHook = ["javax.naming.directory.InitialDirContext"],
         ),
         MethodHook(
             type = HookType.REPLACE,
             targetClassName = "javax.naming.directory.DirContext",
             targetMethod = "search",
-            targetMethodDescriptor = "(Ljava/lang/String;Ljavax/naming.directory/Attributes;[Ljava/lang/Sting;)Ljavax/naming/NamingEnumeration;",
+            targetMethodDescriptor = "(Ljava/lang/String;Ljavax/naming/directory/Attributes;[Ljava/lang/String;)Ljavax/naming/NamingEnumeration;",
             additionalClassesToHook = ["javax.naming.directory.InitialDirContext"],
         ),
         // Object search, possible DN and search filter injection
@@ -79,7 +79,7 @@ object LdapInjection {
             type = HookType.REPLACE,
             targetClassName = "javax.naming.directory.DirContext",
             targetMethod = "search",
-            targetMethodDescriptor = "(Ljavax/naming/Name;Ljava/lang/String;[Ljava.lang.Object;Ljavax/naming/directory/SearchControls;)Ljavax/naming/NamingEnumeration;",
+            targetMethodDescriptor = "(Ljavax/naming/Name;Ljava/lang/String;[Ljava/lang/Object;Ljavax/naming/directory/SearchControls;)Ljavax/naming/NamingEnumeration;",
             additionalClassesToHook = ["javax.naming.directory.InitialDirContext"],
         ),
         MethodHook(
