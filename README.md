@@ -62,10 +62,15 @@ implementation group: 'com.code-intelligence', name: 'jazzer-junit', version: '<
 
 ### Bazel
 
+#### Using rules_fuzzing
 Jazzer is supported via [rules_fuzzing](https://github.com/bazelbuild/rules_fuzzing), the official Bazel rules for fuzzing.
 For setup instructions, see [the README](https://github.com/bazelbuild/rules_fuzzing#java-fuzzing).
 
-With Jazzer set up, you can start writing fuzz tests and benefit from automated bug discovery and improved code coverage.
+#### Using JUnit5 integration
+
+It is also possible to use Jazzer+JUnit5 integration directly in Bazel.
+An example project can be found [here](https://github.com/CodeIntelligenceTesting/example-bazel-junit).
+The [BUILD](https://github.com/CodeIntelligenceTesting/example-bazel-junit/blob/main/BUILD) file showcases how to set up corpus directories for fuzzing and regression and how to pass arguments to Jazzer and libFuzzer.
 
 ## Writing fuzz tests
 
@@ -225,7 +230,7 @@ If you found something interesting and the information is public, please send a 
 
 ## Further documentation
 
-* [Arguments and Configuration Options](docs/arguments-and-configuration-options.md)
+* [Arguments and configuration options](docs/arguments-and-configuration-options.md)
 * [Mutation framework](docs/mutation-framework.md)
 * [Advanced techniques](docs/advanced.md)
 * [Building Jazzer from source](CONTRIBUTING.md)
