@@ -23,6 +23,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
+import com.code_intelligence.jazzer.mutation.annotation.DictionaryObject;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -31,6 +32,7 @@ import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
 import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
+import com.code_intelligence.jazzer.mutation.support.TypeSupport;
 import com.code_intelligence.jazzer.utils.Log;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -97,11 +99,20 @@ public final class ArgumentsMutator {
       Log.error(validationError.getMessage());
       throw validationError;
     }
+
+    DictionaryObject[] typeDictionaries = method.getAnnotationsByType(DictionaryObject.class);
+
     return toArrayOrEmpty(
             stream(method.getAnnotatedParameterTypes())
                 .map(
                     type -> {
-                      Optional<SerializingMutator<?>> mutator = mutatorFactory.tryCreate(type);
+                      // Forward all DictionaryObject annotations of the fuzz test method to each
+                      // arg.
+                      AnnotatedType t = type;
+                      for (DictionaryObject dict : typeDictionaries) {
+                        t = TypeSupport.withExtraAnnotations(t, dict);
+                      }
+                      Optional<SerializingMutator<?>> mutator = mutatorFactory.tryCreate(t);
                       if (!mutator.isPresent()) {
                         Log.error(
                             String.format(
