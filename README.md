@@ -175,20 +175,28 @@ If you see an error saying that `libjvm.so` has not been found, make sure that `
 
 ## Directories and files
 
-Jazzer uses two directories to store inputs: the *generated corpus directory* and the *inputs directory*.
+Jazzer uses two main directories to store inputs: the *generated corpus directory* and the *inputs directory*.
+
+> [!IMPORTANT]
+> If you are using Git and want to add the corpus directories to the repository, mark them as `binary` in your `.gitattributes` file:
+>
+> ```gitattributes
+> src/test/resources/** binary
+> .cifuzz-corpus/** binary
+> ```
 
 ### Generated corpus directory
 
 The *generated corpus directory* is where Jazzer saves inputs that generate new coverage during fuzzing.
 It is located in `.cifuzz-corpus/<package>/<FuzzTestClass>/<fuzzTestMethod>`, where `<package>`, `<FuzzTestClass>`, and `<fuzzTestMethod>` correspond to the package name, class name, and method name of the fuzz test, respectively.
-For example, if the fuzz test is in the class `src/test/java/com/example/ValidFuzzTestsInputs.java`, method `byteFuzz`, the corpus directory is located in `.cifuzz-corpus/com.example.ValidFuzzTestsInputs/byteFuzz`.
+For example, if the fuzz test is in the class `src/test/java/com/example/ValidFuzzTests.java`, method `byteFuzz`, the corpus directory is located in `.cifuzz-corpus/com.example.ValidFuzzTests/byteFuzz`.
 
 
 ### Inputs directory
 
 Any input that triggers a crash during fuzzing is saved to the *inputs directory*.
 This directory is derived from the package and class name of the fuzz test.
-For example, if the fuzz test is in the class `src/test/java/com/example/ValidFuzzTestsInputs.java`, method `byteFuzz`, the *inputs directory* is located in `src/test/resources/com/example/ValidFuzzTestsInputs/byteFuzz`.
+For example, if the fuzz test is in the class `src/test/java/com/example/ValidFuzzTests.java`, method `byteFuzz`, the *inputs directory* is located in `src/test/resources/com/example/ValidFuzzTestsInputs/byteFuzz`.
 If this directory does not exist, Jazzer will save crash inputs in the directory from which the tests are executed.
 
 
