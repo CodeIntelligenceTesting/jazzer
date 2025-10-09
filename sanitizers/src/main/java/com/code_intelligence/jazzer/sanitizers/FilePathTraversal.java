@@ -139,10 +139,6 @@ public class FilePathTraversal {
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = "java.nio.file.Files",
-      targetMethod = "newBufferedReader")
-  @MethodHook(
-      type = HookType.BEFORE,
-      targetClassName = "java.nio.file.Files",
       targetMethod = "readAllBytes")
   @MethodHook(
       type = HookType.BEFORE,
@@ -170,8 +166,8 @@ public class FilePathTraversal {
       targetMethod = "newOutputStream")
   @MethodHook(
       type = HookType.BEFORE,
-      targetClassName = "java.nio.file.probeContentType",
-      targetMethod = "open")
+      targetClassName = "java.nio.file.Files",
+      targetMethod = "probeContentType")
   @MethodHook(
       type = HookType.BEFORE,
       targetClassName = "java.nio.channels.FileChannel",
