@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
+import com.code_intelligence.jazzer.mutation.annotation.Finite;
 import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.Negative;
@@ -466,6 +467,10 @@ class TypeSupportTest {
             new TypeHolder<@NotNull Float>() {}.annotatedType(),
             new TypeHolder<@NotNull @NonNegative Float>() {}.annotatedType()),
         arguments(
+            new TypeHolder<@Finite Double>() {}.annotatedType(),
+            new TypeHolder<@NotNull Double>() {}.annotatedType(),
+            new TypeHolder<@NotNull @Finite Double>() {}.annotatedType()),
+        arguments(
             new TypeHolder<@Negative Double>() {}.annotatedType(),
             new TypeHolder<@NotNull Double>() {}.annotatedType(),
             new TypeHolder<@NotNull @Negative Double>() {}.annotatedType()),
@@ -476,7 +481,11 @@ class TypeSupportTest {
         arguments(
             new TypeHolder<@NonNegative Double>() {}.annotatedType(),
             new TypeHolder<@NotNull Double>() {}.annotatedType(),
-            new TypeHolder<@NotNull @NonNegative Double>() {}.annotatedType()));
+            new TypeHolder<@NotNull @NonNegative Double>() {}.annotatedType()),
+        arguments(
+            new TypeHolder<@Finite Double>() {}.annotatedType(),
+            new TypeHolder<@NotNull Double>() {}.annotatedType(),
+            new TypeHolder<@NotNull @Finite Double>() {}.annotatedType()));
   }
 
   @ParameterizedTest
