@@ -120,6 +120,10 @@ public final class RangeSupport {
         minValue = defaultMin;
         maxValue = 0.0f;
         allowNaN = false;
+      } else if (annotation instanceof Finite) {
+        minValue = -Float.MAX_VALUE;
+        maxValue = Float.MAX_VALUE;
+        allowNaN = false;
       }
     }
     return new FloatRange(minValue, maxValue, allowNaN);
@@ -151,6 +155,10 @@ public final class RangeSupport {
       } else if (annotation instanceof NonPositive) {
         minValue = defaultMin;
         maxValue = 0.0;
+        allowNaN = false;
+      } else if (annotation instanceof Finite) {
+        minValue = -Double.MAX_VALUE;
+        maxValue = Double.MAX_VALUE;
         allowNaN = false;
       }
     }
