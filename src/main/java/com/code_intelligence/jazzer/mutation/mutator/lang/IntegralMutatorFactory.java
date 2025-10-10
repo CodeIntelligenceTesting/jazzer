@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
+import static com.code_intelligence.jazzer.mutation.support.DictionaryObjectSupport.extractLastInvProbability;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static java.lang.String.format;
 
@@ -26,6 +27,8 @@ import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.combinator.SamplingUtils;
+import com.code_intelligence.jazzer.mutation.combinator.SamplingUtils.WeightedMutationFunction;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
 import com.code_intelligence.jazzer.mutation.support.RangeSupport;
 import com.code_intelligence.jazzer.mutation.support.RangeSupport.LongRange;
@@ -35,8 +38,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.LongStream;
 
@@ -200,7 +206,12 @@ final class IntegralMutatorFactory implements MutatorFactory {
     private final int largestMutableBitPositive;
     private final long[] specialValues;
     private final long[] dictionaryValues;
-    private final int numberOfPossibleMutations;
+    private final Function<PseudoRandom, MutationFunction> mutationFunctionSampler;
+
+    // interface to hold mutation functions
+    private interface MutationFunction {
+      long mutate(long value, PseudoRandom prng);
+    }
 
     AbstractIntegralMutator(
         AnnotatedType type, long defaultMinValueForType, long defaultMaxValueForType) {
@@ -238,8 +249,6 @@ final class IntegralMutatorFactory implements MutatorFactory {
       this.specialValues = collectSpecialValues(minValue, maxValue);
 
       DictionaryObject[] dictObj = type.getAnnotationsByType(DictionaryObject.class);
-      long finalMinValue = minValue;
-      long finalMaxValue = maxValue;
       this.dictionaryValues =
           Arrays.stream(dictObj)
               .flatMap(
@@ -257,12 +266,37 @@ final class IntegralMutatorFactory implements MutatorFactory {
                     }
                   })
               .distinct()
-              .filter(v -> v >= finalMinValue && v <= finalMaxValue)
+              .filter(v -> v >= minValue && v <= maxValue)
               .sorted()
               .mapToLong(Long::longValue)
               .toArray();
 
-      numberOfPossibleMutations = dictionaryValues.length > 0 ? 5 : 4;
+      List<WeightedMutationFunction<MutationFunction>> f = new ArrayList<>();
+      f.add(WeightedMutationFunction.of(1.0, this::bitFlip));
+      f.add(WeightedMutationFunction.of(1.0, this::randomWalk));
+      f.add(WeightedMutationFunction.of(0.5, (v, p) -> p.closedRange(minValue, maxValue)));
+      f.add(WeightedMutationFunction.of(2.0, (v, p) -> mutateWithLibFuzzer(v)));
+
+      if (dictionaryValues.length > 0) {
+        // Since weights here are relative, we need to adjust the weight of user dictionary mutator
+        // so that it is taken proportionate the inverse probability specified in the annotation.
+        // Basically, we need to scale up the weight for pInv:
+        // 1/p    --- x?
+        // 1- 1/p --- totalFuncWeights
+        // x = (1/p * totalFuncWeights) / (1 - 1/p)
+        //   =  totalFuncWeights / (p - 1)
+        double totalFuncWeights = 0.0;
+        for (WeightedMutationFunction<MutationFunction> wf : f) {
+          totalFuncWeights += wf.weight;
+        }
+        int invProbability = extractLastInvProbability(type);
+        double perValueWeight = totalFuncWeights / (invProbability - 1);
+        f.add(
+            WeightedMutationFunction.of(
+                perValueWeight, (v, p) -> dictionaryValues[p.indexIn(dictionaryValues.length)]));
+      }
+
+      this.mutationFunctionSampler = SamplingUtils.weightedSampler(f);
     }
 
     private static long[] collectSpecialValues(long minValue, long maxValue) {
@@ -292,27 +326,11 @@ final class IntegralMutatorFactory implements MutatorFactory {
 
     protected final long mutateImpl(long value, PseudoRandom prng) {
       final long previousValue = value;
+      int maxAttempts = 30;
       // Mutate in a loop to verify that we really mutated.
       do {
-        switch (prng.indexIn(numberOfPossibleMutations)) {
-          case 0:
-            value = bitFlip(value, prng);
-            break;
-          case 1:
-            value = randomWalk(value, prng);
-            break;
-          case 2:
-            value = prng.closedRange(minValue, maxValue);
-            break;
-          case 3:
-            // TODO: Replace this with a structure-aware dictionary/TORC search similar to fuzztest.
-            value = forceInRange(mutateWithLibFuzzer(value));
-            break;
-          case 4:
-            value = dictionaryValues[prng.indexIn(dictionaryValues.length)];
-            break;
-        }
-      } while (value == previousValue);
+        value = forceInRange(mutationFunctionSampler.apply(prng).mutate(value, prng));
+      } while (value == previousValue && --maxAttempts > 0);
       return value;
     }
 
@@ -378,14 +396,9 @@ final class IntegralMutatorFactory implements MutatorFactory {
       }
     }
 
-    private long bitFlip(long value, PseudoRandom prng) {
+    public long bitFlip(long value, PseudoRandom prng) {
       int range = value >= 0 ? largestMutableBitPositive : largestMutableBitNegative;
-      value = value ^ (1L << prng.indexIn(range));
-      // The bit flip may violate the range constraint, if so, mutate randomly.
-      if (value > maxValue || value < minValue) {
-        value = prng.closedRange(minValue, maxValue);
-      }
-      return value;
+      return value ^ (1L << prng.indexIn(range));
     }
 
     private long randomWalk(long value, PseudoRandom prng) {
