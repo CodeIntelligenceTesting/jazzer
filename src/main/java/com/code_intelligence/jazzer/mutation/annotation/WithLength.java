@@ -25,6 +25,12 @@ import com.code_intelligence.jazzer.mutation.utils.ValidateContainerDimensions;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * Generates an array of the specified length.
+ *
+ * @see WithSize
+ * @see WithUtf8Length
+ */
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo(
@@ -42,8 +48,14 @@ import java.lang.annotation.Target;
 @ValidateContainerDimensions
 @PropertyConstraint
 public @interface WithLength {
+  /**
+   * The minimum length, inclusive.
+   */
   int min() default 0;
 
+  /**
+   * The maximum length, inclusive.
+   */
   int max() default 1000;
 
   /**

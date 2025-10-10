@@ -24,6 +24,11 @@ import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * Generates a non-positive number, that is, a number <= 0.
+ *
+ * <p>For {@code float} and {@code double} this does not include NaN.
+ */
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo({

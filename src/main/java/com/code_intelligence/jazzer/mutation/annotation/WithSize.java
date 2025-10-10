@@ -27,14 +27,26 @@ import java.lang.annotation.Target;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Generates a {@link List} or {@link Map} with the specified size.
+ *
+ * @see WithLength
+ * @see WithUtf8Length
+ */
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo({List.class, Map.class})
 @ValidateContainerDimensions
 @PropertyConstraint
 public @interface WithSize {
+  /**
+   * The minimum size, inclusive.
+   */
   int min() default 0;
 
+  /**
+   * The maximum size, inclusive.
+   */
   int max() default 1000;
 
   /**
