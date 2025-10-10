@@ -12,6 +12,7 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/mutation/engine",
         "//src/main/java/com/code_intelligence/jazzer/mutation/mutator",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/utils",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
     ],
 )
