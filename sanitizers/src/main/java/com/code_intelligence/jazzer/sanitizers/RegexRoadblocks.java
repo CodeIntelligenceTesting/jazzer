@@ -194,7 +194,7 @@ public final class RegexRoadblocks {
       type = HookType.AFTER,
       targetClassName = "java.util.regex.Pattern",
       targetMethod = "SingleI",
-      targetMethodDescriptor = "(II)Ljava/util/regex/Pattern$CharPredicate;",
+      targetMethodDescriptor = "(II)Ljava/util/regex/Pattern$BmpCharPredicate;",
       additionalClassesToHook = {"java.util.regex.Pattern"})
   @MethodHook(
       type = HookType.AFTER,
