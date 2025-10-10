@@ -25,7 +25,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Generates a non-positive number, that is, a number <= 0.
+ * Generates a non-positive number, that is, a number {@literal <=} 0.
  *
  * <p>For {@code float} and {@code double} this does not include NaN.
  */
