@@ -28,7 +28,7 @@ java_proto_library(
     testonly = True,
     visibility = [
         "//selffuzz:__subpackages__",
-        "//src/test/java/com/code_intelligence/jazzer/mutation/mutator:__pkg__",
+        "//src/test/java/com/code_intelligence/jazzer/mutation:__subpackages__",
         "//tests:__pkg__",
     ],
     deps = [":proto2_proto"],
