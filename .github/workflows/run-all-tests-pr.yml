@@ -36,7 +36,7 @@ jobs:
     name: Build & Test
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-14]
+        os: [ubuntu-22.04, ubuntu-22.04-arm, windows-2022, macos-14]
         jdk: [21, 8]
         include:
           - jdk: 21
@@ -47,6 +47,8 @@ jobs:
 #            bazel_args: "//launcher/android:jazzer_android"
           - os: ubuntu-22.04
             arch: "linux"
+          - os: ubuntu-22.04-arm
+            arch: "linux-arm64"
           - os: macos-14
             arch: "macos-arm64"
             bazel_args: "--xcode_version_config=//.github:host_xcodes"
