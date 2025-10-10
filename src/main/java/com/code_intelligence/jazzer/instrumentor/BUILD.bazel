@@ -24,9 +24,7 @@ kt_jvm_library(
         "//src/test/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
     ],
     deps = [
-        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
         "//src/main/java/com/code_intelligence/jazzer/runtime:jazzer_bootstrap_compile_only",
-        "//src/main/java/com/code_intelligence/jazzer/utils",
         "//src/main/java/com/code_intelligence/jazzer/utils:class_name_globber",
         "//src/main/java/com/code_intelligence/jazzer/utils:log",
         "@jazzer_jacoco//:jacoco_internal",
