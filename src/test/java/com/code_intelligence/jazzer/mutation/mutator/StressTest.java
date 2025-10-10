@@ -583,6 +583,12 @@ public class StressTest {
             distinctElementsRatio(0.30),
             distinctElementsRatio(0.30)),
         arguments(
+            new TypeHolder<@NotNull List<@NotNull Integer> @NotNull []>() {}.annotatedType(),
+            "List<Integer>[]",
+            false,
+            manyDistinctElements(),
+            distinctElementsRatio(0.66)),
+        arguments(
             new TypeHolder<@NotNull TestEnumThree @NotNull []>() {}.annotatedType(),
             "Enum<TestEnumThree>[]",
             false,

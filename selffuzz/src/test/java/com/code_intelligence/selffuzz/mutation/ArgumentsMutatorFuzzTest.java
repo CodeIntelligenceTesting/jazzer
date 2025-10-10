@@ -271,6 +271,17 @@ public class ArgumentsMutatorFuzzTest {
   public static void fuzz_MutuallyReferringProtobufs(
       Proto2.TestProtobuf o1, Proto2.TestSubProtobuf o2) {}
 
+  @SelfFuzzTest
+  void fuzzStrings(
+      @NotNull @WithSize(max = 3)
+          List<String> @NotNull @WithLength(max = 4) [] arrayOfListOfStrings,
+      @NotNull @WithSize(max = 1)
+          List<Integer> @NotNull @WithLength(max = 2) [] @NotNull @WithLength(max = 3) []
+              arrayOfArraysOfListOfIntegers) {
+    assertThat(arrayOfListOfStrings.length).isAtMost(4);
+    assertThat(arrayOfArraysOfListOfIntegers.length).isAtMost(2);
+  }
+
   /**
    * @return all methods in this class annotated by @SelfFuzzTest. If any of those methods are
    *     annotated by @Solo, only those are returned.

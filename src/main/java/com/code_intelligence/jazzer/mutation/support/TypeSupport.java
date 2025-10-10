@@ -37,9 +37,12 @@ import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.AnnotatedTypeVariable;
 import java.lang.reflect.AnnotatedWildcardType;
 import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collections;
@@ -686,5 +689,22 @@ public final class TypeSupport {
     // the annotations on the owner don't matter and the owner itself is compared via Type.
     return left.getType().equals(right.getType())
         && Arrays.equals(left.getAnnotations(), right.getAnnotations());
+  }
+
+  public static Optional<Class<?>> extractRawClass(Type type) {
+    if (type instanceof Class<?>) {
+      return Optional.of((Class<?>) type);
+    } else if (type instanceof ParameterizedType) {
+      return extractRawClass(((ParameterizedType) type).getRawType());
+    } else if (type instanceof GenericArrayType) {
+      Type componentType = ((GenericArrayType) type).getGenericComponentType();
+      Optional<Class<?>> componentClass = extractRawClass(componentType);
+      return componentClass.map(aClass -> Array.newInstance(aClass, 0).getClass());
+    } else if (type instanceof TypeVariable<?> || type instanceof WildcardType) {
+      // Default fallback - assume Object array
+      return Optional.of(Object.class);
+    } else {
+      return Optional.empty();
+    }
   }
 }

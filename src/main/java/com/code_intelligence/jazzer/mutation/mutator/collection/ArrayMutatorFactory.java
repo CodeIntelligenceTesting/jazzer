@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.mutation.mutator.collection;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.MutationAction.pickRandomMutationAction;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.extractRawClass;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.lang.reflect.AnnotatedArrayType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -53,12 +55,16 @@ final class ArrayMutatorFactory implements MutatorFactory {
 
     AnnotatedType elementType = ((AnnotatedArrayType) type).getAnnotatedGenericComponentType();
     AnnotatedType propagatedElementType = propagatePropertyConstraints(type, elementType);
-    Class<?> propagatedElementClazz = (Class<?>) propagatedElementType.getType();
-    return Optional.of(propagatedElementType)
-        .flatMap(factory::tryCreate)
-        .map(
-            elementMutator ->
-                new ArrayMutator<>(elementMutator, propagatedElementClazz, minLength, maxLength));
+    Type rawType = propagatedElementType.getType();
+    return extractRawClass(rawType)
+        .flatMap(
+            propagatedElementClass ->
+                Optional.of(propagatedElementType)
+                    .flatMap(factory::tryCreate)
+                    .map(
+                        elementMutator ->
+                            new ArrayMutator<>(
+                                elementMutator, propagatedElementClass, minLength, maxLength)));
   }
 
   enum CrossOverAction {
