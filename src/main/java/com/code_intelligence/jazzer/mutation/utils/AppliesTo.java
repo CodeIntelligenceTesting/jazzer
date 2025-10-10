@@ -25,6 +25,7 @@ import java.lang.annotation.Target;
 /** A meta-annotation that limits the concrete types an annotation for type usages applies to. */
 @Target(ANNOTATION_TYPE)
 @Retention(RUNTIME)
+@Documented
 public @interface AppliesTo {
   /** The meta-annotated annotation can be applied to these classes. */
   Class<?>[] value() default {};
