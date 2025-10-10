@@ -25,16 +25,28 @@ import com.code_intelligence.jazzer.mutation.utils.ValidateMinMax;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * Generates a {@code float} in the specified range.
+ */
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo({float.class, Float.class})
 @ValidateMinMax
 @PropertyConstraint
 public @interface FloatInRange {
+  /**
+   * The minimum value of the range, inclusive.
+   */
   float min() default Float.NEGATIVE_INFINITY;
 
+  /**
+   * The maximum value of the range, inclusive.
+   */
   float max() default Float.POSITIVE_INFINITY;
 
+  /**
+   * Whether NaN is allowed to be generated.
+   */
   boolean allowNaN() default true;
 
   /**

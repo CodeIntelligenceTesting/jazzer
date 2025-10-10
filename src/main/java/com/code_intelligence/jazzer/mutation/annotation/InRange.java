@@ -25,6 +25,12 @@ import com.code_intelligence.jazzer.mutation.utils.ValidateMinMax;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * Generates an integral number in the specified range.
+ *
+ * @see FloatInRange
+ * @see DoubleInRange
+ */
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo({
@@ -40,8 +46,14 @@ import java.lang.annotation.Target;
 @ValidateMinMax
 @PropertyConstraint
 public @interface InRange {
+  /**
+   * The minimum value of the range, inclusive.
+   */
   long min() default Long.MIN_VALUE;
 
+  /**
+   * The maximum value of the range, inclusive.
+   */
   long max() default Long.MAX_VALUE;
 
   /**

@@ -44,8 +44,14 @@ import java.lang.annotation.Target;
 @ValidateContainerDimensions
 @PropertyConstraint
 public @interface WithUtf8Length {
+  /**
+   * The minimum length of the UTF-8 encoding, inclusive.
+   */
   int min() default 0;
 
+  /**
+   * The maximum length of the UTF-8 encoding, inclusive.
+   */
   int max() default 1000;
 
   /**

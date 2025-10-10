@@ -24,6 +24,11 @@ import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * Generates a {@code String} consisting only of ASCII characters (including control characters).
+ *
+ * @see WithUtf8Length
+ */
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo(String.class)
