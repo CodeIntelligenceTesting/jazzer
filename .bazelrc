@@ -13,7 +13,9 @@ common --repo_env=CC=clang
 # On Linux, use a hermetic toolchain and sysroot shared between local dev setups and CI.
 # Such a toolchain isn't easily available on macOS or Windows.
 common:linux --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+# Register hermetic LLVM toolchains for both x86_64 and arm64
 common:linux --extra_toolchains=@llvm_toolchain//:cc-toolchain-x86_64-linux
+common:linux --extra_toolchains=@llvm_toolchain//:cc-toolchain-aarch64-linux
 # Silence protobuf compilation warnings.
 build --copt=-Wno-unused-function
 build --copt=-Wno-unknown-warning-option
