@@ -178,7 +178,7 @@ If you see an error saying that `libjvm.so` has not been found, make sure that `
 Jazzer uses two main directories to store inputs: the *generated corpus directory* and the *inputs directory*.
 
 > [!IMPORTANT]
-> If you are using Git and want to add the corpus directories to the repository, mark them as `binary` in your `.gitattributes` file:
+> If you are using Git and want to add the inputs and corpus directories to the repository, mark them as `binary` in your `.gitattributes` file:
 >
 > ```gitattributes
 > src/test/resources/** binary
@@ -188,7 +188,7 @@ Jazzer uses two main directories to store inputs: the *generated corpus director
 ### Generated corpus directory
 
 The *generated corpus directory* is where Jazzer saves inputs that generate new coverage during fuzzing.
-It is located in `.cifuzz-corpus/<package>/<FuzzTestClass>/<fuzzTestMethod>`, where `<package>`, `<FuzzTestClass>`, and `<fuzzTestMethod>` correspond to the package name, class name, and method name of the fuzz test, respectively.
+It is located in `.cifuzz-corpus/<package>.<FuzzTestClass>/<fuzzTestMethod>`, where `<package>`, `<FuzzTestClass>`, and `<fuzzTestMethod>` correspond to the package name, class name, and method name of the fuzz test, respectively.
 For example, if the fuzz test is in the class `src/test/java/com/example/ValidFuzzTests.java`, method `byteFuzz`, the corpus directory is located in `.cifuzz-corpus/com.example.ValidFuzzTests/byteFuzz`.
 
 
