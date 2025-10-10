@@ -253,7 +253,24 @@ filegroup(
 )
 """,
     sha256 = "84656a6df544ecef62169cfe3ab6e41bb4346a62d3ba2a045dc5a0a2ecea94a3",
-    urls = ["https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/2202c161310ffde63729f29d27fe7bb24a0bc540/debian_stretch_amd64_sysroot.tar.xz"],
+    urls = [
+        "https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/2202c161310ffde63729f29d27fe7bb24a0bc540/debian_stretch_amd64_sysroot.tar.xz",
+    ],
+)
+
+http_archive(
+    name = "org_chromium_sysroot_linux_aarch64",
+    build_file_content = """
+filegroup(
+  name = "sysroot",
+  srcs = glob(["*/**"]),
+  visibility = ["//visibility:public"],
+)
+""",
+    sha256 = "e39b700d8858d18868544c8c84922f6adfa8419f3f42471b92024ba38eff7aca",
+    urls = [
+        "https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/2202c161310ffde63729f29d27fe7bb24a0bc540/debian_stretch_arm64_sysroot.tar.xz",
+    ],
 )
 
 http_file(
@@ -385,6 +402,7 @@ remote_jdk8_repos = use_extension("//third_party:jdk_8.bzl", "remote_jdk8_repos"
 
 REMOTE_JDK8 = [
     "remote_jdk8_linux",
+    "remote_jdk8_linux_aarch64",
     "remote_jdk8_macos",
     "remote_jdk8_macos_aarch64",
     "remote_jdk8_windows",
@@ -415,6 +433,7 @@ llvm.toolchain(
         # https://github.com/grailbio/bazel-toolchain/issues/234
         # https://github.com/grailbio/bazel-toolchain/pull/235
         "linux-x86_64": "@@_main~_repo_rules~org_chromium_sysroot_linux_x64//:sysroot",
+        "linux-aarch64": "@@_main~_repo_rules~org_chromium_sysroot_linux_aarch64//:sysroot",
     },
 )
 use_repo(llvm, "llvm_toolchain")
