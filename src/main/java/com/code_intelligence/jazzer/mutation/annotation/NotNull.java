@@ -26,8 +26,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Generates a not-{@code null} value. By default the mutation framework can generate {@code null} for objects
- * (including arrays).
+ * Generates a not-{@code null} value. By default the mutation framework can generate {@code null}
+ * for objects (including arrays).
  */
 @Target({PARAMETER, TYPE_USE})
 @Retention(RUNTIME)

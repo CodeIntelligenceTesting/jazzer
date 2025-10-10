@@ -46,14 +46,10 @@ import java.lang.annotation.Target;
 @ValidateMinMax
 @PropertyConstraint
 public @interface InRange {
-  /**
-   * The minimum value of the range, inclusive.
-   */
+  /** The minimum value of the range, inclusive. */
   long min() default Long.MIN_VALUE;
 
-  /**
-   * The maximum value of the range, inclusive.
-   */
+  /** The maximum value of the range, inclusive. */
   long max() default Long.MAX_VALUE;
 
   /**

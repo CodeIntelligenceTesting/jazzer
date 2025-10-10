@@ -39,14 +39,10 @@ import java.util.Map;
 @ValidateContainerDimensions
 @PropertyConstraint
 public @interface WithSize {
-  /**
-   * The minimum size, inclusive.
-   */
+  /** The minimum size, inclusive. */
   int min() default 0;
 
-  /**
-   * The maximum size, inclusive.
-   */
+  /** The maximum size, inclusive. */
   int max() default 1000;
 
   /**

@@ -25,28 +25,20 @@ import com.code_intelligence.jazzer.mutation.utils.ValidateMinMax;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-/**
- * Generates a {@code double} in the specified range.
- */
+/** Generates a {@code double} in the specified range. */
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo({double.class, Double.class})
 @ValidateMinMax
 @PropertyConstraint
 public @interface DoubleInRange {
-  /**
-   * The minimum value of the range, inclusive.
-   */
+  /** The minimum value of the range, inclusive. */
   double min() default Double.NEGATIVE_INFINITY;
 
-  /**
-   * The maximum value of the range, inclusive.
-   */
+  /** The maximum value of the range, inclusive. */
   double max() default Double.POSITIVE_INFINITY;
 
-  /**
-   * Whether NaN is allowed to be generated.
-   */
+  /** Whether NaN is allowed to be generated. */
   boolean allowNaN() default true;
 
   /**

@@ -48,14 +48,10 @@ import java.lang.annotation.Target;
 @ValidateContainerDimensions
 @PropertyConstraint
 public @interface WithLength {
-  /**
-   * The minimum length, inclusive.
-   */
+  /** The minimum length, inclusive. */
   int min() default 0;
 
-  /**
-   * The maximum length, inclusive.
-   */
+  /** The maximum length, inclusive. */
   int max() default 1000;
 
   /**
