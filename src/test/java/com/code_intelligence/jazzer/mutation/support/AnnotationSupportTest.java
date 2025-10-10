@@ -22,6 +22,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.code_intelligence.jazzer.mutation.annotation.Ascii;
 import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
+import com.code_intelligence.jazzer.mutation.annotation.Finite;
 import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.Negative;
@@ -93,6 +94,7 @@ public class AnnotationSupportTest {
         arguments(new TypeHolder<@Negative String>() {}.annotatedType()),
         arguments(new TypeHolder<@NonNegative String>() {}.annotatedType()),
         arguments(new TypeHolder<@NonPositive String>() {}.annotatedType()),
+        arguments(new TypeHolder<@Finite String>() {}.annotatedType()),
         // deep
         arguments(
             new TypeHolder<
