@@ -74,7 +74,10 @@ kt_jvm_library(
         "Utils.kt",
         "XPathInjection.kt",
     ],
-    visibility = ["//sanitizers:__pkg__"],
+    visibility = [
+        "//sanitizers:__pkg__",
+        "//sanitizers/src/test/java/com/code_intelligence/jazzer/sanitizers:__pkg__",
+    ],
     runtime_deps = [
         ":clojure_lang_hooks",
         ":file_path_traversal",
