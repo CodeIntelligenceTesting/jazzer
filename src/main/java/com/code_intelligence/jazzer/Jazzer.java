@@ -527,7 +527,8 @@ public class Jazzer {
       }
 
       // Since LLVM 15 sanitizer runtimes no longer have the architecture in the filename.
-      return asList("libclang_rt.asan.so", "libclang_rt.asan-x86_64.so");
+      return asList(
+          "libclang_rt.asan.so", "libclang_rt.asan-x86_64.so", "libclang_rt.asan-aarch64.so");
     } else {
       return singletonList("libclang_rt.asan_osx_dynamic.dylib");
     }
@@ -541,7 +542,10 @@ public class Jazzer {
         exit(1);
       }
 
-      return asList("libclang_rt.ubsan_standalone.so", "libclang_rt.ubsan_standalone-x86_64.so");
+      return asList(
+          "libclang_rt.ubsan_standalone.so",
+          "libclang_rt.ubsan_standalone-x86_64.so",
+          "libclang_rt.ubsan_standalone-aarch64.so");
     } else {
       return singletonList("libclang_rt.ubsan_osx_dynamic.dylib");
     }
