@@ -94,76 +94,76 @@ jobs:
           path: _tmp/jazzer.jar
           if-no-files-found: error
 
-  maven_predeploy:
-    runs-on: ubuntu-22.04
-    needs: merge_jars
-
-    environment:
-      name: Deploy
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: zulu
-          java-version: 8
-
-      - name: Append build settings to .bazelrc
-        shell: bash
-        run: |
-          TAG=${{ github.ref_name }}
-          echo "build --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }}" >> .bazelrc
-          echo "build --config=ci" >> .bazelrc
-          echo "build --//deploy:jazzer_version=${TAG#v}" >> .bazelrc
-
-      - name: Download merged jar
-        uses: actions/download-artifact@v4
-        with:
-          name: jazzer
-          path: _tmp/
-
-      - name: Generate Jazzer Bundle for Upload to Maven Central
-        env:
-          RELEASE_SIGNING_KEY_ID: ${{ secrets.RELEASE_SIGNING_KEY_ID }}
-          RELEASE_SIGNING_KEY_PRIVATE: ${{ secrets.RELEASE_SIGNING_KEY_PRIVATE }}
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-        run: JAZZER_JAR_PATH="$(pwd)/_tmp/jazzer.jar" bazel run deploy
-
-      - name: Upload Jazzer Bundle to Github Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: jazzer-maven-central-bundle
-          path: _tmp/release
-          if-no-files-found: error
-
-  create_release:
-    needs: build_release
-    runs-on: ubuntu-22.04
-
-    permissions:
-      contents: write # for creating releases
-
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-
-      - name: Download individual tar.gzs
-        uses: actions/download-artifact@v4
-        with:
-          pattern: jazzer_releases_*
-          merge-multiple: true
-          path: _releases/
-
-      - name: create release
-        uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v2.0.9
-        with:
-          generate_release_notes: true
-          draft: true
-          files: |
-            _releases/jazzer-linux.tar.gz
-            _releases/jazzer-linux-arm64.tar.gz
-            _releases/jazzer-macos.tar.gz
-            _releases/jazzer-windows.tar.gz
+#  maven_predeploy:
+#    runs-on: ubuntu-22.04
+#    needs: merge_jars
+#
+#    environment:
+#      name: Deploy
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Set up JDK
+#        uses: actions/setup-java@v4
+#        with:
+#          distribution: zulu
+#          java-version: 8
+#
+#      - name: Append build settings to .bazelrc
+#        shell: bash
+#        run: |
+#          TAG=${{ github.ref_name }}
+#          echo "build --remote_header=x-buildbuddy-api-key=${{ secrets.BUILDBUDDY_API_KEY }}" >> .bazelrc
+#          echo "build --config=ci" >> .bazelrc
+#          echo "build --//deploy:jazzer_version=${TAG#v}" >> .bazelrc
+#
+#      - name: Download merged jar
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: jazzer
+#          path: _tmp/
+#
+#      - name: Generate Jazzer Bundle for Upload to Maven Central
+#        env:
+#          RELEASE_SIGNING_KEY_ID: ${{ secrets.RELEASE_SIGNING_KEY_ID }}
+#          RELEASE_SIGNING_KEY_PRIVATE: ${{ secrets.RELEASE_SIGNING_KEY_PRIVATE }}
+#          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+#          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+#        run: JAZZER_JAR_PATH="$(pwd)/_tmp/jazzer.jar" bazel run deploy
+#
+#      - name: Upload Jazzer Bundle to Github Artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: jazzer-maven-central-bundle
+#          path: _tmp/release
+#          if-no-files-found: error
+#
+#  create_release:
+#    needs: build_release
+#    runs-on: ubuntu-22.04
+#
+#    permissions:
+#      contents: write # for creating releases
+#
+#    steps:
+#      - name: checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Download individual tar.gzs
+#        uses: actions/download-artifact@v4
+#        with:
+#          pattern: jazzer_releases_*
+#          merge-multiple: true
+#          path: _releases/
+#
+#      - name: create release
+#        uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v2.0.9
+#        with:
+#          generate_release_notes: true
+#          draft: true
+#          files: |
+#            _releases/jazzer-linux.tar.gz
+#            _releases/jazzer-linux-arm64.tar.gz
+#            _releases/jazzer-macos.tar.gz
+#            _releases/jazzer-windows.tar.gz
