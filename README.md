@@ -26,7 +26,7 @@ Jazzer is a coverage-guided, in-process fuzzer for the JVM platform developed by
 It is based on [libFuzzer](https://llvm.org/docs/LibFuzzer.html) and brings many of its instrumentation-powered mutation features to the JVM.
 
 Jazzer currently supports the following platforms:
-* Linux x86_64
+* Linux x86_64 & arm64 (aarch64)
 * macOS 12+ x86_64 & arm64
 * Windows x86_64
 

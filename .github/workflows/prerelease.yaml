@@ -13,7 +13,9 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            name: linux
+            name: linux-x86-64
+          - os: ubuntu-22.04-arm
+            name: linux-arm64
           - os: macos-14
             name: macos
           - os: windows-2022
@@ -161,6 +163,7 @@ jobs:
           generate_release_notes: true
           draft: true
           files: |
-            _releases/jazzer-linux.tar.gz
+            _releases/jazzer-linux-x86-64.tar.gz
+            _releases/jazzer-linux-arm64.tar.gz
             _releases/jazzer-macos.tar.gz
             _releases/jazzer-windows.tar.gz
