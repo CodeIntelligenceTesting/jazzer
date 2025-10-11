@@ -10,3 +10,20 @@ java_junit5_test(
         "@maven//:org_junit_jupiter_junit_jupiter_params",
     ],
 )
+
+java_junit5_test(
+    name = "HookBindingSanityTest",
+    srcs = ["HookBindingSanityTest.java"],
+    deps = JUNIT5_DEPS + [
+        "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers",
+        "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers:constants",
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "@clojure_jar//jar",
+        "@maven//:jakarta_el_jakarta_el_api",
+        "@maven//:javax_el_javax_el_api",
+        "@maven//:javax_persistence_javax_persistence_api",
+        "@maven//:javax_validation_validation_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
