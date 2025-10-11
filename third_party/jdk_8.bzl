@@ -57,6 +57,19 @@ def _remote_jdk8_repos(_):
         version = "8",
     )
     remote_java_repository(
+        name = "remote_jdk8_linux_aarch64",
+        target_compatible_with = [
+            "@platforms//os:linux",
+            "@platforms//cpu:aarch64",
+        ],
+        integrity = "sha256-xESdKEmfkiE657X/xclwsJR5M+P72BpWErtAcYMcK0Y=",
+        strip_prefix = "zulu8.74.0.17-ca-jdk8.0.392-linux_aarch64",
+        urls = [
+            "https://cdn.azul.com/zulu/bin/zulu8.74.0.17-ca-jdk8.0.392-linux_aarch64.tar.gz",
+        ],
+        version = "8",
+    )
+    remote_java_repository(
         name = "remote_jdk8_windows",
         target_compatible_with = [
             "@platforms//os:windows",
