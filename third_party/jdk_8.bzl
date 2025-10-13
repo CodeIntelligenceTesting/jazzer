@@ -23,10 +23,10 @@ def _remote_jdk8_repos(_):
             "@platforms//os:linux",
             "@platforms//cpu:x86_64",
         ],
-        sha256 = "39dc809ef8e88eff49d2eaeb48580729888486d56d846559b719da9c545e2884",
-        strip_prefix = "zulu8.74.0.17-ca-jdk8.0.392-linux_x64",
+        sha256 = "af194163bd9c870321f06b134f447869daafe6aef5b92b49d15b2fbc03a3b999",
+        strip_prefix = "zulu8.88.0.19-ca-jdk8.0.462-linux_x64",
         urls = [
-            "https://cdn.azul.com/zulu/bin/zulu8.74.0.17-ca-jdk8.0.392-linux_x64.tar.gz",
+            "https://cdn.azul.com/zulu/bin/zulu8.88.0.19-ca-jdk8.0.462-linux_x64.tar.gz",
         ],
         version = "8",
     )
@@ -36,10 +36,10 @@ def _remote_jdk8_repos(_):
             "@platforms//os:macos",
             "@platforms//cpu:aarch64",
         ],
-        sha256 = "51b5187e3d50fd469a67c4a9e2e816cb14e6247a51a24d8a96b88d2bdc512714",
-        strip_prefix = "zulu8.74.0.17-ca-jdk8.0.392-macosx_aarch64",
+        sha256 = "abfb45c587b80646eedc679f5fd1c47f1851fd682a043adf5c46c0f55e4d2321",
+        strip_prefix = "zulu8.88.0.19-ca-jdk8.0.462-macosx_aarch64",
         urls = [
-            "https://cdn.azul.com/zulu/bin/zulu8.74.0.17-ca-jdk8.0.392-macosx_aarch64.tar.gz",
+            "https://cdn.azul.com/zulu/bin/zulu8.88.0.19-ca-jdk8.0.462-macosx_aarch64.tar.gz",
         ],
         version = "8",
     )
@@ -49,10 +49,10 @@ def _remote_jdk8_repos(_):
             "@platforms//os:macos",
             "@platforms//cpu:x86_64",
         ],
-        sha256 = "ab29ecd51033c8804cd0711c225266c3b757518c90040cb279e329bf1eb9b387",
-        strip_prefix = "zulu8.74.0.17-ca-jdk8.0.392-macosx_x64",
+        sha256 = "e39adde0283ff1cb5c82193654c15688ea5ea4e6f38336d001c43d81d26c102c",
+        strip_prefix = "zulu8.88.0.19-ca-jdk8.0.462-macosx_x64",
         urls = [
-            "https://cdn.azul.com/zulu/bin/zulu8.74.0.17-ca-jdk8.0.392-macosx_x64.tar.gz",
+            "https://cdn.azul.com/zulu/bin/zulu8.88.0.19-ca-jdk8.0.462-macosx_x64.tar.gz",
         ],
         version = "8",
     )
@@ -62,10 +62,10 @@ def _remote_jdk8_repos(_):
             "@platforms//os:linux",
             "@platforms//cpu:aarch64",
         ],
-        integrity = "sha256-xESdKEmfkiE657X/xclwsJR5M+P72BpWErtAcYMcK0Y=",
-        strip_prefix = "zulu8.74.0.17-ca-jdk8.0.392-linux_aarch64",
+        sha256 = "7f3a4f6a24f764259db98c69e759bf7cae95ce957dadd74117ed5d6037fcfcc7",
+        strip_prefix = "zulu8.88.0.19-ca-jdk8.0.462-linux_aarch64",
         urls = [
-            "https://cdn.azul.com/zulu/bin/zulu8.74.0.17-ca-jdk8.0.392-linux_aarch64.tar.gz",
+            "https://cdn.azul.com/zulu/bin/zulu8.88.0.19-ca-jdk8.0.462-linux_aarch64.tar.gz",
         ],
         version = "8",
     )
@@ -75,10 +75,10 @@ def _remote_jdk8_repos(_):
             "@platforms//os:windows",
             "@platforms//cpu:x86_64",
         ],
-        sha256 = "3ba91c758ca93c527983ed3f409ee504c6fc33e0a697672db9c959abba10e38d",
-        strip_prefix = "zulu8.74.0.17-ca-jdk8.0.392-win_x64",
+        sha256 = "4811dd4bb476f7484d132cb6393ca58344c45d43b9547f4251b15c5b8d1fd580",
+        strip_prefix = "zulu8.88.0.19-ca-jdk8.0.462-win_x64",
         urls = [
-            "https://cdn.azul.com/zulu/bin/zulu8.74.0.17-ca-jdk8.0.392-win_x64.zip",
+            "https://cdn.azul.com/zulu/bin/zulu8.88.0.19-ca-jdk8.0.462-win_x64.zip",
         ],
         version = "8",
     )
