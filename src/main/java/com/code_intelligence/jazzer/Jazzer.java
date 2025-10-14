@@ -218,7 +218,7 @@ public class Jazzer {
         List<String> classes = Opt.listFuzzTests.get();
         List<String> fuzzTests = FuzzTestLister.listFuzzTests(classes);
         if (!fuzzTests.isEmpty()) {
-          fuzzTests.forEach(Log::println);
+          fuzzTests.forEach(Log::structuredOutput);
           exit(0);
         } else {
           Log.error("Could not find any fuzz tests in " + classes);
