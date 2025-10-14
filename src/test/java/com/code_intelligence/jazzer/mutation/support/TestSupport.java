@@ -42,6 +42,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.function.BiConsumer;
@@ -426,6 +427,11 @@ public final class TestSupport {
       map.put((K) objs[i], (V) objs[i + 1]);
     }
     return map;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <K> LinkedHashSet<K> asSet(K... objs) {
+    return new LinkedHashSet<>(Arrays.asList(objs));
   }
 
   @SafeVarargs
