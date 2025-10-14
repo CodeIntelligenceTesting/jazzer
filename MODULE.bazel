@@ -103,14 +103,14 @@ TEST_MAVEN_ARTIFACTS_FIXED = [
 TEST_MAVEN_ARTIFACTS = [
     # keep sorted
     # renovate: keep updated
-    "com.google.truth.extensions:truth-java8-extension:1.4.2",
-    "com.google.truth.extensions:truth-liteproto-extension:1.4.2",
-    "com.google.truth.extensions:truth-proto-extension:1.4.2",
-    "com.google.truth:truth:1.4.2",
+    "com.google.truth.extensions:truth-java8-extension:1.4.5",
+    "com.google.truth.extensions:truth-liteproto-extension:1.4.5",
+    "com.google.truth.extensions:truth-proto-extension:1.4.5",
+    "com.google.truth:truth:1.4.5",
     "junit:junit:4.13.2",
-    "org.assertj:assertj-core:3.25.3",
-    "org.jacoco:org.jacoco.core:0.8.12",
-    "org.mockito:mockito-core:5.11.0",
+    "org.assertj:assertj-core:3.27.6",
+    "org.jacoco:org.jacoco.core:0.8.14",
+    "org.mockito:mockito-core:5.20.0",
     "org.openjdk.jmh:jmh-core:1.37",
     "org.openjdk.jmh:jmh-generator-annprocess:1.37",
 ]
