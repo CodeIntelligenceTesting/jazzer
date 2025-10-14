@@ -24,6 +24,10 @@ import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * Generates a {@code float} or {@code double} which is finite, that is, a number which is neither
+ * NaN nor Infinity.
+ */
 @Target(TYPE_USE)
 @Retention(RUNTIME)
 @AppliesTo({float.class, Float.class, double.class, Double.class})
