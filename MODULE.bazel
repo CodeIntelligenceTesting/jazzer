@@ -14,7 +14,7 @@ bazel_dep(name = "buildifier_prebuilt", version = "6.4.0")
 bazel_dep(name = "contrib_rules_jvm", version = "0.24.0")
 bazel_dep(name = "googletest", version = "1.14.0.bcr.1")
 bazel_dep(name = "platforms", version = "0.0.10")
-bazel_dep(name = "protobuf")
+bazel_dep(name = "protobuf", version = "32.1")
 bazel_dep(name = "rules_android", version = "0.1.1")
 bazel_dep(name = "rules_android_ndk", version = "0.1.2")
 bazel_dep(name = "rules_foreign_cc", version = "0.11.1")
@@ -34,17 +34,6 @@ bazel_dep(name = "rules_kotlin", version = "1.9.6")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_pkg", version = "0.9.1")
 bazel_dep(name = "toolchains_llvm", version = "0.10.3")
-
-# TODO: Remove after a release that includes https://github.com/protocolbuffers/protobuf/commit/a7b0421c78412baa48704d727601a17ac0f451d1.
-single_version_override(
-    module_name = "protobuf",
-    patch_strip = 1,
-    patches = [
-        # https://github.com/protocolbuffers/protobuf/pull/15332
-        "//third_party:protobuf-disable-layering_check.patch",
-    ],
-    version = "23.1",
-)
 
 ################################################################################
 # Maven dependencies
@@ -390,9 +379,9 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 """,
-    sha256 = "21bfdfef25554fa2e30aec2a9f9b58f4a17c1d8c8593763fa94a6dd74b226594",
-    strip_prefix = "libprotobuf-mutator-3b28530531b154a748fe9884bc9219b4966f0754",
-    urls = ["https://github.com/google/libprotobuf-mutator/archive/3b28530531b154a748fe9884bc9219b4966f0754.tar.gz"],
+    integrity = "sha256-iVlYiBtJk99wtPZSwtgsW9l9IvgByk9DDWVGgJ3yk9U=",
+    strip_prefix = "libprotobuf-mutator-1.5",
+    urls = ["https://github.com/google/libprotobuf-mutator/archive/refs/tags/v1.5.tar.gz"],
 )
 
 ################################################################################
