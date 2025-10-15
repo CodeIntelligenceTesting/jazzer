@@ -86,6 +86,11 @@ final class ArrayMutatorFactory implements MutatorFactory {
       require(
           minLength >= 0,
           format("WithLength#min=%d needs to be greater than or equal to 0", minLength));
+      require(
+          minLength <= maxLength,
+          format(
+              "WithLength#min=%d needs to be smaller or equal than WithLength#max=%d",
+              minLength, maxLength));
     }
 
     @Override
