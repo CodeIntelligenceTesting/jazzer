@@ -96,9 +96,8 @@ final class MapMutatorFactory implements MutatorFactory {
         int maxSize) {
       this.keyMutator = keyMutator;
       this.valueMutator = valueMutator;
-      this.minSize = Math.max(minSize, DEFAULT_MIN_SIZE);
-      this.maxSize = Math.min(maxSize, DEFAULT_MAX_SIZE);
-
+      this.minSize = minSize;
+      this.maxSize = maxSize;
       require(maxSize >= 1, format("WithSize#max=%d needs to be greater than 0", maxSize));
       // TODO: Add support for min > 0 to map. If min > 0, then #read can fail to construct
       //       sufficiently many distinct keys, but the mutation framework currently doesn't offer
