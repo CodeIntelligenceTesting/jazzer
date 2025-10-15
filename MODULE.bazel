@@ -420,6 +420,29 @@ REMOTE_JDK8 = [
     for jdk in REMOTE_JDK8
 ]
 
+# Use a more recent JDK 21 than is made available by rules_java.
+# This works around a test failure in the StressTest when updating protobuf to a
+# version > 26.0.
+# Remove after https://github.com/bazelbuild/rules_java/pull/328 has been merged/released.
+remote_jdk21_repos = use_extension("//third_party:jdk_21.bzl", "remote_jdk21_repos")
+
+REMOTE_JDK21 = [
+    "remote_jdk21_linux",
+    "remote_jdk21_macos",
+    "remote_jdk21_macos_aarch64",
+    "remote_jdk21_windows",
+]
+
+[
+    use_repo(remote_jdk21_repos, "{}_toolchain_config_repo".format(jdk))
+    for jdk in REMOTE_JDK21
+]
+
+[
+    register_toolchains("@{}_toolchain_config_repo//:all".format(jdk))
+    for jdk in REMOTE_JDK21
+]
+
 register_toolchains("//bazel/toolchains:kotlin_toolchain")
 
 # Used in CI.
