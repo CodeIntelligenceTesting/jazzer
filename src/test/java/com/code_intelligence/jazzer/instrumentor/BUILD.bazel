@@ -1,5 +1,5 @@
-load("//bazel:kotlin.bzl", "ktlint", "wrapped_kt_jvm_test")
 load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("//bazel:kotlin.bzl", "ktlint", "wrapped_kt_jvm_test")
 
 kt_jvm_library(
     name = "patch_test_utils",

@@ -1,6 +1,6 @@
-load("//bazel:compat.bzl", "ANDROID_ONLY", "SKIP_ON_WINDOWS")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@rules_jni//jni:defs.bzl", "java_jni_library")
+load("//bazel:compat.bzl", "ANDROID_ONLY", "SKIP_ON_WINDOWS")
 
 java_import(
     name = "jazzer_bootstrap_android_import",
