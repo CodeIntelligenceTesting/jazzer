@@ -50,9 +50,9 @@ public class ArgumentsMutatorFuzzTest {
   static List<ArgumentsMutator> mutators =
       methods.stream()
           .map(
-              m ->
-                  ArgumentsMutator.forMethod(Mutators.newFactory(), m)
-                      .orElseThrow(() -> new IllegalArgumentException("Invalid method: " + m)))
+              method ->
+                  ArgumentsMutator.forMethod(Mutators.newFactory(), method)
+                      .orElseThrow(() -> new IllegalArgumentException("Invalid method: " + method)))
           .collect(Collectors.toList());
 
   static {

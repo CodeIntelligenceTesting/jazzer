@@ -23,6 +23,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
+import com.code_intelligence.jazzer.mutation.annotation.ValuePool;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -31,6 +32,8 @@ import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
 import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
+import com.code_intelligence.jazzer.mutation.support.TypeSupport;
+import com.code_intelligence.jazzer.mutation.support.ValuePoolRegistry;
 import com.code_intelligence.jazzer.utils.Log;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -75,7 +78,7 @@ public final class ArgumentsMutator {
   }
 
   public static ArgumentsMutator forMethodOrThrow(Method method) {
-    return forMethod(Mutators.newFactory(), method)
+    return forMethod(Mutators.newFactory(new ValuePoolRegistry(method)), method)
         .orElseThrow(
             () ->
                 new IllegalArgumentException(
@@ -83,7 +86,7 @@ public final class ArgumentsMutator {
   }
 
   public static Optional<ArgumentsMutator> forMethod(Method method) {
-    return forMethod(Mutators.newFactory(), method);
+    return forMethod(Mutators.newFactory(new ValuePoolRegistry(method)), method);
   }
 
   public static Optional<ArgumentsMutator> forMethod(
@@ -97,11 +100,20 @@ public final class ArgumentsMutator {
       Log.error(validationError.getMessage());
       throw validationError;
     }
+
+    ValuePool[] valuePools = method.getAnnotationsByType(ValuePool.class);
+
     return toArrayOrEmpty(
             stream(method.getAnnotatedParameterTypes())
                 .map(
                     type -> {
-                      Optional<SerializingMutator<?>> mutator = mutatorFactory.tryCreate(type);
+                      // Forward all @ValuePool annotations of the fuzz test method to each
+                      // arg.
+                      AnnotatedType t = type;
+                      for (ValuePool pool : valuePools) {
+                        t = TypeSupport.withExtraAnnotations(t, pool);
+                      }
+                      Optional<SerializingMutator<?>> mutator = mutatorFactory.tryCreate(t);
                       if (!mutator.isPresent()) {
                         Log.error(
                             String.format(
