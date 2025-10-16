@@ -17,15 +17,21 @@
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import com.code_intelligence.jazzer.mutation.support.ValuePoolRegistry;
 import java.util.stream.Stream;
 
 public final class LangMutators {
   private LangMutators() {}
 
   public static Stream<MutatorFactory> newFactories() {
+    return newFactories(null);
+  }
+
+  public static Stream<MutatorFactory> newFactories(ValuePoolRegistry valuePoolRegistry) {
     return Stream.of(
         // DON'T EVER SORT THESE! The order is important for the mutator engine to work correctly.
         new NullableMutatorFactory(),
+        new ValuePoolMutatorFactory(valuePoolRegistry),
         new BooleanMutatorFactory(),
         new FloatingPointMutatorFactory(),
         new IntegralMutatorFactory(),

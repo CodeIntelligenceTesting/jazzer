@@ -17,7 +17,9 @@
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.*;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withLength;
 
 import com.code_intelligence.jazzer.mutation.annotation.Ascii;
 import com.code_intelligence.jazzer.mutation.annotation.UrlSegment;

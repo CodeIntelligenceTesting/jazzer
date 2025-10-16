@@ -56,6 +56,7 @@ import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutators;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
+import com.code_intelligence.jazzer.mutation.support.ValuePoolRegistry;
 import com.google.protobuf.Any;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.Descriptors.Descriptor;
@@ -87,6 +88,11 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public final class BuilderMutatorFactory implements MutatorFactory {
+  final ValuePoolRegistry valuePoolRegistry;
+
+  public BuilderMutatorFactory(ValuePoolRegistry valuePoolRegistry) {
+    this.valuePoolRegistry = valuePoolRegistry;
+  }
 
   // Generous size limit for decoded protobuf messages. This is necessary to guard against OOM
   // errors when the corpus format changes e.g. due to a change in the fuzz test signature.
@@ -175,7 +181,8 @@ public final class BuilderMutatorFactory implements MutatorFactory {
       // to follow constructors or builders of the EnumValueDescriptor class.
       return ChainedMutatorFactory.of(
           Stream.concat(
-              Stream.concat(LangMutators.newFactories(), CollectionMutators.newFactories()),
+              Stream.concat(
+                  LangMutators.newFactories(valuePoolRegistry), CollectionMutators.newFactories()),
               Stream.of(enumFactory)));
     } else if (field.getJavaType() == JavaType.MESSAGE) {
       if (field.isMapField()) {
