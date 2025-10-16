@@ -17,6 +17,7 @@
 package com.code_intelligence.selffuzz.mutation.mutator.lang;
 
 import static com.code_intelligence.selffuzz.Helpers.assertMutator;
+import static com.code_intelligence.selffuzz.Helpers.dummyMutatorRuntime;
 import static com.code_intelligence.selffuzz.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -42,6 +43,7 @@ class FloatingPointMutatorFuzzTests {
         (SerializingMutator<Double>)
             Mutators.newFactory()
                 .createOrThrow(
+                    dummyMutatorRuntime(),
                     withExtraAnnotations(
                         new TypeHolder<@NotNull Double>() {}.annotatedType(), range));
     assertMutator(mutator, data, seed);
@@ -56,6 +58,7 @@ class FloatingPointMutatorFuzzTests {
         (SerializingMutator<Float>)
             Mutators.newFactory()
                 .createOrThrow(
+                    dummyMutatorRuntime(),
                     withExtraAnnotations(
                         new TypeHolder<@NotNull Float>() {}.annotatedType(), range));
     assertMutator(mutator, data, seed);

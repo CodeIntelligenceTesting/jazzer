@@ -32,6 +32,7 @@ import com.code_intelligence.jazzer.mutation.api.Cache;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.TypeSupport;
 import com.code_intelligence.jazzer.utils.Log;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -83,7 +84,7 @@ public final class ChainedMutatorFactory extends ExtendedMutatorFactory {
   @Override
   @CheckReturnValue
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory parent) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory parent) {
     AnnotatedType previousType = currentType;
     int currentPrependedFactoriesSize = prependedFactories.size();
 
@@ -109,7 +110,7 @@ public final class ChainedMutatorFactory extends ExtendedMutatorFactory {
                       IntStream.range(0, currentPrependedFactoriesSize)
                           .mapToObj(prependedFactories::get),
                       fixedFactories.stream())
-                  .map(factory -> factory.tryCreate(type, parent)));
+                  .map(factory -> factory.tryCreate(runtime, type, parent)));
       if (!result.isPresent()) {
         if (!currentSuppressLog) {
           String indent = join("", nCopies(level, "    "));
@@ -146,7 +147,7 @@ public final class ChainedMutatorFactory extends ExtendedMutatorFactory {
   public void internMutator(SerializingMutator<?> mutator) {
     AnnotatedType localCurrentType = currentType;
     prependedFactories.add(
-        (type, factory) -> {
+        (runtime, type, factory) -> {
           if (annotatedTypeEquals(type, localCurrentType)) {
             // A mutator for this aggregate type has already been created, which is the case in
             // particular if it is recursive, i.e., transitively has a field of the same type. We

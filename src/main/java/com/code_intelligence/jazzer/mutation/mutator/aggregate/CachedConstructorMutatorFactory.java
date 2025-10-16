@@ -24,6 +24,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubcla
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
@@ -34,18 +35,21 @@ final class CachedConstructorMutatorFactory implements MutatorFactory {
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, Object.class)
         .filter(BeanSupport::isConcreteClass)
         .flatMap(
             clazz ->
                 findFirstPresent(
                     findConstructorsByParameterCount(clazz)
-                        .map(constructor -> buildMutator(constructor, type, factory))));
+                        .map(constructor -> buildMutator(runtime, constructor, type, factory))));
   }
 
   private static Optional<SerializingMutator<?>> buildMutator(
-      Constructor<?> constructor, AnnotatedType initialType, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime,
+      Constructor<?> constructor,
+      AnnotatedType initialType,
+      ExtendedMutatorFactory factory) {
 
     Function<Object[], Object> instantiator =
         asInstantiationFunction(MethodHandles.lookup(), constructor);
@@ -61,6 +65,7 @@ final class CachedConstructorMutatorFactory implements MutatorFactory {
         instance -> factory.getCache().get(instance);
 
     return AggregatesHelper.createMutator(
+        runtime,
         factory,
         constructor.getDeclaringClass(),
         constructor.getAnnotatedParameterTypes(),

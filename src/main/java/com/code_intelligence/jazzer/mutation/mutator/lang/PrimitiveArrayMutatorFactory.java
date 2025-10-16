@@ -31,6 +31,7 @@ import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutatorFactory;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.RangeSupport;
 import com.code_intelligence.jazzer.mutation.support.RangeSupport.DoubleRange;
 import com.code_intelligence.jazzer.mutation.support.RangeSupport.FloatRange;
@@ -50,7 +51,7 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
 
     Optional<Class<?>> clazz =
         findFirstParentIfClass(
@@ -63,7 +64,7 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
             float[].class,
             double[].class,
             boolean[].class);
-    return clazz.map(aClass -> new PrimitiveArrayMutator<>(type));
+    return clazz.map(aClass -> new PrimitiveArrayMutator<>(runtime, type));
   }
 
   // public for testing
@@ -83,14 +84,15 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
     private final Function<T, byte[]> toBytes;
 
     @SuppressWarnings("unchecked")
-    public PrimitiveArrayMutator(AnnotatedType type) {
+    public PrimitiveArrayMutator(MutatorRuntime runtime, AnnotatedType type) {
       elementType = ((AnnotatedArrayType) type).getAnnotatedGenericComponentType();
       extractRange(elementType);
       AnnotatedType innerByteArray =
           forwardAnnotations(
               type, convertWithLength(type, new TypeHolder<byte[]>() {}.annotatedType()));
       innerMutator =
-          (SerializingMutator<byte[]>) LibFuzzerMutatorFactory.tryCreate(innerByteArray).get();
+          (SerializingMutator<byte[]>)
+              LibFuzzerMutatorFactory.tryCreate(runtime, innerByteArray).get();
       toPrimitive = (Function<byte[], T>) makeBytesToPrimitiveArrayConverter(elementType);
       toBytes = (Function<T, byte[]>) makePrimitiveArrayToBytesConverter(elementType);
     }

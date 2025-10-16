@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.createOrThrow;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -90,7 +91,9 @@ class MessageMutatorTest {
 
     SerializingMutator<ExtendedMessage2> mutator =
         (SerializingMutator<ExtendedMessage2>)
-            factory.createOrThrow(new TypeHolder<@NotNull ExtendedMessage2>() {}.annotatedType());
+            factory.createOrThrow(
+                dummyMutatorRuntime(),
+                new TypeHolder<@NotNull ExtendedMessage2>() {}.annotatedType());
     ExtendedMessage2 extendedMessage = mutator.readExclusive(new ByteArrayInputStream(bytes));
     assertThat(extendedMessage)
         .isEqualTo(

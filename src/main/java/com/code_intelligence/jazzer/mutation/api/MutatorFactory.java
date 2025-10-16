@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.api;
 
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
@@ -35,14 +36,15 @@ public interface MutatorFactory {
    *     this factory can't create such mutators
    */
   @CheckReturnValue
-  Optional<SerializingMutator<?>> tryCreate(AnnotatedType type, ExtendedMutatorFactory factory);
+  Optional<SerializingMutator<?>> tryCreate(
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory);
 
   /**
    * This exception can be thrown in mutator constructors to indicate that they failed to construct
    * a child mutator. This should be treated by callers as the equivalent of returning {@link
-   * Optional#empty()} from {@link #tryCreate(AnnotatedType, ExtendedMutatorFactory)}, which may not
-   * be possible in mutator factories for recursive structures that need to create child mutators in
-   * a mutators constructor.
+   * Optional#empty()} from {@link #tryCreate(MutatorRuntime, AnnotatedType,
+   * ExtendedMutatorFactory)}, which may not be possible in mutator factories for recursive
+   * structures that need to create child mutators in a mutators constructor.
    */
   final class FailedToConstructChildMutatorException extends RuntimeException {
     public FailedToConstructChildMutatorException() {

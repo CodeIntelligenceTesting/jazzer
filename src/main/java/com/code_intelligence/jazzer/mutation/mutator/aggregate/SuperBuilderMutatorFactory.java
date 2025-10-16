@@ -25,6 +25,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubcla
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Method;
@@ -44,7 +45,7 @@ public final class SuperBuilderMutatorFactory implements MutatorFactory {
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, Object.class)
         .filter(this::isBuilderType)
         .flatMap(
@@ -67,6 +68,7 @@ public final class SuperBuilderMutatorFactory implements MutatorFactory {
                             instance -> factory.getCache().get(instance);
 
                         return AggregatesHelper.createMutator(
+                            runtime,
                             factory,
                             clazz,
                             parameterTypes(builderSetters),

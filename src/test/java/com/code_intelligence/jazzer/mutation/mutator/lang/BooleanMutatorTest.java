@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -42,6 +43,7 @@ class BooleanMutatorTest {
     SerializingMutator<Boolean> mutator =
         (SerializingMutator<Boolean>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new ParameterHolder() {
                   void singleParam(boolean parameter) {}
                 }.annotatedType());
@@ -63,7 +65,8 @@ class BooleanMutatorTest {
   void testBoxed() {
     SerializingMutator<Boolean> mutator =
         (SerializingMutator<Boolean>)
-            factory.createOrThrow(new TypeHolder<@NotNull Boolean>() {}.annotatedType());
+            factory.createOrThrow(
+                dummyMutatorRuntime(), new TypeHolder<@NotNull Boolean>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Boolean");
 
     Boolean bool;
@@ -83,6 +86,7 @@ class BooleanMutatorTest {
     SerializingMutator<Boolean> mutator =
         (SerializingMutator<Boolean>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new ParameterHolder() {
                   void singleParam(boolean parameter) {}
                 }.annotatedType());

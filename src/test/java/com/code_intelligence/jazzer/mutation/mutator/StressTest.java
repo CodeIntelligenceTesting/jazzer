@@ -21,6 +21,7 @@ import static com.code_intelligence.jazzer.mutation.support.InputStreamSupport.e
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.asMap;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.lang.Math.floor;
@@ -1365,7 +1366,7 @@ public class StressTest {
     validateAnnotationUsage(type);
     ExtendedMutatorFactory factory = Mutators.newFactory();
 
-    SerializingMutator mutator = factory.createOrThrow(type);
+    SerializingMutator mutator = factory.createOrThrow(dummyMutatorRuntime(), type);
     assertThat(mutator.toString()).isEqualTo(mutatorTree);
     assertThat(mutator.hasFixedSize()).isEqualTo(hasFixedSize);
 

@@ -30,6 +30,7 @@ import com.code_intelligence.jazzer.mutation.combinator.InPlaceProductMutator;
 import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
 import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import com.code_intelligence.jazzer.utils.Log;
 import java.io.ByteArrayInputStream;
@@ -97,11 +98,13 @@ public final class ArgumentsMutator {
       Log.error(validationError.getMessage());
       throw validationError;
     }
+    MutatorRuntime runtime = MutatorRuntime.forFuzzTestMethod(method);
     return toArrayOrEmpty(
             stream(method.getAnnotatedParameterTypes())
                 .map(
                     type -> {
-                      Optional<SerializingMutator<?>> mutator = mutatorFactory.tryCreate(type);
+                      Optional<SerializingMutator<?>> mutator =
+                          mutatorFactory.tryCreate(runtime, type);
                       if (!mutator.isPresent()) {
                         Log.error(
                             String.format(

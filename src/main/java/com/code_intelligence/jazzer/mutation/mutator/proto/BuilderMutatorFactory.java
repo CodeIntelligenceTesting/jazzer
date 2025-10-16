@@ -55,6 +55,7 @@ import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutators;
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors.Descriptor;
@@ -87,6 +88,7 @@ import java.util.stream.Stream;
 
 public final class BuilderMutatorFactory implements MutatorFactory {
   private <T extends Builder, U> InPlaceMutator<T> mutatorForField(
+      MutatorRuntime runtime,
       AnnotatedType initialType,
       FieldDescriptor field,
       Annotation[] annotations,
@@ -101,7 +103,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
     InPlaceMutator<T> mutator;
     if (field.isMapField()) {
       SerializingInPlaceMutator<Map> underlyingMutator =
-          (SerializingInPlaceMutator<Map>) factory.createInPlaceOrThrow(typeToMutate);
+          (SerializingInPlaceMutator<Map>) factory.createInPlaceOrThrow(runtime, typeToMutate);
       mutator =
           mutateProperty(
               builder -> getMapField(builder, field),
@@ -109,12 +111,12 @@ public final class BuilderMutatorFactory implements MutatorFactory {
               (builder, value) -> setMapField(builder, field, value));
     } else if (field.isRepeated()) {
       SerializingInPlaceMutator<List<U>> underlyingMutator =
-          (SerializingInPlaceMutator<List<U>>) factory.createInPlaceOrThrow(typeToMutate);
+          (SerializingInPlaceMutator<List<U>>) factory.createInPlaceOrThrow(runtime, typeToMutate);
       mutator =
           mutateViaView(builder -> makeMutableRepeatedFieldView(builder, field), underlyingMutator);
     } else if (field.hasPresence()) {
       SerializingMutator<U> underlyingMutator =
-          (SerializingMutator<U>) factory.createOrThrow(typeToMutate);
+          (SerializingMutator<U>) factory.createOrThrow(runtime, typeToMutate);
       mutator =
           mutateProperty(
               builder -> getPresentFieldOrNull(builder, field),
@@ -122,7 +124,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
               (builder, value) -> setFieldWithPresence(builder, field, value));
     } else {
       SerializingMutator<U> underlyingMutator =
-          (SerializingMutator<U>) factory.createOrThrow(typeToMutate);
+          (SerializingMutator<U>) factory.createOrThrow(runtime, typeToMutate);
       mutator =
           mutateProperty(
               builder -> (U) builder.getField(field),
@@ -143,7 +145,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
       // Proto enum fields are special as their type (EnumValueDescriptor) does not encode their
       // domain - we need the actual EnumDescriptor instance.
       MutatorFactory enumFactory =
-          (type, factory) ->
+          (runtime, type, factory) ->
               asSubclassOrEmpty(type, EnumValueDescriptor.class)
                   .map(
                       unused -> {
@@ -188,7 +190,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
           originalFactory.getCache(),
           Stream.of(
               originalFactory,
-              (type, factory) ->
+              (runtime, type, factory) ->
                   asSubclassOrEmpty(type, Message.Builder.class)
                       .flatMap(
                           clazz -> {
@@ -207,6 +209,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
                             // subfields.
                             return Optional.of(
                                 makeBuilderMutator(
+                                    runtime,
                                     type,
                                     originalFactory,
                                     DynamicMessage.getDefaultInstance(messageDescriptor),
@@ -218,6 +221,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
   }
 
   private <T extends Builder> Stream<InPlaceMutator<T>> mutatorsForFields(
+      MutatorRuntime runtime,
       AnnotatedType initialType,
       Optional<OneofDescriptor> oneofField,
       List<FieldDescriptor> fields,
@@ -248,13 +252,13 @@ public final class BuilderMutatorFactory implements MutatorFactory {
               // Mutating to the unset (-1) state is handled by the individual field mutators, which
               // are created nullable as oneof fields report that they track presence.
               fields.stream()
-                  .map(field -> mutatorForField(initialType, field, annotations, factory))
+                  .map(field -> mutatorForField(runtime, initialType, field, annotations, factory))
                   .toArray(InPlaceMutator[]::new)));
     } else {
       // All non-oneof fields are mutated independently, using the order in which they are declared
       // in the .proto file (which may not coincide with the order by field number).
       return fields.stream()
-          .map(field -> mutatorForField(initialType, field, annotations, factory));
+          .map(field -> mutatorForField(runtime, initialType, field, annotations, factory));
     }
   }
 
@@ -337,7 +341,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
       new HashMap<>();
 
   private SerializingMutator<Any.Builder> mutatorForAny(
-      AnySource anySource, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnySource anySource, ExtendedMutatorFactory factory) {
     Map<String, Integer> typeUrlToIndex =
         IntStream.range(0, anySource.value().length)
             .boxed()
@@ -358,6 +362,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
                           SerializingMutator<Message> messageMutator =
                               (SerializingMutator<Message>)
                                   factory.createOrThrow(
+                                      runtime,
                                       notNull(
                                           withExtraAnnotations(
                                               getMessageType(messageClass), anySource)));
@@ -387,7 +392,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, Message.Builder.class)
         .flatMap(
             builderClass -> {
@@ -414,11 +419,12 @@ public final class BuilderMutatorFactory implements MutatorFactory {
 
               return Optional.of(
                   makeBuilderMutator(
-                      type, factory, defaultInstance, type.getDeclaredAnnotations()));
+                      runtime, type, factory, defaultInstance, type.getDeclaredAnnotations()));
             });
   }
 
   private SerializingMutator<?> makeBuilderMutator(
+      MutatorRuntime runtime,
       AnnotatedType initialType,
       ExtendedMutatorFactory factory,
       Message defaultInstance,
@@ -442,7 +448,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
     // If there is no @AnySource, mutate the Any.Builder fields just like a regular message.
     // TODO: Determine whether we should show a warning in this case.
     if (descriptor.equals(Any.getDescriptor()) && anySource != null) {
-      return mutatorForAny(anySource, factory);
+      return mutatorForAny(runtime, anySource, factory);
     }
 
     // assemble inserts the instance of the newly created builder mutator into the
@@ -473,6 +479,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
                     .flatMap(
                         entry ->
                             mutatorsForFields(
+                                runtime,
                                 initialType,
                                 entry.getKey(),
                                 entry.getValue(),

@@ -29,6 +29,7 @@ import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -44,7 +45,7 @@ import java.util.function.Predicate;
 final class ArrayMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     if (!(type instanceof AnnotatedArrayType)) {
       return Optional.empty();
     }
@@ -60,7 +61,7 @@ final class ArrayMutatorFactory implements MutatorFactory {
         .flatMap(
             propagatedElementClass ->
                 Optional.of(propagatedElementType)
-                    .flatMap(factory::tryCreate)
+                    .flatMap(t -> factory.tryCreate(runtime, t))
                     .map(
                         elementMutator ->
                             new ArrayMutator<>(

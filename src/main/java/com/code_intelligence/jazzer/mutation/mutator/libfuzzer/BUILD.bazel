@@ -14,6 +14,7 @@ java_library(
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/runtime",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
         "//src/main/java/com/code_intelligence/jazzer/runtime:mutator",
         "@maven//:com_google_errorprone_error_prone_annotations",
@@ -35,6 +36,7 @@ java_library(
         "//src/main/java/com/code_intelligence/jazzer/driver:fuzzed_data_provider_impl",
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/combinator",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/runtime",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
         "@maven//:com_google_errorprone_error_prone_annotations",
     ],

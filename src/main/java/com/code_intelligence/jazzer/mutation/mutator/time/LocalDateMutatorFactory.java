@@ -25,6 +25,7 @@ import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.lang.reflect.AnnotatedType;
 import java.time.LocalDate;
@@ -42,10 +43,10 @@ final class LocalDateMutatorFactory implements MutatorFactory {
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
 
     return asSubclassOrEmpty(type, LocalDate.class)
-        .flatMap(parent -> factory.tryCreate(INNER_LONG_TYPE))
+        .flatMap(parent -> factory.tryCreate(runtime, INNER_LONG_TYPE))
         .map(
             longMutator ->
                 mutateThenMap(

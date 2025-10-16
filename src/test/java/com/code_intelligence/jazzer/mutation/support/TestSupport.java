@@ -29,6 +29,7 @@ import com.code_intelligence.jazzer.mutation.api.InPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.MustBeClosed;
 import java.io.DataInputStream;
@@ -474,7 +475,28 @@ public final class TestSupport {
   }
 
   public static <T> SerializingMutator<T> createOrThrow(
-      ExtendedMutatorFactory factory, TypeHolder<T> typeHolder) {
-    return (SerializingMutator<T>) factory.createOrThrow(typeHolder.annotatedType());
+      MutatorRuntime runtime, ExtendedMutatorFactory factory, TypeHolder<T> typeHolder) {
+    return (SerializingMutator<T>) factory.createOrThrow(runtime, typeHolder.annotatedType());
   }
+
+  public static <T> SerializingMutator<T> createOrThrow(
+      ExtendedMutatorFactory factory, TypeHolder<T> typeHolder) {
+    return (SerializingMutator<T>)
+        factory.createOrThrow(dummyMutatorRuntime(), typeHolder.annotatedType());
+  }
+
+  /**
+   * A dummy runtime instance for use in tests that do not depend on the runtime information.
+   *
+   * @return A dummy {@link MutatorRuntime} instance.
+   */
+  public static MutatorRuntime dummyMutatorRuntime() {
+    try {
+      return MutatorRuntime.forFuzzTestMethod(TestSupport.class.getMethod("dummyFuzzTestMethod"));
+    } catch (NoSuchMethodException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void dummyFuzzTestMethod() {}
 }
