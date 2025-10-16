@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.engine;
 
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.utils.CapturedOutput.withCapturedOutput;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -38,6 +39,7 @@ public class ChainedMutatorFactoryTest {
             () -> {
               ExtendedMutatorFactory factory = Mutators.newFactory();
               factory.tryCreate(
+                  dummyMutatorRuntime(),
                   new TypeHolder<List<Map<@NotNull String, System>>>() {}.annotatedType());
             });
 

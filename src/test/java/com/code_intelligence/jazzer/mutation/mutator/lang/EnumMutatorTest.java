@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -55,7 +56,8 @@ class EnumMutatorTest {
   void testBoxed() {
     SerializingMutator<TestEnum> mutator =
         (SerializingMutator<TestEnum>)
-            factory.createOrThrow(new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
+            factory.createOrThrow(
+                dummyMutatorRuntime(), new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Enum<TestEnum>");
     TestEnum cl;
     try (MockPseudoRandom prng = mockPseudoRandom(0)) {
@@ -89,7 +91,8 @@ class EnumMutatorTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> {
-          factory.createOrThrow(new TypeHolder<@NotNull TestEnumOne>() {}.annotatedType());
+          factory.createOrThrow(
+              dummyMutatorRuntime(), new TypeHolder<@NotNull TestEnumOne>() {}.annotatedType());
         },
         "When trying to build mutators for Enum with one value, an Exception should be thrown.");
   }
@@ -98,7 +101,8 @@ class EnumMutatorTest {
   void testEnumBasedOnInvalidInput() throws IOException {
     SerializingMutator<TestEnum> mutator =
         (SerializingMutator<TestEnum>)
-            factory.createOrThrow(new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
+            factory.createOrThrow(
+                dummyMutatorRuntime(), new TypeHolder<@NotNull TestEnum>() {}.annotatedType());
     ByteArrayOutputStream bo = new ByteArrayOutputStream();
     DataOutputStream os = new DataOutputStream(bo);
     // Valid values

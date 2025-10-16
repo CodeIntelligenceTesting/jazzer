@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.mutation.mutator.collection;
 import static com.code_intelligence.jazzer.mutation.mutator.collection.ChunkMutations.MutationAction.pickRandomMutationAction;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.extractRawClass;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -28,6 +29,7 @@ import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -35,6 +37,7 @@ import java.io.IOException;
 import java.lang.reflect.AnnotatedArrayType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -42,7 +45,7 @@ import java.util.function.Predicate;
 final class ArrayMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     if (!(type instanceof AnnotatedArrayType)) {
       return Optional.empty();
     }
@@ -53,12 +56,16 @@ final class ArrayMutatorFactory implements MutatorFactory {
 
     AnnotatedType elementType = ((AnnotatedArrayType) type).getAnnotatedGenericComponentType();
     AnnotatedType propagatedElementType = propagatePropertyConstraints(type, elementType);
-    Class<?> propagatedElementClazz = (Class<?>) propagatedElementType.getType();
-    return Optional.of(propagatedElementType)
-        .flatMap(factory::tryCreate)
-        .map(
-            elementMutator ->
-                new ArrayMutator<>(elementMutator, propagatedElementClazz, minLength, maxLength));
+    Type rawType = propagatedElementType.getType();
+    return extractRawClass(rawType)
+        .flatMap(
+            propagatedElementClass ->
+                Optional.of(propagatedElementType)
+                    .flatMap(t -> factory.tryCreate(runtime, t))
+                    .map(
+                        elementMutator ->
+                            new ArrayMutator<>(
+                                elementMutator, propagatedElementClass, minLength, maxLength)));
   }
 
   enum CrossOverAction {

@@ -23,6 +23,7 @@ import static java.util.Arrays.stream;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -31,7 +32,7 @@ import java.util.Optional;
 final class SetterBasedBeanMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, Object.class)
         .filter(BeanSupport::isConcreteClass)
         .flatMap(BeanSupport::findDefaultConstructor)
@@ -60,7 +61,7 @@ final class SetterBasedBeanMutatorFactory implements MutatorFactory {
                   .flatMap(
                       getters ->
                           AggregatesHelper.createMutator(
-                              factory, type, constructor, getters, setters));
+                              runtime, factory, type, constructor, getters, setters));
             });
   }
 }

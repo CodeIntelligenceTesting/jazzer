@@ -17,6 +17,7 @@
 package com.code_intelligence.selffuzz.mutation.mutator.proto;
 
 import static com.code_intelligence.selffuzz.Helpers.assertMutator;
+import static com.code_intelligence.selffuzz.Helpers.dummyMutatorRuntime;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
@@ -63,6 +64,7 @@ class ProtobufMutatorFuzzTest {
           (SerializingMutator<DynamicMessage>)
               Mutators.newFactory()
                   .createOrThrow(
+                      dummyMutatorRuntime(),
                       new TypeHolder<
                           @WithDefaultInstance(
                               "com.code_intelligence.selffuzz.mutation.mutator.proto.ProtobufMutatorFuzzTest#getDefaultInstance")

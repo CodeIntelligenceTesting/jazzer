@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
@@ -51,6 +52,7 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<PrimitiveField2.Builder> mutator =
         (InPlaceMutator<PrimitiveField2.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<PrimitiveField2.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<Boolean>}");
     assertThat(mutator.hasFixedSize()).isTrue();
@@ -105,6 +107,7 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<RequiredPrimitiveField2.Builder> mutator =
         (InPlaceMutator<RequiredPrimitiveField2.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<RequiredPrimitiveField2.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Boolean}");
     assertThat(mutator.hasFixedSize()).isTrue();
@@ -127,6 +130,7 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<RepeatedPrimitiveField2.Builder> mutator =
         (InPlaceMutator<RepeatedPrimitiveField2.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<RepeatedPrimitiveField2.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder via List<Boolean>}");
     assertThat(mutator.hasFixedSize()).isFalse();
@@ -179,6 +183,7 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<MessageField2.Builder> mutator =
         (InPlaceMutator<MessageField2.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<MessageField2.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<{Builder.Boolean} -> Message>}");
     assertThat(mutator.hasFixedSize()).isTrue();
@@ -228,6 +233,7 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<RepeatedOptionalMessageField2.Builder> mutator =
         (InPlaceMutator<RepeatedOptionalMessageField2.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<
                     RepeatedOptionalMessageField2.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
@@ -270,6 +276,7 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<RepeatedMessageField2.Builder> mutator =
         (InPlaceMutator<RepeatedMessageField2.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<RepeatedMessageField2.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder via List<{Builder.Boolean} -> Message>}");
     assertThat(mutator.hasFixedSize()).isFalse();
@@ -334,6 +341,7 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<RecursiveMessageField2.Builder> mutator =
         (InPlaceMutator<RecursiveMessageField2.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<RecursiveMessageField2.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
         .isEqualTo("{Builder.Boolean, WithoutInit(Builder.Nullable<(cycle) -> Message>)}");
@@ -401,6 +409,7 @@ class BuilderMutatorProto2Test {
     InPlaceMutator<OneOfField2.Builder> mutator =
         (InPlaceMutator<OneOfField2.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<OneOfField2.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
         .isEqualTo(
@@ -502,6 +511,7 @@ class BuilderMutatorProto2Test {
     SerializingMutator<TestProtobuf> mutator =
         (SerializingMutator<TestProtobuf>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<
                     @NotNull(constraint = PropertyConstraint.RECURSIVE)
                     TestProtobuf>() {}.annotatedType());

@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.collection;
 
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.emptyList;
@@ -47,7 +48,8 @@ public class ListMutatorTest {
 
   private SerializingMutator<@NotNull List<@NotNull Integer>> defaultListMutator() {
     AnnotatedType type = new TypeHolder<@NotNull List<@NotNull Integer>>() {}.annotatedType();
-    return (SerializingMutator<@NotNull List<@NotNull Integer>>) factory.createOrThrow(type);
+    return (SerializingMutator<@NotNull List<@NotNull Integer>>)
+        factory.createOrThrow(dummyMutatorRuntime(), type);
   }
 
   @Test
@@ -74,7 +76,8 @@ public class ListMutatorTest {
             @NotNull @WithSize(min = 2, max = 3) List<@NotNull Integer>>() {}.annotatedType();
 
     SerializingMutator<@NotNull List<@NotNull Integer>> mutator =
-        (SerializingMutator<@NotNull List<@NotNull Integer>>) factory.createOrThrow(type);
+        (SerializingMutator<@NotNull List<@NotNull Integer>>)
+            factory.createOrThrow(dummyMutatorRuntime(), type);
 
     assertThat(mutator.toString()).isEqualTo("List<Integer>");
     List<Integer> list;
@@ -323,6 +326,7 @@ public class ListMutatorTest {
     SerializingMutator<@NotNull List<List<Integer>>> mutator =
         (SerializingMutator<@NotNull List<List<Integer>>>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<
                     @NotNull(constraint = PropertyConstraint.RECURSIVE) List<
                         List<Integer>>>() {}.annotatedType());

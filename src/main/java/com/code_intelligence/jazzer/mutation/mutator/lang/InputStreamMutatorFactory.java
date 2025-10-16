@@ -25,6 +25,7 @@ import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutatorFactory;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -35,12 +36,12 @@ import java.util.function.Predicate;
 final class InputStreamMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
 
     AnnotatedType innerByteArray = notNull(new TypeHolder<byte[]>() {}.annotatedType());
 
     return asSubclassOrEmpty(type, InputStream.class)
-        .flatMap(parent -> LibFuzzerMutatorFactory.tryCreate(innerByteArray))
+        .flatMap(parent -> LibFuzzerMutatorFactory.tryCreate(runtime, innerByteArray))
         .map(
             byteArrayMutator ->
                 mutateThenMap(

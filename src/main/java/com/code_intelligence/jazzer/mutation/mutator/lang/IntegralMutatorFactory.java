@@ -25,6 +25,7 @@ import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.RangeSupport;
 import com.code_intelligence.jazzer.mutation.support.RangeSupport.LongRange;
 import com.google.errorprone.annotations.ForOverride;
@@ -40,7 +41,7 @@ import java.util.stream.LongStream;
 final class IntegralMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     if (!(type.getType() instanceof Class)) {
       return Optional.empty();
     }

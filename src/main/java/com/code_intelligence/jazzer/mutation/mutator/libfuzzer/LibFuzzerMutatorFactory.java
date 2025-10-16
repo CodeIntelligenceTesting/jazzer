@@ -23,6 +23,7 @@ import com.code_intelligence.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Immutable;
@@ -41,7 +42,8 @@ public final class LibFuzzerMutatorFactory {
   private static final int DEFAULT_MAX_LENGTH = 1000;
 
   @CheckReturnValue
-  public static Optional<SerializingMutator<?>> tryCreate(AnnotatedType type) {
+  public static Optional<SerializingMutator<?>> tryCreate(
+      MutatorRuntime runtime, AnnotatedType type) {
     Optional<WithLength> withLength = Optional.ofNullable(type.getAnnotation(WithLength.class));
     int minLength = withLength.map(WithLength::min).orElse(DEFAULT_MIN_LENGTH);
     int maxLength = withLength.map(WithLength::max).orElse(DEFAULT_MAX_LENGTH);

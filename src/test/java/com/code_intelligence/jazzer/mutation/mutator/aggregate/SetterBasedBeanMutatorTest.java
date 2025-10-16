@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
@@ -39,7 +40,8 @@ class SetterBasedBeanMutatorTest {
   void testEmptyBean() {
     assertThat(
             ChainedMutatorFactory.of(Stream.of(new SetterBasedBeanMutatorFactory()))
-                .tryCreate(new TypeHolder<@NotNull EmptyBean>() {}.annotatedType()))
+                .tryCreate(
+                    dummyMutatorRuntime(), new TypeHolder<@NotNull EmptyBean>() {}.annotatedType()))
         .isEmpty();
   }
 
@@ -99,7 +101,9 @@ class SetterBasedBeanMutatorTest {
     SerializingMutator<SimpleTypeBean> mutator =
         (SerializingMutator<SimpleTypeBean>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull SimpleTypeBean>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(),
+                    new TypeHolder<@NotNull SimpleTypeBean>() {}.annotatedType());
     assertThat(mutator.toString())
         .startsWith("[Nullable<String>, Integer, Boolean] -> SimpleTypeBean");
     assertThat(mutator.hasFixedSize()).isFalse();
@@ -167,7 +171,9 @@ class SetterBasedBeanMutatorTest {
     SerializingMutator<RecursiveTypeBean> mutator =
         (SerializingMutator<RecursiveTypeBean>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull RecursiveTypeBean>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(),
+                    new TypeHolder<@NotNull RecursiveTypeBean>() {}.annotatedType());
     assertThat(mutator.toString())
         .startsWith(
             "[Integer, Nullable<RecursionBreaking((cycle) -> RecursiveTypeBean)>] ->"
@@ -198,7 +204,9 @@ class SetterBasedBeanMutatorTest {
     SerializingMutator<BeanWithParent> mutator =
         (SerializingMutator<BeanWithParent>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull BeanWithParent>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(),
+                    new TypeHolder<@NotNull BeanWithParent>() {}.annotatedType());
     assertThat(mutator.toString())
         .startsWith("[Nullable<String>, Integer, Boolean, Long] -> BeanWithParent");
     assertThat(mutator.hasFixedSize()).isFalse();
@@ -216,6 +224,7 @@ class SetterBasedBeanMutatorTest {
         (SerializingMutator<@NotNull RecursiveTypeBean>)
             Mutators.newFactory()
                 .createOrThrow(
+                    dummyMutatorRuntime(),
                     new TypeHolder<
                         @NotNull(constraint = PropertyConstraint.RECURSIVE)
                         RecursiveTypeBean>() {}.annotatedType());

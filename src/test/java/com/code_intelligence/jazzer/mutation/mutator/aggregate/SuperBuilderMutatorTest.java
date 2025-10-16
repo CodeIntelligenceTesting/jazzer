@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
@@ -78,7 +79,8 @@ public class SuperBuilderMutatorTest {
     SerializingMutator<Parent> mutator =
         (SerializingMutator<Parent>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull Parent>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(), new TypeHolder<@NotNull Parent>() {}.annotatedType());
     assertThat(mutator.toString()).startsWith("[[Nullable<String>] -> ParentBuilder] -> Parent");
 
     assertThat(mutator.hasFixedSize()).isFalse();
@@ -96,6 +98,7 @@ public class SuperBuilderMutatorTest {
         (SerializingMutator<Parent>)
             Mutators.newFactory()
                 .createOrThrow(
+                    dummyMutatorRuntime(),
                     new TypeHolder<
                         @NotNull(constraint = PropertyConstraint.RECURSIVE)
                         Parent>() {}.annotatedType());
@@ -153,7 +156,8 @@ public class SuperBuilderMutatorTest {
     SerializingMutator<Child> mutator =
         (SerializingMutator<Child>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull Child>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(), new TypeHolder<@NotNull Child>() {}.annotatedType());
     assertThat(mutator.toString())
         .startsWith("[[Boolean, Nullable<String>] -> ChildBuilder] -> Child");
 

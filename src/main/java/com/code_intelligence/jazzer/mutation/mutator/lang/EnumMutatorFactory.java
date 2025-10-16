@@ -25,6 +25,7 @@ import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -32,7 +33,7 @@ import java.util.function.Predicate;
 final class EnumMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, Enum.class)
         .map(
             parent -> {

@@ -38,6 +38,7 @@ import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -52,10 +53,10 @@ import java.util.stream.Collectors;
 final class ListMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     return parameterTypeIfParameterized(type, List.class)
         .map(innerType -> propagatePropertyConstraints(type, innerType))
-        .flatMap(factory::tryCreate)
+        .flatMap(t -> factory.tryCreate(runtime, t))
         .map(
             elementMutator -> {
               Optional<WithSize> withSize = Optional.ofNullable(type.getAnnotation(WithSize.class));

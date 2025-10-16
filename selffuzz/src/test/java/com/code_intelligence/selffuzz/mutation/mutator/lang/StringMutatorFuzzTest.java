@@ -17,6 +17,7 @@
 package com.code_intelligence.selffuzz.mutation.mutator.lang;
 
 import static com.code_intelligence.selffuzz.Helpers.assertMutator;
+import static com.code_intelligence.selffuzz.Helpers.dummyMutatorRuntime;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
@@ -31,7 +32,8 @@ class StringMutatorFuzzTest {
   void stringMutatorTest(long seed, byte @NotNull [] data) throws IOException {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
-            Mutators.newFactory().createOrThrow(new TypeHolder<String>() {}.annotatedType());
+            Mutators.newFactory()
+                .createOrThrow(dummyMutatorRuntime(), new TypeHolder<String>() {}.annotatedType());
     assertMutator(mutator, data, seed);
   }
 }
