@@ -21,6 +21,27 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "DictionaryProviderFuzzerLongString",
+    srcs = [
+        "src/test/java/com/example/DictionaryProviderFuzzerLongString.java",
+    ],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    fuzzer_args = [
+        "-runs=10000",
+    ],
+    target_class = "com.example.DictionaryProviderFuzzerLongString",
+    verify_crash_input = False,
+    verify_crash_reproducer = False,
+    deps = [
+        "//deploy:jazzer-junit",
+        "//deploy:jazzer-project",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        "@maven//:org_junit_platform_junit_platform_launcher",
+    ],
+)
+
+java_fuzz_target_test(
     name = "JpegImageParserAutofuzz",
     allowed_findings = ["java.lang.NegativeArraySizeException"],
     fuzzer_args = [

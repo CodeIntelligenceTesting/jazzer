@@ -17,7 +17,10 @@
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
-import static com.code_intelligence.jazzer.mutation.support.TypeSupport.*;
+import static com.code_intelligence.jazzer.mutation.support.DictionaryProviderSupport.extractLastInvProbability;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.findFirstParentIfClass;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withLength;
 
 import com.code_intelligence.jazzer.mutation.annotation.Ascii;
 import com.code_intelligence.jazzer.mutation.annotation.UrlSegment;
@@ -25,14 +28,20 @@ import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
 import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutatorFactory;
 import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
+import com.code_intelligence.jazzer.mutation.support.DictionaryProviderSupport;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 final class StringMutatorFactory implements MutatorFactory {
   private static final int HEADER_MASK = 0b1100_0000;
@@ -177,7 +186,9 @@ final class StringMutatorFactory implements MutatorFactory {
 
               AnnotatedType innerByteArray =
                   notNull(withLength(new TypeHolder<byte[]>() {}.annotatedType(), min, max));
-              return LibFuzzerMutatorFactory.tryCreate(runtime, innerByteArray);
+              Optional<SerializingMutator<?>> innerMutator =
+                  LibFuzzerMutatorFactory.tryCreate(runtime, innerByteArray);
+              return UserDictionaryMutatorWrapper.of(runtime, innerMutator, type, min, max);
             })
         .map(
             byteArrayMutator -> {
@@ -198,5 +209,103 @@ final class StringMutatorFactory implements MutatorFactory {
                   string -> string.getBytes(StandardCharsets.UTF_8),
                   (Predicate<Debuggable> inCycle) -> "String");
             });
+  }
+
+  private static final class UserDictionaryMutatorWrapper extends SerializingMutator<byte[]> {
+    private final byte[][] dictionaryValues;
+    private final SerializingMutator<byte[]> basicMutator;
+    private final int pInv;
+
+    public static Optional<SerializingMutator<?>> of(
+        MutatorRuntime runtime,
+        Optional<SerializingMutator<?>> mutator,
+        AnnotatedType type,
+        int minSize,
+        int maxSize) {
+      if (!mutator.isPresent()) {
+        return Optional.empty();
+      }
+      SerializingMutator<byte[]> castedMutator =
+          mutator.map(m -> (SerializingMutator<byte[]>) m).get();
+      Optional<byte[][]> values = generateDictionaryValues(runtime, type, minSize, maxSize);
+      if (!values.isPresent()) {
+        return mutator;
+      }
+      return Optional.of(
+          new UserDictionaryMutatorWrapper(
+              castedMutator, values.get(), extractLastInvProbability(type)));
+    }
+
+    public UserDictionaryMutatorWrapper(
+        SerializingMutator<byte[]> basicMutator, byte[][] dictionaryValues, int pInv) {
+      this.basicMutator = basicMutator;
+      this.dictionaryValues = dictionaryValues;
+      this.pInv = pInv;
+    }
+
+    public static Optional<byte[][]> generateDictionaryValues(
+        MutatorRuntime runtime, AnnotatedType type, int minSize, int maxSize) {
+      return DictionaryProviderSupport.extractProviderStreams(runtime, type)
+          .map(
+              stream ->
+                  stream
+                      .flatMap(
+                          o -> {
+                            if (o instanceof String) {
+                              return Stream.of(((String) o).getBytes(StandardCharsets.UTF_8));
+                            } else {
+                              return Stream.empty();
+                            }
+                          })
+                      .filter(b -> b.length >= minSize && b.length <= maxSize)
+                      .distinct()
+                      .toArray(byte[][]::new));
+    }
+
+    @Override
+    public String toDebugString(Predicate<Debuggable> isInCycle) {
+      return "String";
+    }
+
+    @Override
+    public byte[] read(DataInputStream in) throws IOException {
+      return basicMutator.read(in);
+    }
+
+    @Override
+    public void write(byte[] value, DataOutputStream out) throws IOException {
+      basicMutator.write(value, out);
+    }
+
+    @Override
+    public byte[] detach(byte[] value) {
+      return basicMutator.detach(value);
+    }
+
+    @Override
+    public byte[] init(PseudoRandom prng) {
+      if (prng.trueInOneOutOf(pInv)) {
+        return prng.pickIn(dictionaryValues);
+      }
+      return basicMutator.init(prng);
+    }
+
+    @Override
+    public byte[] mutate(byte[] value, PseudoRandom prng) {
+      if (prng.trueInOneOutOf(pInv)) {
+        return prng.pickIn(dictionaryValues);
+      }
+      return basicMutator.mutate(value, prng);
+    }
+
+    @Override
+    public byte[] crossOver(byte[] value, byte[] otherValue, PseudoRandom prng) {
+      return basicMutator.crossOver(value, otherValue, prng);
+    }
+
+    @Override
+    public boolean hasFixedSize() {
+      return false;
+    }
   }
 }
