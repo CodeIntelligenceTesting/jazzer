@@ -1,6 +1,6 @@
-load("//bazel:compat.bzl", "ANDROID_ONLY")
-load("@rules_jni//jni:defs.bzl", "cc_jni_library")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@rules_jni//jni:defs.bzl", "cc_jni_library")
+load("//bazel:compat.bzl", "ANDROID_ONLY")
 
 copy_file(
     name = "jvmti_h_encoded",

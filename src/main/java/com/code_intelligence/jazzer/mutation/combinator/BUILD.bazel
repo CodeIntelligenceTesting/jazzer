@@ -5,7 +5,7 @@ java_library(
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/mutation/api",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
-        "@maven//:com_google_errorprone_error_prone_type_annotations",
+        "@maven//:com_google_errorprone_error_prone_annotations",
         "@maven//:net_jodah_typetools",
     ],
 )

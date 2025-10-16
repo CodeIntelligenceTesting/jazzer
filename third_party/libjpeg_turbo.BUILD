@@ -1,6 +1,6 @@
-load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:select_file.bzl", "select_file")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
 
 filegroup(
     name = "all_files",
