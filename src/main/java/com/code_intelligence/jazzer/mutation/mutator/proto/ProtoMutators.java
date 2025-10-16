@@ -17,16 +17,23 @@
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
+import com.code_intelligence.jazzer.mutation.support.ValuePoolRegistry;
 import java.util.stream.Stream;
 
 public final class ProtoMutators {
   private ProtoMutators() {}
 
   public static Stream<MutatorFactory> newFactories() {
+    return newFactories(null);
+  }
+
+  public static Stream<MutatorFactory> newFactories(ValuePoolRegistry valuePoolRegistry) {
     try {
       Class.forName("com.google.protobuf.Message");
       return Stream.of(
-          new ByteStringMutatorFactory(), new MessageMutatorFactory(), new BuilderMutatorFactory());
+          new ByteStringMutatorFactory(),
+          new MessageMutatorFactory(),
+          new BuilderMutatorFactory(valuePoolRegistry));
     } catch (ClassNotFoundException e) {
       return Stream.empty();
     }
