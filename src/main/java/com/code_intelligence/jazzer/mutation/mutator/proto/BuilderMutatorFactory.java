@@ -57,6 +57,7 @@ import com.code_intelligence.jazzer.mutation.mutator.collection.CollectionMutato
 import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import com.google.protobuf.Any;
+import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
@@ -86,6 +87,11 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public final class BuilderMutatorFactory implements MutatorFactory {
+
+  // Generous size limit for decoded protobuf messages. This is necessary to guard against OOM
+  // errors when the corpus format changes e.g. due to a change in the fuzz test signature.
+  private static final int MAX_MESSAGE_SIZE = 32 * 1024 * 1024; // 32 MiB
+
   private <T extends Builder, U> InPlaceMutator<T> mutatorForField(
       AnnotatedType initialType,
       FieldDescriptor field,
@@ -273,9 +279,11 @@ public final class BuilderMutatorFactory implements MutatorFactory {
       }
 
       private Builder parseLeniently(InputStream in) throws IOException {
+        CodedInputStream cis = CodedInputStream.newInstance(in);
+        cis.setSizeLimit(MAX_MESSAGE_SIZE);
         Builder builder = defaultInstance.toBuilder();
         try {
-          builder.mergeFrom(in);
+          builder.mergeFrom(cis);
         } catch (InvalidProtocolBufferException ignored) {
           // builder has been partially modified with what could be decoded before the parser error.
         }
