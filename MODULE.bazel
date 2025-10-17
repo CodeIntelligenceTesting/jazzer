@@ -39,9 +39,8 @@ SHADED_RUNTIME_MAVEN_ARTIFACTS = [
     # keep sorted
     # renovate: keep updated
     "com.github.jsqlparser:jsqlparser:4.9",
-    "com.google.errorprone:error_prone_annotations:2.26.1",
-    "com.google.errorprone:error_prone_type_annotations:2.26.1",
-    "io.github.classgraph:classgraph:jar:4.8.170",
+    "com.google.errorprone:error_prone_annotations:2.42.0",
+    "io.github.classgraph:classgraph:jar:4.8.184",
     "net.bytebuddy:byte-buddy-agent:1.14.13",
     "net.jodah:typetools:jar:0.6.3",
     "org.ow2.asm:asm:9.8",
