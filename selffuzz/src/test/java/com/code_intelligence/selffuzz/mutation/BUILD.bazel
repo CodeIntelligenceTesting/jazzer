@@ -9,6 +9,9 @@ java_fuzz_target_test(
         "ImmutableBean.java",
     ],
     data = ["//selffuzz/src/test/resources:ArgumentsMutatorFuzzTest-corpus"],
+    env = {
+        "_JAVA_OPTIONS": "-Xmx1024m",
+    },
     fuzzer_args = [
         # Make sure that the fuzzer can run. Longer fuzzing runs will be done in a separate GH action.
         "-runs=10000",
