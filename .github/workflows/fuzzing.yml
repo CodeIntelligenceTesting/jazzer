@@ -56,7 +56,7 @@ jobs:
 
       - name: Build & Fuzz
         run: |
-          bazelisk run ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=remotejdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} ${{ matrix.extra_bazel_args }} //selffuzz/src/test/java/com/code_intelligence/selffuzz/mutation:ArgumentsMutatorFuzzTest --jvmopt=-Xmx10000m -- -runs=1000000
+          bazelisk run ${{env.BUILD_BUDDY_CONFIG}} --java_runtime_version=remotejdk_${{ matrix.jdk }} ${{ matrix.bazel_args }} ${{ matrix.extra_bazel_args }} //selffuzz/src/test/java/com/code_intelligence/selffuzz/mutation:ArgumentsMutatorFuzzTest -- -runs=1000000
 
   # Notification job that runs after all matrix jobs complete
   notification:
