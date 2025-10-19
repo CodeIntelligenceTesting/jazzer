@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.collection;
 
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -43,7 +44,8 @@ public class ArrayMutatorTest {
 
   private SerializingMutator<@NotNull Integer @NotNull []> defaultArrayMutator() {
     AnnotatedType type = new TypeHolder<@NotNull Integer @NotNull []>() {}.annotatedType();
-    return (SerializingMutator<@NotNull Integer @NotNull []>) factory.createOrThrow(type);
+    return (SerializingMutator<@NotNull Integer @NotNull []>)
+        factory.createOrThrow(dummyMutatorRuntime(), type);
   }
 
   @Test
@@ -51,6 +53,7 @@ public class ArrayMutatorTest {
     SerializingMutator<@NotNull Integer @NotNull []> mutator =
         (SerializingMutator<@NotNull Integer @NotNull []>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<@NotNull Integer @NotNull []>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Integer[]");
 
@@ -72,6 +75,7 @@ public class ArrayMutatorTest {
     SerializingMutator<Integer[]> mutator =
         (SerializingMutator<Integer[]>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<@NotNull Integer @NotNull []>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Integer[]");
 
@@ -99,7 +103,8 @@ public class ArrayMutatorTest {
             @NotNull Integer @NotNull @WithLength(min = 2, max = 3) []>() {}.annotatedType();
 
     SerializingMutator<@NotNull Integer @NotNull []> mutator =
-        (SerializingMutator<@NotNull Integer @NotNull []>) factory.createOrThrow(type);
+        (SerializingMutator<@NotNull Integer @NotNull []>)
+            factory.createOrThrow(dummyMutatorRuntime(), type);
 
     assertThat(mutator.toString()).isEqualTo("Integer[]");
     Integer[] arr;
@@ -272,6 +277,7 @@ public class ArrayMutatorTest {
     SerializingMutator<@NotNull Integer[]> mutator =
         (SerializingMutator<@NotNull Integer[]>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<
                     Integer @NotNull(constraint = PropertyConstraint.RECURSIVE)
                         []>() {}.annotatedType());

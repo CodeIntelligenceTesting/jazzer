@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
@@ -43,7 +44,8 @@ class CachedConstructorMutatorTest {
   void testEmptyBean() {
     assertThat(
             ChainedMutatorFactory.of(Stream.of(new CachedConstructorMutatorFactory()))
-                .tryCreate(new TypeHolder<@NotNull EmptyBean>() {}.annotatedType()))
+                .tryCreate(
+                    dummyMutatorRuntime(), new TypeHolder<@NotNull EmptyBean>() {}.annotatedType()))
         .isPresent();
   }
 
@@ -82,7 +84,9 @@ class CachedConstructorMutatorTest {
     SerializingMutator<SimpleClass> mutator =
         (SerializingMutator<SimpleClass>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull SimpleClass>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(),
+                    new TypeHolder<@NotNull SimpleClass>() {}.annotatedType());
     assertThat(mutator.toString())
         .isEqualTo("[Nullable<String>, Nullable<List<Nullable<Integer>>>, Boolean] -> SimpleClass");
 
@@ -100,7 +104,9 @@ class CachedConstructorMutatorTest {
     SerializingMutator<SimpleClass> mutator =
         (SerializingMutator<SimpleClass>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull SimpleClass>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(),
+                    new TypeHolder<@NotNull SimpleClass>() {}.annotatedType());
     PseudoRandom prng = anyPseudoRandom();
     SimpleClass inited = mutator.init(prng);
     SimpleClass detached = mutator.detach(inited);
@@ -138,7 +144,9 @@ class CachedConstructorMutatorTest {
     SerializingMutator<BeanWithParent> mutator =
         (SerializingMutator<BeanWithParent>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull BeanWithParent>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(),
+                    new TypeHolder<@NotNull BeanWithParent>() {}.annotatedType());
     assertThat(mutator.toString())
         .startsWith("[Nullable<Integer>, Nullable<List<Nullable<Integer>>>] -> BeanWithParent");
     assertThat(mutator.hasFixedSize()).isFalse();
@@ -156,6 +164,7 @@ class CachedConstructorMutatorTest {
         (SerializingMutator<BeanWithParent>)
             Mutators.newFactory()
                 .createOrThrow(
+                    dummyMutatorRuntime(),
                     new TypeHolder<
                         @NotNull(constraint = PropertyConstraint.RECURSIVE)
                         BeanWithParent>() {}.annotatedType());
@@ -182,7 +191,8 @@ class CachedConstructorMutatorTest {
     SerializingMutator<EmptyArgs> mutator =
         (SerializingMutator<EmptyArgs>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull EmptyArgs>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(), new TypeHolder<@NotNull EmptyArgs>() {}.annotatedType());
     assertThat(mutator.toString()).startsWith("[] -> EmptyArgs");
 
     PseudoRandom prng = anyPseudoRandom();

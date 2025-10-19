@@ -39,6 +39,7 @@ import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingInPlaceMutator;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
 import com.code_intelligence.jazzer.mutation.support.StreamSupport;
 import java.io.DataInputStream;
@@ -55,13 +56,13 @@ import java.util.stream.Collectors;
 final class MapMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     return parameterTypesIfParameterized(type, Map.class)
         .map(
             parameterTypes ->
                 parameterTypes.stream()
                     .map(innerType -> propagatePropertyConstraints(type, innerType))
-                    .map(factory::tryCreate)
+                    .map(t -> factory.tryCreate(runtime, t))
                     .flatMap(StreamSupport::getOrEmpty)
                     .collect(Collectors.toList()))
         .filter(elementMutators -> elementMutators.size() == 2)

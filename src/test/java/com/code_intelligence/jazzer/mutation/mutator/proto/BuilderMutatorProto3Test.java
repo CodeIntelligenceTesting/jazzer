@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.proto;
 
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
@@ -68,6 +69,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<PrimitiveField3.Builder> mutator =
         (InPlaceMutator<PrimitiveField3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<PrimitiveField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Boolean}");
     assertThat(mutator.hasFixedSize()).isTrue();
@@ -90,6 +92,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<EnumField3.Builder> mutator =
         (InPlaceMutator<EnumField3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<EnumField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Enum<TestEnum>}");
     assertThat(mutator.hasFixedSize()).isTrue();
@@ -109,6 +112,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<EnumFieldOutside3.Builder> mutator =
         (InPlaceMutator<EnumFieldOutside3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<EnumFieldOutside3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Enum<TestEnumOutside3>}");
     assertThat(mutator.hasFixedSize()).isTrue();
@@ -128,6 +132,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<EnumFieldOne3.Builder> mutator =
         (InPlaceMutator<EnumFieldOne3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<EnumFieldOne3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.FixedValue(ONE)}");
     assertThat(mutator.hasFixedSize()).isTrue();
@@ -147,6 +152,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<EnumFieldRepeated3.Builder> mutator =
         (InPlaceMutator<EnumFieldRepeated3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<EnumFieldRepeated3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder via List<Enum<TestEnumRepeated>>}");
     assertThat(mutator.hasFixedSize()).isFalse();
@@ -183,6 +189,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<OptionalPrimitiveField3.Builder> mutator =
         (InPlaceMutator<OptionalPrimitiveField3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<OptionalPrimitiveField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<Boolean>}");
     assertThat(mutator.hasFixedSize()).isTrue();
@@ -237,6 +244,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<RepeatedPrimitiveField3.Builder> mutator =
         (InPlaceMutator<RepeatedPrimitiveField3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<RepeatedPrimitiveField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder via List<Boolean>}");
     assertThat(mutator.hasFixedSize()).isFalse();
@@ -289,6 +297,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<MessageField3.Builder> mutator =
         (InPlaceMutator<MessageField3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<MessageField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder.Nullable<{Builder.Boolean} -> Message>}");
     assertThat(mutator.hasFixedSize()).isTrue();
@@ -337,6 +346,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<RepeatedMessageField3.Builder> mutator =
         (InPlaceMutator<RepeatedMessageField3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<RepeatedMessageField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{Builder via List<{Builder.Boolean} -> Message>}");
     assertThat(mutator.hasFixedSize()).isFalse();
@@ -401,6 +411,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<RecursiveMessageField3.Builder> mutator =
         (InPlaceMutator<RecursiveMessageField3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<RecursiveMessageField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
         .isEqualTo("{Builder.Boolean, WithoutInit(Builder.Nullable<(cycle) -> Message>)}");
@@ -468,6 +479,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<OneOfField3.Builder> mutator =
         (InPlaceMutator<OneOfField3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<OneOfField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
         .isEqualTo(
@@ -582,6 +594,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<EmptyMessage3.Builder> mutator =
         (InPlaceMutator<EmptyMessage3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<EmptyMessage3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("{<empty>}");
     assertThat(mutator.hasFixedSize()).isTrue();
@@ -603,6 +616,7 @@ class BuilderMutatorProto3Test {
     InPlaceMutator<AnyField3.Builder> mutator =
         (InPlaceMutator<AnyField3.Builder>)
             factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<
                     @NotNull @AnySource({PrimitiveField3.class, MessageField3.class})
                     Builder>() {}.annotatedType());
@@ -668,7 +682,8 @@ class BuilderMutatorProto3Test {
   void testAnyField3WithoutAnySourceDoesNotCrash() throws InvalidProtocolBufferException {
     InPlaceMutator<AnyField3.Builder> mutator =
         (InPlaceMutator<AnyField3.Builder>)
-            factory.createInPlaceOrThrow(new TypeHolder<@NotNull Builder>() {}.annotatedType());
+            factory.createInPlaceOrThrow(
+                dummyMutatorRuntime(), new TypeHolder<@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
         .isEqualTo("{Builder.Nullable<{Builder.String, Builder.byte[] -> ByteString} -> Message>}");
   }

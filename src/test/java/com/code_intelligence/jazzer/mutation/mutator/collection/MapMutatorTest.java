@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.mutation.mutator.collection;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.asMap;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.asMutableList;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.emptyMap;
@@ -49,7 +50,8 @@ class MapMutatorTest {
   private SerializingMutator<Map<Integer, Integer>> defaultTestMapMutator() {
     AnnotatedType type =
         new TypeHolder<@NotNull Map<@NotNull Integer, @NotNull Integer>>() {}.annotatedType();
-    return (SerializingMutator<Map<Integer, Integer>>) factory.createOrThrow(type);
+    return (SerializingMutator<Map<Integer, Integer>>)
+        factory.createOrThrow(dummyMutatorRuntime(), type);
   }
 
   @Test
@@ -58,7 +60,8 @@ class MapMutatorTest {
         new TypeHolder<
             @NotNull @WithSize(max = 3) Map<@NotNull String, @NotNull String>>() {}.annotatedType();
     SerializingMutator<Map<String, String>> mutator =
-        (SerializingMutator<Map<String, String>>) factory.createOrThrow(type);
+        (SerializingMutator<Map<String, String>>)
+            factory.createOrThrow(dummyMutatorRuntime(), type);
     assertThat(mutator.toString()).isEqualTo("Map<String, String>");
 
     // Initialize new map
@@ -192,7 +195,8 @@ class MapMutatorTest {
     AnnotatedType type =
         new TypeHolder<@NotNull Map<@NotNull Boolean, @NotNull Boolean>>() {}.annotatedType();
     SerializingMutator<Map<Boolean, Boolean>> mutator =
-        (SerializingMutator<Map<Boolean, Boolean>>) factory.createOrThrow(type);
+        (SerializingMutator<Map<Boolean, Boolean>>)
+            factory.createOrThrow(dummyMutatorRuntime(), type);
     assertThat(mutator.toString()).isEqualTo("Map<Boolean, Boolean>");
 
     // No new keys can be generated for this map.
@@ -302,7 +306,7 @@ class MapMutatorTest {
             @NotNull Map<@NotNull List<@NotNull Integer>, @NotNull Integer>>() {}.annotatedType();
     SerializingMutator<@NotNull Map<@NotNull List<@NotNull Integer>, @NotNull Integer>> mutator =
         (SerializingMutator<@NotNull Map<@NotNull List<@NotNull Integer>, @NotNull Integer>>)
-            factory.createOrThrow(type);
+            factory.createOrThrow(dummyMutatorRuntime(), type);
 
     Map<List<Integer>, Integer> map =
         asMap(
@@ -388,7 +392,7 @@ class MapMutatorTest {
             @NotNull Map<@NotNull Integer, @NotNull List<@NotNull Integer>>>() {}.annotatedType();
     SerializingMutator<@NotNull Map<@NotNull Integer, @NotNull List<@NotNull Integer>>> mutator =
         (SerializingMutator<@NotNull Map<@NotNull Integer, @NotNull List<@NotNull Integer>>>)
-            factory.createOrThrow(type);
+            factory.createOrThrow(dummyMutatorRuntime(), type);
 
     Map<Integer, List<Integer>> map =
         asMap(
@@ -471,6 +475,7 @@ class MapMutatorTest {
     SerializingMutator<@NotNull Map<String, List<Integer>>> mutator =
         (SerializingMutator<@NotNull Map<String, List<Integer>>>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<
                     @NotNull(constraint = PropertyConstraint.RECURSIVE) Map<
                         String, List<Integer>>>() {}.annotatedType());

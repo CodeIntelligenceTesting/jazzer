@@ -23,6 +23,7 @@ import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.TypeSupport;
 import java.lang.reflect.AnnotatedType;
 import java.util.Optional;
@@ -31,7 +32,7 @@ import java.util.function.ToIntFunction;
 final class SealedClassMutatorFactory<T> implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     if (!(type.getType() instanceof Class<?>)) {
       return Optional.empty();
     }
@@ -56,7 +57,7 @@ final class SealedClassMutatorFactory<T> implements MutatorFactory {
             stream(permittedSubclasses)
                 .map(TypeSupport::asAnnotatedType)
                 .map(TypeSupport::notNull)
-                .map(factory::tryCreate),
+                .map(t -> factory.tryCreate(runtime, t)),
             SerializingMutator<?>[]::new)
         .map(
             mutators -> MutatorCombinators.mutateSum(getState, (SerializingMutator<T>[]) mutators));

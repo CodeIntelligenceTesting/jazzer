@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -39,7 +40,9 @@ class RecordMutatorTest {
     SerializingMutator<EmptyRecord> mutator =
         (SerializingMutator<EmptyRecord>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull EmptyRecord>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(),
+                    new TypeHolder<@NotNull EmptyRecord>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("[] -> EmptyRecord");
     assertThat(mutator.hasFixedSize()).isTrue();
 
@@ -62,7 +65,9 @@ class RecordMutatorTest {
     SerializingMutator<SimpleTypesRecord> mutator =
         (SerializingMutator<SimpleTypesRecord>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull SimpleTypesRecord>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(),
+                    new TypeHolder<@NotNull SimpleTypesRecord>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("[Boolean, Integer] -> SimpleTypesRecord");
     assertThat(mutator.hasFixedSize()).isTrue();
     try (MockPseudoRandom prng =
@@ -91,7 +96,9 @@ class RecordMutatorTest {
     SerializingMutator<ContainerTypesRecord> mutator =
         (SerializingMutator<ContainerTypesRecord>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull ContainerTypesRecord>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(),
+                    new TypeHolder<@NotNull ContainerTypesRecord>() {}.annotatedType());
     assertThat(mutator.toString())
         .isEqualTo(
             "[List<Nullable<Integer>>, Map<Nullable<String>, Nullable<Boolean>>] ->"
@@ -128,7 +135,9 @@ class RecordMutatorTest {
     SerializingMutator<RecursiveTypesRecord> mutator =
         (SerializingMutator<RecursiveTypesRecord>)
             Mutators.newFactory()
-                .createOrThrow(new TypeHolder<@NotNull RecursiveTypesRecord>() {}.annotatedType());
+                .createOrThrow(
+                    dummyMutatorRuntime(),
+                    new TypeHolder<@NotNull RecursiveTypesRecord>() {}.annotatedType());
     assertThat(mutator.toString())
         .isEqualTo(
             "[Integer, Nullable<RecursionBreaking((cycle) -> RecursiveTypesRecord)>] ->"
@@ -169,6 +178,7 @@ class RecordMutatorTest {
         (SerializingMutator<@NotNull PropagateTypeRecord>)
             Mutators.newFactory()
                 .createOrThrow(
+                    dummyMutatorRuntime(),
                     new TypeHolder<
                         @NotNull(constraint = PropertyConstraint.RECURSIVE)
                         PropagateTypeRecord>() {}.annotatedType());

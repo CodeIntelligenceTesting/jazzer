@@ -23,6 +23,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
 import com.google.protobuf.ByteString;
 import java.lang.reflect.AnnotatedType;
@@ -33,9 +34,11 @@ final class ByteStringMutatorFactory implements MutatorFactory {
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     return findFirstParentIfClass(type, ByteString.class)
-        .flatMap(parent -> factory.tryCreate(notNull(new TypeHolder<byte[]>() {}.annotatedType())))
+        .flatMap(
+            parent ->
+                factory.tryCreate(runtime, notNull(new TypeHolder<byte[]>() {}.annotatedType())))
         .map(
             byteArrayMutator ->
                 mutateThenMapToImmutable(

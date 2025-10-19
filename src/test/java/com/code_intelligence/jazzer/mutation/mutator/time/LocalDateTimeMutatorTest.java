@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.mutation.mutator.time;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
@@ -49,7 +50,8 @@ class LocalDateTimeMutatorTest {
   void testLocalDateTimeMutator() {
     SerializingMutator<LocalDateTime> mutator =
         (SerializingMutator<LocalDateTime>)
-            factory.createOrThrow(new TypeHolder<@NotNull LocalDateTime>() {}.annotatedType());
+            factory.createOrThrow(
+                dummyMutatorRuntime(), new TypeHolder<@NotNull LocalDateTime>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("LocalDateTime");
 
     PseudoRandom prng = anyPseudoRandom();

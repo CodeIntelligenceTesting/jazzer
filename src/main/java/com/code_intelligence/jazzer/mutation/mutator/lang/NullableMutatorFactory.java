@@ -25,6 +25,7 @@ import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -42,12 +43,12 @@ final class NullableMutatorFactory implements MutatorFactory {
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     if (isPrimitive(type)
         || stream(type.getAnnotations()).anyMatch(NullableMutatorFactory::isNotNullAnnotation)) {
       return Optional.empty();
     }
-    return factory.tryCreate(notNull(type)).map(NullableMutator::new);
+    return factory.tryCreate(runtime, notNull(type)).map(NullableMutator::new);
   }
 
   private static final class NullableMutator<T> extends SerializingMutator<T> {

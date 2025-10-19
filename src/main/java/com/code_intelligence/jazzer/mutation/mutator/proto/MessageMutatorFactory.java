@@ -23,6 +23,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtr
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import java.lang.reflect.AnnotatedType;
@@ -31,14 +32,14 @@ import java.util.Optional;
 public final class MessageMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType messageType, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType messageType, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(messageType, Message.class)
         .flatMap(TypeLibrary::getBuilderType)
         .flatMap(
             builderType ->
                 // Forward the annotations (e.g. @NotNull) on the Message type to the Builder type.
                 factory.tryCreateInPlace(
-                    withExtraAnnotations(builderType, messageType.getAnnotations())))
+                    runtime, withExtraAnnotations(builderType, messageType.getAnnotations())))
         .map(
             builderMutator ->
                 mutateThenMapToImmutable(

@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.mutation.mutator.time;
 
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
@@ -49,7 +50,8 @@ class ZonedDateTimeMutatorTest {
   void testZonedDateTimeMutator() {
     SerializingMutator<ZonedDateTime> mutator =
         (SerializingMutator<ZonedDateTime>)
-            factory.createOrThrow(new TypeHolder<@NotNull ZonedDateTime>() {}.annotatedType());
+            factory.createOrThrow(
+                dummyMutatorRuntime(), new TypeHolder<@NotNull ZonedDateTime>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("ZonedDateTime");
 
     PseudoRandom prng = anyPseudoRandom();

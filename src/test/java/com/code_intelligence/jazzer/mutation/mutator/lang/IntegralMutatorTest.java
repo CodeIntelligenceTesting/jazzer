@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.mutation.mutator.lang;
 
 import static com.code_intelligence.jazzer.mutation.mutator.lang.IntegralMutatorFactory.AbstractIntegralMutator.forceInRange;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -94,7 +95,8 @@ class IntegralMutatorTest {
   void testCrossOver() {
     SerializingMutator<Long> mutator =
         (SerializingMutator<Long>)
-            factory.createOrThrow(new TypeHolder<@NotNull Long>() {}.annotatedType());
+            factory.createOrThrow(
+                dummyMutatorRuntime(), new TypeHolder<@NotNull Long>() {}.annotatedType());
     // cross over mean values
     try (MockPseudoRandom prng = mockPseudoRandom(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {
       assertThat(mutator.crossOver(0L, 0L, prng)).isEqualTo(0);

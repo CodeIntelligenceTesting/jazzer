@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.code_intelligence.selffuzz.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.selffuzz.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.selffuzz.jazzer.mutation.engine.SeededPseudoRandom;
+import com.code_intelligence.selffuzz.jazzer.mutation.runtime.MutatorRuntime;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -42,4 +43,14 @@ public class Helpers {
 
     assertEquals(crossedOver, deserialized);
   }
+
+  public static MutatorRuntime dummyMutatorRuntime() {
+    try {
+      return MutatorRuntime.forFuzzTestMethod(Helpers.class.getMethod("dummyFuzzTestMethod"));
+    } catch (NoSuchMethodException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static void dummyFuzzTestMethod() {}
 }

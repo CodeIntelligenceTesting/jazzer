@@ -31,6 +31,7 @@ import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory.FailedToConstructChildMutatorException;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -48,6 +49,7 @@ import java.util.function.Supplier;
 final class AggregatesHelper {
 
   static Optional<SerializingMutator<?>> createMutator(
+      MutatorRuntime runtime,
       ExtendedMutatorFactory factory,
       AnnotatedType initialType,
       Executable instantiator,
@@ -71,6 +73,7 @@ final class AggregatesHelper {
     // TODO: Ideally, we would have the mutator framework pass in a Lookup for the fuzz test class.
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     return createMutator(
+            runtime,
             factory,
             instantiator.getDeclaringClass(),
             instantiator.getAnnotatedParameterTypes(),
@@ -82,6 +85,7 @@ final class AggregatesHelper {
   }
 
   static Optional<SerializingMutator<?>> createMutator(
+      MutatorRuntime runtime,
       ExtendedMutatorFactory factory,
       AnnotatedType initialType,
       Executable newInstance,
@@ -105,6 +109,7 @@ final class AggregatesHelper {
     // TODO: Ideally, we would have the mutator framework pass in a Lookup for the fuzz test class.
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     return createMutator(
+            runtime,
             factory,
             newInstance.getDeclaringClass(),
             parameterTypes(setters),
@@ -117,6 +122,7 @@ final class AggregatesHelper {
 
   @SuppressWarnings("Immutable")
   static <R> Optional<SerializingMutator<?>> createMutator(
+      MutatorRuntime runtime,
       ExtendedMutatorFactory factory,
       Class<?> instantiatedClass,
       AnnotatedType[] instantiatorParameterTypes,
@@ -129,7 +135,7 @@ final class AggregatesHelper {
             toArrayOrEmpty(
                     stream(instantiatorParameterTypes)
                         .map(type -> propagatePropertyConstraints(initialType, type))
-                        .map(factory::tryCreate),
+                        .map(t -> factory.tryCreate(runtime, t)),
                     SerializingMutator<?>[]::new)
                 .map(MutatorCombinators::mutateProduct)
                 .orElseThrow(FailedToConstructChildMutatorException::new);

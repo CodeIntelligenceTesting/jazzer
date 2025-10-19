@@ -20,6 +20,7 @@ import static com.code_intelligence.jazzer.mutation.mutator.lang.StringMutatorFa
 import static com.code_intelligence.jazzer.mutation.mutator.lang.StringMutatorFactory.fixUpPchar;
 import static com.code_intelligence.jazzer.mutation.mutator.lang.StringMutatorFactory.fixUpUtf8;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.dummyMutatorRuntime;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -145,6 +146,7 @@ class StringMutatorTest {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<
                     @NotNull @UrlSegment @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
@@ -161,6 +163,7 @@ class StringMutatorTest {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
@@ -179,6 +182,7 @@ class StringMutatorTest {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<@NotNull @WithUtf8Length(max = 50) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
@@ -197,6 +201,7 @@ class StringMutatorTest {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
@@ -218,6 +223,7 @@ class StringMutatorTest {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<@NotNull @WithUtf8Length(max = 5) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
@@ -231,6 +237,7 @@ class StringMutatorTest {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<@NotNull @WithUtf8Length(max = 15) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 
@@ -255,6 +262,7 @@ class StringMutatorTest {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)
             factory.createOrThrow(
+                dummyMutatorRuntime(),
                 new TypeHolder<@NotNull @WithUtf8Length(min = 10) String>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("String");
 

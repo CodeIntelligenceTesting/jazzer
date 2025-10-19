@@ -27,6 +27,7 @@ import static java.util.Arrays.stream;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.runtime.MutatorRuntime;
 import java.beans.ConstructorProperties;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
@@ -38,7 +39,7 @@ final class ConstructorBasedBeanMutatorFactory implements MutatorFactory {
 
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
-      AnnotatedType type, ExtendedMutatorFactory factory) {
+      MutatorRuntime runtime, AnnotatedType type, ExtendedMutatorFactory factory) {
     return asSubclassOrEmpty(type, Object.class)
         .filter(BeanSupport::isConcreteClass)
         .flatMap(
@@ -61,7 +62,7 @@ final class ConstructorBasedBeanMutatorFactory implements MutatorFactory {
                                           // if not all parameters are supported by the mutation
                                           // framework, empty is returned.
                                           return AggregatesHelper.createMutator(
-                                              factory, type, constructor, getters, false);
+                                              runtime, factory, type, constructor, getters, false);
                                         }))));
   }
 
