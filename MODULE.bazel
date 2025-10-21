@@ -40,9 +40,9 @@ SHADED_RUNTIME_MAVEN_ARTIFACTS = [
     # renovate: keep updated
     "com.github.jsqlparser:jsqlparser:4.9",
     "com.google.errorprone:error_prone_annotations:2.42.0",
-    "io.github.classgraph:classgraph:jar:4.8.184",
+    "io.github.classgraph:classgraph:4.8.184",
     "net.bytebuddy:byte-buddy-agent:1.17.8",
-    "net.jodah:typetools:jar:0.6.3",
+    "net.jodah:typetools:0.6.3",
     "org.ow2.asm:asm:9.9",
     "org.ow2.asm:asm-commons:9.9",
     "org.ow2.asm:asm-tree:9.9",
