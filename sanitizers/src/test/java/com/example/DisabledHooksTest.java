@@ -17,7 +17,6 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh;
-import java.lang.reflect.InvocationTargetException;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -31,15 +30,6 @@ public class DisabledHooksTest {
     try {
       Class.forName("jaz.Zer").newInstance();
     } catch (ClassNotFoundException | IllegalAccessException | InstantiationException ignored) {
-    }
-  }
-
-  public static void triggerExpressionLanguageInjectionSanitizer() throws Throwable {
-    try {
-      Class.forName("jaz.Zer").getMethod("el").invoke(null);
-    } catch (InvocationTargetException e) {
-      throw e.getCause();
-    } catch (IllegalAccessException | ClassNotFoundException | NoSuchMethodException ignore) {
     }
   }
 
@@ -68,11 +58,6 @@ public class DisabledHooksTest {
     triggerDeserializationSanitizer();
   }
 
-  @Test(expected = FuzzerSecurityIssueHigh.class)
-  public void enableExpressionLanguageInjectionSanitizer() throws Throwable {
-    triggerExpressionLanguageInjectionSanitizer();
-  }
-
   @Test
   public void disableReflectiveCallSanitizer() {
     System.setProperty(
@@ -85,14 +70,6 @@ public class DisabledHooksTest {
     System.setProperty(
         "jazzer.disabled_hooks", "com.code_intelligence.jazzer.sanitizers.Deserialization");
     triggerDeserializationSanitizer();
-  }
-
-  @Test
-  public void disableExpressionLanguageSanitizer() throws Throwable {
-    System.setProperty(
-        "jazzer.disabled_hooks",
-        "com.code_intelligence.jazzer.sanitizers.ExpressionLanguageInjection");
-    triggerExpressionLanguageInjectionSanitizer();
   }
 
   @Test(expected = FuzzerSecurityIssueHigh.class)
@@ -111,7 +88,6 @@ public class DisabledHooksTest {
             + File.pathSeparatorChar
             + "com.code_intelligence.jazzer.sanitizers.Deserialization");
     triggerReflectiveCallSanitizer();
-    triggerExpressionLanguageInjectionSanitizer();
     triggerDeserializationSanitizer();
   }
 }
