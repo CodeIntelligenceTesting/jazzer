@@ -18,8 +18,18 @@ package jaz;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh;
 import com.code_intelligence.jazzer.api.Jazzer;
-import java.io.*;
-import java.util.*;
+import java.io.Closeable;
+import java.io.File;
+import java.io.Flushable;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 
@@ -116,6 +126,7 @@ public class Zer
   }
 
   private static boolean isSanitizerEnabled(byte sanitizerId) {
+    // FIXME: This does not take into account disabled hooks set via CLI args or env.
     String allDisabledHooks = System.getProperty("jazzer.disabled_hooks");
     if (allDisabledHooks == null || allDisabledHooks.equals("")) {
       return true;
@@ -132,7 +143,8 @@ public class Zer
       default:
         sanitizer = "com.code_intelligence.jazzer.sanitizers.ReflectiveCall";
     }
-    return Arrays.stream(allDisabledHooks.split(",")).noneMatch(sanitizer::equals);
+    return Arrays.stream(allDisabledHooks.split(String.valueOf(File.pathSeparatorChar)))
+        .noneMatch(sanitizer::equals);
   }
 
   // Getter/Setter
