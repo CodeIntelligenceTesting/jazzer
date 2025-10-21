@@ -17,8 +17,11 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh;
-import java.io.*;
 import java.lang.reflect.InvocationTargetException;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Base64;
 import org.junit.After;
 import org.junit.Test;
@@ -104,9 +107,9 @@ public class DisabledHooksTest {
   public void disableAllSanitizers() throws Throwable {
     System.setProperty(
         "jazzer.disabled_hooks",
-        "com.code_intelligence.jazzer.sanitizers.ReflectiveCall,"
-            + "com.code_intelligence.jazzer.sanitizers.Deserialization,"
-            + "com.code_intelligence.jazzer.sanitizers.ExpressionLanguageInjection");
+        "com.code_intelligence.jazzer.sanitizers.ReflectiveCall"
+            + File.pathSeparatorChar
+            + "com.code_intelligence.jazzer.sanitizers.Deserialization");
     triggerReflectiveCallSanitizer();
     triggerExpressionLanguageInjectionSanitizer();
     triggerDeserializationSanitizer();
