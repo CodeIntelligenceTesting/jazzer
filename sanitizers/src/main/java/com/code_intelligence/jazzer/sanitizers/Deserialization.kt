@@ -64,7 +64,7 @@ object Deserialization {
         // We can't instantiate jaz.Zer directly, so we instantiate and serialize jaz.Ter and then
         // patch the class name.
         val baos = ByteArrayOutputStream()
-        ObjectOutputStream(baos).writeObject(jaz.Ter(jaz.Ter.EXPRESSION_LANGUAGE_SANITIZER_ID))
+        ObjectOutputStream(baos).writeObject(jaz.Ter(jaz.Ter.DESERIALIZATION_SANITIZER_ID))
         val serializedJazTerInstance = baos.toByteArray()
         val posToPatch = serializedJazTerInstance.indexOf("jaz.Ter".toByteArray())
         serializedJazTerInstance[posToPatch + "jaz.".length] = 'Z'.code.toByte()
