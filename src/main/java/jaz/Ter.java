@@ -26,7 +26,6 @@ public class Ter implements java.io.Serializable {
 
   public static final byte REFLECTIVE_CALL_SANITIZER_ID = 0;
   public static final byte DESERIALIZATION_SANITIZER_ID = 1;
-  public static final byte EXPRESSION_LANGUAGE_SANITIZER_ID = 2;
 
   private byte sanitizer = REFLECTIVE_CALL_SANITIZER_ID;
 

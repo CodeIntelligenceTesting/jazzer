@@ -71,7 +71,6 @@ public class Zer
   // serialized size is 41 bytes
   private static final byte REFLECTIVE_CALL_SANITIZER_ID = 0;
   private static final byte DESERIALIZATION_SANITIZER_ID = 1;
-  private static final byte EXPRESSION_LANGUAGE_SANITIZER_ID = 2;
 
   // A byte representing the relevant sanitizer for a given jaz.Zer instance. It is used to check
   // whether the corresponding sanitizer is disabled and jaz.Zer will not report a finding in this
@@ -101,11 +100,13 @@ public class Zer
     reportFindingIfEnabled();
   }
 
-  // A special static method that is called by the expression language injection sanitizer. We
+  // A special static method that is guided to by the expression language injection sanitizer. We
   // choose a parameterless method to keep the string that the sanitizer guides the fuzzer to
   // generate within the 64-byte boundary required by the corresponding guiding methods.
+  // A RCE finding is only reported if the ReflectiveCall sanitizer is active to give users a way to
+  // silence it.
   public static void el() {
-    if (isSanitizerEnabled(EXPRESSION_LANGUAGE_SANITIZER_ID)) {
+    if (isSanitizerEnabled(REFLECTIVE_CALL_SANITIZER_ID)) {
       reportFinding();
     }
   }
@@ -136,9 +137,6 @@ public class Zer
     switch (sanitizerId) {
       case DESERIALIZATION_SANITIZER_ID:
         sanitizer = "com.code_intelligence.jazzer.sanitizers.Deserialization";
-        break;
-      case EXPRESSION_LANGUAGE_SANITIZER_ID:
-        sanitizer = "com.code_intelligence.jazzer.sanitizers.ExpressionLanguageInjection";
         break;
       default:
         sanitizer = "com.code_intelligence.jazzer.sanitizers.ReflectiveCall";
