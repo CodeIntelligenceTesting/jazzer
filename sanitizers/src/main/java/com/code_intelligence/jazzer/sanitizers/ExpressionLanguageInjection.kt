@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2024 Code Intelligence GmbH
  *
@@ -29,13 +28,17 @@ import java.lang.invoke.MethodHandle
 @Suppress("unused_parameter", "unused")
 object ExpressionLanguageInjection {
     /**
-     * Try to call the default constructor of the honeypot class.
+     * Try to call the el() method of the honeypot class.
      */
     private const val EXPRESSION_LANGUAGE_ATTACK =
         "\${Byte.class.forName(\"$HONEYPOT_CLASS_NAME\").getMethod(\"el\").invoke(null)}"
+    private const val SPRING_EXPRESSION_LANGUAGE_ATTACK = "T($HONEYPOT_CLASS_NAME).el()"
 
     init {
         require(EXPRESSION_LANGUAGE_ATTACK.length <= 64) {
+            "Expression language exploit must fit in a table of recent compares entry (64 bytes)"
+        }
+        require(SPRING_EXPRESSION_LANGUAGE_ATTACK.length <= 64) {
             "Expression language exploit must fit in a table of recent compares entry (64 bytes)"
         }
     }
@@ -101,5 +104,33 @@ object ExpressionLanguageInjection {
         }
         val message = arguments[0] as String
         Jazzer.guideTowardsContainment(message, EXPRESSION_LANGUAGE_ATTACK, hookId)
+    }
+
+    /**
+     * Guides Spring Expression Language (SpEL) parsing towards payloads that execute RCE, enabling discovery of
+     * CVE-2022-22963-like bugs where SpEL evaluation is unexpectedly attacker-controlled.
+     */
+    @MethodHooks(
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "org.springframework.expression.spel.standard.SpelExpressionParser",
+            targetMethod = "parseRaw",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "org.springframework.expression.common.TemplateAwareExpressionParser",
+            targetMethod = "parseExpression",
+        ),
+    )
+    @JvmStatic
+    fun hookSpelParseExpression(
+        method: MethodHandle?,
+        thisObject: Any?,
+        arguments: Array<Any>,
+        hookId: Int,
+    ) {
+        if (arguments.isEmpty()) return
+        val expr = arguments[0] as? String ?: return
+        Jazzer.guideTowardsContainment(expr, SPRING_EXPRESSION_LANGUAGE_ATTACK, hookId)
     }
 }

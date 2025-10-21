@@ -136,6 +136,9 @@ VULNERABLE_TEST_MAVEN_ARTIFACTS = [
     "org.apache.xmlgraphics:batik-xml:1.14",
     "org.glassfish:javax.el:3.0.1-b06",
     "org.hibernate:hibernate-validator:5.2.4.Final",
+    "org.springframework.cloud:spring-cloud-function-context:3.1.6",
+    "org.springframework.cloud:spring-cloud-function-core:3.1.6",
+    "org.springframework:spring-messaging:6.1.4",
 ]
 
 maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
