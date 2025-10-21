@@ -335,6 +335,26 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "SpringCloudFunctionRoutingFuzzer",
+    srcs = [
+        "src/main/java/com/example/SpringCloudFunctionRoutingFuzzer.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
+    ],
+    fuzzer_args = ["-runs=100000"],
+    tags = ["no-jdk8"],
+    target_class = "com.example.SpringCloudFunctionRoutingFuzzer",
+    verify_crash_reproducer = False,
+    deps = [
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:org_springframework_cloud_spring_cloud_function_context",
+        "@maven//:org_springframework_cloud_spring_cloud_function_core",
+        "@maven//:org_springframework_spring_messaging",
+    ],
+)
+
+java_fuzz_target_test(
     name = "JacksonCborFuzzer",
     srcs = [
         "src/main/java/com/example/JacksonCborFuzzer.java",

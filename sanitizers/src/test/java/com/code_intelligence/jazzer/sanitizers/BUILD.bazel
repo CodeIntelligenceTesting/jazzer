@@ -25,5 +25,7 @@ java_junit5_test(
         "@maven//:javax_validation_validation_api",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
+        "@maven//:org_springframework_cloud_spring_cloud_function_context",
+        "@maven//:org_springframework_cloud_spring_cloud_function_core",
     ],
 )
