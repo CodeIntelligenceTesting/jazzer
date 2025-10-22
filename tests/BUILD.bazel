@@ -1077,6 +1077,19 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "BigDecimalFuzzer",
+    srcs = [
+        "src/test/java/com/example/BigDecimalFuzzer.java",
+    ],
+    allowed_findings = ["timeout"],
+    fuzzer_args = [
+        "-timeout=1",
+    ],
+    target_class = "com.example.BigDecimalFuzzer",
+    verify_crash_reproducer = False,
+)
+
+java_fuzz_target_test(
     name = "JUnitInvalidJavaSeedTest",
     timeout = "short",
     srcs = ["src/test/java/com/example/JUnitInvalidJavaSeedTest.java"],

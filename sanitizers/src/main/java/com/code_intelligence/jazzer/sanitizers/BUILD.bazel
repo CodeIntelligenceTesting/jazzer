@@ -53,6 +53,14 @@ java_library(
 )
 
 java_library(
+    name = "big_decimal",
+    srcs = ["BigDecimal.java"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+    ],
+)
+
+java_library(
     name = "unsafe_sanitizer",
     srcs = ["UnsafeSanitizer.java"],
     deps = [
@@ -79,6 +87,7 @@ kt_jvm_library(
         "//sanitizers/src/test/java/com/code_intelligence/jazzer/sanitizers:__pkg__",
     ],
     runtime_deps = [
+        ":big_decimal",
         ":clojure_lang_hooks",
         ":file_path_traversal",
         ":regex_roadblocks",
