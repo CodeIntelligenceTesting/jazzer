@@ -23,6 +23,7 @@ import static java.util.Collections.singletonList;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
+import com.code_intelligence.jazzer.protobuf.Proto2;
 import com.code_intelligence.jazzer.protobuf.Proto2.TestProtobuf;
 import com.google.protobuf.DescriptorProtos;
 import java.io.ByteArrayInputStream;
@@ -370,5 +371,25 @@ class ArgumentsMutatorTest {
     // "com.code_intelligence.jazzer.mutation.api.SerializingMutator.toDebugString(java.util.function.Predicate)"
     //   because "productMutator" is null
     assertThat(maybeMutator.toString()).contains("-> Message");
+  }
+
+  // Regression: ensure that the mutator can invoke a method with two protobuf messages where one
+  // message is a submessage of the other. This would fail with an "argument type mismatch" error
+  // when using the type `DynamicMessage` instead of `Proto2.TestSubProtobuf`.
+  @SuppressWarnings("unused")
+  public static void protoWithSubmessage(
+      @NotNull Proto2.TestProtobuf proto, @NotNull Proto2.TestSubProtobuf subproto) {}
+
+  @Test
+  void testProtoWithSubmessage() throws Throwable {
+    Method method =
+        ArgumentsMutatorTest.class.getMethod(
+            "protoWithSubmessage", Proto2.TestProtobuf.class, Proto2.TestSubProtobuf.class);
+    Optional<ArgumentsMutator> maybeMutator =
+        ArgumentsMutator.forMethod(Mutators.newFactory(), method);
+    assertThat(maybeMutator).isPresent();
+    ArgumentsMutator mutator = maybeMutator.get();
+    mutator.init(12345);
+    mutator.invoke(null, false);
   }
 }
