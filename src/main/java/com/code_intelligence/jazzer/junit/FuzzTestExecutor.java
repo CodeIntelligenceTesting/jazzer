@@ -16,7 +16,6 @@
 
 package com.code_intelligence.jazzer.junit;
 
-import static com.code_intelligence.jazzer.junit.ApiStatsHolder.printApiStats;
 import static com.code_intelligence.jazzer.junit.Utils.generatedCorpusPath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectoryResourcePath;
 import static com.code_intelligence.jazzer.junit.Utils.inputsDirectorySourcePath;
@@ -328,14 +327,9 @@ class FuzzTestExecutor {
       throw throwable;
     }
 
-    ApiStatsHolder.apiStats = new ApiStatsInterval();
-
     int exitCode = FuzzTargetRunner.startLibFuzzer(libFuzzerArgs);
     javaSeedsDir.ifPresent(FuzzTestExecutor::deleteJavaSeedsDir);
     Throwable finding = atomicFinding.get();
-
-    // Print the API stats after the test has finished, so that we get the most recent API stats.
-    printApiStats();
 
     if (finding != null) {
       return Optional.of(new FuzzTestFindingException(finding));

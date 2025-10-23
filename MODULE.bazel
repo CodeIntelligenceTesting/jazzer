@@ -62,16 +62,6 @@ PROVIDED_RUNTIME_MAVEN_ARTIFACTS = [
     "org.opentest4j:opentest4j:1.2.0",
 ]
 
-# Runtime dependencies of Jazzer that should not be included in the generated pom.
-# Keep these versions as low as possible for maximum compatibility with user setups.
-HIDDEN_RUNTIME_MAVEN_ARTIFACTS = [
-    # keep sorted
-    "jakarta.servlet:jakarta.servlet-api:6.0.0",
-    "org.springframework:spring-test:6.1.4",
-    "org.springframework:spring-web:6.1.4",
-    "org.springframework:spring-webmvc:6.1.4",
-]
-
 # Dependencies used to support Jazzer's own tests.
 # Keep these versions in sync with the ones in PROVIDED_RUNTIME_MAVEN_ARTIFACTS,
 # as Bazel would use "Minimal Version Selection" and choose a different version
@@ -163,16 +153,6 @@ maven.override(
         version = coordinate.split(":")[2],
     )
     for coordinate in TEST_MAVEN_ARTIFACTS + TEST_MAVEN_ARTIFACTS_FIXED + VULNERABLE_TEST_MAVEN_ARTIFACTS
-]
-
-[
-    maven.artifact(
-        artifact = coordinate.split(":")[1],
-        group = coordinate.split(":")[0],
-        neverlink = True,
-        version = coordinate.split(":")[2],
-    )
-    for coordinate in HIDDEN_RUNTIME_MAVEN_ARTIFACTS
 ]
 
 maven.install(

@@ -80,9 +80,6 @@ java_export(
         # Exclude the unshaded classes comprising com.code-intelligence:jazzer since the java_library
         # target comprising jazzer-junit depend on the individual libraries, not the shaded jar.
         "//src/main/java/com/code_intelligence/jazzer:jazzer_lib",
-        # Spring dependencies are required for javadoc but should be excluded from the jar.
-        "@maven//:org_springframework_spring_test",
-        "@maven//:org_springframework_spring_web",
     ],
     doc_deps = [
         ":jazzer-api-docs",
