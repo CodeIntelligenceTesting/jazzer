@@ -10,17 +10,6 @@ java_library(
 )
 
 java_junit5_test(
-    name = "ApiStatsTest",
-    size = "small",
-    srcs = ["ApiStatsTest.java"],
-    deps = JUNIT5_DEPS + [
-        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test_executor",
-        "@maven//:org_junit_jupiter_junit_jupiter_api",
-        "@maven//:org_junit_jupiter_junit_jupiter_params",
-    ],
-)
-
-java_junit5_test(
     name = "UtilsTest",
     size = "small",
     srcs = ["UtilsTest.java"],
