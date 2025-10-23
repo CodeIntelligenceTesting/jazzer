@@ -928,7 +928,8 @@ public class StressTest {
                 OptionalPrimitiveField3.newBuilder().setSomeField(true).build())),
         arguments(
             new TypeHolder<@NotNull RepeatedRecursiveMessageField3>() {}.annotatedType(),
-            "{Builder.Boolean, WithoutInit(Builder via List<(cycle) -> Message>)} -> Message",
+            "{Builder.Boolean, WithoutInit(Builder via List<{Builder.Boolean, WithoutInit(Builder"
+                + " via List<(cycle) -> Message>)} -> Message>)} -> Message",
             false,
             // The message field is recursive and thus not initialized.
             exactly(
@@ -1041,14 +1042,25 @@ public class StressTest {
                 + " Builder.Nullable<Double>, Builder.Nullable<String>,"
                 + " Builder.Nullable<Enum<Enum>>,"
                 + " WithoutInit(Builder.Nullable<{Builder.Nullable<Integer>, Builder via"
-                + " List<Integer>, WithoutInit(Builder.Nullable<(cycle) -> Message>)} -> Message>),"
-                + " Builder via List<Boolean>, Builder via List<Integer>, Builder via"
-                + " List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via"
-                + " List<Float>, Builder via List<Double>, Builder via List<String>, Builder via"
-                + " List<Enum<Enum>>, WithoutInit(Builder via List<(cycle) -> Message>),"
-                + " Builder.Map<Integer, Integer>, Builder.Nullable<FixedValue(OnlyLabel)>,"
-                + " Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> |"
-                + " Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
+                + " List<Integer>, WithoutInit(Builder.Nullable<{Builder.Nullable<Boolean>,"
+                + " Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>,"
+                + " Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>,"
+                + " Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>,"
+                + " WithoutInit(Builder.Nullable<(cycle) -> Message>), Builder via List<Boolean>,"
+                + " Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>,"
+                + " Builder via List<Long>, Builder via List<Float>, Builder via List<Double>,"
+                + " Builder via List<String>, Builder via List<Enum<Enum>>, WithoutInit(Builder via"
+                + " List<(cycle) -> Message>), Builder.Map<Integer, Integer>,"
+                + " Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} ->"
+                + " Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> |"
+                + " Builder.Nullable<Integer>} -> Message>)} -> Message>), Builder via"
+                + " List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder"
+                + " via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via"
+                + " List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>,"
+                + " WithoutInit(Builder via List<(cycle) -> Message>), Builder.Map<Integer,"
+                + " Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<(cycle) ->"
+                + " Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> |"
+                + " Builder.Nullable<Integer>} -> Message",
             false,
             manyDistinctElements(),
             manyDistinctElements()),
@@ -1063,14 +1075,25 @@ public class StressTest {
                 + " Builder.Nullable<Double>, Builder.Nullable<String>,"
                 + " Builder.Nullable<Enum<Enum>>,"
                 + " WithoutInit(Builder.Nullable<{Builder.Nullable<Integer>, Builder via"
-                + " List<Integer>, WithoutInit(Builder.Nullable<(cycle) -> Message>)} -> Message>),"
-                + " Builder via List<Boolean>, Builder via List<Integer>, Builder via"
-                + " List<Integer>, Builder via List<Long>, Builder via List<Long>, Builder via"
-                + " List<Float>, Builder via List<Double>, Builder via List<String>, Builder via"
-                + " List<Enum<Enum>>, WithoutInit(Builder via List<(cycle) -> Message>),"
-                + " Builder.Map<Integer, Integer>, Builder.Nullable<FixedValue(OnlyLabel)>,"
-                + " Builder.Nullable<{<empty>} -> Message>, Builder.Nullable<Integer> |"
-                + " Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
+                + " List<Integer>, WithoutInit(Builder.Nullable<{Builder.Nullable<Boolean>,"
+                + " Builder.Nullable<Integer>, Builder.Nullable<Integer>, Builder.Nullable<Long>,"
+                + " Builder.Nullable<Long>, Builder.Nullable<Float>, Builder.Nullable<Double>,"
+                + " Builder.Nullable<String>, Builder.Nullable<Enum<Enum>>,"
+                + " WithoutInit(Builder.Nullable<(cycle) -> Message>), Builder via List<Boolean>,"
+                + " Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>,"
+                + " Builder via List<Long>, Builder via List<Float>, Builder via List<Double>,"
+                + " Builder via List<String>, Builder via List<Enum<Enum>>, WithoutInit(Builder via"
+                + " List<(cycle) -> Message>), Builder.Map<Integer, Integer>,"
+                + " Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} ->"
+                + " Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> |"
+                + " Builder.Nullable<Integer>} -> Message>)} -> Message>), Builder via"
+                + " List<Boolean>, Builder via List<Integer>, Builder via List<Integer>, Builder"
+                + " via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via"
+                + " List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>,"
+                + " WithoutInit(Builder via List<(cycle) -> Message>), Builder.Map<Integer,"
+                + " Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<(cycle) ->"
+                + " Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> |"
+                + " Builder.Nullable<Integer>} -> Message",
             false,
             manyDistinctElements(),
             manyDistinctElements()),
@@ -1079,8 +1102,8 @@ public class StressTest {
                 @NotNull @AnySource({PrimitiveField3.class, MessageField3.class})
                 AnyField3>() {}.annotatedType(),
             "{Builder.Nullable<Builder.{Builder.Boolean} -> Message |"
-                + " Builder.{Builder.Nullable<(cycle) -> Message>} -> Message -> Message>} ->"
-                + " Message",
+                + " Builder.{Builder.Nullable<{Builder.Boolean} -> Message>} -> Message ->"
+                + " Message>} -> Message",
             true,
             exactly(
                 AnyField3.getDefaultInstance(),

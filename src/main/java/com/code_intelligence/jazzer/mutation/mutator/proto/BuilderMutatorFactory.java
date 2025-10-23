@@ -199,18 +199,15 @@ public final class BuilderMutatorFactory implements MutatorFactory {
                       .flatMap(
                           clazz -> {
                             // BuilderMutatorFactory only handles concrete subclasses of
-                            // Message.Builder
-                            // and requests Message.Builder itself for message fields, which we
-                            // handle
-                            // here.
+                            // Message.Builder and requests Message.Builder itself for message
+                            // fields, which we handle here.
                             if (clazz != Message.Builder.class) {
                               return Optional.empty();
                             }
                             // It is important that we use originalFactory here instead of factory:
                             // factory has this field-specific message mutator appended, but this
                             // mutator should only be used for this particular field and not any
-                            // message
-                            // subfields.
+                            // message subfields.
                             return Optional.of(
                                 makeBuilderMutator(
                                     type,
@@ -352,7 +349,8 @@ public final class BuilderMutatorFactory implements MutatorFactory {
             .collect(toMap(i -> getTypeUrl(getDefaultInstance(anySource.value()[i])), identity()));
 
     return assemble(
-        mutator -> internedMutators.put(new CacheKey(Any.getDescriptor(), anySource), mutator),
+        mutator ->
+            internedMutators.put(new CacheKey(Any.getDescriptor(), anySource, Any.class), mutator),
         Any.getDefaultInstance()::toBuilder,
         makeBuilderSerializer(Any.getDefaultInstance()),
         () ->
@@ -442,7 +440,7 @@ public final class BuilderMutatorFactory implements MutatorFactory {
         "@AnySource must list a non-empty list of classes");
     Descriptor descriptor = defaultInstance.getDescriptorForType();
 
-    CacheKey cacheKey = new CacheKey(descriptor, anySource);
+    CacheKey cacheKey = new CacheKey(descriptor, anySource, defaultInstance.getClass());
     if (internedMutators.containsKey(cacheKey)) {
       return internedMutators.get(cacheKey);
     }
@@ -494,10 +492,13 @@ public final class BuilderMutatorFactory implements MutatorFactory {
   private static final class CacheKey {
     private final Descriptor descriptor;
     private final AnySource anySource;
+    private final Class<? extends Message> messageClass;
 
-    private CacheKey(Descriptor descriptor, AnySource anySource) {
+    private CacheKey(
+        Descriptor descriptor, AnySource anySource, Class<? extends Message> messageClass) {
       this.descriptor = descriptor;
       this.anySource = anySource;
+      this.messageClass = messageClass;
     }
 
     @Override
@@ -509,12 +510,16 @@ public final class BuilderMutatorFactory implements MutatorFactory {
         return false;
       }
       CacheKey cacheKey = (CacheKey) o;
-      return descriptor == cacheKey.descriptor && Objects.equals(anySource, cacheKey.anySource);
+      return descriptor == cacheKey.descriptor
+          && Objects.equals(anySource, cacheKey.anySource)
+          && Objects.equals(messageClass, cacheKey.messageClass);
     }
 
     @Override
     public int hashCode() {
-      return 31 * System.identityHashCode(descriptor) + Objects.hashCode(anySource);
+      return 31 * System.identityHashCode(descriptor)
+          + Objects.hashCode(anySource)
+          + Objects.hashCode(messageClass);
     }
   }
 }

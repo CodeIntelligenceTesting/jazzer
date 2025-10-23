@@ -336,7 +336,9 @@ class BuilderMutatorProto2Test {
             factory.createInPlaceOrThrow(
                 new TypeHolder<RecursiveMessageField2.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
-        .isEqualTo("{Builder.Boolean, WithoutInit(Builder.Nullable<(cycle) -> Message>)}");
+        .isEqualTo(
+            "{Builder.Boolean, WithoutInit(Builder.Nullable<{Builder.Boolean,"
+                + " WithoutInit(Builder.Nullable<(cycle) -> Message>)} -> Message>)}");
     assertThat(mutator.hasFixedSize()).isFalse();
     RecursiveMessageField2.Builder builder = RecursiveMessageField2.newBuilder();
 
