@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Build documentation
         run: |
@@ -41,13 +41,13 @@ jobs:
 
     steps:
       - name: checkout docs
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: 'CodeIntelligenceTesting/jazzer-docs'
           ssh-key: "${{ secrets.JAZZER_DOCS_SSH_KEY_PRIVATE }}"
 
       - name: Download jar
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: jazzer_docs_jars
           path: .
