@@ -81,6 +81,7 @@ TEST_MAVEN_ARTIFACTS = [
     "com.google.truth.extensions:truth-proto-extension:1.4.5",
     "com.google.truth:truth:1.4.5",
     "jakarta.el:jakarta.el-api:6.0.1",
+    "jakarta.validation:jakarta.validation-api:3.0.2",
     "javax.persistence:javax.persistence-api:2.2",
     "junit:junit:4.13.2",
     "org.assertj:assertj-core:3.27.6",
