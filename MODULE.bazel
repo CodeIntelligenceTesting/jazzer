@@ -104,6 +104,7 @@ VULNERABLE_TEST_MAVEN_ARTIFACTS = [
     "com.h2database:h2:2.1.212",
     "com.mikesamuel:json-sanitizer:1.2.1",
     "com.unboundid:unboundid-ldapsdk:6.0.3",
+    "jakarta.validation:jakarta.validation-api:3.0.2",
     "javax.el:javax.el-api:3.0.1-b06",
     "javax.validation:validation-api:2.0.1.Final",
     "javax.xml.bind:jaxb-api:2.3.1",

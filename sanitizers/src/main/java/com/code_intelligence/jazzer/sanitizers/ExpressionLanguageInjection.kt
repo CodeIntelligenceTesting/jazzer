@@ -80,6 +80,32 @@ object ExpressionLanguageInjection {
         Jazzer.guideTowardsContainment(expression, EXPRESSION_LANGUAGE_ATTACK, hookId)
     }
 
+    @MethodHooks(
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "javax.el.ELProcessor",
+            targetMethod = "eval",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "jakarta.el.ELProcessor",
+            targetMethod = "eval",
+        ),
+    )
+    @JvmStatic
+    fun hoolElProcessor(
+        method: MethodHandle?,
+        thisObject: Any?,
+        arguments: Array<Any>,
+        hookId: Int,
+    ) {
+        if (arguments.size != 1) {
+            return
+        }
+        val message = arguments[0] as String
+        Jazzer.guideTowardsContainment(message, EXPRESSION_LANGUAGE_ATTACK, hookId)
+    }
+
     // With default configurations the argument to
     // ConstraintValidatorContext.buildConstraintViolationWithTemplate() will be evaluated by an
     // Expression Language interpreter which allows arbitrary code execution if the attacker has
@@ -87,10 +113,17 @@ object ExpressionLanguageInjection {
     //
     // References: CVE-2018-16621
     // https://securitylab.github.com/research/bean-validation-RCE/
-    @MethodHook(
-        type = HookType.BEFORE,
-        targetClassName = "javax.validation.ConstraintValidatorContext",
-        targetMethod = "buildConstraintViolationWithTemplate",
+    @MethodHooks(
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "javax.validation.ConstraintValidatorContext",
+            targetMethod = "buildConstraintViolationWithTemplate",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "jakarta.validation.ConstraintValidatorContext",
+            targetMethod = "buildConstraintViolationWithTemplate",
+        ),
     )
     @JvmStatic
     fun hookBuildConstraintViolationWithTemplate(
