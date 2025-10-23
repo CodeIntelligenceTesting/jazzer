@@ -403,7 +403,9 @@ class BuilderMutatorProto3Test {
             factory.createInPlaceOrThrow(
                 new TypeHolder<RecursiveMessageField3.@NotNull Builder>() {}.annotatedType());
     assertThat(mutator.toString())
-        .isEqualTo("{Builder.Boolean, WithoutInit(Builder.Nullable<(cycle) -> Message>)}");
+        .isEqualTo(
+            "{Builder.Boolean, WithoutInit(Builder.Nullable<{Builder.Boolean,"
+                + " WithoutInit(Builder.Nullable<(cycle) -> Message>)} -> Message>)}");
     assertThat(mutator.hasFixedSize()).isFalse();
     RecursiveMessageField3.Builder builder = RecursiveMessageField3.newBuilder();
 
@@ -609,7 +611,8 @@ class BuilderMutatorProto3Test {
     assertThat(mutator.toString())
         .isEqualTo(
             "{Builder.Nullable<Builder.{Builder.Boolean} -> Message |"
-                + " Builder.{Builder.Nullable<(cycle) -> Message>} -> Message -> Message>}");
+                + " Builder.{Builder.Nullable<{Builder.Boolean} -> Message>} -> Message ->"
+                + " Message>}");
     assertThat(mutator.hasFixedSize()).isTrue();
     AnyField3.Builder builder = AnyField3.newBuilder();
 

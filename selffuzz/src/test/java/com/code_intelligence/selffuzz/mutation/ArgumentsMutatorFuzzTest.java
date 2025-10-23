@@ -22,6 +22,7 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.jazzer.mutation.annotation.WithSize;
 import com.code_intelligence.jazzer.mutation.annotation.WithUtf8Length;
+import com.code_intelligence.jazzer.protobuf.Proto2;
 import com.code_intelligence.jazzer.protobuf.Proto3;
 import com.code_intelligence.selffuzz.jazzer.mutation.ArgumentsMutator;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
@@ -246,11 +247,9 @@ public class ArgumentsMutatorFuzzTest {
   @SelfFuzzTest
   void fuzz_MapField3(Proto3.MapField3 o1) {}
 
-  // BUG: causes java.lang.IllegalArgumentException: argument type mismatch
-  //      no problem when testing the two types separately
-  //  @SelfFuzzTest
-  //  public static void fuzz_MutuallyReferringProtobufs(
-  //      Proto2.TestProtobuf o1, Proto2.TestSubProtobuf o2) {}
+  @SelfFuzzTest
+  public static void fuzz_MutuallyReferringProtobufs(
+      Proto2.TestProtobuf o1, Proto2.TestSubProtobuf o2) {}
 
   /**
    * @return all methods in this class annotated by @SelfFuzzTest. If any of those methods are
