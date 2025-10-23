@@ -114,6 +114,7 @@ public class HookBindingSanityTest {
                   new MethodRef(
                       "org.springframework.expression.spel.standard.SpelExpressionParser"),
                   new MethodRef("jakarta.el.ExpressionFactory"),
+                  new MethodRef("jakarta.el.ELProcessor"),
                   new MethodRef("java.util.regex.Pattern$CharPredicate"),
                   new MethodRef("javax.xml.xpath.XPath", "evaluateExpression", null),
                   new MethodRef(

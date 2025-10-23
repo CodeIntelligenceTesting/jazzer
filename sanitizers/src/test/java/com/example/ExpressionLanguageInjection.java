@@ -16,23 +16,41 @@
 
 package com.example;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import com.code_intelligence.jazzer.junit.FuzzTest;
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.example.el.UserData;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
+import javax.el.ELException;
+import javax.el.ELProcessor;
 import javax.validation.Validation;
 import javax.validation.Validator;
+import org.junit.jupiter.api.BeforeEach;
 
 public class ExpressionLanguageInjection {
   private static final Validator validator =
       Validation.buildDefaultValidatorFactory().getValidator();
 
-  public static void fuzzerInitialize() {
+  @BeforeEach
+  public void setUp() {
     LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
   }
 
-  public static void fuzzerTestOneInput(FuzzedDataProvider data) {
-    UserData uncheckedUserData = new UserData(data.consumeRemainingAsString());
+  @FuzzTest
+  void fuzzValidator(@NotNull String data) {
+    UserData uncheckedUserData = new UserData(data);
     validator.validate(uncheckedUserData);
+  }
+
+  @FuzzTest
+  void fuzzEval(@NotNull String data) {
+    ELProcessor elp = new ELProcessor();
+    try {
+      elp.eval(data);
+    } catch (ELException
+        | IllegalStateException
+        | IllegalArgumentException
+        | ArithmeticException ignored) {
+    }
   }
 }
