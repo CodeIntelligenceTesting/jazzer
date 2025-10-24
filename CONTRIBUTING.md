@@ -78,6 +78,21 @@ $ bazel test //...
 If you are bisecting a bug or otherwise want test execution to stop right after the first failure, use `--config=fail-fast`.
 This is especially useful with long-running or parameterized tests.
 
+#### Potentially harmful tests
+
+Some tests deliberately exercise vulnerable code with fuzzer input to e.g. assert specific findings reported by Jazzer.
+Due to the pseudo-random nature of fuzzing this can cause potentially harmful side effects on the host system which is
+why such tests are tagged with `"dangerous"` and not executed by default when running tests locally. You can run _all_
+tests by adding the flag
+
+```bash
+--test_tag_filters=
+```
+
+but this should be done with care. At worst the tests will execute arbitrary commands or open network connections to
+random addresses. Depending on the host OS the bazel test sandboxing can be a good first line of defence to prevent
+destructive side effects.
+
 #### Debugging
 
 ##### Internal debugging
