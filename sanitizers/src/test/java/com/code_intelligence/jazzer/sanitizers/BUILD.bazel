@@ -20,6 +20,7 @@ java_junit5_test(
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
         "@clojure_jar//jar",
         "@maven//:jakarta_el_jakarta_el_api",
+        "@maven//:jakarta_validation_jakarta_validation_api",
         "@maven//:javax_el_javax_el_api",
         "@maven//:javax_persistence_javax_persistence_api",
         "@maven//:javax_validation_validation_api",
