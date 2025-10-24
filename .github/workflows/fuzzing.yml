@@ -32,10 +32,10 @@ jobs:
             bazel_args: "--xcode_version_config=//.github:host_xcodes"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: zulu
           java-version: 21
