@@ -10,6 +10,7 @@ java_fuzz_target_test(
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
         "java.lang.ExceptionInInitializerError",
     ],
+    tags = ["dangerous"],
     target_class = "com.example.ObjectInputStreamDeserialization",
 )
 
@@ -22,6 +23,7 @@ java_fuzz_target_test(
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
         "java.lang.ExceptionInInitializerError",
     ],
+    tags = ["dangerous"],
     target_class = "com.example.ReflectiveCall",
 )
 
@@ -33,6 +35,7 @@ java_fuzz_target_test(
     allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
     ],
+    tags = ["dangerous"],
     target_class = "com.example.LibraryLoad",
     # loading of native libraries is very slow on macos,
     # especially using Java 17
@@ -49,6 +52,7 @@ java_fuzz_target_test(
     ],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
     expected_warning_or_error = "WARN: Some hooks could not be applied to class files built for Java 7 or lower.",
+    tags = ["dangerous"],
     target_class = "com.example.ExpressionLanguageInjection",
     # The reproducer can't find jaz.Zer and thus doesn't crash.
     verify_crash_reproducer = False,
@@ -159,6 +163,7 @@ java_fuzz_target_test(
         "OsCommandInjectionProcessBuilder.java",
     ],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical"],
+    tags = ["dangerous"],
     target_class = "com.example.OsCommandInjectionProcessBuilder",
     verify_crash_reproducer = False,
 )
@@ -169,6 +174,7 @@ java_fuzz_target_test(
         "OsCommandInjectionRuntimeExec.java",
     ],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical"],
+    tags = ["dangerous"],
     target_class = "com.example.OsCommandInjectionRuntimeExec",
     verify_crash_reproducer = False,
 )
@@ -243,6 +249,7 @@ java_fuzz_target_test(
         # Reproducer does not find the honeypot library and doesn't have the hook.
         "java.lang.ExceptionInInitializerError",
     ],
+    tags = ["dangerous"],
     target_class = "com.example.ClassLoaderLoadClass",
 )
 
@@ -489,6 +496,7 @@ java_fuzz_target_test(
     allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
     ],
+    tags = ["dangerous"],
     target_class = "com.example.SsrfSocketConnect",
     verify_crash_reproducer = False,
 )
@@ -501,6 +509,7 @@ java_fuzz_target_test(
     allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
     ],
+    tags = ["dangerous"],
     target_class = "com.example.SsrfSocketConnectToHost",
     verify_crash_reproducer = False,
 )
@@ -513,6 +522,7 @@ java_fuzz_target_test(
     allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
     ],
+    tags = ["dangerous"],
     target_class = "com.example.SsrfUrlConnection",
     verify_crash_reproducer = False,
 )
@@ -525,7 +535,10 @@ java_fuzz_target_test(
     allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
     ],
-    tags = ["no-jdk8"],
+    tags = [
+        "dangerous",
+        "no-jdk8",
+    ],
     target_class = "com.example.SsrfHttpClient",
     verify_crash_reproducer = False,
 )
