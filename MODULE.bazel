@@ -27,7 +27,7 @@ bazel_dep(name = "rules_jvm_external", version = "6.8")
 bazel_dep(name = "rules_kotlin", version = "2.1.9")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
-bazel_dep(name = "toolchains_llvm", version = "0.10.3")
+bazel_dep(name = "toolchains_llvm", version = "1.5.0")
 
 ################################################################################
 # Maven dependencies
@@ -419,19 +419,14 @@ register_toolchains("//bazel/toolchains:kotlin_toolchain")
 
 # Used in CI.
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
-llvm.toolchain(
-    llvm_version = "15.0.6",
-    sysroot = {
-        # The extension doesn't handle labels to external repositories correctly: It does not map
-        # apparent names such as @org_chromium_sysroot_linux_x64 to the correct Bazel-internal
-        # canonical repository name. As a workaround, specify the canonical name directly.
-        # TODO: Get rid on this dependency of Bazel implementation details when toolchains_llvm
-        #       offers an attribute of type label rather than string.
-        # https://github.com/grailbio/bazel-toolchain/issues/234
-        # https://github.com/grailbio/bazel-toolchain/pull/235
-        "linux-x86_64": "@@_main~_repo_rules~org_chromium_sysroot_linux_x64//:sysroot",
-        "linux-aarch64": "@@_main~_repo_rules~org_chromium_sysroot_linux_aarch64//:sysroot",
-    },
+llvm.toolchain(llvm_version = "15.0.6")
+llvm.sysroot(
+    label = "@org_chromium_sysroot_linux_x64//:sysroot",
+    targets = ["linux-x86_64"],
+)
+llvm.sysroot(
+    label = "@org_chromium_sysroot_linux_aarch64//:sysroot",
+    targets = ["linux-aarch64"],
 )
 use_repo(llvm, "llvm_toolchain")
 
