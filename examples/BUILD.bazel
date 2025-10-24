@@ -343,7 +343,10 @@ java_fuzz_target_test(
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
     ],
     fuzzer_args = ["-runs=100000"],
-    tags = ["no-jdk8"],
+    tags = [
+        "dangerous",
+        "no-jdk8",
+    ],
     target_class = "com.example.SpringCloudFunctionRoutingFuzzer",
     verify_crash_reproducer = False,
     deps = [
