@@ -16,8 +16,8 @@
 
 package com.code_intelligence.jazzer.sanitizers
 
-import com.code_intelligence.jazzer.api.Jazzer
 import java.io.InputStream
+import java.io.Reader
 
 /**
  * jaz.Zer is a honeypot class: All of its methods report a finding when called.
@@ -44,11 +44,10 @@ internal fun ByteArray.indexOf(needle: ByteArray): Int {
     return -1
 }
 
-internal fun guideMarkableInputStreamTowardsEquality(
+internal fun peekMarkableInputStream(
     stream: InputStream,
-    target: ByteArray,
-    id: Int,
-) {
+    readlimit: Int,
+): ByteArray {
     fun readBytes(
         stream: InputStream,
         size: Int,
@@ -62,10 +61,33 @@ internal fun guideMarkableInputStreamTowardsEquality(
         }
         return if (n >= readlimit) current else current.copyOf(n)
     }
-
     check(stream.markSupported())
-    stream.mark(target.size)
-    val current = readBytes(stream, target.size)
+    stream.mark(readlimit)
+    val content = readBytes(stream, readlimit)
     stream.reset()
-    Jazzer.guideTowardsEquality(current, target, id)
+    return content
+}
+
+internal fun peekMarkableReader(
+    reader: Reader,
+    readlimit: Int,
+): String {
+    fun readString(
+        reader: Reader,
+        size: Int,
+    ): String {
+        val current = CharArray(size)
+        var n = 0
+        while (n < size) {
+            val count = reader.read(current, n, size - n)
+            if (count < 0) break
+            n += count
+        }
+        return String(current, 0, n)
+    }
+    check(reader.markSupported())
+    reader.mark(readlimit)
+    val content = readString(reader, readlimit)
+    reader.reset()
+    return content
 }
