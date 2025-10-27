@@ -27,6 +27,7 @@ import static java.util.stream.Collectors.toSet;
 
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.annotation.WithLength;
+import com.code_intelligence.jazzer.mutation.utils.IgnoreRecursiveConflicts;
 import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Inherited;
@@ -578,6 +579,9 @@ public final class TypeSupport {
               .collect(Collectors.toCollection(HashSet::new));
       for (Annotation annotation : extraAnnotations) {
         boolean added = existingAnnotationTypes.add(annotation.annotationType());
+        if (annotation.annotationType().isAnnotationPresent(IgnoreRecursiveConflicts.class)) {
+          continue;
+        }
         require(added, annotation + " already directly present on " + base);
       }
       return extraAnnotations;
