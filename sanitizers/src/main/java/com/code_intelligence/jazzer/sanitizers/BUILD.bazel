@@ -81,6 +81,7 @@ kt_jvm_library(
         "RegexInjection.kt",
         "Utils.kt",
         "XPathInjection.kt",
+        "XmlParserSsrfGuidance.kt",
     ],
     visibility = [
         "//sanitizers:__pkg__",
