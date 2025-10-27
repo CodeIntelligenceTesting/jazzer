@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.mutation.support;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 import static java.util.Arrays.stream;
 
+import com.code_intelligence.jazzer.mutation.utils.IgnoreRecursiveConflicts;
 import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
@@ -58,7 +59,8 @@ public final class PropertyConstraintSupport {
   }
 
   private static boolean hasConstraint(AnnotatedType target, Annotation constraint) {
-    return target.getAnnotation(constraint.annotationType()) != null;
+    return constraint.annotationType().getAnnotation(IgnoreRecursiveConflicts.class) == null
+        && target.getAnnotation(constraint.annotationType()) != null;
   }
 
   private PropertyConstraintSupport() {}
