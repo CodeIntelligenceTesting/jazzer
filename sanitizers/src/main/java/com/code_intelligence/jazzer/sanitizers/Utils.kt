@@ -60,7 +60,7 @@ internal fun guideMarkableInputStreamTowardsEquality(
             if (count < 0) break
             n += count
         }
-        return current
+        return if (n >= readlimit) current else current.copyOf(n)
     }
 
     check(stream.markSupported())
