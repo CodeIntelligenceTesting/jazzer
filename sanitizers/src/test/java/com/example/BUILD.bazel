@@ -562,6 +562,19 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "SsrfXmlParser",
+    srcs = [
+        "SsrfXmlParser.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium",
+    ],
+    tags = ["dangerous"],
+    target_class = "com.example.SsrfXmlParser",
+    verify_crash_reproducer = False,
+)
+
+java_fuzz_target_test(
     name = "ScriptEngineInjection",
     srcs = [
         "ScriptEngineInjection.java",
