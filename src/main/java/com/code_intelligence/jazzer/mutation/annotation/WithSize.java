@@ -26,6 +26,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Generates a {@link List} or {@link Map} with the specified size.
@@ -35,7 +36,7 @@ import java.util.Map;
  */
 @Target(TYPE_USE)
 @Retention(RUNTIME)
-@AppliesTo({List.class, Map.class})
+@AppliesTo({List.class, Map.class, Set.class})
 @ValidateContainerDimensions
 @PropertyConstraint
 public @interface WithSize {

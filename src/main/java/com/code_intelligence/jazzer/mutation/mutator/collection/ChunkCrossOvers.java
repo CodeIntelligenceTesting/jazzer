@@ -22,9 +22,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 final class ChunkCrossOvers {
   private ChunkCrossOvers() {}
@@ -98,6 +100,25 @@ final class ChunkCrossOvers {
     }
   }
 
+  static <K> void insertChunk(
+      Set<K> set, Set<K> otherSet, int maxSize, PseudoRandom prng, boolean hasFixedSize) {
+    int originalSize = set.size();
+    int maxChunkSize = Math.min(maxSize - originalSize, otherSet.size());
+    int chunkSize = prng.sizeInClosedRange(1, maxChunkSize, hasFixedSize);
+    int fromChunkOffset = prng.closedRange(0, otherSet.size() - chunkSize);
+    Iterator<K> fromIterator = otherSet.iterator();
+    for (int i = 0; i < fromChunkOffset; i++) {
+      fromIterator.next();
+    }
+    // insertChunk only inserts new entries and does not overwrite existing
+    // ones. As skipping those entries would lead to fewer insertions than
+    // requested, loop over the rest of the map to fill the chunk if possible.
+    while (set.size() < originalSize + chunkSize && fromIterator.hasNext()) {
+      K key = fromIterator.next();
+      set.add(key);
+    }
+  }
+
   static <K, V> void overwriteChunk(
       Map<K, V> map, Map<K, V> otherMap, PseudoRandom prng, boolean hasFixedSize) {
     onCorrespondingChunks(
@@ -115,6 +136,59 @@ final class ChunkCrossOvers {
           }
         },
         hasFixedSize);
+  }
+
+  static <K> void overwriteChunk(
+      Set<K> set, Set<K> otherSet, PseudoRandom prng, boolean hasFixedSize) {
+    onCorrespondingChunks(
+        set,
+        otherSet,
+        prng,
+        (fromIterator, toIterator, chunkSize) -> {
+          // As keys can not be overwritten, only removed and new ones added, this
+          // cross over overwrites the values. Removal of keys is handled by the
+          // removeChunk mutation. Value equality is not checked here.
+          for (int i = 0; i < chunkSize; i++) {
+            K from = fromIterator.next();
+            K to = toIterator.next();
+          }
+        },
+        hasFixedSize);
+  }
+
+  static <K> void crossOverChunk(
+      Set<K> set, Set<K> otherSet, SerializingMutator<K> keyMutator, PseudoRandom prng) {
+    onCorrespondingChunks(
+        set,
+        otherSet,
+        prng,
+        (fromIterator, toIterator, chunkSize) -> {
+          Set<K> entriesToAdd = new LinkedHashSet<>(chunkSize);
+          for (int i = 0; i < chunkSize; i++) {
+            K to = toIterator.next();
+            K from = fromIterator.next();
+
+            // The entry has to be removed from the map before the cross-over, as
+            // mutating its key could cause problems in subsequent lookups.
+            // Furthermore, no new entries may be added while using the iterator,
+            // so crossed-over keys are collected for later addition.
+            toIterator.remove();
+
+            // As cross-overs do not guarantee to mutate the given object, no
+            // checks if the crossed over key already exists in the map are
+            // performed. This potentially overwrites existing entries or
+            // generates equal keys.
+            // In case of cross over this behavior is acceptable.
+            K newKey = keyMutator.crossOver(to, from, prng);
+
+            // Prevent null keys, as those are not allowed in some map implementations.
+            if (newKey != null) {
+              entriesToAdd.add(newKey);
+            }
+          }
+          set.addAll(entriesToAdd);
+        },
+        keyMutator.hasFixedSize());
   }
 
   static <K, V> void crossOverChunk(
@@ -198,6 +272,11 @@ final class ChunkCrossOvers {
     void apply(Iterator<Entry<K, V>> fromIterator, Iterator<Entry<K, V>> toIterator, int chunkSize);
   }
 
+  @FunctionalInterface
+  private interface ChunkSetOperation<K> {
+    void apply(Iterator<K> fromIterator, Iterator<K> toIterator, int chunkSize);
+  }
+
   static <K, V> void onCorrespondingChunks(
       Map<K, V> map,
       Map<K, V> otherMap,
@@ -213,6 +292,27 @@ final class ChunkCrossOvers {
       fromIterator.next();
     }
     Iterator<Entry<K, V>> toIterator = map.entrySet().iterator();
+    for (int i = 0; i < toChunkOffset; i++) {
+      toIterator.next();
+    }
+    operation.apply(fromIterator, toIterator, chunkSize);
+  }
+
+  static <K> void onCorrespondingChunks(
+      Set<K> set,
+      Set<K> otherSet,
+      PseudoRandom prng,
+      ChunkSetOperation<K> operation,
+      boolean hasFixedSize) {
+    int maxChunkSize = Math.min(set.size(), otherSet.size());
+    int chunkSize = prng.sizeInClosedRange(1, maxChunkSize, hasFixedSize);
+    int fromChunkOffset = prng.closedRange(0, otherSet.size() - chunkSize);
+    int toChunkOffset = prng.closedRange(0, set.size() - chunkSize);
+    Iterator<K> fromIterator = otherSet.iterator();
+    for (int i = 0; i < fromChunkOffset; i++) {
+      fromIterator.next();
+    }
+    Iterator<K> toIterator = set.iterator();
     for (int i = 0; i < toChunkOffset; i++) {
       toIterator.next();
     }
