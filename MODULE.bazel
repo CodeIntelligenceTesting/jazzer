@@ -27,6 +27,7 @@ bazel_dep(name = "rules_jvm_external", version = "6.8")
 bazel_dep(name = "rules_kotlin", version = "2.1.9")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
+bazel_dep(name = "rules_cc", version = "0.2.12")
 bazel_dep(name = "toolchains_llvm", version = "1.5.0")
 
 ################################################################################
@@ -432,7 +433,7 @@ llvm.sysroot(
 use_repo(llvm, "llvm_toolchain")
 
 # Required by the reference to the Windows toolchain in @local_config_cc from .bazelrc.
-cc_configure = use_extension("@bazel_tools//tools/cpp:cc_configure.bzl", "cc_configure_extension")
+cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure_extension")
 use_repo(cc_configure, "local_config_cc")
 
 # Referenced in BUILD files.
