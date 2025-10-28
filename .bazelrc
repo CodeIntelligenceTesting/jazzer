@@ -70,6 +70,8 @@ build:windows --extra_execution_platforms=//bazel/platforms:x64_windows-clang-cl
 build:windows --features=static_link_msvcrt
 build:windows --cxxopt=/std:c++17
 build:windows --host_cxxopt=/std:c++17
+# TODO: Remove once https://github.com/bazelbuild/rules_kotlin/issues/1309 is addressed.
+build:windows --legacy_external_runfiles
 # Required as PATH doubles as the shared library search path on Windows and the
 # Java agent functionality depends on system-provided shared libraries.
 test:windows --noincompatible_strict_action_env
