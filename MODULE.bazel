@@ -7,7 +7,7 @@ module(name = "jazzer")
 ################################################################################
 
 bazel_dep(name = "abseil-cpp", version = "20250814.1")
-bazel_dep(name = "apple_support", version = "1.24.1")
+bazel_dep(name = "apple_support", version = "1.24.3")
 bazel_dep(name = "bazel_jar_jar", version = "0.1.11")
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "buildifier_prebuilt", version = "8.2.0.2")
@@ -27,7 +27,7 @@ bazel_dep(name = "rules_jvm_external", version = "6.8")
 bazel_dep(name = "rules_kotlin", version = "2.1.9")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
-bazel_dep(name = "rules_cc", version = "0.2.12")
+bazel_dep(name = "rules_cc", version = "0.2.13")
 bazel_dep(name = "toolchains_llvm", version = "1.5.0")
 
 ################################################################################
