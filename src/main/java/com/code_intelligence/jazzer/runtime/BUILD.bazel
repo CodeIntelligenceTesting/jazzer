@@ -65,11 +65,11 @@ sh_test(
     srcs = ["verify_shading.sh"],
     args = [
         "$(rootpath jazzer_bootstrap.jar)",
-        "$(JAVABASE)",
+        "$(location @bazel_tools//tools/zip:zipper)",
     ],
     data = [
         "jazzer_bootstrap.jar",
-        "@bazel_tools//tools/jdk:current_java_runtime",
+        "@bazel_tools//tools/zip:zipper",
     ],
     tags = [
         # Coverage instrumentation necessarily adds files to the jar that we
@@ -77,9 +77,6 @@ sh_test(
         "no-coverage",
     ],
     target_compatible_with = SKIP_ON_WINDOWS,
-    toolchains = [
-        "@bazel_tools//tools/jdk:current_java_runtime",
-    ],
 )
 
 # At runtime, the AgentInstaller appends jazzer_bootstrap.jar to the bootstrap
