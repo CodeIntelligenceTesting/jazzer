@@ -144,11 +144,11 @@ sh_test(
         srcs = [artifact + "_artifact_test.sh"],
         args = [
             "$(rootpath :%s)" % artifact,
-            "$(JAVABASE)",
+            "$(location @bazel_tools//tools/zip:zipper)",
         ],
         data = [
             ":" + artifact,
-            "@bazel_tools//tools/jdk:current_java_runtime",
+            "@bazel_tools//tools/zip:zipper",
         ],
         tags = [
             # Coverage instrumentation necessarily adds files to the jar that we
@@ -156,9 +156,6 @@ sh_test(
             "no-coverage",
         ],
         target_compatible_with = SKIP_ON_WINDOWS,
-        toolchains = [
-            "@bazel_tools//tools/jdk:current_java_runtime",
-        ],
     )
     for artifact in [
         "jazzer-api",

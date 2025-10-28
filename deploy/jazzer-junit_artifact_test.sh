@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #
 # Copyright 2024 Code Intelligence GmbH
 #
@@ -16,12 +16,13 @@
 #
 
 [ -f "$1" ] || exit 1
-JAR="$2/bin/jar"
-[ -e "$JAR" ] || exit 1
+ZIPPER="$2"
+[[ -x "$ZIPPER" ]] || exit 1
+
 # List all files in the jar and exclude an allowed list of files.
 # Since grep fails if there is no match, ! ... | grep ... fails if there is a
 # match.
-! "$JAR" tf "$1" | \
+! "$ZIPPER" v "$1" | awk '{print $3}' | \
   grep -v \
     -e '^com/$' \
     -e '^com/code_intelligence/$' \
