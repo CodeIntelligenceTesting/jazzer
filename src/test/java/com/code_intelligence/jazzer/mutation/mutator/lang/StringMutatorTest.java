@@ -227,6 +227,20 @@ class StringMutatorTest {
   }
 
   @Test
+  void testMutateWithInputLongerThanMaxLength() {
+    SerializingMutator<String> mutator =
+        (SerializingMutator<String>)
+            factory.createOrThrow(
+                new TypeHolder<@NotNull @WithUtf8Length(max = 5) String>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("String");
+    String s = "foobarbazf";
+    try (MockPseudoRandom prng = mockPseudoRandom()) {
+      s = mutator.mutate(s, prng);
+    }
+    assertThat(s.length()).isAtMost(5);
+  }
+
+  @Test
   void testMaxLengthMutate() {
     SerializingMutator<String> mutator =
         (SerializingMutator<String>)

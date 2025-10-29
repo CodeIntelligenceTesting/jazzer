@@ -206,15 +206,13 @@ public class ArgumentsMutatorFuzzTest {
 
   @SelfFuzzTest
   void fuzz_ProtoBufs(
-      // com.google.protobuf.StringValue v0, // BUG: makes maxIncreaseSize negative in
-      // LibProtobufMutator.mutate
+      com.google.protobuf.StringValue v0,
       com.google.protobuf.Int32Value v1,
       com.google.protobuf.BoolValue v2,
       com.google.protobuf.UInt64Value v3,
       com.google.protobuf.FloatValue v4,
       com.google.protobuf.DoubleValue v5,
-      // com.google.protobuf.BytesValue v6, // BUG: makes maxIncreaseSize negative in
-      // LibProtobufMutator.mutate
+      com.google.protobuf.BytesValue v6,
       com.google.protobuf.Int64Value v7) {
     if (v7 != null) {
       assertThat(v7.getValue()).isAtLeast(Long.MIN_VALUE);
@@ -224,15 +222,13 @@ public class ArgumentsMutatorFuzzTest {
 
   @SelfFuzzTest
   void fuzz_ProtoBufsNotNull(
-      // @NotNull com.google.protobuf.StringValue v0, // BUG: makes maxIncreaseSize negative in
-      // LibProtobufMutator.mutate
+      @NotNull com.google.protobuf.StringValue v0,
       @NotNull com.google.protobuf.Int32Value v1,
       @NotNull com.google.protobuf.BoolValue v2,
       @NotNull com.google.protobuf.UInt64Value v3,
       @NotNull com.google.protobuf.FloatValue v4,
       @NotNull com.google.protobuf.DoubleValue v5,
-      // @NotNull com.google.protobuf.BytesValue v6, // BUG: makes maxIncreaseSize negative in
-      // LibProtobufMutator.mutate
+      @NotNull com.google.protobuf.BytesValue v6,
       @NotNull com.google.protobuf.Int64Value v7) {
     if (v7 != null) {
       assertThat(v7.getValue()).isAtLeast(Long.MIN_VALUE);
@@ -240,9 +236,8 @@ public class ArgumentsMutatorFuzzTest {
     }
   }
 
-  // BUG: makes maxIncreaseSize negative in LibProtobufMutator.mutate
-  // @SelfFuzzTest
-  // public static void fuzz_TestProtobuf(TestProtobuf o1) {}
+  @SelfFuzzTest
+  public static void fuzz_TestProtobuf(Proto2.TestProtobuf o1) {}
 
   @SelfFuzzTest
   void fuzz_MapField3(Proto3.MapField3 o1) {}
