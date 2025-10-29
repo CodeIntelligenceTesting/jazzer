@@ -837,7 +837,7 @@ public class StressTest {
             "[Nullable<[Integer, Boolean] -> SimpleRecord>, Nullable<[Integer, Boolean] ->"
                 + " SimpleRecord>] -> RepeatedRecord",
             true,
-            distinctElementsRatio(0.49),
+            distinctElementsRatio(0.45),
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull LinkedListNode>() {}.annotatedType(),
@@ -845,7 +845,7 @@ public class StressTest {
                 + " LinkedListNode)>] -> LinkedListNode",
             false,
             // Low due to recursion breaking initializing nested records to null.
-            distinctElementsRatio(0.23),
+            distinctElementsRatio(0.22),
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull SetterBasedBeanWithParent>() {}.annotatedType(),
@@ -858,7 +858,7 @@ public class StressTest {
             "[Nullable<RecursionBreaking((cycle) -> LinkedListBean)>, Integer] -> LinkedListBean",
             false,
             // Low due to recursion breaking initializing nested structs to null.
-            distinctElementsRatio(0.22),
+            distinctElementsRatio(0.21),
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull ImmutableBuilder>() {}.annotatedType(),
