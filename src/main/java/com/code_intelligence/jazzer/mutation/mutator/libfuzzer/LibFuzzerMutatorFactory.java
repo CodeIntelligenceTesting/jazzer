@@ -113,6 +113,9 @@ public final class LibFuzzerMutatorFactory {
 
     @Override
     public byte[] mutate(byte[] value, PseudoRandom prng) {
+      // Enforce length constraints on the input to mutate. We do this because some mutators (e.g.
+      // protobuf mutator) don't enforce length constraints in the read methods.
+      value = enforceLength(value);
       int maxLengthIncrease = maxLength - value.length;
       byte[] mutated = LibFuzzerMutate.mutateDefault(value, maxLengthIncrease);
       return enforceLength(mutated);
