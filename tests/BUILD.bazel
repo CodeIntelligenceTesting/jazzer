@@ -638,6 +638,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "MutatorComplexProtoFuzzer",
+    timeout = "long",
     srcs = ["src/test/java/com/example/MutatorComplexProtoFuzzer.java"],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
     fuzzer_args = [
