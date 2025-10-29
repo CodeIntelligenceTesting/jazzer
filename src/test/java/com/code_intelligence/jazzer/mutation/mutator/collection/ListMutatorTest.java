@@ -181,6 +181,7 @@ public class ListMutatorTest {
             // mutation choice based on `IntegralMutatorFactory`
             // 2 == closedRange
             2,
+            0.1, // sampler: stay in closedRange mutation
             // value
             55L)) {
       list = mutator.mutate(list, prng);
@@ -205,10 +206,12 @@ public class ListMutatorTest {
             5,
             // mutation: 0 == bitflip
             0,
+            0.1, // sampler: stay in bitflip mutation
             // shift constant
             13,
             // and again
             0,
+            0.1, // sampler: stay in bitflip mutation
             12)) {
       list = mutator.mutate(list, prng);
     }

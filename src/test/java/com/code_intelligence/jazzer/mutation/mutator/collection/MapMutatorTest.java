@@ -146,10 +146,12 @@ class MapMutatorTest {
             3,
             // uniform pick
             2,
+            0.1, // sampler: stay in uniform pick
             // random integer
             41L,
             // uniform pick
             2,
+            0.1, // sampler: stay in uniform pick
             // random integer
             51L)) {
       map = mutator.mutate(map, prng);
@@ -176,10 +178,12 @@ class MapMutatorTest {
             3,
             // uniform pick
             2,
+            0.1, // sampler: stay in uniform pick
             // integer
             7L,
             // uniform pick
             2,
+            0.1, // sampler: stay in uniform pick
             // random integer
             8L)) {
       map = mutator.mutate(map, prng);
