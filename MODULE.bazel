@@ -85,6 +85,7 @@ TEST_MAVEN_ARTIFACTS = [
     "jakarta.validation:jakarta.validation-api:3.0.2",
     "javax.persistence:javax.persistence-api:2.2",
     "junit:junit:4.13.2",
+    "ognl:ognl:3.3.0",
     "org.apache.commons:commons-jexl:2.1.1",
     "org.assertj:assertj-core:3.27.6",
     "org.jacoco:org.jacoco.core:0.8.14",
