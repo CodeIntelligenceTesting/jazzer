@@ -33,7 +33,7 @@ object ExpressionLanguageInjection {
     private const val EXPRESSION_LANGUAGE_ATTACK =
         "\${Byte.class.forName(\"$HONEYPOT_CLASS_NAME\").getMethod(\"el\").invoke(null)}"
     private const val SPRING_EXPRESSION_LANGUAGE_ATTACK = "T($HONEYPOT_CLASS_NAME).el()"
-    private const val ELPROCESSOR_LANGUAGE_ATTACK =
+    private const val ELPROCESSOR_JEXL_LANGUAGE_ATTACK =
         "\"\".getClass().forName(\"$HONEYPOT_CLASS_NAME\").getMethod(\"el\").invoke(null)"
 
     init {
@@ -43,7 +43,7 @@ object ExpressionLanguageInjection {
         require(SPRING_EXPRESSION_LANGUAGE_ATTACK.length <= 64) {
             "Expression language exploit must fit in a table of recent compares entry (64 bytes)"
         }
-        require(ELPROCESSOR_LANGUAGE_ATTACK.length <= 64) {
+        require(ELPROCESSOR_JEXL_LANGUAGE_ATTACK.length <= 64) {
             "Expression language exploit must fit in a table of recent compares entry (64 bytes)"
         }
     }
@@ -108,7 +108,7 @@ object ExpressionLanguageInjection {
             return
         }
         val message = arguments[0] as String
-        Jazzer.guideTowardsContainment(message, ELPROCESSOR_LANGUAGE_ATTACK, hookId)
+        Jazzer.guideTowardsContainment(message, ELPROCESSOR_JEXL_LANGUAGE_ATTACK, hookId)
     }
 
     // With default configurations the argument to
@@ -170,5 +170,27 @@ object ExpressionLanguageInjection {
         if (arguments.isEmpty()) return
         val expr = arguments[0] as? String ?: return
         Jazzer.guideTowardsContainment(expr, SPRING_EXPRESSION_LANGUAGE_ATTACK, hookId)
+    }
+
+    /**
+     * Guides JEXL expression parsing towards payloads that execute RCE. Note that `parse` is
+     * triggered by vulnerable public methods.
+     */
+    @MethodHook(
+        type = HookType.BEFORE,
+        targetClassName = "org.apache.commons.jexl2.JexlEngine",
+        targetMethod = "parse",
+        additionalClassesToHook = ["org.apache.commons.jexl2.JexlEngine"],
+    )
+    @JvmStatic
+    fun hookJexlParse(
+        method: MethodHandle?,
+        thisObject: Any?,
+        arguments: Array<Any>,
+        hookId: Int,
+    ) {
+        if (arguments.isEmpty()) return
+        val expr = arguments[0] as? CharSequence ?: return
+        Jazzer.guideTowardsContainment(expr.toString(), ELPROCESSOR_JEXL_LANGUAGE_ATTACK, hookId)
     }
 }

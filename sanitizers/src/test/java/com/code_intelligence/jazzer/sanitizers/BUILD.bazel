@@ -24,6 +24,7 @@ java_junit5_test(
         "@maven//:javax_el_javax_el_api",
         "@maven//:javax_persistence_javax_persistence_api",
         "@maven//:javax_validation_validation_api",
+        "@maven//:org_apache_commons_commons_jexl",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
         "@maven//:org_springframework_cloud_spring_cloud_function_context",

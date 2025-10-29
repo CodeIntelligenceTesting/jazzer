@@ -64,11 +64,13 @@ java_fuzz_target_test(
         "//sanitizers/src/test/java/com/example/el:ExpressionLanguageExample",
         "@maven//:javax_el_javax_el_api",
         "@maven//:javax_validation_validation_api",
+        "@maven//:org_apache_commons_commons_jexl",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 ) for method in [
     "fuzzValidator",
     "fuzzEval",
+    "fuzzJexlExpression",
 ]]
 
 java_fuzz_target_test(
