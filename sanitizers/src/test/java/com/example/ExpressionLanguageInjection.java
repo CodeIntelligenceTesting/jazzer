@@ -25,6 +25,7 @@ import javax.el.ELException;
 import javax.el.ELProcessor;
 import javax.validation.Validation;
 import javax.validation.Validator;
+import ognl.Ognl;
 import org.apache.commons.jexl2.Expression;
 import org.apache.commons.jexl2.JexlContext;
 import org.apache.commons.jexl2.JexlEngine;
@@ -76,6 +77,16 @@ public class ExpressionLanguageInjection {
   void fuzzMVELExpression(@NotNull String data) {
     try {
       MVEL.executeExpression(MVEL.compileExpression(data));
+    } catch (Throwable ignored) {
+    }
+  }
+
+  @FuzzTest
+  void fuzzOgnlExpression(@NotNull String data) {
+    try {
+      Object expression = Ognl.parseExpression(data);
+      Object root = new Object();
+      Ognl.getValue(expression, root);
     } catch (Throwable ignored) {
     }
   }
