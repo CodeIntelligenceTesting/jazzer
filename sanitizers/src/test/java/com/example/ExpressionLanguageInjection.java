@@ -25,6 +25,11 @@ import javax.el.ELException;
 import javax.el.ELProcessor;
 import javax.validation.Validation;
 import javax.validation.Validator;
+import org.apache.commons.jexl2.Expression;
+import org.apache.commons.jexl2.JexlContext;
+import org.apache.commons.jexl2.JexlEngine;
+import org.apache.commons.jexl2.JexlException;
+import org.apache.commons.jexl2.MapContext;
 import org.junit.jupiter.api.BeforeEach;
 
 public class ExpressionLanguageInjection {
@@ -51,6 +56,18 @@ public class ExpressionLanguageInjection {
         | IllegalStateException
         | IllegalArgumentException
         | ArithmeticException ignored) {
+    }
+  }
+
+  @FuzzTest
+  void fuzzJexlExpression(@NotNull String data) {
+    JexlEngine jexl = new JexlEngine();
+    JexlContext context = new MapContext();
+
+    try {
+      Expression expr = jexl.createExpression(data);
+      expr.evaluate(context);
+    } catch (JexlException | StringIndexOutOfBoundsException ignored) {
     }
   }
 }
