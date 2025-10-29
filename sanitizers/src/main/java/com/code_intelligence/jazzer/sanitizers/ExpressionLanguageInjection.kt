@@ -35,6 +35,7 @@ object ExpressionLanguageInjection {
     private const val SPRING_EXPRESSION_LANGUAGE_ATTACK = "T($HONEYPOT_CLASS_NAME).el()"
     private const val ELPROCESSOR_JEXL_LANGUAGE_ATTACK =
         "\"\".getClass().forName(\"$HONEYPOT_CLASS_NAME\").getMethod(\"el\").invoke(null)"
+    private const val OGNL_LANGUAGE_ATTACK = "@$HONEYPOT_CLASS_NAME@el()"
     private const val MVEL_ATTACK = "Runtime.getRuntime().exec(\"jazze\")"
 
     init {
@@ -45,6 +46,9 @@ object ExpressionLanguageInjection {
             "Expression language exploit must fit in a table of recent compares entry (64 bytes)"
         }
         require(ELPROCESSOR_JEXL_LANGUAGE_ATTACK.length <= 64) {
+            "Expression language exploit must fit in a table of recent compares entry (64 bytes)"
+        }
+        require(OGNL_LANGUAGE_ATTACK.length <= 64) {
             "Expression language exploit must fit in a table of recent compares entry (64 bytes)"
         }
         require(MVEL_ATTACK.length <= 64) {
@@ -243,5 +247,66 @@ object ExpressionLanguageInjection {
                 else -> throw IllegalArgumentException("Unexpected type for arguments[0] in ExpressionLanguageInjection hook")
             }
         Jazzer.guideTowardsContainment(message, MVEL_ATTACK, hookId)
+    }
+
+    @MethodHooks(
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "ognl.Ognl",
+            targetMethod = "parseExpression",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "ognl.Ognl",
+            targetMethod = "getValue",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "ognl.Ognl",
+            targetMethod = "setValue",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "ognl.Ognl",
+            targetMethod = "isConstant",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "ognl.Ognl",
+            targetMethod = "isSimpleProperty",
+        ),
+        MethodHook(
+            type = HookType.BEFORE,
+            targetClassName = "ognl.Ognl",
+            targetMethod = "isSimpleNavigationChain",
+        ),
+    )
+    @JvmStatic
+    fun hookParseOgnlExpression(
+        method: MethodHandle?,
+        thisObject: Any?,
+        arguments: Array<Any>,
+        hookId: Int,
+    ) {
+        if (arguments.isEmpty()) return
+        val expr = arguments[0] as? String ?: return
+        Jazzer.guideTowardsContainment(expr, OGNL_LANGUAGE_ATTACK, hookId)
+    }
+
+    @MethodHook(
+        type = HookType.BEFORE,
+        targetClassName = "ognl.Ognl",
+        targetMethod = "compileExpression",
+    )
+    @JvmStatic
+    fun hookCompileOgnlExpression(
+        method: MethodHandle?,
+        thisObject: Any?,
+        arguments: Array<Any>,
+        hookId: Int,
+    ) {
+        if (arguments.size != 3) return
+        val expr = arguments[2] as? String ?: return
+        Jazzer.guideTowardsContainment(expr, OGNL_LANGUAGE_ATTACK, hookId)
     }
 }
