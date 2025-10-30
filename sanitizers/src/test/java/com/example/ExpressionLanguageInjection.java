@@ -31,6 +31,7 @@ import org.apache.commons.jexl2.JexlEngine;
 import org.apache.commons.jexl2.JexlException;
 import org.apache.commons.jexl2.MapContext;
 import org.junit.jupiter.api.BeforeEach;
+import org.mvel2.MVEL;
 
 public class ExpressionLanguageInjection {
   private static final Validator validator =
@@ -68,6 +69,14 @@ public class ExpressionLanguageInjection {
       Expression expr = jexl.createExpression(data);
       expr.evaluate(context);
     } catch (JexlException | StringIndexOutOfBoundsException ignored) {
+    }
+  }
+
+  @FuzzTest
+  void fuzzMVELExpression(@NotNull String data) {
+    try {
+      MVEL.executeExpression(MVEL.compileExpression(data));
+    } catch (Throwable ignored) {
     }
   }
 }

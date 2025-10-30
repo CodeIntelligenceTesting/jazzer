@@ -89,6 +89,7 @@ TEST_MAVEN_ARTIFACTS = [
     "org.assertj:assertj-core:3.27.6",
     "org.jacoco:org.jacoco.core:0.8.14",
     "org.mockito:mockito-core:5.20.0",
+    "org.mvel:mvel2:2.5.2.Final",
     "org.openjdk.jmh:jmh-core:1.37",
     "org.openjdk.jmh:jmh-generator-annprocess:1.37",
 ]

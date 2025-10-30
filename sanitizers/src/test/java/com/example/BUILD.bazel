@@ -50,7 +50,10 @@ java_fuzz_target_test(
     srcs = [
         "ExpressionLanguageInjection.java",
     ],
-    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
+    ],
     tags = ["dangerous"],
     target_class = "com.example.ExpressionLanguageInjection",
     target_method = method,
@@ -66,11 +69,13 @@ java_fuzz_target_test(
         "@maven//:javax_validation_validation_api",
         "@maven//:org_apache_commons_commons_jexl",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_mvel_mvel2",
     ],
 ) for method in [
     "fuzzValidator",
     "fuzzEval",
     "fuzzJexlExpression",
+    "fuzzMVELExpression",
 ]]
 
 java_fuzz_target_test(
