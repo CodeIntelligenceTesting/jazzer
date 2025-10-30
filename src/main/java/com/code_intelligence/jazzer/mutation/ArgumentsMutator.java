@@ -30,6 +30,7 @@ import com.code_intelligence.jazzer.mutation.combinator.InPlaceProductMutator;
 import com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators;
 import com.code_intelligence.jazzer.mutation.engine.SeededPseudoRandom;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
+import com.code_intelligence.jazzer.mutation.runtime.MutationRuntime;
 import com.code_intelligence.jazzer.mutation.support.Preconditions;
 import com.code_intelligence.jazzer.utils.Log;
 import java.io.ByteArrayInputStream;
@@ -97,6 +98,8 @@ public final class ArgumentsMutator {
       Log.error(validationError.getMessage());
       throw validationError;
     }
+    MutationRuntime.fuzzTestMethod = method;
+    DictionaryProvider[] typeDictionaries = method.getAnnotationsByType(DictionaryProvider.class);
     return toArrayOrEmpty(
             stream(method.getAnnotatedParameterTypes())
                 .map(
