@@ -178,18 +178,15 @@ public final class BuilderMutatorFactory implements MutatorFactory {
               Stream.concat(LangMutators.newFactories(), CollectionMutators.newFactories()),
               Stream.of(enumFactory)));
     } else if (field.getJavaType() == JavaType.MESSAGE) {
-      Descriptor messageDescriptor;
       if (field.isMapField()) {
         // Map fields are represented as messages, but we mutate them as actual Java Maps. In case
-        // the values of the proto map are themselves messages, we need to mutate their type.
+        // the values of the proto map are themselves messages or enums, we need to mutate their
+        // type.
         FieldDescriptor valueField = field.getMessageType().getFields().get(1);
-        if (valueField.getJavaType() != JavaType.MESSAGE) {
-          return originalFactory;
-        }
-        messageDescriptor = valueField.getMessageType();
-      } else {
-        messageDescriptor = field.getMessageType();
+        return withDescriptorDependentMutatorFactoryIfNeeded(
+            originalFactory, valueField, annotations);
       }
+      Descriptor messageDescriptor = field.getMessageType();
       return ChainedMutatorFactory.of(
           originalFactory.getCache(),
           Stream.of(
