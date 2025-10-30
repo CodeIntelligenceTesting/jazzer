@@ -314,6 +314,26 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "TemplateInjection",
+    srcs = [
+        "TemplateInjection.java",
+    ],
+    allowed_findings = [
+        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical",
+    ],
+    # FreeMarker has too many classes to instrument safely
+    fuzzer_args = [
+        "--instrumentation_includes=com.example.**",
+    ],
+    tags = ["dangerous"],
+    target_class = "com.example.TemplateInjection",
+    verify_crash_reproducer = False,
+    deps = [
+        "@maven//:org_freemarker_freemarker",
+    ],
+)
+
 [java_fuzz_target_test(
     name = "UnsafeArrayOutOfBounds_" + method,
     srcs = [

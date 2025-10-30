@@ -26,6 +26,7 @@ java_junit5_test(
         "@maven//:javax_validation_validation_api",
         "@maven//:ognl_ognl",
         "@maven//:org_apache_commons_commons_jexl",
+        "@maven//:org_freemarker_freemarker",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
         "@maven//:org_mvel_mvel2",

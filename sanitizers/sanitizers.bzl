@@ -32,6 +32,7 @@ _sanitizer_class_names = [
     "ScriptEngineInjection",
     "ServerSideRequestForgery",
     "SqlInjection",
+    "TemplateInjection",
     "UnsafeSanitizer",
     "XPathInjection",
     "XmlParserSsrfGuidance",
