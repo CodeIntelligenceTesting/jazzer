@@ -35,6 +35,7 @@ object ExpressionLanguageInjection {
     private const val SPRING_EXPRESSION_LANGUAGE_ATTACK = "T($HONEYPOT_CLASS_NAME).el()"
     private const val ELPROCESSOR_JEXL_LANGUAGE_ATTACK =
         "\"\".getClass().forName(\"$HONEYPOT_CLASS_NAME\").getMethod(\"el\").invoke(null)"
+    private const val MVEL_ATTACK = "Runtime.getRuntime().exec(\"jazze\")"
 
     init {
         require(EXPRESSION_LANGUAGE_ATTACK.length <= 64) {
@@ -45,6 +46,9 @@ object ExpressionLanguageInjection {
         }
         require(ELPROCESSOR_JEXL_LANGUAGE_ATTACK.length <= 64) {
             "Expression language exploit must fit in a table of recent compares entry (64 bytes)"
+        }
+        require(MVEL_ATTACK.length <= 64) {
+            "MVEL exploit must fit in a table of recent compares entry (64 bytes)"
         }
     }
 
@@ -192,5 +196,52 @@ object ExpressionLanguageInjection {
         if (arguments.isEmpty()) return
         val expr = arguments[0] as? CharSequence ?: return
         Jazzer.guideTowardsContainment(expr.toString(), ELPROCESSOR_JEXL_LANGUAGE_ATTACK, hookId)
+    }
+
+    @MethodHook(
+        type = HookType.BEFORE,
+        targetClassName = "org.mvel2.MVEL",
+        targetMethod = "eval",
+    )
+    @MethodHook(
+        type = HookType.BEFORE,
+        targetClassName = "org.mvel2.MVEL",
+        targetMethod = "evalToString",
+    )
+    @MethodHook(
+        type = HookType.BEFORE,
+        targetClassName = "org.mvel2.MVEL",
+        targetMethod = "evalToBoolean",
+    )
+    @MethodHook(
+        type = HookType.BEFORE,
+        targetClassName = "org.mvel2.MVEL",
+        targetMethod = "compileExpression",
+    )
+    @MethodHook(
+        type = HookType.BEFORE,
+        targetClassName = "org.mvel2.MVEL",
+        targetMethod = "compileGetExpression",
+    )
+    @MethodHook(
+        type = HookType.BEFORE,
+        targetClassName = "org.mvel2.MVEL",
+        targetMethod = "compileSetExpression",
+    )
+    @JvmStatic
+    fun mvelEval(
+        method: MethodHandle?,
+        thisObject: Any?,
+        arguments: Array<Any>,
+        hookId: Int,
+    ) {
+        if (arguments.isEmpty()) return
+        val message =
+            when (val arg0 = arguments[0]) {
+                is String -> arg0
+                is CharArray -> String(arg0)
+                else -> throw IllegalArgumentException("Unexpected type for arguments[0] in ExpressionLanguageInjection hook")
+            }
+        Jazzer.guideTowardsContainment(message, MVEL_ATTACK, hookId)
     }
 }
