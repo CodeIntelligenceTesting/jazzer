@@ -59,6 +59,7 @@ import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumField3.TestEnum;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldRepeated3;
 import com.code_intelligence.jazzer.protobuf.Proto3.EnumFieldRepeated3.TestEnumRepeated;
+import com.code_intelligence.jazzer.protobuf.Proto3.EnumMapField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.FloatField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.IntegralField3;
 import com.code_intelligence.jazzer.protobuf.Proto3.MapField3;
@@ -1011,6 +1012,12 @@ public class StressTest {
             distinctElementsRatio(0.45),
             distinctElementsRatio(0.45)),
         arguments(
+            new TypeHolder<@NotNull EnumMapField3>() {}.annotatedType(),
+            "{Builder.Map<String, {Builder.Enum<TestEnum>} -> Message>} -> Message",
+            false,
+            distinctElementsRatio(0.45),
+            distinctElementsRatio(0.45)),
+        arguments(
             new TypeHolder<@NotNull DoubleField3>() {}.annotatedType(),
             "{Builder.Double} -> Message",
             true,
@@ -1050,7 +1057,8 @@ public class StressTest {
                 + " Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>,"
                 + " Builder via List<Long>, Builder via List<Float>, Builder via List<Double>,"
                 + " Builder via List<String>, Builder via List<Enum<Enum>>, WithoutInit(Builder via"
-                + " List<(cycle) -> Message>), Builder.Map<Integer, Integer>,"
+                + " List<(cycle) -> Message>), Builder.Map<Integer, Integer>, Builder.Map<Integer,"
+                + " Enum<Enum>>, WithoutInit(Builder.Map<Integer, (cycle) -> Message>),"
                 + " Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} ->"
                 + " Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> |"
                 + " Builder.Nullable<Integer>} -> Message>)} -> Message>), Builder via"
@@ -1058,9 +1066,10 @@ public class StressTest {
                 + " via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via"
                 + " List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>,"
                 + " WithoutInit(Builder via List<(cycle) -> Message>), Builder.Map<Integer,"
-                + " Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<(cycle) ->"
-                + " Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> |"
-                + " Builder.Nullable<Integer>} -> Message",
+                + " Integer>, Builder.Map<Integer, Enum<Enum>>, WithoutInit(Builder.Map<Integer,"
+                + " (cycle) -> Message>), Builder.Nullable<FixedValue(OnlyLabel)>,"
+                + " Builder.Nullable<(cycle) -> Message>, Builder.Nullable<Integer> |"
+                + " Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
             false,
             manyDistinctElements(),
             manyDistinctElements()),
@@ -1083,7 +1092,8 @@ public class StressTest {
                 + " Builder via List<Integer>, Builder via List<Integer>, Builder via List<Long>,"
                 + " Builder via List<Long>, Builder via List<Float>, Builder via List<Double>,"
                 + " Builder via List<String>, Builder via List<Enum<Enum>>, WithoutInit(Builder via"
-                + " List<(cycle) -> Message>), Builder.Map<Integer, Integer>,"
+                + " List<(cycle) -> Message>), Builder.Map<Integer, Integer>, Builder.Map<Integer,"
+                + " Enum<Enum>>, WithoutInit(Builder.Map<Integer, (cycle) -> Message>),"
                 + " Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<{<empty>} ->"
                 + " Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> |"
                 + " Builder.Nullable<Integer>} -> Message>)} -> Message>), Builder via"
@@ -1091,9 +1101,10 @@ public class StressTest {
                 + " via List<Long>, Builder via List<Long>, Builder via List<Float>, Builder via"
                 + " List<Double>, Builder via List<String>, Builder via List<Enum<Enum>>,"
                 + " WithoutInit(Builder via List<(cycle) -> Message>), Builder.Map<Integer,"
-                + " Integer>, Builder.Nullable<FixedValue(OnlyLabel)>, Builder.Nullable<(cycle) ->"
-                + " Message>, Builder.Nullable<Integer> | Builder.Nullable<Long> |"
-                + " Builder.Nullable<Integer>} -> Message",
+                + " Integer>, Builder.Map<Integer, Enum<Enum>>, WithoutInit(Builder.Map<Integer,"
+                + " (cycle) -> Message>), Builder.Nullable<FixedValue(OnlyLabel)>,"
+                + " Builder.Nullable<(cycle) -> Message>, Builder.Nullable<Integer> |"
+                + " Builder.Nullable<Long> | Builder.Nullable<Integer>} -> Message",
             false,
             manyDistinctElements(),
             manyDistinctElements()),

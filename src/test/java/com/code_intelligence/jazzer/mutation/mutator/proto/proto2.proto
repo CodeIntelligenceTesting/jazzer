@@ -132,6 +132,8 @@ message TestProtobuf {
   }
 
   map<int32, int32> map_field = 25;
+  map<int32, Enum> enum_map = 26;
+  map<int32, TestSubProtobuf> message_map = 27;
 
   // Special cases
   enum EnumOneLabel {

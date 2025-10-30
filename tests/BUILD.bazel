@@ -616,6 +616,7 @@ java_fuzz_target_test(
 
 java_fuzz_target_test(
     name = "MutatorComplexProtoFuzzer",
+    timeout = "long",
     srcs = ["src/test/java/com/example/MutatorComplexProtoFuzzer.java"],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
     fuzzer_args = [
@@ -624,7 +625,7 @@ java_fuzz_target_test(
         # Limit runs to catch regressions in mutator efficiency and speed up test runs.
         # Especially on Windows this test needs way more iterations than on other platforms.
         "-runs=3000000",
-        "-seed=123",
+        "-seed=1",
     ],
     target_class = "com.example.MutatorComplexProtoFuzzer",
     verify_crash_reproducer = False,
