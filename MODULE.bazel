@@ -14,7 +14,7 @@ bazel_dep(name = "buildifier_prebuilt", version = "8.2.0.2")
 
 # TODO: Starting with version 0.28.0 the JUnit test runner is compiled for Java 11 which breaks our JDK 8 tests.
 #       https://github.com/bazel-contrib/rules_jvm/pull/307
-bazel_dep(name = "contrib_rules_jvm", version = "0.27.0")
+bazel_dep(name = "contrib_rules_jvm", version = "0.30.0")
 bazel_dep(name = "googletest", version = "1.17.0.bcr.1")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "protobuf", version = "33.0")
