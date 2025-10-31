@@ -24,7 +24,10 @@ import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.combinator.SamplingUtils;
+import com.code_intelligence.jazzer.mutation.combinator.SamplingUtils.WeightedValue;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutate;
+import com.code_intelligence.jazzer.mutation.support.DictionaryProviderSupport;
 import com.code_intelligence.jazzer.mutation.support.RangeSupport;
 import com.code_intelligence.jazzer.mutation.support.RangeSupport.LongRange;
 import com.google.errorprone.annotations.ForOverride;
@@ -33,7 +36,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.LongStream;
 
@@ -196,6 +202,8 @@ final class IntegralMutatorFactory implements MutatorFactory {
     private final int largestMutableBitNegative;
     private final int largestMutableBitPositive;
     private final long[] specialValues;
+    private final long[] dictionaryValues;
+    private final Function<PseudoRandom, MutationFunction> mutationFunctionSampler;
 
     AbstractIntegralMutator(
         AnnotatedType type, long defaultMinValueForType, long defaultMaxValueForType) {
@@ -231,6 +239,50 @@ final class IntegralMutatorFactory implements MutatorFactory {
         largestMutableBitPositive = bitWidth(maxValue);
       }
       this.specialValues = collectSpecialValues(minValue, maxValue);
+
+      this.dictionaryValues =
+          DictionaryProviderSupport.extractRawValues(type)
+              .map(
+                  stream ->
+                      stream
+                          .filter(v -> v instanceof Number)
+                          .map(v -> ((Number) v).longValue())
+                          .filter(v -> v >= minValue)
+                          .filter(v -> v <= maxValue)
+                          .sorted()
+                          .mapToLong(Long::longValue)
+                          .toArray())
+              .orElse(null);
+      List<WeightedValue<MutationFunction>> f = new ArrayList<>();
+      f.add(new WeightedValue<>(1.0, MutationFunction.BIT_FLIP));
+      f.add(new WeightedValue<>(1.0, MutationFunction.RANDOM_WALK));
+      f.add(new WeightedValue<>(1.0, MutationFunction.RANDOM_VALUE));
+      f.add(new WeightedValue<>(1.0, MutationFunction.LIBFUZZER));
+      if (dictionaryValues != null && dictionaryValues.length > 0) {
+        // Since weights here are relative, we need to adjust the weight of user dictionary mutator
+        // so that it is taken proportionate the inverse probability specified in the annotation.
+        // Basically, we need to scale up the weight for pInv:
+        // 1/p    --- x?
+        // 1- 1/p --- totalFuncWeights
+        // x = (1/p * totalFuncWeights) / (1 - 1/p)
+        //   =  totalFuncWeights / (p - 1)
+        double totalFuncWeights = 0.0;
+        for (WeightedValue<MutationFunction> wf : f) {
+          totalFuncWeights += wf.weight;
+        }
+        int invProbability = DictionaryProviderSupport.extractFirstInvProbability(type);
+        double perValueWeight = totalFuncWeights / (invProbability - 1);
+        f.add(new WeightedValue<>(perValueWeight, MutationFunction.DICTIONARY_VALUE));
+      }
+      this.mutationFunctionSampler = SamplingUtils.weightedSampler(f);
+    }
+
+    private enum MutationFunction {
+      BIT_FLIP,
+      DICTIONARY_VALUE,
+      LIBFUZZER,
+      RANDOM_VALUE,
+      RANDOM_WALK,
     }
 
     private static long[] collectSpecialValues(long minValue, long maxValue) {
@@ -262,20 +314,25 @@ final class IntegralMutatorFactory implements MutatorFactory {
       final long previousValue = value;
       // Mutate in a loop to verify that we really mutated.
       do {
-        switch (prng.indexIn(4)) {
-          case 0:
+        switch (mutationFunctionSampler.apply(prng)) {
+          case BIT_FLIP:
             value = bitFlip(value, prng);
             break;
-          case 1:
+          case RANDOM_WALK:
             value = randomWalk(value, prng);
             break;
-          case 2:
+          case RANDOM_VALUE:
             value = prng.closedRange(minValue, maxValue);
             break;
-          case 3:
+          case LIBFUZZER:
             // TODO: Replace this with a structure-aware dictionary/TORC search similar to fuzztest.
             value = forceInRange(mutateWithLibFuzzer(value));
             break;
+          case DICTIONARY_VALUE:
+            value = dictionaryValues[prng.indexIn(dictionaryValues.length)];
+            break;
+          default:
+            throw new AssertionError("Invalid mutation function.");
         }
       } while (value == previousValue);
       return value;

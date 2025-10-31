@@ -38,6 +38,7 @@ java_library(
         "//examples/junit/src/test/java/com/example:__pkg__",
         "//selffuzz/src/test/java/com/code_intelligence/selffuzz:__subpackages__",
         "//src/test/java/com/code_intelligence/jazzer/junit:__pkg__",
+        "//src/test/java/com/code_intelligence/jazzer/mutation/support:__pkg__",
     ],
     exports = [
         ":lifecycle",
