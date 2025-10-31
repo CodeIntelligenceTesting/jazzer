@@ -39,9 +39,9 @@ bazel_dep(name = "toolchains_llvm", version = "1.5.0")
 SHADED_RUNTIME_MAVEN_ARTIFACTS = [
     # keep sorted
     # renovate: keep updated
-    "com.github.jsqlparser:jsqlparser:4.9",
+    "com.github.jsqlparser:jsqlparser:5.3",
     "com.google.errorprone:error_prone_annotations:2.43.0",
-    "com.google.guava:guava:33.5.0-android",
+    "com.google.guava:guava:33.5.0-jre",
     "io.github.classgraph:classgraph:4.8.184",
     "net.bytebuddy:byte-buddy-agent:1.17.8",
     "net.jodah:typetools:0.6.3",
@@ -82,7 +82,7 @@ TEST_MAVEN_ARTIFACTS = [
     "com.google.truth.extensions:truth-proto-extension:1.4.5",
     "com.google.truth:truth:1.4.5",
     "jakarta.el:jakarta.el-api:6.0.1",
-    "jakarta.validation:jakarta.validation-api:3.0.2",
+    "jakarta.validation:jakarta.validation-api:3.1.1",
     "javax.persistence:javax.persistence-api:2.2",
     "junit:junit:4.13.2",
     "org.apache.commons:commons-jexl:2.1.1",
