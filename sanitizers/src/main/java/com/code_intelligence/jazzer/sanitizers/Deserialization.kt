@@ -17,6 +17,7 @@
 package com.code_intelligence.jazzer.sanitizers
 
 import com.code_intelligence.jazzer.api.HookType
+import com.code_intelligence.jazzer.api.Jazzer
 import com.code_intelligence.jazzer.api.MethodHook
 import com.code_intelligence.jazzer.api.MethodHooks
 import java.io.BufferedInputStream
@@ -101,7 +102,11 @@ object Deserialization {
                 BufferedInputStream(originalInputStream)
             }
         args[0] = fixedInputStream
-        guideMarkableInputStreamTowardsEquality(fixedInputStream, OBJECT_INPUT_STREAM_HEADER, hookId)
+        Jazzer.guideTowardsEquality(
+            peekMarkableInputStream(fixedInputStream, OBJECT_INPUT_STREAM_HEADER.size),
+            OBJECT_INPUT_STREAM_HEADER,
+            hookId,
+        )
     }
 
     /**
@@ -157,6 +162,10 @@ object Deserialization {
     ) {
         val inputStream = inputStreamForObjectInputStream.get()[objectInputStream]
         if (inputStream?.markSupported() != true) return
-        guideMarkableInputStreamTowardsEquality(inputStream, SERIALIZED_JAZ_ZER_INSTANCE, hookId)
+        Jazzer.guideTowardsEquality(
+            peekMarkableInputStream(inputStream, SERIALIZED_JAZ_ZER_INSTANCE.size),
+            SERIALIZED_JAZ_ZER_INSTANCE,
+            hookId,
+        )
     }
 }
