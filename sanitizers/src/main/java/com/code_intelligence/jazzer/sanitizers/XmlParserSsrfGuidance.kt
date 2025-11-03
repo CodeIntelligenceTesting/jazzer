@@ -31,7 +31,7 @@ import java.lang.invoke.MethodHandle
  * (e.g. Socket/SocketChannel hooks) can observe network connections initiated by XML parsers
  * resolving external entities, schemas, or includes.
  */
-@Suppress("unused")
+@Suppress("unused_parameter", "unused")
 object XmlParserSsrfGuidance {
     private val EXTERNAL_DOCTYPE = "<!DOCTYPE x PUBLIC \"\" \"http://foo\">"
     private val EXTERNAL_DOCTYPE_SIZE = EXTERNAL_DOCTYPE.toByteArray().size
