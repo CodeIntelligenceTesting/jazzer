@@ -59,7 +59,7 @@ internal fun peekMarkableInputStream(
             if (count < 0) break
             n += count
         }
-        return if (n >= readlimit) current else current.copyOf(n)
+        return if (n < size) current.copyOf(n) else current
     }
     check(stream.markSupported())
     stream.mark(readlimit)
