@@ -52,7 +52,7 @@ internal class TraceDataFlowInstrumentor(
             }
         }
 
-        val writer = ClassWriter(ClassWriter.COMPUTE_MAXS)
+        val writer = ClassWriter(reader, ClassWriter.COMPUTE_MAXS)
         node.accept(writer)
         return writer.toByteArray()
     }

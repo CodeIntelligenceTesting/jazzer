@@ -1078,6 +1078,35 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "NestedRecordFuzzer",
+    timeout = "short",
+    srcs = [
+        "src/test/java/com/example/NestedRecordFuzzer.java",
+    ],
+    fuzzer_args = [
+        "-print_final_stats=1",
+        "-runs=10000",
+    ],
+    javacopts = [
+        "--release",
+        "17",
+    ],
+    tags = [
+        "no-jdk8",
+    ],
+    target_class = "com.example.NestedRecordFuzzer",
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+    deps = [
+        "//deploy:jazzer-junit",
+        "//deploy:jazzer-project",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+    ],
+)
+
+java_fuzz_target_test(
     name = "BigDecimalFuzzer",
     srcs = [
         "src/test/java/com/example/BigDecimalFuzzer.java",
