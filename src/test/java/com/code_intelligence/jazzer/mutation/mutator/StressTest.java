@@ -363,6 +363,38 @@ public class StressTest {
     }
   }
 
+  public static class GenericImmutableBuilder<T> {
+    private final T t;
+
+    public GenericImmutableBuilder() {
+      t = null;
+    }
+
+    private GenericImmutableBuilder(T t) {
+      this.t = t;
+    }
+
+    public T getT() {
+      return t;
+    }
+
+    public GenericImmutableBuilder<T> setT(T t) {
+      return new GenericImmutableBuilder<T>(t);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      return Objects.equals(t, ((GenericImmutableBuilder<?>) o).t);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(t);
+    }
+  }
+
   public static class ConstructorBasedBean {
     private final boolean foo;
     private final String bar;
@@ -919,6 +951,12 @@ public class StressTest {
             true,
             // Low due to int and boolean fields having very few common values during init.
             distinctElementsRatio(0.23),
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull GenericImmutableBuilder<@NotNull String>>() {}.annotatedType(),
+            "[String] -> GenericImmutableBuilder",
+            false,
+            manyDistinctElements(),
             manyDistinctElements()),
         arguments(
             new TypeHolder<@NotNull ConstructorBasedBean>() {}.annotatedType(),

@@ -69,7 +69,7 @@ public final class SuperBuilderMutatorFactory implements MutatorFactory {
                         return AggregatesHelper.createMutator(
                             factory,
                             clazz,
-                            parameterTypes(builderSetters),
+                            parameterTypes(builderSetters, type),
                             fromParametersToObject,
                             fromObjectToParameters,
                             type,
