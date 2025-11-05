@@ -192,4 +192,21 @@ class CachedConstructorMutatorTest {
     EmptyArgs read = mutator.readExclusive(new ByteArrayInputStream(new byte[] {}));
     mutator.writeExclusive(read, new ByteArrayOutputStream());
   }
+
+  static class GenericClass<T> {
+    private final T t;
+
+    GenericClass(T t) {
+      this.t = t;
+    }
+  }
+
+  @Test
+  void testGenericClass() {
+    SerializingMutator<GenericClass<String>> mutator =
+        (SerializingMutator<GenericClass<String>>)
+            Mutators.newFactory()
+                .createOrThrow(new TypeHolder<GenericClass<String>>() {}.annotatedType());
+    assertThat(mutator.toString()).startsWith("Nullable<[Nullable<String>] -> GenericClass>");
+  }
 }
