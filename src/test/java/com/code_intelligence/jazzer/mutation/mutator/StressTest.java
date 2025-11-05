@@ -405,6 +405,31 @@ public class StressTest {
     }
   }
 
+  public static class GenericConstructorBasedBean<T> {
+    T t;
+
+    GenericConstructorBasedBean(T t) {
+      this.t = t;
+    }
+
+    public T getT() {
+      return t;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      GenericConstructorBasedBean<T> that = (GenericConstructorBasedBean<T>) o;
+      return Objects.equals(this.t, that.t);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(this.t);
+    }
+  }
+
   public static class OnlyConstructorBean {
     private final String foo;
     private final List<Integer> bar;
@@ -898,6 +923,13 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull ConstructorBasedBean>() {}.annotatedType(),
             "[Boolean, Nullable<String>, Integer] -> ConstructorBasedBean",
+            false,
+            manyDistinctElements(),
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<
+                @NotNull GenericConstructorBasedBean<@NotNull String>>() {}.annotatedType(),
+            "[String] -> GenericConstructorBasedBean",
             false,
             manyDistinctElements(),
             manyDistinctElements()),

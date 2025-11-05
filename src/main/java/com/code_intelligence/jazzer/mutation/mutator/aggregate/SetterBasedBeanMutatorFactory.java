@@ -54,6 +54,7 @@ final class SetterBasedBeanMutatorFactory implements MutatorFactory {
                       getters ->
                           matchingReturnTypes(
                               getters,
+                              type,
                               stream(setters)
                                   .map(setter -> setter.getAnnotatedParameterTypes()[0].getType())
                                   .toArray(Type[]::new)))
