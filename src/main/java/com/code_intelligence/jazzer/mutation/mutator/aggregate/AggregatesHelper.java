@@ -18,6 +18,9 @@ package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMap;
 import static com.code_intelligence.jazzer.mutation.combinator.MutatorCombinators.mutateThenMapToImmutable;
+import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.resolveAnnotatedParameterTypes;
+import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.resolveParameterTypes;
+import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.resolveReturnType;
 import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
 import static com.code_intelligence.jazzer.mutation.support.ReflectionSupport.unreflectMethod;
 import static com.code_intelligence.jazzer.mutation.support.ReflectionSupport.unreflectMethods;
@@ -60,10 +63,8 @@ final class AggregatesHelper {
             getters.length, instantiator));
     for (int i = 0; i < getters.length; i++) {
       Preconditions.check(
-          getters[i]
-              .getAnnotatedReturnType()
-              .getType()
-              .equals(instantiator.getAnnotatedParameterTypes()[i].getType()),
+          resolveReturnType(getters[i], initialType)
+              .equals(resolveParameterTypes(instantiator, initialType)[i]),
           String.format(
               "Parameter %d of %s does not match return type of %s", i, instantiator, getters[i]));
     }
@@ -71,14 +72,13 @@ final class AggregatesHelper {
     // TODO: Ideally, we would have the mutator framework pass in a Lookup for the fuzz test class.
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     return createMutator(
-            factory,
-            instantiator.getDeclaringClass(),
-            instantiator.getAnnotatedParameterTypes(),
-            asInstantiationFunction(lookup, instantiator),
-            makeSingleGetter(unreflectMethods(lookup, getters)),
-            initialType,
-            isImmutable)
-        .map(m -> m);
+        factory,
+        instantiator.getDeclaringClass(),
+        resolveAnnotatedParameterTypes(instantiator, initialType),
+        asInstantiationFunction(lookup, instantiator),
+        makeSingleGetter(unreflectMethods(lookup, getters)),
+        initialType,
+        isImmutable);
   }
 
   static Optional<SerializingMutator<?>> createMutator(
@@ -105,14 +105,13 @@ final class AggregatesHelper {
     // TODO: Ideally, we would have the mutator framework pass in a Lookup for the fuzz test class.
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     return createMutator(
-            factory,
-            newInstance.getDeclaringClass(),
-            parameterTypes(setters),
-            asInstantiationFunction(lookup, newInstance, setters),
-            makeSingleGetter(unreflectMethods(lookup, getters)),
-            initialType,
-            /* isImmutable= */ false)
-        .map(m -> m);
+        factory,
+        newInstance.getDeclaringClass(),
+        parameterTypes(setters),
+        asInstantiationFunction(lookup, newInstance, setters),
+        makeSingleGetter(unreflectMethods(lookup, getters)),
+        initialType,
+        /* isImmutable= */ false);
   }
 
   @SuppressWarnings("Immutable")
