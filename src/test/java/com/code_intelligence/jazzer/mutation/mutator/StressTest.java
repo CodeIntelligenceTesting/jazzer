@@ -492,6 +492,27 @@ public class StressTest {
     }
   }
 
+  public static class GenericOnlyConstructorBean<T> {
+    private final T t;
+
+    GenericOnlyConstructorBean(T t) {
+      this.t = t;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      GenericOnlyConstructorBean<T> that = (GenericOnlyConstructorBean<T>) o;
+      return Objects.equals(t, that.t);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(t);
+    }
+  }
+
   public static class SuperBuilderTarget {
     private final String foo;
 
@@ -974,6 +995,12 @@ public class StressTest {
         arguments(
             new TypeHolder<@NotNull OnlyConstructorBean>() {}.annotatedType(),
             "[Nullable<String>, Nullable<List<Nullable<Integer>>>, Boolean] -> OnlyConstructorBean",
+            false,
+            manyDistinctElements(),
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull GenericOnlyConstructorBean<String>>() {}.annotatedType(),
+            "[Nullable<String>] -> GenericOnlyConstructorBean",
             false,
             manyDistinctElements(),
             manyDistinctElements()),
