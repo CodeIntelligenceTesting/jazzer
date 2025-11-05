@@ -94,10 +94,8 @@ final class AggregatesHelper {
             getters.length, setters.length));
     for (int i = 0; i < getters.length; i++) {
       Preconditions.check(
-          getters[i]
-              .getAnnotatedReturnType()
-              .getType()
-              .equals(setters[i].getAnnotatedParameterTypes()[0].getType()),
+          resolveReturnType(getters[i], initialType)
+              .equals(resolveParameterTypes(setters[i], initialType)[0]),
           String.format(
               "Parameter of %s does not match return type of %s", setters[i], getters[i]));
     }
@@ -107,7 +105,7 @@ final class AggregatesHelper {
     return createMutator(
         factory,
         newInstance.getDeclaringClass(),
-        parameterTypes(setters),
+        parameterTypes(setters, initialType),
         asInstantiationFunction(lookup, newInstance, setters),
         makeSingleGetter(unreflectMethods(lookup, getters)),
         initialType,
@@ -220,9 +218,9 @@ final class AggregatesHelper {
     }
   }
 
-  static AnnotatedType[] parameterTypes(Method[] methods) {
+  static AnnotatedType[] parameterTypes(Method[] methods, AnnotatedType classType) {
     return stream(methods)
-        .map(Method::getAnnotatedParameterTypes)
+        .map(m -> resolveAnnotatedParameterTypes(m, classType))
         .flatMap(Arrays::stream)
         .toArray(AnnotatedType[]::new);
   }
