@@ -112,13 +112,11 @@ public class ArgumentsMutatorFuzzTest {
 
   @SelfFuzzTest
   void fuzzListOfSets(@WithSize(max = 10) @NotNull Set<@NotNull Integer> setWithSize) {
-    if (setWithSize != null) {
-      assertThat(setWithSize.size()).isAtMost(10);
-    }
+    assertThat(setWithSize.size()).isAtMost(10);
   }
 
   @SelfFuzzTest
-  void fuzzListOfLists(List<@NotNull List<String>> nullableMap, List<List<Integer>> nullableList) {}
+  void fuzzListOfLists(List<@NotNull List<String>> list, List<List<Integer>> nullableList) {}
 
   @SelfFuzzTest
   void fuzzPrimitiveArrays(
