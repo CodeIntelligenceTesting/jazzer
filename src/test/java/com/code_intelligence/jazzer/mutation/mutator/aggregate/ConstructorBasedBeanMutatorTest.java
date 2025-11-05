@@ -241,4 +241,50 @@ class ConstructorBasedBeanMutatorTest {
     assertThat(mutator.toString())
         .isEqualTo("[Boolean, String, Integer] -> ConstructorPropertiesAnnotatedBean");
   }
+
+  public static class CustomPair<L, R> {
+    L left;
+    R right;
+
+    public CustomPair(L left, R right) {
+      this.left = left;
+      this.right = right;
+    }
+
+    public L getLeft() {
+      return this.left;
+    }
+
+    public R getRight() {
+      return this.right;
+    }
+  }
+
+  @Test
+  void genericClass() {
+    // Note: We can't use @NotNull here since Java 8 does not retain the annotations for generic
+    // classes.
+    SerializingMutator<CustomPair<String, Integer>> mutator =
+        (SerializingMutator<CustomPair<String, Integer>>)
+            Mutators.newFactory()
+                .createOrThrow(new TypeHolder<CustomPair<String, Integer>>() {}.annotatedType());
+    assertThat(mutator.toString())
+        .isEqualTo("Nullable<[Nullable<String>, Nullable<Integer>] -> CustomPair>");
+  }
+
+  @Test
+  void genericClassLayered() {
+    // Note: We can't use @NotNull here since Java 8 does not retain the annotations for generic
+    // classes.
+    SerializingMutator<CustomPair<CustomPair<String, Boolean>, Integer>> mutator2 =
+        (SerializingMutator<CustomPair<CustomPair<String, Boolean>, Integer>>)
+            Mutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<
+                        CustomPair<CustomPair<String, Boolean>, Integer>>() {}.annotatedType());
+    assertThat(mutator2.toString())
+        .isEqualTo(
+            "Nullable<[Nullable<[Nullable<String>, Nullable<Boolean>] -> CustomPair>,"
+                + " Nullable<Integer>] -> CustomPair>");
+  }
 }

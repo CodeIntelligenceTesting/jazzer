@@ -20,6 +20,7 @@ import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSuppor
 import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.findGettersByPropertyNames;
 import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.findGettersByPropertyTypes;
 import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.matchingReturnTypes;
+import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.resolveParameterTypes;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.findFirstPresent;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static java.util.Arrays.stream;
@@ -50,11 +51,13 @@ final class ConstructorBasedBeanMutatorFactory implements MutatorFactory {
                         .filter(constructor -> constructor.getParameterCount() > 0)
                         .map(
                             constructor ->
-                                findParameterGetters(clazz, constructor)
+                                findParameterGetters(clazz, type, constructor)
                                     .filter(
                                         getters ->
                                             matchingReturnTypes(
-                                                getters, constructor.getParameterTypes()))
+                                                getters,
+                                                type,
+                                                resolveParameterTypes(constructor, type)))
                                     .flatMap(
                                         getters -> {
                                           // Try to create mutator based on constructor and getters,
@@ -65,7 +68,8 @@ final class ConstructorBasedBeanMutatorFactory implements MutatorFactory {
                                         }))));
   }
 
-  private Optional<Method[]> findParameterGetters(Class<?> clazz, Constructor<?> constructor) {
+  private Optional<Method[]> findParameterGetters(
+      Class<?> clazz, AnnotatedType type, Constructor<?> constructor) {
     // Prefer explicit Java Bean ConstructorProperties annotation to determine parameter names.
     ConstructorProperties parameterNames = constructor.getAnnotation(ConstructorProperties.class);
     if (parameterNames != null
@@ -78,7 +82,8 @@ final class ConstructorBasedBeanMutatorFactory implements MutatorFactory {
       return findGettersByPropertyNames(clazz, stream(parameters).map(Parameter::getName));
     } else {
       // Last fallback to parameter types.
-      return findGettersByPropertyTypes(clazz, stream(parameters).map(Parameter::getType));
+      return findGettersByPropertyTypes(
+          clazz, type, stream(resolveParameterTypes(constructor, type)));
     }
   }
 }
