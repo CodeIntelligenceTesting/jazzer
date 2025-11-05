@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Generates a {@link List} or {@link Map} with the specified size.
+ * Generates a {@link List}, {@link Set} or {@link Map} with the specified size.
  *
  * @see WithLength
  * @see WithUtf8Length
