@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
 import static com.code_intelligence.jazzer.mutation.mutator.aggregate.AggregatesHelper.asInstantiationFunction;
 import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.findConstructorsByParameterCount;
+import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSupport.resolveAnnotatedParameterTypes;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.findFirstPresent;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 
@@ -63,7 +64,7 @@ final class CachedConstructorMutatorFactory implements MutatorFactory {
     return AggregatesHelper.createMutator(
         factory,
         constructor.getDeclaringClass(),
-        constructor.getAnnotatedParameterTypes(),
+        resolveAnnotatedParameterTypes(constructor, initialType),
         fromParametersToObject,
         fromObjectToParameters,
         initialType,
