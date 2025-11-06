@@ -200,6 +200,21 @@ For example, if the fuzz test is in the class `src/test/java/com/example/ValidFu
 If this directory does not exist, Jazzer will save crash inputs in the directory from which the tests are executed.
 
 
+## Seeding via JUnit parameter sources
+
+You can provide initial seed inputs for a `@FuzzTest` using standard JUnit parameter sources such as `@MethodSource`,
+`@CsvSource`, `@ValueSource`, or custom `@ArgumentsSource`. In [regression mode](#regression-mode), Jazzer executes the
+fuzz test once for each provided argument set, similar to a JUnit `@ParameterizedTest`.
+In [fuzzing mode](#fuzzing-mode), the seed inputs are additionally used for further mutations.
+
+An example showcasing JUnit’s `@MethodSource` for a `@FuzzTest` can be found in
+[`JavaSeedFuzzTest.java`](examples/junit/src/test/java/com/example/JavaSeedFuzzTest.java).
+
+Note that classes without corresponding getter functions (i.e. that are mutated by the
+[`CachedConstructorMutatorFactory`](src/main/java/com/code_intelligence/jazzer/mutation/mutator/aggregate/CachedConstructorMutatorFactory.java))
+can not be serialized when used in a `@MethodSource` method. Test cases including such objects will be ignored with a
+warning during Jazzer startup.
+
 ## Sanitizers / bug detectors
 
 Sanitizers (also called *bug detectors*) are built-in checks that help Jazzer find security issues in your application while fuzzing.
