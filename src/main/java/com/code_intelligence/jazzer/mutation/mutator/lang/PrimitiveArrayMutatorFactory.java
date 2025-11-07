@@ -43,6 +43,7 @@ import java.lang.reflect.AnnotatedArrayType;
 import java.lang.reflect.AnnotatedType;
 import java.nio.ByteBuffer;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -81,6 +82,7 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
     private final SerializingMutator<byte[]> innerMutator;
     private final Function<byte[], T> toPrimitive;
     private final Function<T, byte[]> toBytes;
+    private final BiFunction<byte[], PseudoRandom, T> toPrimitiveAfterMutate;
 
     @SuppressWarnings("unchecked")
     public PrimitiveArrayMutator(AnnotatedType type) {
@@ -92,6 +94,8 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
       innerMutator =
           (SerializingMutator<byte[]>) LibFuzzerMutatorFactory.tryCreate(innerByteArray).get();
       toPrimitive = (Function<byte[], T>) makeBytesToPrimitiveArrayConverter(elementType);
+      toPrimitiveAfterMutate =
+          (BiFunction<byte[], PseudoRandom, T>) makeBytesToPrimitiveArrayAfterMutate(elementType);
       toBytes = (Function<T, byte[]>) makePrimitiveArrayToBytesConverter(elementType);
     }
 
@@ -128,14 +132,13 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
 
     @Override
     public T mutate(T value, PseudoRandom prng) {
-      return (T) toPrimitive.apply(innerMutator.mutate(toBytes.apply(value), prng));
+      return toPrimitiveAfterMutate.apply(innerMutator.mutate(toBytes.apply(value), prng), prng);
     }
 
     @Override
     public T crossOver(T value, T otherValue, PseudoRandom prng) {
-      return (T)
-          toPrimitive.apply(
-              innerMutator.crossOver(toBytes.apply(value), toBytes.apply(otherValue), prng));
+      return toPrimitive.apply(
+          innerMutator.crossOver(toBytes.apply(value), toBytes.apply(otherValue), prng));
     }
 
     private void extractRange(AnnotatedType type) {
@@ -248,6 +251,29 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
         default:
           throw new IllegalStateException("Unexpected value: " + type);
       }
+    }
+
+    // Randomly maps the byte array from libFuzzer directly onto char[] or converts each byte into a
+    // 2 byte char. This helps in cases where a String is constructed out of char[] and libFuzzer
+    // inserts CESU8 encoded bytes into the byte[].
+    public char[] postMutateChars(byte[] bytes, PseudoRandom prng) {
+      if (prng.choice()) {
+        return (char[]) toPrimitive.apply(bytes);
+      } else {
+        char[] chars = new char[bytes.length];
+        for (int i = 0; i < chars.length; i++) {
+          chars[i] = (char) bytes[i];
+        }
+        return chars;
+      }
+    }
+
+    public BiFunction<byte[], PseudoRandom, ?> makeBytesToPrimitiveArrayAfterMutate(
+        AnnotatedType type) {
+      if (type.getType().getTypeName().equals("char")) {
+        return this::postMutateChars;
+      }
+      return (bytes, ignored) -> makeBytesToPrimitiveArrayConverter(type).apply(bytes);
     }
 
     public static Function<?, byte[]> makePrimitiveArrayToBytesConverter(AnnotatedType type) {
