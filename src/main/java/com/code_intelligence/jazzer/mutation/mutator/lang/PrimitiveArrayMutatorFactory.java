@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.lang.reflect.AnnotatedArrayType;
 import java.lang.reflect.AnnotatedType;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -71,6 +72,7 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
   public static final class PrimitiveArrayMutator<T> extends SerializingMutator<T> {
     private static final int DEFAULT_MIN_LENGTH = 0;
     private static final int DEFAULT_MAX_LENGTH = 1000;
+    private static final Charset FUZZED_DATA_CHARSET = Charset.forName("CESU-8");
     private long minRange;
     private long maxRange;
     private boolean allowNaN;
@@ -253,16 +255,16 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
       }
     }
 
-    // Randomly maps the byte array from libFuzzer directly onto char[] or converts each byte into a
-    // 2 byte char. This helps in cases where a String is constructed out of char[] and libFuzzer
-    // inserts CESU8 encoded bytes into the byte[].
+    // The strings we pass to native callbacks to trace data flow are CESU-8 encoded.
+    // As a result, libFuzzer's TORC contains CESU-8 encoded strings.
+    // Therefore, in 50% of times we decode the byte array as a CESU-8  string.
     public char[] postMutateChars(byte[] bytes, PseudoRandom prng) {
       if (prng.choice()) {
         return (char[]) toPrimitive.apply(bytes);
       } else {
-        char[] chars = new char[bytes.length];
+        char[] chars = new String(bytes, FUZZED_DATA_CHARSET).toCharArray();
         for (int i = 0; i < chars.length; i++) {
-          chars[i] = (char) bytes[i];
+          chars[i] = (char) forceInRange(chars[i], minRange, maxRange);
         }
         return chars;
       }
