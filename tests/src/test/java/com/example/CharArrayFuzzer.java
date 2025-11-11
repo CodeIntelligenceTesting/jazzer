@@ -22,8 +22,8 @@ public class CharArrayFuzzer {
       return;
     }
     String expression = new String(data);
-    if (expression.contains("jazzer")) {
-      throw new RuntimeException("found jazzer");
+    if (expression.equals("中 Bös3r \uD801\uDC00 C0d3 中")) {
+      throw new RuntimeException("Found evil code");
     }
   }
 }
