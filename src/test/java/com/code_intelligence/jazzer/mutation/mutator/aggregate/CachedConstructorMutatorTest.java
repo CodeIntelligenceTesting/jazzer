@@ -209,4 +209,21 @@ class CachedConstructorMutatorTest {
                 .createOrThrow(new TypeHolder<GenericClass<String>>() {}.annotatedType());
     assertThat(mutator.toString()).startsWith("Nullable<[Nullable<String>] -> GenericClass>");
   }
+
+  static class GenericListClass<T> {
+    private final List<T> values;
+
+    GenericListClass(List<T> values) {
+      this.values = values;
+    }
+  }
+
+  @Test
+  void testGenericListClass() {
+    SerializingMutator<GenericListClass<String>> mutator =
+        (SerializingMutator<GenericListClass<String>>)
+            Mutators.newFactory()
+                .createOrThrow(new TypeHolder<GenericListClass<String>>() {}.annotatedType());
+    assertThat(mutator.toString()).contains("List<Nullable<String>>");
+  }
 }

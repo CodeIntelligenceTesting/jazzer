@@ -225,15 +225,15 @@ class SetterBasedBeanMutatorTest {
   }
 
   public static class Generic<T> {
-    T t;
+    T[] t;
 
     public Generic() {}
 
-    public void setT(T t) {
+    public void setT(T[] t) {
       this.t = t;
     }
 
-    public T getT() {
+    public T[] getT() {
       return t;
     }
   }
@@ -244,6 +244,6 @@ class SetterBasedBeanMutatorTest {
         (SerializingMutator<Generic<String>>)
             Mutators.newFactory()
                 .createOrThrow(new TypeHolder<Generic<String>>() {}.annotatedType());
-    assertThat(mutator.toString()).isEqualTo("Nullable<[Nullable<String>] -> Generic>");
+    assertThat(mutator.toString()).isEqualTo("Nullable<[Nullable<Nullable<String>[]>] -> Generic>");
   }
 }
