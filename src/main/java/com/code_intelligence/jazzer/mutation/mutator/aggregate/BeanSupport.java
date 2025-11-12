@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
+import static com.code_intelligence.jazzer.mutation.support.ParameterizedTypeSupport.resolveTypeArguments;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.getOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static java.util.Arrays.stream;
@@ -26,14 +27,12 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 import java.beans.Introspector;
-import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -41,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 class BeanSupport {
@@ -54,26 +52,6 @@ class BeanSupport {
     }
   }
 
-  // Returns the resolved type argument for a generic class if one exists.
-  // For example: For the class `class MyClass<T> {}` with annotated type `MyClass<String>`,
-  // calling `resolveTypeArgument(MyClass.class, annotatedType, T)` returns
-  // `Optional.of(String.class)`.
-  private static Optional<AnnotatedType> resolveTypeArgument(
-      Class<?> clazz, AnnotatedType classType, Type type) {
-    if (!(classType instanceof AnnotatedParameterizedType)) {
-      return Optional.empty();
-    }
-
-    TypeVariable<?>[] typeParameters = clazz.getTypeParameters();
-    AnnotatedType[] typeArguments =
-        ((AnnotatedParameterizedType) classType).getAnnotatedActualTypeArguments();
-
-    return IntStream.range(0, typeParameters.length)
-        .filter(i -> typeParameters[i].equals(type))
-        .mapToObj(i -> typeArguments[i])
-        .findFirst();
-  }
-
   // Returns the annotated parameter types of a method or constructor resolving all generic type
   // arguments.
   public static AnnotatedType[] resolveAnnotatedParameterTypes(
@@ -82,8 +60,7 @@ class BeanSupport {
     AnnotatedType[] annotated = e.getAnnotatedParameterTypes();
     AnnotatedType[] result = new AnnotatedType[generic.length];
     for (int i = 0; i < generic.length; i++) {
-      result[i] =
-          resolveTypeArgument(e.getDeclaringClass(), classType, generic[i]).orElse(annotated[i]);
+      result[i] = resolveTypeArguments(e.getDeclaringClass(), classType, annotated[i]);
     }
     return result;
   }
@@ -96,8 +73,8 @@ class BeanSupport {
   }
 
   static Type resolveReturnType(Method method, AnnotatedType classType) {
-    return resolveTypeArgument(method.getDeclaringClass(), classType, method.getGenericReturnType())
-        .orElse(method.getAnnotatedReturnType())
+    return resolveTypeArguments(
+            method.getDeclaringClass(), classType, method.getAnnotatedReturnType())
         .getType();
   }
 
