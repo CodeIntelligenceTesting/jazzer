@@ -210,6 +210,7 @@ public class ArrayMutatorTest {
             // mutation choice based on `IntegralMutatorFactory`
             // 2 == closedRange
             2,
+            0.1, // sampler: we stay in the closed range mutation
             // value
             55L)) {
       arr = mutator.mutate(arr, prng);

@@ -74,6 +74,7 @@ class RecordMutatorTest {
             // Mutate second component, in range operation, return 23
             1,
             2,
+            0.1, // sampler: we stay in the second function: direct value in range
             23L)) {
       SimpleTypesRecord inited = mutator.init(prng);
       assertThat(inited).isNotNull();
