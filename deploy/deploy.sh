@@ -30,10 +30,6 @@ JAZZER_COORDINATES=$1
 echo "$RELEASE_SIGNING_KEY_PRIVATE" | gpg --import
 echo "default-key $RELEASE_SIGNING_KEY_ID" > $HOME/.gnupg/gpg.conf
 
-[ -z "${MAVEN_USER+x}" ] && \
-  fail "Set MAVEN_USER to the Sonatype OSSRH user"
-[ -z "${MAVEN_PASSWORD+x}" ] && \
-  fail "Set MAVEN_PASSWORD to the Sonatype OSSRH password"
 [ -z "${JAZZER_JAR_PATH+x}" ] && \
   fail "Set JAZZER_JAR_PATH to the absolute path of jazzer.jar obtained from the release GitHub Actions workflow"
 [ ! -f "${JAZZER_JAR_PATH}" ] && \
@@ -68,12 +64,8 @@ JAZZER_DOCS_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-docs)
 JAZZER_SOURCES_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-sources)
 JAZZER_POM_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-pom)
 
-bazel run --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}" \
-  --define "maven_password=${MAVEN_PASSWORD}" --define gpg_sign=true \
-  //deploy:jazzer-api.publish
-MAVEN_REPO="$MAVEN_REPO" GPG_SIGN="true" MAVEN_USER="$MAVEN_USER" MAVEN_PASSWORD="$MAVEN_PASSWORD" \
+bazel run --define "maven_repo=${MAVEN_REPO}" --define gpg_sign=true //deploy:jazzer-api.publish
+MAVEN_REPO="$MAVEN_REPO" GPG_SIGN="true" \
   bazel run @rules_jvm_external//private/tools/java/com/github/bazelbuild/rules_jvm_external/maven:MavenPublisher -- \
   "$JAZZER_COORDINATES" "$JAZZER_POM_PATH" "$JAZZER_JAR_PATH" "sources=${JAZZER_SOURCES_PATH},javadoc=${JAZZER_DOCS_PATH}"
-bazel run --define "maven_repo=${MAVEN_REPO}" --define "maven_user=${MAVEN_USER}" \
-  --define "maven_password=${MAVEN_PASSWORD}" --define gpg_sign=true \
-  //deploy:jazzer-junit.publish
+bazel run --define "maven_repo=${MAVEN_REPO}" --define gpg_sign=true //deploy:jazzer-junit.publish

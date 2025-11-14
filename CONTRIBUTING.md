@@ -131,11 +131,12 @@ Run `./format.sh` to format all source files in the way enforced by the "Check f
 
 ## Releasing (CI employees only)
 
-1. Push a tag of the form `v1.2.3` to trigger the "Prerelease" GitHub Actions workflow.
-2. Wait for the workflow to finish (about 10 minutes).
-3. Download the artifact called "jazzer-maven-central-bundle" from the prerelease workflow run.
-4. Log into https://central.sonatype.com/publishing and click on "Publish Component".
-5. In the dialog that follows, under "Upload Your File", select the downloaded artifact. The "Deployment Name" doesn't matter. Click "Publish Component".
-6. Refresh the page, and you should see "Deployment Info" with status "VALIDATED".
-7. Click "Publish" to publish the component to Maven Central and wait for the status to change to "PUBLISHED" (a refresh or two may be necessary).
-8. Release the draft Github release. This will automatically create a tag, push the docker images and deploy the docs (can take about a few minutes to appear at [jazzer-docs]( https://codeintelligencetesting.github.io/jazzer-docs)).
+Push a tag of the form `v1.2.3` to trigger the "Prerelease" GitHub Actions workflow followed by the "Release" workflow.
+This will also automatically update the [jazzer-docs](https://codeintelligencetesting.github.io/jazzer-docs).
+
+Upon a failure to deploy to Maven Central, follow these steps to manually deploy the artifacts:
+1. Download the bundle artifact called "jazzer-maven-central-bundle".
+2. Log into https://central.sonatype.com/publishing and click on "Publish Component".
+3. In the dialog that follows, under "Upload Your File", select the downloaded artifact. The "Deployment Name" doesn't matter. Click "Publish Component".
+4. Refresh the page, and you should see "Deployment Info" with status "VALIDATED".
+5. Click "Publish" to publish the component to Maven Central and wait for the status to change to "PUBLISHED" (a refresh or two may be necessary).
