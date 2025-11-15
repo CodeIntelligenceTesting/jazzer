@@ -68,7 +68,7 @@ jobs:
           if-no-files-found: error
 
   merge_jars:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: build_release
 
     steps:
@@ -95,7 +95,7 @@ jobs:
           if-no-files-found: error
 
   maven_predeploy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: merge_jars
 
     environment:
@@ -158,7 +158,7 @@ jobs:
           path: _releases/
 
       - name: create release
-        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
+        uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
         with:
           generate_release_notes: true
           draft: true
