@@ -41,12 +41,17 @@ DYNAMIC_SYMBOLS_TO_EXPORT = [
 cc_jni_library(
     name = "jazzer_preload",
     srcs = ["jazzer_preload.c"],
+    copts = select({
+        "@platforms//os:linux": ["-pthread"],
+        "//conditions:default": [],
+    }),
     linkopts = select({
         "@platforms//os:linux": [
             "-Wl,--export-dynamic-symbol=" + symbol
             for symbol in DYNAMIC_SYMBOLS_TO_EXPORT
         ] + [
             "-ldl",
+            "-pthread",
         ],
         "@platforms//os:macos": [
             "-ldl",
