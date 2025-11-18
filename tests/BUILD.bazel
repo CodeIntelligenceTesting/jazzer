@@ -686,6 +686,46 @@ java_fuzz_target_test(
     ],
 )
 
+java_binary(
+    name = "ClassLoaderFuzzer",
+    srcs = ["src/test/java/com/example/ClassLoaderFuzzer.java"],
+    main_class = "com.example.ClassLoaderFuzzer",
+)
+
+java_binary(
+    name = "AsmOOM",
+    srcs = ["src/test/java/com/example/AsmClassReaderFuzzer.java"],
+    main_class = "com.example.AsmClassReaderFuzzer",
+    deps = [
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+        "@maven//:org_ow2_asm_asm",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "AsmClassReaderFuzzer",
+    srcs = ["src/test/java/com/example/AsmClassReaderFuzzer.java"],
+    env = {
+        "_JAVA_OPTIONS": "-Xmx20048m",
+    },
+    fuzzer_args = [
+        "-runs=1000000",
+        "--instrumentation_includes=org.objectweb.**:java.lang.ClassLoader",
+    ],
+    target_class = "com.example.AsmClassReaderFuzzer",
+    deps = [
+        "//deploy:jazzer-junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+        "@maven//:org_ow2_asm_asm",
+    ],
+    runtime_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+    ],
+)
+
 sh_test(
     name = "jazzer_from_path_test",
     srcs = ["src/test/shell/jazzer_from_path_test.sh"],
