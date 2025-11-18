@@ -195,6 +195,8 @@ public class Jazzer {
     processBuilder.command(subProcessArgs);
     processBuilder.inheritIO();
 
+    System.err.println(
+        "Starting process with args " + subProcessArgs + " and env " + additionalEnvironment);
     exit(processBuilder.start().waitFor());
   }
 
