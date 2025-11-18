@@ -20,9 +20,12 @@
 
 #define _GNU_SOURCE  // for RTLD_NEXT
 #include <dlfcn.h>
+#include <pthread.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #ifdef __APPLE__
 // Using dyld's interpose feature requires knowing the addresses of libc
 // functions.
@@ -150,11 +153,10 @@ DEFINE_LIBC_INTERCEPTOR(memmem, void *,
 
 // Native libraries instrumented for fuzzing include references to fuzzer hooks
 // that are resolved by the dynamic linker. We need to route these to the
-// corresponding local symbols in the Jazzer driver JNI library.
-// The __sanitizer_cov_trace_* family of functions is only invoked from code
-// compiled with -fsanitize=fuzzer. We can assume that the Jazzer JNI library
-// has been loaded before any such code, which necessarily belongs to the fuzz
-// target, is executed and thus don't need NULL checks.
+// corresponding local symbols in the Jazzer driver JNI library. When
+// instrumented system libraries initialize before jazzer_driver is loaded, the
+// trace callbacks may fire early, so we defensively no-op until the hooks are
+// installed.
 #define DEFINE_TRACE_HOOK(name, params, args)                                \
   typedef void (*trace_##name##_t)(void *, UNWRAP_VA_ARGS params);           \
   static _Atomic trace_##name##_t trace_##name##_with_pc;                    \
@@ -163,6 +165,9 @@ DEFINE_LIBC_INTERCEPTOR(memmem, void *,
       UNWRAP_VA_ARGS params) {                                               \
     trace_##name##_t hook =                                                  \
         atomic_load_explicit(&trace_##name##_with_pc, memory_order_relaxed); \
+    if (UNLIKELY(hook == NULL)) {                                            \
+      return;                                                                \
+    }                                                                        \
     hook(GET_CALLER_PC(), UNWRAP_VA_ARGS args);                              \
   }
 
@@ -194,10 +199,119 @@ static _Atomic cov_8bit_counters_init_t cov_8bit_counters_init;
 typedef void (*cov_pcs_init_t)(const uintptr_t *, const uintptr_t *);
 static _Atomic cov_pcs_init_t cov_pcs_init;
 
+typedef struct {
+  uint8_t *start;
+  uint8_t *end;
+} cov_8bit_range_t;
+
+typedef struct {
+  const uintptr_t *start;
+  const uintptr_t *end;
+} cov_pcs_range_t;
+
+static pthread_mutex_t pending_cov_8bit_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cov_8bit_range_t *pending_cov_8bit_ranges = NULL;
+static size_t pending_cov_8bit_range_count = 0;
+static size_t pending_cov_8bit_range_capacity = 0;
+
+static pthread_mutex_t pending_cov_pcs_mutex = PTHREAD_MUTEX_INITIALIZER;
+static cov_pcs_range_t *pending_cov_pcs_ranges = NULL;
+static size_t pending_cov_pcs_range_count = 0;
+static size_t pending_cov_pcs_range_capacity = 0;
+
+static void append_cov_8bit_range(uint8_t *start, uint8_t *end) {
+  pthread_mutex_lock(&pending_cov_8bit_mutex);
+  if (pending_cov_8bit_range_count == pending_cov_8bit_range_capacity) {
+    size_t new_capacity = pending_cov_8bit_range_capacity == 0
+                              ? 8
+                              : pending_cov_8bit_range_capacity * 2;
+    cov_8bit_range_t *new_ranges =
+        realloc(pending_cov_8bit_ranges,
+                new_capacity * sizeof(*pending_cov_8bit_ranges));
+    if (new_ranges == NULL) {
+      pthread_mutex_unlock(&pending_cov_8bit_mutex);
+      abort();
+    }
+    pending_cov_8bit_ranges = new_ranges;
+    pending_cov_8bit_range_capacity = new_capacity;
+  }
+  pending_cov_8bit_ranges[pending_cov_8bit_range_count++] =
+      (cov_8bit_range_t){start, end};
+  pthread_mutex_unlock(&pending_cov_8bit_mutex);
+}
+
+static void append_cov_pcs_range(const uintptr_t *start, const uintptr_t *end) {
+  pthread_mutex_lock(&pending_cov_pcs_mutex);
+  if (pending_cov_pcs_range_count == pending_cov_pcs_range_capacity) {
+    size_t new_capacity = pending_cov_pcs_range_capacity == 0
+                              ? 8
+                              : pending_cov_pcs_range_capacity * 2;
+    cov_pcs_range_t *new_ranges = realloc(
+        pending_cov_pcs_ranges, new_capacity * sizeof(*pending_cov_pcs_ranges));
+    if (new_ranges == NULL) {
+      pthread_mutex_unlock(&pending_cov_pcs_mutex);
+      abort();
+    }
+    pending_cov_pcs_ranges = new_ranges;
+    pending_cov_pcs_range_capacity = new_capacity;
+  }
+  pending_cov_pcs_ranges[pending_cov_pcs_range_count++] =
+      (cov_pcs_range_t){start, end};
+  pthread_mutex_unlock(&pending_cov_pcs_mutex);
+}
+
+static void flush_cov_8bit_ranges(cov_8bit_counters_init_t init) {
+  if (init == NULL) {
+    return;
+  }
+  pthread_mutex_lock(&pending_cov_8bit_mutex);
+  cov_8bit_range_t *ranges = pending_cov_8bit_ranges;
+  size_t count = pending_cov_8bit_range_count;
+  pending_cov_8bit_ranges = NULL;
+  pending_cov_8bit_range_count = 0;
+  pending_cov_8bit_range_capacity = 0;
+  pthread_mutex_unlock(&pending_cov_8bit_mutex);
+
+  for (size_t i = 0; i < count; ++i) {
+    fprintf(stderr,
+            "_______________________ inside flush_cov_8bit_ranges with start = "
+            "%x\n",
+            ranges[i].start);
+    init(ranges[i].start, ranges[i].end);
+  }
+  free(ranges);
+}
+
+static void flush_cov_pcs_ranges(cov_pcs_init_t init) {
+  if (init == NULL) {
+    return;
+  }
+  pthread_mutex_lock(&pending_cov_pcs_mutex);
+  cov_pcs_range_t *ranges = pending_cov_pcs_ranges;
+  size_t count = pending_cov_pcs_range_count;
+  pending_cov_pcs_ranges = NULL;
+  pending_cov_pcs_range_count = 0;
+  pending_cov_pcs_range_capacity = 0;
+  pthread_mutex_unlock(&pending_cov_pcs_mutex);
+
+  for (size_t i = 0; i < count; ++i) {
+    init(ranges[i].start, ranges[i].end);
+  }
+  free(ranges);
+}
+
 __attribute__((visibility("default"))) void __sanitizer_cov_8bit_counters_init(
     uint8_t *start, uint8_t *end) {
   cov_8bit_counters_init_t init =
       atomic_load_explicit(&cov_8bit_counters_init, memory_order_relaxed);
+  fprintf(stderr,
+          "_______________________ inside __sanitizer_cov_8bit_counters_init "
+          "with init = %x\n",
+          init);
+  if (UNLIKELY(init == NULL)) {
+    append_cov_8bit_range(start, end);
+    return;
+  }
   init(start, end);
 }
 
@@ -205,6 +319,10 @@ __attribute__((visibility("default"))) void __sanitizer_cov_pcs_init(
     const uintptr_t *pcs_beg, const uintptr_t *pcs_end) {
   cov_pcs_init_t init =
       atomic_load_explicit(&cov_pcs_init, memory_order_relaxed);
+  if (UNLIKELY(init == NULL)) {
+    append_cov_pcs_range(pcs_beg, pcs_end);
+    return;
+  }
   init(pcs_beg, pcs_end);
 }
 
@@ -246,4 +364,8 @@ __attribute__((visibility("default"))) void jazzer_preload_init(void *handle) {
   atomic_store(&cov_8bit_counters_init,
                dlsym(handle, "__sanitizer_cov_8bit_counters_init"));
   atomic_store(&cov_pcs_init, dlsym(handle, "__sanitizer_cov_pcs_init"));
+  flush_cov_8bit_ranges(
+      atomic_load_explicit(&cov_8bit_counters_init, memory_order_relaxed));
+  flush_cov_pcs_ranges(
+      atomic_load_explicit(&cov_pcs_init, memory_order_relaxed));
 }
