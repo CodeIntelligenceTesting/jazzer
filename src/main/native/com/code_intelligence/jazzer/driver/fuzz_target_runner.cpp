@@ -24,6 +24,7 @@
 #endif
 #include <jni.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include <iostream>
 #include <limits>
@@ -194,6 +195,11 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_startLibFuzze
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_printAndDumpCrashingInput(
     JNIEnv *, jclass) {
+  fprintf(stderr,
+          "_______________________ inside "
+          "Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_"
+          "printAndDumpCrashingInput with %x\n",
+          gLibfuzzerPrintCrashingInput);
   if (gLibfuzzerPrintCrashingInput == nullptr) {
     std::cerr << "<not available>" << std::endl;
   } else {
@@ -219,6 +225,10 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_temporarilyDi
 // __sanitizer_set_death_callback to pass us the death callback.
 extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
     void (*callback)()) {
+  fprintf(stderr,
+          "_______________________ inside __jazzer_set_death_callback with "
+          "callback %x\n",
+          callback);
   gLibfuzzerPrintCrashingInput = callback;
 #ifndef _WIN32
   void *sanitizer_set_death_callback =
