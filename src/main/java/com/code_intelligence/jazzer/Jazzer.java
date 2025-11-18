@@ -184,8 +184,8 @@ public class Jazzer {
     Map<String, String> additionalEnvironment = new HashMap<>();
     additionalEnvironment.put(
         preloadVariable(),
-        appendWithPathListSeparator(
-            preloadVariable(), preloadLibs.stream().map(Path::toString).toArray(String[]::new)));
+        String.join(
+            File.pathSeparator, preloadLibs.stream().map(Path::toString).toArray(String[]::new)));
     List<String> subProcessArgs =
         Stream.concat(
                 Stream.of(prepareArgv0(additionalEnvironment)),
