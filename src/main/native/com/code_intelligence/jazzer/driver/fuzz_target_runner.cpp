@@ -195,6 +195,9 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_startLibFuzze
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_printAndDumpCrashingInput(
     JNIEnv *, jclass) {
+  fprintf(stderr,
+          "[jazzer_driver] printAndDumpCrashingInput invoked (callback=%p)\n",
+          gLibfuzzerPrintCrashingInput);
   if (gLibfuzzerPrintCrashingInput == nullptr) {
     std::cerr << "<not available>" << std::endl;
   } else {
@@ -220,9 +223,16 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_temporarilyDi
 // __sanitizer_set_death_callback to pass us the death callback.
 extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
     void (*callback)()) {
+  fprintf(stderr,
+          "[jazzer_driver] __jazzer_set_death_callback received %p\n",
+          callback);
   gLibfuzzerPrintCrashingInput = callback;
 #ifndef _WIN32
   auto callCombinedCallback = []() {
+    fprintf(stderr,
+            "[jazzer_driver] combined death callback triggered "
+            "(callback=%p)\n",
+            gLibfuzzerPrintCrashingInput);
     ::jazzer::DumpJvmStackTraces();
     if (gLibfuzzerPrintCrashingInput == nullptr) {
       std::cerr << "<not available>" << std::endl;
@@ -239,8 +249,15 @@ extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
   void *sanitizer_set_death_callback =
       dlsym(RTLD_DEFAULT, "__sanitizer_set_death_callback");
   if (sanitizer_set_death_callback != nullptr) {
+    fprintf(stderr,
+            "[jazzer_driver] registering combined callback via "
+            "__sanitizer_set_death_callback=%p\n",
+            sanitizer_set_death_callback);
     (reinterpret_cast<void (*)(void (*)())>(sanitizer_set_death_callback))(
         callCombinedCallback);
+  } else {
+    fprintf(stderr,
+            "[jazzer_driver] failed to find __sanitizer_set_death_callback\n");
   }
 #endif
 }
