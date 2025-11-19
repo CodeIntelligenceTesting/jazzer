@@ -1136,6 +1136,16 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "CharArrayFuzzer",
+    srcs = [
+        "src/test/java/com/example/CharArrayFuzzer.java",
+    ],
+    allowed_findings = ["java.lang.RuntimeException"],
+    target_class = "com.example.CharArrayFuzzer",
+    verify_crash_reproducer = False,
+)
+
 filegroup(
     name = "fuzz_test_lister_classes",
     srcs = ["src/test/data/fuzz_test_lister_test"],
