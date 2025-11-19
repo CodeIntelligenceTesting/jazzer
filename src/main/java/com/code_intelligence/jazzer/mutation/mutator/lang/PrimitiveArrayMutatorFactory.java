@@ -43,6 +43,7 @@ import java.lang.reflect.AnnotatedArrayType;
 import java.lang.reflect.AnnotatedType;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -75,6 +76,8 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
     private static final Charset FUZZED_DATA_CHARSET = Charset.forName("CESU-8");
     private long minRange;
     private long maxRange;
+    private int minLength;
+    private int maxLength;
     private boolean allowNaN;
     private float minFloatRange;
     private float maxFloatRange;
@@ -90,6 +93,7 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
     public PrimitiveArrayMutator(AnnotatedType type) {
       elementType = ((AnnotatedArrayType) type).getAnnotatedGenericComponentType();
       extractRange(elementType);
+      extractLength(type);
       AnnotatedType innerByteArray =
           forwardAnnotations(
               type, convertWithLength(type, new TypeHolder<byte[]>() {}.annotatedType()));
@@ -209,11 +213,15 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
       }
     }
 
-    private static AnnotatedType convertWithLength(AnnotatedType type, AnnotatedType newType) {
-      AnnotatedType elementType = ((AnnotatedArrayType) type).getAnnotatedGenericComponentType();
+    private void extractLength(AnnotatedType type) {
       Optional<WithLength> withLength = Optional.ofNullable(type.getAnnotation(WithLength.class));
-      int minLength = withLength.map(WithLength::min).orElse(DEFAULT_MIN_LENGTH);
-      int maxLength = withLength.map(WithLength::max).orElse(DEFAULT_MAX_LENGTH);
+      withLength.ifPresent(System.err::println);
+      minLength = withLength.map(WithLength::min).orElse(DEFAULT_MIN_LENGTH);
+      maxLength = withLength.map(WithLength::max).orElse(DEFAULT_MAX_LENGTH);
+    }
+
+    private AnnotatedType convertWithLength(AnnotatedType type, AnnotatedType newType) {
+      AnnotatedType elementType = ((AnnotatedArrayType) type).getAnnotatedGenericComponentType();
       switch (elementType.getType().getTypeName()) {
         case "int":
         case "float":
@@ -222,8 +230,13 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
         case "double":
           return withLength(newType, minLength * 8, maxLength * 8);
         case "short":
-        case "char":
           return withLength(newType, minLength * 2, maxLength * 2);
+        case "char":
+          // CESU-8 encoding uses at maximum 6 bytes to encode a character. This value represents
+          // the maximum size needed for the underlying byte array to hold the corresponding
+          // char array with the specified length range. After the conversion to a char array in the
+          // mutator, we should ensure the exact length constraints
+          return withLength(newType, minLength * 6, maxLength * 6);
         case "boolean":
         case "byte":
           return withLength(newType, minLength, maxLength);
@@ -241,7 +254,7 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
         case "short":
           return getShortPrimitiveArray(minRange, maxRange);
         case "char":
-          return getCharPrimitiveArray(minRange, maxRange);
+          return getCharPrimitiveArray(minRange, maxRange, minLength, maxLength);
         case "float":
           return getFloatPrimitiveArray(minFloatRange, maxFloatRange, allowNaN);
         case "double":
@@ -263,8 +276,15 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
         return (char[]) toPrimitive.apply(bytes);
       } else {
         char[] chars = new String(bytes, FUZZED_DATA_CHARSET).toCharArray();
+
         for (int i = 0; i < chars.length; i++) {
           chars[i] = (char) forceInRange(chars[i], minRange, maxRange);
+        }
+
+        if (chars.length < minLength) {
+          return Arrays.copyOf(chars, minLength);
+        } else if (chars.length > maxLength) {
+          return Arrays.copyOf(chars, maxLength);
         }
         return chars;
       }
@@ -407,10 +427,18 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
       };
     }
 
-    public static Function<byte[], char[]> getCharPrimitiveArray(long minRange, long maxRange) {
+    public static Function<byte[], char[]> getCharPrimitiveArray(
+        long minRange, long maxRange, int minLength, int maxLength) {
       int nBytes = 2;
       return (byte[] byteArray) -> {
         if (byteArray == null) return null;
+
+        if (byteArray.length < minLength * 2) {
+          byteArray = Arrays.copyOf(byteArray, minLength * 2);
+        } else if (byteArray.length > maxLength * 2) {
+          byteArray = Arrays.copyOf(byteArray, maxLength * 2);
+        }
+
         char extraBytes = (char) (byteArray.length % nBytes);
         char[] result = new char[byteArray.length / nBytes + (extraBytes > 0 ? 1 : 0)];
         ByteBuffer buffer = ByteBuffer.wrap(byteArray);
