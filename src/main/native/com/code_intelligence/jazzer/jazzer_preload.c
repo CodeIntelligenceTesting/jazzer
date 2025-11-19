@@ -376,6 +376,12 @@ __attribute__((visibility("default"))) void jazzer_preload_init(void *handle) {
   atomic_store(&cov_pcs_init, dlsym(handle, "__sanitizer_cov_pcs_init"));
   atomic_store(&fatal_error_callback,
                dlsym(handle, "jazzer_report_fatal_error_from_preload"));
+  fprintf(stderr,
+          "[jazzer_preload] fatal_error_callback resolved to %p "
+          "(cov8=%p, covpcs=%p)\n",
+          atomic_load_explicit(&fatal_error_callback, memory_order_relaxed),
+          atomic_load_explicit(&cov_8bit_counters_init, memory_order_relaxed),
+          atomic_load_explicit(&cov_pcs_init, memory_order_relaxed));
   flush_cov_8bit_ranges(
       atomic_load_explicit(&cov_8bit_counters_init, memory_order_relaxed));
   flush_cov_pcs_ranges(
@@ -412,6 +418,7 @@ static asan_error_callback_t load_asan_error_callback_real(void) {
 __attribute__((visibility("default"), noreturn)) void abort(void) {
   fatal_error_callback_t callback =
       atomic_load_explicit(&fatal_error_callback, memory_order_relaxed);
+  fprintf(stderr, "[jazzer_preload] abort intercepted (fatal=%p)\n", callback);
   if (callback != NULL) {
     callback();
   }
@@ -421,13 +428,27 @@ __attribute__((visibility("default"), noreturn)) void abort(void) {
 
 __attribute__((visibility("default"))) void asan_error_callback(
     const char *report_text) {
+  fprintf(stderr,
+          "[jazzer_preload] intercepted asan_error_callback (report=%p)\n",
+          report_text);
   fatal_error_callback_t callback =
       atomic_load_explicit(&fatal_error_callback, memory_order_relaxed);
   if (callback != NULL) {
+    fprintf(stderr,
+            "[jazzer_preload] invoking fatal_error_callback=%p before JVM "
+            "handler\n",
+            callback);
     callback();
+  } else {
+    fprintf(stderr,
+            "[jazzer_preload] no fatal_error_callback registered for ASAN "
+            "error\n");
   }
   asan_error_callback_t real = load_asan_error_callback_real();
   if (real != NULL) {
+    fprintf(stderr,
+            "[jazzer_preload] forwarding to original asan_error_callback=%p\n",
+            real);
     real(report_text);
     return;
   }
