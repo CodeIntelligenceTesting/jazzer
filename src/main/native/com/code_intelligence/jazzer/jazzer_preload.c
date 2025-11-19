@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #ifdef __APPLE__
 // Using dyld's interpose feature requires knowing the addresses of libc
 // functions.
@@ -199,6 +200,15 @@ static _Atomic cov_8bit_counters_init_t cov_8bit_counters_init;
 typedef void (*cov_pcs_init_t)(const uintptr_t *, const uintptr_t *);
 static _Atomic cov_pcs_init_t cov_pcs_init;
 
+typedef void (*fatal_error_callback_t)(void);
+static _Atomic fatal_error_callback_t fatal_error_callback;
+
+typedef void (*abort_t)(void);
+static _Atomic abort_t abort_real;
+
+typedef void (*asan_error_callback_t)(const char *);
+static _Atomic asan_error_callback_t asan_error_callback_real;
+
 typedef struct {
   uint8_t *start;
   uint8_t *end;
@@ -364,8 +374,67 @@ __attribute__((visibility("default"))) void jazzer_preload_init(void *handle) {
   atomic_store(&cov_8bit_counters_init,
                dlsym(handle, "__sanitizer_cov_8bit_counters_init"));
   atomic_store(&cov_pcs_init, dlsym(handle, "__sanitizer_cov_pcs_init"));
+  atomic_store(&fatal_error_callback,
+               dlsym(handle, "jazzer_report_fatal_error_from_preload"));
   flush_cov_8bit_ranges(
       atomic_load_explicit(&cov_8bit_counters_init, memory_order_relaxed));
   flush_cov_pcs_ranges(
       atomic_load_explicit(&cov_pcs_init, memory_order_relaxed));
+}
+
+static abort_t load_abort_real(void) {
+  abort_t real = atomic_load_explicit(&abort_real, memory_order_acquire);
+  if (LIKELY(real != NULL)) {
+    return real;
+  }
+  real = dlsym(RTLD_NEXT, "abort");
+  if (UNLIKELY(real == NULL)) {
+    _exit(134);
+  }
+  atomic_store_explicit(&abort_real, real, memory_order_release);
+  return real;
+}
+
+static asan_error_callback_t load_asan_error_callback_real(void) {
+  asan_error_callback_t real =
+      atomic_load_explicit(&asan_error_callback_real, memory_order_acquire);
+  if (LIKELY(real != NULL)) {
+    return real;
+  }
+  real = dlsym(RTLD_NEXT, "asan_error_callback");
+  if (real == NULL) {
+    return NULL;
+  }
+  atomic_store_explicit(&asan_error_callback_real, real, memory_order_release);
+  return real;
+}
+
+__attribute__((visibility("default"), noreturn)) void abort(void) {
+  fatal_error_callback_t callback =
+      atomic_load_explicit(&fatal_error_callback, memory_order_relaxed);
+  if (callback != NULL) {
+    callback();
+  }
+  load_abort_real()();
+  __builtin_unreachable();
+}
+
+__attribute__((visibility("default"))) void asan_error_callback(
+    const char *report_text) {
+  fatal_error_callback_t callback =
+      atomic_load_explicit(&fatal_error_callback, memory_order_relaxed);
+  if (callback != NULL) {
+    callback();
+  }
+  asan_error_callback_t real = load_asan_error_callback_real();
+  if (real != NULL) {
+    real(report_text);
+    return;
+  }
+  if (report_text != NULL) {
+    fprintf(stderr, "Jazzer intercepted ASAN Error:\n%s\n", report_text);
+  } else {
+    fprintf(stderr, "Jazzer intercepted ASAN Error: <no report text>\n");
+  }
+  load_abort_real()();
 }

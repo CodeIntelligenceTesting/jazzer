@@ -195,11 +195,6 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_startLibFuzze
 [[maybe_unused]] void
 Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_printAndDumpCrashingInput(
     JNIEnv *, jclass) {
-  fprintf(stderr,
-          "_______________________ inside "
-          "Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_"
-          "printAndDumpCrashingInput with %x\n",
-          gLibfuzzerPrintCrashingInput);
   if (gLibfuzzerPrintCrashingInput == nullptr) {
     std::cerr << "<not available>" << std::endl;
   } else {
@@ -225,26 +220,27 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_temporarilyDi
 // __sanitizer_set_death_callback to pass us the death callback.
 extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
     void (*callback)()) {
-  fprintf(stderr,
-          "_______________________ inside __jazzer_set_death_callback with "
-          "callback %x\n",
-          callback);
   gLibfuzzerPrintCrashingInput = callback;
 #ifndef _WIN32
+  auto callCombinedCallback = []() {
+    ::jazzer::DumpJvmStackTraces();
+    if (gLibfuzzerPrintCrashingInput == nullptr) {
+      std::cerr << "<not available>" << std::endl;
+    } else {
+      gLibfuzzerPrintCrashingInput();
+    }
+    // Ideally, we would be able to perform a graceful shutdown of the
+    // JVM. However, doing this directly results in a nested bug report by
+    // ASan or UBSan, likely because something about the stack/thread
+    // context in which they generate reports is incompatible with the JVM
+    // shutdown process. use_sigaltstack=0 does not help though, so this
+    // might be on us.
+  };
   void *sanitizer_set_death_callback =
       dlsym(RTLD_DEFAULT, "__sanitizer_set_death_callback");
   if (sanitizer_set_death_callback != nullptr) {
     (reinterpret_cast<void (*)(void (*)())>(sanitizer_set_death_callback))(
-        []() {
-          ::jazzer::DumpJvmStackTraces();
-          gLibfuzzerPrintCrashingInput();
-          // Ideally, we would be able to perform a graceful shutdown of the
-          // JVM. However, doing this directly results in a nested bug report by
-          // ASan or UBSan, likely because something about the stack/thread
-          // context in which they generate reports is incompatible with the JVM
-          // shutdown process. use_sigaltstack=0 does not help though, so this
-          // might be on us.
-        });
+        callCombinedCallback);
   }
 #endif
 }
