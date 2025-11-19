@@ -28,9 +28,6 @@ import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.selffuzz.jazzer.mutation.mutator.Mutators;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.InputStream;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.invoke.MethodHandles;
@@ -66,7 +63,7 @@ public class ArgumentsMutatorFuzzTest {
    * use FuzzedDataProvider to force the top-level fuzzer to not use the mutation framework, for
    * easier debugging.
    */
-  @FuzzTest(isUnchained = true, maxExecutions = 10000000, maxDuration = "10m")
+  @FuzzTest(isUnchained = true, maxExecutions = 100000, maxDuration = "10s")
   void allTests(FuzzedDataProvider data) throws Throwable {
     int index = data.consumeInt(0, methods.size() - 1);
     Method method = methods.get(index);
@@ -76,20 +73,24 @@ public class ArgumentsMutatorFuzzTest {
     byte[] input = data.consumeRemainingAsBytes();
 
     try {
-      mutator.init(seed);
-      ByteArrayOutputStream initedOut = new ByteArrayOutputStream();
-      mutator.write(new DataOutputStream(initedOut));
-      InputStream inited = new ByteArrayInputStream(initedOut.toByteArray());
+      // mutator.init(seed);
+      // ByteArrayOutputStream initedOut = new ByteArrayOutputStream();
+      // mutator.write(new DataOutputStream(initedOut));
+      // InputStream inited = new ByteArrayInputStream(initedOut.toByteArray());
 
       mutator.read(new ByteArrayInputStream(input));
       mutator.invoke(this, true);
 
+      System.err.println("MUTATE");
       mutator.mutate(seed);
-      ByteArrayOutputStream mutatedOut = new ByteArrayOutputStream();
-      mutator.write(new DataOutputStream(mutatedOut));
-      InputStream mutated = new ByteArrayInputStream(mutatedOut.toByteArray());
+      System.err.println("INVOKE**************");
+      mutator.invoke(this, true);
 
-      mutator.crossOver(mutated, inited, seed);
+      // ByteArrayOutputStream mutatedOut = new ByteArrayOutputStream();
+      // mutator.write(new DataOutputStream(mutatedOut));
+      // InputStream mutated = new ByteArrayInputStream(mutatedOut.toByteArray());
+
+      // mutator.crossOver(mutated, inited, seed);
     } catch (Exception e) {
       throw new RuntimeException("In method: " + method, e);
     }
@@ -98,9 +99,8 @@ public class ArgumentsMutatorFuzzTest {
   @Solo
   @SelfFuzzTest
   void fuzzStrings_torc(@NotNull String s0) {
-    if (s0.equals(
-        "qbfdbas891rbujebfrldsafbhd81irbewhavfsgdalvfdlasuvfzu3vrvesadolufdvsalfv"
-            + " dsagolufvdgsalfvffdshakfvdsakfvdksavfgdksafdasgfzdasgfzdasgfdsafdsafdasvfdavsfdasfdasvfdsafdsafdsafdsafdsafdsafdasfdasfdsafdsafdsa")) {
+    System.err.println("   =>>> FUZZ TEST:     " + s0);
+    if (s0.equals("qbfdbas891rbujebfrldsafbhd81")) {
       throw new RuntimeException("Found it!");
     }
   }

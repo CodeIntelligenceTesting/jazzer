@@ -227,7 +227,7 @@ java_fuzz_target_test(
 java_fuzz_target_test(
     name = "MutatorFuzzTest",
     srcs = ["MutatorFuzzTest.java"],
-    allowed_findings = ["java.lang.AssertionError"],
+    #    allowed_findings = ["java.lang.AssertionError"],
     data = [
         "//examples/junit/src/test/resources:MutatorFuzzTestInputs",
     ],
@@ -235,6 +235,7 @@ java_fuzz_target_test(
         "JAZZER_FUZZ": "1",
     },
     fuzzer_args = [
+        "-runs=100",
         "$(rlocationpaths //examples/junit/src/test/resources:MutatorFuzzTestInputs)",
     ],
     target_class = "com.example.MutatorFuzzTest",

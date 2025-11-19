@@ -24,7 +24,9 @@ import com.code_intelligence.jazzer.mutation.api.Debuggable;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import com.code_intelligence.jazzer.mutation.mutator.torc.Torc;
+import com.code_intelligence.jazzer.mutation.mutator.torc.Torc.Pair;
 import com.code_intelligence.jazzer.mutation.support.RandomSupport;
+import com.google.common.primitives.Bytes;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.Immutable;
 import java.io.DataInputStream;
@@ -47,12 +49,12 @@ public final class LibFuzzerMutatorFactory {
   }
 
   private static final MutationFunction[] MUTATION_FUNCTIONS = {
-    LibFuzzerMutator::deleteRandomChunk,
+    /*     LibFuzzerMutator::deleteRandomChunk,
     LibFuzzerMutator::insertRandomByte,
     LibFuzzerMutator::insertRepeatedBytes,
     LibFuzzerMutator::changeByte,
-    LibFuzzerMutator::changeBit,
-    LibFuzzerMutator::insertTorcBytes
+    LibFuzzerMutator::changeBit, */
+    LibFuzzerMutator::replaceChunkByTorc
   };
 
   @CheckReturnValue
@@ -107,6 +109,7 @@ public final class LibFuzzerMutatorFactory {
 
     @Override
     public byte[] init(PseudoRandom prng) {
+      System.err.println("   INIT!!!");
       int len = prng.closedRange(minInitialSize(), maxInitialSize());
       byte[] bytes = new byte[len];
       prng.bytes(bytes);
@@ -197,20 +200,63 @@ public final class LibFuzzerMutatorFactory {
       return out;
     }
 
-    public static byte[] insertTorcBytes(byte[] value, int maxSizeIncrease, PseudoRandom prng) {
-      if (maxSizeIncrease == 0) {
+    /**
+     * Insert a chunk from the Torc ring buffer into the input at a random position. If the Torc
+     * ring buffer is empty, return the input unchanged. If the Torc chunk is larger than the input,
+     * resize the chunk to fit into the input at the chosen position.
+     */
+    public static byte[] replaceChunkByTorc(byte[] value, int maxSizeIncrease, PseudoRandom prng) {
+      Pair torcValues = Torc.get(prng);
+      if (torcValues == null) {
+        System.err.println("   --- Torc returned null or empty byte array");
         return value;
       }
-      byte[] torcBytes = Torc.get(prng);
-      if (torcBytes == null || torcBytes.length == 0) {
+
+      byte[] torcA = torcValues.operand1;
+      if (torcA == null || torcA.length == 0) {
+        System.err.println("   --- Torc A returned null or empty byte array");
         return value;
       }
-      int insertPos = prng.indexIn(value.length + 1);
-      int insertSize = Math.min(torcBytes.length, maxSizeIncrease);
-      byte[] out = new byte[value.length + insertSize];
-      System.arraycopy(value, 0, out, 0, insertPos);
-      System.arraycopy(torcBytes, 0, out, insertPos, insertSize);
-      System.arraycopy(value, insertPos, out, insertPos + insertSize, value.length - insertPos);
+      byte[] torcB = torcValues.operand2;
+      if (torcB == null || torcB.length == 0) {
+        System.err.println("   --- Torc  B returned null or empty byte array");
+        return value;
+      }
+
+      System.err.println(
+          "   --- Torc returned byte arrays of length " + torcA.length + " and " + torcB.length);
+      // also values
+      System.err.println("    -- input: " + Arrays.toString(value));
+      System.err.println("   --- Torc A: " + Arrays.toString(torcA));
+      System.err.println("   --- Torc B: " + Arrays.toString(torcB));
+
+      // overwrite
+      if (value.length == 0) {
+        return value;
+      }
+      int pos = prng.indexIn(value.length);
+      byte[] torcBytes = torcB;
+
+      // Try finding out if the input value contains torcA as a subsequence.
+      int aOffset = Bytes.indexOf(value, torcA);
+
+      if (aOffset >= 0) {
+        System.err.println("   --- [TORC] Torc found subsequence at offset " + aOffset);
+        pos = aOffset;
+      } else {
+        int bOffset = Bytes.indexOf(value, torcB);
+        if (bOffset >= 0) {
+          System.err.println("   --- [TORC] Torc found subsequence at offset " + bOffset);
+          pos = bOffset;
+          torcBytes = torcA;
+        }
+      }
+
+      int newSize =
+          Math.min(torcBytes.length, Math.max(value.length - pos, value.length + maxSizeIncrease));
+      byte[] out = Arrays.copyOf(value, newSize);
+      System.arraycopy(torcBytes, 0, out, pos, newSize - pos);
+      System.err.println("   --- Torc overwrote " + newSize + " bytes at position " + pos);
       return out;
     }
 

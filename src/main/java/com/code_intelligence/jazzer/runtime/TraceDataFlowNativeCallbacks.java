@@ -46,25 +46,15 @@ public final class TraceDataFlowNativeCallbacks {
 
   // public static native void traceMemcmp(byte[] b1, byte[] b2, int result, int pc);
   public static void traceMemcmp(byte[] b1, byte[] b2, int result, int pc) {
-    Torc.add(b1);
-    Torc.add(b2);
-    // System.out.println("traceMemcmp called with: "+ Arrays.toString(b1)+ ","
-    // +Arrays.toString(b2)+" , "+result+" , "+pc);
-
+    Torc.add(b1, b2);
   }
 
   public static void traceStrcmp(String s1, String s2, int result, int pc) {
-    if (NATIVE_INITIALIZED) {
-      // System.out.println("traceStrcmp called with: "+ s1+" , "+s2+" , "+result+" , "+pc);
-      traceMemcmp(encodeForLibFuzzer(s1), encodeForLibFuzzer(s2), result, pc);
-    }
+    traceMemcmp(encodeForLibFuzzer(s1), encodeForLibFuzzer(s2), result, pc);
   }
 
   public static void traceStrstr(String s1, String s2, int pc) {
-    if (NATIVE_INITIALIZED) {
-      // System.out.println("---traceStrstr called with: "+ s1+" , "+s2+" , "+pc);
-      traceStrstr0(encodeForLibFuzzer(s2), pc);
-    }
+    traceStrstr0(encodeForLibFuzzer(s2), pc);
   }
 
   public static void traceReflectiveCall(Executable callee, int pc) {
@@ -88,9 +78,11 @@ public final class TraceDataFlowNativeCallbacks {
 
   // The caller has to ensure that arg1 and arg2 have the same class.
   public static void traceGenericCmp(Object arg1, Object arg2, int pc) {
+    System.err.println("[]   -- Generic CMP " + arg1 + " vs " + arg2);
     if (arg1 instanceof CharSequence) {
       traceStrcmp(arg1.toString(), arg2.toString(), 1, pc);
     } else if (arg1 instanceof Integer) {
+      
       traceCmpInt((int) arg1, (int) arg2, pc);
     } else if (arg1 instanceof Long) {
       traceCmpLong((long) arg1, (long) arg2, pc);
@@ -141,7 +133,7 @@ public final class TraceDataFlowNativeCallbacks {
   private static byte[] encodeForLibFuzzer(String str) {
     // libFuzzer string hooks only ever consume the first 64 bytes, so we can definitely cut the
     // string off after 64 characters.
-    return str.substring(0, Math.min(str.length(), 64)).getBytes(FUZZED_DATA_CHARSET);
+    /*  */ return str.getBytes(FUZZED_DATA_CHARSET);
   }
 
   private static native void traceStrstr0(byte[] needle, int pc);

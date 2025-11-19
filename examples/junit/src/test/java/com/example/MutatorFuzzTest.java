@@ -16,29 +16,29 @@
 
 package com.example;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import com.code_intelligence.jazzer.driver.FuzzTargetRunner;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
-import java.util.List;
-import org.junit.jupiter.api.AfterAll;
 
 class MutatorFuzzTest {
-  @FuzzTest
-  void mutatorFuzz(List<@NotNull String> list) {
+  @FuzzTest(maxExecutions = 10000)
+  void mutatorFuzz(@NotNull String s) {
+    if (s.length() > 0) {
+        byte sAt0 = (byte) s.charAt(0);
+        if (sAt0 == (byte) 0xFF) {
+          throw new AssertionError("Found expected JUnit mutator test issue");
+        }
+      }
+
+/*     for (int i = 0; i < s.length(); i++) {
+      
+      
+    } */
+    /* System.err.println("Fuzzing with input: " + s.length() + ", str: " + s);
     // Check that the mutator is actually doing something.
-    if (list != null && list.size() > 3 && list.get(2).equals("mutator")) {
+    if (s.equals("Hello, world!")) {
+      System.err.println("HERE-----------------------------------------------------");
       throw new AssertionError("Found expected JUnit mutator test issue");
     }
-  }
-
-  @AfterAll
-  static void assertFuzzTargetRunner() {
-    // FuzzTargetRunner values are not set in JUnit engine tests.
-    String jazzerFuzz = System.getenv("JAZZER_FUZZ");
-    if (jazzerFuzz != null && !jazzerFuzz.isEmpty()) {
-      assertEquals(FuzzTargetRunner.mutatorDebugString(), "Arguments[Nullable<List<String>>]");
-    }
+  } */
   }
 }

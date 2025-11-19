@@ -192,7 +192,8 @@ final class StringMutatorFactory implements MutatorFactory {
                     } else {
                       fixUpUtf8(bytes);
                     }
-                    return new String(bytes, StandardCharsets.UTF_8);
+                    String result = new String(bytes, StandardCharsets.UTF_8);
+                    return result;
                   },
                   string -> string.getBytes(StandardCharsets.UTF_8),
                   (Predicate<Debuggable> inCycle) -> "String");

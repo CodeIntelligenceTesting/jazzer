@@ -521,6 +521,7 @@ public final class FuzzTargetRunner {
 
     // should stop is used to signal the fuzzer thread to stop
     boolean shouldStop = false;
+    boolean threadFinished = false;
 
     Thread fuzzerThread =
         new Thread(
@@ -674,23 +675,28 @@ public final class FuzzTargetRunner {
                 try {
                   Thread.sleep(maxDuration * 1000);
                 } catch (InterruptedException e) {
-                  e.printStackTrace();
+                  System.err.println("Duration thread stopping");
+                  return;
                 }
                 System.err.println("Max duration reached, stopping");
                 fuzzerThread.interrupt();
               });
-      durationThread.setDaemon(true);
       durationThread.start();
     }
 
     try {
       fuzzerThread.join();
     } catch (InterruptedException e) {
-      // stop duration thread
       if (durationThread != null) durationThread.interrupt();
       e.printStackTrace();
+    } finally {
+      if (durationThread != null) durationThread.interrupt();
     }
-
+    try {
+      durationThread.join();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     return 0;
   }
 
