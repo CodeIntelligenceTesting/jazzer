@@ -175,4 +175,15 @@ class RecordMutatorTest {
     assertThat(mutator.toString())
         .isEqualTo("[[List<Integer>] -> PropagateInnerTypeRecord] -> PropagateTypeRecord");
   }
+
+  record GenericRecord<T>(T t) {}
+
+  @Test
+  void testGenericRecord() {
+    SerializingMutator<GenericRecord<String>> mutator =
+        (SerializingMutator<GenericRecord<String>>)
+            Mutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull GenericRecord<String>>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("[Nullable<String>] -> GenericRecord");
+  }
 }

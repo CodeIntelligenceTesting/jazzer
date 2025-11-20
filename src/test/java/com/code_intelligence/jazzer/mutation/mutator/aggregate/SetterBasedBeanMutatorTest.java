@@ -223,4 +223,37 @@ class SetterBasedBeanMutatorTest {
         .isEqualTo(
             "[Integer, RecursionBreaking((cycle) -> RecursiveTypeBean)] -> RecursiveTypeBean");
   }
+
+  public static class Generic<T> {
+    T[] t;
+
+    public Generic() {}
+
+    public void setT(T[] t) {
+      this.t = t;
+    }
+
+    public T[] getT() {
+      return t;
+    }
+  }
+
+  @Test
+  void genericClass() {
+    SerializingMutator<Generic<String>> mutator =
+        (SerializingMutator<Generic<String>>)
+            Mutators.newFactory()
+                .createOrThrow(new TypeHolder<Generic<String>>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("Nullable<[Nullable<Nullable<String>[]>] -> Generic>");
+  }
+
+  public static class Child extends Generic<String> {}
+
+  @Test
+  void genericClassChild() {
+    SerializingMutator<Child> mutator =
+        (SerializingMutator<Child>)
+            Mutators.newFactory().createOrThrow(new TypeHolder<Child>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("Nullable<[Nullable<Nullable<String>[]>] -> Child>");
+  }
 }

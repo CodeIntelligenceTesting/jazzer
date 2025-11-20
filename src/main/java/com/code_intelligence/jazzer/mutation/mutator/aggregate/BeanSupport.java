@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 
+import static com.code_intelligence.jazzer.mutation.support.ParameterizedTypeSupport.resolveTypeArguments;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.getOrEmpty;
 import static com.code_intelligence.jazzer.mutation.support.StreamSupport.toArrayOrEmpty;
 import static java.util.Arrays.stream;
@@ -26,9 +27,13 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 import java.beans.Introspector;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -47,6 +52,42 @@ class BeanSupport {
     } catch (ClassNotFoundException ignored) {
       return Optional.empty();
     }
+  }
+
+  private static Class<?> rawType(Type classType) {
+    if (classType instanceof Class<?>) {
+      return (Class<?>) classType;
+    } else if (classType instanceof ParameterizedType) {
+      return rawType(((ParameterizedType) classType).getRawType());
+    } else if (classType instanceof GenericArrayType) {
+      return rawType(((GenericArrayType) classType).getGenericComponentType());
+    } else {
+      // Bail out on wildcard types or type variables.
+      throw new UnsupportedOperationException("Unsupported type: " + classType);
+    }
+  }
+
+  // Returns the annotated parameter types of a method or constructor resolving all generic type
+  // arguments.
+  public static AnnotatedType[] resolveAnnotatedParameterTypes(
+      Executable e, AnnotatedType classType) {
+    Class<?> clazz = rawType(classType.getType());
+    return stream(e.getAnnotatedParameterTypes())
+        .map(t -> resolveTypeArguments(clazz, classType, t))
+        .toArray(AnnotatedType[]::new);
+  }
+
+  // Returns the parameter types of a method or constructor resolving all generic type arguments.
+  public static Type[] resolveParameterTypes(Executable e, AnnotatedType classType) {
+    return stream(resolveAnnotatedParameterTypes(e, classType))
+        .map(AnnotatedType::getType)
+        .toArray(Type[]::new);
+  }
+
+  static Type resolveReturnType(Method method, AnnotatedType classType) {
+    return resolveTypeArguments(
+            rawType(classType.getType()), classType, method.getAnnotatedReturnType())
+        .getType();
   }
 
   static boolean isConcreteClass(Class<?> clazz) {
@@ -88,9 +129,11 @@ class BeanSupport {
         propertyNames.map(gettersByPropertyName::get).map(Optional::ofNullable), Method[]::new);
   }
 
-  static Optional<Method[]> findGettersByPropertyTypes(Class<?> clazz, Stream<Class<?>> types) {
-    Map<Class<?>, List<Method>> gettersByType =
-        findMethods(clazz, BeanSupport::isGetter).collect(groupingBy(Method::getReturnType));
+  static Optional<Method[]> findGettersByPropertyTypes(
+      Class<?> clazz, AnnotatedType classType, Stream<Type> types) {
+    Map<Type, List<Method>> gettersByType =
+        findMethods(clazz, BeanSupport::isGetter)
+            .collect(groupingBy(m -> resolveReturnType(m, classType)));
     return toArrayOrEmpty(
         types.map(
             type -> {
@@ -122,10 +165,10 @@ class BeanSupport {
     }
   }
 
-  static boolean matchingReturnTypes(Method[] methods, Type[] types) {
+  static boolean matchingReturnTypes(Method[] methods, AnnotatedType classType, Type[] types) {
     for (int i = 0; i < methods.length; i++) {
       // TODO: Support Optional<T> getters, which often have a corresponding T setter.
-      if (!methods[i].getAnnotatedReturnType().getType().equals(types[i])) {
+      if (!resolveReturnType(methods[i], classType).equals(types[i])) {
         return false;
       }
     }

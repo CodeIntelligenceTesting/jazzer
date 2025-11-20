@@ -363,6 +363,38 @@ public class StressTest {
     }
   }
 
+  public static class GenericImmutableBuilder<T> {
+    private final T t;
+
+    public GenericImmutableBuilder() {
+      t = null;
+    }
+
+    private GenericImmutableBuilder(T t) {
+      this.t = t;
+    }
+
+    public T getT() {
+      return t;
+    }
+
+    public GenericImmutableBuilder<T> setT(T t) {
+      return new GenericImmutableBuilder<T>(t);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      return Objects.equals(t, ((GenericImmutableBuilder<?>) o).t);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(t);
+    }
+  }
+
   public static class ConstructorBasedBean {
     private final boolean foo;
     private final String bar;
@@ -405,6 +437,31 @@ public class StressTest {
     }
   }
 
+  public static class GenericConstructorBasedBean<T> {
+    T t;
+
+    GenericConstructorBasedBean(T t) {
+      this.t = t;
+    }
+
+    public T getT() {
+      return t;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      GenericConstructorBasedBean<T> that = (GenericConstructorBasedBean<T>) o;
+      return Objects.equals(this.t, that.t);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(this.t);
+    }
+  }
+
   public static class OnlyConstructorBean {
     private final String foo;
     private final List<Integer> bar;
@@ -432,6 +489,27 @@ public class StressTest {
     @Override
     public String toString() {
       return "OnlyConstructorBean{" + "foo='" + foo + '\'' + ", bar=" + bar + ", baz=" + baz + '}';
+    }
+  }
+
+  public static class GenericOnlyConstructorBean<T> {
+    private final T t;
+
+    GenericOnlyConstructorBean(T t) {
+      this.t = t;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      GenericOnlyConstructorBean<T> that = (GenericOnlyConstructorBean<T>) o;
+      return Objects.equals(t, that.t);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(t);
     }
   }
 
@@ -890,14 +968,33 @@ public class StressTest {
             distinctElementsRatio(0.23),
             manyDistinctElements()),
         arguments(
+            new TypeHolder<@NotNull GenericImmutableBuilder<@NotNull String>>() {}.annotatedType(),
+            "[String] -> GenericImmutableBuilder",
+            false,
+            manyDistinctElements(),
+            manyDistinctElements()),
+        arguments(
             new TypeHolder<@NotNull ConstructorBasedBean>() {}.annotatedType(),
             "[Boolean, Nullable<String>, Integer] -> ConstructorBasedBean",
             false,
             manyDistinctElements(),
             manyDistinctElements()),
         arguments(
+            new TypeHolder<
+                @NotNull GenericConstructorBasedBean<@NotNull String>>() {}.annotatedType(),
+            "[String] -> GenericConstructorBasedBean",
+            false,
+            manyDistinctElements(),
+            manyDistinctElements()),
+        arguments(
             new TypeHolder<@NotNull OnlyConstructorBean>() {}.annotatedType(),
             "[Nullable<String>, Nullable<List<Nullable<Integer>>>, Boolean] -> OnlyConstructorBean",
+            false,
+            manyDistinctElements(),
+            manyDistinctElements()),
+        arguments(
+            new TypeHolder<@NotNull GenericOnlyConstructorBean<String>>() {}.annotatedType(),
+            "[Nullable<String>] -> GenericOnlyConstructorBean",
             false,
             manyDistinctElements(),
             manyDistinctElements()),
