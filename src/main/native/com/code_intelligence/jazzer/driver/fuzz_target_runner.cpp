@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <atomic>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -50,6 +51,18 @@ jboolean gUseMutatorFramework;
 // A libFuzzer-registered callback that outputs the crashing input, but does
 // not include a stack trace.
 void (*gLibfuzzerPrintCrashingInput)() = nullptr;
+std::atomic<bool> gHasPrintedCrashingInput{false};
+
+void PrintAndDedupCrashingInput() {
+  if (gLibfuzzerPrintCrashingInput == nullptr) {
+    std::cerr << "<not available>" << std::endl;
+    return;
+  }
+  bool alreadyPrinted = gHasPrintedCrashingInput.exchange(true);
+  if (!alreadyPrinted) {
+    gLibfuzzerPrintCrashingInput();
+  }
+}
 
 int testOneInput(const uint8_t *data, const std::size_t size) {
   JNIEnv &env = *gEnv;
@@ -198,11 +211,13 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_printAndDumpC
   fprintf(stderr,
           "[jazzer_driver] printAndDumpCrashingInput invoked (callback=%p)\n",
           gLibfuzzerPrintCrashingInput);
-  if (gLibfuzzerPrintCrashingInput == nullptr) {
-    std::cerr << "<not available>" << std::endl;
-  } else {
-    gLibfuzzerPrintCrashingInput();
-  }
+  PrintAndDedupCrashingInput();
+}
+
+extern "C" [[maybe_unused]] void jazzer_report_fatal_error_from_preload() {
+  fprintf(stderr,
+          "[jazzer_driver] jazzer_report_fatal_error_from_preload invoked\n");
+  PrintAndDedupCrashingInput();
 }
 
 namespace fuzzer {
@@ -223,8 +238,7 @@ Java_com_code_1intelligence_jazzer_runtime_FuzzTargetRunnerNatives_temporarilyDi
 // __sanitizer_set_death_callback to pass us the death callback.
 extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
     void (*callback)()) {
-  fprintf(stderr,
-          "[jazzer_driver] __jazzer_set_death_callback received %p\n",
+  fprintf(stderr, "[jazzer_driver] __jazzer_set_death_callback received %p\n",
           callback);
   gLibfuzzerPrintCrashingInput = callback;
 #ifndef _WIN32
@@ -234,11 +248,7 @@ extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
             "(callback=%p)\n",
             gLibfuzzerPrintCrashingInput);
     ::jazzer::DumpJvmStackTraces();
-    if (gLibfuzzerPrintCrashingInput == nullptr) {
-      std::cerr << "<not available>" << std::endl;
-    } else {
-      gLibfuzzerPrintCrashingInput();
-    }
+    PrintAndDedupCrashingInput();
     // Ideally, we would be able to perform a graceful shutdown of the
     // JVM. However, doing this directly results in a nested bug report by
     // ASan or UBSan, likely because something about the stack/thread
@@ -246,6 +256,17 @@ extern "C" [[maybe_unused]] void __jazzer_set_death_callback(
     // shutdown process. use_sigaltstack=0 does not help though, so this
     // might be on us.
   };
+  void *register_callback =
+      dlsym(RTLD_DEFAULT, "jazzer_register_libfuzzer_death_callback");
+  if (register_callback != nullptr) {
+    fprintf(stderr,
+            "[jazzer_driver] registering combined callback via "
+            "jazzer_register_libfuzzer_death_callback=%p\n",
+            register_callback);
+    reinterpret_cast<void (*)(void (*)())>(register_callback)(
+        callCombinedCallback);
+    return;
+  }
   void *sanitizer_set_death_callback =
       dlsym(RTLD_DEFAULT, "__sanitizer_set_death_callback");
   if (sanitizer_set_death_callback != nullptr) {
