@@ -246,4 +246,14 @@ class SetterBasedBeanMutatorTest {
                 .createOrThrow(new TypeHolder<Generic<String>>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Nullable<[Nullable<Nullable<String>[]>] -> Generic>");
   }
+
+  public static class Child extends Generic<String> {}
+
+  @Test
+  void genericClassChild() {
+    SerializingMutator<Child> mutator =
+        (SerializingMutator<Child>)
+            Mutators.newFactory().createOrThrow(new TypeHolder<Child>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("Nullable<[Nullable<Nullable<String>[]>] -> Child>");
+  }
 }
