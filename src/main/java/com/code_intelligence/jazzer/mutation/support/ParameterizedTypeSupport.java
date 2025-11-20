@@ -64,21 +64,50 @@ public class ParameterizedTypeSupport {
    */
   public static AnnotatedType resolveTypeArguments(
       Class<?> clazz, AnnotatedType classType, AnnotatedType type) {
-    if (!(classType instanceof AnnotatedParameterizedType)) {
+    Map<TypeVariable<?>, AnnotatedType> mapping = new HashMap<>();
+    updateTypeMappings(clazz, classType, mapping);
+    if (mapping.isEmpty()) {
       return type;
     }
-
-    TypeVariable<?>[] typeParameters = clazz.getTypeParameters();
-    AnnotatedType[] typeArguments =
-        ((AnnotatedParameterizedType) classType).getAnnotatedActualTypeArguments();
-
-    require(typeArguments.length == typeParameters.length);
-
-    Map<TypeVariable<?>, AnnotatedType> mapping = new HashMap<>();
-    for (int i = 0; i < typeParameters.length; i++) {
-      mapping.put(typeParameters[i], typeArguments[i]);
-    }
     return resolveRecursive(type.getType(), type, mapping);
+  }
+
+  private static void updateTypeMappings(
+      Class<?> clazz,
+      AnnotatedType annotatedClazzType,
+      Map<TypeVariable<?>, AnnotatedType> mapping) {
+    if (annotatedClazzType instanceof AnnotatedParameterizedType) {
+      TypeVariable<?>[] typeParameters = clazz.getTypeParameters();
+      AnnotatedType[] typeArguments =
+          ((AnnotatedParameterizedType) annotatedClazzType).getAnnotatedActualTypeArguments();
+      require(typeArguments.length == typeParameters.length);
+      for (int i = 0; i < typeParameters.length; i++) {
+        mapping.put(typeParameters[i], typeArguments[i]);
+      }
+    }
+
+    Class<?> superClass = clazz.getSuperclass();
+    AnnotatedType annotatedSuperclass = clazz.getAnnotatedSuperclass();
+    Type genericSuperclass = clazz.getGenericSuperclass();
+    if (superClass != null && annotatedSuperclass != null && genericSuperclass != null) {
+      AnnotatedType resolvedSuperclass =
+          resolveRecursive(genericSuperclass, annotatedSuperclass, mapping);
+      updateTypeMappings(superClass, resolvedSuperclass, mapping);
+    }
+
+    Class<?>[] interfaces = clazz.getInterfaces();
+    AnnotatedType[] annotatedInterfaces = clazz.getAnnotatedInterfaces();
+    Type[] genericInterfaces = clazz.getGenericInterfaces();
+    for (int i = 0; i < interfaces.length; i++) {
+      AnnotatedType annotatedInterface = annotatedInterfaces[i];
+      Type genericInterface = genericInterfaces[i];
+      if (annotatedInterface == null || genericInterface == null) {
+        continue;
+      }
+      AnnotatedType resolvedInterface =
+          resolveRecursive(genericInterface, annotatedInterface, mapping);
+      updateTypeMappings(interfaces[i], resolvedInterface, mapping);
+    }
   }
 
   /**
@@ -106,6 +135,10 @@ public class ParameterizedTypeSupport {
       AnnotatedType replacement = mapping.get(type);
       if (replacement == null) {
         return annotated;
+      }
+      if (replacement instanceof AnnotatedWildcardType) {
+        // Forwarding annotations to wildcard types is not supported
+        return replacement;
       }
       return TypeSupport.forwardAnnotations(annotated, replacement);
     }
