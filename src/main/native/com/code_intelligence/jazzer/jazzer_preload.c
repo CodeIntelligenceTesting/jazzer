@@ -209,6 +209,12 @@ static _Atomic abort_t abort_real;
 typedef void (*asan_error_callback_t)(const char *);
 static _Atomic asan_error_callback_t asan_error_callback_real;
 
+typedef void (*death_callback_t)(void);
+typedef void (*set_death_callback_t)(death_callback_t);
+static _Atomic death_callback_t jazzer_libfuzzer_death_callback;
+static _Atomic death_callback_t chained_sanitizer_death_callback;
+static _Atomic set_death_callback_t set_death_callback_real;
+
 typedef struct {
   uint8_t *start;
   uint8_t *end;
@@ -228,6 +234,40 @@ static pthread_mutex_t pending_cov_pcs_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cov_pcs_range_t *pending_cov_pcs_ranges = NULL;
 static size_t pending_cov_pcs_range_count = 0;
 static size_t pending_cov_pcs_range_capacity = 0;
+
+static set_death_callback_t load_set_death_callback_real(void) {
+  set_death_callback_t real =
+      atomic_load_explicit(&set_death_callback_real, memory_order_acquire);
+  if (LIKELY(real != NULL)) {
+    return real;
+  }
+  real = dlsym(RTLD_NEXT, "__sanitizer_set_death_callback");
+  if (real == NULL) {
+    return NULL;
+  }
+  atomic_store_explicit(&set_death_callback_real, real, memory_order_release);
+  return real;
+}
+
+static void jazzer_combined_death_callback(void) {
+  death_callback_t jazzer_cb = atomic_load_explicit(
+      &jazzer_libfuzzer_death_callback, memory_order_relaxed);
+  if (jazzer_cb != NULL) {
+    jazzer_cb();
+  }
+  death_callback_t chained_cb = atomic_load_explicit(
+      &chained_sanitizer_death_callback, memory_order_relaxed);
+  if (chained_cb != NULL) {
+    chained_cb();
+  }
+}
+
+static void reinstall_combined_death_callback(void) {
+  set_death_callback_t real = load_set_death_callback_real();
+  if (real != NULL) {
+    real(jazzer_combined_death_callback);
+  }
+}
 
 static void append_cov_8bit_range(uint8_t *start, uint8_t *end) {
   pthread_mutex_lock(&pending_cov_8bit_mutex);
@@ -386,6 +426,21 @@ __attribute__((visibility("default"))) void jazzer_preload_init(void *handle) {
       atomic_load_explicit(&cov_8bit_counters_init, memory_order_relaxed));
   flush_cov_pcs_ranges(
       atomic_load_explicit(&cov_pcs_init, memory_order_relaxed));
+  reinstall_combined_death_callback();
+}
+
+__attribute__((visibility("default"))) void
+jazzer_register_libfuzzer_death_callback(void (*callback)(void)) {
+  atomic_store_explicit(&jazzer_libfuzzer_death_callback, callback,
+                        memory_order_relaxed);
+  reinstall_combined_death_callback();
+}
+
+__attribute__((visibility("default"))) void __sanitizer_set_death_callback(
+    void (*callback)(void)) {
+  atomic_store_explicit(&chained_sanitizer_death_callback, callback,
+                        memory_order_relaxed);
+  reinstall_combined_death_callback();
 }
 
 static abort_t load_abort_real(void) {
