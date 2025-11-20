@@ -744,6 +744,7 @@ public final class TraceCmpHooks {
     if (returnValue) return;
     byte[] first = (byte[]) arguments[0];
     byte[] second = (byte[]) arguments[1];
+    if (first == null || second == null) return;
     TraceDataFlowNativeCallbacks.traceMemcmp(first, second, 1, hookId);
   }
 
@@ -777,6 +778,7 @@ public final class TraceCmpHooks {
     if (returnValue == 0) return;
     byte[] first = (byte[]) arguments[0];
     byte[] second = (byte[]) arguments[1];
+    if (first == null || second == null) return;
     TraceDataFlowNativeCallbacks.traceMemcmp(first, second, returnValue, hookId);
   }
 
