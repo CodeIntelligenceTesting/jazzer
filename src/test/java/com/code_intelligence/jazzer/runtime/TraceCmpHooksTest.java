@@ -52,4 +52,13 @@ public class TraceCmpHooksTest {
     // noinspection ResultOfMethodCallIgnored
     ES.awaitTermination(5, TimeUnit.SECONDS);
   }
+
+  @Test
+  public void handlesNullValuesInArrayCompare() {
+    byte[] b1 = new byte[10];
+    byte[] b2 = null;
+    // Make sure we don't crash the JVM on null arrays.
+    TraceCmpHooks.arraysEquals(null, null, new Object[] {b1, b2}, 1, false);
+    TraceCmpHooks.arraysCompare(null, null, new Object[] {b1, b2}, 1, 1);
+  }
 }
