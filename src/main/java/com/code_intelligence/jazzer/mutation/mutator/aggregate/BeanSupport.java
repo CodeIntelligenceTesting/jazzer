@@ -32,6 +32,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -52,17 +53,27 @@ class BeanSupport {
     }
   }
 
+  private static Class<?> rawBeanType(Type classType) {
+    if (classType instanceof Class<?>) {
+      return (Class<?>) classType;
+    } else if (classType instanceof ParameterizedType) {
+      return rawBeanType(((ParameterizedType) classType).getRawType());
+    } else {
+      // Bail out on wildcard types or type variables neither of which are supported as "top level"
+      // types in a @FuzzTest. Also bail out on generic array types as they are handled by the
+      // ArrayMutatorFactory.
+      throw new UnsupportedOperationException("Unsupported type: " + classType);
+    }
+  }
+
   // Returns the annotated parameter types of a method or constructor resolving all generic type
   // arguments.
   public static AnnotatedType[] resolveAnnotatedParameterTypes(
       Executable e, AnnotatedType classType) {
-    Type[] generic = e.getGenericParameterTypes();
-    AnnotatedType[] annotated = e.getAnnotatedParameterTypes();
-    AnnotatedType[] result = new AnnotatedType[generic.length];
-    for (int i = 0; i < generic.length; i++) {
-      result[i] = resolveTypeArguments(e.getDeclaringClass(), classType, annotated[i]);
-    }
-    return result;
+    Class<?> clazz = rawBeanType(classType.getType());
+    return stream(e.getAnnotatedParameterTypes())
+        .map(t -> resolveTypeArguments(clazz, classType, t))
+        .toArray(AnnotatedType[]::new);
   }
 
   // Returns the parameter types of a method or constructor resolving all generic type arguments.
@@ -74,7 +85,7 @@ class BeanSupport {
 
   static Type resolveReturnType(Method method, AnnotatedType classType) {
     return resolveTypeArguments(
-            method.getDeclaringClass(), classType, method.getAnnotatedReturnType())
+            rawBeanType(classType.getType()), classType, method.getAnnotatedReturnType())
         .getType();
   }
 
