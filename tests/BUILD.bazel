@@ -693,6 +693,18 @@ java_binary(
 )
 
 java_binary(
+    name = "ObjectInputStreamFuzzer",
+    srcs = ["src/test/java/com/example/ObjectInputStreamFuzzer.java"],
+    main_class = "com.example.ObjectInputStreamFuzzer",
+)
+
+java_binary(
+    name = "ZipFuzzer",
+    srcs = ["src/test/java/com/example/ZipFuzzer.java"],
+    main_class = "com.example.ZipFuzzer",
+)
+
+java_binary(
     name = "AsmOOM",
     srcs = ["src/test/java/com/example/AsmClassReaderFuzzer.java"],
     main_class = "com.example.AsmClassReaderFuzzer",
