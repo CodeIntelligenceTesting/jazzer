@@ -9,7 +9,10 @@ java_library(
 java_binary(
     name = "ExampleFuzzTests",
     testonly = True,
-    srcs = glob(["*.java"]),
+    srcs = glob(
+        ["*.java"],
+        exclude = ["TestSuccessfulException.java"],
+    ),
     create_executable = False,
     visibility = [
         "//src/test/java/com/code_intelligence/jazzer/junit:__pkg__",
