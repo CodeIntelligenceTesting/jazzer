@@ -94,7 +94,7 @@ jobs:
           path: _tmp/jazzer.jar
           if-no-files-found: error
 
-  maven_predeploy:
+  maven_deploy:
     runs-on: ubuntu-22.04
     needs: merge_jars
 
@@ -128,16 +128,31 @@ jobs:
         env:
           RELEASE_SIGNING_KEY_ID: ${{ secrets.RELEASE_SIGNING_KEY_ID }}
           RELEASE_SIGNING_KEY_PRIVATE: ${{ secrets.RELEASE_SIGNING_KEY_PRIVATE }}
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-        run: JAZZER_JAR_PATH="$(pwd)/_tmp/jazzer.jar" bazel run deploy
+        run: |
+          JAZZER_JAR_PATH="$(pwd)/_tmp/jazzer.jar" bazel run deploy
+          cd _tmp
+          tar -czvf jazzer-maven-central-bundle.tar.gz -C release com
 
+      # In case something goes wrong, we can still reupload the bundle manually
       - name: Upload Jazzer Bundle to Github Artifacts
         uses: actions/upload-artifact@v5
         with:
           name: jazzer-maven-central-bundle
-          path: _tmp/release
+          path: _tmp/jazzer-maven-central-bundle.tar.gz
           if-no-files-found: error
+          # don't wrap .tar.gz in a .zip
+          compression-level: 0
+
+      - name: Deploy to Maven Central
+        shell: bash
+        run: |
+          TAG=${{ github.ref_name }}
+          curl --request POST \
+                --verbose \
+                --fail-with-body \
+                --header "Authorization: Bearer ${{ secrets.SONATYPE_BEARER_TOKEN }}" \
+                --form bundle=@_tmp/jazzer-maven-central-bundle.tar.gz \
+                "https://central.sonatype.com/api/v1/publisher/upload?name=Jazzer%20${TAG#v}&publishingType=AUTOMATIC"
 
   create_release:
     needs: build_release
