@@ -27,18 +27,23 @@ import com.code_intelligence.jazzer.mutation.mutator.lang.LangMutators;
 import com.code_intelligence.jazzer.mutation.mutator.libfuzzer.LibFuzzerMutators;
 import com.code_intelligence.jazzer.mutation.mutator.proto.ProtoMutators;
 import com.code_intelligence.jazzer.mutation.mutator.time.TimeMutators;
+import com.code_intelligence.jazzer.mutation.support.ValuePoolRegistry;
 import java.util.stream.Stream;
 
 public final class Mutators {
   private Mutators() {}
 
   public static ExtendedMutatorFactory newFactory() {
+    return newFactory(null);
+  }
+
+  public static ExtendedMutatorFactory newFactory(ValuePoolRegistry valuePoolRegistry) {
     return ChainedMutatorFactory.of(
         new IdentityCache(),
         NonNullableMutators.newFactories(),
-        LangMutators.newFactories(),
+        LangMutators.newFactories(valuePoolRegistry),
         CollectionMutators.newFactories(),
-        ProtoMutators.newFactories(),
+        ProtoMutators.newFactories(valuePoolRegistry),
         LibFuzzerMutators.newFactories(),
         TimeMutators.newFactories(),
         // Keep generic aggregate mutators last in case a concrete type is also an aggregate type.

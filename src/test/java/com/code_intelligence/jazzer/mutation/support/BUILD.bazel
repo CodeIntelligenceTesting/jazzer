@@ -30,6 +30,8 @@ java_test_suite(
     runner = "junit5",
     deps = [
         ":test_support",
+        "//deploy:jazzer-project",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
         "//src/main/java/com/code_intelligence/jazzer/mutation/support",
         "//src/main/java/com/code_intelligence/jazzer/mutation/utils",
