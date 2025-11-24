@@ -34,9 +34,19 @@ public class ServerSideRequestForgery {
   public static final AtomicReference<BiPredicate<String, Integer>> connectionPermitted =
       new AtomicReference<>((host, port) -> true);
 
-  // Disallow all connections right before the first fuzz target is executed.
   static {
-    Jazzer.onFuzzTargetReady(() -> connectionPermitted.set((host, port) -> false));
+    // Disallow all connections right before the first fuzz target is executed, if the user has not
+    // specifically opted into permissive behavior.
+    // In multithreaded fuzzing scenarios, a network request can be made after the fuzzing has
+    // started but before a user had a chance to call BugDetectors.allowNetworkConnections().
+    if (!permissivelyParseBoolean(System.getenv("JAZZER_SSRF_PERMISSIVE_UNTIL_CONFIGURED"))) {
+      Jazzer.onFuzzTargetReady(() -> connectionPermitted.set((host, port) -> false));
+    }
+  }
+
+  static boolean permissivelyParseBoolean(String value) {
+    return value != null
+        && (value.equalsIgnoreCase("true") || value.equals("1") || value.equalsIgnoreCase("yes"));
   }
 
   /**
@@ -132,7 +142,10 @@ public class ServerSideRequestForgery {
                       + "If the fuzz test is expected to perform network connections, call"
                       + " com.code_intelligence.jazzer.api.BugDetectors#allowNetworkConnections at"
                       + " the beginning of your fuzz test and optionally provide a predicate"
-                      + " matching the expected hosts.",
+                      + " matching the expected hosts.\n\n"
+                      + "In multithreaded fuzzing scenarios consider using the environment variable"
+                      + " JAZZER_SSRF_PERMISSIVE_UNTIL_CONFIGURED to allow all connections until"
+                      + " the fuzz test has been configured to allow specific connections.",
                   host, port)));
     }
   }
