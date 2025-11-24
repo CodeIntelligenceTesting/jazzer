@@ -125,6 +125,9 @@ Some parameters only have an effect when used with standalone Jazzer binary (mar
   - In regression mode, controls which folders are used for coverage computation.
     - `false` (default): Use only thej crash file folder.
 	- `true`: Use both the crash file folder and the corpus folder.
+- **JAZZER_SSRF_PERMISSIVE_UNTIL_CONFIGURED** [bool, default=""] (*environment variable only*)
+  - When set to a truthy value, the ServerSideRequestForgery sanitizer will allow all outgoing requests until it is explicitly configured with allowed hosts in the fuzz test.
+  This is useful to avoid false positives in multithreaded applications that make network requests during initialization.
 
 - **keep_going** [uint64, default="1"]
   - Number of distinct findings after which the fuzzer should stop.
