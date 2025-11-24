@@ -21,6 +21,16 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "CharFuzzer",
+    srcs = [
+        "src/test/java/com/example/CharFuzzer.java",
+    ],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    target_class = "com.example.CharFuzzer",
+    verify_crash_reproducer = False,
+)
+
+java_fuzz_target_test(
     name = "JpegImageParserAutofuzz",
     allowed_findings = ["java.lang.NegativeArraySizeException"],
     fuzzer_args = [
