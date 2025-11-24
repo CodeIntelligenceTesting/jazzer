@@ -126,6 +126,10 @@ Some parameters only have an effect when used with standalone Jazzer binary (mar
     - `false` (default): Use only thej crash file folder.
 	- `true`: Use both the crash file folder and the corpus folder.
 
+- **JAZZER_SSRF_PERMISSIVE_UNTIL_CONFIGURED** [bool, default="false"] (*environment variable only*)
+  - When set to `true`, the SSRF sanitizer will allow all outgoing requests until it is explicitly configured with BugDetectors.allowNetworkConnections(...).
+  This is useful to avoid false positives in multithreaded applications that make network requests after the fuzzing has started, but before the user had a chance to configure the sanitizer.
+
 - **keep_going** [uint64, default="1"]
   - Number of distinct findings after which the fuzzer should stop.
   See [here](advanced.md#keep-going) for more details.
