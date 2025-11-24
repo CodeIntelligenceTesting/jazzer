@@ -112,6 +112,39 @@ final class IntegralMutatorFactory implements MutatorFactory {
               out.writeShort(value);
             }
           });
+    } else if (clazz == char.class || clazz == Character.class) {
+      return Optional.of(
+          new AbstractIntegralMutator<Character>(type, Character.MIN_VALUE, Character.MAX_VALUE) {
+            @Override
+            protected long mutateWithLibFuzzer(long value) {
+              return LibFuzzerMutate.mutateDefault((char) value, this, 0);
+            }
+
+            @Override
+            public Character init(PseudoRandom prng) {
+              return (char) initImpl(prng);
+            }
+
+            @Override
+            public Character mutate(Character value, PseudoRandom prng) {
+              return (char) mutateImpl(value, prng);
+            }
+
+            @Override
+            public Character crossOver(Character value, Character otherValue, PseudoRandom prng) {
+              return (char) crossOverImpl(value, otherValue, prng);
+            }
+
+            @Override
+            public Character read(DataInputStream in) throws IOException {
+              return (char) forceInRange(in.readChar());
+            }
+
+            @Override
+            public void write(Character value, DataOutputStream out) throws IOException {
+              out.writeChar(value);
+            }
+          });
     } else if (clazz == int.class || clazz == Integer.class) {
       return Optional.of(
           new AbstractIntegralMutator<Integer>(type, Integer.MIN_VALUE, Integer.MAX_VALUE) {
@@ -189,7 +222,7 @@ final class IntegralMutatorFactory implements MutatorFactory {
   // Copyright 2022 Google LLC
   //
   // Visible for testing.
-  abstract static class AbstractIntegralMutator<T extends Number> extends SerializingMutator<T> {
+  abstract static class AbstractIntegralMutator<T> extends SerializingMutator<T> {
     private static final long RANDOM_WALK_RANGE = 5;
     private final long minValue;
     private final long maxValue;

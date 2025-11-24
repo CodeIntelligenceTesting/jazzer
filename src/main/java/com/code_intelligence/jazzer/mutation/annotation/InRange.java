@@ -38,6 +38,8 @@ import java.lang.annotation.Target;
   Byte.class,
   short.class,
   Short.class,
+  char.class,
+  Character.class,
   int.class,
   Integer.class,
   long.class,

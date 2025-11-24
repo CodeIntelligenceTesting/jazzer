@@ -777,6 +777,22 @@ public class StressTest {
                 1 << Short.SIZE, NUM_INITS * NUM_MUTATE_PER_INIT * 9 / 10)),
         arguments(
             new ParameterHolder() {
+              void singleParam(char parameter) {}
+            }.annotatedType(),
+            "Character",
+            true,
+            // init is heavily biased towards special values and only returns a uniformly random
+            // value in 1 out of 5 calls.
+            all(
+                expectedNumberOfDistinctElements(1 << Character.SIZE, boundHits(NUM_INITS, 0.2)),
+                contains((char) 1, Character.MIN_VALUE, Character.MAX_VALUE)),
+            // The integral type mutator does not always return uniformly random values and the
+            // random walk it uses is more likely to produce non-distinct elements, hence the test
+            // only passes with ~90% of the optimal parameters.
+            expectedNumberOfDistinctElements(
+                1 << Character.SIZE, NUM_INITS * NUM_MUTATE_PER_INIT * 9 / 10)),
+        arguments(
+            new ParameterHolder() {
               void singleParam(int parameter) {}
             }.annotatedType(),
             "Integer",
