@@ -488,13 +488,7 @@ public final class TypeSupport {
               if (typeArguments.size() != 1) {
                 return Optional.empty();
               } else {
-                AnnotatedType elementType = typeArguments.get(0);
-                if (!(elementType.getType() instanceof ParameterizedType)
-                    && !(elementType.getType() instanceof Class)) {
-                  return Optional.empty();
-                } else {
-                  return Optional.of(elementType);
-                }
+                return Optional.of(typeArguments.get(0));
               }
             });
   }

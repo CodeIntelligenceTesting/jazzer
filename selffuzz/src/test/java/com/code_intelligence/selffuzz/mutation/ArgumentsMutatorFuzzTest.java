@@ -16,6 +16,7 @@
 
 package com.code_intelligence.selffuzz.mutation;
 
+import static com.code_intelligence.selffuzz.jazzer.mutation.utils.PropertyConstraint.RECURSIVE;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
@@ -23,6 +24,7 @@ import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.jazzer.protobuf.Proto2;
 import com.code_intelligence.jazzer.protobuf.Proto3;
 import com.code_intelligence.selffuzz.jazzer.mutation.ArgumentsMutator;
+import com.code_intelligence.selffuzz.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.WithLength;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.WithSize;
@@ -289,6 +291,25 @@ public class ArgumentsMutatorFuzzTest {
               arrayOfArraysOfListOfIntegers) {
     assertThat(arrayOfListOfStrings.length).isAtMost(4);
     assertThat(arrayOfArraysOfListOfIntegers.length).isAtMost(2);
+  }
+
+  @SelfFuzzTest
+  public static void fuzzListOfGenericArrays(
+      @NotNull(constraint = RECURSIVE)
+          @WithSize(min = 1, max = 1, constraint = RECURSIVE)
+          @WithLength(min = 1, max = 1, constraint = RECURSIVE)
+          @InRange(min = 2, max = 3, constraint = RECURSIVE)
+          List<List<Integer>[]> lofGenericArrays) {
+    // Make sure all annotations are respected.
+    assertThat(lofGenericArrays.size()).isEqualTo(1);
+    for (List<Integer>[] array : lofGenericArrays) {
+      assertThat(array.length).isEqualTo(1);
+      for (List<Integer> list : array) {
+        assertThat(list.size()).isEqualTo(1);
+        assertThat(list.get(0)).isAtLeast(2);
+        assertThat(list.get(0)).isAtMost(3);
+      }
+    }
   }
 
   /**
