@@ -47,11 +47,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -553,5 +555,18 @@ class TypeSupportTest {
   void testForwardAnnotations_withExcludes(
       AnnotatedType src, AnnotatedType target, Annotation[] excludes, AnnotatedType expected) {
     assertThat(forwardAnnotations(src, target, excludes)).isEqualTo(expected);
+  }
+
+  @Test
+  void testParameterTypeIfParameterizedList() {
+    AnnotatedType type = new TypeHolder<List<List<Integer>[]>>() {}.annotatedType();
+    Optional<AnnotatedType> parameterType =
+        TypeSupport.parameterTypeIfParameterized(type, List.class);
+    if (!parameterType.isPresent()
+        || !(parameterType.get().getType() instanceof GenericArrayType)) {
+      throw new AssertionError("Expected to find a GenericArrayType as parameter type.");
+    }
+    AnnotatedType expectedParameterType = new TypeHolder<List<Integer>[]>() {}.annotatedType();
+    assertThat(annotatedTypeEquals(parameterType.get(), expectedParameterType)).isTrue();
   }
 }
