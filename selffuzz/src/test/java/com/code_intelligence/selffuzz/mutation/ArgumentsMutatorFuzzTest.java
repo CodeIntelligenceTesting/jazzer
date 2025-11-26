@@ -57,8 +57,17 @@ public class ArgumentsMutatorFuzzTest {
 
   static {
     System.out.println("Found " + methods.size() + " @SelfFuzzTest methods.");
-    for (Method method : methods) {
-      System.out.println(" - " + method);
+    for (int i = 0; i < methods.size(); i++) {
+      System.out.print(" - " + methods.get(i).getName() + "(");
+      Class<?>[] paramTypes = methods.get(i).getParameterTypes();
+      for (int j = 0; j < paramTypes.length; j++) {
+        System.out.print(paramTypes[j].getSimpleName());
+        if (j < paramTypes.length - 1) {
+          System.out.print(", ");
+        }
+      }
+      System.out.println(")");
+      System.out.println("   -> " + mutators.get(i));
     }
     assertThat(methods).isNotEmpty();
   }
