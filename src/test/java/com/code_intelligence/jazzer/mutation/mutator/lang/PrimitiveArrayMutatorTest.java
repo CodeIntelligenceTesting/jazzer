@@ -86,7 +86,7 @@ public class PrimitiveArrayMutatorTest {
   static Function<char[], byte[]> charsToBytes =
       (Function<char[], byte[]>) makePrimitiveArrayToBytesConverter(annotatedType_char);
   static Function<byte[], char[]> bytesToChars =
-      getCharPrimitiveArray(Character.MIN_VALUE, Character.MAX_VALUE);
+      getCharPrimitiveArray(Character.MIN_VALUE, Character.MAX_VALUE, 0, 1000);
 
   static Function<boolean[], byte[]> booleansToBytes =
       (Function<boolean[], byte[]>) makePrimitiveArrayToBytesConverter(annotatedType_boolean);
@@ -305,7 +305,7 @@ public class PrimitiveArrayMutatorTest {
   @ParameterizedTest
   @MethodSource("bytes2charsTestCases")
   void testArrayConversion_bytes2chars(byte[] input, char[] expected, long min, long max) {
-    Function<byte[], char[]> fn = getCharPrimitiveArray(min, max);
+    Function<byte[], char[]> fn = getCharPrimitiveArray(min, max, 0, 100);
     assertThat(fn.apply(input)).isEqualTo(expected);
   }
 

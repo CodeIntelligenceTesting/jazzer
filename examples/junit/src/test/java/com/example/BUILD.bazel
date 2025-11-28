@@ -225,6 +225,23 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "CharArrayWithLengthFuzzTest",
+    srcs = ["CharArrayWithLengthFuzzTest.java"],
+    allowed_findings = ["java.lang.RuntimeException"],
+    tags = ["no-jdk8"],
+    target_class = "com.example.CharArrayWithLengthFuzzTest",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        ":junit_runtime",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+java_fuzz_target_test(
     name = "MutatorFuzzTest",
     srcs = ["MutatorFuzzTest.java"],
     allowed_findings = ["java.lang.AssertionError"],
