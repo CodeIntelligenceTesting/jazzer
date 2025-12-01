@@ -26,6 +26,7 @@ import org.junit.After;
 import org.junit.Test;
 
 public class DisabledHooksTest {
+  @SuppressWarnings("ReturnValueIgnored")
   public static void triggerReflectiveCallSanitizer() {
     try {
       Class.forName("jaz.Zer").newInstance();

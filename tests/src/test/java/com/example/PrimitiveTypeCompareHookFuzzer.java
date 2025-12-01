@@ -23,6 +23,7 @@ import com.code_intelligence.jazzer.api.FuzzerSecurityIssueCritical;
  * Regression test for https://github.com/CodeIntelligenceTesting/jazzer/issues/790.
  */
 public class PrimitiveTypeCompareHookFuzzer {
+  @SuppressWarnings("ReturnValueIgnored")
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     Byte.compare(data.consumeByte(), (byte) 127);
     Short.compare(data.consumeShort(), (short) 4096);

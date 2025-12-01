@@ -19,6 +19,7 @@ package com.example;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 
 public class ClassLoaderLoadClass {
+  @SuppressWarnings("ReturnValueIgnored")
   public static void fuzzerTestOneInput(FuzzedDataProvider data) throws InterruptedException {
     String input = data.consumeRemainingAsAsciiString();
     try {

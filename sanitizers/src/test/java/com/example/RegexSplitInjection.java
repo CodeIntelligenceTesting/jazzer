@@ -20,6 +20,7 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import java.util.regex.PatternSyntaxException;
 
 public class RegexSplitInjection {
+  @SuppressWarnings("ReturnValueIgnored")
   public static void fuzzerTestOneInput(FuzzedDataProvider fdp) {
     String regex = fdp.consumeRemainingAsString();
     try {
