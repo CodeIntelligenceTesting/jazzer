@@ -19,12 +19,20 @@ package com.example;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 
 public class ZipFuzzer {
   private static final int MAX_ENTRIES = 16;
@@ -41,7 +49,34 @@ public class ZipFuzzer {
       byte[] rezipped = rezipEntries(parsedEntries);
       List<EntryData> roundTripEntries =
           extractEntries(new ZipInputStream(new ByteArrayInputStream(rezipped)));
+      if (roundTripEntries.isEmpty()) {
+        return;
+      }
+
       assertEquivalent(parsedEntries, roundTripEntries);
+
+      List<EntryData> commonsInputEntries = extractEntriesWithCommonsInput(rezipped);
+      if (!commonsInputEntries.isEmpty()) {
+        assertEquivalent(roundTripEntries, commonsInputEntries);
+      }
+
+      Path tempZip = writeTempZip(rezipped);
+      try {
+        List<EntryData> zipFileEntries = extractEntriesWithZipFile(tempZip);
+        List<EntryData> commonsZipEntries = extractEntriesWithCommonsZip(tempZip);
+
+        assertEquivalent(roundTripEntries, zipFileEntries);
+        assertEquivalent(roundTripEntries, commonsZipEntries);
+
+        byte[] commonsRezipped = commonsRezipEntries(roundTripEntries);
+        List<EntryData> commonsRoundTrip =
+            extractEntries(new ZipInputStream(new ByteArrayInputStream(commonsRezipped)));
+        if (!commonsRoundTrip.isEmpty()) {
+          assertEquivalent(roundTripEntries, commonsRoundTrip);
+        }
+      } finally {
+        Files.deleteIfExists(tempZip);
+      }
     } catch (IOException | IllegalArgumentException ignored) {
     }
   }
@@ -60,18 +95,84 @@ public class ZipFuzzer {
     }
   }
 
-  private static EntryData readEntry(ZipInputStream zis, ZipEntry entry, int index)
+  private static Path writeTempZip(byte[] data) throws IOException {
+    Path tempFile = Files.createTempFile("jazzer-zipfuzzer-", ".zip");
+    Files.write(tempFile, data);
+    return tempFile;
+  }
+
+  private static List<EntryData> extractEntriesWithCommonsInput(byte[] data) throws IOException {
+    try (ZipArchiveInputStream zis = new ZipArchiveInputStream(new ByteArrayInputStream(data))) {
+      List<EntryData> entries = new ArrayList<>();
+      ZipArchiveEntry entry;
+      int index = 0;
+      while (index < MAX_ENTRIES && (entry = zis.getNextZipEntry()) != null) {
+        entries.add(readEntry(zis, entry, index));
+        index++;
+      }
+      return entries;
+    }
+  }
+
+  private static List<EntryData> extractEntriesWithZipFile(Path zipPath) throws IOException {
+    try (java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(zipPath.toFile())) {
+      List<EntryData> entries = new ArrayList<>();
+      int index = 0;
+      Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
+      while (index < MAX_ENTRIES && enumeration.hasMoreElements()) {
+        ZipEntry entry = enumeration.nextElement();
+        try (InputStream entryStream = zipFile.getInputStream(entry)) {
+          entries.add(readEntry(entryStream, entry, index));
+        }
+        index++;
+      }
+      return entries;
+    }
+  }
+
+  private static byte[] commonsRezipEntries(List<EntryData> entries) throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    try (ZipArchiveOutputStream zos = new ZipArchiveOutputStream(baos)) {
+      for (EntryData entry : entries) {
+        ZipArchiveEntry archiveEntry = new ZipArchiveEntry(entry.name);
+        zos.putArchiveEntry(archiveEntry);
+        zos.write(entry.data);
+        zos.closeArchiveEntry();
+      }
+      zos.finish();
+    }
+    return baos.toByteArray();
+  }
+
+  private static List<EntryData> extractEntriesWithCommonsZip(Path zipPath) throws IOException {
+    try (ZipFile zipFile = new ZipFile(zipPath.toFile())) {
+      List<EntryData> entries = new ArrayList<>();
+      int index = 0;
+      Enumeration<ZipArchiveEntry> enumeration = zipFile.getEntries();
+      while (index < MAX_ENTRIES && enumeration.hasMoreElements()) {
+        ZipArchiveEntry entry = enumeration.nextElement();
+        try (InputStream entryStream = zipFile.getInputStream(entry)) {
+          entries.add(readEntry(entryStream, entry, index));
+        }
+        index++;
+      }
+      return entries;
+    }
+  }
+
+  private static EntryData readEntry(InputStream entryStream, ZipEntry entry, int index)
       throws IOException {
     String name = entry.getName();
     if (name == null || name.isEmpty()) {
       name = "entry-" + index;
     }
+    name = normalizeName(name);
 
     ByteArrayOutputStream entryData = new ByteArrayOutputStream();
     byte[] buffer = new byte[4096];
     int stored = 0;
     int read;
-    while ((read = zis.read(buffer)) != -1) {
+    while ((read = entryStream.read(buffer)) != -1) {
       if (stored < MAX_ENTRY_BYTES) {
         int toWrite = Math.min(MAX_ENTRY_BYTES - stored, read);
         entryData.write(buffer, 0, toWrite);
@@ -111,6 +212,10 @@ public class ZipFuzzer {
         throw new AssertionError("Entry " + expected.name + " payload mismatch");
       }
     }
+  }
+
+  private static String normalizeName(String name) {
+    return name.replace('\\', '/');
   }
 
   private static final class EntryData {

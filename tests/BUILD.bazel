@@ -700,8 +700,52 @@ java_binary(
 
 java_binary(
     name = "ZipFuzzer",
+    testonly = True,
     srcs = ["src/test/java/com/example/ZipFuzzer.java"],
     main_class = "com.example.ZipFuzzer",
+    deps = [
+        "@maven//:org_apache_commons_commons_compress",
+    ],
+)
+
+java_binary(
+    name = "JarFuzzer",
+    testonly = True,
+    srcs = ["src/test/java/com/example/JarFuzzer.java"],
+    main_class = "com.example.JarFuzzer",
+    deps = [
+        "@maven//:org_apache_commons_commons_compress",
+    ],
+)
+
+java_binary(
+    name = "GzipFuzzer",
+    testonly = True,
+    srcs = ["src/test/java/com/example/GzipFuzzer.java"],
+    main_class = "com.example.GzipFuzzer",
+    deps = [
+        "@maven//:org_apache_commons_commons_compress",
+    ],
+)
+
+java_binary(
+    name = "DeflateFuzzer",
+    testonly = True,
+    srcs = ["src/test/java/com/example/DeflateFuzzer.java"],
+    main_class = "com.example.DeflateFuzzer",
+    deps = [
+        "@maven//:org_apache_commons_commons_compress",
+    ],
+)
+
+java_binary(
+    name = "ZlibFuzzer",
+    testonly = True,
+    srcs = ["src/test/java/com/example/ZlibFuzzer.java"],
+    main_class = "com.example.ZlibFuzzer",
+    deps = [
+        "@maven//:org_apache_commons_commons_compress",
+    ],
 )
 
 java_binary(
