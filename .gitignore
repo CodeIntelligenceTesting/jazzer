@@ -7,3 +7,6 @@
 # platform-dependent. Ignore it for now.
 # https://github.com/bazelbuild/bazel/issues/20369
 MODULE.bazel.lock
+.cifuzz-corpus/
+crashes/
+logs.txt
