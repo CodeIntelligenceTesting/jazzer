@@ -19,6 +19,7 @@ package com.example;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 
 public class ReflectiveCall {
+  @SuppressWarnings("ReturnValueIgnored")
   public static void fuzzerTestOneInput(FuzzedDataProvider data) {
     String input = data.consumeRemainingAsAsciiString();
     if (input.startsWith("@")) {

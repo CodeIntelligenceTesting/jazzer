@@ -326,7 +326,6 @@ java_fuzz_target_test(
         "src/main/java/com/example/JsonSanitizerValidJsonFuzzer.java",
     ],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
-    expected_warning_or_error = "WARN: Some hooks could not be applied to class files built for Java 7 or lower.",
     target_class = "com.example.JsonSanitizerValidJsonFuzzer",
     deps = [
         "@maven//:com_google_code_gson_gson",
