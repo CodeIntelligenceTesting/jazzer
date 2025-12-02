@@ -274,16 +274,23 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
       } else {
         char[] chars = new String(bytes, FUZZED_DATA_CHARSET).toCharArray();
 
-        for (int i = 0; i < chars.length; i++) {
-          chars[i] = (char) forceInRange(chars[i], minRange, maxRange);
-        }
+        int targetLength = Math.min(Math.max(chars.length, minLength), maxLength);
 
-        if (chars.length < minLength) {
-          return Arrays.copyOf(chars, minLength);
-        } else if (chars.length > maxLength) {
-          return Arrays.copyOf(chars, maxLength);
+        if (chars.length == targetLength) {
+          for (int i = 0; i < chars.length; i++) {
+            chars[i] = (char) forceInRange(chars[i], minRange, maxRange);
+          }
+          return chars;
+        } else {
+          char[] result = new char[targetLength];
+          for (int i = 0; i < targetLength; i++) {
+            result[i] =
+                i < chars.length
+                    ? (char) forceInRange(chars[i], minRange, maxRange)
+                    : (char) forceInRange(0, minRange, maxRange);
+          }
+          return result;
         }
-        return chars;
       }
     }
 
