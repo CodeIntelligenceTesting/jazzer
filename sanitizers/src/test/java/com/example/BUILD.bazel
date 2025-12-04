@@ -595,6 +595,23 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "SsrfAllowUntilConfigured",
+    srcs = [
+        "SsrfAllowUntilConfigured.java",
+    ],
+    env = {
+        "JAZZER_SSRF_PERMISSIVE_UNTIL_CONFIGURED": "1",
+    },
+    fuzzer_args = [
+        "-runs=1",
+        "-print_final_stats=1",
+    ],
+    # tags = ["dangerous"],
+    target_class = "com.example.SsrfAllowUntilConfigured",
+    verify_crash_reproducer = False,
+)
+
+java_fuzz_target_test(
     name = "ScriptEngineInjection",
     srcs = [
         "ScriptEngineInjection.java",
