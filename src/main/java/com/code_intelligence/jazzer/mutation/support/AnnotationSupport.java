@@ -74,7 +74,7 @@ public class AnnotationSupport {
     }
     if (appliesTo.subClassesOf().length != 0) {
       if (!helpText.isEmpty()) {
-        helpText += "as well as ";
+        helpText += " as well as ";
       }
       helpText += "subclasses of ";
       helpText += stream(appliesTo.subClassesOf()).map(Class::getName).collect(joining(", "));
