@@ -27,7 +27,7 @@ public class InvalidMutatorTest {
   }
 
   @FuzzTest
-  public void invalidAnnotation(@UrlSegment Integer ignored) {
+  public void invalidAnnotation(Integer @UrlSegment [] ignored) {
     throw new IllegalStateException("This method should not be executed");
   }
 }

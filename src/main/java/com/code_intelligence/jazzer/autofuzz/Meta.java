@@ -201,7 +201,7 @@ public class Meta {
     if (obj.getClass().isArray()) {
       return String.format(
           "(%s[]) %s",
-          obj.getClass().getComponentType().getName(), Arrays.deepToString((Object[]) obj));
+          obj.getClass().getComponentType().getTypeName(), Arrays.deepToString((Object[]) obj));
     }
     return obj.toString();
   }

@@ -1045,7 +1045,7 @@ java_fuzz_target_test(
     srcs = ["src/test/java/com/example/InvalidMutatorTest.java"],
     expect_crash = False,
     expect_non_crash_exit_code = 1,
-    expected_warning_or_error = "ERROR: @UrlSegment does not apply to java.lang.Integer, only applies to java.lang.String",
+    expected_warning_or_error = "ERROR: @UrlSegment does not apply to java.lang.Integer\\[\\], only applies to java.lang.String",
     target_class = "com.example.InvalidMutatorTest",
     target_method = "invalidAnnotation",
     runtime_deps = [
