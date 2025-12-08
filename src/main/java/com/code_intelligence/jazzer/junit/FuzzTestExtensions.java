@@ -145,7 +145,7 @@ class FuzzTestExtensions
       String argumentTypes =
           arguments.stream()
               .filter(Objects::nonNull)
-              .map(obj -> obj.getClass().getName())
+              .map(obj -> obj.getClass().getTypeName())
               .collect(Collectors.joining(","));
       String argumentValues =
           arguments.stream()

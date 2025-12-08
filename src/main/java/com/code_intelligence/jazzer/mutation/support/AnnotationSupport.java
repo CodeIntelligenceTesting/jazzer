@@ -70,20 +70,20 @@ public class AnnotationSupport {
 
     String helpText = "";
     if (appliesTo.value().length != 0) {
-      helpText = stream(appliesTo.value()).map(Class::getName).collect(joining(", "));
+      helpText = stream(appliesTo.value()).map(Class::getTypeName).collect(joining(", "));
     }
     if (appliesTo.subClassesOf().length != 0) {
       if (!helpText.isEmpty()) {
         helpText += " as well as ";
       }
       helpText += "subclasses of ";
-      helpText += stream(appliesTo.subClassesOf()).map(Class::getName).collect(joining(", "));
+      helpText += stream(appliesTo.subClassesOf()).map(Class::getTypeName).collect(joining(", "));
     }
     // Use the simple name as our annotations live in a single package.
     throw new IllegalArgumentException(
         format(
             "@%s does not apply to %s, only applies to %s",
-            annotation.annotationType().getSimpleName(), clazz.getName(), helpText));
+            annotation.annotationType().getSimpleName(), clazz.getTypeName(), helpText));
   }
 
   private static void ensureMinLessThanOrEqualsMax(Annotation annotation) {

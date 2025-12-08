@@ -178,7 +178,7 @@ final class TypeLibrary {
                   + " subtype of %s, got %s",
               withDefaultInstance.value(),
               Message.class.getName(),
-              method.getReturnType().getName()));
+              method.getReturnType().getTypeName()));
     }
 
     try {
