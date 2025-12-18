@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import com.code_intelligence.jazzer.mutation.annotation.ElementOf;
 import com.code_intelligence.jazzer.protobuf.Proto2;
 import com.code_intelligence.jazzer.protobuf.Proto3;
 import com.code_intelligence.selffuzz.jazzer.mutation.ArgumentsMutator;
@@ -311,6 +312,11 @@ public class ArgumentsMutatorFuzzTest {
       }
     }
   }
+
+  @SelfFuzzTest
+  void fuzzElementsOf(
+      @ElementOf(strings = {"A", "B", "C"}) @NotNull String s,
+      @ElementOf(integers = {1, 2, 3}) int i) {}
 
   /**
    * @return all methods in this class annotated by @SelfFuzzTest. If any of those methods are
