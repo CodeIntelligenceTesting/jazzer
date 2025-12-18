@@ -39,6 +39,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
 import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
+import com.code_intelligence.jazzer.mutation.annotation.ElementOf;
 import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
@@ -868,6 +869,13 @@ public class StressTest {
             true,
             exactly(null, TestEnumThree.A, TestEnumThree.B, TestEnumThree.C),
             exactly(null, TestEnumThree.A, TestEnumThree.B, TestEnumThree.C)),
+        arguments(
+            new TypeHolder<
+                @ElementOf(strings = {"one", "two", "three"}) String>() {}.annotatedType(),
+            "Nullable<@ElementOf(strings, size=3) -> String>",
+            true,
+            exactly(null, "one", "two", "three"),
+            exactly(null, "one", "two", "three")),
         arguments(
             new TypeHolder<@NotNull @FloatInRange(min = 0f) Float>() {}.annotatedType(),
             "Float",
