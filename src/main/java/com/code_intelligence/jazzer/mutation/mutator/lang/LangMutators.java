@@ -32,6 +32,7 @@ public final class LangMutators {
         // DON'T EVER SORT THESE! The order is important for the mutator engine to work correctly.
         new NullableMutatorFactory(),
         new ValuePoolMutatorFactory(valuePoolRegistry),
+        new ElementOfMutatorFactory(),
         new BooleanMutatorFactory(),
         new FloatingPointMutatorFactory(),
         new IntegralMutatorFactory(),
