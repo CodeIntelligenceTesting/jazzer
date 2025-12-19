@@ -24,6 +24,7 @@ import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.jazzer.protobuf.Proto2;
 import com.code_intelligence.jazzer.protobuf.Proto3;
 import com.code_intelligence.selffuzz.jazzer.mutation.ArgumentsMutator;
+import com.code_intelligence.selffuzz.jazzer.mutation.annotation.ElementOf;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.selffuzz.jazzer.mutation.annotation.WithLength;
@@ -270,6 +271,13 @@ public class ArgumentsMutatorFuzzTest {
       assertThat(v7.getValue()).isAtLeast(Long.MIN_VALUE);
       assertThat(v7.getValue()).isAtMost(Long.MAX_VALUE);
     }
+  }
+
+  @Solo
+  @SelfFuzzTest
+  void fuzz_MapField10(@ElementOf(strings = {"Test", "Me"}) String data, boolean dummy) {
+    // assertThat(data).isIn(List.of(1, 2, 3));
+    assertThat(data).isAnyOf("Test", "Me", null);
   }
 
   @SelfFuzzTest
