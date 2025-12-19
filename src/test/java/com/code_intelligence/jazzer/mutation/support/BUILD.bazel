@@ -3,7 +3,10 @@ load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_test_suite")
 java_library(
     name = "test_support",
     testonly = True,
-    srcs = ["TestSupport.java"],
+    srcs = [
+        "GlobTestSupport.java",
+        "TestSupport.java",
+    ],
     visibility = ["//src/test/java/com/code_intelligence/jazzer/mutation:__subpackages__"],
     exports = JUNIT5_DEPS + [
         # keep sorted
