@@ -27,7 +27,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Provides values to user-selected mutator types to start fuzzing from.
+ * Provides values to user-selected types that will be used during mutation.
  *
  * <p>This annotation can be applied to fuzz test methods and any parameter type or subtype. By
  * default, this annotation is propagated to all nested subtypes unless specified otherwise via the
@@ -68,11 +68,35 @@ import java.lang.annotation.Target;
 public @interface ValuePool {
   /**
    * Specifies supplier methods that generate values for fuzzing the annotated method or type. The
-   * specified supplier methods must be static and return a {@code Stream <?>} of values. The values
+   * specified supplier methods must be static and return a {@code Stream<?>} of values. The values
    * don't need to match the type of the annotated method or parameter. The mutation framework will
    * extract only the values that are compatible with the target type.
    */
-  String[] value();
+  String[] value() default {};
+
+  /**
+   * Specifies glob patterns matching files that should be provided as {@code byte[]} to the
+   * annotated type. The syntax follows closely to Java's {@link
+   * java.nio.file.FileSystem#getPathMatcher(String) PathMatcher} "glob:" syntax.
+   *
+   * <p>Relative glob patterns are resolved against the working directory.
+   *
+   * <p><i>Note: Patterns that start with <code>{</code> or <code>[</code> are treated as relative
+   * to the working directory.</i>
+   *
+   * <p>Examples:
+   *
+   * <ul>
+   *   <li>{@code *.jpeg} - matches all jpegs in the working directory
+   *   <li>{@code **.xml} - matches all xml files recursively
+   *   <li>{@code src/test/resources/dict/*.txt} - matches txt files in a specific directory
+   *   <li>{@code /absolute/path/to/some/directory/**} - matches all files in an absolute path
+   *       recursively
+   *   <li><code>{"*.jpg", "**.png"}</code> - matches all jpg in the working directory, and png
+   *       files recursively
+   * </ul>
+   */
+  String[] files() default {};
 
   /**
    * This {@code ValuePool} will be used with probability {@code p} by the mutator responsible for
@@ -82,7 +106,7 @@ public @interface ValuePool {
 
   /**
    * Defines the scope of the annotation. Possible values are defined in {@link
-   * com.code_intelligence.jazzer.mutation.utils.PropertyConstraint}. By default it's {@code
+   * com.code_intelligence.jazzer.mutation.utils.PropertyConstraint}. By default, it's {@code
    * RECURSIVE}.
    */
   String constraint() default RECURSIVE;

@@ -19,12 +19,16 @@ package com.code_intelligence.jazzer.mutation.support;
 import static com.code_intelligence.jazzer.mutation.support.Preconditions.require;
 
 import com.code_intelligence.jazzer.mutation.annotation.ValuePool;
-import com.code_intelligence.jazzer.utils.Log;
+import java.io.IOException;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,12 +37,25 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ValuePoolRegistry {
-  private final Map<String, Supplier<Stream<?>>> pools;
   private final Method fuzzTestMethod;
+  private final Path baseDir;
+  private final Map<String, Supplier<Stream<?>>> pools;
+  private final Map<Path, Optional<byte[]>> pathToBytesCache = new LinkedHashMap<>();
 
   public ValuePoolRegistry(Method fuzzTestMethod) {
+    this(fuzzTestMethod, computeBaseDir());
+  }
+
+  protected ValuePoolRegistry(Method fuzzTestMethod, Path baseDir) {
     this.fuzzTestMethod = fuzzTestMethod;
     this.pools = extractValueSuppliers(fuzzTestMethod);
+    this.baseDir = baseDir;
+  }
+
+  private static Path computeBaseDir() {
+    return System.getProperty("jazzer.internal.basedir") == null
+        ? Paths.get("").toAbsolutePath().normalize()
+        : Paths.get(System.getProperty("jazzer.internal.basedir"));
   }
 
   /**
@@ -62,29 +79,20 @@ public class ValuePoolRegistry {
     return p;
   }
 
-  public Optional<Stream<?>> extractRawValues(AnnotatedType type) {
-    String[] poolNames =
-        Arrays.stream(type.getAnnotations())
-            .filter(annotation -> annotation instanceof ValuePool)
-            .map(annotation -> (ValuePool) annotation)
+  public Stream<?> extractUserValues(AnnotatedType type) {
+    Stream<?> valuesFromSourceMethods =
+        getValuePoolAnnotations(type).stream()
             .map(ValuePool::value)
             .flatMap(Arrays::stream)
-            .toArray(String[]::new);
-
-    if (poolNames.length == 0) {
-      return Optional.empty();
-    }
-
-    return Optional.of(
-        Arrays.stream(poolNames)
+            .filter(name -> !name.isEmpty())
             .flatMap(
                 name -> {
                   Supplier<Stream<?>> supplier = pools.get(name);
                   if (supplier == null) {
                     throw new IllegalStateException(
-                        "No method named '"
+                        "@ValuePool: No method named '"
                             + name
-                            + "' found for @ValuePool on type "
+                            + "' found for type "
                             + type.getType().getTypeName()
                             + " in fuzz test method "
                             + fuzzTestMethod.getName()
@@ -93,7 +101,63 @@ public class ValuePoolRegistry {
                   }
                   return supplier.get();
                 })
-            .distinct());
+            .distinct();
+
+    // Walking the file system only makes sense for ValuePool's that annotate byte[] types.
+    if (type.getType() == byte[].class) {
+      return Stream.concat(valuesFromSourceMethods, extractByteArraysFromPatterns(type));
+    } else {
+      return valuesFromSourceMethods;
+    }
+  }
+
+  private Stream<byte[]> extractByteArraysFromPatterns(AnnotatedType type) {
+    List<ValuePool> annotations = getValuePoolAnnotations(type);
+
+    return annotations.stream()
+        .map(ValuePool::files)
+        .flatMap(Arrays::stream)
+        .filter(glob -> !glob.isEmpty())
+        .distinct()
+        .flatMap(
+            glob -> {
+              List<Path> paths = GlobUtils.collectPathsForGlob(baseDir, glob);
+              if (paths.isEmpty()) {
+                throw new IllegalArgumentException(
+                    "@ValuePool: No files matched glob pattern '"
+                        + glob
+                        + "' for type "
+                        + type.getType().getTypeName()
+                        + " in fuzz test method "
+                        + fuzzTestMethod.getName()
+                        + ".");
+              }
+              return paths.stream();
+            })
+        .distinct()
+        .map(this::tryReadFile)
+        .filter(Optional::isPresent)
+        .map(Optional::get);
+  }
+
+  private List<ValuePool> getValuePoolAnnotations(AnnotatedType type) {
+    return Arrays.stream(type.getAnnotations())
+        .filter(annotation -> annotation instanceof ValuePool)
+        .map(annotation -> (ValuePool) annotation)
+        .collect(Collectors.toList());
+  }
+
+  private Optional<byte[]> tryReadFile(Path path) {
+    Path normalizedPath = path.toAbsolutePath().normalize();
+    return pathToBytesCache.computeIfAbsent(
+        normalizedPath,
+        p -> {
+          try {
+            return Optional.of(Files.readAllBytes(p));
+          } catch (IOException e) {
+            return Optional.empty();
+          }
+        });
   }
 
   private static Map<String, Supplier<Stream<?>>> extractValueSuppliers(Method fuzzTestMethod) {
@@ -117,11 +181,12 @@ public class ValuePoolRegistry {
             }
           }
           if (cachedData.isEmpty()) {
-            Log.warn("@ValuePool method " + method.getName() + " provided no values.");
-            return Stream.empty();
+            throw new IllegalStateException(
+                "@ValuePool: method '"
+                    + method.getName()
+                    + "' returned no values. Value pool methods must return at least one value.");
           }
         }
-
         return cachedData.stream();
       }
     };
@@ -133,9 +198,12 @@ public class ValuePoolRegistry {
       Stream<?> stream = (Stream<?>) method.invoke(null);
       return stream.collect(Collectors.toList());
     } catch (IllegalAccessException e) {
-      throw new IllegalStateException("Cannot access method " + method.getName(), e);
+      throw new RuntimeException("@ValuePool: Access denied for method " + method.getName(), e);
     } catch (InvocationTargetException e) {
-      throw new RuntimeException("Error invoking method " + method.getName(), e.getCause());
+      Throwable cause = e.getCause();
+      throw new RuntimeException(
+          "@ValuePool: Method " + method.getName() + " threw an exception",
+          cause != null ? cause : e);
     }
   }
 }
