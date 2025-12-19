@@ -178,6 +178,8 @@ class FuzzTestExecutor {
         Paths.get(context.getConfigurationParameter("jazzer.internal.basedir").orElse(""))
             .toAbsolutePath();
 
+    System.setProperty("jazzer.internal.basedir", baseDir.toString());
+
     // Use the specified corpus dir, if given, otherwise store the generated corpus in a per-class
     // directory under the project root.
     // The path is specified relative to the current working directory, which with JUnit is the

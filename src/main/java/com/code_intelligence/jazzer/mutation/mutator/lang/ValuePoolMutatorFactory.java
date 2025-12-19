@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ValuePoolMutatorFactory implements MutatorFactory {
   /** Types annotated with this marker wil not be re-wrapped by this factory. */
@@ -91,14 +90,9 @@ public class ValuePoolMutatorFactory implements MutatorFactory {
         return mutator;
       }
 
-      Optional<Stream<?>> rawUserValues = valuePoolRegistry.extractRawValues(type);
-      if (!rawUserValues.isPresent()) {
-        return mutator;
-      }
-
       List<T> userValues =
-          rawUserValues
-              .get()
+          valuePoolRegistry
+              .extractUserValues(type)
               // Values whose round trip serialization is not stable violate either some user
               // annotations on the type (e.g. @InRange), or the default mutator limits (e.g.
               // default List size limits) and are therefore not suitable for inclusion in the value
