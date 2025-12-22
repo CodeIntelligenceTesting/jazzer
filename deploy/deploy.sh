@@ -67,5 +67,5 @@ JAZZER_POM_PATH=$PWD/$(bazel cquery --output=files //deploy:jazzer-pom)
 bazel run --define "maven_repo=${MAVEN_REPO}" --define gpg_sign=true //deploy:jazzer-api.publish
 MAVEN_REPO="$MAVEN_REPO" GPG_SIGN="true" \
   bazel run @rules_jvm_external//private/tools/java/com/github/bazelbuild/rules_jvm_external/maven:MavenPublisher -- \
-  "$JAZZER_COORDINATES" "$JAZZER_POM_PATH" "$JAZZER_JAR_PATH" "sources=${JAZZER_SOURCES_PATH},javadoc=${JAZZER_DOCS_PATH}"
+  "$JAZZER_COORDINATES" "$JAZZER_POM_PATH" "$JAZZER_JAR_PATH" true "sources=${JAZZER_SOURCES_PATH},javadoc=${JAZZER_DOCS_PATH}"
 bazel run --define "maven_repo=${MAVEN_REPO}" --define gpg_sign=true //deploy:jazzer-junit.publish
