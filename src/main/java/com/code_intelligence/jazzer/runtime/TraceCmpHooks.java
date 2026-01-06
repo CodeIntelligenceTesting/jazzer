@@ -802,9 +802,32 @@ public final class TraceCmpHooks {
     TraceDataFlowNativeCallbacks.traceMemcmp(first, second, returnValue, hookId);
   }
 
-  // The maximal number of elements of a non-TreeMap Map that will be sorted and searched for the
-  // key closest to the current lookup key in the mapGet hook.
-  private static final int MAX_NUM_KEYS_TO_ENUMERATE = 100;
+  // The maximal number of elements of collections we enumerate to find values close to a lookup.
+  private static final int MAX_NUM_ELEMENTS_TO_ENUMERATE = 100;
+
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.util.Set",
+      targetMethod = "contains",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  public static void setContains(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean isContained) {
+    if (!isContained) {
+      setHookInternal((Set) thisObject, arguments[0], hookId);
+    }
+  }
+
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.util.Set",
+      targetMethod = "remove",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  public static void setRemove(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean wasRemoved) {
+    if (!wasRemoved) {
+      setHookInternal((Set) thisObject, arguments[0], hookId);
+    }
+  }
 
   @MethodHook(
       type = HookType.AFTER,
@@ -843,6 +866,54 @@ public final class TraceCmpHooks {
     }
   }
 
+  private static final class Bounds {
+    private final Object lower;
+    private final Object upper;
+
+    private Bounds(Object lower, Object upper) {
+      this.lower = lower;
+      this.upper = upper;
+    }
+
+    private Object getLower() {
+      return lower;
+    }
+
+    private Object getUpper() {
+      return upper;
+    }
+  }
+
+  private static <E> Bounds getLowerUpperBounds(Set<E> elements, E currentElement) {
+    int enumeratedElements = 0;
+    Comparable comparableElement = (Comparable) currentElement;
+
+    Object lowerBound = null;
+    Object upperBound = null;
+    for (Object validElement : elements) {
+      if (!(validElement instanceof Comparable)) continue;
+      final Comparable comparableValidElement = (Comparable) validElement;
+      // If the element sorts lower than the non-existing elements, but higher than the current
+      // lower bound, update the lower bound and vice versa for the upper bound.
+      try {
+        if (comparableValidElement.compareTo(comparableElement) < 0
+            && (lowerBound == null || comparableValidElement.compareTo(lowerBound) > 0)) {
+          lowerBound = validElement;
+        }
+        if (comparableValidElement.compareTo(comparableElement) > 0
+            && (upperBound == null || comparableValidElement.compareTo(upperBound) < 0)) {
+          upperBound = validElement;
+        }
+      } catch (ClassCastException ignored) {
+        // Can be thrown by Comparable.compareTo if comparableElement is of a type that can't be
+        // compared to the elements set.
+      }
+      if (enumeratedElements++ > MAX_NUM_ELEMENTS_TO_ENUMERATE) break;
+    }
+
+    return new Bounds(lowerBound, upperBound);
+  }
+
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static <K, V> void mapHookInternal(Map<K, V> map, K currentKey, int hookId) {
     if (map == null || map.isEmpty()) return;
@@ -853,8 +924,8 @@ public final class TraceCmpHooks {
     Object lowerBoundKey = null;
     Object upperBoundKey = null;
     try {
-      if (map instanceof TreeMap) {
-        final TreeMap<K, V> treeMap = (TreeMap<K, V>) map;
+      if (map instanceof NavigableMap) {
+        final NavigableMap<K, V> treeMap = (NavigableMap<K, V>) map;
         try {
           lowerBoundKey = treeMap.floorKey(currentKey);
           upperBoundKey = treeMap.ceilingKey(currentKey);
@@ -863,30 +934,9 @@ public final class TraceCmpHooks {
           // compared to the maps keys.
         }
       } else if (currentKey instanceof Comparable) {
-        final Comparable comparableCurrentKey = (Comparable) currentKey;
-        // Find two keys that bracket currentKey.
-        // Note: This is not deterministic if map.size() > MAX_NUM_KEYS_TO_ENUMERATE.
-        int enumeratedKeys = 0;
-        for (Object validKey : map.keySet()) {
-          if (!(validKey instanceof Comparable)) continue;
-          final Comparable comparableValidKey = (Comparable) validKey;
-          // If the key sorts lower than the non-existing key, but higher than the current lower
-          // bound, update the lower bound and vice versa for the upper bound.
-          try {
-            if (comparableValidKey.compareTo(comparableCurrentKey) < 0
-                && (lowerBoundKey == null || comparableValidKey.compareTo(lowerBoundKey) > 0)) {
-              lowerBoundKey = validKey;
-            }
-            if (comparableValidKey.compareTo(comparableCurrentKey) > 0
-                && (upperBoundKey == null || comparableValidKey.compareTo(upperBoundKey) < 0)) {
-              upperBoundKey = validKey;
-            }
-          } catch (ClassCastException ignored) {
-            // Can be thrown by floorKey and ceilingKey if currentKey is of a type that can't be
-            // compared to the maps keys.
-          }
-          if (enumeratedKeys++ > MAX_NUM_KEYS_TO_ENUMERATE) break;
-        }
+        Bounds bounds = getLowerUpperBounds(map.keySet(), currentKey);
+        lowerBoundKey = bounds.getLower();
+        upperBoundKey = bounds.getUpper();
       }
     } catch (ConcurrentModificationException ignored) {
       // map was modified by another thread, skip this invocation
@@ -898,6 +948,44 @@ public final class TraceCmpHooks {
     }
     if (upperBoundKey != null) {
       TraceDataFlowNativeCallbacks.traceGenericCmp(currentKey, upperBoundKey, 31 * hookId + 11);
+    }
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static <E> void setHookInternal(Set<E> set, E currentElement, int hookId) {
+    if (set == null || set.isEmpty()) return;
+    if (currentElement == null) return;
+
+    Object lowerBoundElement = null;
+    Object upperBoundElement = null;
+
+    try {
+      if (set instanceof NavigableSet) {
+        final NavigableSet<E> navigableSet = (NavigableSet<E>) set;
+        try {
+          lowerBoundElement = navigableSet.floor(currentElement);
+          upperBoundElement = navigableSet.ceiling(currentElement);
+        } catch (ClassCastException ignored) {
+          // Can be thrown by NavigableSet.floor and NavigableSet.ceiling if the element cannot be
+          // compared to elements in the set.
+        }
+
+      } else if (currentElement instanceof Comparable) {
+        Bounds bounds = getLowerUpperBounds(set, currentElement);
+        lowerBoundElement = bounds.getLower();
+        upperBoundElement = bounds.getUpper();
+      }
+    } catch (ConcurrentModificationException ignored) {
+      // set was modified by another thread, skip this invocation
+      return;
+    }
+
+    if (lowerBoundElement != null) {
+      TraceDataFlowNativeCallbacks.traceGenericCmp(currentElement, lowerBoundElement, hookId);
+    }
+    if (upperBoundElement != null) {
+      TraceDataFlowNativeCallbacks.traceGenericCmp(
+          currentElement, upperBoundElement, 31 * hookId + 11);
     }
   }
 
