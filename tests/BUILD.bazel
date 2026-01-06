@@ -696,6 +696,20 @@ java_fuzz_target_test(
     ],
 )
 
+java_fuzz_target_test(
+    name = "SetFuzzer",
+    srcs = ["src/test/java/com/example/SetFuzzer.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueMedium"],
+    fuzzer_args = [
+        "-runs=1000000",
+    ],
+    target_class = "com.example.SetFuzzer",
+    verify_crash_reproducer = False,
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+    ],
+)
+
 sh_test(
     name = "jazzer_from_path_test",
     srcs = ["src/test/shell/jazzer_from_path_test.sh"],
