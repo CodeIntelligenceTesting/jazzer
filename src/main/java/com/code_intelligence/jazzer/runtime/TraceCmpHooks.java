@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Code Intelligence GmbH
+ * Copyright 2026 Code Intelligence GmbH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -625,9 +625,6 @@ public final class TraceCmpHooks {
       targetMethod = "replaceFirst$default")
   public static void replaceKt(
       MethodHandle method, Object alwaysNull, Object[] arguments, int hookId, String returnValue) {
-    if (arguments.length < 2 || !(arguments[0] instanceof String)) {
-      return;
-    }
     String original = (String) arguments[0];
     if (!original.equals(returnValue)) {
       return;
@@ -864,6 +861,42 @@ public final class TraceCmpHooks {
     if (value == defaultValue) {
       mapHookInternal((Map) thisObject, arguments[0], hookId);
     }
+  }
+
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = "java.lang.Enum",
+      targetMethod = "valueOf",
+      targetMethodDescriptor = "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Enum;")
+  public static void enumValueOf(
+      MethodHandle method, Object alwaysNull, Object[] arguments, int hookId) {
+    Class<?> enumClass = (Class<?>) arguments[0];
+    String candidate = (String) arguments[1];
+    if (enumClass == null || candidate == null) {
+      return;
+    }
+
+    Enum<?>[] constants;
+    try {
+      constants = (Enum<?>[]) enumClass.getEnumConstants();
+    } catch (Exception | LinkageError ignored) {
+      return;
+    }
+    if (constants == null || constants.length == 0) {
+      return;
+    }
+
+    // Skip guidance if the target string is already valid.
+    for (Enum<?> enumConstant : constants) {
+      if (enumConstant.name().equals(candidate)) {
+        return;
+      }
+    }
+
+    // Guide the fuzzer towards a single valid enum
+    int index = Math.floorMod(candidate.hashCode(), constants.length);
+    Enum<?> target = constants[index];
+    TraceDataFlowNativeCallbacks.traceStrcmp(candidate, target.name(), 1, hookId);
   }
 
   private static final class Bounds {
