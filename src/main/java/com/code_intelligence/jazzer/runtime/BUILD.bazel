@@ -149,6 +149,7 @@ java_library(
     name = "runtime",
     srcs = [
         "HardToCatchError.java",
+        "JazzerApiHooks.java",
         "JazzerInternal.java",
         "NativeLibHooks.java",
         "TraceCmpHooks.java",

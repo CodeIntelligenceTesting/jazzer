@@ -67,7 +67,7 @@ public final class MazeFuzzer {
           // every new combination of x and y as a new feature. Without it, the fuzzer would be
           // completely lost in the maze as guessing an escaping path by chance is close to
           // impossible.
-          Jazzer.exploreState((byte) Objects.hash(x, y), 0);
+          Jazzer.exploreState((byte) Objects.hash(x, y));
           if (REACHED_FIELDS[y][x] == ' ') {
             // Fuzzer reached a new field in the maze, print its progress.
             REACHED_FIELDS[y][x] = '.';
