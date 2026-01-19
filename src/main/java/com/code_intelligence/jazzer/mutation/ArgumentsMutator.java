@@ -77,16 +77,15 @@ public final class ArgumentsMutator {
         stream(method.getAnnotatedParameterTypes()).map(Object::toString).collect(joining(", ")));
   }
 
-  public static ArgumentsMutator forMethodOrThrow(Method method) {
-    return forMethod(Mutators.newFactory(new ValuePoolRegistry(method)), method)
+  public static ArgumentsMutator forMethodOrThrow(Method method, boolean isFuzzing) {
+    // ValuePool is only used when fuzzing, so in regression mode we can skip constructing the
+    // registry.
+    ValuePoolRegistry registry = isFuzzing ? new ValuePoolRegistry(method) : null;
+    return forMethod(Mutators.newFactory(registry), method)
         .orElseThrow(
             () ->
                 new IllegalArgumentException(
                     "Failed to construct mutator for " + prettyPrintMethod(method)));
-  }
-
-  public static Optional<ArgumentsMutator> forMethod(Method method) {
-    return forMethod(Mutators.newFactory(new ValuePoolRegistry(method)), method);
   }
 
   public static Optional<ArgumentsMutator> forMethod(

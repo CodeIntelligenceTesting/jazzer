@@ -62,7 +62,7 @@ public class ValuePoolMutatorFactory implements MutatorFactory {
   @Override
   public Optional<SerializingMutator<?>> tryCreate(
       AnnotatedType type, ExtendedMutatorFactory factory) {
-    if (type.getAnnotation(ValuePoolMarker.class) != null) {
+    if (valuePoolRegistry == null || type.getAnnotation(ValuePoolMarker.class) != null) {
       return Optional.empty();
     }
     AnnotatedType markedType = TypeSupport.withExtraAnnotations(type, VALUE_POOL_MARKER);

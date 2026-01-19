@@ -26,12 +26,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
@@ -45,6 +45,8 @@ class FuzzTestExtensions
   private static final AtomicReference<Method> fuzzTestMethod = new AtomicReference<>();
   private static Field lastFindingField;
   private static Field hooksEnabledField;
+  private static final ConcurrentHashMap<Method, SeedSerializer> serializersCache =
+      new ConcurrentHashMap<>(4);
 
   @Override
   public void interceptTestTemplateMethod(
@@ -195,10 +197,7 @@ class FuzzTestExtensions
 
   private static SeedSerializer getOrCreateSeedSerializer(ExtensionContext extensionContext) {
     Method method = extensionContext.getRequiredTestMethod();
-    return extensionContext
-        .getStore(Namespace.create(FuzzTestExtensions.class, method))
-        .getOrComputeIfAbsent(
-            SeedSerializer.class, unused -> SeedSerializer.of(method), SeedSerializer.class);
+    return serializersCache.computeIfAbsent(method, SeedSerializer::of);
   }
 
   private static Field getLastFindingField() throws ClassNotFoundException, NoSuchFieldException {
