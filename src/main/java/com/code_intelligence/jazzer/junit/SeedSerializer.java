@@ -51,7 +51,7 @@ interface SeedSerializer {
       return new FuzzedDataProviderSeedSerializer();
     } else {
       try {
-        return new ArgumentsMutatorSeedSerializer(ArgumentsMutator.forMethodOrThrow(method));
+        return new ArgumentsMutatorSeedSerializer(ArgumentsMutator.forMethodOrThrow(method, false));
       } catch (IllegalArgumentException e) {
         // Wrap exception message from ArgumentsMutator in JUnit specific exception type.
         throw new FuzzTestConfigurationError(e.getMessage());

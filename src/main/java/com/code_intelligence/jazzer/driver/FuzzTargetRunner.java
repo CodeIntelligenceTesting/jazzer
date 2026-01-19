@@ -158,7 +158,7 @@ public final class FuzzTargetRunner {
     }
 
     if (useMutatorFramework) {
-      mutator = ArgumentsMutator.forMethodOrThrow(fuzzTarget.method);
+      mutator = ArgumentsMutator.forMethodOrThrow(fuzzTarget.method, true);
       Log.info("Using mutator: " + mutator);
     } else {
       mutator = null;

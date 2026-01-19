@@ -59,7 +59,7 @@ public class MutatorBenchmark {
     public void setUp() throws NoSuchMethodException {
       mutator =
           ArgumentsMutator.forMethodOrThrow(
-              MutatorBenchmark.class.getMethod("fuzzMinimal", List.class));
+              MutatorBenchmark.class.getMethod("fuzzMinimal", List.class), false);
     }
   }
 
