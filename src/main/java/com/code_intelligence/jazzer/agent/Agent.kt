@@ -111,7 +111,7 @@ fun installInternal(
                     InstrumentationType.NATIVE -> "com.code_intelligence.jazzer.runtime.NativeLibHooks"
                     else -> null
                 }
-            }
+            } + listOf("com.code_intelligence.jazzer.runtime.JazzerApiHooks")
     val coverageIdSynchronizer =
         if (idSyncFilePath != null) {
             FileSyncCoverageIdStrategy(idSyncFilePath)

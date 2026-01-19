@@ -218,6 +218,19 @@ public final class Jazzer {
   }
 
   /**
+   * Convenience overload of {@link #exploreState(byte, int)} that allows using automatically
+   * generated call-site identifiers. During instrumentation, calls to this method are replaced with
+   * calls to {@link #exploreState(byte, int)} using a unique id for each call site.
+   *
+   * @param state a numeric encoding of a state that should be varied by the fuzzer
+   * @see #exploreState(byte, int)
+   */
+  public static void exploreState(byte state) {
+    // Instrumentation replaces calls to this method with calls to exploreState(byte, int) using
+    // an automatically generated call-site id. Without instrumentation, this is a no-op.
+  }
+
+  /**
    * Make Jazzer report the provided {@link Throwable} as a finding.
    *
    * <p><b>Note:</b> This method must only be called from a method hook. In a fuzz target, simply
