@@ -2,6 +2,7 @@ load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
 java_fuzz_target_test(
     name = "ArgumentsMutatorFuzzTest",
+    timeout = "long",
     srcs = [
         "ArgumentsMutatorFuzzTest.java",
         "BeanWithParent.java",
