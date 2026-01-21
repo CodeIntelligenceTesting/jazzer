@@ -105,6 +105,12 @@ public @interface ValuePool {
   double p() default 0.1;
 
   /**
+   * If the mutator selects a value from this {@code ValuePool}, it will perform up to {@code
+   * maxMutations} additional mutations on the selected value.
+   */
+  int maxMutations() default 1;
+
+  /**
    * Defines the scope of the annotation. Possible values are defined in {@link
    * com.code_intelligence.jazzer.mutation.utils.PropertyConstraint}. By default, it's {@code
    * RECURSIVE}.

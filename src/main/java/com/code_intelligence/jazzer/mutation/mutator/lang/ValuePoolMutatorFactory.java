@@ -74,12 +74,17 @@ public class ValuePoolMutatorFactory implements MutatorFactory {
     private final SerializingMutator<T> mutator;
     private final List<T> userValues;
     private final double poolUsageProbability;
+    private final int maxMutations;
 
     ValuePoolMutator(
-        SerializingMutator<T> mutator, List<T> userValues, double poolUsageProbability) {
+        SerializingMutator<T> mutator,
+        List<T> userValues,
+        double poolUsageProbability,
+        int maxMutations) {
       this.mutator = mutator;
       this.userValues = userValues;
       this.poolUsageProbability = poolUsageProbability;
+      this.maxMutations = maxMutations;
     }
 
     @SuppressWarnings("unchecked")
@@ -106,7 +111,8 @@ public class ValuePoolMutatorFactory implements MutatorFactory {
       }
 
       double p = valuePoolRegistry.extractFirstProbability(type);
-      return new ValuePoolMutator<>(mutator, userValues, p);
+      int maxMutations = valuePoolRegistry.extractFirstMaxMutations(type);
+      return new ValuePoolMutator<>(mutator, userValues, p, maxMutations);
     }
 
     /**
@@ -138,8 +144,8 @@ public class ValuePoolMutatorFactory implements MutatorFactory {
     @Override
     public String toDebugString(Predicate<Debuggable> isInCycle) {
       return String.format(
-          "%s (values: %d p: %.2f)",
-          mutator.toDebugString(isInCycle), userValues.size(), poolUsageProbability);
+          "%s (values: %d p: %.2f, maxMutations: %d)",
+          mutator.toDebugString(isInCycle), userValues.size(), poolUsageProbability, maxMutations);
     }
 
     @Override
@@ -174,19 +180,30 @@ public class ValuePoolMutatorFactory implements MutatorFactory {
     @Override
     public T mutate(T value, PseudoRandom prng) {
       if (prng.closedRange(0.0, 1.0) < poolUsageProbability) {
-        if (prng.choice()) {
-          return prng.pickIn(userValues);
-        } else {
-          // treat the value from valuePool as a starting point for mutation
-          return mutator.mutate(prng.pickIn(userValues), prng);
+        value = prng.pickIn(userValues);
+        // Treat the user value as a starting point for mutation
+        int mutations = prng.closedRange(0, maxMutations);
+        for (int i = 0; i < mutations; i++) {
+          value = mutator.mutate(value, prng);
         }
+        return value;
       }
       return mutator.mutate(value, prng);
     }
 
     @Override
     public T crossOver(T value, T otherValue, PseudoRandom prng) {
-      return mutator.crossOver(value, otherValue, prng);
+      if (prng.closedRange(0.0, 1.0) < poolUsageProbability) {
+        value = prng.pickIn(userValues);
+        // Treat the user value as a starting point for crossOver
+        int mutations = prng.closedRange(0, maxMutations);
+        for (int i = 0; i < mutations; i++) {
+          value = mutator.crossOver(value, prng.pickIn(userValues), prng);
+        }
+        return value;
+      } else {
+        return mutator.crossOver(value, otherValue, prng);
+      }
     }
   }
 }
