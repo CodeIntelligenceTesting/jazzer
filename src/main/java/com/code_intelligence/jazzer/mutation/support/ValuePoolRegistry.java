@@ -79,6 +79,17 @@ public class ValuePoolRegistry {
     return p;
   }
 
+  public int extractFirstMaxMutations(AnnotatedType type) {
+    ValuePool[] valuePoolAnnotations = type.getAnnotationsByType(ValuePool.class);
+    if (valuePoolAnnotations.length == 0) {
+      // If we are here, it's a bug in the caller.
+      throw new IllegalStateException("Expected to find @ValuePool, but found none.");
+    }
+    int maxMutations = valuePoolAnnotations[0].maxMutations();
+    require(maxMutations >= 0, "@ValuePool maxMutations must be >= 0, but was " + maxMutations);
+    return maxMutations;
+  }
+
   public Stream<?> extractUserValues(AnnotatedType type) {
     Stream<?> valuesFromSourceMethods =
         getValuePoolAnnotations(type).stream()

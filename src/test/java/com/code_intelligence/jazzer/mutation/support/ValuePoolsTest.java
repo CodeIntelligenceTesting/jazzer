@@ -22,6 +22,7 @@ import static com.code_intelligence.jazzer.mutation.support.TypeSupport.paramete
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 import static com.code_intelligence.jazzer.mutation.utils.PropertyConstraint.DECLARATION;
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.code_intelligence.jazzer.mutation.annotation.ValuePool;
 import java.io.IOException;
@@ -87,6 +88,45 @@ class ValuePoolsTest {
             new ValuePoolBuilder().value("myPool2").p(0.3).build());
     double p = valuePools.extractFirstProbability(type);
     assertThat(p).isEqualTo(0.2);
+  }
+
+  @Test
+  void testExtractFirstMaxMutations_Default() {
+    AnnotatedType type = new TypeHolder<@ValuePool("myPool") String>() {}.annotatedType();
+    int maxMutations = valuePools.extractFirstMaxMutations(type);
+    assertThat(maxMutations).isEqualTo(1);
+  }
+
+  @Test
+  void testExtractFirstMaxMutations_OneUserDefined() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool(value = "myPool2", maxMutations = 10) String>() {}.annotatedType();
+    int maxMutations = valuePools.extractFirstMaxMutations(type);
+    assertThat(maxMutations).isEqualTo(10);
+  }
+
+  @Test
+  void testExtractMaxMutations_TwoWithLastUsed() {
+    AnnotatedType type =
+        withExtraAnnotations(
+            new TypeHolder<
+                @ValuePool(value = "myPool", maxMutations = 2) String>() {}.annotatedType(),
+            new ValuePoolBuilder().value("myPool2").maxMutations(10).build());
+    int maxMutations = valuePools.extractFirstMaxMutations(type);
+    assertThat(maxMutations).isEqualTo(2);
+  }
+
+  @Test
+  void testExtractFirstMaxMutations_Negative() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool(value = "myPool2", maxMutations = -1) String>() {}.annotatedType();
+    assertThat(
+            assertThrows(
+                IllegalArgumentException.class, () -> valuePools.extractFirstMaxMutations(type)))
+        .hasMessageThat()
+        .contains("@ValuePool maxMutations must be >= 0");
   }
 
   @Test
@@ -353,6 +393,7 @@ class ValuePoolsTest {
     private String[] value;
     private String[] files;
     private double p;
+    private int maxMutations;
     private String constraint;
 
     public ValuePoolBuilder() {
@@ -360,6 +401,7 @@ class ValuePoolsTest {
         value = (String[]) getDefault("value");
         files = (String[]) getDefault("files");
         p = (double) getDefault("p");
+        maxMutations = (int) getDefault("maxMutations");
         constraint = (String) getDefault("constraint");
       } catch (NoSuchMethodException e) {
         throw new RuntimeException("Could not load ValuePool defaults", e);
@@ -385,6 +427,11 @@ class ValuePoolsTest {
       return this;
     }
 
+    public ValuePoolBuilder maxMutations(int maxMutations) {
+      this.maxMutations = maxMutations;
+      return this;
+    }
+
     public ValuePoolBuilder constraint(String constraint) {
       this.constraint = constraint;
       return this;
@@ -393,6 +440,7 @@ class ValuePoolsTest {
     public ValuePool build() {
       final String[] value = this.value;
       final double p = this.p;
+      final int maxMutations = this.maxMutations;
       final String constraint = this.constraint;
 
       return new ValuePool() {
@@ -417,6 +465,11 @@ class ValuePoolsTest {
         }
 
         @Override
+        public int maxMutations() {
+          return maxMutations;
+        }
+
+        @Override
         public String constraint() {
           return constraint;
         }
@@ -430,13 +483,18 @@ class ValuePoolsTest {
           return Arrays.equals(this.value(), other.value())
               && Arrays.equals(this.files(), other.files())
               && this.p() == other.p()
+              && this.maxMutations() == other.maxMutations()
               && this.constraint().equals(other.constraint());
         }
 
         @Override
         public int hashCode() {
           return Objects.hash(
-              Arrays.hashCode(value()), Arrays.hashCode(files()), p(), constraint());
+              Arrays.hashCode(value()),
+              Arrays.hashCode(files()),
+              p(),
+              maxMutations(),
+              constraint());
         }
 
         @Override
@@ -449,6 +507,8 @@ class ValuePoolsTest {
               + String.join(", ", files())
               + "}, p="
               + p()
+              + ", maxMutations="
+              + maxMutations()
               + ", constraint="
               + constraint()
               + ")";
