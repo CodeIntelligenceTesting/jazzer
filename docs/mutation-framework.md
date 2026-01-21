@@ -317,6 +317,170 @@ class SimpleClassFuzzTests {
 }
 ```
 
+## @ValuePool: Guide fuzzing with custom values
+
+The `@ValuePool` annotation lets you provide concrete example values of any [supported type](#supported-types) (except for cache-based mutators) that Jazzer's mutators will use when generating test inputs.
+This helps guide fuzzing toward realistic or edge-case values relevant to your application.
+
+### Basic Usage
+
+You can apply `@ValuePool` in two places:
+- **On method parameter (sub-)types** - values apply only to the annotated types
+- **On the test method itself** - values propagate to all matching types across all parameters
+
+**Example:**
+```java
+@FuzzTest
+void fuzzTest(Map<@ValuePool(value = {"mySupplier"}) String, Integer> foo) {
+  // Strings from mySupplier feed the Map's String mutator
+}
+
+@FuzzTest
+void anotherFuzzTest(@ValuePool(value = {"mySupplier"}) Map<String, Integer> foo) {
+    // Strings from mySupplier feed the Map's String mutator
+    // Integers from mySupplier feed the Map's Integer mutator
+}
+
+@FuzzTest
+@ValuePool(value = {"mySupplier"})
+void yetAnotherFuzzTest(Map<String, Integer> foo, String bar) {
+    // Values propagate to ALL matching types:
+    // - String mutator for Map keys in 'foo'
+    // - String mutator for 'bar' 
+    // - Integer mutator for Map values in 'foo'
+}
+
+static Stream<?> mySupplier() {
+    return Stream.of("example1", "example2", "example3", 1232187321, -182371);
+}
+```
+
+### How Type Matching Works
+
+Jazzer automatically routes values to mutators based on type:
+- Strings in your value pool → String mutators
+- Integers in your value pool → Integer mutators
+- Byte arrays in your value pool → byte[] mutators
+
+**Type propagation happens recursively by default**, so a `@ValuePool` on a `Map<String, Integer>` will feed both the String mutator (for keys) and Integer mutator (for values).
+
+---
+
+### Supplying Values: Two Mechanisms
+
+#### 1. Supplier Methods (`value` field)
+
+Provide the names of static methods that return `Stream<?>`:
+```java
+@ValuePool(value = {"mySupplier", "anotherSupplier"})
+```
+
+**Requirements:**
+- Methods must be `static`
+- Must return `Stream<?>` 
+- Can contain mixed types (Jazzer routes by type automatically)
+
+#### 2. File Patterns (`files` field)
+
+Load files as `byte[]` arrays using glob patterns:
+```java
+@ValuePool(files = {"*.jpeg"})              // All JPEGs in working dir
+@ValuePool(files = {"**.xml"})              // All XMLs recursively
+@ValuePool(files = {"/absolute/path/**"})   // All files from absolute path
+@ValuePool(files = {"*.jpg", "**.png"})     // Multiple patterns
+```
+
+**Glob syntax:** Follows `java.nio.file.PathMatcher` with `glob:` pattern rules.
+
+**You can combine both mechanisms:**
+```java
+@ValuePool(value = {"mySupplier"}, files = {"test-data/*.json"})
+```
+
+---
+
+### Configuration Options
+
+#### Mutation Probability (`p` field)
+Controls how often values from the pool are used versus other mutation strategies.
+```java
+@ValuePool(value = {"mySupplier"}, p = 0.3)  // Use pool values 30% of the time
+```
+
+**Default:** `p = 0.1` (10% of mutations use pool values)
+**Range:** 0.0 to 1.0
+
+#### Type Propagation (`constraint` field)
+
+Controls whether the annotation affects nested types:
+```java
+// Default: RECURSIVE - applies to all nested types
+@ValuePool(value = {"mySupplier"}, constraint = Constraint.RECURSIVE)
+
+// DECLARATION - applies only to the annotated type, not subtypes
+@ValuePool(value = {"mySupplier"}, constraint = Constraint.DECLARATION)
+```
+
+**Example of the difference:**
+```java
+// With RECURSIVE (default):
+@ValuePool(value = {"valuesSupplier"}) Map<String, Integer> data
+// The supplier feed both Map keys AND values
+
+// With DECLARATION:
+@ValuePool(value = {"valuesSupplier"}, constraint = DECLARATION) Map<String, Integer> data
+// The supplier only feeds the Map, NOT keys or values---it should contain Map instances to have effect
+```
+
+---
+
+### Complete Example
+```java
+class MyFuzzTest {
+    static Stream<?> edgeCases() {
+      Map<String, Integer> map = new HashMap<>();
+      map.put("one", 1);
+      map.put("two", 2);
+      return Stream.of(
+        "", "null", "alert('xss')",  // Strings
+        0, -1, Integer.MAX_VALUE,    // Integers
+        new byte[]{0x00, 0x7F},      // A byte array
+        map                          // A Map
+      );
+    }
+    
+    @FuzzTest
+    @ValuePool(value = {"edgeCases"},
+               files = {"test-inputs/*.bin"},
+               p = 0.25)  // Use pool values 25% of the time
+    void testParser(String input, Map<String, Integer> config, byte[] data) {
+        // All three parameters get values from the pool:
+        // - 'input' gets Strings
+        // - 'config' keys get Strings, values get Integers, Map itself gets the `map` object
+        // - 'data' gets bytes from both edgeCases() and *.bin files
+    }
+}
+```
+
+---
+
+#### Max Mutations (`maxMutations` field)
+
+After selecting a value from the pool, the mutator can apply additional random mutations to it.
+```java
+@ValuePool(value = {"mySupplier"}, maxMutations = 5)
+```
+
+**Default:** `maxMutations = 1` (at most one additional mutation applied)
+**Range:** 0 or higher
+
+**How it works:** If `maxMutations = 5`, and Jazzer selects the value pool as mutation strategy, Jazzer will:
+1. Select a random value from your pool (e.g., `"alert('xss')"`)
+2. Apply up to 5 random mutations in a row (e.g., `"alert('xss')"` → `"alert(x"` → `"AAAt(x"` → ...)
+
+This helps explore variations of your seed values while staying close to realistic inputs.
+
+
 ## FuzzedDataProvider
 
 The `FuzzedDataProvider` is an alternative approach commonly used in programming
