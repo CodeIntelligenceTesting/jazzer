@@ -20,7 +20,6 @@ import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSu
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.parameterTypeIfParameterized;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 import static com.code_intelligence.jazzer.mutation.utils.PropertyConstraint.DECLARATION;
-import static com.code_intelligence.jazzer.mutation.utils.PropertyConstraint.RECURSIVE;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.mutation.annotation.ValuePool;
@@ -28,6 +27,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -75,7 +75,7 @@ class ValuePoolsTest {
     AnnotatedType type =
         withExtraAnnotations(
             new TypeHolder<@ValuePool(value = "myPool", p = 0.2) String>() {}.annotatedType(),
-            withValuePoolImplementation(new String[] {"myPool2"}, 0.3));
+            new ValuePoolBuilder().value("myPool2").p(0.3).build());
     double p = valuePools.extractFirstProbability(type);
     assertThat(p).isEqualTo(0.2);
   }
@@ -111,7 +111,7 @@ class ValuePoolsTest {
     AnnotatedType type =
         withExtraAnnotations(
             new TypeHolder<@ValuePool("myPool2") String>() {}.annotatedType(),
-            withValuePoolImplementation(new String[] {"myPool"}, 5));
+            new ValuePoolBuilder().value("myPool").build());
     Optional<Stream<?>> elements = valuePools.extractRawValues(type);
     assertThat(elements).isPresent();
     assertThat(elements.get()).containsExactly("value1", "value2", "value3", "value4");
@@ -155,64 +155,95 @@ class ValuePoolsTest {
     return Arrays.stream(getValuePoolAnnotations(type)).flatMap(v -> Arrays.stream(v.value()));
   }
 
-  public static ValuePool withValuePoolImplementation(String[] value, double p) {
-    return withValuePoolImplementation(value, p, RECURSIVE);
-  }
+  private static class ValuePoolBuilder {
+    private String[] value;
+    private double p;
+    private String constraint;
 
-  public static ValuePool withValuePoolImplementation(String[] value, double p, String constraint) {
-    return new ValuePool() {
-      @Override
-      public String[] value() {
-        return value;
+    public ValuePoolBuilder() {
+      try {
+        value = (String[]) getDefault("value");
+        p = (double) getDefault("p");
+        constraint = (String) getDefault("constraint");
+      } catch (NoSuchMethodException e) {
+        throw new RuntimeException("Could not load ValuePool defaults", e);
       }
+    }
 
-      @Override
-      public double p() {
-        return p;
-      }
+    private Object getDefault(String methodName) throws NoSuchMethodException {
+      return ValuePool.class.getDeclaredMethod(methodName).getDefaultValue();
+    }
 
-      @Override
-      public String constraint() {
-        return constraint;
-      }
+    public ValuePoolBuilder value(String... values) {
+      this.value = values;
+      return this;
+    }
 
-      @Override
-      public Class<? extends Annotation> annotationType() {
-        return ValuePool.class;
-      }
+    public ValuePoolBuilder p(double p) {
+      this.p = p;
+      return this;
+    }
 
-      @Override
-      public boolean equals(Object o) {
-        if (!(o instanceof ValuePool)) {
-          return false;
+    public ValuePoolBuilder constraint(String constraint) {
+      this.constraint = constraint;
+      return this;
+    }
+
+    public ValuePool build() {
+      final String[] value = this.value;
+      final double p = this.p;
+      final String constraint = this.constraint;
+
+      return new ValuePool() {
+        @Override
+        public Class<? extends Annotation> annotationType() {
+          return ValuePool.class;
         }
-        ValuePool other = (ValuePool) o;
-        return Arrays.equals(this.value(), other.value())
-            && this.p() == other.p()
-            && this.constraint().equals(other.constraint());
-      }
 
-      @Override
-      public int hashCode() {
-        int hash = 0;
-        hash += Arrays.hashCode(value()) * 127;
-        hash += Double.hashCode(p()) * 31 * 127;
-        hash += constraint().hashCode() * 127;
-        return hash;
-      }
+        @Override
+        public String[] value() {
+          return value;
+        }
 
-      @Override
-      public String toString() {
-        return "@"
-            + ValuePool.class.getName()
-            + "(value={"
-            + String.join(", ", value())
-            + "}, p="
-            + p()
-            + ", constraint="
-            + constraint()
-            + ")";
-      }
-    };
+        @Override
+        public double p() {
+          return p;
+        }
+
+        @Override
+        public String constraint() {
+          return constraint;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+          if (!(o instanceof ValuePool)) {
+            return false;
+          }
+          ValuePool other = (ValuePool) o;
+          return Arrays.equals(this.value(), other.value())
+              && this.p() == other.p()
+              && this.constraint().equals(other.constraint());
+        }
+
+        @Override
+        public int hashCode() {
+          return Objects.hash(Arrays.hashCode(value()), p(), constraint());
+        }
+
+        @Override
+        public String toString() {
+          return "@"
+              + ValuePool.class.getName()
+              + "(value={"
+              + String.join(", ", value())
+              + "}, p="
+              + p()
+              + ", constraint="
+              + constraint()
+              + ")";
+        }
+      };
+    }
   }
 }
