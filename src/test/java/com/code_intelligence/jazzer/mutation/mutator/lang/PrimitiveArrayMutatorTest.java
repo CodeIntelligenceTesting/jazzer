@@ -24,10 +24,19 @@ import static com.code_intelligence.jazzer.mutation.mutator.lang.PrimitiveArrayM
 import static com.code_intelligence.jazzer.mutation.mutator.lang.PrimitiveArrayMutatorFactory.PrimitiveArrayMutator.getLongPrimitiveArray;
 import static com.code_intelligence.jazzer.mutation.mutator.lang.PrimitiveArrayMutatorFactory.PrimitiveArrayMutator.getShortPrimitiveArray;
 import static com.code_intelligence.jazzer.mutation.mutator.lang.PrimitiveArrayMutatorFactory.PrimitiveArrayMutator.makePrimitiveArrayToBytesConverter;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.notNull;
+import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withLength;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
+import com.code_intelligence.jazzer.mutation.engine.ChainedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.support.TypeHolder;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.lang.reflect.AnnotatedArrayType;
 import java.lang.reflect.AnnotatedType;
 import java.util.function.Function;
@@ -635,5 +644,69 @@ public class PrimitiveArrayMutatorTest {
   void testRoundTrip_bytes(byte[] numbers) {
     assertThat(libfuzzerBytesToBytes.apply(bytesToLibfuzzerBytes.apply(numbers)))
         .isEqualTo(numbers);
+  }
+
+  /*
+  Testing that the  maxRange for the byte[] type is 4096 bytes, which is the default max range for byte[] in Jazzer.
+  This is important to ensure that the mutator does not generate byte arrays that are too large, which could lead to out-of-memory errors during fuzzing.
+   */
+  static Stream<Arguments> byteArrayLength() {
+    AnnotatedType defaultLen = new TypeHolder<byte[]>() {}.annotatedType();
+    AnnotatedType defaultLenNN = notNull(new TypeHolder<byte[]>() {}.annotatedType());
+    AnnotatedType withLen_10_20 = withLength(new TypeHolder<byte[]>() {}.annotatedType(), 10, 20);
+    AnnotatedType withLen_10_5000 =
+        withLength(new TypeHolder<byte[]>() {}.annotatedType(), 10, 5000);
+    AnnotatedType withLen_10_20_NN =
+        withLength(notNull(new TypeHolder<byte[]>() {}.annotatedType()), 10, 20);
+    AnnotatedType withLen_10_5000_NN =
+        withLength(notNull(new TypeHolder<byte[]>() {}.annotatedType()), 10, 5000);
+    // type, numBytes to serialize with write(), expectedNumBytes after deserialization with read()
+    return Stream.of(
+        arguments(defaultLen, 5000, 4096),
+        arguments(defaultLen, 100, 100),
+        arguments(defaultLen, 0, 0),
+        arguments(defaultLenNN, 5000, 4096),
+        arguments(defaultLenNN, 100, 100),
+        arguments(defaultLenNN, 0, 0),
+        arguments(withLen_10_20, 15, 15),
+        arguments(withLen_10_20, 25, 20),
+        arguments(withLen_10_5000, 15, 15),
+        arguments(withLen_10_5000, 25, 25),
+        arguments(withLen_10_5000, 5000, 5000),
+        arguments(withLen_10_5000, 10000, 5000),
+        arguments(withLen_10_20_NN, 15, 15),
+        arguments(withLen_10_20_NN, 25, 20),
+        arguments(withLen_10_5000_NN, 15, 15),
+        arguments(withLen_10_5000_NN, 25, 25),
+        arguments(withLen_10_5000_NN, 5000, 5000),
+        arguments(withLen_10_5000_NN, 10000, 5000));
+  }
+
+  @ParameterizedTest
+  @MethodSource("byteArrayLength")
+  public void testByteArrayMaxRange_writeReadWithLength(
+      AnnotatedType type, int serializationLength, int expectedReadLength) throws IOException {
+    ChainedMutatorFactory factory = ChainedMutatorFactory.of(LangMutators.newFactories());
+    SerializingMutator<byte[]> mutator = (SerializingMutator<byte[]>) factory.createOrThrow(type);
+
+    byte[] serialized;
+
+    // serialize with write()
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    mutator.write(new byte[serializationLength], new DataOutputStream(baos));
+    serialized = baos.toByteArray();
+
+    // deserialize with read()
+    byte[] data = mutator.read(new DataInputStream(new ByteArrayInputStream(serialized)));
+    assertThat(data.length).isEqualTo(expectedReadLength);
+
+    // serialize with writeExclusive()
+    baos = new ByteArrayOutputStream();
+    mutator.writeExclusive(new byte[serializationLength], new DataOutputStream(baos));
+    serialized = baos.toByteArray();
+
+    // deserialize with readExclusive()
+    data = mutator.readExclusive(new DataInputStream(new ByteArrayInputStream(serialized)));
+    assertThat(data.length).isEqualTo(expectedReadLength);
   }
 }
