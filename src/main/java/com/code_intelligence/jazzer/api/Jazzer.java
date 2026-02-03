@@ -33,6 +33,9 @@ public final class Jazzer {
   private static final MethodHandle TRACE_MEMCMP;
   private static final MethodHandle TRACE_PC_INDIR;
 
+  private static final MethodHandle COUNTERS_TRACKER_ALLOCATE;
+  private static final MethodHandle COUNTERS_TRACKER_SET_RANGE;
+
   static {
     Class<?> jazzerInternal = null;
     MethodHandle onFuzzTargetReady = null;
@@ -40,6 +43,8 @@ public final class Jazzer {
     MethodHandle traceStrstr = null;
     MethodHandle traceMemcmp = null;
     MethodHandle tracePcIndir = null;
+    MethodHandle countersTrackerAllocate = null;
+    MethodHandle countersTrackerSetRange = null;
     try {
       jazzerInternal = Class.forName("com.code_intelligence.jazzer.runtime.JazzerInternal");
       MethodType onFuzzTargetReadyType = MethodType.methodType(void.class, Runnable.class);
@@ -70,6 +75,16 @@ public final class Jazzer {
       tracePcIndir =
           MethodHandles.publicLookup()
               .findStatic(traceDataFlowNativeCallbacks, "tracePcIndir", tracePcIndirType);
+
+      Class<?> countersTracker =
+          Class.forName("com.code_intelligence.jazzer.runtime.CountersTracker");
+      MethodType allocateType = MethodType.methodType(void.class, int.class, int.class);
+      countersTrackerAllocate =
+          MethodHandles.publicLookup()
+              .findStatic(countersTracker, "ensureCountersAllocated", allocateType);
+      MethodType setRangeType = MethodType.methodType(void.class, int.class, int.class);
+      countersTrackerSetRange =
+          MethodHandles.publicLookup().findStatic(countersTracker, "setCounterRange", setRangeType);
     } catch (ClassNotFoundException ignore) {
       // Not running in the context of the agent. This is fine as long as no methods are called on
       // this class.
@@ -86,6 +101,8 @@ public final class Jazzer {
     TRACE_STRSTR = traceStrstr;
     TRACE_MEMCMP = traceMemcmp;
     TRACE_PC_INDIR = tracePcIndir;
+    COUNTERS_TRACKER_ALLOCATE = countersTrackerAllocate;
+    COUNTERS_TRACKER_SET_RANGE = countersTrackerSetRange;
   }
 
   private Jazzer() {}
@@ -93,7 +110,7 @@ public final class Jazzer {
   /**
    * A 32-bit random number that hooks can use to make pseudo-random choices between multiple
    * possible mutations they could guide the fuzzer towards. Hooks <b>must not</b> base the decision
-   * whether or not to report a finding on this number as this will make findings non-reproducible.
+   * whether to report a finding on this number as this will make findings non-reproducible.
    *
    * <p>This is the same number that libFuzzer uses as a seed internally, which makes it possible to
    * deterministically reproduce a previous fuzzing run by supplying the seed value printed by
@@ -228,6 +245,66 @@ public final class Jazzer {
   public static void exploreState(byte state) {
     // Instrumentation replaces calls to this method with calls to exploreState(byte, int) using
     // an automatically generated call-site id. Without instrumentation, this is a no-op.
+  }
+
+  /**
+   * Hill-climbing API to maximize a value. For each observed value v in [minValue, maxValue],
+   * provides feedback that all values in [minValue, v] are covered.
+   *
+   * <p>This enables corpus minimization to keep only the input resulting in the maximum value.
+   * Values below minValue provide no signal. Values above maxValue are clamped to maxValue.
+   *
+   * <p><b>Important:</b> This allocates (maxValue - minValue + 1) coverage counters per unique ID.
+   * For large value ranges, use a mapping function to reduce the range:
+   *
+   * <pre>{@code
+   * // Map [0, 1_000_000] to [0, 1000] steps
+   * long step = value < 0 ? 0 : Math.min(value / 1000, 1000);
+   * Jazzer.maximize(step, id, 0, 1000);
+   * }</pre>
+   *
+   * @param value The value to maximize (will be clamped to [minValue, maxValue])
+   * @param id A unique identifier for this call site (must be consistent across runs)
+   * @param minValue The minimum value in the range (inclusive)
+   * @param maxValue The maximum value in the range (inclusive)
+   */
+  public static void maximize(long value, int id, long minValue, long maxValue) {
+    if (COUNTERS_TRACKER_ALLOCATE == null) {
+      return;
+    }
+
+    int numCounters = (int) (maxValue - minValue + 1);
+
+    try {
+      // Allocate counters (idempotent, validates numCounters > 0 and consistency)
+      COUNTERS_TRACKER_ALLOCATE.invokeExact(id, numCounters);
+
+      // Set counters if value provides signal
+      if (value >= minValue) {
+        int toOffset = (int) (Math.min(value, maxValue) - minValue);
+        COUNTERS_TRACKER_SET_RANGE.invokeExact(id, toOffset);
+      }
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Convenience overload of {@link #maximize(long, int, long, long)} that allows using
+   * automatically generated call-site identifiers. During instrumentation, calls to this method are
+   * replaced with calls to {@link #maximize(long, int, long, long)} using a unique id for each call
+   * site.
+   *
+   * <p>Without instrumentation, this is a no-op.
+   *
+   * @param value The value to maximize
+   * @param minValue The minimum value in the range (inclusive)
+   * @param maxValue The maximum value in the range (inclusive)
+   * @see #maximize(long, int, long, long)
+   */
+  public static void maximize(long value, long minValue, long maxValue) {
+    // Instrumentation replaces calls to this method with calls to maximize(long, int, long, long)
+    // using an automatically generated call-site id. Without instrumentation, this is a no-op.
   }
 
   /**
