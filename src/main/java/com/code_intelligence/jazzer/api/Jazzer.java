@@ -273,7 +273,16 @@ public final class Jazzer {
       return;
     }
 
-    int numCounters = (int) (maxValue - minValue + 1);
+    if (maxValue < minValue) {
+      throw new IllegalArgumentException("maxValue must be >= minValue");
+    }
+    long range = maxValue - minValue;
+    if (range < 0 || range > (long) Integer.MAX_VALUE - 1) {
+      throw new IllegalArgumentException(
+          "Range too large: (maxValue - minValue + 1) must be <= Integer.MAX_VALUE");
+    }
+
+    int numCounters = (int) (range + 1);
 
     try {
       // Allocate counters (idempotent, validates numCounters > 0 and consistency)
