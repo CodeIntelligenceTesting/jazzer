@@ -48,11 +48,10 @@ public final class CountersTracker {
 
   private static final String ENV_MAX_COUNTERS = "JAZZER_MAXIMIZE_MAX_COUNTERS";
 
+  private static final int DEFAULT_MAX_COUNTERS = 1 << 20;
+
   /** Maximum number of counters available (default 1M, configurable via environment variable). */
-  private static final int MAX_COUNTERS =
-      System.getenv(ENV_MAX_COUNTERS) != null
-          ? Integer.parseInt(System.getenv(ENV_MAX_COUNTERS))
-          : 1 << 20;
+  private static final int MAX_COUNTERS = initMaxCounters();
 
   private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
 
@@ -253,6 +252,18 @@ public final class CountersTracker {
     CounterRange(int startOffset, int numCounters) {
       this.startOffset = startOffset;
       this.numCounters = numCounters;
+    }
+  }
+
+  private static int initMaxCounters() {
+    String value = System.getenv(ENV_MAX_COUNTERS);
+    if (value == null || value.isEmpty()) {
+      return DEFAULT_MAX_COUNTERS;
+    }
+    try {
+      return Integer.parseInt(value.trim());
+    } catch (NumberFormatException e) {
+      return DEFAULT_MAX_COUNTERS;
     }
   }
 
