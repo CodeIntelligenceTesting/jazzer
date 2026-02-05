@@ -40,14 +40,14 @@ SHADED_RUNTIME_MAVEN_ARTIFACTS = [
     # keep sorted
     # renovate: keep updated
     "com.github.jsqlparser:jsqlparser:4.9",
-    "com.google.errorprone:error_prone_annotations:2.44.0",
+    "com.google.errorprone:error_prone_annotations:2.47.0",
     "com.google.guava:guava:33.5.0-android",
     "io.github.classgraph:classgraph:4.8.184",
-    "net.bytebuddy:byte-buddy-agent:1.18.1",
+    "net.bytebuddy:byte-buddy-agent:1.18.4",
     "net.jodah:typetools:0.6.3",
-    "org.ow2.asm:asm:9.9",
-    "org.ow2.asm:asm-commons:9.9",
-    "org.ow2.asm:asm-tree:9.9",
+    "org.ow2.asm:asm:9.9.1",
+    "org.ow2.asm:asm-commons:9.9.1",
+    "org.ow2.asm:asm-tree:9.9.1",
 ]
 
 # Runtime dependencies of Jazzer that are expected to be provided by the fuzzed project.
@@ -85,12 +85,12 @@ TEST_MAVEN_ARTIFACTS = [
     "jakarta.validation:jakarta.validation-api:3.1.1",
     "javax.persistence:javax.persistence-api:2.2",
     "junit:junit:4.13.2",
-    "ognl:ognl:3.4.8",
+    "ognl:ognl:3.4.10",
     "org.apache.commons:commons-jexl:2.1.1",
-    "org.assertj:assertj-core:3.27.6",
+    "org.assertj:assertj-core:3.27.7",
     "org.freemarker:freemarker:2.3.34",
     "org.jacoco:org.jacoco.core:0.8.14",
-    "org.mockito:mockito-core:5.20.0",
+    "org.mockito:mockito-core:5.21.0",
     "org.mvel:mvel2:2.5.2.Final",
     "org.openjdk.jmh:jmh-core:1.37",
     "org.openjdk.jmh:jmh-generator-annprocess:1.37",
