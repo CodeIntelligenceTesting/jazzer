@@ -261,7 +261,11 @@ public final class CountersTracker {
       return DEFAULT_MAX_COUNTERS;
     }
     try {
-      return Integer.parseInt(value.trim());
+      int parsed = Integer.parseInt(value.trim());
+      if (parsed <= 0) {
+        return DEFAULT_MAX_COUNTERS;
+      }
+      return parsed;
     } catch (NumberFormatException e) {
       return DEFAULT_MAX_COUNTERS;
     }
