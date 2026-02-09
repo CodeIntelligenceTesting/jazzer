@@ -22,7 +22,7 @@ jobs:
             name: windows
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up JDK
         uses: actions/setup-java@v5
@@ -54,14 +54,14 @@ jobs:
           cp -L $(bazel cquery --output=files :jazzer_release) jazzer-${{ matrix.name }}.tar.gz
 
       - name: Upload jazzer.jar
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: jazzer_tmp_${{ matrix.name }}
           path: jazzer-${{ matrix.name }}.jar
           if-no-files-found: error
 
       - name: Upload release archive
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: jazzer_releases_${{ matrix.name }}
           path: jazzer-${{ matrix.name }}.tar.gz
@@ -72,10 +72,10 @@ jobs:
     needs: build_release
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Download individual jars
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           pattern: jazzer_tmp_*
           merge-multiple: true
@@ -88,7 +88,7 @@ jobs:
             $(find "$(pwd)/_tmp/" -name '*.jar' -printf "--sources %h/%f ")
 
       - name: Upload merged jar
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: jazzer
           path: _tmp/jazzer.jar
@@ -102,7 +102,7 @@ jobs:
       name: Deploy
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up JDK
         uses: actions/setup-java@v5
@@ -119,7 +119,7 @@ jobs:
           echo "build --//deploy:jazzer_version=${TAG#v}" >> .bazelrc
 
       - name: Download merged jar
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: jazzer
           path: _tmp/
@@ -135,7 +135,7 @@ jobs:
 
       # In case something goes wrong, we can still reupload the bundle manually
       - name: Upload Jazzer Bundle to Github Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: jazzer-maven-central-bundle
           path: _tmp/jazzer-maven-central-bundle.tar.gz
@@ -163,17 +163,17 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Download individual tar.gzs
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           pattern: jazzer_releases_*
           merge-multiple: true
           path: _releases/
 
       - name: create release
-        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090 # v2.4.1
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         with:
           generate_release_notes: true
           draft: true
