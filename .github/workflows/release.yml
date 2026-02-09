@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Build documentation
         run: |
@@ -23,7 +23,7 @@ jobs:
           cp $(bazel cquery --output=files //deploy:jazzer-junit-docs) ./jazzer-junit-docs.jar
 
       - name: Upload jars
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: jazzer_docs_jars
           path: |
@@ -41,13 +41,13 @@ jobs:
 
     steps:
       - name: checkout docs
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: 'CodeIntelligenceTesting/jazzer-docs'
           ssh-key: "${{ secrets.JAZZER_DOCS_SSH_KEY_PRIVATE }}"
 
       - name: Download jar
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: jazzer_docs_jars
           path: .
