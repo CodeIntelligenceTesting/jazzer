@@ -38,7 +38,12 @@ public final class Jazzer {
 
   /**
    * Fixed number of counters per hill-climbing call site. Users must map their domain values into
-   * [0, 1023] before calling {@link #maximize(long)} or {@link #maximize(long, int)}.
+   * [0, 1023] before calling the hill-climbing APIs:
+   *
+   * <ul>
+   *   <li>{@link #maximize(long)} / {@link #maximize(long, int)}
+   *   <li>{@link #minimize(long)} / {@link #minimize(long, int)}
+   * </ul>
    */
   private static final int HILL_CLIMBING_RANGE = 1024;
 
@@ -312,6 +317,61 @@ public final class Jazzer {
    */
   public static void maximize(long value) {
     // Instrumentation replaces calls to this method with calls to maximize(long, int)
+    // using an automatically generated call-site id. Without instrumentation, this is a no-op.
+  }
+
+  /**
+   * Hill-climbing API to minimize a value. For each observed value v in [0, 1023], provides
+   * feedback inversely proportional to the value: lower values set more counters.
+   *
+   * <p>This enables corpus minimization to keep only the input resulting in the minimum value.
+   * Values above 1023 provide no signal. Values below 0 are clamped to 0.
+   *
+   * <p>Each call site allocates exactly 1024 coverage counters. Map your domain values into [0,
+   * 1023] before calling this method:
+   *
+   * <pre>{@code
+   * // Map temperature in [0, 4000] to [0, 1023]
+   * long mapped = temperature * 1023 / 4000;
+   * Jazzer.minimize(mapped);
+   * }</pre>
+   *
+   * @param value The value to minimize (expected in [0, 1023]; values above 1023 produce no signal,
+   *     negative values are clamped to 0)
+   * @param id A unique identifier for this call site (must be consistent across runs)
+   */
+  public static void minimize(long value, int id) {
+    if (COUNTERS_TRACKER_ALLOCATE == null) {
+      return;
+    }
+
+    try {
+      COUNTERS_TRACKER_ALLOCATE.invokeExact(id, HILL_CLIMBING_RANGE);
+
+      if (value <= HILL_CLIMBING_RANGE - 1) {
+        // Inverse of maximize: lower value = more counters
+        int toOffset = HILL_CLIMBING_RANGE - 1 - (int) Math.max(value, 0);
+        COUNTERS_TRACKER_SET_RANGE.invokeExact(id, toOffset);
+      }
+    } catch (JazzerApiException e) {
+      throw e;
+    } catch (Throwable e) {
+      throw new JazzerApiException("minimize: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Convenience overload of {@link #minimize(long, int)} that allows using automatically generated
+   * call-site identifiers. During instrumentation, calls to this method are replaced with calls to
+   * {@link #minimize(long, int)} using a unique id for each call site.
+   *
+   * <p>Without instrumentation, this is a no-op.
+   *
+   * @param value The value to minimize (expected in [0, 1023])
+   * @see #minimize(long, int)
+   */
+  public static void minimize(long value) {
+    // Instrumentation replaces calls to this method with calls to minimize(long, int)
     // using an automatically generated call-site id. Without instrumentation, this is a no-op.
   }
 
