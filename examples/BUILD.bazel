@@ -129,7 +129,6 @@ java_fuzz_target_test(
         "src/main/java/com/example/MazeFuzzer.java",
     ],
     allowed_findings = ["com.example.MazeFuzzer$$TreasureFoundException"],
-    fuzzer_args = ["-use_value_profile=1"],
     target_class = "com.example.MazeFuzzer",
 )
 
