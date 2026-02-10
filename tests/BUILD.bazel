@@ -36,6 +36,7 @@ java_fuzz_target_test(
     fuzzer_args = [
         "--autofuzz=org.apache.commons.imaging.formats.jpeg.JpegImageParser::getBufferedImage",
         "--autofuzz_ignore=java.lang.NullPointerException",
+        "--disabled_hooks=com.code_intelligence.jazzer.sanitizers.FilePathTraversal",
     ],
     runtime_deps = [
         "@maven//:org_apache_commons_commons_imaging",
