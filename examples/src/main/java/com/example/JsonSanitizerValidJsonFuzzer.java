@@ -36,7 +36,7 @@ public class JsonSanitizerValidJsonFuzzer {
     // that trust the output of the sanitizer.
     try {
       Gson gson = new Gson();
-      gson.fromJson(validJson, JsonElement.class);
+      Object unused = gson.fromJson(validJson, JsonElement.class);
     } catch (Exception e) {
       throw new FuzzerSecurityIssueLow("Output is invalid JSON", e);
     }
