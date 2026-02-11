@@ -16,6 +16,7 @@
 
 package com.code_intelligence.jazzer.driver;
 
+import static com.code_intelligence.jazzer.driver.Constants.JAZZER_ERROR_EXIT_CODE;
 import static com.code_intelligence.jazzer.driver.Constants.JAZZER_FINDING_EXIT_CODE;
 import static com.code_intelligence.jazzer.runtime.Constants.IS_ANDROID;
 import static java.lang.System.exit;
@@ -91,6 +92,8 @@ public final class FuzzTargetRunner {
 
   private static final String OPENTEST4J_TEST_ABORTED_EXCEPTION =
       "org.opentest4j.TestAbortedException";
+  private static final String JAZZER_API_EXCEPTION =
+      "com.code_intelligence.jazzer.api.JazzerApiException";
 
   private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
 
@@ -270,6 +273,16 @@ public final class FuzzTargetRunner {
     if (JazzerInternal.lastFinding != null) {
       finding = JazzerInternal.lastFinding;
       JazzerInternal.lastFinding = null;
+    }
+    // JazzerApiException signals API error, not a finding in the code under test.
+    if (finding != null && finding.getClass().getName().equals(JAZZER_API_EXCEPTION)) {
+      Log.error("Jazzer API error", finding);
+      temporarilyDisableLibfuzzerExitHook();
+      if (fatalFindingHandlerForJUnit != null) {
+        fatalFindingHandlerForJUnit.accept(finding);
+        return LIBFUZZER_RETURN_FROM_DRIVER;
+      }
+      exit(JAZZER_ERROR_EXIT_CODE);
     }
     // Allow skipping invalid inputs in fuzz tests by using e.g. JUnit's assumeTrue.
     if (finding == null || finding.getClass().getName().equals(OPENTEST4J_TEST_ABORTED_EXCEPTION)) {

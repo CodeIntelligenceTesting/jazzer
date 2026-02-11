@@ -136,8 +136,10 @@ public final class Jazzer {
     }
     try {
       TRACE_STRCMP.invokeExact(current, target, 1, id);
+    } catch (JazzerApiException e) {
+      throw e;
     } catch (Throwable e) {
-      e.printStackTrace();
+      throw new JazzerApiException("guideTowardsEquality: " + e.getMessage(), e);
     }
   }
 
@@ -159,8 +161,10 @@ public final class Jazzer {
     }
     try {
       TRACE_MEMCMP.invokeExact(current, target, 1, id);
+    } catch (JazzerApiException e) {
+      throw e;
     } catch (Throwable e) {
-      e.printStackTrace();
+      throw new JazzerApiException("guideTowardsEquality: " + e.getMessage(), e);
     }
   }
 
@@ -183,8 +187,10 @@ public final class Jazzer {
     }
     try {
       TRACE_STRSTR.invokeExact(haystack, needle, id);
+    } catch (JazzerApiException e) {
+      throw e;
     } catch (Throwable e) {
-      e.printStackTrace();
+      throw new JazzerApiException("guideTowardsContainment: " + e.getMessage(), e);
     }
   }
 
@@ -229,8 +235,10 @@ public final class Jazzer {
     int upperBits = id >>> 5;
     try {
       TRACE_PC_INDIR.invokeExact(upperBits, lowerBits);
+    } catch (JazzerApiException e) {
+      throw e;
     } catch (Throwable e) {
-      e.printStackTrace();
+      throw new JazzerApiException("exploreState: " + e.getMessage(), e);
     }
   }
 
@@ -273,18 +281,18 @@ public final class Jazzer {
       return;
     }
 
-    if (maxValue < minValue) {
-      throw new IllegalArgumentException("maxValue must be >= minValue");
-    }
-    long range = maxValue - minValue;
-    if (range < 0 || range > (long) Integer.MAX_VALUE - 1) {
-      throw new IllegalArgumentException(
-          "Range too large: (maxValue - minValue + 1) must be <= Integer.MAX_VALUE");
-    }
-
-    int numCounters = (int) (range + 1);
-
     try {
+      if (maxValue < minValue) {
+        throw new IllegalArgumentException("maxValue must be >= minValue");
+      }
+      long range = maxValue - minValue;
+      if (range < 0 || range > (long) Integer.MAX_VALUE - 1) {
+        throw new IllegalArgumentException(
+            "Range too large: (maxValue - minValue + 1) must be <= Integer.MAX_VALUE");
+      }
+
+      int numCounters = (int) (range + 1);
+
       // Allocate counters (idempotent, validates numCounters > 0 and consistency)
       COUNTERS_TRACKER_ALLOCATE.invokeExact(id, numCounters);
 
@@ -293,8 +301,10 @@ public final class Jazzer {
         int toOffset = (int) (Math.min(value, maxValue) - minValue);
         COUNTERS_TRACKER_SET_RANGE.invokeExact(id, toOffset);
       }
+    } catch (JazzerApiException e) {
+      throw e;
     } catch (Throwable e) {
-      e.printStackTrace();
+      throw new JazzerApiException("maximize: " + e.getMessage(), e);
     }
   }
 
@@ -347,8 +357,10 @@ public final class Jazzer {
   public static void onFuzzTargetReady(Runnable callback) {
     try {
       ON_FUZZ_TARGET_READY.invokeExact(callback);
+    } catch (JazzerApiException e) {
+      throw e;
     } catch (Throwable e) {
-      e.printStackTrace();
+      throw new JazzerApiException("onFuzzTargetReady: " + e.getMessage(), e);
     }
   }
 

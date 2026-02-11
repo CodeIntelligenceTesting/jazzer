@@ -62,9 +62,9 @@ public class MaximizeTest {
     Jazzer.maximize(42, 5006, 42, 42);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = JazzerApiException.class)
   public void testMaximizeInvalidRange() {
-    // maxValue < minValue - should throw IllegalArgumentException
+    // maxValue < minValue - should throw JazzerApiException
     Jazzer.maximize(50, 5007, 100, 0);
   }
 
@@ -76,9 +76,9 @@ public class MaximizeTest {
     Jazzer.maximize(75, 5009, 0, 100);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = JazzerApiException.class)
   public void testMaximizeLargeRange() {
-    // Extremely large range - should throw IllegalArgumentException
+    // Extremely large range - should throw JazzerApiException
     Jazzer.maximize(0, 5010, Long.MIN_VALUE, Long.MAX_VALUE);
   }
 
