@@ -31,6 +31,7 @@ public final class LangMutators {
     return Stream.of(
         // DON'T EVER SORT THESE! The order is important for the mutator engine to work correctly.
         new NullableMutatorFactory(),
+        new ElementOfMutatorFactory(),
         new ValuePoolMutatorFactory(valuePoolRegistry),
         new BooleanMutatorFactory(),
         new FloatingPointMutatorFactory(),
