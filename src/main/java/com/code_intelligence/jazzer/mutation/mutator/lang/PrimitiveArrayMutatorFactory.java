@@ -73,6 +73,8 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
   public static final class PrimitiveArrayMutator<T> extends SerializingMutator<T> {
     private static final int DEFAULT_MIN_LENGTH = 0;
     private static final int DEFAULT_MAX_LENGTH = 1000;
+    // This default is chosen to match libFuzzer's default max length for byte arrays.
+    private static final int DEFAULT_BYTE_ARRAY_MAX_LENGTH = 4096;
     private static final Charset FUZZED_DATA_CHARSET = Charset.forName("CESU-8");
     private long minRange;
     private long maxRange;
@@ -216,7 +218,12 @@ final class PrimitiveArrayMutatorFactory implements MutatorFactory {
     private void extractLength(AnnotatedType type) {
       Optional<WithLength> withLength = Optional.ofNullable(type.getAnnotation(WithLength.class));
       minLength = withLength.map(WithLength::min).orElse(DEFAULT_MIN_LENGTH);
-      maxLength = withLength.map(WithLength::max).orElse(DEFAULT_MAX_LENGTH);
+      // Different default max lengths for byte[] and other primitive arrays to match libFuzzer.
+      int defaultMaxLength =
+          type.getType().getTypeName().equals("byte")
+              ? DEFAULT_BYTE_ARRAY_MAX_LENGTH
+              : DEFAULT_MAX_LENGTH;
+      maxLength = withLength.map(WithLength::max).orElse(defaultMaxLength);
     }
 
     private AnnotatedType convertWithLength(AnnotatedType type, AnnotatedType newType) {
