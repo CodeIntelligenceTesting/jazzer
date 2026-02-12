@@ -46,9 +46,9 @@ public final class CountersTracker {
     RulesJni.loadLibrary("jazzer_driver", "/com/code_intelligence/jazzer/driver");
   }
 
-  private static final String ENV_MAX_COUNTERS = "JAZZER_MAXIMIZE_MAX_COUNTERS";
+  private static final String ENV_MAX_COUNTERS = "JAZZER_EXTRA_COUNTERS_MAX";
 
-  private static final int DEFAULT_MAX_COUNTERS = 1 << 20;
+  private static final int DEFAULT_MAX_COUNTERS = 1 << 18;
 
   /** Maximum number of counters available (default 1M, configurable via environment variable). */
   private static final int MAX_COUNTERS = initMaxCounters();
@@ -257,8 +257,9 @@ public final class CountersTracker {
     }
     try {
       int parsed = Integer.parseInt(value.trim());
-      if (parsed <= 0) {
-        return DEFAULT_MAX_COUNTERS;
+      if (parsed < 0) {
+        throw new IllegalArgumentException(
+            ENV_MAX_COUNTERS + " must not be negative, got: " + parsed);
       }
       return parsed;
     } catch (NumberFormatException e) {
