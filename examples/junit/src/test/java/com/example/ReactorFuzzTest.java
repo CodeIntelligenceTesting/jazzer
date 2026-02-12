@@ -51,7 +51,8 @@ public class ReactorFuzzTest {
     // THE GOAL: MAXIMIZATION
     // We need to drive 'temperature' to an extreme value.
     // Standard coverage is 100% constant here (it just loops).
-    Jazzer.maximize(temperature, 500, 4500);
+    long mapped = temperature * 1023 / 4500;
+    Jazzer.maximize(mapped);
     if (temperature >= 4500) {
       throw new RuntimeException("Meltdown! Temperature maximized.");
     }

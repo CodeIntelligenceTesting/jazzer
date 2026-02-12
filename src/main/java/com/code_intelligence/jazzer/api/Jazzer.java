@@ -36,6 +36,12 @@ public final class Jazzer {
   private static final MethodHandle COUNTERS_TRACKER_ALLOCATE;
   private static final MethodHandle COUNTERS_TRACKER_SET_RANGE;
 
+  /**
+   * Fixed number of counters per hill-climbing call site. Users must map their domain values into
+   * [0, 1023] before calling {@link #maximize(long)} or {@link #maximize(long, int)}.
+   */
+  private static final int HILL_CLIMBING_RANGE = 1024;
+
   static {
     Class<?> jazzerInternal = null;
     MethodHandle onFuzzTargetReady = null;
@@ -256,49 +262,35 @@ public final class Jazzer {
   }
 
   /**
-   * Hill-climbing API to maximize a value. For each observed value v in [minValue, maxValue],
-   * provides feedback that all values in [minValue, v] are covered.
+   * Hill-climbing API to maximize a value. For each observed value v in [0, 1023], provides
+   * feedback that all values in [0, v] are covered.
    *
    * <p>This enables corpus minimization to keep only the input resulting in the maximum value.
-   * Values below minValue provide no signal. Values above maxValue are clamped to maxValue.
+   * Values below 0 provide no signal. Values above 1023 are clamped to 1023.
    *
-   * <p><b>Important:</b> This allocates (maxValue - minValue + 1) coverage counters per unique ID.
-   * For large value ranges, use a mapping function to reduce the range:
+   * <p>Each call site allocates exactly 1024 coverage counters. Map your domain values into [0,
+   * 1023] before calling this method:
    *
    * <pre>{@code
-   * // Map [0, 1_000_000] to [0, 1000] steps
-   * long step = value < 0 ? 0 : Math.min(value / 1000, 1000);
-   * Jazzer.maximize(step, id, 0, 1000);
+   * // Map temperature in [500, 4500] to [0, 1023]
+   * long mapped = (temperature - 500) * 1023 / (4500 - 500);
+   * Jazzer.maximize(mapped);
    * }</pre>
    *
-   * @param value The value to maximize (will be clamped to [minValue, maxValue])
+   * @param value The value to maximize (expected in [0, 1023]; negative values produce no signal,
+   *     values above 1023 are clamped)
    * @param id A unique identifier for this call site (must be consistent across runs)
-   * @param minValue The minimum value in the range (inclusive)
-   * @param maxValue The maximum value in the range (inclusive)
    */
-  public static void maximize(long value, int id, long minValue, long maxValue) {
+  public static void maximize(long value, int id) {
     if (COUNTERS_TRACKER_ALLOCATE == null) {
       return;
     }
 
     try {
-      if (maxValue < minValue) {
-        throw new IllegalArgumentException("maxValue must be >= minValue");
-      }
-      long range = maxValue - minValue;
-      if (range < 0 || range > (long) Integer.MAX_VALUE - 1) {
-        throw new IllegalArgumentException(
-            "Range too large: (maxValue - minValue + 1) must be <= Integer.MAX_VALUE");
-      }
+      COUNTERS_TRACKER_ALLOCATE.invokeExact(id, HILL_CLIMBING_RANGE);
 
-      int numCounters = (int) (range + 1);
-
-      // Allocate counters (idempotent, validates numCounters > 0 and consistency)
-      COUNTERS_TRACKER_ALLOCATE.invokeExact(id, numCounters);
-
-      // Set counters if value provides signal
-      if (value >= minValue) {
-        int toOffset = (int) (Math.min(value, maxValue) - minValue);
+      if (value >= 0) {
+        int toOffset = (int) Math.min(value, HILL_CLIMBING_RANGE - 1);
         COUNTERS_TRACKER_SET_RANGE.invokeExact(id, toOffset);
       }
     } catch (JazzerApiException e) {
@@ -309,20 +301,17 @@ public final class Jazzer {
   }
 
   /**
-   * Convenience overload of {@link #maximize(long, int, long, long)} that allows using
-   * automatically generated call-site identifiers. During instrumentation, calls to this method are
-   * replaced with calls to {@link #maximize(long, int, long, long)} using a unique id for each call
-   * site.
+   * Convenience overload of {@link #maximize(long, int)} that allows using automatically generated
+   * call-site identifiers. During instrumentation, calls to this method are replaced with calls to
+   * {@link #maximize(long, int)} using a unique id for each call site.
    *
    * <p>Without instrumentation, this is a no-op.
    *
-   * @param value The value to maximize
-   * @param minValue The minimum value in the range (inclusive)
-   * @param maxValue The maximum value in the range (inclusive)
-   * @see #maximize(long, int, long, long)
+   * @param value The value to maximize (expected in [0, 1023])
+   * @see #maximize(long, int)
    */
-  public static void maximize(long value, long minValue, long maxValue) {
-    // Instrumentation replaces calls to this method with calls to maximize(long, int, long, long)
+  public static void maximize(long value) {
+    // Instrumentation replaces calls to this method with calls to maximize(long, int)
     // using an automatically generated call-site id. Without instrumentation, this is a no-op.
   }
 

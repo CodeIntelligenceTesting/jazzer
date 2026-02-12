@@ -262,21 +262,18 @@ public class CountersTrackerTest {
 
   @Test
   public void testMaximizePattern() {
-    // Test the typical usage pattern for maximize()
+    // Test the typical usage pattern for maximize(value, id) with fixed 1024 counters
     int id = 400000;
-    int numCounters = 101; // For range [0, 100]
+    int numCounters = 1024;
 
     CountersTracker.ensureCountersAllocated(id, numCounters);
 
-    // Simulate maximize(50, id, 0, 100) - should set counters 0-50 to 1
+    // Simulate maximize(50, id) - should set counters 0-50 to 1
     int value = 50;
-    int minValue = 0;
-    int steps = value - minValue;
-    CountersTracker.setCounterRange(id, steps);
+    CountersTracker.setCounterRange(id, value);
 
     // Should be able to call again with higher value
     value = 75;
-    steps = value - minValue;
-    CountersTracker.setCounterRange(id, steps);
+    CountersTracker.setCounterRange(id, value);
   }
 }
