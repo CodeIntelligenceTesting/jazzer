@@ -33,6 +33,20 @@ public final class Jazzer {
   private static final MethodHandle TRACE_MEMCMP;
   private static final MethodHandle TRACE_PC_INDIR;
 
+  private static final MethodHandle COUNTERS_TRACKER_ALLOCATE;
+  private static final MethodHandle COUNTERS_TRACKER_SET_RANGE;
+
+  /**
+   * Fixed number of counters per hill-climbing call site. Users must map their domain values into
+   * [0, 1023] before calling the hill-climbing APIs:
+   *
+   * <ul>
+   *   <li>{@link #maximize(long)} / {@link #maximize(long, int)}
+   *   <li>{@link #minimize(long)} / {@link #minimize(long, int)}
+   * </ul>
+   */
+  private static final int HILL_CLIMBING_RANGE = 1024;
+
   static {
     Class<?> jazzerInternal = null;
     MethodHandle onFuzzTargetReady = null;
@@ -40,6 +54,8 @@ public final class Jazzer {
     MethodHandle traceStrstr = null;
     MethodHandle traceMemcmp = null;
     MethodHandle tracePcIndir = null;
+    MethodHandle countersTrackerAllocate = null;
+    MethodHandle countersTrackerSetRange = null;
     try {
       jazzerInternal = Class.forName("com.code_intelligence.jazzer.runtime.JazzerInternal");
       MethodType onFuzzTargetReadyType = MethodType.methodType(void.class, Runnable.class);
@@ -70,6 +86,16 @@ public final class Jazzer {
       tracePcIndir =
           MethodHandles.publicLookup()
               .findStatic(traceDataFlowNativeCallbacks, "tracePcIndir", tracePcIndirType);
+
+      Class<?> countersTracker =
+          Class.forName("com.code_intelligence.jazzer.runtime.CountersTracker");
+      MethodType allocateType = MethodType.methodType(void.class, int.class, int.class);
+      countersTrackerAllocate =
+          MethodHandles.publicLookup()
+              .findStatic(countersTracker, "ensureCountersAllocated", allocateType);
+      MethodType setRangeType = MethodType.methodType(void.class, int.class, int.class);
+      countersTrackerSetRange =
+          MethodHandles.publicLookup().findStatic(countersTracker, "setCounterRange", setRangeType);
     } catch (ClassNotFoundException ignore) {
       // Not running in the context of the agent. This is fine as long as no methods are called on
       // this class.
@@ -86,6 +112,8 @@ public final class Jazzer {
     TRACE_STRSTR = traceStrstr;
     TRACE_MEMCMP = traceMemcmp;
     TRACE_PC_INDIR = tracePcIndir;
+    COUNTERS_TRACKER_ALLOCATE = countersTrackerAllocate;
+    COUNTERS_TRACKER_SET_RANGE = countersTrackerSetRange;
   }
 
   private Jazzer() {}
@@ -93,7 +121,7 @@ public final class Jazzer {
   /**
    * A 32-bit random number that hooks can use to make pseudo-random choices between multiple
    * possible mutations they could guide the fuzzer towards. Hooks <b>must not</b> base the decision
-   * whether or not to report a finding on this number as this will make findings non-reproducible.
+   * whether to report a finding on this number as this will make findings non-reproducible.
    *
    * <p>This is the same number that libFuzzer uses as a seed internally, which makes it possible to
    * deterministically reproduce a previous fuzzing run by supplying the seed value printed by
@@ -119,8 +147,10 @@ public final class Jazzer {
     }
     try {
       TRACE_STRCMP.invokeExact(current, target, 1, id);
+    } catch (JazzerApiException e) {
+      throw e;
     } catch (Throwable e) {
-      e.printStackTrace();
+      throw new JazzerApiException("guideTowardsEquality: " + e.getMessage(), e);
     }
   }
 
@@ -142,8 +172,10 @@ public final class Jazzer {
     }
     try {
       TRACE_MEMCMP.invokeExact(current, target, 1, id);
+    } catch (JazzerApiException e) {
+      throw e;
     } catch (Throwable e) {
-      e.printStackTrace();
+      throw new JazzerApiException("guideTowardsEquality: " + e.getMessage(), e);
     }
   }
 
@@ -166,8 +198,10 @@ public final class Jazzer {
     }
     try {
       TRACE_STRSTR.invokeExact(haystack, needle, id);
+    } catch (JazzerApiException e) {
+      throw e;
     } catch (Throwable e) {
-      e.printStackTrace();
+      throw new JazzerApiException("guideTowardsContainment: " + e.getMessage(), e);
     }
   }
 
@@ -212,8 +246,10 @@ public final class Jazzer {
     int upperBits = id >>> 5;
     try {
       TRACE_PC_INDIR.invokeExact(upperBits, lowerBits);
+    } catch (JazzerApiException e) {
+      throw e;
     } catch (Throwable e) {
-      e.printStackTrace();
+      throw new JazzerApiException("exploreState: " + e.getMessage(), e);
     }
   }
 
@@ -228,6 +264,115 @@ public final class Jazzer {
   public static void exploreState(byte state) {
     // Instrumentation replaces calls to this method with calls to exploreState(byte, int) using
     // an automatically generated call-site id. Without instrumentation, this is a no-op.
+  }
+
+  /**
+   * Hill-climbing API to maximize a value. For each observed value v in [0, 1023], provides
+   * feedback that all values in [0, v] are covered.
+   *
+   * <p>This enables corpus minimization to keep only the input resulting in the maximum value.
+   * Values below 0 provide no signal. Values above 1023 are clamped to 1023.
+   *
+   * <p>Each call site allocates exactly 1024 coverage counters. Map your domain values into [0,
+   * 1023] before calling this method:
+   *
+   * <pre>{@code
+   * // Map temperature in [500, 4500] to [0, 1023]
+   * long mapped = (temperature - 500) * 1023 / (4500 - 500);
+   * Jazzer.maximize(mapped);
+   * }</pre>
+   *
+   * @param value The value to maximize (expected in [0, 1023]; negative values produce no signal,
+   *     values above 1023 are clamped)
+   * @param id A unique identifier for this call site (must be consistent across runs)
+   */
+  public static void maximize(long value, int id) {
+    if (COUNTERS_TRACKER_ALLOCATE == null) {
+      return;
+    }
+
+    try {
+      COUNTERS_TRACKER_ALLOCATE.invokeExact(id, HILL_CLIMBING_RANGE);
+
+      if (value >= 0) {
+        int toOffset = (int) Math.min(value, HILL_CLIMBING_RANGE - 1);
+        COUNTERS_TRACKER_SET_RANGE.invokeExact(id, toOffset);
+      }
+    } catch (JazzerApiException e) {
+      throw e;
+    } catch (Throwable e) {
+      throw new JazzerApiException("maximize: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Convenience overload of {@link #maximize(long, int)} that allows using automatically generated
+   * call-site identifiers. During instrumentation, calls to this method are replaced with calls to
+   * {@link #maximize(long, int)} using a unique id for each call site.
+   *
+   * <p>Without instrumentation, this is a no-op.
+   *
+   * @param value The value to maximize (expected in [0, 1023])
+   * @see #maximize(long, int)
+   */
+  public static void maximize(long value) {
+    // Instrumentation replaces calls to this method with calls to maximize(long, int)
+    // using an automatically generated call-site id. Without instrumentation, this is a no-op.
+  }
+
+  /**
+   * Hill-climbing API to minimize a value. For each observed value v in [0, 1023], provides
+   * feedback inversely proportional to the value: lower values set more counters.
+   *
+   * <p>This enables corpus minimization to keep only the input resulting in the minimum value.
+   * Values above 1023 provide no signal. Values below 0 are clamped to 0.
+   *
+   * <p>Each call site allocates exactly 1024 coverage counters. Map your domain values into [0,
+   * 1023] before calling this method:
+   *
+   * <pre>{@code
+   * // Map temperature in [0, 4000] to [0, 1023]
+   * long mapped = temperature * 1023 / 4000;
+   * Jazzer.minimize(mapped);
+   * }</pre>
+   *
+   * @param value The value to minimize (expected in [0, 1023]; values above 1023 produce no signal,
+   *     negative values are clamped to 0)
+   * @param id A unique identifier for this call site (must be consistent across runs)
+   */
+  public static void minimize(long value, int id) {
+    if (COUNTERS_TRACKER_ALLOCATE == null) {
+      return;
+    }
+
+    try {
+      COUNTERS_TRACKER_ALLOCATE.invokeExact(id, HILL_CLIMBING_RANGE);
+
+      if (value <= HILL_CLIMBING_RANGE - 1) {
+        // Inverse of maximize: lower value = more counters
+        int toOffset = HILL_CLIMBING_RANGE - 1 - (int) Math.max(value, 0);
+        COUNTERS_TRACKER_SET_RANGE.invokeExact(id, toOffset);
+      }
+    } catch (JazzerApiException e) {
+      throw e;
+    } catch (Throwable e) {
+      throw new JazzerApiException("minimize: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Convenience overload of {@link #minimize(long, int)} that allows using automatically generated
+   * call-site identifiers. During instrumentation, calls to this method are replaced with calls to
+   * {@link #minimize(long, int)} using a unique id for each call site.
+   *
+   * <p>Without instrumentation, this is a no-op.
+   *
+   * @param value The value to minimize (expected in [0, 1023])
+   * @see #minimize(long, int)
+   */
+  public static void minimize(long value) {
+    // Instrumentation replaces calls to this method with calls to minimize(long, int)
+    // using an automatically generated call-site id. Without instrumentation, this is a no-op.
   }
 
   /**
@@ -261,8 +406,10 @@ public final class Jazzer {
   public static void onFuzzTargetReady(Runnable callback) {
     try {
       ON_FUZZ_TARGET_READY.invokeExact(callback);
+    } catch (JazzerApiException e) {
+      throw e;
     } catch (Throwable e) {
-      e.printStackTrace();
+      throw new JazzerApiException("onFuzzTargetReady: " + e.getMessage(), e);
     }
   }
 

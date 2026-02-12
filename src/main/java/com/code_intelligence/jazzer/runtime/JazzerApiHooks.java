@@ -43,4 +43,38 @@ public final class JazzerApiHooks {
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     Jazzer.exploreState((byte) arguments[0], hookId);
   }
+
+  /**
+   * Replaces calls to {@link Jazzer#maximize(long)} with calls to {@link Jazzer#maximize(long,
+   * int)} using the hook id as the id parameter.
+   *
+   * <p>This allows each call site to be tracked separately without requiring the user to manually
+   * provide a unique id.
+   */
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "com.code_intelligence.jazzer.api.Jazzer",
+      targetMethod = "maximize",
+      targetMethodDescriptor = "(J)V")
+  public static void maximizeWithId(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    Jazzer.maximize((long) arguments[0], hookId);
+  }
+
+  /**
+   * Replaces calls to {@link Jazzer#minimize(long)} with calls to {@link Jazzer#minimize(long,
+   * int)} using the hook id as the id parameter.
+   *
+   * <p>This allows each call site to be tracked separately without requiring the user to manually
+   * provide a unique id.
+   */
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "com.code_intelligence.jazzer.api.Jazzer",
+      targetMethod = "minimize",
+      targetMethodDescriptor = "(J)V")
+  public static void minimizeWithId(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    Jazzer.minimize((long) arguments[0], hookId);
+  }
 }
