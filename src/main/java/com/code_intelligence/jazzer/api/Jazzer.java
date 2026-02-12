@@ -31,7 +31,12 @@ public final class Jazzer {
   private static final MethodHandle TRACE_STRCMP;
   private static final MethodHandle TRACE_STRSTR;
   private static final MethodHandle TRACE_MEMCMP;
-  private static final MethodHandle TRACE_PC_INDIR;
+
+  private static final MethodHandle COUNTERS_TRACKER_ALLOCATE;
+  private static final MethodHandle COUNTERS_TRACKER_SET_RANGE;
+  private static final MethodHandle COUNTERS_TRACKER_SET_COUNTER;
+
+  private static final byte[] EXPLORE_BUCKET_VALUES = {1, 2, 3, 4, 8, 16, 32, (byte) 128};
 
   static {
     Class<?> jazzerInternal = null;
@@ -39,7 +44,9 @@ public final class Jazzer {
     MethodHandle traceStrcmp = null;
     MethodHandle traceStrstr = null;
     MethodHandle traceMemcmp = null;
-    MethodHandle tracePcIndir = null;
+    MethodHandle countersTrackerAllocate = null;
+    MethodHandle countersTrackerSetRange = null;
+    MethodHandle countersTrackerSetCounter = null;
     try {
       jazzerInternal = Class.forName("com.code_intelligence.jazzer.runtime.JazzerInternal");
       MethodType onFuzzTargetReadyType = MethodType.methodType(void.class, Runnable.class);
@@ -66,10 +73,20 @@ public final class Jazzer {
       traceMemcmp =
           MethodHandles.publicLookup()
               .findStatic(traceDataFlowNativeCallbacks, "traceMemcmp", traceMemcmpType);
-      MethodType tracePcIndirType = MethodType.methodType(void.class, int.class, int.class);
-      tracePcIndir =
+
+      Class<?> countersTracker =
+          Class.forName("com.code_intelligence.jazzer.runtime.CountersTracker");
+      MethodType allocateType = MethodType.methodType(void.class, int.class, int.class);
+      countersTrackerAllocate =
           MethodHandles.publicLookup()
-              .findStatic(traceDataFlowNativeCallbacks, "tracePcIndir", tracePcIndirType);
+              .findStatic(countersTracker, "ensureCountersAllocated", allocateType);
+      MethodType setRangeType = MethodType.methodType(void.class, int.class, int.class);
+      countersTrackerSetRange =
+          MethodHandles.publicLookup().findStatic(countersTracker, "setCounterRange", setRangeType);
+      MethodType setCounterType =
+          MethodType.methodType(void.class, int.class, int.class, byte.class);
+      countersTrackerSetCounter =
+          MethodHandles.publicLookup().findStatic(countersTracker, "setCounter", setCounterType);
     } catch (ClassNotFoundException ignore) {
       // Not running in the context of the agent. This is fine as long as no methods are called on
       // this class.
@@ -85,7 +102,9 @@ public final class Jazzer {
     TRACE_STRCMP = traceStrcmp;
     TRACE_STRSTR = traceStrstr;
     TRACE_MEMCMP = traceMemcmp;
-    TRACE_PC_INDIR = tracePcIndir;
+    COUNTERS_TRACKER_ALLOCATE = countersTrackerAllocate;
+    COUNTERS_TRACKER_SET_RANGE = countersTrackerSetRange;
+    COUNTERS_TRACKER_SET_COUNTER = countersTrackerSetCounter;
   }
 
   private Jazzer() {}
@@ -93,7 +112,7 @@ public final class Jazzer {
   /**
    * A 32-bit random number that hooks can use to make pseudo-random choices between multiple
    * possible mutations they could guide the fuzzer towards. Hooks <b>must not</b> base the decision
-   * whether or not to report a finding on this number as this will make findings non-reproducible.
+   * whether to report a finding on this number as this will make findings non-reproducible.
    *
    * <p>This is the same number that libFuzzer uses as a seed internally, which makes it possible to
    * deterministically reproduce a previous fuzzing run by supplying the seed value printed by
@@ -172,46 +191,31 @@ public final class Jazzer {
   }
 
   /**
-   * Instructs the fuzzer to attain as many possible values for the absolute value of {@code state}
-   * as possible.
+   * Instructs the fuzzer to attain as many possible values for {@code state} as possible.
    *
    * <p>Call this function from a fuzz target or a hook to help the fuzzer track partial progress
    * (e.g. by passing the length of a common prefix of two lists that should become equal) or
    * explore different values of state that is not directly related to code coverage (see the
    * MazeFuzzer example).
    *
-   * <p><b>Note:</b> This hint only takes effect if the fuzzer is run with the argument {@code
-   * -use_value_profile=1}.
+   * <p>Each unique state value is tracked via libFuzzer's counter bucketing mechanism, enabling us
+   * to represent 8 different states for each coverage counter. As a result, all 256 byte values are
+   * distinguished by mapping each to a unique (counter, bucket) pair across 32 counters. See:
+   * https://github.com/llvm/llvm-project/blob/972e73b812cb7b6dd349c7c07daae73314f29e8f/compiler-rt/lib/fuzzer/FuzzerTracePC.h#L213-L235
    *
    * @param state a numeric encoding of a state that should be varied by the fuzzer
    * @param id a (probabilistically) unique identifier for this particular state hint
    */
   public static void exploreState(byte state, int id) {
-    if (TRACE_PC_INDIR == null) {
+    if (COUNTERS_TRACKER_ALLOCATE == null) {
       return;
     }
-    // We only use the lower 7 bits of state, which allows for 128 different state values tracked
-    // per id. The particular amount of 7 bits of state is also used in libFuzzer's
-    // TracePC::HandleCmp:
-    // https://github.com/llvm/llvm-project/blob/c12d49c4e286fa108d4d69f1c6d2b8d691993ffd/compiler-rt/lib/fuzzer/FuzzerTracePC.cpp#L390
-    // This value should be large enough for most use cases (e.g. tracking the length of a prefix in
-    // a comparison) while being small enough that the bitmap isn't filled up too quickly
-    // (65536 bits / 128 bits per id = 512 ids).
-
-    // We use tracePcIndir as a way to set a bit in libFuzzer's value profile bitmap. In
-    // TracePC::HandleCallerCallee, which is what this function ultimately calls through to, the
-    // lower 12 bits of each argument are combined into a 24-bit index into the bitmap, which is
-    // then reduced modulo a 16-bit prime. To keep the modulo bias small, we should fill as many
-    // of the relevant bits as possible.
-
-    // We pass state in the lowest bits of the caller address, which is used to form the lowest bits
-    // of the bitmap index. This should result in the best caching behavior as state is expected to
-    // change quickly in consecutive runs and in this way all its bitmap entries would be located
-    // close to each other in memory.
-    int lowerBits = (state & 0x7f) | (id << 7);
-    int upperBits = id >>> 5;
     try {
-      TRACE_PC_INDIR.invokeExact(upperBits, lowerBits);
+      COUNTERS_TRACKER_ALLOCATE.invokeExact(id, 32);
+      int unsignedState = state & 0xff;
+      int counterIndex = unsignedState >> 3;
+      byte counterValue = EXPLORE_BUCKET_VALUES[unsignedState & 0x7];
+      COUNTERS_TRACKER_SET_COUNTER.invokeExact(id, counterIndex, counterValue);
     } catch (Throwable e) {
       e.printStackTrace();
     }
@@ -222,12 +226,83 @@ public final class Jazzer {
    * generated call-site identifiers. During instrumentation, calls to this method are replaced with
    * calls to {@link #exploreState(byte, int)} using a unique id for each call site.
    *
+   * <p>Without instrumentation, this is a no-op.
+   *
    * @param state a numeric encoding of a state that should be varied by the fuzzer
    * @see #exploreState(byte, int)
    */
   public static void exploreState(byte state) {
     // Instrumentation replaces calls to this method with calls to exploreState(byte, int) using
     // an automatically generated call-site id. Without instrumentation, this is a no-op.
+  }
+
+  /**
+   * Hill-climbing API to maximize a value. For each observed value v in [minValue, maxValue],
+   * provides feedback that all values in [minValue, v] are covered.
+   *
+   * <p>This enables corpus minimization to keep only the input resulting in the maximum value.
+   * Values below minValue provide no signal. Values above maxValue are clamped to maxValue.
+   *
+   * <p><b>Important:</b> This allocates (maxValue - minValue + 1) coverage counters per unique ID.
+   * For large value ranges, use a mapping function to reduce the range:
+   *
+   * <pre>{@code
+   * // Map [0, 1_000_000] to [0, 1000] steps
+   * long step = value < 0 ? 0 : Math.min(value / 1000, 1000);
+   * Jazzer.maximize(step, id, 0, 1000);
+   * }</pre>
+   *
+   * @param value The value to maximize (will be clamped to [minValue, maxValue])
+   * @param id A unique identifier for this call site (must be consistent across runs)
+   * @param minValue The minimum value in the range (inclusive)
+   * @param maxValue The maximum value in the range (inclusive)
+   */
+  public static void maximize(long value, int id, long minValue, long maxValue) {
+    if (COUNTERS_TRACKER_ALLOCATE == null) {
+      return;
+    }
+
+    if (maxValue < minValue) {
+      throw new IllegalArgumentException("maxValue must be >= minValue");
+    }
+    long range = maxValue - minValue;
+    if (range < 0 || range > (long) Integer.MAX_VALUE - 1) {
+      throw new IllegalArgumentException(
+          "Range too large: (maxValue - minValue + 1) must be <= Integer.MAX_VALUE");
+    }
+
+    int numCounters = (int) (range + 1);
+
+    try {
+      // Allocate counters (idempotent, validates numCounters > 0 and consistency)
+      COUNTERS_TRACKER_ALLOCATE.invokeExact(id, numCounters);
+
+      // Set counters if value provides signal
+      if (value >= minValue) {
+        int toOffset = (int) (Math.min(value, maxValue) - minValue);
+        COUNTERS_TRACKER_SET_RANGE.invokeExact(id, toOffset);
+      }
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Convenience overload of {@link #maximize(long, int, long, long)} that allows using
+   * automatically generated call-site identifiers. During instrumentation, calls to this method are
+   * replaced with calls to {@link #maximize(long, int, long, long)} using a unique id for each call
+   * site.
+   *
+   * <p>Without instrumentation, this is a no-op.
+   *
+   * @param value The value to maximize
+   * @param minValue The minimum value in the range (inclusive)
+   * @param maxValue The maximum value in the range (inclusive)
+   * @see #maximize(long, int, long, long)
+   */
+  public static void maximize(long value, long minValue, long maxValue) {
+    // Instrumentation replaces calls to this method with calls to maximize(long, int, long, long)
+    // using an automatically generated call-site id. Without instrumentation, this is a no-op.
   }
 
   /**
