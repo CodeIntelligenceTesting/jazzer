@@ -43,12 +43,16 @@ import java.io.UncheckedIOException;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class ArgumentsMutator {
   private final ExtendedMutatorFactory mutatorFactory;
   private final Method method;
   private final InPlaceProductMutator productMutator;
+
+  private static final Map<Method, ArgumentsMutator> mutatorsCache = new ConcurrentHashMap<>();
 
   private Object[] arguments;
 
@@ -78,15 +82,14 @@ public final class ArgumentsMutator {
   }
 
   public static ArgumentsMutator forMethodOrThrow(Method method) {
-    return forMethod(Mutators.newFactory(new ValuePoolRegistry(method)), method)
-        .orElseThrow(
-            () ->
-                new IllegalArgumentException(
-                    "Failed to construct mutator for " + prettyPrintMethod(method)));
-  }
-
-  public static Optional<ArgumentsMutator> forMethod(Method method) {
-    return forMethod(Mutators.newFactory(new ValuePoolRegistry(method)), method);
+    return mutatorsCache.computeIfAbsent(
+        method,
+        m ->
+            forMethod(Mutators.newFactory(new ValuePoolRegistry(m)), m)
+                .orElseThrow(
+                    () ->
+                        new IllegalArgumentException(
+                            "Failed to construct mutator for " + prettyPrintMethod(m))));
   }
 
   public static Optional<ArgumentsMutator> forMethod(

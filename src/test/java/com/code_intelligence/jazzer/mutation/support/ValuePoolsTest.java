@@ -17,20 +17,27 @@
 package com.code_intelligence.jazzer.mutation.support;
 
 import static com.code_intelligence.jazzer.mutation.support.PropertyConstraintSupport.propagatePropertyConstraints;
+import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockSourceDirectory;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.parameterTypeIfParameterized;
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.withExtraAnnotations;
 import static com.code_intelligence.jazzer.mutation.utils.PropertyConstraint.DECLARATION;
-import static com.code_intelligence.jazzer.mutation.utils.PropertyConstraint.RECURSIVE;
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.code_intelligence.jazzer.mutation.annotation.ValuePool;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class ValuePoolsTest {
 
@@ -39,12 +46,15 @@ class ValuePoolsTest {
 
   private static final ValuePoolRegistry valuePools;
 
+  private static Method fuzzTestMethod;
+
   static {
     try {
-      valuePools = new ValuePoolRegistry(ValuePoolsTest.class.getMethod("dummyFuzzTestMethod"));
+      fuzzTestMethod = ValuePoolsTest.class.getMethod("dummyFuzzTestMethod");
     } catch (NoSuchMethodException e) {
       throw new RuntimeException(e);
     }
+    valuePools = new ValuePoolRegistry(fuzzTestMethod);
   }
 
   public static Stream<?> myPool() {
@@ -75,35 +85,74 @@ class ValuePoolsTest {
     AnnotatedType type =
         withExtraAnnotations(
             new TypeHolder<@ValuePool(value = "myPool", p = 0.2) String>() {}.annotatedType(),
-            withValuePoolImplementation(new String[] {"myPool2"}, 0.3));
+            new ValuePoolBuilder().value("myPool2").p(0.3).build());
     double p = valuePools.extractFirstProbability(type);
     assertThat(p).isEqualTo(0.2);
   }
 
   @Test
+  void testExtractFirstMaxMutations_Default() {
+    AnnotatedType type = new TypeHolder<@ValuePool("myPool") String>() {}.annotatedType();
+    int maxMutations = valuePools.extractFirstMaxMutations(type);
+    assertThat(maxMutations).isEqualTo(1);
+  }
+
+  @Test
+  void testExtractFirstMaxMutations_OneUserDefined() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool(value = "myPool2", maxMutations = 10) String>() {}.annotatedType();
+    int maxMutations = valuePools.extractFirstMaxMutations(type);
+    assertThat(maxMutations).isEqualTo(10);
+  }
+
+  @Test
+  void testExtractMaxMutations_TwoWithLastUsed() {
+    AnnotatedType type =
+        withExtraAnnotations(
+            new TypeHolder<
+                @ValuePool(value = "myPool", maxMutations = 2) String>() {}.annotatedType(),
+            new ValuePoolBuilder().value("myPool2").maxMutations(10).build());
+    int maxMutations = valuePools.extractFirstMaxMutations(type);
+    assertThat(maxMutations).isEqualTo(2);
+  }
+
+  @Test
+  void testExtractFirstMaxMutations_Negative() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool(value = "myPool2", maxMutations = -1) String>() {}.annotatedType();
+    assertThat(
+            assertThrows(
+                IllegalArgumentException.class, () -> valuePools.extractFirstMaxMutations(type)))
+        .hasMessageThat()
+        .contains("@ValuePool maxMutations must be >= 0");
+  }
+
+  @Test
   void testExtractRawValues_OneAnnotation() {
     AnnotatedType type = new TypeHolder<@ValuePool("myPool") String>() {}.annotatedType();
-    Optional<Stream<?>> elements = valuePools.extractRawValues(type);
-    assertThat(elements).isPresent();
-    assertThat(elements.get()).containsExactly("value1", "value2", "value3");
+    List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements).isNotEmpty();
+    assertThat(elements).containsExactly("value1", "value2", "value3");
   }
 
   @Test
   void testExtractProviderStreams_JoinStreamsInOneProvider() {
     AnnotatedType type =
         new TypeHolder<@ValuePool({"myPool", "myPool2"}) String>() {}.annotatedType();
-    Optional<Stream<?>> elements = valuePools.extractRawValues(type);
-    assertThat(elements).isPresent();
-    assertThat(elements.get()).containsExactly("value1", "value2", "value3", "value4");
+    List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements).isNotEmpty();
+    assertThat(elements).containsExactly("value1", "value2", "value3", "value4");
   }
 
   @Test
   void testExtractRawValues_JoinTwoFromOne() {
     AnnotatedType type =
         new TypeHolder<@ValuePool({"myPool", "myPool2"}) String>() {}.annotatedType();
-    Optional<Stream<?>> elements = valuePools.extractRawValues(type);
-    assertThat(elements).isPresent();
-    assertThat(elements.get()).containsExactly("value1", "value2", "value3", "value4");
+    List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements).isNotEmpty();
+    assertThat(elements).containsExactly("value1", "value2", "value3", "value4");
   }
 
   @Test
@@ -111,10 +160,10 @@ class ValuePoolsTest {
     AnnotatedType type =
         withExtraAnnotations(
             new TypeHolder<@ValuePool("myPool2") String>() {}.annotatedType(),
-            withValuePoolImplementation(new String[] {"myPool"}, 5));
-    Optional<Stream<?>> elements = valuePools.extractRawValues(type);
-    assertThat(elements).isPresent();
-    assertThat(elements.get()).containsExactly("value1", "value2", "value3", "value4");
+            new ValuePoolBuilder().value("myPool").build());
+    List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements).isNotEmpty();
+    assertThat(elements).containsExactly("value1", "value2", "value3", "value4");
   }
 
   @Test
@@ -145,6 +194,191 @@ class ValuePoolsTest {
     assertThat(0.9).isEqualTo(valuePools.extractFirstProbability(propagatedType));
   }
 
+  @Test
+  void testExtractRawValues_Files_NonRecursive(@TempDir Path tempDir) throws IOException {
+    mockSourceDirectory(tempDir);
+    String glob = tempDir + "/*.txt";
+    AnnotatedType type =
+        withExtraAnnotations(
+            new TypeHolder<byte[]>() {}.annotatedType(),
+            new ValuePoolBuilder().files(glob).build());
+
+    List<String> elements =
+        valuePools
+            .extractUserValues(type)
+            .map(value -> new String((byte[]) value, StandardCharsets.UTF_8))
+            .collect(Collectors.toList());
+
+    assertThat(elements).containsExactly("a.txt", "c.zip.txt");
+  }
+
+  @Test
+  void testExtractRawValues_Files_Recursive(@TempDir Path tempDir) throws IOException {
+    mockSourceDirectory(tempDir);
+    String glob = tempDir + "/**/*.txt";
+    AnnotatedType type =
+        withExtraAnnotations(
+            new TypeHolder<byte[]>() {}.annotatedType(),
+            new ValuePoolBuilder().files(glob).build());
+
+    List<String> elements =
+        valuePools
+            .extractUserValues(type)
+            .map(value -> new String((byte[]) value, StandardCharsets.UTF_8))
+            .collect(Collectors.toList());
+
+    assertThat(elements)
+        .containsExactly(
+            "sub/b.txt",
+            "sub/deep/c.txt",
+            "sub/deep/corpus/d.txt",
+            "sub/deeper/than/mah.txt",
+            "test/c/d/bar.txt");
+  }
+
+  @Test
+  void testExtractRawValues_Files_RelativePatternInsideBrackets(@TempDir Path tempDir)
+      throws IOException {
+    mockSourceDirectory(tempDir);
+    String glob = "{" + "**/*.txt}";
+    AnnotatedType type =
+        withExtraAnnotations(
+            new TypeHolder<byte[]>() {}.annotatedType(),
+            new ValuePoolBuilder().files(glob).build());
+
+    // Need to create ValuePoolRegistry with tempDir as working directory
+    ValuePoolRegistry valuePools = new ValuePoolRegistry(fuzzTestMethod, tempDir);
+
+    List<String> elements =
+        valuePools
+            .extractUserValues(type)
+            .map(value -> new String((byte[]) value, StandardCharsets.UTF_8))
+            .collect(Collectors.toList());
+
+    assertThat(elements)
+        .containsExactly(
+            "sub/b.txt",
+            "sub/deep/c.txt",
+            "sub/deep/corpus/d.txt",
+            "sub/deeper/than/mah.txt",
+            "test/c/d/bar.txt");
+  }
+
+  @Test
+  void testExtractRawValues_Files_OverlappingPatternsAreDeduped(@TempDir Path tempDir)
+      throws IOException {
+    mockSourceDirectory(tempDir);
+
+    String recursiveGlob = tempDir + "/**.txt";
+    String directGlob = tempDir + "/*.txt";
+    String relativeRecursiveGlob = "**.txt";
+
+    AnnotatedType type =
+        withExtraAnnotations(
+            new TypeHolder<byte[]>() {}.annotatedType(),
+            new ValuePoolBuilder().files(recursiveGlob, directGlob, relativeRecursiveGlob).build());
+
+    ValuePoolRegistry valuePools;
+    try {
+      valuePools =
+          new ValuePoolRegistry(ValuePoolsTest.class.getMethod("dummyFuzzTestMethod"), tempDir);
+    } catch (NoSuchMethodException e) {
+      throw new RuntimeException(e);
+    }
+
+    List<String> elements =
+        valuePools
+            .extractUserValues(type)
+            .map(value -> new String((byte[]) value, StandardCharsets.UTF_8))
+            .collect(Collectors.toList());
+
+    assertThat(elements)
+        .containsExactly(
+            "a.txt",
+            "c.zip.txt",
+            "sub/b.txt",
+            "sub/deep/c.txt",
+            "sub/deep/corpus/d.txt",
+            "sub/deeper/than/mah.txt",
+            "test/c/d/bar.txt");
+  }
+
+  @Test
+  void testExtractRawValues_Files_GlobsWithMethodSources(@TempDir Path tempDir) throws IOException {
+    mockSourceDirectory(tempDir);
+
+    String recursiveGlob = tempDir + "/**.txt";
+    String directGlob = tempDir + "/*.txt";
+    String relativeRecursiveGlob = "**.txt";
+
+    AnnotatedType type =
+        withExtraAnnotations(
+            new TypeHolder<byte[]>() {}.annotatedType(),
+            new ValuePoolBuilder()
+                .value("myPool")
+                .files(recursiveGlob, directGlob, relativeRecursiveGlob)
+                .build());
+
+    // Need to create ValuePoolRegistry with tempDir as "working directory"
+    ValuePoolRegistry valuePools;
+    try {
+      valuePools =
+          new ValuePoolRegistry(ValuePoolsTest.class.getMethod("dummyFuzzTestMethod"), tempDir);
+    } catch (NoSuchMethodException e) {
+      throw new RuntimeException(e);
+    }
+
+    List<?> elements =
+        valuePools
+            .extractUserValues(type)
+            // if byte[], convert to string
+            .map(
+                value -> {
+                  if (value instanceof byte[]) {
+                    return new String((byte[]) value, StandardCharsets.UTF_8);
+                  } else {
+                    return value;
+                  }
+                })
+            .collect(Collectors.toList());
+
+    assertThat(elements)
+        .containsExactly(
+            // method sources
+            "value1",
+            "value2",
+            "value3",
+            // globs
+            "a.txt",
+            "c.zip.txt",
+            "sub/b.txt",
+            "sub/deep/c.txt",
+            "sub/deep/corpus/d.txt",
+            "sub/deeper/than/mah.txt",
+            "test/c/d/bar.txt");
+  }
+
+  @Test
+  void testExtractRawValues_Files_PatternsWithGlobSymbols(@TempDir Path tempDir)
+      throws IOException {
+    mockSourceDirectory(tempDir);
+
+    String recursiveGlob = tempDir + "/weird/\\[\\]\\{\\}.glob";
+
+    AnnotatedType type =
+        withExtraAnnotations(
+            new TypeHolder<byte[]>() {}.annotatedType(),
+            new ValuePoolBuilder().files(recursiveGlob).build());
+
+    List<String> elements =
+        valuePools
+            .extractUserValues(type)
+            .map(value -> new String((byte[]) value, StandardCharsets.UTF_8))
+            .collect(Collectors.toList());
+
+    assertThat(elements).containsExactly("weird/[]{}.glob");
+  }
+
   private static ValuePool[] getValuePoolAnnotations(AnnotatedType type) {
     return Arrays.stream(type.getAnnotations())
         .filter(annotation -> annotation instanceof ValuePool)
@@ -155,64 +389,131 @@ class ValuePoolsTest {
     return Arrays.stream(getValuePoolAnnotations(type)).flatMap(v -> Arrays.stream(v.value()));
   }
 
-  public static ValuePool withValuePoolImplementation(String[] value, double p) {
-    return withValuePoolImplementation(value, p, RECURSIVE);
-  }
+  private static class ValuePoolBuilder {
+    private String[] value;
+    private String[] files;
+    private double p;
+    private int maxMutations;
+    private String constraint;
 
-  public static ValuePool withValuePoolImplementation(String[] value, double p, String constraint) {
-    return new ValuePool() {
-      @Override
-      public String[] value() {
-        return value;
+    public ValuePoolBuilder() {
+      try {
+        value = (String[]) getDefault("value");
+        files = (String[]) getDefault("files");
+        p = (double) getDefault("p");
+        maxMutations = (int) getDefault("maxMutations");
+        constraint = (String) getDefault("constraint");
+      } catch (NoSuchMethodException e) {
+        throw new RuntimeException("Could not load ValuePool defaults", e);
       }
+    }
 
-      @Override
-      public double p() {
-        return p;
-      }
+    private Object getDefault(String methodName) throws NoSuchMethodException {
+      return ValuePool.class.getDeclaredMethod(methodName).getDefaultValue();
+    }
 
-      @Override
-      public String constraint() {
-        return constraint;
-      }
+    public ValuePoolBuilder value(String... values) {
+      this.value = values;
+      return this;
+    }
 
-      @Override
-      public Class<? extends Annotation> annotationType() {
-        return ValuePool.class;
-      }
+    public ValuePoolBuilder files(String... files) {
+      this.files = files;
+      return this;
+    }
 
-      @Override
-      public boolean equals(Object o) {
-        if (!(o instanceof ValuePool)) {
-          return false;
+    public ValuePoolBuilder p(double p) {
+      this.p = p;
+      return this;
+    }
+
+    public ValuePoolBuilder maxMutations(int maxMutations) {
+      this.maxMutations = maxMutations;
+      return this;
+    }
+
+    public ValuePoolBuilder constraint(String constraint) {
+      this.constraint = constraint;
+      return this;
+    }
+
+    public ValuePool build() {
+      final String[] value = this.value;
+      final double p = this.p;
+      final int maxMutations = this.maxMutations;
+      final String constraint = this.constraint;
+
+      return new ValuePool() {
+        @Override
+        public Class<? extends Annotation> annotationType() {
+          return ValuePool.class;
         }
-        ValuePool other = (ValuePool) o;
-        return Arrays.equals(this.value(), other.value())
-            && this.p() == other.p()
-            && this.constraint().equals(other.constraint());
-      }
 
-      @Override
-      public int hashCode() {
-        int hash = 0;
-        hash += Arrays.hashCode(value()) * 127;
-        hash += Double.hashCode(p()) * 31 * 127;
-        hash += constraint().hashCode() * 127;
-        return hash;
-      }
+        @Override
+        public String[] value() {
+          return value;
+        }
 
-      @Override
-      public String toString() {
-        return "@"
-            + ValuePool.class.getName()
-            + "(value={"
-            + String.join(", ", value())
-            + "}, p="
-            + p()
-            + ", constraint="
-            + constraint()
-            + ")";
-      }
-    };
+        @Override
+        public String[] files() {
+          return files;
+        }
+
+        @Override
+        public double p() {
+          return p;
+        }
+
+        @Override
+        public int maxMutations() {
+          return maxMutations;
+        }
+
+        @Override
+        public String constraint() {
+          return constraint;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+          if (!(o instanceof ValuePool)) {
+            return false;
+          }
+          ValuePool other = (ValuePool) o;
+          return Arrays.equals(this.value(), other.value())
+              && Arrays.equals(this.files(), other.files())
+              && this.p() == other.p()
+              && this.maxMutations() == other.maxMutations()
+              && this.constraint().equals(other.constraint());
+        }
+
+        @Override
+        public int hashCode() {
+          return Objects.hash(
+              Arrays.hashCode(value()),
+              Arrays.hashCode(files()),
+              p(),
+              maxMutations(),
+              constraint());
+        }
+
+        @Override
+        public String toString() {
+          return "@"
+              + ValuePool.class.getName()
+              + "(value={"
+              + String.join(", ", value())
+              + "}, files="
+              + String.join(", ", files())
+              + "}, p="
+              + p()
+              + ", maxMutations="
+              + maxMutations()
+              + ", constraint="
+              + constraint()
+              + ")";
+        }
+      };
+    }
   }
 }
