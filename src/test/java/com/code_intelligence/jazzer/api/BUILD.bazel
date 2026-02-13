@@ -1,3 +1,5 @@
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+
 java_test(
     name = "AutofuzzTest",
     size = "small",
