@@ -9,7 +9,7 @@ on:
 jobs:
 
   generate_docs:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: checkout
@@ -33,7 +33,7 @@ jobs:
           if-no-files-found: error
 
   update_docs:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: generate_docs
 
     environment:
