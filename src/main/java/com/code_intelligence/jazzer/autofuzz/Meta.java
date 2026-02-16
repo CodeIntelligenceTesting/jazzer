@@ -496,7 +496,7 @@ public class Meta {
       } else {
         if (visitor != null) {
           visitor.pushGroup(
-              String.format("new %s[]{", type.getComponentType().getName()), ", ", "}");
+              String.format("new %s[]{", type.getComponentType().getCanonicalName()), ", ", "}");
         }
         int remainingBytesBeforeFirstElementCreation = data.remainingBytes();
         Object firstElement = consume(data, type.getComponentType(), visitor);
@@ -593,7 +593,7 @@ public class Meta {
     } else if (type.isEnum()) {
       Enum<?> enumValue = (Enum<?>) data.pickValue(type.getEnumConstants());
       if (visitor != null) {
-        visitor.pushElement(String.format("%s.%s", type.getName(), enumValue.name()));
+        visitor.pushElement(String.format("%s.%s", type.getCanonicalName(), enumValue.name()));
       }
       return enumValue;
     } else if (type == Class.class) {

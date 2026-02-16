@@ -555,6 +555,23 @@ java_fuzz_target_test(
     ],
 )
 
+java_library(
+    name = "autofuzz_multi_dim_array_target",
+    srcs = ["src/test/java/com/example/AutofuzzMultiDimArrayTarget.java"],
+)
+
+# Regression test for https://github.com/CodeIntelligenceTesting/jazzer/issues/1026.
+java_fuzz_target_test(
+    name = "AutofuzzMultiDimArrayFuzzer",
+    allowed_findings = ["java.lang.RuntimeException"],
+    fuzzer_args = [
+        "--autofuzz=com.example.AutofuzzMultiDimArrayTarget::new",
+    ],
+    runtime_deps = [
+        ":autofuzz_multi_dim_array_target",
+    ],
+)
+
 java_fuzz_target_test(
     name = "SilencedFuzzer",
     timeout = "short",
