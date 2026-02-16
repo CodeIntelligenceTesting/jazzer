@@ -125,6 +125,45 @@ public class MetaTest {
             23, // remaining bytes
             "foo\nbar"));
 
+    // Test for multi-dimensional array codegen
+    // (https://github.com/CodeIntelligenceTesting/jazzer/issues/1026)
+    consumeTestCase(
+        int[][].class,
+        new int[][] {{1, 2}, {3}},
+        "new int[][]{new int[]{1, 2}, new int[]{3}}",
+        Arrays.asList(
+            (byte) 1, // do not return null for the outer array
+            100, // remainingBytes before first element creation
+            (byte) 1, // do not return null for first int[]
+            50, // remainingBytes for consumeArrayLength inside first consumeInts
+            new int[] {1, 2}, // consumeInts returns first int[]
+            40, // remainingBytes after first element creation
+            // sizeOfElementEstimate = 100 - 40 = 60
+            // consumeArrayLength(data, 60) = remainingBytes / 2 / 60
+            // need this to return 2: 240 / 2 / 60 = 2
+            240, // remainingBytes for outer consumeArrayLength
+            (byte) 1, // do not return null for second int[]
+            50, // remainingBytes for consumeArrayLength inside second consumeInts
+            new int[] {3})); // consumeInts returns second int[]
+
+    // Test that inner class arrays use getCanonicalName() (dot-separated) not getTypeName() which
+    // would produce '$'-separated names that are not valid Java source.
+    consumeTestCase(
+        TestEnum[].class,
+        new TestEnum[] {TestEnum.BAR},
+        "new com.code_intelligence.jazzer.autofuzz.MetaTest.TestEnum[]{"
+            + "com.code_intelligence.jazzer.autofuzz.MetaTest.TestEnum.BAR}",
+        Arrays.asList(
+            (byte) 1, // do not return null for the array
+            100, // remainingBytes before first element creation
+            (byte) 1, // do not return null for the enum value
+            1, // pickValue index (BAR)
+            90, // remainingBytes after first element creation
+            // sizeOfElementEstimate = 100 - 90 = 10
+            // consumeArrayLength(data, 10) = remainingBytes / 2 / 10
+            // need this to return 1: 20 / 2 / 10 = 1
+            20)); // remainingBytes for outer consumeArrayLength
+
     byte[] testInputStreamBytes = new byte[] {(byte) 1, (byte) 2, (byte) 3};
     consumeTestCase(
         new ByteArrayInputStream(testInputStreamBytes),
@@ -136,7 +175,7 @@ public class MetaTest {
 
     consumeTestCase(
         TestEnum.BAR,
-        String.format("%s.%s", TestEnum.class.getName(), TestEnum.BAR.name()),
+        String.format("%s.%s", TestEnum.class.getCanonicalName(), TestEnum.BAR.name()),
         Arrays.asList(
             (byte) 1, // do not return null for the enum value
             1 /* second value */));
