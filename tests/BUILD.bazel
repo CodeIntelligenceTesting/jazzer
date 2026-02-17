@@ -124,6 +124,32 @@ java_fuzz_target_test(
     ],
 )
 
+java_binary(
+    name = "CoverageWithHooksFuzzerHooks",
+    srcs = ["src/test/java/com/example/CoverageWithHooksFuzzerHooks.java"],
+    create_executable = False,
+    deploy_manifest_lines = ["Jazzer-Hook-Classes: com.example.CoverageWithHooksFuzzerHooks"],
+    deps = ["//src/main/java/com/code_intelligence/jazzer/api:hooks"],
+)
+
+# Regression test for https://github.com/CodeIntelligence/jazzer/issues/878:
+# Custom hooks must be disabled during coverage report generation to prevent
+# NoClassDefFoundError when hooked classes are used and the hook class is no
+# longer available.
+java_fuzz_target_test(
+    name = "CoverageWithHooksFuzzer",
+    srcs = ["src/test/java/com/example/CoverageWithHooksFuzzer.java"],
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    fuzzer_args = [
+        "--coverage_report=coverage.txt",
+        "--instrumentation_includes=com.example.**",
+    ],
+    hook_jar = "CoverageWithHooksFuzzerHooks_deploy.jar",
+    target_class = "com.example.CoverageWithHooksFuzzer",
+    verify_crash_input = False,
+    verify_crash_reproducer = False,
+)
+
 java_library(
     name = "autofuzz_inner_class_target",
     srcs = ["src/test/java/com/example/AutofuzzInnerClassTarget.java"],
