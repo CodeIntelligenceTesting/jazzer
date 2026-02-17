@@ -448,6 +448,7 @@ public final class FuzzTargetRunner {
 
   private static void shutdown() {
     if (!Opt.coverageDump.get().isEmpty() || !Opt.coverageReport.get().isEmpty()) {
+      JazzerInternal.hooksEnabled = false;
       if (!Opt.coverageDump.get().isEmpty()) {
         CoverageRecorder.dumpJacocoCoverage(Opt.coverageDump.get());
       }

@@ -250,7 +250,8 @@ public final class Opt {
   public static final OptItem<Boolean> mergeInner = boolSetting("merge_inner", false, null);
 
   // Whether hook instrumentation should add a check for JazzerInternal#hooksEnabled before
-  // executing hooks. Used to disable hooks during non-fuzz JUnit tests.
+  // executing hooks. Used to disable hooks during non-fuzz JUnit tests and during coverage
+  // report generation at shutdown.
   public static final OptItem<Boolean> conditionalHooks =
       boolSetting("conditional_hooks", false, null);
 
