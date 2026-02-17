@@ -50,6 +50,17 @@ fun installInternal(
     dumpClassesDir: String = Opt.dumpClassesDir.get(),
     additionalClassesExcludes: List<String> = Opt.additionalClassesExcludes.get(),
 ) {
+    // Enable conditional hooks when custom hooks are used together with coverage reporting so
+    // that hooks can be disabled during coverage report generation at shutdown (see #878).
+    // Without this, any use of hooked classes during coverage dumping would trigger custom hook
+    // dispatch, causing NoClassDefFoundError when the hook class is no longer loadable.
+    val useConditionalHooks =
+        conditionalHooks ||
+            (
+                userHookNames.isNotEmpty() &&
+                    (Opt.coverageDump.get().isNotEmpty() || Opt.coverageReport.get().isNotEmpty())
+            )
+
     val allCustomHookNames = (Constants.SANITIZER_HOOK_NAMES + userHookNames).toSet()
     check(allCustomHookNames.isNotEmpty()) { "No hooks registered; expected at least the built-in hooks" }
     val customHookNames = allCustomHookNames - disabledHookNames.toSet()
@@ -136,7 +147,7 @@ fun installInternal(
             instrumentationTypes,
             includedHooks.hooks,
             customHooks.hooks,
-            conditionalHooks,
+            useConditionalHooks,
             customHooks.additionalHookClassNameGlobber,
             coverageIdSynchronizer,
             dumpClassesDirPath,
