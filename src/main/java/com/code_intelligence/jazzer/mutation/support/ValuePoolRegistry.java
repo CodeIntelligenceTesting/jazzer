@@ -32,14 +32,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ValuePoolRegistry {
   private final Method fuzzTestMethod;
   private final Path baseDir;
-  private final Map<String, Supplier<Stream<?>>> pools;
+  private final Map<Method, List<?>> supplierValuesCache = new LinkedHashMap<>();
   private final Map<Path, Optional<byte[]>> pathToBytesCache = new LinkedHashMap<>();
 
   public ValuePoolRegistry(Method fuzzTestMethod) {
@@ -48,7 +47,6 @@ public class ValuePoolRegistry {
 
   protected ValuePoolRegistry(Method fuzzTestMethod, Path baseDir) {
     this.fuzzTestMethod = fuzzTestMethod;
-    this.pools = extractValueSuppliers(fuzzTestMethod);
     this.baseDir = baseDir;
   }
 
@@ -96,29 +94,140 @@ public class ValuePoolRegistry {
             .map(ValuePool::value)
             .flatMap(Arrays::stream)
             .filter(name -> !name.isEmpty())
-            .flatMap(
-                name -> {
-                  Supplier<Stream<?>> supplier = pools.get(name);
-                  if (supplier == null) {
-                    throw new IllegalStateException(
-                        "@ValuePool: No method named '"
-                            + name
-                            + "' found for type "
-                            + type.getType().getTypeName()
-                            + " in fuzz test method "
-                            + fuzzTestMethod.getName()
-                            + ". Available provider methods: "
-                            + String.join(", ", pools.keySet()));
-                  }
-                  return supplier.get();
-                })
+            .map(String::trim)
+            .flatMap(this::loadUserValuesFromSupplier)
             .distinct();
 
-    // Walking the file system only makes sense for ValuePool's that annotate byte[] types.
+    // Walking the file system only makes sense for pools that annotate byte[] types.
     if (type.getType() == byte[].class) {
       return Stream.concat(valuesFromSourceMethods, extractByteArraysFromPatterns(type));
     } else {
       return valuesFromSourceMethods;
+    }
+  }
+
+  private Stream<?> loadUserValuesFromSupplier(String supplierRef) {
+    Method supplier = resolveSupplier(supplierRef);
+    return supplierValuesCache
+        .computeIfAbsent(supplier, s -> loadValuesFromMethod(s, supplierRef))
+        .stream();
+  }
+
+  private Method resolveSupplier(String supplierRef) {
+    if (supplierRef.isEmpty()) {
+      throw new IllegalArgumentException("@ValuePool: Supplier method cannot be blank");
+    }
+
+    int hashIndex = supplierRef.indexOf('#');
+
+    // Supplier method is in the fuzz test class
+    if (hashIndex == -1) {
+      return resolveSupplier(fuzzTestMethod.getDeclaringClass(), supplierRef);
+    }
+
+    // Supplier method is not in the fuzz test class
+    // Validate the format of the supplier reference before loading the class
+    if (hashIndex != supplierRef.lastIndexOf('#')) {
+      throw new IllegalArgumentException(
+          "@ValuePool: Invalid supplier method reference (multiple '#'): " + supplierRef);
+    }
+    if (hashIndex == 0 || hashIndex == supplierRef.length() - 1) {
+      throw new IllegalArgumentException(
+          "@ValuePool: Invalid supplier method reference (expected 'ClassName#methodName'): "
+              + supplierRef);
+    }
+
+    String className = supplierRef.substring(0, hashIndex);
+    String methodName = supplierRef.substring(hashIndex + 1);
+    if (className.isEmpty() || methodName.isEmpty()) {
+      throw new IllegalArgumentException(
+          "@ValuePool: Invalid supplier method reference (expected 'ClassName#methodName'): "
+              + supplierRef);
+    }
+
+    Class<?> clazz = loadClass(className);
+    return resolveSupplier(clazz, methodName);
+  }
+
+  private Method resolveSupplier(Class<?> clazz, String methodName) {
+    try {
+      return clazz.getDeclaredMethod(methodName);
+    } catch (NoSuchMethodException e) {
+      throw new IllegalArgumentException(
+          "@ValuePool: No supplier method named '" + methodName + "' found in class " + clazz, e);
+    }
+  }
+
+  private Class<?> loadClass(String className) {
+    ClassLoader fuzzTestLoader = fuzzTestMethod.getDeclaringClass().getClassLoader();
+    try {
+      return Class.forName(className, false, fuzzTestLoader);
+    } catch (ClassNotFoundException | LinkageError | SecurityException firstFailure) {
+      // Retry with the context class loader
+      ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+      if (contextLoader != null && contextLoader != fuzzTestLoader) {
+        try {
+          return Class.forName(className, false, contextLoader);
+        } catch (ClassNotFoundException | LinkageError | SecurityException secondFailure) {
+          IllegalArgumentException ex =
+              new IllegalArgumentException(
+                  "@ValuePool: Failed to load class '"
+                      + className
+                      + "' (fuzzTestLoader="
+                      + fuzzTestLoader
+                      + ", contextLoader="
+                      + contextLoader
+                      + ")",
+                  firstFailure);
+          ex.addSuppressed(secondFailure);
+          throw ex;
+        }
+      }
+      if (firstFailure instanceof ClassNotFoundException) {
+        throw new IllegalArgumentException(
+            "@ValuePool: No class named '" + className + "' found", firstFailure);
+      }
+      throw new IllegalArgumentException(
+          "@ValuePool: Failed to load class '"
+              + className
+              + "' using class loader "
+              + fuzzTestLoader,
+          firstFailure);
+    }
+  }
+
+  private List<Object> loadValuesFromMethod(Method supplier, String supplierRef) {
+    if (!Modifier.isStatic(supplier.getModifiers())) {
+      throw new IllegalStateException(
+          "@ValuePool: supplier method '"
+              + supplierRef
+              + "' must be static in fuzz test method "
+              + fuzzTestMethod.getName());
+    }
+    if (!Stream.class.equals(supplier.getReturnType())) {
+      throw new IllegalStateException(
+          "@ValuePool: supplier method '"
+              + supplierRef
+              + "' must return a Stream<?> in fuzz test method "
+              + fuzzTestMethod.getName());
+    }
+
+    supplier.setAccessible(true);
+
+    try {
+      List<Object> values = ((Stream<?>) supplier.invoke(null)).collect(Collectors.toList());
+      if (values.isEmpty()) {
+        throw new IllegalStateException(
+            "@ValuePool: supplier method '" + supplierRef + "' returned no values.");
+      }
+      return values;
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException("@ValuePool: Access denied for supplier method " + supplierRef, e);
+    } catch (InvocationTargetException e) {
+      Throwable cause = e.getCause();
+      throw new RuntimeException(
+          "@ValuePool: Supplier method " + supplierRef + " threw an exception",
+          cause != null ? cause : e);
     }
   }
 
@@ -169,52 +278,5 @@ public class ValuePoolRegistry {
             return Optional.empty();
           }
         });
-  }
-
-  private static Map<String, Supplier<Stream<?>>> extractValueSuppliers(Method fuzzTestMethod) {
-    return Arrays.stream(fuzzTestMethod.getDeclaringClass().getDeclaredMethods())
-        .filter(m -> m.getParameterCount() == 0)
-        .filter(m -> Stream.class.equals(m.getReturnType()))
-        .filter(m -> Modifier.isStatic(m.getModifiers()))
-        .collect(Collectors.toMap(Method::getName, ValuePoolRegistry::createLazyStreamSupplier));
-  }
-
-  private static Supplier<Stream<?>> createLazyStreamSupplier(Method method) {
-    return new Supplier<Stream<?>>() {
-      private volatile List<Object> cachedData = null;
-
-      @Override
-      public Stream<?> get() {
-        if (cachedData == null) {
-          synchronized (this) {
-            if (cachedData == null) {
-              cachedData = loadDataFromMethod(method);
-            }
-          }
-          if (cachedData.isEmpty()) {
-            throw new IllegalStateException(
-                "@ValuePool: method '"
-                    + method.getName()
-                    + "' returned no values. Value pool methods must return at least one value.");
-          }
-        }
-        return cachedData.stream();
-      }
-    };
-  }
-
-  private static List<Object> loadDataFromMethod(Method method) {
-    method.setAccessible(true);
-    try {
-      Stream<?> stream = (Stream<?>) method.invoke(null);
-      return stream.collect(Collectors.toList());
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException("@ValuePool: Access denied for method " + method.getName(), e);
-    } catch (InvocationTargetException e) {
-      Throwable cause = e.getCause();
-      throw new RuntimeException(
-          "@ValuePool: Method " + method.getName() + " threw an exception",
-          cause != null ? cause : e);
-    }
   }
 }
