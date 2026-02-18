@@ -65,6 +65,33 @@ class ValuePoolsTest {
     return Stream.of("value1", "value2", "value3", "value4");
   }
 
+  private static Stream<?> myPrivatePool() {
+    return Stream.of("private!");
+  }
+
+  public static Stream<Integer> poolOfInts() {
+    return Stream.of(1, 2, 3);
+  }
+
+  public static List<Integer> listSupplier() {
+    return Arrays.asList(1, 2, 3);
+  }
+
+  public static Stream<?> badPool(int arg) {
+    return Stream.of(1, 2, 3);
+  }
+
+  public static Stream<?> emptyPool() {
+    return Stream.empty();
+  }
+
+  private static int sideEffectCounter = 0;
+
+  static Stream<?> poolWithSideEffect() {
+    sideEffectCounter++;
+    return Stream.of("only once");
+  }
+
   @Test
   void testExtractFirstProbability_Default() {
     AnnotatedType type = new TypeHolder<@ValuePool("myPool") String>() {}.annotatedType();
@@ -164,6 +191,212 @@ class ValuePoolsTest {
     List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
     assertThat(elements).isNotEmpty();
     assertThat(elements).containsExactly("value1", "value2", "value3", "value4");
+  }
+
+  @Test
+  void testExtractRawValues_PrivatePool() {
+    AnnotatedType type = new TypeHolder<@ValuePool("myPrivatePool") String>() {}.annotatedType();
+    List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements).isNotEmpty();
+    assertThat(elements).containsExactly("private!");
+  }
+
+  @Test
+  void testExtractRawValues_SupplierInAnotherClass() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool("com.code_intelligence.jazzer.mutation.support.ValuePoolsTestSupport#myPool")
+            String>() {}.annotatedType();
+    List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements).isNotEmpty();
+    assertThat(elements)
+        .containsExactly("external1", "external2", "external3", 1232187321, -182371);
+  }
+
+  @Test
+  void testExtractRawValues_SupplierInAnotherClassNotPresent() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool(
+                "com.code_intelligence.jazzer.mutation.support.ValuePoolsTestSupport#nonexistent")
+            String>() {}.annotatedType();
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> valuePools.extractUserValues(type).collect(Collectors.toList()));
+  }
+
+  @Test
+  void testExtractRawValues_EmptyAnnotationIsNoop() {
+    AnnotatedType type = new TypeHolder<@ValuePool(p = 0.2) String>() {}.annotatedType();
+    List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements).isEmpty();
+  }
+
+  @Test
+  void testExtractRawValues_ThrowWhenSupplierReturnsNoValues() {
+    AnnotatedType type = new TypeHolder<@ValuePool("emptyPool") String>() {}.annotatedType();
+    assertThat(
+            assertThrows(
+                IllegalStateException.class,
+                () -> valuePools.extractUserValues(type).collect(Collectors.toList())))
+        .hasMessageThat()
+        .contains("returned no values");
+  }
+
+  @Test
+  void testExtractRawValues_InvalidMethodReference_MissingClass() {
+    AnnotatedType type = new TypeHolder<@ValuePool("#myPool") String>() {}.annotatedType();
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> valuePools.extractUserValues(type).collect(Collectors.toList()));
+  }
+
+  @Test
+  void testExtractRawValues_InvalidMethodReference_MissingMethod() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool("com.code_intelligence.jazzer.mutation.support.ValuePoolsTestSupport#")
+            String>() {}.annotatedType();
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> valuePools.extractUserValues(type).collect(Collectors.toList()));
+  }
+
+  @Test
+  void testExtractRawValues_InvalidMethodReference_MultipleHashes() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool(
+                "com.code_intelligence.jazzer.mutation.support.ValuePoolsTestSupport#myPool#x")
+            String>() {}.annotatedType();
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> valuePools.extractUserValues(type).collect(Collectors.toList()));
+  }
+
+  @Test
+  void testExtractRawValues_InvalidSupplier_ReturnsList() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool(
+                "com.code_intelligence.jazzer.mutation.support.ValuePoolsTestSupport#listSupplier")
+            String>() {}.annotatedType();
+    assertThrows(
+        IllegalStateException.class,
+        () -> valuePools.extractUserValues(type).collect(Collectors.toList()));
+  }
+
+  @Test
+  void testExtractRawValues_InvalidLocalSupplier_ReturnsList() {
+    AnnotatedType type = new TypeHolder<@ValuePool("listSupplier") String>() {}.annotatedType();
+    assertThrows(
+        IllegalStateException.class,
+        () -> valuePools.extractUserValues(type).collect(Collectors.toList()));
+  }
+
+  @Test
+  void testExtractRawValues_BadPool() {
+    AnnotatedType type = new TypeHolder<@ValuePool("badPool") String>() {}.annotatedType();
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> valuePools.extractUserValues(type).collect(Collectors.toList()));
+  }
+
+  @Test
+  void testExtractRawValues_StreamOfConcreteTypeSupplier() {
+    AnnotatedType type = new TypeHolder<@ValuePool("poolOfInts") String>() {}.annotatedType();
+    List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements).isNotEmpty();
+    assertThat(elements).containsExactly(1, 2, 3);
+  }
+
+  @Test
+  void testExtractRawValues_OverloadedSupplier() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool(
+                "com.code_intelligence.jazzer.mutation.support.ValuePoolsTestSupport#myPrivatePoolWithOverload")
+            String>() {}.annotatedType();
+    List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements).isNotEmpty();
+    assertThat(elements)
+        .containsExactly("external1", "external2", "external3", 1232187321, -182371);
+  }
+
+  @Test
+  void testExtractRawValues_SupplierInNestedClass() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool(
+                "com.code_intelligence.jazzer.mutation.support.ValuePoolsTestSupport$Nested#myPool")
+            String>() {}.annotatedType();
+    List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements).isNotEmpty();
+    assertThat(elements).containsExactly("nested");
+  }
+
+  @Test
+  void testExtractRawValues_MergeSuppliersFromDifferentClasses() {
+    AnnotatedType type =
+        new TypeHolder<
+            @ValuePool(
+                value = {
+                  "com.code_intelligence.jazzer.mutation.support.ValuePoolsTestSupport$Nested#myPool",
+                  "myPool"
+                })
+            String>() {}.annotatedType();
+    List<?> elements = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements).isNotEmpty();
+    assertThat(elements).containsExactly("nested", "value1", "value2", "value3");
+  }
+
+  @Test
+  void testExtractRawValues_SuppliersCalledOncePerRegistry() {
+    // Each supplier method is called once per fuzz test method (i.e. per ValuePoolRegistry)
+    ValuePoolRegistry valuePools = new ValuePoolRegistry(fuzzTestMethod);
+    sideEffectCounter = 0;
+    AnnotatedType type =
+        new TypeHolder<@ValuePool("poolWithSideEffect") String>() {}.annotatedType();
+    List<?> elements1 = valuePools.extractUserValues(type).collect(Collectors.toList());
+    List<?> elements2 = valuePools.extractUserValues(type).collect(Collectors.toList());
+    List<?> elements3 = valuePools.extractUserValues(type).collect(Collectors.toList());
+    assertThat(elements1).containsExactly("only once");
+    assertThat(elements2).containsExactly("only once");
+    assertThat(elements3).containsExactly("only once");
+    assertThat(sideEffectCounter).isEqualTo(1);
+  }
+
+  @Test
+  void testExtractRawValues_SupplierNameInvariance() {
+    // Each supplier method is called once per fuzz test method (i.e. per ValuePoolRegistry)
+    ValuePoolRegistry valuePools = new ValuePoolRegistry(fuzzTestMethod);
+    sideEffectCounter = 0;
+    AnnotatedType type1 =
+        new TypeHolder<@ValuePool("poolWithSideEffect") String>() {}.annotatedType();
+    AnnotatedType type2 =
+        new TypeHolder<
+            @ValuePool(
+                "com.code_intelligence.jazzer.mutation.support.ValuePoolsTest#poolWithSideEffect")
+            String>() {}.annotatedType();
+    List<?> elements1 = valuePools.extractUserValues(type1).collect(Collectors.toList());
+    List<?> elements2 = valuePools.extractUserValues(type2).collect(Collectors.toList());
+    assertThat(elements1).containsExactly("only once");
+    assertThat(elements2).containsExactly("only once");
+    assertThat(sideEffectCounter).isEqualTo(1);
+  }
+
+  @Test
+  void changeParametersOnly() {
+    AnnotatedType sourceType =
+        new TypeHolder<
+            @ValuePool(value = "list", p = 1.0, maxMutations = 0) List<
+                @ValuePool(p = 0.9, maxMutations = 100) String>>() {}.annotatedType();
+    AnnotatedType targetType = parameterTypeIfParameterized(sourceType, List.class).get();
+    AnnotatedType propagatedType = propagatePropertyConstraints(sourceType, targetType);
+
+    assertThat(extractValuesFromValuePools(propagatedType)).containsExactly("list");
+    assertThat(0.9).isEqualTo(valuePools.extractFirstProbability(propagatedType));
+    assertThat(100).isEqualTo(valuePools.extractFirstMaxMutations(propagatedType));
   }
 
   @Test
