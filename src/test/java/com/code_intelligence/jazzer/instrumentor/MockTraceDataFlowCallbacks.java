@@ -109,4 +109,20 @@ public class MockTraceDataFlowCallbacks {
     // (behaviour is the same)
     return Long.compare(value1, value2);
   }
+
+  public static int traceCmpDoubleWrapper(double value1, double value2, int nanResult, int pc) {
+    traceCmpLong(Double.doubleToRawLongBits(value1), Double.doubleToRawLongBits(value2), pc);
+    if (Double.isNaN(value1) || Double.isNaN(value2)) return nanResult;
+    if (value1 > value2) return 1;
+    if (value1 == value2) return 0;
+    return -1;
+  }
+
+  public static int traceCmpFloatWrapper(float value1, float value2, int nanResult, int pc) {
+    traceCmpInt(Float.floatToRawIntBits(value1), Float.floatToRawIntBits(value2), pc);
+    if (Float.isNaN(value1) || Float.isNaN(value2)) return nanResult;
+    if (value1 > value2) return 1;
+    if (value1 == value2) return 0;
+    return -1;
+  }
 }

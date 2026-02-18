@@ -81,6 +81,24 @@ public final class TraceDataFlowNativeCallbacks {
     return Long.compare(arg1, arg2);
   }
 
+  public static int traceCmpDoubleWrapper(double arg1, double arg2, int nanResult, int pc) {
+    traceCmpLong(Double.doubleToRawLongBits(arg1), Double.doubleToRawLongBits(arg2), pc);
+    if (Double.isNaN(arg1) || Double.isNaN(arg2)) return nanResult;
+    // Mirror DCMPG/DCMPL semantics: in particular, -0.0 == +0.0 must yield 0.
+    if (arg1 > arg2) return 1;
+    if (arg1 == arg2) return 0;
+    return -1;
+  }
+
+  public static int traceCmpFloatWrapper(float arg1, float arg2, int nanResult, int pc) {
+    traceCmpInt(Float.floatToRawIntBits(arg1), Float.floatToRawIntBits(arg2), pc);
+    if (Float.isNaN(arg1) || Float.isNaN(arg2)) return nanResult;
+    // Mirror FCMPG/FCMPL semantics: in particular, -0.0 == +0.0 must yield 0.
+    if (arg1 > arg2) return 1;
+    if (arg1 == arg2) return 0;
+    return -1;
+  }
+
   // The caller has to ensure that arg1 and arg2 have the same class.
   public static void traceGenericCmp(Object arg1, Object arg2, int pc) {
     if (arg1 instanceof CharSequence) {
@@ -89,6 +107,11 @@ public final class TraceDataFlowNativeCallbacks {
       traceCmpInt((int) arg1, (int) arg2, pc);
     } else if (arg1 instanceof Long) {
       traceCmpLong((long) arg1, (long) arg2, pc);
+    } else if (arg1 instanceof Float) {
+      traceCmpInt(Float.floatToRawIntBits((float) arg1), Float.floatToRawIntBits((float) arg2), pc);
+    } else if (arg1 instanceof Double) {
+      traceCmpLong(
+          Double.doubleToRawLongBits((double) arg1), Double.doubleToRawLongBits((double) arg2), pc);
     } else if (arg1 instanceof Short) {
       traceCmpInt((short) arg1, (short) arg2, pc);
     } else if (arg1 instanceof Byte) {

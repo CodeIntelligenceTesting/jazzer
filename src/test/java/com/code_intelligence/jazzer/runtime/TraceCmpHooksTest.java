@@ -16,6 +16,8 @@
 
 package com.code_intelligence.jazzer.runtime;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -60,5 +62,47 @@ public class TraceCmpHooksTest {
     // Make sure we don't crash the JVM on null arrays.
     TraceCmpHooks.arraysEquals(null, null, new Object[] {b1, b2}, 1, false);
     TraceCmpHooks.arraysCompare(null, null, new Object[] {b1, b2}, 1, 1);
+  }
+
+  @Test
+  public void traceCmpDoubleWrapperShouldMatchDcmpSemantics() {
+    assertEquals(0, invokeTraceCmpDoubleWrapper(-0.0d, +0.0d, /* nanResult= */ -1));
+    assertEquals(0, invokeTraceCmpDoubleWrapper(+0.0d, -0.0d, /* nanResult= */ 1));
+    assertEquals(-1, invokeTraceCmpDoubleWrapper(Double.NaN, 1.0d, /* nanResult= */ -1));
+    assertEquals(1, invokeTraceCmpDoubleWrapper(Double.NaN, 1.0d, /* nanResult= */ 1));
+  }
+
+  @Test
+  public void traceCmpFloatWrapperShouldMatchFcmpSemantics() {
+    assertEquals(0, invokeTraceCmpFloatWrapper(-0.0f, +0.0f, /* nanResult= */ -1));
+    assertEquals(0, invokeTraceCmpFloatWrapper(+0.0f, -0.0f, /* nanResult= */ 1));
+    assertEquals(-1, invokeTraceCmpFloatWrapper(Float.NaN, 1.0f, /* nanResult= */ -1));
+    assertEquals(1, invokeTraceCmpFloatWrapper(Float.NaN, 1.0f, /* nanResult= */ 1));
+  }
+
+  private static int invokeTraceCmpDoubleWrapper(double arg1, double arg2, int nanResult) {
+    try {
+      Class<?> callbacksClass =
+          Class.forName("com.code_intelligence.jazzer.runtime.TraceDataFlowNativeCallbacks");
+      return (int)
+          callbacksClass
+              .getMethod("traceCmpDoubleWrapper", double.class, double.class, int.class, int.class)
+              .invoke(null, arg1, arg2, nanResult, 1);
+    } catch (ReflectiveOperationException e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  private static int invokeTraceCmpFloatWrapper(float arg1, float arg2, int nanResult) {
+    try {
+      Class<?> callbacksClass =
+          Class.forName("com.code_intelligence.jazzer.runtime.TraceDataFlowNativeCallbacks");
+      return (int)
+          callbacksClass
+              .getMethod("traceCmpFloatWrapper", float.class, float.class, int.class, int.class)
+              .invoke(null, arg1, arg2, nanResult, 1);
+    } catch (ReflectiveOperationException e) {
+      throw new AssertionError(e);
+    }
   }
 }
