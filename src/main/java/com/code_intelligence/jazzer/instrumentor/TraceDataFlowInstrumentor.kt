@@ -32,6 +32,13 @@ import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.tree.TableSwitchInsnNode
 import org.objectweb.asm.tree.VarInsnNode
 
+private val TRACE_COMPARISON_METHODS =
+    setOf(
+        "traceCmpLongWrapper",
+        "traceCmpDoubleWrapper",
+        "traceCmpFloatWrapper",
+    )
+
 internal class TraceDataFlowInstrumentor(
     private val types: Set<InstrumentationType>,
     private val callbackInternalClassName: String = "com/code_intelligence/jazzer/runtime/TraceDataFlowNativeCallbacks",
@@ -65,6 +72,18 @@ internal class TraceDataFlowInstrumentor(
                     method.instructions.insertBefore(inst, longCmpInstrumentation())
                     method.instructions.remove(inst)
                 }
+                Opcodes.DCMPG, Opcodes.DCMPL -> {
+                    if (InstrumentationType.CMP !in types) continue@loop
+                    val nanResult = if (inst.opcode == Opcodes.DCMPG) 1 else -1
+                    method.instructions.insertBefore(inst, doubleCmpInstrumentation(nanResult))
+                    method.instructions.remove(inst)
+                }
+                Opcodes.FCMPG, Opcodes.FCMPL -> {
+                    if (InstrumentationType.CMP !in types) continue@loop
+                    val nanResult = if (inst.opcode == Opcodes.FCMPG) 1 else -1
+                    method.instructions.insertBefore(inst, floatCmpInstrumentation(nanResult))
+                    method.instructions.remove(inst)
+                }
                 Opcodes.IF_ICMPEQ, Opcodes.IF_ICMPNE,
                 Opcodes.IF_ICMPLT, Opcodes.IF_ICMPLE,
                 Opcodes.IF_ICMPGT, Opcodes.IF_ICMPGE,
@@ -78,15 +97,14 @@ internal class TraceDataFlowInstrumentor(
                 -> {
                     if (InstrumentationType.CMP !in types) continue@loop
                     // The IF* opcodes are often used to branch based on the result of a compare
-                    // instruction for a type other than int. The operands of this compare will
-                    // already be reported via the instrumentation above (for non-floating point
-                    // numbers) and the follow-up compare does not provide a good signal as all
-                    // operands will be in {-1, 0, 1}. Skip instrumentation for it.
-                    if (inst.previous?.opcode in listOf(Opcodes.DCMPG, Opcodes.DCMPL, Opcodes.FCMPG, Opcodes.DCMPL) ||
-                        (inst.previous as? MethodInsnNode)?.name == "traceCmpLongWrapper"
-                    ) {
+                    // instruction for a type other than int (long, float, double). The operands
+                    // of this compare will already be reported via the instrumentation above and
+                    // the follow-up compare does not provide a good signal as all operands will
+                    // be in {-1, 0, 1}. Skip instrumentation for it.
+                    if ((inst.previous as? MethodInsnNode)?.name in TRACE_COMPARISON_METHODS) {
                         continue@loop
                     }
+
                     method.instructions.insertBefore(inst, ifInstrumentation())
                 }
                 Opcodes.LOOKUPSWITCH, Opcodes.TABLESWITCH -> {
@@ -254,6 +272,20 @@ internal class TraceDataFlowInstrumentor(
             // traceCmpLong returns the result of the comparison as duplicating two longs on the stack
             // is not possible without local variables.
             add(MethodInsnNode(Opcodes.INVOKESTATIC, callbackInternalClassName, "traceCmpLongWrapper", "(JJI)I", false))
+        }
+
+    private fun doubleCmpInstrumentation(nanResult: Int) =
+        InsnList().apply {
+            add(LdcInsnNode(nanResult))
+            pushFakePc()
+            add(MethodInsnNode(Opcodes.INVOKESTATIC, callbackInternalClassName, "traceCmpDoubleWrapper", "(DDII)I", false))
+        }
+
+    private fun floatCmpInstrumentation(nanResult: Int) =
+        InsnList().apply {
+            add(LdcInsnNode(nanResult))
+            pushFakePc()
+            add(MethodInsnNode(Opcodes.INVOKESTATIC, callbackInternalClassName, "traceCmpFloatWrapper", "(FFII)I", false))
         }
 
     private fun intCmpInstrumentation() =

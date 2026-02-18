@@ -37,6 +37,22 @@ public class TraceDataFlowInstrumentationTarget implements DynamicTestContract {
   volatile int int3 = 6;
   volatile int int4 = 5;
 
+  volatile double double1 = 1.5;
+  volatile double double2 = 1.5;
+  volatile double double3 = 2.5;
+  volatile double double4 = 3.5;
+  volatile double doubleNaN = Double.NaN;
+  volatile double doubleNegZero = -0.0;
+  volatile double doublePosZero = 0.0;
+
+  volatile float float1 = 1.5f;
+  volatile float float2 = 1.5f;
+  volatile float float3 = 2.5f;
+  volatile float float4 = 3.5f;
+  volatile float floatNaN = Float.NaN;
+  volatile float floatNegZero = -0.0f;
+  volatile float floatPosZero = 0.0f;
+
   volatile int switchValue = 1200;
 
   @SuppressWarnings("ReturnValueIgnored")
@@ -46,6 +62,17 @@ public class TraceDataFlowInstrumentationTarget implements DynamicTestContract {
 
     results.put("longCompareEq", long1 == long2);
     results.put("longCompareNe", long3 != long4);
+
+    results.put("doubleCompareEq", double1 == double2);
+    results.put("doubleCompareNe", double3 != double4);
+    results.put("floatCompareEq", float1 == float2);
+    results.put("floatCompareNe", float3 != float4);
+    results.put("doubleCompareSignedZeroEq", doubleNegZero == doublePosZero);
+    results.put("floatCompareSignedZeroEq", floatNegZero == floatPosZero);
+    results.put("doubleCompareNaNLessFalse", !(doubleNaN < double1));
+    results.put("doubleCompareNaNGreaterFalse", !(doubleNaN > double1));
+    results.put("floatCompareNaNLessFalse", !(floatNaN < float1));
+    results.put("floatCompareNaNGreaterFalse", !(floatNaN > float1));
 
     results.put("intCompareEq", int1 == int2);
     results.put("intCompareNe", int3 != int4);

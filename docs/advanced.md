@@ -93,7 +93,7 @@ These hooks correspond to [clang's data flow hooks](https://clang.llvm.org/docs/
 The particular instrumentation types to apply can be specified using the `--trace` flag, which accepts the following values:
 
 * `cov`: AFL-style edge coverage
-* `cmp`: compares (int, long, String) and switch cases
+* `cmp`: compares (int, long, float, double, String) and switch cases
 * `div`: divisors in integer divisions
 * `gep`: constant array indexes
 * `indir`: call through `Method#invoke`

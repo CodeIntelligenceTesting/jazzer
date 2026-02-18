@@ -87,6 +87,56 @@ public final class TraceCmpHooks {
 
   @MethodHook(
       type = HookType.BEFORE,
+      targetClassName = "java.lang.Float",
+      targetMethod = "compare",
+      targetMethodDescriptor = "(FF)I")
+  public static void floatCompare(
+      MethodHandle method, Object alwaysNull, Object[] arguments, int hookId) {
+    TraceDataFlowNativeCallbacks.traceCmpInt(
+        Float.floatToRawIntBits((float) arguments[0]),
+        Float.floatToRawIntBits((float) arguments[1]),
+        hookId);
+  }
+
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = "java.lang.Double",
+      targetMethod = "compare",
+      targetMethodDescriptor = "(DD)I")
+  public static void doubleCompare(
+      MethodHandle method, Object alwaysNull, Object[] arguments, int hookId) {
+    TraceDataFlowNativeCallbacks.traceCmpLong(
+        Double.doubleToRawLongBits((double) arguments[0]),
+        Double.doubleToRawLongBits((double) arguments[1]),
+        hookId);
+  }
+
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = "java.lang.Float",
+      targetMethod = "compareTo",
+      targetMethodDescriptor = "(Ljava/lang/Float;)I")
+  public static void floatCompareTo(
+      MethodHandle method, Float thisObject, Object[] arguments, int hookId) {
+    TraceDataFlowNativeCallbacks.traceCmpInt(
+        Float.floatToRawIntBits(thisObject), Float.floatToRawIntBits((float) arguments[0]), hookId);
+  }
+
+  @MethodHook(
+      type = HookType.BEFORE,
+      targetClassName = "java.lang.Double",
+      targetMethod = "compareTo",
+      targetMethodDescriptor = "(Ljava/lang/Double;)I")
+  public static void doubleCompareTo(
+      MethodHandle method, Double thisObject, Object[] arguments, int hookId) {
+    TraceDataFlowNativeCallbacks.traceCmpLong(
+        Double.doubleToRawLongBits(thisObject),
+        Double.doubleToRawLongBits((double) arguments[0]),
+        hookId);
+  }
+
+  @MethodHook(
+      type = HookType.BEFORE,
       targetClassName = "java.lang.Long",
       targetMethod = "compare",
       targetMethodDescriptor = "(JJ)I")

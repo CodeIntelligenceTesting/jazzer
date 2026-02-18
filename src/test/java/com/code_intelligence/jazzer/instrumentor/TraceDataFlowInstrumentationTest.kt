@@ -58,6 +58,20 @@ class TraceDataFlowInstrumentationTest {
             // long compares
             "LCMP: 1, 1",
             "LCMP: 2, 3",
+            // double compares
+            "LCMP: 4609434218613702656, 4609434218613702656",
+            "LCMP: 4612811918334230528, 4615063718147915776",
+            // float compares
+            "ICMP: 1069547520, 1069547520",
+            "ICMP: 1075838976, 1080033280",
+            // signed zero compares
+            "LCMP: -9223372036854775808, 0",
+            "ICMP: -2147483648, 0",
+            // NaN compares
+            "LCMP: 4609434218613702656, 9221120237041090560",
+            "LCMP: 4609434218613702656, 9221120237041090560",
+            "ICMP: 1069547520, 2143289344",
+            "ICMP: 1069547520, 2143289344",
             // int compares
             "ICMP: 4, 4",
             "ICMP: 5, 6",
@@ -87,9 +101,10 @@ class TraceDataFlowInstrumentationTest {
             "ICMP: 3, 3",
             // doubleArray[4] == 4
             "GEP: 4",
+            "LCMP: 4616189618054758400, 4616189618054758400",
             // floatArray[5] == 5
             "GEP: 5",
-            "CICMP: 0, 0",
+            "ICMP: 1084227584, 1084227584",
             // intArray[6] == 6
             "GEP: 6",
             "ICMP: 6, 6",
