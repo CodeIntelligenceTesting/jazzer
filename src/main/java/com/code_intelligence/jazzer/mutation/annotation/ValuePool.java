@@ -71,6 +71,11 @@ public @interface ValuePool {
    * specified supplier methods must be static and return a {@code Stream<?>} of values. The values
    * don't need to match the type of the annotated method or parameter. The mutation framework will
    * extract only the values that are compatible with the target type.
+   *
+   * <p>Suppliers in the fuzz test class can be referenced by their method name, while suppliers in
+   * other classes must be referenced by their fully qualified method name (e.g. {@code
+   * com.example.MyClass#mySupplierMethod}), or for nested classes: {@code
+   * com.example.OuterClass$InnerClass#mySupplierMethod}.
    */
   String[] value() default {};
 
