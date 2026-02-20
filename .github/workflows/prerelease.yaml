@@ -68,7 +68,7 @@ jobs:
           if-no-files-found: error
 
   merge_jars:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: build_release
 
     steps:
@@ -95,7 +95,7 @@ jobs:
           if-no-files-found: error
 
   maven_deploy:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: merge_jars
 
     environment:
