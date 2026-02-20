@@ -101,6 +101,22 @@ java_library(
 # The following targets must only be referenced directly by tests or native implementations.
 
 java_jni_library(
+    name = "extra_counters_tracker",
+    srcs = ["ExtraCountersTracker.java"],
+    native_libs = select({
+        "@platforms//os:android": ["//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver"],
+        "//conditions:default": [],
+    }),
+    visibility = [
+        "//src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
+        "//src/test:__subpackages__",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/utils:unsafe_provider",
+    ],
+)
+
+java_jni_library(
     name = "coverage_map",
     srcs = ["CoverageMap.java"],
     native_libs = select({
@@ -171,6 +187,7 @@ java_library(
     deps = [
         ":constants",
         ":coverage_map",
+        ":extra_counters_tracker",
         ":trace_data_flow_native_callbacks",
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
     ],

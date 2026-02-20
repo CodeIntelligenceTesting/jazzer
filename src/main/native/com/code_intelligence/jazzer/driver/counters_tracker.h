@@ -17,7 +17,7 @@
 #include <jni.h>
 #include <stdint.h>
 
-#include <string>
+#include <mutex>
 
 namespace jazzer {
 
@@ -26,16 +26,34 @@ struct __attribute__((packed)) PCTableEntry {
   [[maybe_unused]] uintptr_t PC, PCFlags;
 };
 
-// CoverageTracker registers an array of 8-bit coverage counters with
-// libFuzzer. The array is populated from Java using Unsafe.
-class CoverageTracker {
+// CountersTracker manages coverage counter arrays and registers them with
+// libFuzzer. It handles two separate counter regions:
+// - Coverage counters: for bytecode edge coverage (used by CoverageMap)
+// - Extra counters: for user APIs like maximize() (used by
+// ExtraCountersTracker.java)
+class CountersTracker {
  private:
-  static uint8_t *counters_;
-  static PCTableEntry *pc_entries_;
+  static uint8_t *coverage_counters_;
+  static uint8_t *extra_counters_;
+  static std::mutex mutex_;
+
+  // Shared helper to register a counter range with libFuzzer.
+  static void RegisterCounterRange(uint8_t *start, uint8_t *end);
 
  public:
+  // For CoverageMap: initialize coverage counters base address.
   static void Initialize(JNIEnv &env, jlong counters);
+
+  // For CoverageMap: register new coverage counters with libFuzzer.
   static void RegisterNewCounters(JNIEnv &env, jint old_num_counters,
                                   jint new_num_counters);
+
+  // For ExtraCountersTracker.java: initialize extra counters base address.
+  static void InitializeExtra(JNIEnv &env, jlong counters);
+
+  // For ExtraCountersTracker.java: register extra counters with libFuzzer.
+  static void RegisterExtraCounters(JNIEnv &env, jint start_offset,
+                                    jint end_offset);
 };
+
 }  // namespace jazzer
