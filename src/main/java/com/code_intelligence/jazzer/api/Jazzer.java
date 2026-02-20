@@ -381,6 +381,95 @@ public final class Jazzer {
   }
 
   /**
+   * Core implementation of the hill-climbing minimize API. It maps {@code value} from the range
+   * [{@code minValue}, {@code maxValue}] onto {@code numCounters} coverage counters via inverse
+   * linear interpolation, then sets all counters from 0 to the mapped offset.
+   *
+   * <p>Lower values produce more signal (more counters set), which causes the fuzzer to prefer
+   * inputs that result in lower values. Values above {@code maxValue} produce no signal. Values
+   * below {@code minValue} are clamped.
+   *
+   * <p>Must be invoked with the same {@code minValue}, {@code maxValue}, and {@code numCounters}
+   * for a given {@code id} across all calls. Passing different values is illegal.
+   *
+   * @param value the value to minimize
+   * @param minValue the minimum expected value (inclusive)
+   * @param maxValue the maximum expected value (inclusive); must be &gt;= {@code minValue}
+   * @param numCounters the number of counters to allocate; must be &gt; 0
+   * @param id a unique identifier for this call site (must be consistent across runs)
+   * @throws JazzerApiException if {@code maxValue < minValue} or {@code numCounters <= 0}
+   */
+  public static void minimize(long value, long minValue, long maxValue, int numCounters, int id) {
+    if (COUNTERS_TRACKER_ALLOCATE == null) {
+      return;
+    }
+
+    try {
+      ensureRangeConsistent(id, minValue, maxValue);
+      int effectiveCounters = effectiveCounters(minValue, maxValue, numCounters);
+      COUNTERS_TRACKER_ALLOCATE.invokeExact(id, effectiveCounters);
+
+      if (value <= maxValue) {
+        int toOffset;
+        if (minValue == maxValue) {
+          toOffset = 0;
+        } else {
+          double range = (double) maxValue - (double) minValue;
+          double offset = (double) maxValue - (double) Math.max(value, minValue);
+          toOffset = (int) (offset / range * (effectiveCounters - 1));
+        }
+        COUNTERS_TRACKER_SET_RANGE.invokeExact(id, toOffset);
+      }
+    } catch (JazzerApiException e) {
+      throw e;
+    } catch (Throwable e) {
+      throw new JazzerApiException("minimize: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Convenience overload of {@link #minimize(long, long, long, int, int)} that uses {@link
+   * #DEFAULT_NUM_COUNTERS} counters and an automatically generated call-site id.
+   *
+   * <p>During instrumentation, calls to this method are replaced by a hook that supplies a unique
+   * id for each call site. Without instrumentation, this is a no-op.
+   *
+   * <pre>{@code
+   * // Minimize temperature in [0, 4000]
+   * Jazzer.minimize(temperature, 0, 4000);
+   * }</pre>
+   *
+   * @param value the value to minimize
+   * @param minValue the minimum expected value (inclusive)
+   * @param maxValue the maximum expected value (inclusive)
+   * @see #minimize(long, long, long, int, int)
+   */
+  public static void minimize(long value, long minValue, long maxValue) {
+    // Instrumentation replaces calls to this method with the core overload using
+    // DEFAULT_NUM_COUNTERS and an automatically generated call-site id.
+    // Without instrumentation, this is a no-op.
+  }
+
+  /**
+   * Convenience overload of {@link #minimize(long, long, long, int, int)} that uses a custom number
+   * of counters and an automatically generated call-site id.
+   *
+   * <p>During instrumentation, calls to this method are replaced by a hook that supplies a unique
+   * id for each call site. Without instrumentation, this is a no-op.
+   *
+   * @param value the value to minimize
+   * @param minValue the minimum expected value (inclusive)
+   * @param maxValue the maximum expected value (inclusive)
+   * @param numCounters the number of counters to allocate; must be &gt; 0
+   * @see #minimize(long, long, long, int, int)
+   */
+  public static void minimize(long value, long minValue, long maxValue, int numCounters) {
+    // Instrumentation replaces calls to this method with the core overload using
+    // the given numCounters and an automatically generated call-site id.
+    // Without instrumentation, this is a no-op.
+  }
+
+  /**
    * Make Jazzer report the provided {@link Throwable} as a finding.
    *
    * <p><b>Note:</b> This method must only be called from a method hook. In a fuzz target, simply

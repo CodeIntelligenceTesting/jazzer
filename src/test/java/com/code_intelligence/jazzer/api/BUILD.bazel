@@ -41,3 +41,22 @@ java_test(
         "@maven//:junit_junit",
     ],
 )
+
+java_test(
+    name = "MinimizeTest",
+    size = "small",
+    srcs = [
+        "MinimizeTest.java",
+    ],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    test_class = "com.code_intelligence.jazzer.api.MinimizeTest",
+    runtime_deps = [
+        "//src/main/java/com/code_intelligence/jazzer/runtime",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
+        "@maven//:junit_junit",
+    ],
+)
