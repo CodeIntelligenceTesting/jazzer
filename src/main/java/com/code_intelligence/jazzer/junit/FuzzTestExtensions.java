@@ -42,6 +42,8 @@ class FuzzTestExtensions
     implements ExecutionCondition, InvocationInterceptor, TestExecutionExceptionHandler {
   private static final String JAZZER_INTERNAL =
       "com.code_intelligence.jazzer.runtime.JazzerInternal";
+  private static final String JAZZER_API_EXCEPTION =
+      "com.code_intelligence.jazzer.api.JazzerApiException";
   private static final AtomicReference<Method> fuzzTestMethod = new AtomicReference<>();
   private static Field lastFindingField;
   private static Field hooksEnabledField;
@@ -113,6 +115,10 @@ class FuzzTestExtensions
       invocation.proceed();
     } catch (Throwable t) {
       thrown = t;
+    }
+    // JazzerApiException signals API error, so propagate as is and not as a finding.
+    if (thrown != null && thrown.getClass().getName().equals(JAZZER_API_EXCEPTION)) {
+      throw thrown;
     }
     Throwable stored = (Throwable) getLastFindingField().get(null);
     if (stored != null) {

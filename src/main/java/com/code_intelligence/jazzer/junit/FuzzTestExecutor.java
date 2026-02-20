@@ -52,6 +52,8 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.platform.commons.support.AnnotationSupport;
 
 class FuzzTestExecutor {
+  private static final String JAZZER_API_EXCEPTION =
+      "com.code_intelligence.jazzer.api.JazzerApiException";
   private static final AtomicBoolean hasBeenPrepared = new AtomicBoolean();
   private static final AtomicBoolean agentInstalled = new AtomicBoolean(false);
 
@@ -334,6 +336,9 @@ class FuzzTestExecutor {
     Throwable finding = atomicFinding.get();
 
     if (finding != null) {
+      if (finding.getClass().getName().equals(JAZZER_API_EXCEPTION)) {
+        return Optional.of(finding);
+      }
       return Optional.of(new FuzzTestFindingException(finding));
     } else if (exitCode != 0) {
       return Optional.of(
