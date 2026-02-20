@@ -25,7 +25,7 @@ cc_library(
     name = "jazzer_driver_lib",
     visibility = ["//src/test/native/com/code_intelligence/jazzer/driver/mocks:__pkg__"],
     deps = [
-        ":coverage_tracker",
+        ":counters_tracker",
         ":fuzz_target_runner",
         ":jazzer_fuzzer_callbacks",
         ":libfuzzer_callbacks",
@@ -45,10 +45,13 @@ cc_jni_library(
 )
 
 cc_library(
-    name = "coverage_tracker",
-    srcs = ["coverage_tracker.cpp"],
-    hdrs = ["coverage_tracker.h"],
-    deps = ["//src/main/java/com/code_intelligence/jazzer/runtime:coverage_map.hdrs"],
+    name = "counters_tracker",
+    srcs = ["counters_tracker.cpp"],
+    hdrs = ["counters_tracker.h"],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/runtime:coverage_map.hdrs",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:extra_counters_tracker.hdrs",
+    ],
     # Symbols are only referenced dynamically via JNI.
     alwayslink = True,
 )
