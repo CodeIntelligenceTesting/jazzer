@@ -1,3 +1,5 @@
+load("//bazel:compat.bzl", "SKIP_ON_WINDOWS")
+
 java_test(
     name = "AutofuzzTest",
     size = "small",
@@ -16,6 +18,25 @@ java_test(
     ],
     deps = [
         "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
+    name = "MaximizeTest",
+    size = "small",
+    srcs = [
+        "MaximizeTest.java",
+    ],
+    target_compatible_with = SKIP_ON_WINDOWS,
+    test_class = "com.code_intelligence.jazzer.api.MaximizeTest",
+    runtime_deps = [
+        "//src/main/java/com/code_intelligence/jazzer/runtime",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api",
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
         "//src/main/native/com/code_intelligence/jazzer/driver:jazzer_driver",
         "@maven//:junit_junit",
     ],
