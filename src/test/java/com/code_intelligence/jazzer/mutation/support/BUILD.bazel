@@ -6,6 +6,7 @@ java_library(
     srcs = [
         "GlobTestSupport.java",
         "TestSupport.java",
+        "ValuePoolsTestSupport.java",
     ],
     visibility = ["//src/test/java/com/code_intelligence/jazzer/mutation:__subpackages__"],
     exports = JUNIT5_DEPS + [
