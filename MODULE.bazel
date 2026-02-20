@@ -39,11 +39,11 @@ bazel_dep(name = "toolchains_llvm", version = "1.6.0")
 SHADED_RUNTIME_MAVEN_ARTIFACTS = [
     # keep sorted
     # renovate: keep updated
-    "com.github.jsqlparser:jsqlparser:4.9",
+    "com.github.jsqlparser:jsqlparser:5.3",
     "com.google.errorprone:error_prone_annotations:2.47.0",
-    "com.google.guava:guava:33.5.0-android",
+    "com.google.guava:guava:33.5.0-jre",
     "io.github.classgraph:classgraph:4.8.184",
-    "net.bytebuddy:byte-buddy-agent:1.18.4",
+    "net.bytebuddy:byte-buddy-agent:1.18.5",
     "net.jodah:typetools:0.6.3",
     "org.ow2.asm:asm:9.9.1",
     "org.ow2.asm:asm-commons:9.9.1",
