@@ -46,6 +46,7 @@ java_library(
         "FuzzerSecurityIssueMedium.java",
         "HookType.java",
         "Jazzer.java",
+        "JazzerApiException.java",
         "MethodHook.java",
         "MethodHooks.java",
         "//src/main/java/jaz",
