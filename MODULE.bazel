@@ -199,9 +199,9 @@ http_archive(
         "//third_party:jacoco-make-probe-inserter-subclassable.patch",
         "//third_party:jacoco-ignore-offline-instrumentation.patch",
     ],
-    sha256 = "5c72dea2d13eef33a4d972d157186fc12d85149bc042186953efe1be50c220ee",
-    strip_prefix = "jacoco-0.8.10",
-    url = "https://github.com/jacoco/jacoco/archive/refs/tags/v0.8.10.tar.gz",
+    sha256 = "764d75713a41473241b2bb88a69f813f786c87c8a6a5e6f7372b819f70e90bd4",
+    strip_prefix = "jacoco-0.8.14",
+    url = "https://github.com/jacoco/jacoco/archive/refs/tags/v0.8.14.tar.gz",
 )
 
 http_archive(

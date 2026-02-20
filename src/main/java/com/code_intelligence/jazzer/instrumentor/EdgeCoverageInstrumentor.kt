@@ -161,7 +161,10 @@ class EdgeCoverageInstrumentor(
             maxLocals: Int,
         ) {
             val newMaxStack = max(maxStack + strategy.instrumentControlFlowEdgeStackSize, strategy.loadLocalVariableStackSize)
-            val newMaxLocals = maxLocals + if (strategy.localVariableType != null) 1 else 0
+            // Since JaCoCo 0.8.11, ProbeInserter reserves two local variable slots immediately
+            // after the method parameters: a "safety slot" and the probe array itself.
+            // See: https://github.com/jacoco/jacoco/commit/1a1db3bc1e51d6320ed8eb7da086ad401aef1ff7
+            val newMaxLocals = maxLocals + if (strategy.localVariableType != null) 2 else 0
             mv.visitMaxs(newMaxStack, newMaxLocals)
         }
 
