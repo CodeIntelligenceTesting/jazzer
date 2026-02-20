@@ -43,4 +43,39 @@ public final class JazzerApiHooks {
       MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
     Jazzer.exploreState((byte) arguments[0], hookId);
   }
+
+  /**
+   * Replaces calls to {@link Jazzer#maximize(long, long, long)} with calls to {@link
+   * Jazzer#maximize(long, long, long, int, int)} using {@link Jazzer#DEFAULT_NUM_COUNTERS} and the
+   * hook id.
+   */
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "com.code_intelligence.jazzer.api.Jazzer",
+      targetMethod = "maximize",
+      targetMethodDescriptor = "(JJJ)V")
+  public static void maximizeWithDefaultCountersAndId(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    Jazzer.maximize(
+        (long) arguments[0],
+        (long) arguments[1],
+        (long) arguments[2],
+        Jazzer.DEFAULT_NUM_COUNTERS,
+        hookId);
+  }
+
+  /**
+   * Replaces calls to {@link Jazzer#maximize(long, long, long, int)} with calls to {@link
+   * Jazzer#maximize(long, long, long, int, int)} using the hook id.
+   */
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "com.code_intelligence.jazzer.api.Jazzer",
+      targetMethod = "maximize",
+      targetMethodDescriptor = "(JJJI)V")
+  public static void maximizeWithCustomCountersAndId(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    Jazzer.maximize(
+        (long) arguments[0], (long) arguments[1], (long) arguments[2], (int) arguments[3], hookId);
+  }
 }
