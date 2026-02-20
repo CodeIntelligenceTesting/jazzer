@@ -393,3 +393,24 @@ java_fuzz_target_test(
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
 )
+
+# Test for the minimize() hill-climbing API.
+# This test uses Jazzer.minimize() to guide the fuzzer toward minimizing
+# a "temperature" value, demonstrating inverse hill-climbing behavior.
+java_fuzz_target_test(
+    name = "CoolerFuzzTest",
+    srcs = ["CoolerFuzzTest.java"],
+    allowed_findings = ["java.lang.RuntimeException"],
+    env = {"JAZZER_FUZZ": "1"},
+    target_class = "com.example.CoolerFuzzTest",
+    verify_crash_reproducer = False,
+    runtime_deps = [
+        ":junit_runtime",
+    ],
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/api:hooks",
+        "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
+        "//src/main/java/com/code_intelligence/jazzer/mutation/annotation",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
