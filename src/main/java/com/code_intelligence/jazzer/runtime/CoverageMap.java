@@ -39,10 +39,9 @@ public final class CoverageMap {
 
   private static final String ENV_MAX_NUM_COUNTERS = "JAZZER_MAX_NUM_COUNTERS";
 
-  private static final int MAX_NUM_COUNTERS =
-      System.getenv(ENV_MAX_NUM_COUNTERS) != null
-          ? Integer.parseInt(System.getenv(ENV_MAX_NUM_COUNTERS))
-          : 1 << 20;
+  private static final int DEFAULT_MAX_NUM_COUNTERS = 1 << 20;
+
+  private static final int MAX_NUM_COUNTERS = initMaxNumCounters();
 
   private static final Unsafe UNSAFE = UnsafeProvider.getUnsafe();
   private static final Class<?> LOG;
@@ -82,7 +81,7 @@ public final class CoverageMap {
   private static final int INITIAL_NUM_COUNTERS = 1 << 9;
 
   static {
-    registerNewCounters(0, INITIAL_NUM_COUNTERS);
+    registerNewCounters(0, Math.min(INITIAL_NUM_COUNTERS, MAX_NUM_COUNTERS));
   }
 
   /**
@@ -174,4 +173,21 @@ public final class CoverageMap {
   private static native void initialize(long countersAddress);
 
   private static native void registerNewCounters(int oldNumCounters, int newNumCounters);
+
+  private static int initMaxNumCounters() {
+    String value = System.getenv(ENV_MAX_NUM_COUNTERS);
+    if (value == null || value.isEmpty()) {
+      return DEFAULT_MAX_NUM_COUNTERS;
+    }
+    try {
+      int parsed = Integer.parseInt(value.trim());
+      if (parsed < 0) {
+        throw new IllegalArgumentException(
+            ENV_MAX_NUM_COUNTERS + " must not be negative, got: " + parsed);
+      }
+      return parsed;
+    } catch (NumberFormatException e) {
+      return DEFAULT_MAX_NUM_COUNTERS;
+    }
+  }
 }
