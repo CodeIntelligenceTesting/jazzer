@@ -140,7 +140,7 @@ public final class FuzzTargetRunner {
     useMutatorFramework =
         Opt.mutatorFramework.get()
             && Opt.autofuzz.get().isEmpty()
-            && !(fuzzTarget.usesPrimitiveByteArray() || fuzzTarget.usesFuzzedDataProvider());
+            && !fuzzTarget.usesFuzzedDataProvider();
 
     useFuzzedDataProvider = fuzzTarget.usesFuzzedDataProvider();
     if (!useFuzzedDataProvider && IS_ANDROID) {
