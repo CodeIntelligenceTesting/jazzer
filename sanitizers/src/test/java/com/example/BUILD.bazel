@@ -508,7 +508,6 @@ java_test(
     ],
     test_class = "com.example.DisabledHooksTest",
     deps = [
-        "//src/main/java/com/code_intelligence/jazzer/api",
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
     ],
 )
