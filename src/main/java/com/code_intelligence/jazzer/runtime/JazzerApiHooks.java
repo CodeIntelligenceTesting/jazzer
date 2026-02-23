@@ -78,4 +78,39 @@ public final class JazzerApiHooks {
     Jazzer.maximize(
         (long) arguments[0], (long) arguments[1], (long) arguments[2], (int) arguments[3], hookId);
   }
+
+  /**
+   * Replaces calls to {@link Jazzer#minimize(long, long, long)} with calls to {@link
+   * Jazzer#minimize(long, long, long, int, int)} using {@link Jazzer#DEFAULT_NUM_COUNTERS} and the
+   * hook id.
+   */
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "com.code_intelligence.jazzer.api.Jazzer",
+      targetMethod = "minimize",
+      targetMethodDescriptor = "(JJJ)V")
+  public static void minimizeWithDefaultCountersAndId(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    Jazzer.minimize(
+        (long) arguments[0],
+        (long) arguments[1],
+        (long) arguments[2],
+        Jazzer.DEFAULT_NUM_COUNTERS,
+        hookId);
+  }
+
+  /**
+   * Replaces calls to {@link Jazzer#minimize(long, long, long, int)} with calls to {@link
+   * Jazzer#minimize(long, long, long, int, int)} using the hook id.
+   */
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "com.code_intelligence.jazzer.api.Jazzer",
+      targetMethod = "minimize",
+      targetMethodDescriptor = "(JJJI)V")
+  public static void minimizeWithCustomCountersAndId(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId) {
+    Jazzer.minimize(
+        (long) arguments[0], (long) arguments[1], (long) arguments[2], (int) arguments[3], hookId);
+  }
 }
