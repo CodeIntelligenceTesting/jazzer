@@ -11,7 +11,7 @@ java_fuzz_target_test(
     ],
     data = ["//selffuzz/src/test/resources:ArgumentsMutatorFuzzTest-corpus"],
     env = {
-        "_JAVA_OPTIONS": "-Xmx2048m",
+        "_JAVA_OPTIONS": "-Xmx4096m",
     },
     fuzzer_args = [
         # Make sure that the fuzzer can run. Longer fuzzing runs will be done in a separate GH action.

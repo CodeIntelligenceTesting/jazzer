@@ -18,6 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Fuzzing
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, macos-14]
         jdk: [21, 8]
