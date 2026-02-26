@@ -17,10 +17,11 @@
 package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import java.util.Base64;
 
 public class StringCompareFuzzer {
-  public static void fuzzerTestOneInput(byte[] data) {
+  public static void fuzzerTestOneInput(byte @NotNull [] data) {
     String text = Base64.getEncoder().encodeToString(data);
     if (text.startsWith("aGVsbG8K") // hello
         && text.endsWith("d29ybGQK") // world

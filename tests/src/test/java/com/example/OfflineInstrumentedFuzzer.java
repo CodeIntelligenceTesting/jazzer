@@ -16,8 +16,10 @@
 
 package com.example;
 
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+
 public class OfflineInstrumentedFuzzer {
-  public static void fuzzerTestOneInput(byte[] data) {
+  public static void fuzzerTestOneInput(byte @NotNull [] data) {
     OfflineInstrumentedTarget.someFunction(data);
   }
 }

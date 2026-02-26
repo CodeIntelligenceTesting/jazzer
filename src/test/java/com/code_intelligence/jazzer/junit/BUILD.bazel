@@ -86,6 +86,7 @@ java_test(
         srcs = ["FuzzingWithCrashTest.java"],
         env = {
             "JAZZER_FUZZ": JAZZER_FUZZ,
+            "JAZZER_MUTATOR_FRAMEWORK": "false",
         },
         test_class = "com.code_intelligence.jazzer.junit.FuzzingWithCrashTest",
         runtime_deps = [
@@ -118,6 +119,7 @@ java_test(
         srcs = ["FuzzingWithoutCrashTest.java"],
         env = {
             "JAZZER_FUZZ": JAZZER_FUZZ,
+            "JAZZER_MUTATOR_FRAMEWORK": "false",
         },
         test_class = "com.code_intelligence.jazzer.junit.FuzzingWithoutCrashTest",
         runtime_deps = [
@@ -147,6 +149,7 @@ java_test(
         srcs = ["ValueProfileTest.java"],
         env = {
             "JAZZER_FUZZ": "true",
+            "JAZZER_MUTATOR_FRAMEWORK": "false",
             "JAZZER_VALUE_PROFILE": str(JAZZER_VALUE_PROFILE),
         },
         # The test is both CPU-intensive and sensitive to timing, which causes it to be flaky on
@@ -251,6 +254,7 @@ java_test(
         srcs = ["PerExecutionLifecycleTest.java"],
         env = {
             "JAZZER_FUZZ": JAZZER_FUZZ,
+            "JAZZER_MUTATOR_FRAMEWORK": "false",
         },
         test_class = "com.code_intelligence.jazzer.junit.PerExecutionLifecycleTest",
         runtime_deps = [

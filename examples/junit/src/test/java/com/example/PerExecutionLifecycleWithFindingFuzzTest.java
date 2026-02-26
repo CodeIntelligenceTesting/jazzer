@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import com.code_intelligence.jazzer.junit.Lifecycle;
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +36,7 @@ class PerExecutionLifecycleWithFindingFuzzTest extends LifecycleRecordingTestBas
   }
 
   @FuzzTest(maxExecutions = RUNS, lifecycle = Lifecycle.PER_EXECUTION)
-  void lifecycleFuzz(byte[] data) throws IOException {
+  void lifecycleFuzz(byte @NotNull [] data) throws IOException {
     addEvent("lifecycleFuzz");
     if (data.length != 0) {
       throw new IOException(

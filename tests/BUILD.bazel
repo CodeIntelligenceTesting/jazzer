@@ -13,6 +13,7 @@ java_fuzz_target_test(
     data = ["src/test/java/com/example/LongStringFuzzerInput"],
     # Additionally verify that Jazzer-Fuzz-Target-Class is picked up if --target_class isn't set.
     deploy_manifest_lines = ["Jazzer-Fuzz-Target-Class: com.example.LongStringFuzzer"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"},
     fuzzer_args = [
         "$(rlocationpath src/test/java/com/example/LongStringFuzzerInput)",
     ],
@@ -73,8 +74,8 @@ java_fuzz_target_test(
     ],
 )
 
-java_fuzz_target_test(
-    name = "ForkModeFuzzer",
+[java_fuzz_target_test(
+    name = "ForkModeFuzzer_" + mode,
     size = "enormous",
     srcs = [
         "src/test/java/com/example/ForkModeFuzzer.java",
@@ -82,6 +83,7 @@ java_fuzz_target_test(
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
     env = {
         "JAVA_OPTS": "-Dfoo=not_foo -Djava_opts=1",
+        "JAZZER_MUTATOR_FRAMEWORK": "false" if mode == "classic" else "true",
     },
     fuzzer_args = [
         "-fork=2",
@@ -98,7 +100,11 @@ java_fuzz_target_test(
     target_class = "com.example.ForkModeFuzzer",
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
     target_compatible_with = SKIP_ON_MACOS,
-)
+    verify_crash_reproducer = True if mode == "classic" else False,
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 java_fuzz_target_test(
     name = "CoverageFuzzer",
@@ -299,6 +305,7 @@ java_fuzz_target_test(
     data = [
         "src/test/java/com/example/JUnitReproducerTest.seed",
     ],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"},
     fuzzer_args = [
         "$(rlocationpath src/test/java/com/example/JUnitReproducerTest.seed)",
     ],
@@ -437,6 +444,7 @@ sh_test(
         "@jacocoagent//file:jacocoagent.jar",
         "@jacococli//file:jacococli.jar",
     ],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"},
     target_compatible_with = LINUX_ONLY,
 )
 
@@ -572,13 +580,18 @@ java_fuzz_target_test(
     ],
 )
 
-java_fuzz_target_test(
-    name = "SilencedFuzzer",
+[java_fuzz_target_test(
+    name = "SilencedFuzzer_" + mode,
     timeout = "short",
     srcs = ["src/test/java/com/example/SilencedFuzzer.java"],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     target_class = "com.example.SilencedFuzzer",
-)
+    verify_crash_reproducer = True if mode == "classic" else False,
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 java_binary(
     name = "jacococli",
@@ -603,22 +616,27 @@ cp jacoco-instrumented/*.jar $@
     tools = [":jacococli"],
 )
 
-java_fuzz_target_test(
-    name = "OfflineInstrumentedFuzzer",
+[java_fuzz_target_test(
+    name = "OfflineInstrumentedFuzzer_" + mode,
     timeout = "short",
     srcs = ["src/test/java/com/example/OfflineInstrumentedFuzzer.java"],
     allowed_findings = ["java.lang.IllegalStateException"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     fuzzer_args = [
         # Do not instrument the JaCoCo agent.
         "--instrumentation_includes=com.example.*",
         "--custom_hook_includes=com.example.*",
     ],
     target_class = "com.example.OfflineInstrumentedFuzzer",
+    verify_crash_reproducer = True if mode == "classic" else False,
     deps = [
         ":OfflineInstrumentedTargetInstrumented",
         "@jacocoagent//file:jacocoagent.jar",  # Offline instrumented classes depend on the jacoco agent
     ],
-)
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 # TODO: Move to //examples eventually.
 java_fuzz_target_test(
@@ -783,38 +801,52 @@ java_fuzz_target_test(
     ],
 )
 
-java_fuzz_target_test(
-    name = "StringCompareFuzzer",
+[java_fuzz_target_test(
+    name = "StringCompareFuzzer_" + mode,
     srcs = ["src/test/java/com/example/StringCompareFuzzer.java"],
     allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     fuzzer_args = [
         "-use_value_profile=1",
     ],
     target_class = "com.example.StringCompareFuzzer",
-)
+    verify_crash_reproducer = True if mode == "classic" else False,
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 kt_jvm_library(
     name = "kotlin_string_compare_fuzzer",
     srcs = ["src/test/java/com/example/KotlinStringCompareFuzzer.kt"],
+    deps = [
+        "//deploy:jazzer-api",
+    ],
 )
 
-java_fuzz_target_test(
-    name = "KotlinStringCompareFuzzer",
+[java_fuzz_target_test(
+    name = "KotlinStringCompareFuzzer_" + mode,
     allowed_findings = ["java.io.IOException"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     fuzzer_args = [
         "-use_value_profile=1",
     ],
     target_class = "com.example.KotlinStringCompareFuzzer",
+    verify_crash_reproducer = True if mode == "classic" else False,
     runtime_deps = [":kotlin_string_compare_fuzzer"],
-)
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
-java_fuzz_target_test(
-    name = "ObjectEqualsStringFuzzer",
+[java_fuzz_target_test(
+    name = "ObjectEqualsStringFuzzer_" + mode,
     timeout = "short",
     srcs = ["src/test/java/com/example/ObjectEqualsStringFuzzer.java"],
     allowed_findings = [
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
     ],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     target_class = "com.example.ObjectEqualsStringFuzzer",
     verify_crash_reproducer = False,
     runtime_deps = [
@@ -825,7 +857,10 @@ java_fuzz_target_test(
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_junit_jupiter_junit_jupiter_params",
     ],
-)
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 java_fuzz_target_test(
     name = "ObjectEqualsIntegerFuzzer",

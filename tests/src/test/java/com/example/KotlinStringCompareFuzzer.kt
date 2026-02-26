@@ -23,7 +23,10 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 object KotlinStringCompareFuzzer {
     @JvmStatic
     @OptIn(ExperimentalEncodingApi::class)
-    fun fuzzerTestOneInput(data: ByteArray) {
+    fun fuzzerTestOneInput(data: ByteArray?) {
+        if (data == null) {
+            return
+        }
         val text = Base64.encode(data)
         if (text.startsWith("aGVsbG8K") &&
             // hello
