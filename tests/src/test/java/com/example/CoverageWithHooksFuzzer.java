@@ -20,7 +20,7 @@ import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
 import java.util.ArrayList;
 
 /**
- * Regression test for https://github.com/CodeIntelligence/jazzer/issues/878.
+ * Regression test for https://github.com/CodeIntelligenceTesting/jazzer/issues/878.
  *
  * <p>When generating a coverage report at shutdown, any use of hooked method would trigger custom
  * hook dispatch. If the hook class is no longer loadable at that point, the JVM throws

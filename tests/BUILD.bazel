@@ -132,7 +132,7 @@ java_binary(
     deps = ["//src/main/java/com/code_intelligence/jazzer/api:hooks"],
 )
 
-# Regression test for https://github.com/CodeIntelligence/jazzer/issues/878:
+# Regression test for https://github.com/CodeIntelligenceTesting/jazzer/issues/878:
 # Custom hooks must be disabled during coverage report generation to prevent
 # NoClassDefFoundError when hooked classes are used and the hook class is no
 # longer available.
