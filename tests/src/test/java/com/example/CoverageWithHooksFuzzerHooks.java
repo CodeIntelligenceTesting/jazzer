@@ -21,8 +21,8 @@ import com.code_intelligence.jazzer.api.MethodHook;
 import java.lang.invoke.MethodHandle;
 
 /**
- * Hook that targets ArrayList.&lt;init&gt; that sets a system property so that we can check in the
- * fuzz test whether the hook is called or not.
+ * Hook that targets {@code ArrayList.<init>} that sets a system property so that we can check in
+ * the fuzz test whether the hook is called or not.
  */
 public class CoverageWithHooksFuzzerHooks {
   @MethodHook(
