@@ -19,12 +19,13 @@ package com.example;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 
 class CommandLineFuzzTest {
   int run = 0;
 
   @FuzzTest
-  void commandLineFuzz(byte[] bytes) {
+  void commandLineFuzz(byte @NotNull [] bytes) {
     assumeTrue(bytes.length > 0);
     switch (run++) {
       case 0:

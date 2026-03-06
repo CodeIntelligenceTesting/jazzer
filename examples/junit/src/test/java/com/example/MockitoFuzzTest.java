@@ -17,6 +17,7 @@
 package com.example;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import org.mockito.Mockito;
 
 public class MockitoFuzzTest {
@@ -27,7 +28,7 @@ public class MockitoFuzzTest {
   }
 
   @FuzzTest
-  void fuzzWithMockito(byte[] bytes) {
+  void fuzzWithMockito(byte @NotNull [] bytes) {
     // Mock the Foo class to trigger an instrumentation cycle,
     // if not properly ignored.
     Foo foo = Mockito.mock(Foo.class);

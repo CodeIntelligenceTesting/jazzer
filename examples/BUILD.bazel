@@ -123,17 +123,22 @@ java_fuzz_target_test(
     target_class = "com.example.ExampleValueProfileFuzzer",
 )
 
-java_fuzz_target_test(
-    name = "MazeFuzzer",
+[java_fuzz_target_test(
+    name = "MazeFuzzer_" + mode,
     srcs = [
         "src/main/java/com/example/MazeFuzzer.java",
     ],
     allowed_findings = ["com.example.MazeFuzzer$$TreasureFoundException"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     target_class = "com.example.MazeFuzzer",
-)
+    verify_crash_reproducer = True if mode == "classic" else False,
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
-java_fuzz_target_test(
-    name = "ExampleOutOfMemoryFuzzer",
+[java_fuzz_target_test(
+    name = "ExampleOutOfMemoryFuzzer_" + mode,
     timeout = "short",
     srcs = [
         "src/main/java/com/example/ExampleOutOfMemoryFuzzer.java",
@@ -142,12 +147,17 @@ java_fuzz_target_test(
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
         "java.lang.OutOfMemoryError",
     ],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     fuzzer_args = ["--jvm_args=-Xmx512m"],
     target_class = "com.example.ExampleOutOfMemoryFuzzer",
-)
+    verify_crash_reproducer = True if mode == "classic" else False,
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
-java_fuzz_target_test(
-    name = "ExampleStackOverflowFuzzer",
+[java_fuzz_target_test(
+    name = "ExampleStackOverflowFuzzer_" + mode,
     srcs = [
         "src/main/java/com/example/ExampleStackOverflowFuzzer.java",
     ],
@@ -155,10 +165,15 @@ java_fuzz_target_test(
         "com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow",
         "java.lang.StackOverflowError",
     ],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     target_class = "com.example.ExampleStackOverflowFuzzer",
     # Crashes with a segfault before any stack trace printing is reached.
     target_compatible_with = SKIP_ON_MACOS,
-)
+    verify_crash_reproducer = True if mode == "classic" else False,
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 # WARNING: This fuzz target uses a vulnerable version of log4j, which could result in the execution
 # of arbitrary code during fuzzing if executed with an older JDK. Use at your own risk.
@@ -207,13 +222,14 @@ java_fuzz_target_test(
     ],
 )
 
-java_fuzz_target_test(
-    name = "JpegImageParserFuzzer",
+[java_fuzz_target_test(
+    name = "JpegImageParserFuzzer_" + mode,
     size = "enormous",
     srcs = [
         "src/main/java/com/example/JpegImageParserFuzzer.java",
     ],
     allowed_findings = ["java.lang.NegativeArraySizeException"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     fuzzer_args = [
         "-fork=2",
     ],
@@ -221,13 +237,17 @@ java_fuzz_target_test(
     target_class = "com.example.JpegImageParserFuzzer",
     # The exit codes of the forked libFuzzer processes are not picked up correctly.
     target_compatible_with = SKIP_ON_MACOS,
+    verify_crash_reproducer = True if mode == "classic" else False,
     deps = [
         "@maven//:org_apache_commons_commons_imaging",
     ],
-)
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
-java_fuzz_target_test(
-    name = "GifImageParserFuzzer",
+[java_fuzz_target_test(
+    name = "GifImageParserFuzzer_" + mode,
     srcs = [
         "src/main/java/com/example/GifImageParserFuzzer.java",
     ],
@@ -236,11 +256,16 @@ java_fuzz_target_test(
         "java.lang.IllegalArgumentException",
         "java.lang.OutOfMemoryError",
     ],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     target_class = "com.example.GifImageParserFuzzer",
+    verify_crash_reproducer = True if mode == "classic" else False,
     deps = [
         "@maven//:org_apache_commons_commons_imaging",
     ],
-)
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 java_fuzz_target_test(
     name = "TiffImageParserFuzzer",
@@ -355,19 +380,24 @@ java_fuzz_target_test(
     ],
 )
 
-java_fuzz_target_test(
-    name = "JacksonCborFuzzer",
+[java_fuzz_target_test(
+    name = "JacksonCborFuzzer_" + mode,
     srcs = [
         "src/main/java/com/example/JacksonCborFuzzer.java",
     ],
     allowed_findings = ["java.lang.NullPointerException"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     target_class = "com.example.JacksonCborFuzzer",
+    verify_crash_reproducer = True if mode == "classic" else False,
     deps = [
         "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_cbor",
     ],
-)
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 java_fuzz_target_test(
     name = "FastJsonFuzzer",
@@ -499,8 +529,10 @@ java_binary(
         ":ExampleFuzzer_target_deploy.jar",
         ":ExampleValueProfileFuzzer_target_deploy.jar",
         ":FastJsonFuzzer_target_deploy.jar",
-        ":JacksonCborFuzzer_target_deploy.jar",
-        ":JpegImageParserFuzzer_target_deploy.jar",
+        ":JacksonCborFuzzer_classic_target_deploy.jar",
+        ":JacksonCborFuzzer_mutationFramework_target_deploy.jar",
+        ":JpegImageParserFuzzer_classic_target_deploy.jar",
+        ":JpegImageParserFuzzer_mutationFramework_target_deploy.jar",
         ":JsonSanitizerDenylistFuzzer_target_deploy.jar",
     ],
 )

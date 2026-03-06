@@ -16,6 +16,7 @@
 
 package com.example;
 
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import java.io.IOException;
 import java.util.HashMap;
 import org.apache.commons.imaging.ImageReadException;
@@ -24,7 +25,7 @@ import org.apache.commons.imaging.formats.jpeg.JpegImageParser;
 
 // Found https://issues.apache.org/jira/browse/IMAGING-275.
 public class JpegImageParserFuzzer {
-  public static void fuzzerTestOneInput(byte[] input) {
+  public static void fuzzerTestOneInput(byte @NotNull [] input) {
     try {
       new JpegImageParser().getBufferedImage(new ByteSourceArray(input), new HashMap<>());
     } catch (IOException | ImageReadException ignored) {
