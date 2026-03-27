@@ -189,3 +189,14 @@ cc_test(
         "@rules_jni//jni",
     ],
 )
+
+cc_test(
+    name = "synthetic_symbolizer_test",
+    size = "small",
+    srcs = ["synthetic_symbolizer_test.cpp"],
+    deps = [
+        ":synthetic_symbolizer",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)

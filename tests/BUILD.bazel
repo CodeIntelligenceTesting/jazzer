@@ -451,6 +451,30 @@ java_binary(
     srcs = ["src/test/java/com/example/CrashResistantCoverageTarget.java"],
 )
 
+java_binary(
+    name = "PrintPcsTarget",
+    testonly = True,
+    srcs = ["src/test/java/com/example/PrintPcsTarget.java"],
+    create_executable = False,
+    deps = ["//deploy:jazzer-api"],
+)
+
+sh_test(
+    name = "print_pcs_symbolization_test",
+    size = "large",
+    srcs = ["src/test/shell/print_pcs_symbolization_test.sh"],
+    args = [
+        "$(rlocationpath //launcher:jazzer)",
+        "$(rlocationpath :PrintPcsTarget_deploy.jar)",
+    ],
+    data = [
+        ":PrintPcsTarget_deploy.jar",
+        "//launcher:jazzer",
+    ],
+    target_compatible_with = LINUX_ONLY,
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
 sh_test(
     name = "crash_resistant_coverage_test",
     srcs = ["src/test/shell/crash_resistant_coverage_test.sh"],
