@@ -18,6 +18,7 @@ package com.code_intelligence.jazzer.agent
 
 import com.code_intelligence.jazzer.instrumentor.ClassInstrumentor
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
+import com.code_intelligence.jazzer.instrumentor.EdgeLocationData
 import com.code_intelligence.jazzer.instrumentor.Hook
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
@@ -246,14 +247,15 @@ class RuntimeInstrumentor(
                 // or there will be additional coverage points injected if any calls are inserted
                 // and JaCoCo will produce a broken coverage report.
                 coverageIdSynchronizer.withIdForClass(internalClassName) { firstId ->
-                    coverage(firstId).also { actualNumEdgeIds ->
-                        CoverageRecorder.recordInstrumentedClass(
-                            internalClassName,
-                            bytecode,
-                            firstId,
-                            actualNumEdgeIds,
-                        )
-                    }
+                    val result = coverage(firstId)
+                    CoverageRecorder.recordInstrumentedClass(
+                        internalClassName,
+                        bytecode,
+                        firstId,
+                        result.numEdges,
+                    )
+                    registerSourceLocations(result.locations, firstId)
+                    result.numEdges
                 }
                 // Hook instrumentation must be performed after data flow tracing as the injected
                 // bytecode would trigger the GEP callbacks for byte[].
@@ -263,6 +265,23 @@ class RuntimeInstrumentor(
                 hooks(customHooks, classWithHooksEnabledField)
             }
             instrumentedBytecode
+        }
+    }
+
+    private fun registerSourceLocations(
+        locations: EdgeLocationData?,
+        firstEdgeId: Int,
+    ) {
+        if (locations == null) return
+        try {
+            com.code_intelligence.jazzer.runtime.SourceLocationRegistry.registerLocations(
+                locations.sourceFile,
+                locations.methodNames,
+                firstEdgeId,
+                locations.edgeData,
+            )
+        } catch (_: UnsatisfiedLinkError) {
+            // Native library not loaded (e.g. standalone instrumentation).
         }
     }
 }

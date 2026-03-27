@@ -30,6 +30,7 @@ cc_library(
         ":jazzer_fuzzer_callbacks",
         ":libfuzzer_callbacks",
         ":mutator",
+        ":synthetic_symbolizer",
     ],
 )
 
@@ -53,6 +54,18 @@ cc_library(
         "//src/main/java/com/code_intelligence/jazzer/runtime:extra_counters_tracker.hdrs",
     ],
     # Symbols are only referenced dynamically via JNI.
+    alwayslink = True,
+)
+
+cc_library(
+    name = "synthetic_symbolizer",
+    srcs = ["synthetic_symbolizer.cpp"],
+    hdrs = ["synthetic_symbolizer.h"],
+    deps = [
+        ":counters_tracker",
+        "//src/main/java/com/code_intelligence/jazzer/runtime:source_location_registry.hdrs",
+    ],
+    # JNI symbols are only referenced dynamically.
     alwayslink = True,
 )
 
@@ -156,6 +169,7 @@ cc_library(
 cc_library(
     name = "sanitizer_symbols",
     srcs = ["sanitizer_symbols.cpp"],
+    deps = [":synthetic_symbolizer"],
     # Symbols are referenced dynamically by libFuzzer.
     alwayslink = True,
 )
@@ -173,5 +187,16 @@ cc_test(
         "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@rules_jni//jni",
+    ],
+)
+
+cc_test(
+    name = "synthetic_symbolizer_test",
+    size = "small",
+    srcs = ["synthetic_symbolizer_test.cpp"],
+    deps = [
+        ":synthetic_symbolizer",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )

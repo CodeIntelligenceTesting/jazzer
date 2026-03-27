@@ -21,6 +21,11 @@ import com.code_intelligence.jazzer.runtime.CoverageMap
 fun extractClassFileMajorVersion(classfileBuffer: ByteArray): Int =
     ((classfileBuffer[6].toInt() and 0xff) shl 8) or (classfileBuffer[7].toInt() and 0xff)
 
+data class CoverageResult(
+    val numEdges: Int,
+    val locations: EdgeLocationData?,
+)
+
 class ClassInstrumentor(
     private val internalClassName: String,
     bytecode: ByteArray,
@@ -28,7 +33,7 @@ class ClassInstrumentor(
     var instrumentedBytecode = bytecode
         private set
 
-    fun coverage(initialEdgeId: Int): Int {
+    fun coverage(initialEdgeId: Int): CoverageResult {
         val edgeCoverageInstrumentor =
             EdgeCoverageInstrumentor(
                 defaultEdgeCoverageStrategy,
@@ -36,7 +41,7 @@ class ClassInstrumentor(
                 initialEdgeId,
             )
         instrumentedBytecode = edgeCoverageInstrumentor.instrument(internalClassName, instrumentedBytecode)
-        return edgeCoverageInstrumentor.numEdges
+        return CoverageResult(edgeCoverageInstrumentor.numEdges, edgeCoverageInstrumentor.buildEdgeLocations())
     }
 
     fun traceDataFlow(instrumentations: Set<InstrumentationType>) {

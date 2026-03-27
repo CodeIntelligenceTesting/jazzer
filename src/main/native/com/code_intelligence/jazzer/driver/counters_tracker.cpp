@@ -37,6 +37,15 @@ void AssertNoException(JNIEnv &env) {
     _Exit(1);
   }
 }
+
+// Tracks a registered PC table batch so we can update PCFlags later.
+struct PCTableBatch {
+  uintptr_t pc_base;
+  std::size_t count;
+  jazzer::PCTableEntry *entries;
+};
+
+std::vector<PCTableBatch> gCoveragePCBatches;
 }  // namespace
 
 namespace jazzer {
@@ -45,24 +54,27 @@ uint8_t *CountersTracker::coverage_counters_ = nullptr;
 uint8_t *CountersTracker::extra_counters_ = nullptr;
 std::mutex CountersTracker::mutex_;
 
-void CountersTracker::RegisterCounterRange(uint8_t *start, uint8_t *end) {
+void CountersTracker::RegisterCounterRange(uint8_t *start, uint8_t *end,
+                                           uintptr_t pc_base,
+                                           bool track_batch) {
   if (start >= end) {
     return;
   }
 
   std::size_t num_counters = end - start;
 
-  // libFuzzer requires an array containing the instruction addresses associated
-  // with the coverage counters. Since these may be synthetic counters (not
-  // associated with real code), we create PC entries with the flag set to 0 to
-  // indicate they are not real PCs. The PC value is set to the counter index
-  // for identification purposes.
+  // libFuzzer pairs each 8-bit counter with a PC table entry. We assign
+  // globally unique synthetic PCs so the symbolizer can resolve them back
+  // to Java source locations.
   PCTableEntry *pc_entries = new PCTableEntry[num_counters];
   for (std::size_t i = 0; i < num_counters; ++i) {
-    pc_entries[i] = {i, 0};
+    pc_entries[i] = {pc_base + i, 0};
   }
 
   std::lock_guard<std::mutex> lock(mutex_);
+  if (track_batch) {
+    gCoveragePCBatches.push_back({pc_base, num_counters, pc_entries});
+  }
   __sanitizer_cov_8bit_counters_init(start, end);
   __sanitizer_cov_pcs_init(
       reinterpret_cast<uintptr_t *>(pc_entries),
@@ -94,8 +106,12 @@ void CountersTracker::RegisterNewCounters(JNIEnv &env, jint old_num_counters,
         << std::endl;
     _Exit(1);
   }
+  // Coverage counters use the global edge ID as the PC value and
+  // track the batch so SetCoveragePCFlags can update entries later.
   RegisterCounterRange(coverage_counters_ + old_num_counters,
-                       coverage_counters_ + new_num_counters);
+                       coverage_counters_ + new_num_counters,
+                       static_cast<uintptr_t>(old_num_counters),
+                       /*track_batch=*/true);
 }
 
 void CountersTracker::InitializeExtra(JNIEnv &env, jlong counters) {
@@ -123,8 +139,21 @@ void CountersTracker::RegisterExtraCounters(JNIEnv &env, jint start_offset,
               << std::endl;
     _Exit(1);
   }
+  // Extra counters use a disjoint PC range so the symbolizer can tell them
+  // apart from coverage counters.
   RegisterCounterRange(extra_counters_ + start_offset,
-                       extra_counters_ + end_offset);
+                       extra_counters_ + end_offset,
+                       kExtraCountersPCBase + start_offset);
+}
+
+void CountersTracker::SetCoveragePCFlags(std::size_t edge_id, uintptr_t flags) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  for (auto &batch : gCoveragePCBatches) {
+    if (edge_id >= batch.pc_base && edge_id < batch.pc_base + batch.count) {
+      batch.entries[edge_id - batch.pc_base].PCFlags |= flags;
+      return;
+    }
+  }
 }
 
 }  // namespace jazzer
@@ -149,13 +178,22 @@ Java_com_code_1intelligence_jazzer_runtime_CoverageMap_getEverCoveredIds(
     JNIEnv *env, jclass) {
   uintptr_t *covered_pcs;
   jint num_covered_pcs = __sanitizer_cov_get_observed_pcs(&covered_pcs);
-  std::vector<jint> covered_edge_ids(covered_pcs,
-                                     covered_pcs + num_covered_pcs);
+
+  // Filter out extra-counter PCs (>= kExtraCountersPCBase) which would
+  // overflow jint and corrupt Java-side coverage analysis.
+  std::vector<jint> covered_edge_ids;
+  covered_edge_ids.reserve(num_covered_pcs);
+  for (jint i = 0; i < num_covered_pcs; ++i) {
+    if (covered_pcs[i] < jazzer::kExtraCountersPCBase) {
+      covered_edge_ids.push_back(static_cast<jint>(covered_pcs[i]));
+    }
+  }
   delete[] covered_pcs;
 
-  jintArray covered_edge_ids_jni = env->NewIntArray(num_covered_pcs);
+  jint count = static_cast<jint>(covered_edge_ids.size());
+  jintArray covered_edge_ids_jni = env->NewIntArray(count);
   AssertNoException(*env);
-  env->SetIntArrayRegion(covered_edge_ids_jni, 0, num_covered_pcs,
+  env->SetIntArrayRegion(covered_edge_ids_jni, 0, count,
                          covered_edge_ids.data());
   AssertNoException(*env);
   return covered_edge_ids_jni;
