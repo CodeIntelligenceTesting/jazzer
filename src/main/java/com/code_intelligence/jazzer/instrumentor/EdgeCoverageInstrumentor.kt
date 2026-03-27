@@ -30,6 +30,7 @@ import com.code_intelligence.jazzer.third_party.org.jacoco.core.internal.instr.P
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles.publicLookup
@@ -82,6 +83,22 @@ interface EdgeCoverageStrategy {
     val loadLocalVariableStackSize: Int
 }
 
+/**
+ * Per-edge source location data collected during instrumentation.
+ *
+ * @param sourceFile  Qualified source path, e.g. "com/example/Foo.java"
+ * @param methodNames Deduplicated method name table (SimpleClassName.method)
+ * @param edgeData    Flat array: [packedLine0, methodIdx0, packedLine1, methodIdx1, ...]
+ *                    The sign bit of each packedLine encodes isFunctionEntry.
+ */
+class EdgeLocationData(
+    val sourceFile: String,
+    val methodNames: Array<String>,
+    val edgeData: IntArray,
+) {
+    override fun toString(): String = "EdgeLocationData(sourceFile=$sourceFile, methods=${methodNames.size}, edges=${edgeData.size / 2})"
+}
+
 // An instance of EdgeCoverageInstrumentor should only be used to instrument a single class as it
 // internally tracks the edge IDs, which have to be globally unique.
 class EdgeCoverageInstrumentor(
@@ -106,10 +123,38 @@ class EdgeCoverageInstrumentor(
             ),
         )
 
+    // ── Source location tracking ──────────────────────────────────
+    private var sourceFile: String = ""
+    private var simpleClassName: String = ""
+    private val methodNameList = mutableListOf<String>()
+    private val methodNameIndex = mutableMapOf<String, Int>()
+    private val locationData = mutableListOf<Int>()
+
+    private fun internMethodName(name: String): Int =
+        methodNameIndex.getOrPut(name) {
+            methodNameList.add(name)
+            methodNameList.size - 1
+        }
+
+    /** Returns the collected edge locations, or null if no edges were instrumented. */
+    fun buildEdgeLocations(): EdgeLocationData? {
+        if (numEdges == 0) return null
+        return EdgeLocationData(
+            sourceFile,
+            methodNameList.toTypedArray(),
+            locationData.toIntArray(),
+        )
+    }
+
     override fun instrument(
         internalClassName: String,
         bytecode: ByteArray,
     ): ByteArray {
+        val lastSlash = internalClassName.lastIndexOf('/')
+        simpleClassName = if (lastSlash >= 0) internalClassName.substring(lastSlash + 1) else internalClassName
+        // Fallback source file if the class has no SourceFile attribute.
+        sourceFile = internalClassName
+
         val reader = InstrSupport.classReaderFor(bytecode)
         val writer = ClassWriter(reader, 0)
         val version = InstrSupport.getMajorVersion(reader)
@@ -144,6 +189,8 @@ class EdgeCoverageInstrumentor(
     /**
      * A [ProbeInserter] that injects bytecode instrumentation at every control flow edge and
      * modifies the stack size and number of local variables accordingly.
+     *
+     * Also records the source location of each probe for PC symbolization.
      */
     private inner class EdgeCoverageProbeInserter(
         access: Int,
@@ -152,7 +199,25 @@ class EdgeCoverageInstrumentor(
         mv: MethodVisitor,
         arrayStrategy: IProbeArrayStrategy,
     ) : ProbeInserter(access, name, desc, mv, arrayStrategy) {
+        private var currentLine = 0
+        private var isFirstProbe = true
+        private val methodIdx = internMethodName("$simpleClassName.$name")
+
+        override fun visitLineNumber(
+            line: Int,
+            start: Label,
+        ) {
+            currentLine = line
+            super.visitLineNumber(line, start)
+        }
+
         override fun insertProbe(id: Int) {
+            // Pack isFuncEntry into the sign bit of the line number.
+            val packedLine = if (isFirstProbe) (currentLine or (1 shl 31)) else currentLine
+            locationData.add(packedLine)
+            locationData.add(methodIdx)
+            isFirstProbe = false
+
             strategy.instrumentControlFlowEdge(mv, id, variable, coverageMapInternalClassName)
         }
 
@@ -181,6 +246,20 @@ class EdgeCoverageInstrumentor(
         trackFrames: Boolean,
     ) : ClassProbesAdapter(cpv, trackFrames) {
         override fun nextId(): Int = nextEdgeId()
+
+        override fun visitSource(
+            source: String?,
+            debug: String?,
+        ) {
+            if (source != null) {
+                // sourceFile was initialized to the internal class name (e.g. "com/example/Outer$Inner")
+                // in instrument().  Extract the package prefix and prepend it to the declared source
+                // file name, giving e.g. "com/example/Outer.java".
+                val packageEnd = sourceFile.lastIndexOf('/')
+                sourceFile = if (packageEnd >= 0) sourceFile.substring(0, packageEnd + 1) + source else source
+            }
+            super.visitSource(source, debug)
+        }
 
         override fun visitEnd() {
             cpv.visitTotalProbeCount(numEdges)
