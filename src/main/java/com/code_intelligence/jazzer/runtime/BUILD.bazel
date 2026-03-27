@@ -161,6 +161,15 @@ java_jni_library(
     ],
 )
 
+java_jni_library(
+    name = "source_location_registry",
+    srcs = ["SourceLocationRegistry.java"],
+    visibility = [
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor:__pkg__",
+        "//src/main/native/com/code_intelligence/jazzer/driver:__pkg__",
+    ],
+)
+
 java_library(
     name = "runtime",
     srcs = [
@@ -188,6 +197,7 @@ java_library(
         ":constants",
         ":coverage_map",
         ":extra_counters_tracker",
+        ":source_location_registry",
         ":trace_data_flow_native_callbacks",
         "//src/main/java/com/code_intelligence/jazzer/api:hooks",
     ],
