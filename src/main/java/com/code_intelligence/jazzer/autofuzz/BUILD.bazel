@@ -4,6 +4,7 @@ java_library(
         "AccessibleObjectLookup.java",
         "AutofuzzCodegenVisitor.java",
         "AutofuzzError.java",
+        "ConstructorExclusions.java",
         "FuzzTarget.java",
         "Meta.java",
         "YourAverageJavaClass.java",
