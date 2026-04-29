@@ -34,7 +34,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +53,7 @@ public final class FuzzTarget {
           + "}";
   private static final long MAX_EXECUTIONS_WITHOUT_INVOCATION = 100;
 
+  private static List<String> constructorExcludeReferences = Collections.emptyList();
   private static Meta meta;
   private static String methodReference;
   private static Executable[] targetExecutables;
@@ -58,6 +61,10 @@ public final class FuzzTarget {
   private static Map<Executable, Class<?>[]> throwsDeclarations;
   private static Set<SimpleGlobMatcher> ignoredExceptionMatchers;
   private static long executionsSinceLastInvocation = 0;
+
+  public static void setConstructorExcludeReferences(List<String> references) {
+    constructorExcludeReferences = Collections.unmodifiableList(new ArrayList<>(references));
+  }
 
   public static void fuzzerInitialize(String[] args) {
     if (args.length == 0 || !args[0].contains("::")) {
@@ -245,8 +252,22 @@ public final class FuzzTarget {
                                 Arrays.stream(method.getExceptionTypes()), alwaysIgnore.stream())
                             .toArray(Class[]::new)));
 
+    ConstructorExclusions constructorExclusions;
+    try {
+      constructorExclusions = ConstructorExclusions.from(constructorExcludeReferences, lookup);
+    } catch (IllegalArgumentException e) {
+      Log.error(e.getMessage());
+      System.exit(1);
+      return;
+    }
+
     setTarget(
-        executables, null, methodSignature, ignoredExceptionGlobMatchers, ignoredExceptionClasses);
+        executables,
+        null,
+        methodSignature,
+        ignoredExceptionGlobMatchers,
+        ignoredExceptionClasses,
+        constructorExclusions);
   }
 
   /**
@@ -259,6 +280,22 @@ public final class FuzzTarget {
       String methodReference,
       Set<SimpleGlobMatcher> ignoredExceptionMatchers,
       Map<Executable, Class<?>[]> throwsDeclarations) {
+    setTarget(
+        targetExecutables,
+        targetInstance,
+        methodReference,
+        ignoredExceptionMatchers,
+        throwsDeclarations,
+        ConstructorExclusions.empty());
+  }
+
+  private static void setTarget(
+      Executable[] targetExecutables,
+      Object targetInstance,
+      String methodReference,
+      Set<SimpleGlobMatcher> ignoredExceptionMatchers,
+      Map<Executable, Class<?>[]> throwsDeclarations,
+      ConstructorExclusions constructorExclusions) {
     Class<?> targetClass = null;
     for (Executable executable : targetExecutables) {
       if (targetClass != null && !targetClass.equals(executable.getDeclaringClass())) {
@@ -269,7 +306,7 @@ public final class FuzzTarget {
       executable.setAccessible(true);
     }
 
-    FuzzTarget.meta = new Meta(targetClass);
+    FuzzTarget.meta = new Meta(targetClass, constructorExclusions);
     FuzzTarget.targetExecutables = targetExecutables;
     FuzzTarget.targetInstance = targetInstance;
     FuzzTarget.methodReference = methodReference;

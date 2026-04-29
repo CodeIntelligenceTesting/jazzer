@@ -105,6 +105,11 @@ public final class Opt {
           "autofuzz_ignore",
           ',',
           "Fully qualified names of exception classes to ignore during fuzzing");
+  public static final OptItem<List<String>> autofuzzConstructorExcludes =
+      stringListSetting(
+          "autofuzz_constructor_excludes",
+          ';',
+          "Exact constructor references to exclude during Autofuzz argument construction");
   public static final OptItem<String> coverageDump =
       stringSetting(
           "coverage_dump",

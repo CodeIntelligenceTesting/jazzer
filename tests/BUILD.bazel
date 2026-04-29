@@ -565,6 +565,39 @@ java_fuzz_target_test(
 )
 
 java_library(
+    name = "autofuzz_constructor_excludes_target",
+    srcs = ["src/test/java/com/example/AutofuzzConstructorExcludesTarget.java"],
+    deps = ["//deploy:jazzer-api"],
+)
+
+java_fuzz_target_test(
+    name = "AutofuzzConstructorExcludesPositiveFuzzer",
+    allowed_findings = ["com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow"],
+    expect_crash = True,
+    expect_number_of_findings = 1,
+    fuzzer_args = [
+        "--autofuzz=com.example.AutofuzzConstructorExcludesTarget::target",
+        "-runs=1000",
+    ],
+    runtime_deps = [
+        ":autofuzz_constructor_excludes_target",
+    ],
+)
+
+java_fuzz_target_test(
+    name = "AutofuzzConstructorExcludesFuzzer",
+    expect_crash = False,
+    fuzzer_args = [
+        "--autofuzz=com.example.AutofuzzConstructorExcludesTarget::target",
+        "--autofuzz_constructor_excludes=com.example.AutofuzzConstructorExcludesTarget$$Argument::new(int)",
+        "-runs=1000",
+    ],
+    runtime_deps = [
+        ":autofuzz_constructor_excludes_target",
+    ],
+)
+
+java_library(
     name = "autofuzz_assertion_error_target",
     srcs = ["src/test/java/com/example/AutofuzzAssertionErrorTarget.java"],
 )

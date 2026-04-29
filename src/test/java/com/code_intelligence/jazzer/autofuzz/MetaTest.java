@@ -19,15 +19,19 @@ package com.code_intelligence.jazzer.autofuzz;
 import static com.code_intelligence.jazzer.autofuzz.TestHelpers.autofuzzTestCase;
 import static com.code_intelligence.jazzer.autofuzz.TestHelpers.consumeTestCase;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.code_intelligence.jazzer.api.CannedFuzzedDataProvider;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.google.json.JsonSanitizer;
 import java.io.ByteArrayInputStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import org.junit.Test;
 
 public class MetaTest {
@@ -35,6 +39,31 @@ public class MetaTest {
     FOO,
     BAR,
     BAZ,
+  }
+
+  public static class ConstructorExclusionTarget {
+    private final int value;
+
+    public ConstructorExclusionTarget(int value) {
+      this.value = value;
+    }
+
+    public ConstructorExclusionTarget(String value) {
+      this.value = value.length();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      ConstructorExclusionTarget that = (ConstructorExclusionTarget) o;
+      return value == that.value;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(value);
+    }
   }
 
   @Test
@@ -232,6 +261,60 @@ public class MetaTest {
   private Map<String, String> returnsStringStringMap() {
     throw new IllegalStateException(
         "Should not be called, only exists to construct its generic return type");
+  }
+
+  @Test
+  public void testConstructorExclusionsDuringConsume() throws NoSuchMethodException {
+    AutofuzzCodegenVisitor visitor = new AutofuzzCodegenVisitor();
+    FuzzedDataProvider data =
+        CannedFuzzedDataProvider.create(
+            Arrays.asList(
+                (byte) 1, // do not return null
+                0, // pick the first non-excluded constructor (String)
+                (byte) 1, // do not return null for the String constructor argument
+                8, // remaining bytes
+                "safe" // String constructor argument
+                ));
+    AccessibleObjectLookup lookup = new AccessibleObjectLookup(null);
+    Constructor<?> intConstructor = ConstructorExclusionTarget.class.getConstructor(int.class);
+    Constructor<?> stringConstructor =
+        ConstructorExclusionTarget.class.getConstructor(String.class);
+    ConstructorExclusions constructorExclusions =
+        ConstructorExclusions.from(
+            Collections.singletonList(ConstructorExclusionTarget.class.getName() + "::new(int)"),
+            lookup);
+
+    assertEquals(
+        intConstructor, lookup.getAccessibleConstructors(ConstructorExclusionTarget.class)[0]);
+    assertTrue(constructorExclusions.isExcluded(intConstructor));
+    assertFalse(constructorExclusions.isExcluded(stringConstructor));
+
+    assertEquals(
+        new ConstructorExclusionTarget("safe"),
+        new Meta(null, constructorExclusions)
+            .consume(data, ConstructorExclusionTarget.class, visitor));
+    assertEquals(
+        "new com.code_intelligence.jazzer.autofuzz.MetaTest.ConstructorExclusionTarget("
+            + "\"safe\")",
+        visitor.generate());
+  }
+
+  @Test
+  public void testConstructorExclusionsDoNotApplyToExplicitTargets() throws NoSuchMethodException {
+    AutofuzzCodegenVisitor visitor = new AutofuzzCodegenVisitor();
+    FuzzedDataProvider data = CannedFuzzedDataProvider.create(Collections.singletonList(42));
+    ConstructorExclusions constructorExclusions =
+        ConstructorExclusions.from(
+            Collections.singletonList(ConstructorExclusionTarget.class.getName() + "::new(int)"),
+            new AccessibleObjectLookup(null));
+
+    assertEquals(
+        new ConstructorExclusionTarget(42),
+        new Meta(null, constructorExclusions)
+            .autofuzz(data, ConstructorExclusionTarget.class.getConstructor(int.class), visitor));
+    assertEquals(
+        "new com.code_intelligence.jazzer.autofuzz.MetaTest.ConstructorExclusionTarget(42)",
+        visitor.generate());
   }
 
   public static boolean isFive(int arg) {
