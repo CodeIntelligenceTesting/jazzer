@@ -21,11 +21,19 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class AccessibleObjectLookup {
+  // Constructors that autofuzz should never invoke, e.g. because they can take practically forever
+  // to compute a value (https://github.com/CodeIntelligenceTesting/jazzer/issues/1055).
+  private static final Set<Constructor<?>> DENYLISTED_CONSTRUCTORS = denylistedConstructors();
+
   private static final Comparator<Class<?>> STABLE_CLASS_COMPARATOR =
       Comparator.comparing(Class::getName);
   private static final Comparator<Executable> STABLE_EXECUTABLE_COMPARATOR =
@@ -62,6 +70,7 @@ class AccessibleObjectLookup {
             Arrays.stream(type.getDeclaredConstructors()), Arrays.stream(type.getConstructors()))
         .distinct()
         .filter(this::isAccessible)
+        .filter(constructor -> !DENYLISTED_CONSTRUCTORS.contains(constructor))
         .sorted(STABLE_EXECUTABLE_COMPARATOR)
         .filter(
             constructor -> {
@@ -75,6 +84,18 @@ class AccessibleObjectLookup {
               }
             })
         .toArray(Constructor<?>[]::new);
+  }
+
+  private static Set<Constructor<?>> denylistedConstructors() {
+    try {
+      return Stream.of(
+              // Searches for a random prime with up to Integer.MAX_VALUE bits, which can stall the
+              // fuzzer indefinitely.
+              BigInteger.class.getConstructor(int.class, int.class, Random.class))
+          .collect(Collectors.toSet());
+    } catch (NoSuchMethodException e) {
+      throw new AutofuzzError("Failed to look up denylisted constructor", e);
+    }
   }
 
   Method[] getAccessibleMethods(Class<?> type) {
