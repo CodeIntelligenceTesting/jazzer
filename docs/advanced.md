@@ -15,6 +15,8 @@ To use the compiled method hooks, they have to be available on the classpath pro
 Hooks have to be loaded from separate JAR files so that Jazzer can [add it to the bootstrap class loader search](https://docs.oracle.com/javase/8/docs/api/java/lang/instrument/Instrumentation.html#appendToBootstrapClassLoaderSearch-java.util.jar.JarFile-).
 The list of custom hooks can alternatively be specified via the `Jazzer-Hook-Classes` attribute in the fuzz target JAR's manifest.
 
+The classes that hooks are applied to can be restricted with the `--custom_hook_includes` and `--custom_hook_excludes` flags, see [Coverage Instrumentation](#coverage-instrumentation) for details.
+
 
 ## Reproducing a finding
 
@@ -85,6 +87,15 @@ Both flags take a list of glob patterns for the java class name separated by col
 
 By default, JVM-internal classes and Java as well as Kotlin standard library classes are not instrumented,
 so these do not need to be excluded manually.
+
+Hook instrumentation, which applies both [custom hooks](#custom-hooks) and Jazzer's built-in hooks (e.g. the sanitizers), can be restricted in the same way with the `--custom_hook_includes` and `--custom_hook_excludes` flags:
+
+```bash
+--custom_hook_includes=com.my_com.** --custom_hook_excludes=com.my_com.crypto.**
+```
+
+These flags control which classes hooks are applied to, not which hooks are loaded.
+To disable particular hooks entirely, use `--disabled_hooks` instead.
 
 ## Trace Instrumentation
 
