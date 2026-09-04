@@ -1,6 +1,16 @@
 load("@contrib_rules_jvm//java:defs.bzl", "JUNIT5_DEPS", "java_junit5_test")
 
 java_junit5_test(
+    name = "ClojureLangHooksTest",
+    srcs = ["ClojureLangHooksTest.java"],
+    deps = JUNIT5_DEPS + [
+        "//sanitizers/src/main/java/com/code_intelligence/jazzer/sanitizers:clojure_lang_hooks",
+        "@clojure_jar//jar",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+java_junit5_test(
     name = "FilePathTraversalTest",
     srcs = ["FilePathTraversalTest.java"],
     deps = JUNIT5_DEPS + [
