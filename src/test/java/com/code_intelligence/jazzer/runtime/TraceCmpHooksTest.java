@@ -19,7 +19,10 @@ package com.code_intelligence.jazzer.runtime;
 import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -62,6 +65,81 @@ public class TraceCmpHooksTest {
     // Make sure we don't crash the JVM on null arrays.
     TraceCmpHooks.arraysEquals(null, null, new Object[] {b1, b2}, 1, false);
     TraceCmpHooks.arraysCompare(null, null, new Object[] {b1, b2}, 1, 1);
+  }
+
+  /**
+   * Map/set hooks compare the lookup key against bracketing elements via {@code
+   * TraceDataFlowNativeCallbacks.traceGenericCmp}, which assumes that both operands have the same
+   * runtime class. Comparisons may succeed across incompatible {@link Number} implementations
+   * without throwing, e.g. {@code clojure.lang.Ratio.compareTo} accepts any {@code Number}. Such a
+   * heterogeneous match previously caused a {@link ClassCastException} in the unboxing casts of
+   * {@code traceGenericCmp}; this happens, for instance, when the Clojure compiler registers {@code
+   * Double} constants under the Jazzer agent. The hooks must simply skip the guidance in that case.
+   */
+  @Test
+  public void mapGetShouldTolerateHeterogeneousComparableKeys() {
+    Map<Object, Object> map = new HashMap<>();
+    map.put(new LenientNumber(2), "two");
+    map.put(new LenientNumber(4), "four");
+    // A Double sorts between the two LenientNumber keys, so lower and upper bracketing keys exist
+    // and are found via compareTo despite the different classes.
+    TraceCmpHooks.mapGet(null, map, new Object[] {3.1d}, 1, null);
+  }
+
+  @Test
+  public void setContainsShouldTolerateHeterogeneousComparableElements() {
+    Set<Object> set = new HashSet<>();
+    set.add(new LenientNumber(2));
+    set.add(new LenientNumber(4));
+    TraceCmpHooks.setContains(null, set, new Object[] {3.1d}, 1, false);
+    TraceCmpHooks.setRemove(null, set, new Object[] {3.1d}, 1, false);
+  }
+
+  @Test
+  public void containsKeyShouldTolerateHeterogeneousComparableKeys() {
+    // Mirror the actual Clojure compiler call site, which uses an IdentityHashMap.
+    Map<Object, Object> map = new IdentityHashMap<>();
+    map.put(new LenientNumber(2), 1);
+    map.put(new LenientNumber(4), 2);
+    TraceCmpHooks.containsKey(null, map, new Object[] {3.1d}, 1, false);
+  }
+
+  /**
+   * A {@link Number} whose {@code compareTo} accepts any other {@code Number}, like {@code
+   * clojure.lang.Ratio}.
+   */
+  @SuppressWarnings("ComparableType")
+  private static final class LenientNumber extends Number implements Comparable<Number> {
+    private final long value;
+
+    LenientNumber(long value) {
+      this.value = value;
+    }
+
+    @Override
+    public int compareTo(Number other) {
+      return Long.compare(value, other.longValue());
+    }
+
+    @Override
+    public int intValue() {
+      return (int) value;
+    }
+
+    @Override
+    public long longValue() {
+      return value;
+    }
+
+    @Override
+    public float floatValue() {
+      return value;
+    }
+
+    @Override
+    public double doubleValue() {
+      return value;
+    }
   }
 
   @Test
