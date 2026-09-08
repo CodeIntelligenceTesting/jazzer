@@ -74,6 +74,16 @@ java_fuzz_target_test(
 )
 
 java_fuzz_target_test(
+    name = "ExitOnTimeFuzzer",
+    srcs = ["src/test/java/com/example/ExitOnTimeFuzzer.java"],
+    expect_non_crash_exit_code = 0,
+    fuzzer_args = ["-exit_on_time=2"],
+    target_class = "com.example.ExitOnTimeFuzzer",
+    verify_crash_input = False,
+    verify_crash_reproducer = False,
+)
+
+java_fuzz_target_test(
     name = "ForkModeFuzzer",
     size = "enormous",
     srcs = [

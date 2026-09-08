@@ -173,6 +173,23 @@ public class Driver {
         args.add("-runs=" + Opt.maxExecutions.get());
       }
     }
+    if (Opt.exitOnTime.get() > 0) {
+      // A native libFuzzer flag takes precedence over the Jazzer option, just like
+      // -max_total_time does for --max_duration.
+      boolean hasExitOnTime = args.stream().anyMatch(a -> a.startsWith("-exit_on_time="));
+      // Opt has already consumed this Jazzer-specific option. Do not forward it to libFuzzer,
+      // which only accepts the single-dash spelling and would otherwise emit a warning.
+      args.removeIf(a -> a.startsWith("--exit_on_time="));
+      if (!hasExitOnTime) {
+        args.add("-exit_on_time=" + Opt.exitOnTime.get());
+      }
+      boolean hasExitOnTimeMinRuns =
+          args.stream().anyMatch(a -> a.startsWith("-exit_on_time_min_runs="));
+      args.removeIf(a -> a.startsWith("--exit_on_time_min_runs="));
+      if (!hasExitOnTimeMinRuns) {
+        args.add("-exit_on_time_min_runs=" + Opt.exitOnTimeMinRuns.get());
+      }
+    }
 
     // Installing the agent after the following "findFuzzTarget" leads to an asan error
     // in it on "Class.forName(targetClassName)", but only during native fuzzing.

@@ -1,0 +1,118 @@
+diff --git a/FuzzerFlags.def b/FuzzerFlags.def
+--- a/FuzzerFlags.def
++++ b/FuzzerFlags.def
+@@ -55,6 +55,12 @@
+   "this exit code will be used.")
+ FUZZER_FLAG_INT(max_total_time, 0, "If positive, indicates the maximal total "
+                                    "time in seconds to run the fuzzer.")
++FUZZER_FLAG_INT(exit_on_time, 0,
++                "Exit successfully if no new coverage features are found for "
++                "this many seconds (0 disables the limit).")
++FUZZER_FLAG_INT(exit_on_time_min_runs, 100000,
++                "Minimum number of fuzzer runs before -exit_on_time is "
++                "allowed to trigger (default: 100000).")
+ FUZZER_FLAG_INT(help, 0, "Print help.")
+ FUZZER_FLAG_INT(fork, 0, "Experimental mode where fuzzing happens "
+                 "in a subprocess")
+diff --git a/FuzzerOptions.h b/FuzzerOptions.h
+--- a/FuzzerOptions.h
++++ b/FuzzerOptions.h
+@@ -28,6 +28,8 @@
+   bool IgnoreOOMs = true;
+   bool IgnoreCrashes = false;
+   int MaxTotalTimeSec = 0;
++  int ExitOnTimeSec = 0;
++  int ExitOnTimeMinRuns = 100000;
+   int RssLimitMb = 0;
+   int MallocLimitMb = 0;
+   bool DoCrossOver = true;
+diff --git a/FuzzerInternal.h b/FuzzerInternal.h
+--- a/FuzzerInternal.h
++++ b/FuzzerInternal.h
+@@ -50,6 +50,13 @@
+                static_cast<size_t>(Options.MaxTotalTimeSec);
+   }
+ 
++  bool ExitOnTimeReached() {
++    return Options.ExitOnTimeSec > 0 &&
++           TotalNumberOfRuns >= (size_t)Options.ExitOnTimeMinRuns &&
++           duration_cast<seconds>(system_clock::now() - LastNewCoverageTime)
++                   .count() >= Options.ExitOnTimeSec;
++  }
++
+   size_t execPerSec() {
+     size_t Seconds = secondsSinceProcessStartUp();
+     return Seconds ? TotalNumberOfRuns / Seconds : 0;
+@@ -137,6 +143,7 @@
+   FuzzingOptions Options;
+   DataFlowTrace DFT;
+ 
++  system_clock::time_point LastNewCoverageTime;
+   system_clock::time_point ProcessStartTime = system_clock::now();
+   system_clock::time_point UnitStartTime, UnitStopTime;
+   long TimeOfLongestUnitInSeconds = 0;
+diff --git a/FuzzerLoop.cpp b/FuzzerLoop.cpp
+--- a/FuzzerLoop.cpp
++++ b/FuzzerLoop.cpp
+@@ -535,6 +535,8 @@
+     *FoundUniqFeatures = FoundUniqFeaturesOfII;
+   PrintPulseAndReportSlowInput(Data, Size);
+   size_t NumNewFeatures = Corpus.NumFeatureUpdates() - NumUpdatesBefore;
++  if (NumNewFeatures > 0)
++    LastNewCoverageTime = system_clock::now();
+   if (NumNewFeatures || ForceAddToCorpus) {
+     TPC.UpdateObservedPCs();
+     auto NewII =
+@@ -862,6 +864,7 @@
+   TPC.SetPrintNewPCs(Options.PrintNewCovPcs);
+   TPC.SetPrintNewFuncs(Options.PrintNewCovFuncs);
+   system_clock::time_point LastCorpusReload = system_clock::now();
++  LastNewCoverageTime = system_clock::now();
+ 
+   TmpMaxMutationLen =
+       Min(MaxMutationLen, Max(size_t(4), Corpus.MaxInputSize()));
+@@ -880,6 +883,11 @@
+       break;
+     if (TimedOut())
+       break;
++    if (ExitOnTimeReached()) {
++      Printf("INFO: no new coverage features for %d seconds; exiting.\n",
++             Options.ExitOnTimeSec);
++      break;
++    }
+ 
+     // Update TmpMaxMutationLen
+     if (Options.LenControl) {
+diff --git a/FuzzerDriver.cpp b/FuzzerDriver.cpp
+--- a/FuzzerDriver.cpp
++++ b/FuzzerDriver.cpp
+@@ -665,6 +665,20 @@
+   if (Flags.close_fd_mask & 1)
+     CloseStdout();
+ 
++  if (Flags.exit_on_time < 0) {
++    Printf("ERROR: -exit_on_time must be non-negative\n");
++    return 1;
++  }
++  if (Flags.exit_on_time_min_runs < 0) {
++    Printf("ERROR: -exit_on_time_min_runs must be non-negative\n");
++    return 1;
++  }
++  if (Flags.exit_on_time > 0 &&
++      (Flags.fork || Flags.jobs || Flags.merge || Flags.set_cover_merge)) {
++    Printf("ERROR: -exit_on_time is only supported for single-process fuzzing\n");
++    return 1;
++  }
++
+   if (Flags.jobs > 0 && Flags.workers == 0) {
+     Flags.workers = std::min(NumberOfCpuCores() / 2, Flags.jobs);
+     if (Flags.workers > 1)
+@@ -686,6 +696,8 @@
+   Options.IgnoreOOMs = Flags.ignore_ooms;
+   Options.IgnoreCrashes = Flags.ignore_crashes;
+   Options.MaxTotalTimeSec = Flags.max_total_time;
++  Options.ExitOnTimeSec = Flags.exit_on_time;
++  Options.ExitOnTimeMinRuns = Flags.exit_on_time_min_runs;
+   Options.DoCrossOver = Flags.cross_over;
+   Options.CrossOverUniformDist = Flags.cross_over_uniform_dist;
+   Options.MutateDepth = Flags.mutate_depth;

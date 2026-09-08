@@ -120,6 +120,9 @@ class FuzzTestExecutor {
     if (Opt.maxExecutions.get() > 0) {
       libFuzzerArgs.add("-runs=" + Opt.maxExecutions.get());
     }
+    if (Opt.exitOnTime.get() > 0) {
+      libFuzzerArgs.add("-exit_on_time=" + Opt.exitOnTime.get());
+    }
     // Disable libFuzzer's out of memory detection: It is only useful for native library fuzzing,
     // which we don't support without our native driver, and leads to false positives where it picks
     // up IntelliJ's memory usage.

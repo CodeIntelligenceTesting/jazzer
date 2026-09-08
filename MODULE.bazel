@@ -207,6 +207,8 @@ http_archive(
 http_archive(
     name = "jazzer_libfuzzer",
     build_file = "//third_party:libFuzzer.BUILD",
+    patch_args = ["-p1"],
+    patches = ["//third_party:libfuzzer-exit-on-time.patch"],
     sha256 = "200b32c897b1171824462706f577d7f1d6175da602eccfe570d2dceeac11d490",
     strip_prefix = "llvm-project-jazzer-2023-04-25/compiler-rt/lib/fuzzer",
     url = "https://github.com/CodeIntelligenceTesting/llvm-project-jazzer/archive/refs/tags/2023-04-25.tar.gz",
