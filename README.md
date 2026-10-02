@@ -251,6 +251,30 @@ A list of security issues and bugs found by Jazzer is maintained [here](docs/tro
 If you found something interesting and the information is public, please send a PR to add it to the list.
 
 
+## Cite
+
+If you use Jazzer in scientific work, consider citing our IEEE S&P 2026 paper:
+
+**[Jazzer: Coverage-Guided Fuzzing for Semantic Vulnerabilities in the Java Ecosystem](https://doi.org/10.1109/SP63933.2026.00134)**
+
+<details>
+
+<summary>BibTeX</summary>
+
+```bibtex
+@inproceedings{jazzer_sp26,
+  author={Dechand, Sergej and Wienand, Tobias and Meumertzheim, Fabian and Samarin, Peter and Resch, Simon and Yakdan, Khaled and Holz, Thorsten and Toffalini, Flavio},
+  booktitle={2026 IEEE Symposium on Security and Privacy (SP)},
+  title={Jazzer: Coverage-Guided Fuzzing for Semantic Vulnerabilities in the Java Ecosystem},
+  year={2026},
+  pages={3720-3739},
+  doi={10.1109/SP63933.2026.00134}
+}
+```
+
+</details>
+
+
 ## Further documentation
 
 * [Arguments and configuration options](docs/arguments-and-configuration-options.md)
