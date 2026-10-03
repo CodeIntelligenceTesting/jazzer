@@ -42,11 +42,11 @@ final class OptParser {
         String.format(
             "  java -cp jazzer.jar[%cclasspath_entries] com.code_intelligence.jazzer.Jazzer"
                 + " --target_class=<target class> [args...]",
-            File.separatorChar),
+            File.pathSeparatorChar),
         String.format(
             "  java -cp jazzer.jar[%cclasspath_entries] com.code_intelligence.jazzer.Jazzer"
                 + " --autofuzz=<method reference> [args...]",
-            File.separatorChar),
+            File.pathSeparatorChar),
         "",
         "In addition to the options listed below, Jazzer also accepts all",
         "libFuzzer options described at:",
