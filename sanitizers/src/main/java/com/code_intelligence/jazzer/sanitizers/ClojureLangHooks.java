@@ -54,7 +54,7 @@ public final class ClojureLangHooks {
       targetMethod = "getRawRoot")
   public static void clojureMarkContains(
       MethodHandle method, Object thisObject, Object[] arguments, int hookId, Object result) {
-    if (stringContainsFuncNames.contains(result.getClass().getCanonicalName())) {
+    if (result != null && stringContainsFuncNames.contains(result.getClass().getCanonicalName())) {
       stringContainsFuncs.get().add(result);
     }
   }
