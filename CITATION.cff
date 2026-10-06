@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use Jazzer in scientific work, consider citing our IEEE S&P 2026 paper."
+title: Jazzer
+type: software
+authors:
+  - name: Code Intelligence
+repository-code: "https://github.com/CodeIntelligenceTesting/jazzer"
+license: Apache-2.0
+preferred-citation:
+  type: conference-paper
+  title: "Jazzer: Coverage-Guided Fuzzing for Semantic Vulnerabilities in the Java Ecosystem"
+  authors:
+    - family-names: Dechand
+      given-names: Sergej
+    - family-names: Wienand
+      given-names: Tobias
+    - family-names: Meumertzheim
+      given-names: Fabian
+    - family-names: Samarin
+      given-names: Peter
+    - family-names: Resch
+      given-names: Simon
+    - family-names: Yakdan
+      given-names: Khaled
+    - family-names: Holz
+      given-names: Thorsten
+    - family-names: Toffalini
+      given-names: Flavio
+  collection-title: "2026 IEEE Symposium on Security and Privacy (SP)"
+  publisher:
+    name: IEEE
+  year: 2026
+  start: 3720
+  end: 3739
+  doi: "10.1109/SP63933.2026.00134"
