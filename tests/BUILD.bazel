@@ -73,11 +73,76 @@ java_fuzz_target_test(
     ],
 )
 
+# The native libFuzzer flags exit the run early.
 java_fuzz_target_test(
     name = "ExitOnTimeFuzzer",
     srcs = ["src/test/java/com/example/ExitOnTimeFuzzer.java"],
+    env = {
+        "MAX_FUZZING_SECONDS": "30",
+    },
     expect_non_crash_exit_code = 0,
-    fuzzer_args = ["-exit_on_time=2"],
+    fuzzer_args = [
+        "-exit_on_time=2",
+        "-exit_on_time_min_runs=1",
+        "-max_total_time=60",
+    ],
+    target_class = "com.example.ExitOnTimeFuzzer",
+    verify_crash_input = False,
+    verify_crash_reproducer = False,
+)
+
+# The Jazzer options are translated into libFuzzer flags and not forwarded verbatim, which would
+# result in a warning about an unknown flag.
+java_fuzz_target_test(
+    name = "ExitOnTimeJazzerOptionFuzzer",
+    srcs = ["src/test/java/com/example/ExitOnTimeFuzzer.java"],
+    env = {
+        "MAX_FUZZING_SECONDS": "30",
+    },
+    expect_non_crash_exit_code = 0,
+    fuzzer_args = [
+        "--exit_on_time=2",
+        "--exit_on_time_min_runs=1",
+        "-max_total_time=60",
+    ],
+    target_class = "com.example.ExitOnTimeFuzzer",
+    verify_crash_input = False,
+    verify_crash_reproducer = False,
+)
+
+# An unreachable number of minimum runs prevents --exit_on_time from triggering, so the run only
+# stops at -max_total_time.
+java_fuzz_target_test(
+    name = "ExitOnTimeMinRunsGateFuzzer",
+    srcs = ["src/test/java/com/example/ExitOnTimeFuzzer.java"],
+    env = {
+        "MIN_FUZZING_SECONDS": "4",
+    },
+    expect_non_crash_exit_code = 0,
+    fuzzer_args = [
+        "--exit_on_time=1",
+        "--exit_on_time_min_runs=2147483647",
+        "-max_total_time=5",
+    ],
+    target_class = "com.example.ExitOnTimeFuzzer",
+    verify_crash_input = False,
+    verify_crash_reproducer = False,
+)
+
+# A native -exit_on_time flag takes precedence over --exit_on_time.
+java_fuzz_target_test(
+    name = "ExitOnTimeNativeFlagPrecedenceFuzzer",
+    srcs = ["src/test/java/com/example/ExitOnTimeFuzzer.java"],
+    env = {
+        "MAX_FUZZING_SECONDS": "30",
+    },
+    expect_non_crash_exit_code = 0,
+    fuzzer_args = [
+        "--exit_on_time=100",
+        "-exit_on_time=2",
+        "--exit_on_time_min_runs=1",
+        "-max_total_time=60",
+    ],
     target_class = "com.example.ExitOnTimeFuzzer",
     verify_crash_input = False,
     verify_crash_reproducer = False,

@@ -16,7 +16,33 @@
 
 package com.example;
 
-/** A target with no input-dependent coverage, used to test idle coverage limits. */
+/**
+ * A target with no input-dependent coverage, used to test idle coverage limits.
+ *
+ * <p>The optional environment variables {@code MIN_FUZZING_SECONDS} and {@code
+ * MAX_FUZZING_SECONDS} bound the duration of the fuzzing run, which distinguishes an exit caused
+ * by -exit_on_time from one caused by -max_total_time.
+ */
 public final class ExitOnTimeFuzzer {
+  private static long startNanos;
+
+  public static void fuzzerInitialize() {
+    startNanos = System.nanoTime();
+  }
+
   public static void fuzzerTestOneInput(byte[] ignored) {}
+
+  public static void fuzzerTearDown() {
+    long elapsedSeconds = (System.nanoTime() - startNanos) / 1_000_000_000L;
+    String min = System.getenv("MIN_FUZZING_SECONDS");
+    if (min != null && elapsedSeconds < Long.parseLong(min)) {
+      throw new IllegalStateException(
+          "Fuzzing stopped after " + elapsedSeconds + "s, expected at least " + min + "s");
+    }
+    String max = System.getenv("MAX_FUZZING_SECONDS");
+    if (max != null && elapsedSeconds > Long.parseLong(max)) {
+      throw new IllegalStateException(
+          "Fuzzing stopped after " + elapsedSeconds + "s, expected at most " + max + "s");
+    }
+  }
 }

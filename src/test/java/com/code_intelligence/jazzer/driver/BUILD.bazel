@@ -32,6 +32,16 @@ java_test(
 )
 
 java_junit5_test(
+    name = "DriverTest",
+    srcs = ["DriverTest.java"],
+    deps = JUNIT5_DEPS + [
+        "//src/main/java/com/code_intelligence/jazzer/driver",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+)
+
+java_junit5_test(
     name = "OptItemTest",
     srcs = ["OptItemTest.java"],
     env = {

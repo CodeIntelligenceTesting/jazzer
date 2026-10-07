@@ -35,7 +35,7 @@ diff --git a/FuzzerInternal.h b/FuzzerInternal.h
  
 +  bool ExitOnTimeReached() {
 +    return Options.ExitOnTimeSec > 0 &&
-+           TotalNumberOfRuns >= (size_t)Options.ExitOnTimeMinRuns &&
++           TotalNumberOfRuns >= static_cast<size_t>(Options.ExitOnTimeMinRuns) &&
 +           duration_cast<seconds>(system_clock::now() - LastNewCoverageTime)
 +                   .count() >= Options.ExitOnTimeSec;
 +  }

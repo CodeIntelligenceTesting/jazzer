@@ -135,13 +135,14 @@ public final class Opt {
           "exit_on_time",
           0,
           "Exit fuzzing successfully if no new coverage features are discovered for the specified"
-              + " number of seconds (0 disables the limit). Single-process fuzzing only.");
+              + " number of seconds (0 disables the limit, at most 2147483647). Single-process"
+              + " fuzzing only.");
   public static final OptItem<Long> exitOnTimeMinRuns =
       uint64Setting(
           "exit_on_time_min_runs",
           100000,
           "Minimum number of fuzzer runs before --exit_on_time is allowed to trigger"
-              + " (default: 100000).");
+              + " (default: 100000, at most 2147483647).");
   public static final OptItem<List<String>> disabledHooks =
       stringListSetting(
           "disabled_hooks",
