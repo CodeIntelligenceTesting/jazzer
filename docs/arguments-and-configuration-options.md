@@ -71,6 +71,17 @@ Some parameters only have an effect when used with standalone Jazzer binary (mar
 - **dedup** [bool, default="true"]
   - Compute and print a deduplication token for every finding
   
+- **exit_on_time** [uint64, default="0"]
+  - Exit fuzzing successfully if no new coverage features are discovered for the specified number
+  of seconds. `0` disables the limit. This option is supported for single-process fuzzing only.
+  A native `-exit_on_time` flag takes precedence over this option.
+
+- **exit_on_time_min_runs** [uint64, default="100000"]
+  - Minimum number of fuzzer runs that must complete before `--exit_on_time` is allowed to trigger.
+  Prevents premature exits during the warm-up phase when coverage has not yet stabilised.
+  Has no effect if `--exit_on_time` is `0` (disabled).
+  A native `-exit_on_time_min_runs` flag takes precedence over this option.
+
 - **disabled_hooks** [list, separator=`':'`, default=""]
   - Names of classes from which hooks (custom or built-in) should not be loaded from
   - Example: to disable the `ServerSideRequestForgery` and `RegexInjection` sanitizers use this environment variable when running Jazzer:
