@@ -226,6 +226,8 @@ public class ArgumentsMutatorFuzzTest {
     if (l0 != null) assertThat(l0.length).isAtMost(3);
     if (by0 != null) assertThat(by0.length).isAtMost(3);
     if (s0 != null) assertThat(s0.length).isAtMost(3);
+    if (b1 != null) assertThat(b1.length).isAtMost(1000);
+    if (by1 != null) assertThat(by1.length).isAtMost(4096);
   }
 
   enum MyEnum {

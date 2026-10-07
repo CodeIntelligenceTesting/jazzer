@@ -16,10 +16,12 @@
 
 package com.example;
 
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
+
 public class ExampleOutOfMemoryFuzzer {
   public static long[] leak;
 
-  public static void fuzzerTestOneInput(byte[] input) {
+  public static void fuzzerTestOneInput(byte @NotNull [] input) {
     if (input.length == 0) {
       return;
     }

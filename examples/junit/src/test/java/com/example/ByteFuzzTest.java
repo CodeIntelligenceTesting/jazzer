@@ -19,10 +19,11 @@ package com.example;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 
 class ByteFuzzTest {
   @FuzzTest
-  void byteFuzz(byte[] data) {
+  void byteFuzz(byte @NotNull [] data) {
     if (data.length < 1) {
       return;
     }

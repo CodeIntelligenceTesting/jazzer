@@ -1,18 +1,26 @@
 load("//bazel:compat.bzl", "SKIP_ON_MACOS")
 load("//bazel:fuzz_target.bzl", "java_fuzz_target_test")
 
-java_fuzz_target_test(
-    name = "ObjectInputStreamDeserialization",
-    srcs = [
-        "ObjectInputStreamDeserialization.java",
-    ],
-    allowed_findings = [
-        "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
-        "java.lang.ExceptionInInitializerError",
-    ],
-    tags = ["dangerous"],
-    target_class = "com.example.ObjectInputStreamDeserialization",
-)
+[
+    java_fuzz_target_test(
+        name = "ObjectInputStreamDeserialization_" + mode,
+        srcs = [
+            "ObjectInputStreamDeserialization.java",
+        ],
+        allowed_findings = [
+            "com.code_intelligence.jazzer.api.FuzzerSecurityIssueHigh",
+            "java.lang.ExceptionInInitializerError",
+        ],
+        env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
+        tags = ["dangerous"],
+        target_class = "com.example.ObjectInputStreamDeserialization",
+        verify_crash_reproducer = True if mode == "classic" else False,
+    )
+    for mode in [
+        "classic",
+        "mutationFramework",
+    ]
+]
 
 java_fuzz_target_test(
     name = "ReflectiveCall",
