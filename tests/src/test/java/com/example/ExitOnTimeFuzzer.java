@@ -19,9 +19,9 @@ package com.example;
 /**
  * A target with no input-dependent coverage, used to test idle coverage limits.
  *
- * <p>The optional environment variables {@code MIN_FUZZING_SECONDS} and {@code
- * MAX_FUZZING_SECONDS} bound the duration of the fuzzing run, which distinguishes an exit caused
- * by -exit_on_time from one caused by -max_total_time.
+ * <p>The optional environment variables {@code MIN_FUZZING_SECONDS} and {@code MAX_FUZZING_SECONDS}
+ * bound the duration of the fuzzing run, which distinguishes an exit caused by -exit_on_time from
+ * one caused by -max_total_time.
  */
 public final class ExitOnTimeFuzzer {
   private static long startNanos;

@@ -196,8 +196,7 @@ public class Driver {
       List<String> args, long exitOnTime, long exitOnTimeMinRuns) {
     // Opt has already consumed these Jazzer-specific options. Never forward them to libFuzzer,
     // which only accepts the single-dash spelling and would otherwise emit a warning.
-    args.removeIf(
-        a -> a.startsWith("--exit_on_time=") || a.startsWith("--exit_on_time_min_runs="));
+    args.removeIf(a -> a.startsWith("--exit_on_time=") || a.startsWith("--exit_on_time_min_runs="));
     if (exitOnTime == 0) {
       return;
     }
