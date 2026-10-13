@@ -68,11 +68,16 @@ public final class FuzzTargetRunner {
         Log.error("--autofuzz_ignore requires --autofuzz");
         exit(1);
       }
+      if (!Opt.autofuzzConstructorExcludes.get().isEmpty()) {
+        Log.error("--autofuzz_constructor_excludes requires --autofuzz");
+        exit(1);
+      }
     } else {
       if (!Opt.targetClass.get().isEmpty()) {
         Log.error("--target_class and --autofuzz cannot be specified together");
         exit(1);
       }
+      FuzzTarget.setConstructorExcludeReferences(Opt.autofuzzConstructorExcludes.get());
       if (!Opt.targetArgs.setIfDefault(
           unmodifiableList(
               concat(Stream.of(Opt.autofuzz.get()), Opt.autofuzzIgnore.get().stream())

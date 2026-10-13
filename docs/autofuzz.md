@@ -18,6 +18,17 @@ Under the hood, Jazzer tries various ways of creating objects from the fuzzer in
 For example, if a parameter is an interface or an abstract class, it will look for all concrete implementing classes on the classpath.
 Jazzer can also create objects from classes that follow the [builder design pattern](https://www.baeldung.com/creational-design-patterns#builder) or have a default constructor and use setters to set the fields.
 
+Some constructors have undesired side effects or can take a very long time for fuzzed inputs.
+Exact constructor references can be excluded via `--autofuzz_constructor_excludes` as a semicolon-separated list:
+```
+--autofuzz_constructor_excludes='com.example.Dangerous::new(int,java.util.Random);com.example.Dangerous::new(byte[])'
+```
+The constructor descriptor is exact and uses the same parameter type format as `--autofuzz` method descriptors.
+Each exclude must name an accessible constructor that exists when Autofuzz initializes.
+Nested classes must be specified with their binary names, for example `com.example.Outer$Inner::new()`.
+Globs, regular expressions, and broad `Class::new` excludes are not supported.
+Explicitly targeted constructors, for example via `--autofuzz=com.example.Dangerous::new(int)`, are not affected by this option.
+
 Creating objects from fuzzer input can lead to many reported exceptions.
 Jazzer addresses this issue by ignoring exceptions that the target method declares to throw.
 In addition to that, you can provide a list of exceptions to be ignored during fuzzing via the `--autofuzz_ignore` flag in the form of a comma-separated list.
