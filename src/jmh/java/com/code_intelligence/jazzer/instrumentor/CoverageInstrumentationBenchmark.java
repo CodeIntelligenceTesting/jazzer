@@ -46,9 +46,11 @@ public class CoverageInstrumentationBenchmark {
   private static final String TARGET_METHOD = "sanitize";
   private static final MethodType TARGET_TYPE = MethodType.methodType(String.class, String.class);
 
-  // This is part of the benchmark's state and not a constant to prevent constant folding.
-  String TARGET_ARG =
+  static final String SAMPLE_INPUT =
       "{\"foo\":1123987,\"bar\":[true, false],\"baz\":{\"foo\":\"132ä3\",\"bar\":1.123e-005}}";
+
+  // This is part of the benchmark's state and not a constant to prevent constant folding.
+  String TARGET_ARG = SAMPLE_INPUT;
 
   MethodHandle uninstrumented_sanitize;
   MethodHandle local_DirectByteBuffer_NeverZero_sanitize;

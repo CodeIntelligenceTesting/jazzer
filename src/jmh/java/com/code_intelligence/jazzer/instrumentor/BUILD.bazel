@@ -29,7 +29,10 @@ java_test(
 
 java_library(
     name = "coverage_instrumentation_benchmark",
-    srcs = ["CoverageInstrumentationBenchmark.java"],
+    srcs = ["CoverageInstrumentationBenchmark.java"] + select({
+        ":jdk25": ["FfmCoverageInstrumentationBenchmark.java"],
+        "//conditions:default": [],
+    }),
     plugins = ["//src/jmh/java/com/code_intelligence/jazzer:JmhGeneratorAnnotationProcessor"],
     runtime_deps = [
         "@maven//:com_mikesamuel_json_sanitizer",
@@ -39,7 +42,10 @@ java_library(
         ":strategies",
         "//src/main/java/com/code_intelligence/jazzer/instrumentor",
         "@maven//:org_openjdk_jmh_jmh_core",
-    ],
+    ] + select({
+        ":jdk25": [":ffm_strategies"],
+        "//conditions:default": [],
+    }),
 )
 
 java_library(
@@ -47,6 +53,9 @@ java_library(
     srcs = [
         "DirectByteBuffer2CoverageMap.java",
         "DirectByteBufferCoverageMap.java",
+        # Uses the FFM API only via method handles, so it compiles with Java 8 source level, but
+        # only works on JDK 22+.
+        "FfmMethodHandleCoverageMap.java",
         "Unsafe2CoverageMap.java",
         "UnsafeBranchfreeCoverageMap.java",
         "UnsafeCoverageMap.java",
@@ -57,6 +66,30 @@ java_library(
         "@jazzer_jacoco//:jacoco_internal",
         "@maven//:org_ow2_asm_asm",
     ],
+)
+
+# The FFM API requires JDK 22+, so the FFM-backed coverage maps are only benchmarked when building
+# with remotejdk_25, the only remote JDK >= 22 provided by rules_java (it ships LTS releases only):
+# bazel run --java_runtime_version=remotejdk_25 \
+#   //src/jmh/java/com/code_intelligence/jazzer/instrumentor:CoverageInstrumentationBenchmark
+config_setting(
+    name = "jdk25",
+    values = {"java_runtime_version": "remotejdk_25"},
+)
+
+java_library(
+    name = "ffm_strategies",
+    srcs = ["FfmCoverageMap.java"],
+    javacopts = [
+        "-source",
+        "22",
+        "-target",
+        "22",
+    ],
+    target_compatible_with = select({
+        ":jdk25": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
 )
 
 kt_jvm_library(
