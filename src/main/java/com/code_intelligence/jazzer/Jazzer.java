@@ -128,6 +128,17 @@ public class Jazzer {
     Set<String> argsToFilter =
         Stream.of("--asan", "--ubsan", "--hwasan", "--native").collect(toSet());
     ProcessBuilder processBuilder = new ProcessBuilder();
+    // The JVM handles these signals itself, e.g. for implicit null checks and safepoint polls. A
+    // UBSan runtime that is only loaded once the JVM is running, such as the one clang on macOS
+    // links into every library built with -fsanitize=fuzzer-no-link, would otherwise replace the
+    // JVM's handlers and turn these signals into crashes.
+    processBuilder
+        .environment()
+        .compute(
+            "UBSAN_OPTIONS",
+            (name, currentValue) ->
+                appendWithPathListSeparator(
+                    name, "handle_segv=0", "handle_sigbus=0", "handle_sigfpe=0"));
     List<Path> preloadLibs = new ArrayList<>();
     // We have to load jazzer_preload before we load ASan since the ASan includes no-op definitions
     // of the fuzzer callbacks as weak symbols, but the dynamic linker doesn't distinguish between
