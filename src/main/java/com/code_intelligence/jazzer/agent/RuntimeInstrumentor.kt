@@ -20,6 +20,7 @@ import com.code_intelligence.jazzer.instrumentor.ClassInstrumentor
 import com.code_intelligence.jazzer.instrumentor.CoverageRecorder
 import com.code_intelligence.jazzer.instrumentor.Hook
 import com.code_intelligence.jazzer.instrumentor.InstrumentationType
+import com.code_intelligence.jazzer.instrumentor.sortMethods
 import com.code_intelligence.jazzer.utils.ClassNameGlobber
 import com.code_intelligence.jazzer.utils.Log
 import io.github.classgraph.ClassGraph
@@ -105,7 +106,11 @@ class RuntimeInstrumentor(
             // Using ClassWriter.COMPUTE_FRAMES as an escape hatch isn't possible in the context of an agent as the
             // computation may itself need to load classes, which leads to circular loads and incompatible class
             // redefinitions.
-            transformInternal(internalClassName, classfileBuffer.takeUnless { loader == null && classBeingRedefined != null })
+            transformInternal(
+                internalClassName,
+                classfileBuffer.takeUnless { loader == null && classBeingRedefined != null },
+                isReconstituted = classBeingRedefined != null,
+            )
         } catch (t: Throwable) {
             if (dumpClassesDir != null) {
                 dumpToClassFile(internalClassName, classfileBuffer, basenameSuffix = ".failed", pathPrefix = pathPrefix)
@@ -180,6 +185,7 @@ class RuntimeInstrumentor(
     fun transformInternal(
         internalClassName: String,
         maybeClassfileBuffer: ByteArray?,
+        isReconstituted: Boolean = false,
     ): ByteArray? {
         val (fullInstrumentation, printInfo) =
             when {
@@ -193,7 +199,7 @@ class RuntimeInstrumentor(
             }
         val className = internalClassName.replace('/', '.')
         val classfileBuffer =
-            maybeClassfileBuffer ?: ClassGraph()
+            maybeClassfileBuffer?.let { if (isReconstituted) sortMethods(it) else it } ?: ClassGraph()
                 .enableSystemJarsAndModules()
                 .acceptLibOrExtJars()
                 .ignoreClassVisibility()

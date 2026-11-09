@@ -17,9 +17,29 @@
 package com.code_intelligence.jazzer.instrumentor
 
 import com.code_intelligence.jazzer.runtime.CoverageMap
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.tree.ClassNode
 
 fun extractClassFileMajorVersion(classfileBuffer: ByteArray): Int =
     ((classfileBuffer[6].toInt() and 0xff) shl 8) or (classfileBuffer[7].toInt() and 0xff)
+
+/**
+ * Sorts the methods of the given class file by name and descriptor.
+ *
+ * Coverage and hook IDs are assigned in method order. The class file the JVM reconstitutes for a
+ * retransformation lists methods in an internal order that can differ between JVM runs, which would make the
+ * IDs, and thus fuzzing with a fixed seed, nondeterministic.
+ */
+fun sortMethods(classfileBuffer: ByteArray): ByteArray {
+    val reader = ClassReader(classfileBuffer)
+    val node = ClassNode()
+    reader.accept(node, 0)
+    node.methods.sortWith(compareBy({ it.name }, { it.desc }))
+    val writer = ClassWriter(reader, 0)
+    node.accept(writer)
+    return writer.toByteArray()
+}
 
 class ClassInstrumentor(
     private val internalClassName: String,

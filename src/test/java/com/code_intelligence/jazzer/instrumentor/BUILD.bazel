@@ -67,6 +67,26 @@ wrapped_kt_jvm_test(
 )
 
 wrapped_kt_jvm_test(
+    name = "sort_methods_test",
+    size = "small",
+    srcs = [
+        "CoverageInstrumentationTarget.java",
+        "SortMethodsTest.kt",
+    ],
+    associates = [
+        "//src/main/java/com/code_intelligence/jazzer/instrumentor:instrumentor",
+    ],
+    test_class = "com.code_intelligence.jazzer.instrumentor.SortMethodsTest",
+    deps = [
+        ":patch_test_utils",
+        "@maven//:junit_junit",
+        "@maven//:org_ow2_asm_asm",
+        "@maven//:org_ow2_asm_asm_tree",
+        "@rules_kotlin//kotlin/compiler:kotlin-test",
+    ],
+)
+
+wrapped_kt_jvm_test(
     name = "hook_validation_test",
     size = "small",
     srcs = [
