@@ -22,6 +22,19 @@ java_test(
 )
 
 java_test(
+    name = "ConstructorExclusionsTest",
+    size = "small",
+    srcs = [
+        "ConstructorExclusionsTest.java",
+    ],
+    test_class = "com.code_intelligence.jazzer.autofuzz.ConstructorExclusionsTest",
+    deps = [
+        "//src/main/java/com/code_intelligence/jazzer/autofuzz",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
     name = "InterfaceCreationTest",
     size = "small",
     srcs = [

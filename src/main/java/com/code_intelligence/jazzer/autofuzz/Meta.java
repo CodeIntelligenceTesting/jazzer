@@ -72,9 +72,15 @@ public class Meta {
       new WeakHashMap<>();
 
   private final AccessibleObjectLookup lookup;
+  private final ConstructorExclusions constructorExclusions;
 
   public Meta(Class<?> referenceClass) {
+    this(referenceClass, ConstructorExclusions.empty());
+  }
+
+  Meta(Class<?> referenceClass, ConstructorExclusions constructorExclusions) {
     lookup = new AccessibleObjectLookup(referenceClass);
+    this.constructorExclusions = constructorExclusions;
   }
 
   @SuppressWarnings("unchecked")
@@ -610,7 +616,7 @@ public class Meta {
       if (visitor != null) {
         throw new AutofuzzError("codegen has not been implemented for Constructor.class");
       }
-      return data.pickValue(lookup.getAccessibleConstructors(YourAverageJavaClass.class));
+      return data.pickValue(getAccessibleConstructors(YourAverageJavaClass.class));
     } else if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
       List<Class<?>> implementingClasses = implementingClassesCache.get(type);
       if (implementingClasses == null) {
@@ -665,7 +671,7 @@ public class Meta {
       }
       return result;
     }
-    Constructor<?>[] constructors = lookup.getAccessibleConstructors(type);
+    Constructor<?>[] constructors = getAccessibleConstructors(type);
     if (constructors.length > 0) {
       Constructor<?> constructor = data.pickValue(constructors);
       boolean applySetters = constructor.getParameterCount() == 0;
@@ -701,7 +707,10 @@ public class Meta {
 
     // First, try to find nested classes with names ending in Builder and call a subset of their
     // chaining methods.
-    List<Class<?>> nestedBuilderClasses = getNestedBuilderClasses(type);
+    List<Class<?>> nestedBuilderClasses =
+        getNestedBuilderClasses(type).stream()
+            .filter(builder -> getAccessibleConstructors(builder).length > 0)
+            .collect(Collectors.toList());
     if (!nestedBuilderClasses.isEmpty()) {
       Class<?> pickedBuilder = data.pickValue(nestedBuilderClasses);
       List<Method> cascadingBuilderMethods = getCascadingBuilderMethods(pickedBuilder);
@@ -717,7 +726,7 @@ public class Meta {
       }
       Object builderObj =
           autofuzzForConsume(
-              data, data.pickValue(lookup.getAccessibleConstructors(pickedBuilder)), visitor);
+              data, data.pickValue(getAccessibleConstructors(pickedBuilder)), visitor);
       for (Method method : pickedMethods) {
         builderObj = autofuzzForConsume(data, method, builderObj, visitor);
       }
@@ -741,7 +750,7 @@ public class Meta {
               "Failed to generate instance of %s:%nAccessible constructors: %s%nNested subclasses:"
                   + " %s%n",
               type.getName(),
-              Arrays.stream(lookup.getAccessibleConstructors(type))
+              Arrays.stream(getAccessibleConstructors(type))
                   .map(Utils::getReadableDescriptor)
                   .collect(Collectors.joining(", ")),
               Arrays.stream(lookup.getAccessibleClasses(type))
@@ -764,6 +773,12 @@ public class Meta {
       nestedBuilderClassesCache.put(type, nestedBuilderClasses);
     }
     return nestedBuilderClasses;
+  }
+
+  private Constructor<?>[] getAccessibleConstructors(Class<?> type) {
+    return Arrays.stream(lookup.getAccessibleConstructors(type))
+        .filter(constructor -> !constructorExclusions.isExcluded(constructor))
+        .toArray(Constructor<?>[]::new);
   }
 
   private List<Method> getOriginalObjectCreationMethods(Class<?> builder) {

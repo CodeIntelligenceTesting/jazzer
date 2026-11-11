@@ -42,6 +42,9 @@ Some parameters only have an effect when used with standalone Jazzer binary (mar
 - **autofuzz_ignore** [list, separator=`','`, default=""] (*DEPRECATED*)
   - Fully qualified names of exception classes to ignore during fuzzing
   
+- **autofuzz_constructor_excludes** [list, separator=`';'`, default=""] (*DEPRECATED*)
+  - Exact constructor references to exclude during Autofuzz argument construction
+   
 - **command_line** [bool, default="false"]
   - Whether Jazzer is running a JUnit fuzz test from the command line
   
