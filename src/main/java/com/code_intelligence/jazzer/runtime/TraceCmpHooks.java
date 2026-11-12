@@ -19,6 +19,20 @@ package com.code_intelligence.jazzer.runtime;
 import com.code_intelligence.jazzer.api.HookType;
 import com.code_intelligence.jazzer.api.MethodHook;
 import java.lang.invoke.MethodHandle;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.MonthDay;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Period;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 @SuppressWarnings("unused")
@@ -231,6 +245,176 @@ public final class TraceCmpHooks {
       // The precise value of the result of the comparison is not used by libFuzzer as long as it is
       // non-zero.
       TraceDataFlowNativeCallbacks.traceStrcmp(thisObject, (String) arguments[0], 1, hookId);
+    }
+  }
+
+  private static final LocalDate FALLBACK_LOCAL_DATE = LocalDate.of(2000, 1, 1);
+  private static final ClassValue<Optional<String>> TEMPORAL_PARSE_FALLBACKS =
+      new ClassValue<Optional<String>>() {
+        @Override
+        protected Optional<String> computeValue(Class<?> type) {
+          if (type == Duration.class) return Optional.of(Duration.ZERO.toString());
+          if (type == Instant.class) return Optional.of(Instant.EPOCH.toString());
+          if (type == LocalDate.class) return Optional.of(FALLBACK_LOCAL_DATE.toString());
+          if (type == LocalDateTime.class)
+            return Optional.of(FALLBACK_LOCAL_DATE.atStartOfDay().toString());
+          if (type == LocalTime.class) return Optional.of(LocalTime.MIDNIGHT.toString());
+          if (type == OffsetDateTime.class) {
+            return Optional.of(
+                OffsetDateTime.of(FALLBACK_LOCAL_DATE, LocalTime.MIDNIGHT, ZoneOffset.UTC)
+                    .toString());
+          }
+          if (type == OffsetTime.class) {
+            return Optional.of(OffsetTime.of(LocalTime.MIDNIGHT, ZoneOffset.UTC).toString());
+          }
+          if (type == Period.class) return Optional.of(Period.ZERO.toString());
+          if (type == Year.class)
+            return Optional.of(Year.of(FALLBACK_LOCAL_DATE.getYear()).toString());
+          if (type == YearMonth.class) {
+            return Optional.of(
+                YearMonth.of(FALLBACK_LOCAL_DATE.getYear(), FALLBACK_LOCAL_DATE.getMonth())
+                    .toString());
+          }
+          if (type == MonthDay.class)
+            return Optional.of(MonthDay.from(FALLBACK_LOCAL_DATE).toString());
+          if (type == ZonedDateTime.class) {
+            return Optional.of(
+                ZonedDateTime.of(FALLBACK_LOCAL_DATE, LocalTime.MIDNIGHT, ZoneId.of("Europe/Paris"))
+                    .toString());
+          }
+          return Optional.empty();
+        }
+      };
+
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.Duration",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.Instant",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.LocalDate",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.LocalDateTime",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.LocalTime",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.MonthDay",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.OffsetDateTime",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.OffsetTime",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.Period",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.Year",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.YearMonth",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  @MethodHook(
+      type = HookType.AFTER,
+      targetClassName = "java.time.ZonedDateTime",
+      targetMethod = "equals",
+      targetMethodDescriptor = "(Ljava/lang/Object;)Z")
+  public static void temporalEquals(
+      MethodHandle method, Object thisObject, Object[] arguments, int hookId, Boolean areEqual) {
+    if (!areEqual
+        && arguments.length == 1
+        && arguments[0] != null
+        && thisObject.getClass() == arguments[0].getClass()) {
+      TraceDataFlowNativeCallbacks.traceStrcmp(
+          thisObject.toString(), arguments[0].toString(), 1, hookId);
+    }
+  }
+
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.time.Instant",
+      targetMethod = "parse")
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.time.LocalDate",
+      targetMethod = "parse")
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.time.LocalDateTime",
+      targetMethod = "parse")
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.time.LocalTime",
+      targetMethod = "parse")
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.time.OffsetDateTime",
+      targetMethod = "parse")
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.time.OffsetTime",
+      targetMethod = "parse")
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.time.ZonedDateTime",
+      targetMethod = "parse")
+  @MethodHook(type = HookType.REPLACE, targetClassName = "java.time.Year", targetMethod = "parse")
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.time.YearMonth",
+      targetMethod = "parse")
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.time.MonthDay",
+      targetMethod = "parse")
+  @MethodHook(
+      type = HookType.REPLACE,
+      targetClassName = "java.time.Duration",
+      targetMethod = "parse")
+  @MethodHook(type = HookType.REPLACE, targetClassName = "java.time.Period", targetMethod = "parse")
+  public static Object temporalParse(
+      MethodHandle method, Object alwaysNull, Object[] arguments, int hookId) throws Throwable {
+    try {
+      return method.invokeWithArguments(arguments);
+    } catch (Throwable throwable) {
+      if (throwable instanceof Error) {
+        throw throwable;
+      }
+
+      if (arguments[0] != null) {
+        String fallback = TEMPORAL_PARSE_FALLBACKS.get(method.type().returnType()).orElse(null);
+        if (fallback != null) {
+          TraceDataFlowNativeCallbacks.traceStrcmp(arguments[0].toString(), fallback, 1, hookId);
+        }
+      }
+      throw throwable;
     }
   }
 
