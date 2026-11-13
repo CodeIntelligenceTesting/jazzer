@@ -173,12 +173,56 @@ public class Driver {
         args.add("-runs=" + Opt.maxExecutions.get());
       }
     }
+    try {
+      translateExitOnTimeOptions(args, Opt.exitOnTime.get(), Opt.exitOnTimeMinRuns.get());
+    } catch (IllegalArgumentException e) {
+      Log.error(e.getMessage());
+      exit(1);
+    }
 
     // Installing the agent after the following "findFuzzTarget" leads to an asan error
     // in it on "Class.forName(targetClassName)", but only during native fuzzing.
     AgentInstaller.install(Opt.hooks.get());
     FuzzTargetHolder.fuzzTarget = FuzzTargetFinder.findFuzzTarget(targetClassName);
     return FuzzTargetRunner.startLibFuzzer(args);
+  }
+
+  /**
+   * Translates --exit_on_time and --exit_on_time_min_runs into the corresponding libFuzzer flags.
+   *
+   * @throws IllegalArgumentException if a value does not fit into libFuzzer's int flags
+   */
+  static void translateExitOnTimeOptions(
+      List<String> args, long exitOnTime, long exitOnTimeMinRuns) {
+    // Opt has already consumed these Jazzer-specific options. Never forward them to libFuzzer,
+    // which only accepts the single-dash spelling and would otherwise emit a warning.
+    args.removeIf(a -> a.startsWith("--exit_on_time=") || a.startsWith("--exit_on_time_min_runs="));
+    if (exitOnTime == 0) {
+      return;
+    }
+    checkFitsIntoLibFuzzerIntFlag("exit_on_time", exitOnTime);
+    checkFitsIntoLibFuzzerIntFlag("exit_on_time_min_runs", exitOnTimeMinRuns);
+    // A native libFuzzer flag takes precedence over the Jazzer option, just like
+    // -max_total_time does for --max_duration.
+    boolean hasExitOnTime = args.stream().anyMatch(a -> a.startsWith("-exit_on_time="));
+    if (!hasExitOnTime) {
+      args.add("-exit_on_time=" + exitOnTime);
+    }
+    boolean hasExitOnTimeMinRuns =
+        args.stream().anyMatch(a -> a.startsWith("-exit_on_time_min_runs="));
+    if (!hasExitOnTimeMinRuns) {
+      args.add("-exit_on_time_min_runs=" + exitOnTimeMinRuns);
+    }
+  }
+
+  private static void checkFitsIntoLibFuzzerIntFlag(String name, long value) {
+    // Opt values are unsigned 64-bit integers, but libFuzzer would silently truncate them to int.
+    if (Long.compareUnsigned(value, Integer.MAX_VALUE) > 0) {
+      throw new IllegalArgumentException(
+          String.format(
+              "--%s must be at most %d, got %s",
+              name, Integer.MAX_VALUE, Long.toUnsignedString(value)));
+    }
   }
 
   private static String getDefaultRssLimitMbArg() {

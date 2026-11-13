@@ -120,6 +120,13 @@ class FuzzTestExecutor {
     if (Opt.maxExecutions.get() > 0) {
       libFuzzerArgs.add("-runs=" + Opt.maxExecutions.get());
     }
+    if (Opt.exitOnTime.get() > 0) {
+      libFuzzerArgs.add(
+          "-exit_on_time=" + checkedLibFuzzerIntFlag("exit_on_time", Opt.exitOnTime.get()));
+      libFuzzerArgs.add(
+          "-exit_on_time_min_runs="
+              + checkedLibFuzzerIntFlag("exit_on_time_min_runs", Opt.exitOnTimeMinRuns.get()));
+    }
     // Disable libFuzzer's out of memory detection: It is only useful for native library fuzzing,
     // which we don't support without our native driver, and leads to false positives where it picks
     // up IntelliJ's memory usage.
@@ -135,6 +142,17 @@ class FuzzTestExecutor {
     libFuzzerArgs.addAll(originalLibFuzzerArgs);
 
     return new FuzzTestExecutor(libFuzzerArgs, javaSeedsDir);
+  }
+
+  private static long checkedLibFuzzerIntFlag(String name, long value) {
+    // Opt values are unsigned 64-bit integers, but libFuzzer would silently truncate them to int.
+    if (Long.compareUnsigned(value, Integer.MAX_VALUE) > 0) {
+      throw new FuzzTestConfigurationError(
+          String.format(
+              "%s must be at most %d, got %s",
+              name, Integer.MAX_VALUE, Long.toUnsignedString(value)));
+    }
+    return value;
   }
 
   private static Optional<String> translateJUnitTimeoutToLibFuzzerFlag(ExtensionContext context) {

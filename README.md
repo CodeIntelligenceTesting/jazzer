@@ -240,6 +240,24 @@ Currently, this applies to Server-Side Request Forgery and File Path Traversal s
 For details, check out the [API documentation](https://codeintelligencetesting.github.io/jazzer-docs/jazzer-api/com/code_intelligence/jazzer/api/BugDetectors.html).
 
   
+## Stopping criteria: exit_on_time and exit_on_time_min_runs
+
+By default Jazzer runs indefinitely. Two options let you define when a successful fuzz run should stop automatically:
+
+- **`--exit_on_time=<seconds>`** - exit successfully after the specified number of seconds pass without any new coverage being discovered. `0` (default) disables the limit. Equivalent to libFuzzer's `-exit_on_time`, but forwarded automatically by the Jazzer driver.
+
+- **`--exit_on_time_min_runs=<N>`** (default: `100000`) - minimum number of fuzzer executions that must complete before `--exit_on_time` is allowed to trigger. Prevents the fuzzer from stopping too early during the warm-up phase when the corpus is being loaded and coverage has not yet stabilised.
+
+Example — stop after 8 hours of no new coverage, but only after at least 1 000 000 runs:
+
+```shell
+./jazzer --cp=fuzz.jar \
+         --target_class=com.example.MyFuzzTest \
+         --exit_on_time=28800 \
+         --exit_on_time_min_runs=1000000 \
+         corpus/
+```
+
 ## OSS-Fuzz
 
 [Code Intelligence](https://code-intelligence.com) and Google have teamed up to bring support for Java, Kotlin, and other JVM-based languages to [OSS-Fuzz](https://github.com/google/oss-fuzz), Google's project for large-scale fuzzing of open-source software.
