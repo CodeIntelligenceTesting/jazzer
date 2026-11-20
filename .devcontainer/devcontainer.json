@@ -1,0 +1,31 @@
+{
+    "name": "Jazzer Dev Container",
+    "dockerFile": "Dockerfile",
+    "features": {
+      "ghcr.io/devcontainers/features/git:1": {
+      },
+      "ghcr.io/devcontainers-community/features/bazel:1": {
+        "bazelisk_version": "v1.17.0",
+        "buildifier_version": "v6.1.2"
+      }
+    },
+    "customizations": {
+      "vscode": {
+        // Set *default* container specific settings.json values on container create.
+        "settings": {
+          "terminal.integrated.shell.linux": "/bin/bash",
+        },
+        // Add the IDs of extensions you want installed when the container is created.
+        "extensions": [
+          // Java
+          "redhat-java",
+          // Bazel
+          "bazelbuild.vscode-bazel",
+          // Documentation
+          "zhang.markdown-all-in-one",
+          "redhat.vscode-yaml",
+          "shardulm94.trailing-spaces",
+        ],
+      },
+    },
+}
