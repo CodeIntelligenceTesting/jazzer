@@ -6,6 +6,10 @@ load("//sanitizers:sanitizers.bzl", "SANITIZER_CLASSES")
 java_library(
     name = "clojure_lang_hooks",
     srcs = ["ClojureLangHooks.java"],
+    visibility = [
+        "//sanitizers:__pkg__",
+        "//sanitizers/src/test/java/com/code_intelligence/jazzer/sanitizers:__pkg__",
+    ],
     deps = ["//src/main/java/com/code_intelligence/jazzer/api:hooks"],
 )
 

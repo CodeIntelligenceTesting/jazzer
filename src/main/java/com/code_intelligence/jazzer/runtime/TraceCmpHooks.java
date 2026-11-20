@@ -1025,11 +1025,15 @@ public final class TraceCmpHooks {
       // map was modified by another thread, skip this invocation
       return;
     }
-    // Modify the hook ID so that compares against distinct valid keys are traced separately.
-    if (lowerBoundKey != null) {
+    // traceGenericCmp requires both operands to have the same runtime class.
+    // Bracketing keys are found via compareTo, which may succeed across incompatible Number
+    // implementations
+    // (e.g. clojure.lang.Ratio vs. java.lang.Double) and would make the unboxing in traceGenericCmp
+    // throw a ClassCastException.
+    if (lowerBoundKey != null && lowerBoundKey.getClass() == currentKey.getClass()) {
       TraceDataFlowNativeCallbacks.traceGenericCmp(currentKey, lowerBoundKey, hookId);
     }
-    if (upperBoundKey != null) {
+    if (upperBoundKey != null && upperBoundKey.getClass() == currentKey.getClass()) {
       TraceDataFlowNativeCallbacks.traceGenericCmp(currentKey, upperBoundKey, 31 * hookId + 11);
     }
   }
@@ -1063,10 +1067,11 @@ public final class TraceCmpHooks {
       return;
     }
 
-    if (lowerBoundElement != null) {
+    // See the comment in mapHookInternal on why the element classes have to match.
+    if (lowerBoundElement != null && lowerBoundElement.getClass() == currentElement.getClass()) {
       TraceDataFlowNativeCallbacks.traceGenericCmp(currentElement, lowerBoundElement, hookId);
     }
-    if (upperBoundElement != null) {
+    if (upperBoundElement != null && upperBoundElement.getClass() == currentElement.getClass()) {
       TraceDataFlowNativeCallbacks.traceGenericCmp(
           currentElement, upperBoundElement, 31 * hookId + 11);
     }
