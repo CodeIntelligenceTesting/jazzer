@@ -16,6 +16,7 @@
 
 package com.example;
 
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import java.io.IOException;
@@ -24,7 +25,7 @@ import java.io.IOException;
 // https://github.com/FasterXML/jackson-databind/pull/3032 if executed with
 // `--keep_going=3 -seed=2735196724`.
 public class JacksonCborFuzzer {
-  public static void fuzzerTestOneInput(byte[] input) {
+  public static void fuzzerTestOneInput(byte @NotNull [] input) {
     CBORFactory factory = new CBORFactory();
     ObjectMapper mapper = new ObjectMapper(factory);
     mapper.enableDefaultTyping();

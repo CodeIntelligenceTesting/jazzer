@@ -49,10 +49,11 @@ java_fuzz_target_test(
     ],
 )
 
-java_fuzz_target_test(
-    name = "ByteFuzzTest",
+[java_fuzz_target_test(
+    name = "ByteFuzzTest_" + mode,
     srcs = ["ByteFuzzTest.java"],
     allowed_findings = ["org.opentest4j.AssertionFailedError"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     fuzzer_args = [
         "-runs=0",
     ],
@@ -67,7 +68,10 @@ java_fuzz_target_test(
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
-)
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 java_fuzz_target_test(
     name = "PerExecutionLifecycleFuzzTest",
@@ -94,10 +98,11 @@ java_fuzz_target_test(
     ],
 )
 
-java_fuzz_target_test(
-    name = "PerExecutionLifecycleWithFindingFuzzTest",
+[java_fuzz_target_test(
+    name = "PerExecutionLifecycleWithFindingFuzzTest_" + mode,
     srcs = ["PerExecutionLifecycleWithFindingFuzzTest.java"],
     allowed_findings = ["java.io.IOException"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     expected_warning_or_error = "ERROR: com.example.TestSuccessfulException: Lifecycle methods invoked as expected",
     fuzzer_args = [
         "-runs=3",
@@ -116,7 +121,10 @@ java_fuzz_target_test(
         "@maven//:com_google_truth_truth",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
-)
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 java_fuzz_target_test(
     name = "PerTestLifecycleFuzzTest",
@@ -183,13 +191,14 @@ java_fuzz_target_test(
 )
 
 # Verifies that fuzzer command-line arguments are honored for @FuzzTests.
-java_fuzz_target_test(
-    name = "CommandLineFuzzTest",
+[java_fuzz_target_test(
+    name = "CommandLineFuzzTest_" + mode,
     srcs = ["CommandLineFuzzTest.java"],
     allowed_findings = ["java.lang.Error"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     fuzzer_args = [
         # Ignore the first two findings.
-        "--ignore=d5e250a5298b81e6,d86371e6d41739ec",
+        "--ignore=d5abe997b6e1c738,c4c41efd6aa94d6c",
     ],
     target_class = "com.example.CommandLineFuzzTest",
     verify_crash_reproducer = False,
@@ -201,18 +210,23 @@ java_fuzz_target_test(
         "//src/main/java/com/code_intelligence/jazzer/junit:fuzz_test",
         "@maven//:org_junit_jupiter_junit_jupiter_api",
     ],
-)
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 # Verify that Mockito is properly ignored.
 # Using version 5+ could otherwise introduce cyclic instrumentation.
-java_fuzz_target_test(
-    name = "MockitoFuzzTest",
+[java_fuzz_target_test(
+    name = "MockitoFuzzTest_" + mode,
     srcs = ["MockitoFuzzTest.java"],
+    env = {"JAZZER_MUTATOR_FRAMEWORK": "false"} if mode == "classic" else {},
     fuzzer_args = [
         "-runs=1",
     ],
     tags = ["no-jdk8"],
     target_class = "com.example.MockitoFuzzTest",
+    verify_crash_reproducer = True if mode == "classic" else False,
     runtime_deps = [
         ":junit_runtime",
     ],
@@ -222,7 +236,10 @@ java_fuzz_target_test(
         "@maven//:org_junit_jupiter_junit_jupiter_api",
         "@maven//:org_mockito_mockito_core",
     ],
-)
+) for mode in [
+    "classic",
+    "mutationFramework",
+]]
 
 java_fuzz_target_test(
     name = "CharArrayWithLengthFuzzTest",
@@ -289,7 +306,10 @@ java_fuzz_target_test(
     name = "JavaBinarySeedFuzzTest",
     srcs = ["JavaBinarySeedFuzzTest.java"],
     allowed_findings = ["java.lang.Error"],
-    env = {"JAZZER_FUZZ": "1"},
+    env = {
+        "JAZZER_FUZZ": "1",
+        "JAZZER_MUTATOR_FRAMEWORK": "false",
+    },
     target_class = "com.example.JavaBinarySeedFuzzTest",
     verify_crash_reproducer = False,
     runtime_deps = [

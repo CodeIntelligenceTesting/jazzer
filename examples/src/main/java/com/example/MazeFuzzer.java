@@ -18,6 +18,7 @@ package com.example;
 
 import com.code_intelligence.jazzer.api.Consumer3;
 import com.code_intelligence.jazzer.api.Jazzer;
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -56,7 +57,7 @@ public final class MazeFuzzer {
   private static final char[][] MAZE = parseMaze();
   private static final char[][] REACHED_FIELDS = parseMaze();
 
-  public static void fuzzerTestOneInput(byte[] commands) {
+  public static void fuzzerTestOneInput(byte @NotNull [] commands) {
     executeCommands(
         commands,
         (x, y, won) -> {

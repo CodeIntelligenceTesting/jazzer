@@ -18,11 +18,12 @@ package com.example;
 
 import com.code_intelligence.jazzer.api.FuzzerSecurityIssueLow;
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import java.util.Objects;
 
 public class ObjectEqualsStringFuzzer {
   @FuzzTest
-  void objectEqualsString(byte[] input) {
+  void objectEqualsString(byte @NotNull [] input) {
     String stringInput = new String(input);
     if (Objects.equals(stringInput, "ObjectsEqualsFuzzer")) {
       throw new FuzzerSecurityIssueLow("ObjectsEqualsFuzzer works!");
