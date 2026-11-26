@@ -19,6 +19,7 @@ package com.code_intelligence.jazzer.mutation.mutator.aggregate;
 import static com.code_intelligence.jazzer.mutation.support.TestSupport.anyPseudoRandom;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.code_intelligence.jazzer.mutation.annotation.JazzerIgnore;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
@@ -255,5 +256,259 @@ class SetterBasedBeanMutatorTest {
         (SerializingMutator<Child>)
             Mutators.newFactory().createOrThrow(new TypeHolder<Child>() {}.annotatedType());
     assertThat(mutator.toString()).isEqualTo("Nullable<[Nullable<Nullable<String>[]>] -> Child>");
+  }
+
+  static class IgnoreOnSetterBean {
+    private int kept;
+    private String ignored;
+    private Object unsupportedWriteOnly;
+
+    public int getKept() {
+      return kept;
+    }
+
+    public void setKept(int kept) {
+      this.kept = kept;
+    }
+
+    public String getIgnored() {
+      return ignored;
+    }
+
+    @JazzerIgnore
+    public void setIgnored(String ignored) {
+      this.ignored = ignored;
+    }
+
+    @JazzerIgnore
+    public void setUnsupportedWriteOnly(Object unsupportedWriteOnly) {
+      this.unsupportedWriteOnly = unsupportedWriteOnly;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      IgnoreOnSetterBean that = (IgnoreOnSetterBean) o;
+      return kept == that.kept
+          && Objects.equals(ignored, that.ignored)
+          && Objects.equals(unsupportedWriteOnly, that.unsupportedWriteOnly);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(kept, ignored, unsupportedWriteOnly);
+    }
+  }
+
+  @Test
+  void testIgnoreOnSetter() {
+    SerializingMutator<IgnoreOnSetterBean> mutator =
+        (SerializingMutator<IgnoreOnSetterBean>)
+            Mutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull IgnoreOnSetterBean>() {}.annotatedType());
+    assertThat(mutator.toString()).startsWith("[Integer] -> IgnoreOnSetterBean");
+
+    PseudoRandom prng = anyPseudoRandom();
+    IgnoreOnSetterBean inited = mutator.init(prng);
+    IgnoreOnSetterBean mutated = mutator.mutate(inited, prng);
+    assertThat(mutated).isNotEqualTo(inited);
+    assertThat(inited.ignored).isNull();
+    assertThat(mutated.ignored).isNull();
+    assertThat(inited.unsupportedWriteOnly).isNull();
+    assertThat(mutated.unsupportedWriteOnly).isNull();
+  }
+
+  static class IgnoreOnGetterBean {
+    private int kept;
+    private String ignoredByGetter;
+    private boolean ignoredBoolean;
+    private Object unsupportedWithIgnoredGetter;
+
+    public int getKept() {
+      return kept;
+    }
+
+    public void setKept(int kept) {
+      this.kept = kept;
+    }
+
+    @JazzerIgnore
+    public String getIgnoredByGetter() {
+      return ignoredByGetter;
+    }
+
+    public void setIgnoredByGetter(String ignoredByGetter) {
+      this.ignoredByGetter = ignoredByGetter;
+    }
+
+    @JazzerIgnore
+    public boolean isIgnoredBoolean() {
+      return ignoredBoolean;
+    }
+
+    public void setIgnoredBoolean(boolean ignoredBoolean) {
+      this.ignoredBoolean = ignoredBoolean;
+    }
+
+    @JazzerIgnore
+    public Object getUnsupportedWithIgnoredGetter() {
+      return unsupportedWithIgnoredGetter;
+    }
+
+    public void setUnsupportedWithIgnoredGetter(Object unsupportedWithIgnoredGetter) {
+      this.unsupportedWithIgnoredGetter = unsupportedWithIgnoredGetter;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      IgnoreOnGetterBean that = (IgnoreOnGetterBean) o;
+      return kept == that.kept
+          && ignoredBoolean == that.ignoredBoolean
+          && Objects.equals(ignoredByGetter, that.ignoredByGetter)
+          && Objects.equals(unsupportedWithIgnoredGetter, that.unsupportedWithIgnoredGetter);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(kept, ignoredByGetter, ignoredBoolean, unsupportedWithIgnoredGetter);
+    }
+  }
+
+  @Test
+  void testIgnoreOnGetter() {
+    SerializingMutator<IgnoreOnGetterBean> mutator =
+        (SerializingMutator<IgnoreOnGetterBean>)
+            Mutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull IgnoreOnGetterBean>() {}.annotatedType());
+    assertThat(mutator.toString()).startsWith("[Integer] -> IgnoreOnGetterBean");
+
+    PseudoRandom prng = anyPseudoRandom();
+    IgnoreOnGetterBean inited = mutator.init(prng);
+    IgnoreOnGetterBean mutated = mutator.mutate(inited, prng);
+    assertThat(mutated).isNotEqualTo(inited);
+    assertThat(inited.ignoredByGetter).isNull();
+    assertThat(mutated.ignoredByGetter).isNull();
+    assertThat(inited.ignoredBoolean).isFalse();
+    assertThat(mutated.ignoredBoolean).isFalse();
+    assertThat(inited.unsupportedWithIgnoredGetter).isNull();
+    assertThat(mutated.unsupportedWithIgnoredGetter).isNull();
+  }
+
+  static class AllIgnoredBean {
+    private int foo;
+    private String bar;
+
+    public int getFoo() {
+      return foo;
+    }
+
+    @JazzerIgnore
+    public void setFoo(int foo) {
+      this.foo = foo;
+    }
+
+    @JazzerIgnore
+    public String getBar() {
+      return bar;
+    }
+
+    public void setBar(String bar) {
+      this.bar = bar;
+    }
+  }
+
+  @Test
+  void testAllIgnoredFallsBackToCachedConstructor() {
+    assertThat(
+            ChainedMutatorFactory.of(Stream.of(new SetterBasedBeanMutatorFactory()))
+                .tryCreate(new TypeHolder<@NotNull AllIgnoredBean>() {}.annotatedType()))
+        .isEmpty();
+
+    SerializingMutator<AllIgnoredBean> mutator =
+        (SerializingMutator<AllIgnoredBean>)
+            Mutators.newFactory()
+                .createOrThrow(new TypeHolder<@NotNull AllIgnoredBean>() {}.annotatedType());
+    assertThat(mutator.toString()).isEqualTo("[] -> AllIgnoredBean");
+  }
+
+  static class MissingGetterWithAnotherIgnoredBean {
+    private int missingGetter;
+    private String ignored;
+
+    public void setMissingGetter(int missingGetter) {
+      this.missingGetter = missingGetter;
+    }
+
+    @JazzerIgnore
+    public void setIgnored(String ignored) {
+      this.ignored = ignored;
+    }
+  }
+
+  @Test
+  void testNonIgnoredSetterWithoutGetterStillFails() {
+    assertThat(
+            ChainedMutatorFactory.of(Stream.of(new SetterBasedBeanMutatorFactory()))
+                .tryCreate(
+                    new TypeHolder<
+                        @NotNull MissingGetterWithAnotherIgnoredBean>() {}.annotatedType()))
+        .isEmpty();
+  }
+
+  public static class IgnoreInheritedBeanParent {
+    private int keptParent;
+    private String ignoredParentSetter;
+    private String ignoredParentGetter;
+
+    public int getKeptParent() {
+      return keptParent;
+    }
+
+    public void setKeptParent(int keptParent) {
+      this.keptParent = keptParent;
+    }
+
+    public String getIgnoredParentSetter() {
+      return ignoredParentSetter;
+    }
+
+    @JazzerIgnore
+    public void setIgnoredParentSetter(String ignoredParentSetter) {
+      this.ignoredParentSetter = ignoredParentSetter;
+    }
+
+    @JazzerIgnore
+    public String getIgnoredParentGetter() {
+      return ignoredParentGetter;
+    }
+
+    public void setIgnoredParentGetter(String ignoredParentGetter) {
+      this.ignoredParentGetter = ignoredParentGetter;
+    }
+  }
+
+  public static class IgnoreInheritedBeanChild extends IgnoreInheritedBeanParent {
+    private int keptChild;
+
+    public int getKeptChild() {
+      return keptChild;
+    }
+
+    public void setKeptChild(int keptChild) {
+      this.keptChild = keptChild;
+    }
+  }
+
+  @Test
+  void testIgnoreInherited() {
+    SerializingMutator<IgnoreInheritedBeanChild> mutator =
+        (SerializingMutator<IgnoreInheritedBeanChild>)
+            Mutators.newFactory()
+                .createOrThrow(
+                    new TypeHolder<@NotNull IgnoreInheritedBeanChild>() {}.annotatedType());
+    assertThat(mutator.toString()).startsWith("[Integer, Integer] -> IgnoreInheritedBeanChild");
   }
 }

@@ -20,12 +20,16 @@ import static com.code_intelligence.jazzer.mutation.mutator.aggregate.BeanSuppor
 import static com.code_intelligence.jazzer.mutation.support.TypeSupport.asSubclassOrEmpty;
 import static java.util.Arrays.stream;
 
+import com.code_intelligence.jazzer.mutation.annotation.JazzerIgnore;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.MutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.SerializingMutator;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 final class SetterBasedBeanMutatorFactory implements MutatorFactory {
@@ -38,30 +42,45 @@ final class SetterBasedBeanMutatorFactory implements MutatorFactory {
         .flatMap(
             constructor -> {
               Class<?> clazz = constructor.getDeclaringClass();
-              Method[] setters = findMethods(clazz, BeanSupport::isSetter).toArray(Method[]::new);
+              Map<String, Method> gettersByPropertyName = findGettersByPropertyName(clazz);
+              List<Method> setters = new ArrayList<>();
+              List<Method> getters = new ArrayList<>();
+              for (Method setter :
+                  findMethods(clazz, BeanSupport::isSetter).toArray(Method[]::new)) {
+                if (setter.isAnnotationPresent(JazzerIgnore.class)) {
+                  continue;
+                }
+                Method getter = gettersByPropertyName.get(toPropertyName(setter));
+                if (getter == null) {
+                  // A Java bean can have additional getters corresponding to computed properties,
+                  // but we require that all non-ignored setters have a corresponding getter.
+                  return Optional.empty();
+                }
+                if (getter.isAnnotationPresent(JazzerIgnore.class)) {
+                  continue;
+                }
+                setters.add(setter);
+                getters.add(getter);
+              }
 
-              // Classes with a default constructor but without setters are handled by the
-              // CachedConstructorMutator.
-              if (setters.length == 0) {
+              // Classes with a default constructor but without (non-ignored) setters are handled by
+              // the CachedConstructorMutator.
+              if (setters.isEmpty()) {
                 return Optional.empty();
               }
 
-              // A Java bean can have additional getters corresponding to computed properties, but
-              // we require that all setters have a corresponding getter.
-              return findGettersByPropertyNames(
-                      clazz, stream(setters).map(BeanSupport::toPropertyName))
-                  .filter(
-                      getters ->
-                          matchingReturnTypes(
-                              getters,
-                              type,
-                              stream(setters)
-                                  .map(setter -> resolveParameterTypes(setter, type)[0])
-                                  .toArray(Type[]::new)))
-                  .flatMap(
-                      getters ->
-                          AggregatesHelper.createMutator(
-                              factory, type, constructor, getters, setters));
+              Method[] setterArray = setters.toArray(Method[]::new);
+              Method[] getterArray = getters.toArray(Method[]::new);
+              if (!matchingReturnTypes(
+                  getterArray,
+                  type,
+                  stream(setterArray)
+                      .map(setter -> resolveParameterTypes(setter, type)[0])
+                      .toArray(Type[]::new))) {
+                return Optional.empty();
+              }
+              return AggregatesHelper.createMutator(
+                  factory, type, constructor, getterArray, setterArray);
             });
   }
 }

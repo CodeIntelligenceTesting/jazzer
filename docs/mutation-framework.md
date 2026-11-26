@@ -104,6 +104,7 @@ package.
 | `@WithUtf8Length` | `java.lang.String`                                                                                                                      | Specifies the length of the generated string in UTF-8 bytes, see annotation Javadoc for further information       |
 | `@WithSize`       | `java.util.List`, `java.util.Map`                                                                                                       | Specifies the size of the generated collection                                                                    |
 | `@UrlSegment`     | `java.lang.String`                                                                                                                      | `String` should only contain valid URL segment characters                                                         |
+| `@JazzerIgnore`   | JavaBean getter or setter methods                                                                                                       | Excludes a JavaBean property from setter-based mutation when placed on its getter or setter                       |
 
 The example below shows how Fuzz Test parameters can be annotated to provide
 additional information to the mutation framework.
@@ -163,7 +164,9 @@ no arguments. The corresponding methods are looked up by name and must adhere to
 the JavaBeans Spec naming convention, meaning `setXX` and `getXX`/`isXX` methods
 for property `XX`. A JavaBean can have additional getters corresponding to
 computed properties, but it is required that all setters have a corresponding
-getter.
+getter. To exclude a property from setter-based mutation (for example, write-only
+setters or properties with unsupported types), annotate either its setter or
+getter with `@JazzerIgnore`.
 
 ```java title="Example" showLineNumbers
 public static class FooBean {
