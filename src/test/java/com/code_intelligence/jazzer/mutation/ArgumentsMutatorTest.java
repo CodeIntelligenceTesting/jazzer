@@ -20,6 +20,9 @@ import static com.code_intelligence.jazzer.mutation.support.TestSupport.mockPseu
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.singletonList;
 
+import com.code_intelligence.jazzer.mutation.annotation.IgnoreGetters;
+import com.code_intelligence.jazzer.mutation.annotation.IgnoreProperties;
+import com.code_intelligence.jazzer.mutation.annotation.IgnoreSetters;
 import com.code_intelligence.jazzer.mutation.annotation.NotNull;
 import com.code_intelligence.jazzer.mutation.mutator.Mutators;
 import com.code_intelligence.jazzer.mutation.support.TestSupport.MockPseudoRandom;
@@ -395,5 +398,83 @@ class ArgumentsMutatorTest {
     ArgumentsMutator mutator = maybeMutator.get();
     mutator.init(12345);
     mutator.invoke(null, false);
+  }
+
+  static class Jwks {
+    private Jwks(String raw) {}
+  }
+
+  static class App {
+    private String name;
+    private Jwks jwks;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public Jwks getJwks() {
+      return jwks;
+    }
+
+    public void setJwks(Jwks jwks) {
+      this.jwks = jwks;
+    }
+  }
+
+  static class OnboardingBean {
+    private App app;
+    private String ignoredByGetter;
+    private String ignoredBySetter;
+
+    public App getApp() {
+      return app;
+    }
+
+    public void setApp(App app) {
+      this.app = app;
+    }
+
+    public String getIgnoredByGetter() {
+      return ignoredByGetter;
+    }
+
+    public void setIgnoredByGetter(String ignoredByGetter) {
+      this.ignoredByGetter = ignoredByGetter;
+    }
+
+    public String getIgnoredBySetter() {
+      return ignoredBySetter;
+    }
+
+    public void setIgnoredBySetter(String ignoredBySetter) {
+      this.ignoredBySetter = ignoredBySetter;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  @IgnoreProperties(types = Jwks.class)
+  @IgnoreGetters("getIgnoredByGetter")
+  @IgnoreSetters("setIgnoredBySetter")
+  public static void beanFuzzTest(@NotNull OnboardingBean onboarding, int count) {}
+
+  @Test
+  void testMethodLevelBeanIgnoreAnnotationsPropagated() throws Throwable {
+    Method method =
+        ArgumentsMutatorTest.class.getMethod("beanFuzzTest", OnboardingBean.class, int.class);
+    // Regression / SeedSerializer.of path (isFuzzing = false)
+    ArgumentsMutator regressionMutator = ArgumentsMutator.forMethodOrThrow(method, false);
+    assertThat(regressionMutator.toString())
+        .isEqualTo("Arguments[[Nullable<[Nullable<String>] -> App>] -> OnboardingBean, Integer]");
+    // Fuzzing path (isFuzzing = true)
+    ArgumentsMutator fuzzingMutator = ArgumentsMutator.forMethodOrThrow(method, true);
+    assertThat(fuzzingMutator.toString())
+        .isEqualTo("Arguments[[Nullable<[Nullable<String>] -> App>] -> OnboardingBean, Integer]");
+
+    fuzzingMutator.init(12345);
+    fuzzingMutator.invoke(null, false);
   }
 }

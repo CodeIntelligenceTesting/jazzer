@@ -24,6 +24,9 @@ import com.code_intelligence.jazzer.mutation.annotation.Ascii;
 import com.code_intelligence.jazzer.mutation.annotation.DoubleInRange;
 import com.code_intelligence.jazzer.mutation.annotation.Finite;
 import com.code_intelligence.jazzer.mutation.annotation.FloatInRange;
+import com.code_intelligence.jazzer.mutation.annotation.IgnoreGetters;
+import com.code_intelligence.jazzer.mutation.annotation.IgnoreProperties;
+import com.code_intelligence.jazzer.mutation.annotation.IgnoreSetters;
 import com.code_intelligence.jazzer.mutation.annotation.InRange;
 import com.code_intelligence.jazzer.mutation.annotation.Negative;
 import com.code_intelligence.jazzer.mutation.annotation.NonNegative;
@@ -54,7 +57,10 @@ public class AnnotationSupportTest {
         arguments(
             new TypeHolder<
                 @Ascii(constraint = PropertyConstraint.RECURSIVE) List<
-                    String>>() {}.annotatedType()));
+                    String>>() {}.annotatedType()),
+        arguments(new TypeHolder<@IgnoreProperties("foo") List<String>>() {}.annotatedType()),
+        arguments(new TypeHolder<@IgnoreGetters("getFoo") Object>() {}.annotatedType()),
+        arguments(new TypeHolder<@IgnoreSetters("setFoo") Object>() {}.annotatedType()));
   }
 
   @ParameterizedTest
@@ -95,6 +101,9 @@ public class AnnotationSupportTest {
         arguments(new TypeHolder<@NonNegative String>() {}.annotatedType()),
         arguments(new TypeHolder<@NonPositive String>() {}.annotatedType()),
         arguments(new TypeHolder<@Finite String>() {}.annotatedType()),
+        arguments(primitiveWithDeclarationIgnoreProperties()),
+        arguments(primitiveWithDeclarationIgnoreGetters()),
+        arguments(primitiveWithDeclarationIgnoreSetters()),
         // deep
         arguments(
             new TypeHolder<
@@ -107,5 +116,44 @@ public class AnnotationSupportTest {
   @MethodSource("validateAnnotationUsageCases_throw")
   void testValidateAnnotationUsage_throw(AnnotatedType type) {
     assertThrows(IllegalArgumentException.class, () -> validateAnnotationUsage(type));
+  }
+
+  @SuppressWarnings("unused")
+  private static void dummyIgnoreProperties(
+      @IgnoreProperties(value = "foo", constraint = PropertyConstraint.DECLARATION) int x) {}
+
+  @SuppressWarnings("unused")
+  private static void dummyIgnoreGetters(
+      @IgnoreGetters(value = "getFoo", constraint = PropertyConstraint.DECLARATION) int x) {}
+
+  @SuppressWarnings("unused")
+  private static void dummyIgnoreSetters(
+      @IgnoreSetters(value = "setFoo", constraint = PropertyConstraint.DECLARATION) int x) {}
+
+  private static AnnotatedType primitiveWithDeclarationIgnoreProperties() {
+    try {
+      return AnnotationSupportTest.class.getDeclaredMethod("dummyIgnoreProperties", int.class)
+          .getAnnotatedParameterTypes()[0];
+    } catch (NoSuchMethodException e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  private static AnnotatedType primitiveWithDeclarationIgnoreGetters() {
+    try {
+      return AnnotationSupportTest.class.getDeclaredMethod("dummyIgnoreGetters", int.class)
+          .getAnnotatedParameterTypes()[0];
+    } catch (NoSuchMethodException e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  private static AnnotatedType primitiveWithDeclarationIgnoreSetters() {
+    try {
+      return AnnotationSupportTest.class.getDeclaredMethod("dummyIgnoreSetters", int.class)
+          .getAnnotatedParameterTypes()[0];
+    } catch (NoSuchMethodException e) {
+      throw new AssertionError(e);
+    }
   }
 }

@@ -1,0 +1,56 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.code_intelligence.jazzer.mutation.annotation;
+
+import static com.code_intelligence.jazzer.mutation.utils.PropertyConstraint.RECURSIVE;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE_USE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import com.code_intelligence.jazzer.mutation.utils.AppliesTo;
+import com.code_intelligence.jazzer.mutation.utils.IgnoreRecursiveConflicts;
+import com.code_intelligence.jazzer.mutation.utils.PropertyConstraint;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+/**
+ * Excludes matching JavaBean properties from setter-based bean mutation.
+ *
+ * <p>Can be applied to {@code @FuzzTest} methods or parameter types. By default, rules propagate
+ * recursively through nested beans and containers ({@link PropertyConstraint#RECURSIVE}).
+ */
+@Target({METHOD, TYPE_USE})
+@Retention(RUNTIME)
+@AppliesTo(subClassesOf = Object.class)
+@IgnoreRecursiveConflicts
+@PropertyConstraint
+public @interface IgnoreProperties {
+  /**
+   * JavaBean property names to ignore (e.g., {@code "foo"} matches {@code setFoo}/{@code getFoo}).
+   */
+  String[] value() default {};
+
+  /**
+   * Property types to ignore (matches assignable setter parameter types, including generic type
+   * arguments and array component types).
+   */
+  Class<?>[] types() default {};
+
+  /**
+   * Defines the scope of the annotation. Possible values are defined in {@link
+   * com.code_intelligence.jazzer.mutation.utils.PropertyConstraint}. Defaults to {@code RECURSIVE}.
+   */
+  String constraint() default RECURSIVE;
+}
