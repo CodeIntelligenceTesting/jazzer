@@ -104,6 +104,9 @@ package.
 | `@WithUtf8Length` | `java.lang.String`                                                                                                                      | Specifies the length of the generated string in UTF-8 bytes, see annotation Javadoc for further information       |
 | `@WithSize`       | `java.util.List`, `java.util.Map`                                                                                                       | Specifies the size of the generated collection                                                                    |
 | `@UrlSegment`     | `java.lang.String`                                                                                                                      | `String` should only contain valid URL segment characters                                                         |
+| `@IgnoreProperties` | `@FuzzTest` methods, JavaBeans, or containers                                                                                         | Excludes JavaBean properties by property name (`value`) or assignable type (`types`) from setter-based mutation   |
+| `@IgnoreGetters`  | `@FuzzTest` methods, JavaBeans, or containers                                                                                           | Excludes JavaBean properties whose getter method name matches any entry in `value`                                |
+| `@IgnoreSetters`  | `@FuzzTest` methods, JavaBeans, or containers                                                                                           | Excludes JavaBean setter methods whose name matches any entry in `value`                                          |
 
 The example below shows how Fuzz Test parameters can be annotated to provide
 additional information to the mutation framework.
@@ -163,7 +166,24 @@ no arguments. The corresponding methods are looked up by name and must adhere to
 the JavaBeans Spec naming convention, meaning `setXX` and `getXX`/`isXX` methods
 for property `XX`. A JavaBean can have additional getters corresponding to
 computed properties, but it is required that all setters have a corresponding
-getter.
+getter. To exclude properties from setter-based mutation without annotating the
+JavaBean class under test (for example, write-only setters or properties with
+unsupported types), annotate the `@FuzzTest` method or parameter type with
+`@IgnoreProperties`, `@IgnoreGetters`, or `@IgnoreSetters`:
+
+```java title="Example" showLineNumbers
+@IgnoreProperties(value = {"internalId"}, types = {UnsupportedService.class})
+@IgnoreSetters({"setAuditCallback"})
+@FuzzTest
+public void testOnboardingBean(@NotNull OnboardingBean onboarding) {
+    // ...
+}
+```
+
+By default, these annotations use `PropertyConstraint.RECURSIVE`, so rules
+(including `types = {UnsupportedService.class}`) apply across nested JavaBeans
+and collections. Set `constraint = PropertyConstraint.DECLARATION` on a
+parameter type to limit an annotation to that type alone.
 
 ```java title="Example" showLineNumbers
 public static class FooBean {

@@ -23,6 +23,9 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
+import com.code_intelligence.jazzer.mutation.annotation.IgnoreGetters;
+import com.code_intelligence.jazzer.mutation.annotation.IgnoreProperties;
+import com.code_intelligence.jazzer.mutation.annotation.IgnoreSetters;
 import com.code_intelligence.jazzer.mutation.annotation.ValuePool;
 import com.code_intelligence.jazzer.mutation.api.ExtendedMutatorFactory;
 import com.code_intelligence.jazzer.mutation.api.PseudoRandom;
@@ -40,10 +43,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public final class ArgumentsMutator {
   private final ExtendedMutatorFactory mutatorFactory;
@@ -100,18 +106,21 @@ public final class ArgumentsMutator {
       throw validationError;
     }
 
-    ValuePool[] valuePools = method.getAnnotationsByType(ValuePool.class);
+    Annotation[] methodAnnotations =
+        Stream.of(
+                method.getAnnotationsByType(ValuePool.class),
+                method.getAnnotationsByType(IgnoreProperties.class),
+                method.getAnnotationsByType(IgnoreGetters.class),
+                method.getAnnotationsByType(IgnoreSetters.class))
+            .flatMap(Arrays::stream)
+            .toArray(Annotation[]::new);
 
     return toArrayOrEmpty(
             stream(method.getAnnotatedParameterTypes())
                 .map(
                     type -> {
-                      // Forward all @ValuePool annotations of the fuzz test method to each
-                      // arg.
-                      AnnotatedType t = type;
-                      for (ValuePool pool : valuePools) {
-                        t = TypeSupport.withExtraAnnotations(t, pool);
-                      }
+                      // Forward method-level annotations of the fuzz test method to each arg.
+                      AnnotatedType t = TypeSupport.withExtraAnnotations(type, methodAnnotations);
                       Optional<SerializingMutator<?>> mutator = mutatorFactory.tryCreate(t);
                       if (!mutator.isPresent()) {
                         Log.error(

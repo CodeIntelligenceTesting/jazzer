@@ -119,11 +119,14 @@ class BeanSupport {
     }
   }
 
+  static Map<String, Method> findGettersByPropertyName(Class<?> clazz) {
+    return findMethods(clazz, BeanSupport::isGetter)
+        .collect(toMap(BeanSupport::toPropertyName, method -> method, (a, b) -> a));
+  }
+
   static Optional<Method[]> findGettersByPropertyNames(
       Class<?> clazz, Stream<String> propertyNames) {
-    Map<String, Method> gettersByPropertyName =
-        findMethods(clazz, BeanSupport::isGetter)
-            .collect(toMap(BeanSupport::toPropertyName, method -> method, (a, b) -> a));
+    Map<String, Method> gettersByPropertyName = findGettersByPropertyName(clazz);
     return toArrayOrEmpty(
         propertyNames.map(gettersByPropertyName::get).map(Optional::ofNullable), Method[]::new);
   }
